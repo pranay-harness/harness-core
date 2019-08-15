@@ -480,6 +480,58 @@ public class WorkflowServiceHelper {
     }
   }
 
+  public void generateNewWorkflowPhaseStepsForSpotInstBlueGreen(
+      String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
+    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
+    List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
+    if (serviceSetupRequired) {
+      InfrastructureMapping infraMapping;
+      boolean spotInstInfra;
+      if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(appId))) {
+        InfrastructureDefinition infrastructureDefinition =
+            infrastructureDefinitionService.get(appId, workflowPhase.getInfraDefinitionId());
+        spotInstInfra = infrastructureDefinition.getInfrastructure() instanceof AwsAmiInfrastructure;
+      } else {
+        infraMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
+        spotInstInfra = infraMapping instanceof AwsAmiInfrastructureMapping;
+      }
+      if (spotInstInfra) {
+        Map<String, Object> defaultData = newHashMap();
+        defaultData.put("blueGreen", true);
+        phaseSteps.add(aPhaseStep(PhaseStepType.SPOTINST_SETUP, SPOTINST_SETUP)
+                           .addStep(GraphNode.builder()
+                                        .id(generateUuid())
+                                        .type(StateType.SPOTINST_SETUP.name())
+                                        .name(SPOTINST_SETUP)
+                                        .properties(defaultData)
+                                        .build())
+                           .build());
+      }
+    }
+    phaseSteps.add(aPhaseStep(PhaseStepType.SPOTINST_DEPLOY, SPOTINST_DEPLOY)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(StateType.SPOTINST_DEPLOY.name())
+                                    .name(SPOTINST_DEPLOY)
+                                    .build())
+                       .build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_STAGING)
+                       .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                       .build());
+    Map<String, Object> defaultDataSwitchRoutes = newHashMap();
+    defaultDataSwitchRoutes.put("downsizeOldElastiGroup", true);
+    phaseSteps.add(aPhaseStep(PhaseStepType.SPOTINST_LISTENER_UPDATE, SPOTINST_LISTENER_UPDATE)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(StateType.SPOTINST_LISTENER_UPDATE.name())
+                                    .name(SPOTINST_LISTENER_UPDATE)
+                                    .properties(defaultDataSwitchRoutes)
+                                    .build())
+                       .build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
+  }
+
   public void generateNewWorkflowPhaseStepsForAWSAmiBlueGreen(
       String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired, boolean isDynamicInfrastructure) {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
@@ -1310,6 +1362,30 @@ public class WorkflowServiceHelper {
                 .withRollback(true)
                 .build(),
             aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).withRollback(true).build()))
+        .build();
+  }
+
+  public WorkflowPhase generateRollbackWorkflowPhaseForSpotInstBlueGreen(WorkflowPhase workflowPhase) {
+    return rollbackWorkflow(workflowPhase)
+        .phaseSteps(
+            asList(aPhaseStep(PhaseStepType.SPOTINST_LISTENER_UPDATE_ROLLBACK, SPOTINST_LISTENER_UPDATE_ROLLBACK)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(StateType.SPOTINST_LISTENER_UPDATE_ROLLBACK.name())
+                                    .name(SPOTINST_LISTENER_UPDATE_ROLLBACK)
+                                    .rollback(true)
+                                    .build())
+                       .withPhaseStepNameForRollback(DEPLOY_SERVICE)
+                       .withStatusForRollback(SUCCESS)
+                       .withRollback(true)
+                       .build(),
+                aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
+                    .withRollback(true)
+                    .withPhaseStepNameForRollback(DEPLOY_SERVICE)
+                    .withStatusForRollback(SUCCESS)
+                    .withRollback(true)
+                    .build(),
+                aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).withRollback(true).build()))
         .build();
   }
 
