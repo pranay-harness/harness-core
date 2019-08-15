@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 
+@Deprecated
 @Slf4j
 // TODO: this job is no longer needed, delete after 2019/10/15
 public class PersistentLockCleanupJob implements Job {

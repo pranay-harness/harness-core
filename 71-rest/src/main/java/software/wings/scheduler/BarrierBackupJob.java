@@ -9,6 +9,7 @@ import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
+@Deprecated
 @Slf4j
 // TODO: this job is no longer needed, delete after 2019/09/09
 public class BarrierBackupJob implements Job {

@@ -29,6 +29,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 
+@Deprecated
 @Slf4j
 // TODO: this job is no longer needed, delete after 2019/09/30
 public class ZombieHunterJob implements Job {
