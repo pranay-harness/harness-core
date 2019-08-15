@@ -99,6 +99,7 @@ import software.wings.api.pcf.PcfSwapRouteRollbackContextElement;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.audit.AuditHeader;
+import software.wings.audit.AuditRecord;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.Account;
 import software.wings.beans.ActionableNotification;
@@ -668,6 +669,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(ArtifactSourceable.class);
     set.add(ArtifactStream.class);
     set.add(ArtifactStreamWithOnlyAuditNeededData.class);
+    set.add(AuditRecord.class);
     set.add(AuditHeader.class);
     set.add(AuditPreference.class);
     set.add(AuthToken.class);
