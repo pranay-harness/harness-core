@@ -133,8 +133,10 @@ import software.wings.api.DeploymentType;
 import software.wings.api.InstanceElement;
 import software.wings.app.StaticConfiguration;
 import software.wings.beans.Account;
+import software.wings.beans.AmiDeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.ArtifactVariable;
+import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.BuildWorkflow;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CustomOrchestrationWorkflow;
@@ -194,6 +196,8 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
+import software.wings.infra.AwsAmiInfrastructure;
+import software.wings.infra.InfraMappingInfrastructureProvider;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
@@ -3168,8 +3172,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private void generateNewWorkflowPhaseSteps(String appId, String envId, WorkflowPhase workflowPhase,
       boolean serviceRepeat, OrchestrationWorkflowType orchestrationWorkflowType, WorkflowCreationFlags creationFlags) {
     DeploymentType deploymentType = workflowPhase.getDeploymentType();
+    String accountId = appService.getAccountIdByAppId(appId);
+    boolean infraMappingRefactorEnabled = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId);
     boolean isDynamicInfrastructure;
-    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(appId))) {
+    if (infraMappingRefactorEnabled) {
       isDynamicInfrastructure =
           infrastructureDefinitionService.isDynamicInfrastructure(appId, workflowPhase.getInfraDefinitionId());
     } else {
@@ -3202,12 +3208,22 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     } else if (deploymentType == AWS_LAMBDA) {
       workflowServiceHelper.generateNewWorkflowPhaseStepsForAWSLambda(appId, envId, workflowPhase);
     } else if (deploymentType == AMI) {
-      if (BLUE_GREEN.equals(orchestrationWorkflowType)) {
-        workflowServiceHelper.generateNewWorkflowPhaseStepsForAWSAmiBlueGreen(
-            appId, workflowPhase, !serviceRepeat, isDynamicInfrastructure);
+      if (featureFlagService.isEnabled(FeatureName.SPOTINST, accountId)
+          && isSpotInstTypeInfra(infraMappingRefactorEnabled, workflowPhase.getInfraDefinitionId(),
+                 workflowPhase.getInfraMappingId(), appId)) {
+        if (BLUE_GREEN.equals(orchestrationWorkflowType)) {
+          workflowServiceHelper.generateNewWorkflowPhaseStepsForSpotInstBlueGreen(appId, workflowPhase, !serviceRepeat);
+        } else {
+          throw new InvalidRequestException("Spotinst ONLY supported for Blue/Green deployments right now", USER);
+        }
       } else {
-        workflowServiceHelper.generateNewWorkflowPhaseStepsForAWSAmi(
-            appId, workflowPhase, !serviceRepeat, isDynamicInfrastructure, orchestrationWorkflowType);
+        if (BLUE_GREEN.equals(orchestrationWorkflowType)) {
+          workflowServiceHelper.generateNewWorkflowPhaseStepsForAWSAmiBlueGreen(
+              appId, workflowPhase, !serviceRepeat, isDynamicInfrastructure);
+        } else {
+          workflowServiceHelper.generateNewWorkflowPhaseStepsForAWSAmi(
+              appId, workflowPhase, !serviceRepeat, isDynamicInfrastructure, orchestrationWorkflowType);
+        }
       }
     } else if (deploymentType == PCF) {
       if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {
@@ -3250,10 +3266,21 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     } else if (deploymentType == AWS_LAMBDA) {
       return workflowServiceHelper.generateRollbackWorkflowPhaseForAwsLambda(workflowPhase);
     } else if (deploymentType == AMI) {
-      if (BLUE_GREEN.equals(orchestrationWorkflowType)) {
-        return workflowServiceHelper.generateRollbackWorkflowPhaseForAwsAmiBlueGreen(workflowPhase);
+      String accountId = appService.getAccountIdByAppId(appId);
+      if (featureFlagService.isEnabled(FeatureName.SPOTINST, accountId)
+          && isSpotInstTypeInfra(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId),
+                 workflowPhase.getInfraDefinitionId(), workflowPhase.getInfraMappingId(), appId)) {
+        if (BLUE_GREEN.equals(orchestrationWorkflowType)) {
+          return workflowServiceHelper.generateRollbackWorkflowPhaseForSpotInstBlueGreen(workflowPhase);
+        } else {
+          throw new InvalidRequestException("Spotinst ONLY supported for Blue/Green deployments right now", USER);
+        }
       } else {
-        return workflowServiceHelper.generateRollbackWorkflowPhaseForAwsAmi(workflowPhase);
+        if (BLUE_GREEN.equals(orchestrationWorkflowType)) {
+          return workflowServiceHelper.generateRollbackWorkflowPhaseForAwsAmiBlueGreen(workflowPhase);
+        } else {
+          return workflowServiceHelper.generateRollbackWorkflowPhaseForAwsAmi(workflowPhase);
+        }
       }
     } else if (deploymentType == HELM) {
       return workflowServiceHelper.generateRollbackWorkflowPhaseForHelm(workflowPhase);
@@ -3265,6 +3292,20 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
     } else {
       return workflowServiceHelper.generateRollbackWorkflowPhaseForSSH(appId, workflowPhase);
+    }
+  }
+
+  private boolean isSpotInstTypeInfra(
+      boolean infraMappingRefactorEnabled, String infraDefinitionId, String infraMappingId, String appId) {
+    if (infraMappingRefactorEnabled) {
+      InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefinitionId);
+      InfraMappingInfrastructureProvider infrastructure = infrastructureDefinition.getInfrastructure();
+      return infrastructure instanceof AwsAmiInfrastructure
+          && AmiDeploymentType.SPOTINST.equals(((AwsAmiInfrastructure) infrastructure).getAmiDeploymentType());
+    } else {
+      InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, infraMappingId);
+      return infraMapping instanceof AwsAmiInfrastructureMapping
+          && AmiDeploymentType.SPOTINST.equals(((AwsAmiInfrastructureMapping) infraMapping).getAmiDeploymentType());
     }
   }
 
