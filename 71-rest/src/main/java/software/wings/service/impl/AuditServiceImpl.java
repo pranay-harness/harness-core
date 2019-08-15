@@ -45,6 +45,7 @@ import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
 import software.wings.audit.AuditHeaderYamlResponse;
 import software.wings.audit.AuditHeaderYamlResponse.AuditHeaderYamlResponseBuilder;
+import software.wings.audit.AuditRecord;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.audit.EntityAuditRecord.EntityAuditRecordBuilder;
 import software.wings.audit.ResourceType;
@@ -53,6 +54,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.EntityYamlRecord;
 import software.wings.beans.EntityYamlRecord.EntityYamlRecordKeys;
 import software.wings.beans.Event.Type;
+import software.wings.beans.FeatureName;
 import software.wings.beans.HarnessTag;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
@@ -397,11 +399,23 @@ public class AuditServiceImpl implements AuditService {
           return;
         }
       }
-      UpdateOperations<AuditHeader> operations = wingsPersistence.createUpdateOperations(AuditHeader.class);
-      operations.addToSet("entityAuditRecords", record);
-      operations.set("accountId", accountId);
-      wingsPersistence.update(
-          wingsPersistence.createQuery(AuditHeader.class).filter(ID_KEY, auditHeaderId), operations);
+
+      if (featureFlagService.isEnabled(FeatureName.ENTITY_AUDIT_RECORD, accountId)) {
+        AuditRecord auditRecord = AuditRecord.builder()
+                                      .accountId(accountId)
+                                      .auditHeaderId(auditHeaderId)
+                                      .entityAuditRecord(record)
+                                      .createdAt(System.currentTimeMillis())
+                                      .build();
+
+        wingsPersistence.save(auditRecord);
+      } else {
+        UpdateOperations<AuditHeader> operations = wingsPersistence.createUpdateOperations(AuditHeader.class);
+        operations.addToSet("entityAuditRecords", record);
+        operations.set("accountId", accountId);
+        wingsPersistence.update(
+            wingsPersistence.createQuery(AuditHeader.class).filter(ID_KEY, auditHeaderId), operations);
+      }
     } catch (WingsException exception) {
       ExceptionLogger.logProcessedMessages(exception, ExecutionContext.MANAGER, logger);
     } catch (Exception ex) {

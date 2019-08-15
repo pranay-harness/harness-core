@@ -54,7 +54,8 @@ public enum FeatureName {
   TAGS_YAML,
   TF_ALL,
   NEW_INSTANCE_TIMESERIES,
-  SPOTINST;
+  SPOTINST,
+  ENTITY_AUDIT_RECORD;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;
