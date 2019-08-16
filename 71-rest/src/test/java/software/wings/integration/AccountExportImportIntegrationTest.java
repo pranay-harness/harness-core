@@ -209,7 +209,8 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
         new FormDataBodyPart("file", accountDataJson, MediaType.MULTIPART_FORM_DATA_TYPE);
     multiPart.bodyPart(formDataBodyPart);
 
-    WebTarget target = client.target(API_BASE + "/account/import?accountId=" + accountId);
+    WebTarget target =
+        client.target(API_BASE + "/account/import?accountId=" + accountId + "&accountName=MigratedAccount");
     RestResponse<Void> restResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(multiPart, MediaType.MULTIPART_FORM_DATA_TYPE), new GenericType<RestResponse<Void>>() {});
     assertEquals(0, restResponse.getResponseMessages().size());
