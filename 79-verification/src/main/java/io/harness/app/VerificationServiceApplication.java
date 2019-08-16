@@ -1,6 +1,7 @@
 package io.harness.app;
 
 import static com.google.inject.matcher.Matchers.not;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.security.ServiceTokenGenerator.VERIFICATION_SERVICE_SECRET;
 import static java.time.Duration.ofSeconds;
@@ -14,8 +15,6 @@ import static software.wings.common.VerificationConstants.LEARNING_ENGINE_EXP_TA
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_TIME_IN_SECONDS;
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_TASK_QUEUED_TIME_IN_SECONDS;
 import static software.wings.common.VerificationConstants.getDataAnalysisMetricHelpDocument;
-import static software.wings.common.VerificationConstants.getDataCollectionMetricHelpDocument;
-import static software.wings.common.VerificationConstants.getIgnoredErrorsMetricHelpDocument;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -220,20 +219,21 @@ public class VerificationServiceApplication extends Application<VerificationServ
   }
 
   private void initMetrics() {
-    harnessMetricRegistry.registerGaugeMetric(
-        LEARNING_ENGINE_TASK_QUEUED_TIME_IN_SECONDS, null, getDataAnalysisMetricHelpDocument());
-    harnessMetricRegistry.registerGaugeMetric(
-        LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS, null, getDataAnalysisMetricHelpDocument());
-    harnessMetricRegistry.registerGaugeMetric(
-        LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_TIME_IN_SECONDS, null, getDataAnalysisMetricHelpDocument());
-    harnessMetricRegistry.registerGaugeMetric(
-        LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_TIME_IN_SECONDS, null, getDataAnalysisMetricHelpDocument());
-    harnessMetricRegistry.registerGaugeMetric(
-        LEARNING_ENGINE_EXP_TASK_QUEUED_TIME_IN_SECONDS, null, getDataAnalysisMetricHelpDocument());
-    harnessMetricRegistry.registerGaugeMetric(
-        DATA_COLLECTION_TASKS_PER_MINUTE, null, getDataCollectionMetricHelpDocument());
-    harnessMetricRegistry.registerGaugeMetric(
-        IGNORED_ERRORS_METRIC_NAME, IGNORED_ERRORS_METRIC_LABELS, getIgnoredErrorsMetricHelpDocument());
+    registerGaugeMetric(LEARNING_ENGINE_TASK_QUEUED_TIME_IN_SECONDS, null);
+    registerGaugeMetric(LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS, null);
+    registerGaugeMetric(LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_TIME_IN_SECONDS, null);
+    registerGaugeMetric(LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_TIME_IN_SECONDS, null);
+    registerGaugeMetric(LEARNING_ENGINE_EXP_TASK_QUEUED_TIME_IN_SECONDS, null);
+    registerGaugeMetric(DATA_COLLECTION_TASKS_PER_MINUTE, null);
+    registerGaugeMetric(IGNORED_ERRORS_METRIC_NAME, IGNORED_ERRORS_METRIC_LABELS);
+  }
+
+  private void registerGaugeMetric(String metricName, String[] labels) {
+    harnessMetricRegistry.registerGaugeMetric(metricName, labels, getDataAnalysisMetricHelpDocument());
+    final String env = System.getenv("ENV");
+    if (isNotEmpty(env)) {
+      harnessMetricRegistry.registerGaugeMetric(env + "_" + metricName, labels, getDataAnalysisMetricHelpDocument());
+    }
   }
 
   private void registerStores(VerificationServiceConfiguration configuration, Injector injector) {

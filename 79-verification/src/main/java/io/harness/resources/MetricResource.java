@@ -1,5 +1,6 @@
 package io.harness.resources;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.common.VerificationConstants.VERIFICATION_SERVICE_METRICS;
 
 import com.google.inject.Inject;
@@ -15,6 +16,8 @@ import software.wings.security.annotations.HarnessApiKeyAuth;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.HashSet;
+import java.util.Set;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -41,8 +44,16 @@ public class MetricResource {
   @ExceptionMetered
   public String get() throws IOException {
     final StringWriter writer = new StringWriter();
+    Set<String> metrics = new HashSet<>();
+    final String env = System.getenv("ENV");
+    VERIFICATION_SERVICE_METRICS.forEach(metricName -> {
+      metrics.add(metricName);
+      if (isNotEmpty(env)) {
+        metrics.add(env + "_" + metricName);
+      }
+    });
     try {
-      TextFormat.write004(writer, metricRegistry.getMetric(VERIFICATION_SERVICE_METRICS));
+      TextFormat.write004(writer, metricRegistry.getMetric(metrics));
       writer.flush();
     } finally {
       writer.close();

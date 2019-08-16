@@ -1,6 +1,7 @@
 package io.harness.jobs.housekeeping;
 
 import static io.harness.beans.ExecutionStatus.QUEUED;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.common.VerificationConstants.DEFAULT_LE_AUTOSCALE_DATA_COLLECTION_INTERVAL_IN_SECONDS;
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_TIME_IN_SECONDS;
@@ -56,6 +57,7 @@ public class UsageMetricsJob implements Job {
   }
 
   private void recordQueuedTaskMetric() {
+    final String env = System.getenv("ENV");
     LearningEngineAnalysisTask lastQueuedAnalysisTask =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
             .filter(LearningEngineAnalysisTaskKeys.executionStatus, QUEUED)
@@ -67,6 +69,10 @@ public class UsageMetricsJob implements Job {
         : 0;
     logger.info("Learning Engine task has been queued for {} Seconds", taskQueuedTimeInSeconds);
     metricRegistry.recordGaugeValue(LEARNING_ENGINE_TASK_QUEUED_TIME_IN_SECONDS, null, taskQueuedTimeInSeconds);
+    if (isNotEmpty(env)) {
+      metricRegistry.recordGaugeValue(
+          env + "_" + LEARNING_ENGINE_TASK_QUEUED_TIME_IN_SECONDS, null, taskQueuedTimeInSeconds);
+    }
 
     lastQueuedAnalysisTask = wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
                                  .filter(LearningEngineAnalysisTaskKeys.executionStatus, QUEUED)
@@ -80,6 +86,10 @@ public class UsageMetricsJob implements Job {
     logger.info("Learning Engine clustering task has been queued for {} Seconds", taskQueuedTimeInSeconds);
     metricRegistry.recordGaugeValue(
         LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS, null, taskQueuedTimeInSeconds);
+    if (isNotEmpty(env)) {
+      metricRegistry.recordGaugeValue(
+          env + "_" + LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS, null, taskQueuedTimeInSeconds);
+    }
 
     lastQueuedAnalysisTask = wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
                                  .filter(LearningEngineAnalysisTaskKeys.executionStatus, QUEUED)
@@ -94,6 +104,10 @@ public class UsageMetricsJob implements Job {
     logger.info("Learning Engine analysis task has been queued for {} Seconds", taskQueuedTimeInSeconds);
     metricRegistry.recordGaugeValue(
         LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_TIME_IN_SECONDS, null, taskQueuedTimeInSeconds);
+    if (isNotEmpty(env)) {
+      metricRegistry.recordGaugeValue(
+          env + "_" + LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_TIME_IN_SECONDS, null, taskQueuedTimeInSeconds);
+    }
 
     lastQueuedAnalysisTask =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
@@ -108,6 +122,10 @@ public class UsageMetricsJob implements Job {
     logger.info("Learning Engine feedback task has been queued for {} Seconds", taskQueuedTimeInSeconds);
     metricRegistry.recordGaugeValue(
         LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_TIME_IN_SECONDS, null, taskQueuedTimeInSeconds);
+    if (isNotEmpty(env)) {
+      metricRegistry.recordGaugeValue(
+          env + "_" + LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_TIME_IN_SECONDS, null, taskQueuedTimeInSeconds);
+    }
 
     // Do the same for experimental
     LearningEngineExperimentalAnalysisTask lastQueuedExpAnalysisTask =
@@ -121,6 +139,10 @@ public class UsageMetricsJob implements Job {
         : 0;
     logger.info("Learning Engine Experimental task has been queued for {} Seconds", taskQueuedTimeInSecondsExp);
     metricRegistry.recordGaugeValue(LEARNING_ENGINE_EXP_TASK_QUEUED_TIME_IN_SECONDS, null, taskQueuedTimeInSecondsExp);
+    if (isNotEmpty(env)) {
+      metricRegistry.recordGaugeValue(
+          env + "_" + LEARNING_ENGINE_EXP_TASK_QUEUED_TIME_IN_SECONDS, null, taskQueuedTimeInSeconds);
+    }
   }
 
   public static void addJob(PersistentScheduler jobScheduler) {
