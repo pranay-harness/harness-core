@@ -433,6 +433,7 @@ public class EventPublishHelper {
 
     PageRequest<Delegate> pageRequest = aPageRequest()
                                             .addFilter(DelegateKeys.accountId, Operator.EQ, accountId)
+                                            .addFilter(DelegateKeys.sampleDelegate, Operator.EQ, false)
                                             .addOrder(DelegateKeys.createdAt, OrderType.ASC)
                                             .addFieldsIncluded(DelegateKeys.uuid)
                                             .withLimit("1")
