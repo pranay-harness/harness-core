@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.settings.UsageRestrictions;
@@ -9,6 +10,7 @@ import software.wings.settings.UsageRestrictions;
  */
 @Data
 @Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SecretText {
   private String name;
   private String value;

@@ -1083,6 +1083,8 @@ public class SecretManagerImpl implements SecretManager {
           throw new IllegalStateException("Unexpected value: " + config.getEncryptionType());
       }
     }
+
+    logger.info("Cleared default flag for secret managers in account {}.", accountId);
   }
 
   @Override
