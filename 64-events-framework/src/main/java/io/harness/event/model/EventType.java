@@ -23,12 +23,6 @@ public enum EventType {
   /***
    * Usage metrics EventTypes
    */
-  DEPLOYMENT_METADATA,
-  DEPLOYMENT_DURATION,
-  USERS_LOGGED_IN,
-  SETUP_DATA,
-  INSTANCE_COUNT,
-  LICENSE_UNITS,
   CV_META_DATA,
 
   OPEN_ALERT,

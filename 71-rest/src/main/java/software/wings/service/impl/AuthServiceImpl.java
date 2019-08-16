@@ -926,8 +926,6 @@ public class AuthServiceImpl implements AuthService {
 
     userService.evictUserFromCache(user.getUuid());
     user.setToken(authToken.getJwtToken());
-    Account account = user.getAccounts().get(0);
-    usageMetricsEventPublisher.publishUserLoginEvent(account.getUuid(), account.getAccountName());
 
     user.setFirstLogin(isFirstLogin);
     return user;

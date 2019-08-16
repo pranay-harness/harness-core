@@ -12,7 +12,6 @@ import com.google.inject.Singleton;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.event.model.EventConstants;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.Environment;
@@ -54,19 +53,6 @@ public class UsageMetricsService {
             List<String> appIds = getAppIds(account.getUuid());
             logger.info("Detected [{}] apps for account [{}]", appIds.size(), account.getAccountName());
 
-            publisher.publishSetupDataMetric(
-                account.getUuid(), account.getAccountName(), appIds.size(), EventConstants.NUMBER_OF_APPLICATIONS);
-            publisher.publishSetupDataMetric(account.getUuid(), account.getAccountName(),
-                getNumberOfServicesPerAccount(appIds), EventConstants.NUMBER_OF_SERVICES);
-            publisher.publishSetupDataMetric(account.getUuid(), account.getAccountName(),
-                getNumberOfPipelinesPerAccount(appIds), EventConstants.NUMBER_OF_PIPELINES);
-            publisher.publishSetupDataMetric(account.getUuid(), account.getAccountName(),
-                getNumberOfTriggersPerAccount(appIds), EventConstants.NUMBER_OF_TRIGGERS);
-            publisher.publishSetupDataMetric(account.getUuid(), account.getAccountName(),
-                getNumberOfEnvironmentsPerAccount(appIds), EventConstants.NUMBER_OF_ENVIRONMENTS);
-            publisher.publishSetupDataMetric(account.getUuid(), account.getAccountName(),
-                getNumberOfWorkflowsForAccount(account.getUuid()), EventConstants.NUMBER_OF_WORKFLOWS);
-            publisher.publishAccountMetadataMetric(account);
             publisher.publishCV247MetadataMetric(account.getUuid(), true);
             publisher.publishCV247MetadataMetric(account.getUuid(), false);
           } catch (Exception e) {

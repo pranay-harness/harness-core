@@ -51,7 +51,6 @@ import software.wings.sm.StateMachineExecutionCallback;
 import software.wings.sm.states.EnvState.EnvExecutionResponseData;
 
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 /**
  * The Class WorkflowExecutionUpdate.
@@ -241,24 +240,6 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
           if (account == null) {
             logger.warn("Workflow execution in application {} is associated with deleted account {}", applicationName,
                 accountID);
-          } else {
-            String accountName = account.getAccountName();
-            long executionDuration = workflowExecution.getStartTs() != null && workflowExecution.getEndTs() != null
-                ? TimeUnit.MILLISECONDS.toSeconds(workflowExecution.getEndTs() - workflowExecution.getStartTs())
-                : 0;
-            /**
-             * Query workflow execution and project deploymentTrigger, if it is not empty, it is automatic or it is
-             * manual
-             */
-            boolean manual = workflowExecution.getDeploymentTriggerId() == null;
-
-            /**
-             * We are sending the event out only for a pipeline execution or a workflow execution
-             */
-            usageMetricsEventPublisher.publishDeploymentDurationEvent(executionDuration, accountID, accountName,
-                workflowId, workflowExecution.getName(), appId, applicationName);
-            usageMetricsEventPublisher.publishDeploymentMetadataEvent(status, manual, accountID, accountName,
-                workflowId, workflowExecution.getName(), appId, applicationName);
           }
         }
         if (!WorkflowType.PIPELINE.equals(context.getWorkflowType())) {
