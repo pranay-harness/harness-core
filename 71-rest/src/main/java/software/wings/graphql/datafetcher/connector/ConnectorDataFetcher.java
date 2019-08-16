@@ -17,9 +17,13 @@ public class ConnectorDataFetcher extends AbstractDataFetcher<QLConnector, QLCon
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
-  protected QLConnector fetch(QLConnectorQueryParameters qlQuery) {
+  protected QLConnector fetch(QLConnectorQueryParameters qlQuery, String accountId) {
     SettingAttribute settingAttribute = persistence.get(SettingAttribute.class, qlQuery.getConnectorId());
     if (settingAttribute == null) {
+      throw new InvalidRequestException("Connector does not exist", WingsException.USER);
+    }
+
+    if (!settingAttribute.getAccountId().equals(accountId)) {
       throw new InvalidRequestException("Connector does not exist", WingsException.USER);
     }
 

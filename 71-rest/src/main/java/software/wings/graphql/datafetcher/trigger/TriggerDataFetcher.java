@@ -16,7 +16,7 @@ public class TriggerDataFetcher extends AbstractDataFetcher<QLTrigger, QLTrigger
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
-  protected QLTrigger fetch(QLTriggerQueryParameters parameters) {
+  protected QLTrigger fetch(QLTriggerQueryParameters parameters, String accountId) {
     Trigger trigger = persistence.get(Trigger.class, parameters.getTriggerId());
     if (trigger == null) {
       return null;

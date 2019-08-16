@@ -21,9 +21,13 @@ public class ServiceDataFetcher extends AbstractDataFetcher<QLService, QLService
 
   @Override
   @AuthRule(permissionType = PermissionType.SERVICE, action = Action.READ)
-  protected QLService fetch(QLServiceQueryParameters qlQuery) {
+  protected QLService fetch(QLServiceQueryParameters qlQuery, String accountId) {
     Service service = persistence.get(Service.class, qlQuery.getServiceId());
     if (service == null) {
+      throw new InvalidRequestException("Service does not exist", WingsException.USER);
+    }
+
+    if (!service.getAccountId().equals(accountId)) {
       throw new InvalidRequestException("Service does not exist", WingsException.USER);
     }
 

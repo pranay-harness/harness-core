@@ -1323,7 +1323,7 @@ public class SecretManagerImpl implements SecretManager {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuId);
     Preconditions.checkNotNull(encryptedData, "No encrypted record found with id " + uuId);
     if (!usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, encryptedData.getUsageRestrictions())) {
-      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
+      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS, USER);
     }
 
     EncryptionType encryptionType = encryptedData.getEncryptionType();
@@ -1700,7 +1700,7 @@ public class SecretManagerImpl implements SecretManager {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuId);
     Preconditions.checkNotNull(encryptedData, "No encrypted record found with id " + uuId);
     if (!usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, encryptedData.getUsageRestrictions())) {
-      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
+      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS, USER);
     }
 
     List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class)

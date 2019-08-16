@@ -181,7 +181,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
     return ExecutionInput.newExecutionInput()
         .query(query)
         .dataLoaderRegistry(getDataLoaderRegistry())
-        .context(GraphQLContext.newContext().of("auth", userPermissionInfo, "accountId", accountId))
+        .context(GraphQLContext.newContext().of("accountId", accountId, "permissions", userPermissionInfo))
         .build();
   }
 }

@@ -759,7 +759,7 @@ public class SettingsServiceImpl implements SettingsService {
     String accountId = settingAttribute.getAccountId();
     if (!usageRestrictionsService.userHasPermissionsToChangeEntity(
             accountId, settingAttribute.getUsageRestrictions())) {
-      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
+      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS, USER);
     }
 
     ensureSettingAttributeSafeToDelete(settingAttribute);

@@ -23,7 +23,7 @@ public class ApplicationDataFetcher extends AbstractDataFetcher<QLApplication, Q
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
-  public QLApplication fetch(QLApplicationQueryParameters qlQuery) {
+  public QLApplication fetch(QLApplicationQueryParameters qlQuery, String accountId) {
     Application application = null;
     if (qlQuery.getApplicationId() != null) {
       application = persistence.get(Application.class, qlQuery.getApplicationId());

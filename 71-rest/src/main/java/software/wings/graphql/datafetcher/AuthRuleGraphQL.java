@@ -36,6 +36,7 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserRequestContext.UserRequestContextBuilder;
+import software.wings.security.UserRestrictionInfo;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
@@ -86,7 +87,7 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
       parameterTypes = new Class[] {java.lang.Object.class, DataLoader.class};
     } else {
       fetchMethod = "fetch";
-      parameterTypes = new Class[] {java.lang.Object.class};
+      parameterTypes = new Class[] {java.lang.Object.class, String.class};
     }
 
     try {
@@ -114,11 +115,13 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
       throw new WingsException(ErrorCode.ACCESS_DENIED);
     }
 
-    UserPermissionInfo userPermissionInfo = context.get("auth");
+    UserPermissionInfo userPermissionInfo = context.get("permissions");
     if (userPermissionInfo == null) {
       logger.error("No user permission info for the given api key");
       throw new WingsException(ErrorCode.ACCESS_DENIED);
     }
+
+    UserRestrictionInfo userRestrictionInfo = context.get("restrictions");
 
     String httpMethod;
     ResourceType resourceType;
@@ -153,8 +156,8 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
     boolean isScopedToApp = ResourceType.APPLICATION.equals(resourceType);
 
     if (isEmpty(permissionAttributes) || PermissionType.LOGGED_IN.equals(permissionAttribute.getPermissionType())) {
-      UserRequestContext userRequestContext =
-          buildUserRequestContext(userPermissionInfo, accountId, emptyAppIdsInReq, isScopedToApp, appIdsFromRequest);
+      UserRequestContext userRequestContext = buildUserRequestContext(
+          userPermissionInfo, userRestrictionInfo, accountId, emptyAppIdsInReq, isScopedToApp, appIdsFromRequest);
       user.setUserRequestContext(userRequestContext);
       UserThreadLocal.set(user);
       return dataFetcher;
@@ -165,8 +168,9 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
       throw new WingsException(ErrorCode.ACCESS_DENIED);
     }
 
-    UserRequestContext userRequestContext = buildUserRequestContext(userPermissionInfo, permissionAttributes, accountId,
-        emptyAppIdsInReq, httpMethod, appIdsFromRequest, false, isAccountLevelPermissions, isScopedToApp);
+    UserRequestContext userRequestContext =
+        buildUserRequestContext(userPermissionInfo, userRestrictionInfo, permissionAttributes, accountId,
+            emptyAppIdsInReq, httpMethod, appIdsFromRequest, false, isAccountLevelPermissions, isScopedToApp);
     user.setUserRequestContext(userRequestContext);
     UserThreadLocal.set(user);
 
@@ -289,11 +293,11 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
   }
 
   public UserRequestContext buildUserRequestContext(UserPermissionInfo userPermissionInfo,
-      List<PermissionAttribute> requiredPermissionAttributes, String accountId, boolean emptyAppIdsInReq,
-      String httpMethod, List<String> appIdsFromRequest, boolean skipAuth, boolean accountLevelPermissions,
-      boolean isScopeToApp) {
-    UserRequestContext userRequestContext =
-        buildUserRequestContext(userPermissionInfo, accountId, emptyAppIdsInReq, isScopeToApp, appIdsFromRequest);
+      UserRestrictionInfo userRestrictionInfo, List<PermissionAttribute> requiredPermissionAttributes, String accountId,
+      boolean emptyAppIdsInReq, String httpMethod, List<String> appIdsFromRequest, boolean skipAuth,
+      boolean accountLevelPermissions, boolean isScopeToApp) {
+    UserRequestContext userRequestContext = buildUserRequestContext(
+        userPermissionInfo, userRestrictionInfo, accountId, emptyAppIdsInReq, isScopeToApp, appIdsFromRequest);
 
     if (!accountLevelPermissions) {
       authHandler.setEntityIdFilterIfGet(httpMethod, skipAuth, requiredPermissionAttributes, userRequestContext,
@@ -302,12 +306,14 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
     return userRequestContext;
   }
 
-  private UserRequestContext buildUserRequestContext(UserPermissionInfo userPermissionInfo, String accountId,
-      boolean emptyAppIdsInReq, boolean isScopedToApp, List<String> appIdsFromRequest) {
+  private UserRequestContext buildUserRequestContext(UserPermissionInfo userPermissionInfo,
+      UserRestrictionInfo userRestrictionInfo, String accountId, boolean emptyAppIdsInReq, boolean isScopedToApp,
+      List<String> appIdsFromRequest) {
     UserRequestContextBuilder userRequestContextBuilder =
         UserRequestContext.builder().accountId(accountId).entityInfoMap(Maps.newHashMap());
 
     userRequestContextBuilder.userPermissionInfo(userPermissionInfo);
+    userRequestContextBuilder.userRestrictionInfo(userRestrictionInfo);
 
     if (isScopedToApp) {
       Set<String> allowedAppIds = authRuleFilter.getAllowedAppIds(userPermissionInfo);

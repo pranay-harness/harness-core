@@ -739,24 +739,12 @@ public class AuthServiceImpl implements AuthService {
 
   private UserRestrictionInfo getUserRestrictionInfoFromDB(
       String accountId, User user, UserPermissionInfo userPermissionInfo) {
-    UserRestrictionInfoBuilder userRestrictionInfoBuilder = UserRestrictionInfo.builder();
     List<UserGroup> userGroups = getUserGroups(accountId, user);
-    // Restrictions for update permissions
-    userRestrictionInfoBuilder.appEnvMapForUpdateAction(
-        usageRestrictionsService.getAppEnvMapFromUserPermissions(accountId, userPermissionInfo, UPDATE));
-    userRestrictionInfoBuilder.usageRestrictionsForUpdateAction(
-        usageRestrictionsService.getUsageRestrictionsFromUserPermissions(UPDATE, userGroups));
-
-    // Restrictions for read permissions
-    userRestrictionInfoBuilder.appEnvMapForReadAction(
-        usageRestrictionsService.getAppEnvMapFromUserPermissions(accountId, userPermissionInfo, READ));
-    userRestrictionInfoBuilder.usageRestrictionsForReadAction(
-        usageRestrictionsService.getUsageRestrictionsFromUserPermissions(READ, userGroups));
-
-    return userRestrictionInfoBuilder.build();
+    return getUserRestrictionInfoFromDB(accountId, userPermissionInfo, userGroups);
   }
 
-  private UserRestrictionInfo getUserRestrictionInfoFromDB(
+  @Override
+  public UserRestrictionInfo getUserRestrictionInfoFromDB(
       String accountId, UserPermissionInfo userPermissionInfo, List<UserGroup> userGroupList) {
     UserRestrictionInfoBuilder userRestrictionInfoBuilder = UserRestrictionInfo.builder();
 

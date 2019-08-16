@@ -628,7 +628,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     if (GLOBAL_APP_ID.equals(artifactStream.fetchAppId())) {
       if (!usageRestrictionsService.userHasPermissionsToChangeEntity(
               accountId, settingsService.getUsageRestrictionsForSettingId(artifactStream.getSettingId()))) {
-        throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
+        throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS, USER);
       }
       ensureArtifactStreamSafeToDelete(GLOBAL_APP_ID, artifactStreamId, accountId);
     }
@@ -655,7 +655,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         accountId = settingsService.fetchAccountIdBySettingId(artifactStream.getSettingId());
         if (!usageRestrictionsService.userHasPermissionsToChangeEntity(
                 accountId, settingsService.getUsageRestrictionsForSettingId(artifactStream.getSettingId()))) {
-          throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
+          throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS, USER);
         }
       }
     }

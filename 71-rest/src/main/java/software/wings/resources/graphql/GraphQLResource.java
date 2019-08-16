@@ -33,12 +33,14 @@ import software.wings.graphql.provider.QueryLanguageProvider;
 import software.wings.graphql.utils.GraphQLConstants;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserPermissionInfo;
+import software.wings.security.UserRequestContext;
+import software.wings.security.UserRestrictionInfo;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.service.impl.security.auth.AuthHandler;
-import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ApiKeyService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
 
 import java.time.Duration;
@@ -67,21 +69,21 @@ public class GraphQLResource {
   FeatureFlagService featureFlagService;
   ApiKeyService apiKeyService;
   AuthHandler authHandler;
-  AccountService accountService;
+  AuthService authService;
   PremiumFeature restApiFeature;
   DataLoaderRegistryHelper dataLoaderRegistryHelper;
   @Inject
   public GraphQLResource(@NotNull QueryLanguageProvider<GraphQL> queryLanguageProvider,
       @NotNull FeatureFlagService featureFlagService, @NotNull ApiKeyService apiKeyService,
       @NotNull AuthHandler authHandler, DataLoaderRegistryHelper dataLoaderRegistryHelper,
-      @NotNull AccountService accountService, @Named(RestApiFeature.FEATURE_NAME) PremiumFeature restApiFeature) {
+      @NotNull AuthService authService, @Named(RestApiFeature.FEATURE_NAME) PremiumFeature restApiFeature) {
     this.privateGraphQL = queryLanguageProvider.getPrivateGraphQL();
     this.publicGraphQL = queryLanguageProvider.getPublicGraphQL();
     this.featureFlagService = featureFlagService;
     this.apiKeyService = apiKeyService;
     this.authHandler = authHandler;
     this.dataLoaderRegistryHelper = dataLoaderRegistryHelper;
-    this.accountService = accountService;
+    this.authService = authService;
     this.restApiFeature = restApiFeature;
     requestRateLimiter = new InMemorySlidingWindowRequestRateLimiter(Collections.singleton(
         RequestLimitRule.of(Duration.ofMinutes(RATE_LIMIT_DURATION_IN_MINUTE), RATE_LIMIT_QUERY_PER_MINUTE)));
@@ -141,11 +143,13 @@ public class GraphQLResource {
     String accountId;
     boolean hasUserContext = false;
     UserPermissionInfo userPermissionInfo = null;
+    UserRestrictionInfo userRestrictionInfo = null;
     if (apiKey == null || (accountId = apiKeyService.getAccountIdFromApiKey(apiKey)) == null) {
       User user = UserThreadLocal.get();
       if (user != null) {
         accountId = user.getUserRequestContext().getAccountId();
         userPermissionInfo = user.getUserRequestContext().getUserPermissionInfo();
+        userRestrictionInfo = user.getUserRequestContext().getUserRestrictionInfo();
         hasUserContext = true;
       } else {
         logger.info(GraphQLConstants.INVALID_API_KEY);
@@ -172,17 +176,19 @@ public class GraphQLResource {
       } else {
         graphQL = publicGraphQL;
       }
-      if (hasUserContext && userPermissionInfo != null) {
-        executionResult =
-            graphQL.execute(getExecutionInput(userPermissionInfo, accountId, graphQLQuery, dataLoaderRegistryHelper));
+      if (hasUserContext) {
+        executionResult = graphQL.execute(getExecutionInput(
+            userPermissionInfo, userRestrictionInfo, accountId, graphQLQuery, dataLoaderRegistryHelper));
       } else {
         ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(apiKey, accountId, true);
         if (apiKeyEntry == null) {
           executionResult = getExecutionResultWithError(GraphQLConstants.INVALID_API_KEY);
         } else {
           userPermissionInfo = authHandler.evaluateUserPermissionInfo(accountId, apiKeyEntry.getUserGroups(), null);
-          executionResult =
-              graphQL.execute(getExecutionInput(userPermissionInfo, accountId, graphQLQuery, dataLoaderRegistryHelper));
+          userRestrictionInfo =
+              authService.getUserRestrictionInfoFromDB(accountId, userPermissionInfo, apiKeyEntry.getUserGroups());
+          executionResult = graphQL.execute(getExecutionInput(
+              userPermissionInfo, userRestrictionInfo, accountId, graphQLQuery, dataLoaderRegistryHelper));
         }
       }
     } catch (Exception ex) {
@@ -208,12 +214,12 @@ public class GraphQLResource {
 
   private Map<String, Object> executeInternal(GraphQLQuery graphQLQuery) {
     String accountId;
-    boolean hasUserContext = false;
-    UserPermissionInfo userPermissionInfo = null;
+    boolean hasUserContext;
+    UserRequestContext userRequestContext;
     User user = UserThreadLocal.get();
     if (user != null) {
       accountId = user.getUserRequestContext().getAccountId();
-      userPermissionInfo = user.getUserRequestContext().getUserPermissionInfo();
+      userRequestContext = user.getUserRequestContext();
       hasUserContext = true;
     } else {
       throw new WingsException(INVALID_TOKEN, USER_ADMIN);
@@ -227,9 +233,9 @@ public class GraphQLResource {
     ExecutionResult executionResult;
     try {
       GraphQL graphQL = privateGraphQL;
-      if (hasUserContext && userPermissionInfo != null) {
-        executionResult =
-            graphQL.execute(getExecutionInput(userPermissionInfo, accountId, graphQLQuery, dataLoaderRegistryHelper));
+      if (hasUserContext && userRequestContext != null) {
+        executionResult = graphQL.execute(getExecutionInput(userRequestContext.getUserPermissionInfo(),
+            userRequestContext.getUserRestrictionInfo(), accountId, graphQLQuery, dataLoaderRegistryHelper));
       } else {
         throw new WingsException(INVALID_TOKEN, USER_ADMIN);
       }
@@ -246,14 +252,16 @@ public class GraphQLResource {
         .build();
   }
 
-  private ExecutionInput getExecutionInput(UserPermissionInfo userPermissionInfo, String accountId,
-      GraphQLQuery graphQLQuery, DataLoaderRegistryHelper dataLoaderRegistryHelper) {
+  private ExecutionInput getExecutionInput(UserPermissionInfo userPermissionInfo,
+      UserRestrictionInfo userRestrictionInfo, String accountId, GraphQLQuery graphQLQuery,
+      DataLoaderRegistryHelper dataLoaderRegistryHelper) {
     return ExecutionInput.newExecutionInput()
         .query(graphQLQuery.getQuery())
         .variables(graphQLQuery.getVariables() == null ? Maps.newHashMap() : graphQLQuery.getVariables())
         .operationName(graphQLQuery.getOperationName())
         .dataLoaderRegistry(dataLoaderRegistryHelper.getDataLoaderRegistry())
-        .context(GraphQLContext.newContext().of("auth", userPermissionInfo, "accountId", accountId))
+        .context(GraphQLContext.newContext().of(
+            "accountId", accountId, "permissions", userPermissionInfo, "restrictions", userRestrictionInfo))
         .build();
   }
 }
