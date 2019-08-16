@@ -572,4 +572,22 @@ public class AccountServiceTest extends WingsBaseTest {
     account = accountService.get(account.getUuid());
     assertEquals(Sets.newHashSet("harness.io"), account.getWhitelistedDomains());
   }
+
+  @Test
+  @Category(UnitTests.class)
+  public void test_updateAccountName() {
+    String companyName = "CompanyName 1";
+    Account account = accountService.save(anAccount()
+                                              .withCompanyName(companyName)
+                                              .withAccountName("Account Name 1")
+                                              .withAccountKey("ACCOUNT_KEY")
+                                              .withLicenseInfo(getLicenseInfo())
+                                              .withWhitelistedDomains(new HashSet<>())
+                                              .build());
+    String newAccountName = "New Account Name";
+    accountService.updateAccountName(account.getUuid(), newAccountName, null);
+    account = accountService.get(account.getUuid());
+    assertEquals(newAccountName, account.getAccountName());
+    assertEquals(companyName, account.getCompanyName());
+  }
 }

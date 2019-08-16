@@ -63,7 +63,6 @@ import software.wings.scheduler.LimitVicinityCheckerJob;
 import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -379,7 +378,8 @@ public class AccountExportImportResource {
   public RestResponse<ImportStatusReport> importAccountData(@QueryParam("accountId") final String accountId,
       @QueryParam("mode") @DefaultValue("UPSERT") ImportMode importMode,
       @QueryParam("disableSchemaCheck") boolean disableSchemaCheck, @QueryParam("adminUser") String adminUserEmail,
-      @QueryParam("adminPassword") String adminPassword, @FormDataParam("file") final InputStream uploadInputStream)
+      @QueryParam("adminPassword") String adminPassword, @QueryParam("accountName") String newAccountName,
+      @QueryParam("companyName") String newCompanyName, @FormDataParam("file") final InputStream uploadInputStream)
       throws Exception {
     // Only if the user the account administrator or in the Harness user group can perform the export operation.
     if (!userService.isAccountAdmin(accountId)) {
@@ -495,14 +495,11 @@ public class AccountExportImportResource {
     if (!StringUtils.isEmpty(adminUserEmail) && !StringUtils.isEmpty(adminPassword)) {
       updateAdminUserPassword(accountId, adminUserEmail, adminPassword);
     }
-    // If user account is using LDAP, change it to USER_PASSWORD till the delegate has been setup in the migrated
-    // account/cluster.
-    account = accountService.get(accountId);
-    if (AuthenticationMechanism.LDAP.equals(account.getAuthenticationMechanism())) {
-      accountService.setAuthenticationMechanism(accountId, AuthenticationMechanism.USER_PASSWORD);
-      logger.info(
-          "Changed account {}'s authentication mechanism from LDAP to USER_PASSWORD till new delegate has been setup in the migrated account.",
-          accountId);
+
+    // PL-3126: When the 'accountName' query parameter is provided, it means the account name need to be renamed at
+    // account migration/import time.
+    if (isNotEmpty(newAccountName)) {
+      accountService.updateAccountName(accountId, newAccountName, newCompanyName);
     }
 
     // 10. Reinstantiate Quartz jobs (recreate through APIs) in the new cluster

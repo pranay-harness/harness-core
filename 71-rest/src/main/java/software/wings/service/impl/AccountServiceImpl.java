@@ -845,12 +845,6 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
-  public String getMigratedToClusterUrl(String accountId) {
-    Account account = getFromCacheWithFallback(accountId);
-    return account == null ? null : account.getMigratedToClusterUrl();
-  }
-
-  @Override
   public boolean isCommunityAccount(String accountId) {
     return getAccountType(accountId).map(AccountType::isCommunity).orElse(false);
   }
@@ -1304,6 +1298,19 @@ public class AccountServiceImpl implements AccountService {
     setUnset(whitelistedDomainsUpdateOperations, AccountKeys.whitelistedDomains, trimmedWhitelistedDomains);
     wingsPersistence.update(wingsPersistence.createQuery(Account.class).filter(Mapper.ID_KEY, accountId),
         whitelistedDomainsUpdateOperations);
+    return get(accountId);
+  }
+
+  @Override
+  public Account updateAccountName(String accountId, String accountName, String companyName) {
+    notNullCheck("Account name can not be set to null!", accountName);
+    UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class);
+    updateOperations.set(AccountKeys.accountName, accountName);
+    if (isNotEmpty(companyName)) {
+      updateOperations.set(AccountKeys.companyName, companyName);
+    }
+    wingsPersistence.update(
+        wingsPersistence.createQuery(Account.class).filter(Mapper.ID_KEY, accountId), updateOperations);
     return get(accountId);
   }
 

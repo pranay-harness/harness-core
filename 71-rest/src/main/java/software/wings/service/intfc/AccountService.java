@@ -121,13 +121,13 @@ public interface AccountService {
    */
   boolean isAccountMigrated(String accountId);
 
-  String getMigratedToClusterUrl(String accountId);
-
   boolean isCommunityAccount(String accountId);
 
   Set<String> getWhitelistedDomains(String accountId);
 
   Account updateWhitelistedDomains(String accountId, Set<String> whitelistedDomains);
+
+  Account updateAccountName(String accountId, String accountName, String companyName);
 
   AccountSettingsResponse getAuthSettingsByAccountId(String accountId);
 
