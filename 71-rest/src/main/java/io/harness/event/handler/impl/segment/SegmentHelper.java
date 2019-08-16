@@ -2,7 +2,6 @@ package io.harness.event.handler.impl.segment;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.event.handler.impl.Constants.EMAIL_ID;
 import static io.harness.event.model.EventConstants.ACCOUNT_STATUS;
 import static io.harness.event.model.EventConstants.COMPANY_NAME;
 import static io.harness.event.model.EventConstants.DAYS_LEFT_IN_TRIAL;
@@ -54,7 +53,7 @@ public class SegmentHelper {
     }
 
     Map<String, String> traits = new HashMap<>();
-    traits.put(EMAIL_ID, email);
+    traits.put("email", email);
     traits.put(FIRST_NAME, utils.getFirstName(userName, email));
     traits.put(LAST_NAME, utils.getLastName(userName, email));
 
