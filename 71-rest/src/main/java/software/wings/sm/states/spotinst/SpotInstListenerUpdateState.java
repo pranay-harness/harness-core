@@ -21,8 +21,8 @@ import lombok.Setter;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
+import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.Environment;
-import software.wings.beans.SpotInstInfrastructureMapping;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
@@ -85,9 +85,8 @@ public class SpotInstListenerUpdateState extends State {
 
     Environment env = workflowStandardParams.getEnv();
     Application app = appService.get(context.getAppId());
-    SpotInstInfrastructureMapping spotInstInfrastructureMapping =
-        (SpotInstInfrastructureMapping) infrastructureMappingService.get(
-            app.getUuid(), phaseElement.getInfraMappingId());
+    AwsAmiInfrastructureMapping awsAmiInfrastructureMapping =
+        (AwsAmiInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
 
     // retrieve SpotInstSetupContextElement
     SpotInstSetupContextElement spotInstSetupContextElement =
@@ -106,17 +105,17 @@ public class SpotInstListenerUpdateState extends State {
         geStateExecutionData(spotInstSetupContextElement, activity);
 
     SpotInstTaskParameters spotInstTaskParameters =
-        getTaskParameters(context, app, activity.getUuid(), spotInstInfrastructureMapping, spotInstSetupContextElement);
+        getTaskParameters(context, app, activity.getUuid(), awsAmiInfrastructureMapping, spotInstSetupContextElement);
 
     // Generate CommandRequest to be sent to delegate
     SpotInstCommandRequestBuilder requestBuilder =
-        spotInstStateHelper.generateSpotInstCommandRequest(spotInstInfrastructureMapping, context);
+        spotInstStateHelper.generateSpotInstCommandRequest(awsAmiInfrastructureMapping, context);
     SpotInstCommandRequest spotInstCommandRequest =
         requestBuilder.spotInstTaskParameters(spotInstTaskParameters).build();
 
     stateExecutionData.setSpotinstCommandRequest(spotInstCommandRequest);
     DelegateTask task = spotInstStateHelper.getDelegateTask(app.getAccountId(), app.getUuid(),
-        TaskType.SPOTINST_COMMAND_TASK, activity.getUuid(), env.getUuid(), spotInstInfrastructureMapping.getUuid(),
+        TaskType.SPOTINST_COMMAND_TASK, activity.getUuid(), env.getUuid(), awsAmiInfrastructureMapping.getUuid(),
         new Object[] {spotInstCommandRequest},
         spotInstStateHelper.generateTimeOutForDelegateTask(spotInstTaskParameters.getTimeoutIntervalInMin()));
 
@@ -151,14 +150,14 @@ public class SpotInstListenerUpdateState extends State {
   }
 
   protected SpotInstSwapRoutesTaskParameters getTaskParameters(ExecutionContext context, Application app,
-      String activityId, SpotInstInfrastructureMapping spotInstInfrastructureMapping,
+      String activityId, AwsAmiInfrastructureMapping awsAmiInfrastructureMapping,
       SpotInstSetupContextElement setupContextElement) {
     SpotInstCommandRequest commandRequest = setupContextElement.getCommandRequest();
     return SpotInstSwapRoutesTaskParameters.builder()
         .accountId(app.getAccountId())
         .appId(app.getAppId())
         .activityId(activityId)
-        .awsRegion(spotInstInfrastructureMapping.getAwsRegion())
+        .awsRegion(awsAmiInfrastructureMapping.getRegion())
         .commandName(SPOTINST_LISTENER_UPDATE_COMMAND)
         .workflowExecutionId(context.getWorkflowExecutionId())
         .downsizeOldElastiGroup(downsizeOldElastiGroup)

@@ -9,6 +9,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.joor.Reflect.on;
 import static software.wings.beans.InfrastructureMappingType.AWS_ECS;
+import static software.wings.beans.PhaseStepType.AMI_AUTOSCALING_GROUP_SETUP;
 import static software.wings.beans.PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP;
 import static software.wings.beans.PhaseStepType.AMI_SWITCH_AUTOSCALING_GROUP_ROUTES;
 import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
@@ -433,7 +434,8 @@ public enum StateType implements StateTypeDescriptor {
       Lists.newArrayList(InfrastructureMappingType.AWS_AWS_LAMBDA), asList(DEPLOY_AWS_LAMBDA), ORCHESTRATION_STENCILS),
 
   AWS_AMI_SERVICE_SETUP(AwsAmiServiceSetup.class, CLOUD, AMI_SETUP_COMMAND_NAME,
-      Lists.newArrayList(InfrastructureMappingType.AWS_AMI), asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
+      Lists.newArrayList(InfrastructureMappingType.AWS_AMI), asList(AMI_AUTOSCALING_GROUP_SETUP),
+      ORCHESTRATION_STENCILS),
 
   AWS_AMI_SERVICE_DEPLOY(AwsAmiServiceDeployState.class, COMMANDS, UPGRADE_AUTOSCALING_GROUP,
       Lists.newArrayList(InfrastructureMappingType.AWS_AMI), asList(AMI_DEPLOY_AUTOSCALING_GROUP),
@@ -455,21 +457,21 @@ public enum StateType implements StateTypeDescriptor {
       asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
   SPOTINST_SETUP(SpotInstServiceSetup.class, SPOTINST, WorkflowServiceHelper.SPOTINST_SETUP,
-      asList(InfrastructureMappingType.SPOTINST), asList(PhaseStepType.SPOTINST_SETUP), ORCHESTRATION_STENCILS),
+      asList(InfrastructureMappingType.AWS_AMI), asList(PhaseStepType.SPOTINST_SETUP), ORCHESTRATION_STENCILS),
 
   SPOTINST_DEPLOY(SpotInstDeployState.class, SPOTINST, WorkflowServiceHelper.SPOTINST_DEPLOY,
-      asList(InfrastructureMappingType.SPOTINST), asList(PhaseStepType.SPOTINST_DEPLOY), ORCHESTRATION_STENCILS),
-
-  SPOTINST_ROLLBACK(SpotInstRollbackState.class, SPOTINST, WorkflowServiceHelper.SPOTINST_ROLLBACK,
-      asList(InfrastructureMappingType.SPOTINST), asList(PhaseStepType.SPOTINST_DEPLOY), ORCHESTRATION_STENCILS),
-
-  SPOTINST_LISTENER_UPDATE_ROLLBACK(SpotInstListenerUpdateRollbackState.class, SPOTINST,
-      WorkflowServiceHelper.SPOTINST_LISTENER_UPDATE_ROLLBACK, asList(InfrastructureMappingType.SPOTINST),
-      asList(PhaseStepType.SPOTINST_LISTENER_UPDATE), ORCHESTRATION_STENCILS),
+      asList(InfrastructureMappingType.AWS_AMI), asList(PhaseStepType.SPOTINST_DEPLOY), ORCHESTRATION_STENCILS),
 
   SPOTINST_LISTENER_UPDATE(SpotInstListenerUpdateState.class, SPOTINST, WorkflowServiceHelper.SPOTINST_LISTENER_UPDATE,
-      asList(InfrastructureMappingType.SPOTINST), asList(PhaseStepType.SPOTINST_LISTENER_UPDATE),
+      asList(InfrastructureMappingType.AWS_AMI), asList(PhaseStepType.SPOTINST_LISTENER_UPDATE),
       ORCHESTRATION_STENCILS),
+
+  SPOTINST_ROLLBACK(SpotInstRollbackState.class, SPOTINST, WorkflowServiceHelper.SPOTINST_ROLLBACK,
+      asList(InfrastructureMappingType.AWS_AMI), asList(PhaseStepType.SPOTINST_ROLLBACK), ORCHESTRATION_STENCILS),
+
+  SPOTINST_LISTENER_UPDATE_ROLLBACK(SpotInstListenerUpdateRollbackState.class, SPOTINST,
+      WorkflowServiceHelper.SPOTINST_LISTENER_UPDATE_ROLLBACK, asList(InfrastructureMappingType.AWS_AMI),
+      asList(PhaseStepType.SPOTINST_LISTENER_UPDATE_ROLLBACK), ORCHESTRATION_STENCILS),
 
   ECS_SERVICE_SETUP_ROLLBACK(EcsSetupRollback.class, ECS, StateType.ROLLBACK_ECS_SETUP, Lists.newArrayList(AWS_ECS),
       asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),

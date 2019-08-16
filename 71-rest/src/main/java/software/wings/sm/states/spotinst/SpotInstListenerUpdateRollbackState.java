@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.delegate.task.spotinst.request.SpotInstSwapRoutesTaskParameters;
 
 import software.wings.beans.Application;
-import software.wings.beans.SpotInstInfrastructureMapping;
+import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 
@@ -17,10 +17,10 @@ public class SpotInstListenerUpdateRollbackState extends SpotInstListenerUpdateS
 
   @Override
   protected SpotInstSwapRoutesTaskParameters getTaskParameters(ExecutionContext context, Application app,
-      String activityId, SpotInstInfrastructureMapping spotInstInfrastructureMapping,
+      String activityId, AwsAmiInfrastructureMapping awsAmiInfrastructureMapping,
       SpotInstSetupContextElement setupContextElement) {
     SpotInstSwapRoutesTaskParameters taskParameters =
-        super.getTaskParameters(context, app, activityId, spotInstInfrastructureMapping, setupContextElement);
+        super.getTaskParameters(context, app, activityId, awsAmiInfrastructureMapping, setupContextElement);
     taskParameters.setNewElastiGroup(spotInstStateHelper.prepareNewElastiGroupConfigForRollback(setupContextElement));
     taskParameters.setOldElastiGroup(spotInstStateHelper.prepareOldElastiGroupConfigForRollback(setupContextElement));
     return taskParameters;
