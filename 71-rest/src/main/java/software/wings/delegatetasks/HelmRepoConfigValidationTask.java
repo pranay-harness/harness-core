@@ -26,12 +26,15 @@ import software.wings.delegatetasks.helm.HelmTaskHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @Slf4j
 public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
+  private static final String WORKING_DIR_BASE = "./repository/helm-validation/";
+
   @Inject private EncryptionService encryptionService;
   @Inject private HelmTaskHelper helmTaskHelper;
 
@@ -70,18 +73,21 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
     List<EncryptedDataDetail> encryptedDataDetails = taskParams.getEncryptedDataDetails();
     encryptionService.decrypt(helmRepoConfig, encryptedDataDetails);
 
+    String workingDirectory = helmTaskHelper.createNewDirectoryAtPath(Paths.get(WORKING_DIR_BASE).toString());
+    helmTaskHelper.initHelm(workingDirectory);
     String repoName = convertBase64UuidToCanonicalForm(generateUuid());
+
     switch (helmRepoConfig.getSettingType()) {
       case HTTP_HELM_REPO:
-        tryAddingHttpHelmRepo(helmRepoConfig, repoName, taskParams.getRepoDisplayName());
+        tryAddingHttpHelmRepo(helmRepoConfig, repoName, taskParams.getRepoDisplayName(), workingDirectory);
         break;
 
       case AMAZON_S3_HELM_REPO:
-        tryAddingAmazonS3HelmRepo(helmRepoConfig, repoName, taskParams);
+        tryAddingAmazonS3HelmRepo(helmRepoConfig, repoName, taskParams, workingDirectory);
         break;
 
       case GCS_HELM_REPO:
-        tryAddingGCSHelmRepo(helmRepoConfig, repoName, taskParams);
+        tryAddingGCSHelmRepo(helmRepoConfig, repoName, taskParams, workingDirectory);
         break;
 
       default:
@@ -89,32 +95,33 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
         throw new WingsException("Unhandled type of helm repo config. Type : " + helmRepoConfig.getSettingType());
     }
 
-    helmTaskHelper.removeRepo(repoName);
+    helmTaskHelper.removeRepo(repoName, workingDirectory);
+    helmTaskHelper.cleanup(workingDirectory);
   }
 
-  private void tryAddingGCSHelmRepo(
-      HelmRepoConfig helmRepoConfig, String repoName, HelmRepoConfigValidationTaskParams taskParams) throws Exception {
+  private void tryAddingGCSHelmRepo(HelmRepoConfig helmRepoConfig, String repoName,
+      HelmRepoConfigValidationTaskParams taskParams, String workingDirectory) throws Exception {
     GcpConfig gcpConfig = (GcpConfig) taskParams.getConnectorConfig();
     List<EncryptedDataDetail> connectorEncryptedDataDetails = taskParams.getConnectorEncryptedDataDetails();
     encryptionService.decrypt(gcpConfig, connectorEncryptedDataDetails);
 
-    helmTaskHelper.addHelmRepo(helmRepoConfig, gcpConfig, repoName, taskParams.getRepoDisplayName());
+    helmTaskHelper.addHelmRepo(helmRepoConfig, gcpConfig, repoName, taskParams.getRepoDisplayName(), workingDirectory);
   }
 
-  private void tryAddingHttpHelmRepo(HelmRepoConfig helmRepoConfig, String repoName, String repoDisplayName)
-      throws Exception {
+  private void tryAddingHttpHelmRepo(HelmRepoConfig helmRepoConfig, String repoName, String repoDisplayName,
+      String workingDirectory) throws Exception {
     HttpHelmRepoConfig httpHelmRepoConfig = (HttpHelmRepoConfig) helmRepoConfig;
 
     helmTaskHelper.addRepo(repoName, repoDisplayName, httpHelmRepoConfig.getChartRepoUrl(),
-        httpHelmRepoConfig.getUsername(), httpHelmRepoConfig.getPassword(), null);
+        httpHelmRepoConfig.getUsername(), httpHelmRepoConfig.getPassword(), workingDirectory);
   }
 
-  private void tryAddingAmazonS3HelmRepo(
-      HelmRepoConfig helmRepoConfig, String repoName, HelmRepoConfigValidationTaskParams taskParams) throws Exception {
+  private void tryAddingAmazonS3HelmRepo(HelmRepoConfig helmRepoConfig, String repoName,
+      HelmRepoConfigValidationTaskParams taskParams, String workingDirectory) throws Exception {
     AwsConfig awsConfig = (AwsConfig) taskParams.getConnectorConfig();
     List<EncryptedDataDetail> connectorEncryptedDataDetails = taskParams.getConnectorEncryptedDataDetails();
     encryptionService.decrypt(awsConfig, connectorEncryptedDataDetails);
 
-    helmTaskHelper.addHelmRepo(helmRepoConfig, awsConfig, repoName, taskParams.getRepoDisplayName());
+    helmTaskHelper.addHelmRepo(helmRepoConfig, awsConfig, repoName, taskParams.getRepoDisplayName(), workingDirectory);
   }
 }
