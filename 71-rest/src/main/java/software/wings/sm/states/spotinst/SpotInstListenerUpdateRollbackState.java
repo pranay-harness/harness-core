@@ -3,9 +3,8 @@ package software.wings.sm.states.spotinst;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.task.spotinst.request.SpotInstSwapRoutesTaskParameters;
-
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.sm.ExecutionContext;
@@ -26,16 +25,19 @@ public class SpotInstListenerUpdateRollbackState extends SpotInstListenerUpdateS
     return taskParameters;
   }
 
-  /**
-   * Instantiates a new state.
-   *
-   * @param name      the name
-   */
   public SpotInstListenerUpdateRollbackState(String name) {
     super(name, StateType.SPOTINST_LISTENER_UPDATE_ROLLBACK.name());
   }
 
+  @Override
+  @SchemaIgnore
   public boolean isRollback() {
     return true;
+  }
+
+  @Override
+  @SchemaIgnore
+  public boolean isDownsizeOldElastiGroup() {
+    return super.isDownsizeOldElastiGroup();
   }
 }
