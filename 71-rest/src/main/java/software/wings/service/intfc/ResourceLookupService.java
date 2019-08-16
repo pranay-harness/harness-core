@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import software.wings.audit.EntityAuditRecord;
+import software.wings.beans.EntityType;
 import software.wings.beans.ResourceLookup;
 
 import java.util.List;
@@ -45,4 +46,7 @@ public interface ResourceLookupService {
 
   PageResponse<ResourceLookup> listResourceLookupRecordsWithTags(
       String accountId, String filter, String limit, String offset);
+
+  <T> PageResponse<T> listWithTagFilters(
+      PageRequest<T> request, String filter, EntityType entityType, boolean withTags);
 }

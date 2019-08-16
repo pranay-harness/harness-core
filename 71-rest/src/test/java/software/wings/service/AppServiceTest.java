@@ -68,6 +68,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
@@ -127,6 +128,8 @@ public class AppServiceTest extends WingsBaseTest {
 
   @Mock private BackgroundJobScheduler backgroundJobScheduler;
   @Mock private ServiceJobScheduler serviceJobScheduler;
+
+  @Inject @InjectMocks ResourceLookupService resourceLookupService;
 
   /**
    * Sets up.

@@ -35,8 +35,9 @@ public class CommandStateEnumDataProvider implements DataProvider {
         return Maps.newHashMap();
       }
       if (isEmpty(serviceId)) {
-        services = serviceResourceService.list(aPageRequest().addFilter("appId", EQ, appId).build(), false, true)
-                       .getResponse();
+        services =
+            serviceResourceService.list(aPageRequest().addFilter("appId", EQ, appId).build(), false, true, false, null)
+                .getResponse();
       } else {
         Service service = serviceResourceService.get(appId, serviceId, true);
         services = service == null ? Collections.EMPTY_LIST : Collections.singletonList(service);

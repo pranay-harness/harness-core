@@ -217,6 +217,7 @@ import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
@@ -347,6 +348,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Inject private Queue<PruneEvent> pruneQueue;
   @Inject private HarnessTagService harnessTagService;
+  @Inject private ResourceLookupService resourceLookupService;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
@@ -573,15 +575,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
    */
   @Override
   public PageResponse<Workflow> listWorkflows(PageRequest<Workflow> pageRequest) {
-    return listWorkflows(pageRequest, 0);
+    return listWorkflows(pageRequest, 0, false, null);
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public PageResponse<Workflow> listWorkflows(PageRequest<Workflow> pageRequest, Integer previousExecutionsCount) {
-    PageResponse<Workflow> workflows = listWorkflowsWithoutOrchestration(pageRequest);
+  public PageResponse<Workflow> listWorkflows(
+      PageRequest<Workflow> pageRequest, Integer previousExecutionsCount, boolean withTags, String tagFilter) {
+    PageResponse<Workflow> workflows =
+        resourceLookupService.listWithTagFilters(pageRequest, tagFilter, EntityType.WORKFLOW, withTags);
+
     if (workflows != null && workflows.getResponse() != null) {
       for (Workflow workflow : workflows.getResponse()) {
         try {

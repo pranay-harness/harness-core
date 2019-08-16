@@ -71,11 +71,12 @@ public class EnvironmentResource {
   @Timed
   @ExceptionMetered
   public RestResponse<PageResponse<Environment>> list(@QueryParam("appId") String appId,
-      @BeanParam PageRequest<Environment> pageRequest, @QueryParam("details") @DefaultValue("true") boolean details) {
+      @BeanParam PageRequest<Environment> pageRequest, @QueryParam("details") @DefaultValue("true") boolean details,
+      @QueryParam("tagFilter") String tagFilter, @QueryParam("withTags") @DefaultValue("false") boolean withTags) {
     if (appId != null) {
       pageRequest.addFilter("appId", EQ, appId);
     }
-    return new RestResponse<>(environmentService.list(pageRequest, details));
+    return new RestResponse<>(environmentService.list(pageRequest, details, withTags, tagFilter));
   }
 
   /**

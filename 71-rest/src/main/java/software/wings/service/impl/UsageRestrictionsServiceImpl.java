@@ -572,7 +572,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
                                                                  .addFilter("accountId", EQ, accountId)
                                                                  .addFieldsIncluded("_id", "name")
                                                                  .build(),
-        false);
+        false, false, null);
 
     Map<String, String> appMap =
         pageResponse.getResponse().stream().collect(Collectors.toMap(app -> app.getUuid(), app -> app.getName()));
@@ -591,7 +591,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
                                     .addFilter("appId", Operator.IN, appMap.keySet().toArray(new String[0]))
                                     .addFieldsIncluded("_id", "name")
                                     .build(),
-            false);
+            false, false, null);
 
     Map<String, String> envMap =
         envPageResponse.getResponse().stream().collect(Collectors.toMap(env -> env.getUuid(), env -> env.getName()));

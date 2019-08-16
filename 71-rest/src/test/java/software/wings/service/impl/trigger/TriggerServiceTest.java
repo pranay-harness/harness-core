@@ -220,7 +220,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     Trigger trigger = triggerService.save(artifactConditionTrigger);
     assertThat(trigger).isNotNull();
     PageRequest<Trigger> pageRequest = new PageRequest<>();
-    PageResponse<Trigger> triggers = triggerService.list(pageRequest);
+    PageResponse<Trigger> triggers = triggerService.list(pageRequest, false, null);
     assertThat(triggers.size()).isEqualTo(1);
   }
 

@@ -13,7 +13,6 @@ import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.persistence.NameAccess;
-import io.harness.tags.TagAware;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,6 +24,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
 import software.wings.beans.entityinterface.KeywordsAware;
+import software.wings.beans.entityinterface.TagAware;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;
@@ -73,6 +73,7 @@ public class Pipeline extends Base implements KeywordsAware, NameAccess, TagAwar
   @SchemaIgnore private Set<String> keywords;
   @Indexed private String accountId;
   private boolean sample;
+  private transient List<HarnessTagLink> tagLinks;
 
   @Builder
   public Pipeline(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,

@@ -50,6 +50,7 @@ import software.wings.api.TerraformExecutionData;
 import software.wings.beans.BlueprintProperty;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.CloudFormationSourceType;
+import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
@@ -88,6 +89,7 @@ import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.LogService;
+import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.aws.manager.AwsCFHelperServiceManager;
@@ -132,6 +134,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Inject private LimitCheckerFactory limitCheckerFactory;
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private HarnessTagService harnessTagService;
+  @Inject private ResourceLookupService resourceLookupService;
 
   @Override
   @ValidationGroups(Create.class)
@@ -231,7 +234,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
             .uuid(provisioner.getUuid())
             .name(provisioner.getName())
             .description(provisioner.getDescription())
-            .infrastructureProvisionerType(provisioner.getInfrastructureProvisionerType());
+            .infrastructureProvisionerType(provisioner.getInfrastructureProvisionerType())
+            .tagLinks(provisioner.getTagLinks());
 
     if (provisioner instanceof TerraformInfrastructureProvisioner) {
       final TerraformInfrastructureProvisioner terraformInfrastructureProvisioner =
@@ -268,9 +272,9 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
   @Override
   public PageResponse<InfrastructureProvisionerDetails> listDetails(
-      PageRequest<InfrastructureProvisioner> pageRequest) {
+      PageRequest<InfrastructureProvisioner> pageRequest, boolean withTags, String tagFilter) {
     return aPageResponse()
-        .withResponse(wingsPersistence.query(InfrastructureProvisioner.class, pageRequest)
+        .withResponse(resourceLookupService.listWithTagFilters(pageRequest, tagFilter, EntityType.PROVISIONER, withTags)
                           .stream()
                           .map(item -> details(item))
                           .collect(toList()))

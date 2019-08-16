@@ -28,15 +28,8 @@ public interface PipelineService extends OwnedByApplication {
    */
   PageResponse<Pipeline> listPipelines(PageRequest<Pipeline> pageRequest);
 
-  /**
-   * List pipelines page response.
-   *
-   * @param pageRequest the page request
-   * @param withDetails with details
-   * @return the page response
-   */
-  PageResponse<Pipeline> listPipelines(
-      PageRequest<Pipeline> pageRequest, boolean withDetails, Integer previousExecutionsCount);
+  PageResponse<Pipeline> listPipelines(PageRequest<Pipeline> pageRequest, boolean withDetails,
+      Integer previousExecutionsCount, boolean withTags, String tagFilter);
 
   /**
    * Read pipeline pipeline.

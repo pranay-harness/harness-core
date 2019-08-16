@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.AND;
+import static io.harness.beans.SearchFilter.Operator.ELEMENT_MATCH;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.beans.SearchFilter.Operator.OR;
@@ -33,9 +35,11 @@ import java.util.List;
 @Slf4j
 @Singleton
 public class ResourceLookupFilterHelper {
-  private static final String TAGS_NAME = "tags.name";
-  private static final String TAGS_VALUE = "tags.value";
+  private static final String NAME = "name";
+  private static final String VALUE = "value";
   private static final String QUERY_KEY = "query";
+  private static final String TAGS = "tags";
+  private static final String TAGS_NAME = "tags.name";
 
   public void addResourceLookupFiltersToPageRequest(PageRequest<ResourceLookup> pageRequest, String filter) {
     ResourceLookupFilter resourceLookupFilter = convertToResourceLookupFilter(filter);
@@ -77,10 +81,19 @@ public class ResourceLookupFilterHelper {
 
     switch (operator) {
       case IN:
-        SearchFilter nameSearchFilter = prepareSearchFilter(TAGS_NAME, EQ, new Object[] {tagFilterCondition.getName()});
-        SearchFilter valueSearchFilter = prepareSearchFilter(TAGS_VALUE, IN, tagFilterCondition.getValues().toArray());
+        SearchFilter nameSearchFilter = prepareSearchFilter(NAME, EQ, new Object[] {tagFilterCondition.getName()});
+        SearchFilter valueSearchFilter = prepareSearchFilter(VALUE, IN, tagFilterCondition.getValues().toArray());
+        PageRequest pageRequest = aPageRequest().build();
+        pageRequest.addFilter(nameSearchFilter);
+        pageRequest.addFilter(valueSearchFilter);
 
-        searchFilters.add(prepareSearchFilter(QUERY_KEY, AND, new Object[] {nameSearchFilter, valueSearchFilter}));
+        searchFilters.add(prepareSearchFilter(TAGS, ELEMENT_MATCH, new Object[] {pageRequest}));
+        break;
+
+      case EXISTS:
+        SearchFilter existsSearchFilter =
+            prepareSearchFilter(TAGS_NAME, EQ, new Object[] {tagFilterCondition.getName()});
+        searchFilters.add(prepareSearchFilter(QUERY_KEY, AND, new Object[] {existsSearchFilter}));
         break;
 
       default:

@@ -98,6 +98,7 @@ import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -135,6 +136,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   @Mock private FieldEnd end;
 
   @Inject @InjectMocks private PipelineService pipelineService;
+  @Inject @InjectMocks ResourceLookupService resourceLookupService;
 
   @Captor private ArgumentCaptor<Pipeline> pipelineArgumentCaptor;
   @Captor private ArgumentCaptor<StateMachine> stateMachineArgumentCaptor;
@@ -843,7 +845,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     when(workflowExecutionService.listExecutions(workflowExecutionPageRequest, false, false, false, false))
         .thenReturn(aPageResponse().build());
 
-    PageResponse pageResponse = pipelineService.listPipelines(aPageRequest().build(), true, 2);
+    PageResponse pageResponse = pipelineService.listPipelines(aPageRequest().build(), true, 2, false, null);
     List<Pipeline> pipelines = pageResponse.getResponse();
     assertThat(pipelines).isNotEmpty().size().isEqualTo(2);
     assertThat(pipelines.get(0).getName()).isEqualTo("pipeline1");
@@ -925,7 +927,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     when(workflowExecutionService.listExecutions(Mockito.any(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean()))
         .thenReturn(aPageResponse().withResponse(new ArrayList()).build());
 
-    PageResponse pageResponse = pipelineService.listPipelines(aPageRequest().build(), true, 2);
+    PageResponse pageResponse = pipelineService.listPipelines(aPageRequest().build(), true, 2, false, null);
     List<Pipeline> pipelines = pageResponse.getResponse();
     assertThat(pipelines).isNotEmpty().size().isEqualTo(2);
     assertThat(pipelines.get(0).getName()).isEqualTo("pipeline1");
@@ -983,7 +985,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     when(workflowExecutionService.listExecutions(workflowExecutionPageRequest, false, false, false, false))
         .thenReturn(aPageResponse().build());
 
-    PageResponse pageResponse = pipelineService.listPipelines(aPageRequest().build(), true, 2);
+    PageResponse pageResponse = pipelineService.listPipelines(aPageRequest().build(), true, 2, false, null);
     List<Pipeline> pipelines = pageResponse.getResponse();
     assertThat(pipelines).isNotEmpty().size().isEqualTo(1);
     assertThat(pipelines.get(0).getName()).isEqualTo("pipeline1");

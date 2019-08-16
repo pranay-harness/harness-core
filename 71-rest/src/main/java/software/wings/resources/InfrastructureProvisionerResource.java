@@ -37,6 +37,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -93,12 +94,13 @@ public class InfrastructureProvisionerResource {
   @ExceptionMetered
   @ListAPI(ResourceType.PROVISIONER)
   @AuthRule(permissionType = PROVISIONER, action = READ)
-  public RestResponse<PageResponse<InfrastructureProvisionerDetails>> listDetails(
-      @QueryParam("appId") String appId, @BeanParam PageRequest<InfrastructureProvisioner> pageRequest) {
+  public RestResponse<PageResponse<InfrastructureProvisionerDetails>> listDetails(@QueryParam("appId") String appId,
+      @QueryParam("tagFilter") String tagFilter, @QueryParam("withTags") @DefaultValue("false") boolean withTags,
+      @BeanParam PageRequest<InfrastructureProvisioner> pageRequest) {
     if (appId != null) {
       pageRequest.addFilter("appId", EQ, appId);
     }
-    return new RestResponse<>(infrastructureProvisionerService.listDetails(pageRequest));
+    return new RestResponse<>(infrastructureProvisionerService.listDetails(pageRequest, withTags, tagFilter));
   }
 
   @POST

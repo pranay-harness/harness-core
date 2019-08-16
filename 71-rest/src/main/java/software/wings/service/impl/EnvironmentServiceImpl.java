@@ -89,6 +89,7 @@ import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
@@ -145,13 +146,17 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Inject private Queue<PruneEvent> pruneQueue;
   @Inject private HarnessTagService harnessTagService;
+  @Inject private ResourceLookupService resourceLookupService;
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public PageResponse<Environment> list(PageRequest<Environment> request, boolean withSummary) {
-    PageResponse<Environment> pageResponse = wingsPersistence.query(Environment.class, request);
+  public PageResponse<Environment> list(
+      PageRequest<Environment> request, boolean withSummary, boolean withTags, String tagFilter) {
+    PageResponse<Environment> pageResponse =
+        resourceLookupService.listWithTagFilters(request, tagFilter, EntityType.ENVIRONMENT, withTags);
+
     if (pageResponse == null || pageResponse.getResponse() == null) {
       return pageResponse;
     }
@@ -231,7 +236,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   public Map<String, String> getData(String appId, Map<String, String> params) {
     PageRequest<Environment> pageRequest = new PageRequest<>();
     pageRequest.addFilter("appId", EQ, appId);
-    return list(pageRequest, false).stream().collect(toMap(Environment::getUuid, Environment::getName));
+    return list(pageRequest, false, false, null).stream().collect(toMap(Environment::getUuid, Environment::getName));
   }
 
   /**
@@ -433,7 +438,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                                              .addFilter("uuid", IN, serviceIds.toArray())
                                              .addFieldsExcluded("appContainer")
                                              .build();
-      services = serviceResourceService.list(pageRequest, false, false);
+      services = serviceResourceService.list(pageRequest, false, false, false, null);
     }
     return services;
   }
@@ -542,7 +547,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                                                .addFieldsIncluded("_id", "appId", "environmentType")
                                                .build();
 
-    List<Environment> list = wingsPersistence.getAllEntities(pageRequest, () -> list(pageRequest, false));
+    List<Environment> list = wingsPersistence.getAllEntities(pageRequest, () -> list(pageRequest, false, false, null));
 
     List<Base> emptyList = new ArrayList<>();
 

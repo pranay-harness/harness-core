@@ -7,7 +7,6 @@ import com.google.common.base.MoreObjects;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.persistence.NameAccess;
-import io.harness.tags.TagAware;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -23,6 +22,7 @@ import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.entityinterface.KeywordsAware;
+import software.wings.beans.entityinterface.TagAware;
 import software.wings.yaml.BaseEntityYaml;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
@@ -81,6 +81,8 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
   public void setDefaults(Map<String, String> defaults) {
     this.defaults = defaults;
   }
+
+  @Getter @Setter private transient List<HarnessTagLink> tagLinks;
 
   /**
    * Gets name.

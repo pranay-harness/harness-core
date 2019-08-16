@@ -4,6 +4,7 @@
 
 package software.wings.resources;
 
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.eraro.ErrorCode.DUPLICATE_STATE_NAMES;
 import static io.harness.exception.WingsException.ReportTarget.LOG_SYSTEM;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
@@ -72,21 +73,20 @@ public class PipelineResource {
     this.authService = authService;
   }
 
-  /**
-   * List.
-   *
-   * @param appIds       the app ids
-   * @param pageRequest the page request
-   * @return the rest response
-   */
   @GET
   @Timed
   @ExceptionMetered
-  public RestResponse<PageResponse<Pipeline>> list(@QueryParam("appId") List<String> appIds,
+  public RestResponse<PageResponse<Pipeline>> list(@QueryParam("appId") String appId,
       @BeanParam PageRequest<Pipeline> pageRequest,
       @QueryParam("previousExecutionsCount") Integer previousExecutionsCount,
-      @QueryParam("details") @DefaultValue("true") boolean details) {
-    return new RestResponse<>(pipelineService.listPipelines(pageRequest, details, previousExecutionsCount));
+      @QueryParam("details") @DefaultValue("true") boolean details, @QueryParam("tagFilter") String tagFilter,
+      @QueryParam("withTags") @DefaultValue("false") boolean withTags) {
+    if (appId != null) {
+      pageRequest.addFilter("appId", EQ, appId);
+    }
+
+    return new RestResponse<>(
+        pipelineService.listPipelines(pageRequest, details, previousExecutionsCount, withTags, tagFilter));
   }
 
   /**

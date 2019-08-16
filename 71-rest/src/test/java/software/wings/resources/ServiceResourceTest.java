@@ -66,7 +66,8 @@ public class ServiceResourceTest extends CategoryTest {
     PageResponse<Service> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(aSERVICE));
     pageResponse.setTotal(1l);
-    when(RESOURCE_SERVICE.list(any(PageRequest.class), eq(true), eq(true))).thenReturn(pageResponse);
+    when(RESOURCE_SERVICE.list(any(PageRequest.class), eq(true), eq(true), eq(false), eq(null)))
+        .thenReturn(pageResponse);
     RestResponse<PageResponse<Service>> restResponse =
         RESOURCES.client()
             .target("/services/?appId=" + APP_ID)
@@ -75,7 +76,7 @@ public class ServiceResourceTest extends CategoryTest {
     PageRequest<Service> pageRequest = new PageRequest<>();
     pageRequest.setOffset("0");
     pageRequest.addFilter("appId", Operator.EQ, APP_ID);
-    verify(RESOURCE_SERVICE).list(pageRequest, true, true);
+    verify(RESOURCE_SERVICE).list(any(PageRequest.class), eq(true), eq(true), eq(false), eq(null));
     assertThat(restResponse.getResource().getResponse().size()).isEqualTo(1);
     assertThat(restResponse.getResource().getResponse().get(0)).isNotNull();
   }

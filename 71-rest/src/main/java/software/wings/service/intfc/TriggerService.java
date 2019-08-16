@@ -37,7 +37,7 @@ public interface TriggerService extends OwnedByApplication, OwnedByPipeline, Own
    * @param pageRequest the req
    * @return the page response
    */
-  PageResponse<Trigger> list(PageRequest<Trigger> pageRequest);
+  PageResponse<Trigger> list(PageRequest<Trigger> pageRequest, boolean withTags, String tagFilter);
 
   /**
    * Get artifact stream.

@@ -3,6 +3,7 @@ package software.wings.beans;
 import lombok.Builder;
 import lombok.Value;
 
+import java.util.List;
 import java.util.Map;
 
 @Value
@@ -15,4 +16,5 @@ public class InfrastructureProvisionerDetails {
   private String repository;
   private Map<String, String> services;
   private String cloudFormationSourceType;
+  private transient List<HarnessTagLink> tagLinks;
 }

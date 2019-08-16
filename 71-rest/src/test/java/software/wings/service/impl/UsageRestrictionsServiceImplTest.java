@@ -414,7 +414,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
                            .appId(APP_ID_3)
                            .environmentType(EnvironmentType.PROD)
                            .build();
-    when(envService.list(any(PageRequest.class), anyBoolean()))
+    when(envService.list(any(PageRequest.class), anyBoolean(), anyBoolean(), anyString()))
         .thenReturn(PageResponseBuilder.aPageResponse().withResponse(asList(env1, env2, env3)).build());
   }
 

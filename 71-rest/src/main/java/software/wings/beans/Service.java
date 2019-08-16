@@ -9,7 +9,6 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.persistence.NameAccess;
-import io.harness.tags.TagAware;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -30,6 +29,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamBinding;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.entityinterface.KeywordsAware;
+import software.wings.beans.entityinterface.TagAware;
 import software.wings.utils.ArtifactType;
 import software.wings.yaml.BaseEntityYaml;
 
@@ -79,6 +79,8 @@ public class Service extends Base implements KeywordsAware, NameAccess, TagAware
   @Indexed private List<String> artifactStreamIds;
   @Transient private List<ArtifactStreamBinding> artifactStreamBindings;
   private boolean sample;
+
+  private transient List<HarnessTagLink> tagLinks;
 
   @Builder
   public Service(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,

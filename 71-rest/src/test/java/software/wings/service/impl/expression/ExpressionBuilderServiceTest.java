@@ -218,7 +218,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   public void shouldGetAllServiceVariableExpressions() {
     when(serviceResourceService.list(
              aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, APP_ID).addFieldsIncluded("uuid").build(),
-             false, false))
+             false, false, false, null))
         .thenReturn(aPageResponse()
                         .withResponse(asList(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build()))
                         .build());
@@ -429,7 +429,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   public void shouldGetWorkflowStateExpressionsAllService() {
     when(serviceResourceService.list(
              aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, APP_ID).addFieldsIncluded("uuid").build(),
-             false, false))
+             false, false, false, null))
         .thenReturn(aPageResponse()
                         .withResponse(asList(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build()))
                         .build());

@@ -230,14 +230,15 @@ public class AuthHandlerTest extends WingsBaseTest {
     when(appService.getAppIdsByAccountId(ACCOUNT_ID)).thenReturn(appIds);
 
     PageResponse<Service> svcResponse = aPageResponse().withResponse(asList(service1, service2)).build();
-    when(serviceResourceService.list(any(PageRequest.class), eq(false), eq(false))).thenReturn(svcResponse);
+    when(serviceResourceService.list(any(PageRequest.class), eq(false), eq(false), eq(false), eq(null)))
+        .thenReturn(svcResponse);
 
     PageResponse<InfrastructureProvisioner> infrastructureProvisionersResponse =
         aPageResponse().withResponse(asList(infrastructureProvisioner)).build();
     when(infrastructureProvisionerService.list(any(PageRequest.class))).thenReturn(infrastructureProvisionersResponse);
 
     PageResponse<Environment> envResponse = aPageResponse().withResponse(asList(dev, qa, prod, dr)).build();
-    when(environmentService.list(any(PageRequest.class), eq(false))).thenReturn(envResponse);
+    when(environmentService.list(any(PageRequest.class), eq(false), eq(false), eq(null))).thenReturn(envResponse);
 
     PageResponse<Workflow> workflowResponse =
         aPageResponse().withResponse(asList(workflow1, workflow2, workflow3)).build();
@@ -254,7 +255,8 @@ public class AuthHandlerTest extends WingsBaseTest {
   private void setupForOneEnv(Environment env) {
     when(appService.getAppIdsByAccountId(ACCOUNT_ID)).thenReturn(appIds);
     PageResponse<Service> svcResponse = aPageResponse().withResponse(asList(service1, service2)).build();
-    when(serviceResourceService.list(any(PageRequest.class), eq(false), eq(false))).thenReturn(svcResponse);
+    when(serviceResourceService.list(any(PageRequest.class), eq(false), eq(false), eq(false), eq(null)))
+        .thenReturn(svcResponse);
 
     PageResponse<InfrastructureProvisioner> infrastructureProvisionersResponse =
         aPageResponse().withResponse(asList(infrastructureProvisioner)).build();
@@ -266,7 +268,7 @@ public class AuthHandlerTest extends WingsBaseTest {
     } else {
       envResponse = aPageResponse().withResponse(asList(env)).build();
     }
-    when(environmentService.list(any(PageRequest.class), eq(false))).thenReturn(envResponse);
+    when(environmentService.list(any(PageRequest.class), eq(false), eq(false), eq(null))).thenReturn(envResponse);
 
     PageResponse<Workflow> workflowResponse =
         aPageResponse().withResponse(asList(workflow1, workflow2, workflow3, buildWorkflow)).build();
@@ -819,7 +821,7 @@ public class AuthHandlerTest extends WingsBaseTest {
     PageResponse<Environment> lastPage =
         aPageResponse().withResponse(createEnvs("dev", pageSize, total)).withTotal(total).build();
 
-    when(environmentService.list(any(PageRequest.class), eq(false)))
+    when(environmentService.list(any(PageRequest.class), eq(false), eq(false), eq(null)))
         .thenAnswer((Answer<PageResponse<Environment>>) invocation -> {
           Object[] arguments = invocation.getArguments();
           PageRequest pageRequest = (PageRequest) arguments[0];
@@ -833,7 +835,7 @@ public class AuthHandlerTest extends WingsBaseTest {
         });
 
     List<Environment> allEntities =
-        authHandler.getAllEntities(pageRequest1, () -> environmentService.list(pageRequest1, false));
+        authHandler.getAllEntities(pageRequest1, () -> environmentService.list(pageRequest1, false, false, null));
     assertEquals(allEntities.size(), total);
     assertThat(allEntities).containsExactlyInAnyOrder(expectedEnv.toArray(new Environment[0]));
   }
@@ -854,7 +856,7 @@ public class AuthHandlerTest extends WingsBaseTest {
     PageResponse<Environment> lastPage =
         aPageResponse().withResponse(createEnvs("dev", pageSize, total)).withTotal(total).build();
 
-    when(environmentService.list(any(PageRequest.class), eq(false)))
+    when(environmentService.list(any(PageRequest.class), eq(false), eq(false), eq(null)))
         .thenAnswer((Answer<PageResponse<Environment>>) invocation -> {
           Object[] arguments = invocation.getArguments();
           PageRequest pageRequest = (PageRequest) arguments[0];
@@ -868,7 +870,7 @@ public class AuthHandlerTest extends WingsBaseTest {
         });
 
     List<Environment> allEntities =
-        authHandler.getAllEntities(pageRequest1, () -> environmentService.list(pageRequest1, false));
+        authHandler.getAllEntities(pageRequest1, () -> environmentService.list(pageRequest1, false, false, null));
     assertEquals(allEntities.size(), total);
     assertThat(allEntities).containsExactlyInAnyOrder(expectedEnv.toArray(new Environment[0]));
   }
@@ -885,10 +887,10 @@ public class AuthHandlerTest extends WingsBaseTest {
 
     PageResponse<Environment> firstPage =
         aPageResponse().withResponse(createEnvs("dev", 0, total)).withTotal(total).build();
-    when(environmentService.list(eq(pageRequest1), eq(false))).thenReturn(firstPage);
+    when(environmentService.list(eq(pageRequest1), eq(false), eq(false), eq(null))).thenReturn(firstPage);
 
     List<Environment> allEntities =
-        authHandler.getAllEntities(pageRequest1, () -> environmentService.list(pageRequest1, false));
+        authHandler.getAllEntities(pageRequest1, () -> environmentService.list(pageRequest1, false, false, null));
     assertEquals(allEntities.size(), total);
     assertThat(allEntities).containsExactlyInAnyOrder(expectedEnv.toArray(new Environment[0]));
   }
@@ -904,10 +906,10 @@ public class AuthHandlerTest extends WingsBaseTest {
         PageRequestBuilder.aPageRequest().withLimit(pageSizeStr).withOffset("0").build();
 
     PageResponse<Environment> firstPage = aPageResponse().withResponse(Lists.newArrayList()).withTotal(total).build();
-    when(environmentService.list(eq(pageRequest1), eq(false))).thenReturn(firstPage);
+    when(environmentService.list(eq(pageRequest1), eq(false), eq(false), eq(null))).thenReturn(firstPage);
 
     List<Environment> allEntities =
-        authHandler.getAllEntities(pageRequest1, () -> environmentService.list(pageRequest1, false));
+        authHandler.getAllEntities(pageRequest1, () -> environmentService.list(pageRequest1, false, false, null));
     assertEquals(allEntities.size(), total);
   }
 

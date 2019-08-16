@@ -36,15 +36,8 @@ import javax.validation.Valid;
  * Created by anubhaw on 3/28/16.
  */
 public interface ServiceResourceService extends OwnedByApplication {
-  /**
-   * List.
-   *
-   * @param pageRequest         the page request
-   * @param withBuildSource     the with build source
-   * @param withServiceCommands the with service commands
-   * @return the page response
-   */
-  PageResponse<Service> list(PageRequest<Service> pageRequest, boolean withBuildSource, boolean withServiceCommands);
+  PageResponse<Service> list(PageRequest<Service> request, boolean withBuildSource, boolean withServiceCommands,
+      boolean withTags, String tagFilter);
 
   /**
    * Save.

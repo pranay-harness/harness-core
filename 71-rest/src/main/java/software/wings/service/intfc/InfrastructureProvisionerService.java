@@ -32,7 +32,8 @@ public interface InfrastructureProvisionerService extends OwnedByApplication {
       String infrastructureProvisionerType, String serviceId, DeploymentType deploymentType,
       CloudProviderType cloudProviderType);
 
-  PageResponse<InfrastructureProvisionerDetails> listDetails(PageRequest<InfrastructureProvisioner> pageRequest);
+  PageResponse<InfrastructureProvisionerDetails> listDetails(
+      PageRequest<InfrastructureProvisioner> pageRequest, boolean withTags, String tagFilter);
 
   @ValidationGroups(Create.class)
   InfrastructureProvisioner save(@Valid InfrastructureProvisioner infrastructureProvisioner);

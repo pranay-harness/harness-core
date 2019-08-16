@@ -328,6 +328,7 @@ import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.ecs.ECSPollingJobEntity;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.KeywordsAware;
+import software.wings.beans.entityinterface.TagAware;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.infrastructure.CloudFormationRollbackConfig;
 import software.wings.beans.infrastructure.Host;
@@ -850,6 +851,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(SupervisedTSThreshold.class);
     set.add(SyncStatus.class);
     set.add(SystemCatalog.class);
+    set.add(TagAware.class);
     set.add(Template.class);
     set.add(TemplateFolder.class);
     set.add(TemplateGallery.class);

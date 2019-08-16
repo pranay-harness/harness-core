@@ -156,6 +156,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
@@ -265,14 +266,17 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private Queue<PruneEvent> pruneQueue;
   @Inject private ApplicationManifestUtils applicationManifestUtils;
   @Inject private HarnessTagService harnessTagService;
+  @Inject private ResourceLookupService resourceLookupService;
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public PageResponse<Service> list(
-      PageRequest<Service> request, boolean withBuildSource, boolean withServiceCommands) {
-    PageResponse<Service> pageResponse = wingsPersistence.query(Service.class, request);
+  public PageResponse<Service> list(PageRequest<Service> request, boolean withBuildSource, boolean withServiceCommands,
+      boolean withTags, String tagFilter) {
+    PageResponse<Service> pageResponse =
+        resourceLookupService.listWithTagFilters(request, tagFilter, EntityType.SERVICE, withTags);
+
     List<Service> services = pageResponse.getResponse();
     if (withServiceCommands) {
       setServiceCommands(services);

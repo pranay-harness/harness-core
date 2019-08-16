@@ -4,6 +4,11 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
+import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.audit.ResourceType.APPLICATION;
 import static software.wings.audit.ResourceType.ARTIFACT_SERVER;
 import static software.wings.audit.ResourceType.CLOUD_PROVIDER;
@@ -31,6 +36,9 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter;
+import io.harness.exception.InvalidRequestException;
+import io.harness.persistence.UuidAware;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotBlank;
 import org.mongodb.morphia.query.Query;
@@ -39,11 +47,19 @@ import org.mongodb.morphia.query.UpdateResults;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
+import software.wings.beans.Environment;
+import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.Pipeline;
 import software.wings.beans.ResourceLookup;
 import software.wings.beans.ResourceLookup.ResourceLookupKeys;
+import software.wings.beans.Service;
+import software.wings.beans.Workflow;
+import software.wings.beans.entityinterface.TagAware;
+import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.PermissionAttribute.Action;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
@@ -57,6 +73,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Audit Service Implementation class.
@@ -76,6 +93,7 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
   @Inject private EnvironmentService environmentService;
   @Inject private ResourceLookupFilterHelper resourceLookupFilterHelper;
   @Inject private HarnessTagService harnessTagService;
+  @Inject private AppService appService;
 
   private static List<String> applicationLevelResource =
       Arrays.asList(APPLICATION.name(), SERVICE.name(), ENVIRONMENT.name(), WORKFLOW.name(), PIPELINE.name(),
@@ -272,12 +290,18 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
   @Override
   public PageResponse<ResourceLookup> listResourceLookupRecordsWithTags(
       String accountId, String filter, String limit, String offset) {
+    return listResourceLookupRecordsWithTagsInternal(
+        accountId, filter, limit, offset, supportedTagEntityTypes.toArray());
+  }
+
+  private PageResponse<ResourceLookup> listResourceLookupRecordsWithTagsInternal(
+      String accountId, String filter, String limit, String offset, Object[] entityTypes) {
     PageRequest<ResourceLookup> pageRequest = new PageRequest<>();
 
     pageRequest.addFilter(ResourceLookupKeys.accountId, EQ, accountId);
     pageRequest.setOffset("0");
     pageRequest.setLimit(String.valueOf(Integer.MAX_VALUE));
-    pageRequest.addFilter(ResourceLookupKeys.resourceType, IN, supportedTagEntityTypes.toArray());
+    pageRequest.addFilter(ResourceLookupKeys.resourceType, IN, entityTypes);
     resourceLookupFilterHelper.addResourceLookupFiltersToPageRequest(pageRequest, filter);
 
     PageResponse<ResourceLookup> pageResponse = wingsPersistence.query(ResourceLookup.class, pageRequest);
@@ -285,8 +309,8 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
 
     List<ResourceLookup> response;
     int total = filteredResourceLookups.size();
-    int offsetValue = Integer.parseInt(offset);
-    int limitValue = Integer.parseInt(limit);
+    int offsetValue = isNotBlank(offset) ? Integer.parseInt(offset) : 0;
+    int limitValue = isNotBlank(limit) ? Integer.parseInt(limit) : PageRequest.DEFAULT_UNLIMITED;
 
     if (total <= offsetValue) {
       response = new ArrayList<>();
@@ -326,5 +350,133 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
     });
 
     return filteredResourceLookupList;
+  }
+
+  @Override
+  public <T> PageResponse<T> listWithTagFilters(
+      PageRequest<T> request, String filter, EntityType entityType, boolean withTags) {
+    Long resourceLookupRecordCount = 0l;
+
+    if (isNotBlank(filter)) {
+      String accountId = getAccountIdFromPageRequest(request);
+
+      if (isNotBlank(accountId)) {
+        PageResponse<ResourceLookup> resourceLookupPageResponse = listResourceLookupRecordsWithTagsInternal(
+            accountId, filter, request.getLimit(), request.getOffset(), new Object[] {entityType});
+
+        List<ResourceLookup> response = resourceLookupPageResponse.getResponse();
+        if (isEmpty(response)) {
+          return aPageResponse().withResponse(emptyList()).build();
+        }
+
+        resourceLookupRecordCount = resourceLookupPageResponse.getTotal();
+
+        List<String> resourceIds = response.stream().map(ResourceLookup::getResourceId).collect(Collectors.toList());
+        request.addFilter("_id", IN, resourceIds.toArray());
+        request.setOffset("0");
+        request.setLimit(String.valueOf(Integer.MAX_VALUE));
+      }
+    }
+
+    PageResponse<T> pageResponse;
+
+    switch (entityType) {
+      case SERVICE:
+        pageResponse = (PageResponse<T>) wingsPersistence.query(Service.class, (PageRequest<Service>) request);
+        break;
+
+      case ENVIRONMENT:
+        pageResponse = (PageResponse<T>) wingsPersistence.query(Environment.class, (PageRequest<Environment>) request);
+        break;
+
+      case WORKFLOW:
+        pageResponse = (PageResponse<T>) wingsPersistence.query(Workflow.class, (PageRequest<Workflow>) request);
+        break;
+
+      case PIPELINE:
+        pageResponse = (PageResponse<T>) wingsPersistence.query(Pipeline.class, (PageRequest<Pipeline>) request);
+        break;
+
+      case TRIGGER:
+        pageResponse = (PageResponse<T>) wingsPersistence.query(Trigger.class, (PageRequest<Trigger>) request);
+        break;
+
+      case PROVISIONER:
+        pageResponse = (PageResponse<T>) wingsPersistence.query(
+            InfrastructureProvisioner.class, (PageRequest<InfrastructureProvisioner>) request);
+        break;
+
+      case APPLICATION:
+        pageResponse = (PageResponse<T>) wingsPersistence.query(Application.class, (PageRequest<Application>) request);
+        break;
+
+      default:
+        throw new InvalidRequestException(format("Unhandled entity type %s while getting list", entityType));
+    }
+
+    if (isNotBlank(filter) && resourceLookupRecordCount > 0l) {
+      pageResponse.setTotal(resourceLookupRecordCount);
+      pageResponse.setPageSize(Integer.parseInt(request.getLimit()));
+    }
+
+    if (withTags) {
+      setTagLinks(request, pageResponse, entityType);
+    }
+
+    return pageResponse;
+  }
+
+  private <T> String getAccountIdFromPageRequest(PageRequest<T> request) {
+    List<SearchFilter> filters = request.getFilters();
+
+    if (isEmpty(filters)) {
+      return null;
+    }
+
+    String accountId = null;
+    String appId = null;
+
+    for (SearchFilter searchFilter : filters) {
+      if (isNotEmpty(searchFilter.getFieldValues())) {
+        if (searchFilter.getFieldName().equals("accountId")) {
+          accountId = (String) searchFilter.getFieldValues()[0];
+          break;
+        } else if (searchFilter.getFieldName().equals("appId")) {
+          appId = (String) searchFilter.getFieldValues()[0];
+          break;
+        }
+      }
+    }
+
+    if (isNotBlank(accountId)) {
+      return accountId;
+    }
+
+    return appService.getAccountIdByAppId(appId);
+  }
+
+  private <T> void setTagLinks(PageRequest<T> request, PageResponse<T> response, EntityType entityType) {
+    String accountId = getAccountIdFromPageRequest(request);
+    if (isBlank(accountId)) {
+      return;
+    }
+
+    switch (entityType) {
+      case SERVICE:
+      case ENVIRONMENT:
+      case WORKFLOW:
+      case PIPELINE:
+      case TRIGGER:
+      case PROVISIONER:
+      case APPLICATION:
+        for (T t : response.getResponse()) {
+          ((TagAware) t).setTagLinks(harnessTagService.getTagLinksWithEntityId(accountId, ((UuidAware) t).getUuid()));
+        }
+
+        break;
+
+      default:
+        throw new InvalidRequestException(format("Unhandled entity type %s while setting tags links", entityType));
+    }
   }
 }

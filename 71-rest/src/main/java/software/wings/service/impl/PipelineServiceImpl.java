@@ -79,6 +79,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -125,6 +126,7 @@ public class PipelineServiceImpl implements PipelineService {
 
   @Inject private Queue<PruneEvent> pruneQueue;
   @Inject private HarnessTagService harnessTagService;
+  @Inject private ResourceLookupService resourceLookupService;
 
   /**
    * {@inheritDoc}
@@ -138,9 +140,11 @@ public class PipelineServiceImpl implements PipelineService {
    * {@inheritDoc}
    */
   @Override
-  public PageResponse<Pipeline> listPipelines(
-      PageRequest<Pipeline> pageRequest, boolean withDetails, Integer previousExecutionsCount) {
-    PageResponse<Pipeline> res = wingsPersistence.query(Pipeline.class, pageRequest);
+  public PageResponse<Pipeline> listPipelines(PageRequest<Pipeline> pageRequest, boolean withDetails,
+      Integer previousExecutionsCount, boolean withTags, String tagFilter) {
+    PageResponse<Pipeline> res =
+        resourceLookupService.listWithTagFilters(pageRequest, tagFilter, EntityType.PIPELINE, withTags);
+
     List<Pipeline> pipelines = res.getResponse();
     if (withDetails) {
       setPipelineDetails(pipelines);
