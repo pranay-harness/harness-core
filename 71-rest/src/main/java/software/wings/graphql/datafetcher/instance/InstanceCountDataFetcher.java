@@ -27,7 +27,7 @@ public class InstanceCountDataFetcher extends AbstractDataFetcher<QLInstanceCoun
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
-  public QLInstanceCount fetch(QLInstancesCountQueryParameters qlQuery) {
+  public QLInstanceCount fetch(QLInstancesCountQueryParameters qlQuery, String accountId) {
     switch (qlQuery.getInstanceCountType()) {
       case NINETY_FIVE_PERCENTILE:
         return QLInstanceCount.builder()

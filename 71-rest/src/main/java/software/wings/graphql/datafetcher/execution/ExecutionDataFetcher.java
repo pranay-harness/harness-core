@@ -29,7 +29,7 @@ public class ExecutionDataFetcher extends AbstractDataFetcher<QLExecution, QLExe
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
-  public QLExecution fetch(QLExecutionQueryParameters qlQuery) {
+  public QLExecution fetch(QLExecutionQueryParameters qlQuery, String accountId) {
     WorkflowExecution execution =
         persistence.createAuthorizedQuery(WorkflowExecution.class).filter("_id", qlQuery.getExecutionId()).get();
     if (execution == null) {

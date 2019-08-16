@@ -27,7 +27,7 @@ public class WorkflowDataFetcher extends AbstractDataFetcher<QLWorkflow, QLWorkf
 
   @Override
   @AuthRule(permissionType = PermissionType.WORKFLOW, action = Action.READ)
-  public QLWorkflow fetch(QLWorkflowQueryParameters qlQuery) {
+  public QLWorkflow fetch(QLWorkflowQueryParameters qlQuery, String accountId) {
     Workflow workflow = null;
 
     if (qlQuery.getWorkflowId() != null) {
@@ -36,6 +36,7 @@ public class WorkflowDataFetcher extends AbstractDataFetcher<QLWorkflow, QLWorkf
       // TODO: add this to in memory cache
       final String workflowId = persistence.createQuery(WorkflowExecution.class)
                                     .filter(WorkflowExecutionKeys.uuid, qlQuery.getExecutionId())
+                                    .filter(WorkflowExecutionKeys.accountId, accountId)
                                     .project(WorkflowExecutionKeys.workflowId, true)
                                     .get()
                                     .getWorkflowId();

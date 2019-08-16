@@ -27,7 +27,7 @@ public abstract class AbstractConnectionDataFetcher<T, P> extends AbstractDataFe
   protected abstract T fetchConnection(P parameters);
 
   @Override
-  protected final T fetch(P parameters) {
+  protected final T fetch(P parameters, String accountId) {
     try {
       return fetchConnection(parameters);
     } catch (WingsException ex) {

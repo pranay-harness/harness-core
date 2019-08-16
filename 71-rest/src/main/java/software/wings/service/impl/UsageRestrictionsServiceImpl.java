@@ -867,7 +867,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         userHasPermissionsToChangeEntity(accountId, usageRestrictions, restrictionsFromUserPermissions, appIdEnvMap);
 
     if (!canUpdateEntity) {
-      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
+      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS, USER);
     }
   }
 
@@ -893,7 +893,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         userHasPermissionsToChangeEntity(accountId, oldUsageRestrictions, restrictionsFromUserPermissions);
 
     if (!canUpdateEntity) {
-      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
+      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS, USER);
     }
   }
 

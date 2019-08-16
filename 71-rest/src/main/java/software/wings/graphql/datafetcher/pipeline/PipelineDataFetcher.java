@@ -24,7 +24,7 @@ public class PipelineDataFetcher extends AbstractDataFetcher<QLPipeline, QLPipel
 
   @Override
   @AuthRule(permissionType = PermissionType.PIPELINE, action = Action.READ)
-  public QLPipeline fetch(QLPipelineQueryParameters qlQuery) {
+  public QLPipeline fetch(QLPipelineQueryParameters qlQuery, String accountId) {
     Pipeline pipeline = null;
     if (qlQuery.getPipelineId() != null) {
       pipeline = persistence.get(Pipeline.class, qlQuery.getPipelineId());
@@ -32,6 +32,7 @@ public class PipelineDataFetcher extends AbstractDataFetcher<QLPipeline, QLPipel
       // TODO: add this to in memory cache
       final String pipelineId = persistence.createQuery(WorkflowExecution.class)
                                     .filter(WorkflowExecutionKeys.uuid, qlQuery.getExecutionId())
+                                    .filter(WorkflowExecutionKeys.accountId, accountId)
                                     .project(WorkflowExecutionKeys.workflowId, true)
                                     .get()
                                     .getWorkflowId();

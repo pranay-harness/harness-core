@@ -1,11 +1,13 @@
 package software.wings.graphql.datafetcher;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.ReportTarget.GRAPHQL_API;
 import static io.harness.exception.WingsException.USER_SRE;
 import static software.wings.graphql.datafetcher.DataFetcherUtils.GENERIC_EXCEPTION_MSG;
 import static software.wings.graphql.datafetcher.DataFetcherUtils.NEGATIVE_LIMIT_ARG_MSG;
 import static software.wings.graphql.datafetcher.DataFetcherUtils.NEGATIVE_OFFSET_ARG_MSG;
 
+import graphql.GraphQLContext;
 import graphql.schema.DataFetchingEnvironment;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.InvalidRequestException;
@@ -44,7 +46,7 @@ public abstract class AbstractDataFetcher<T, P> extends BaseDataFetcher {
     parentToContextFieldArgsMap.putIfAbsent(parentTypeName, dataFetcherDirectiveAttributes);
   }
 
-  protected abstract T fetch(P parameters);
+  protected abstract T fetch(P parameters, String accountId);
 
   protected CompletionStage<T> fetchWithBatching(P parameters, DataLoader dataLoader) {
     return null;
@@ -64,7 +66,7 @@ public abstract class AbstractDataFetcher<T, P> extends BaseDataFetcher {
         String dataFetcherName = getDataFetcherName(parentTypeName);
         result = fetchWithBatching(parameters, dataFetchingEnvironment.getDataLoader(dataFetcherName));
       } else {
-        result = fetch(parameters);
+        result = fetch(parameters, getAccountId(dataFetchingEnvironment));
       }
     } catch (WingsException ex) {
       throw new WingsException(getCombinedErrorMessages(ex), ex, ex.getReportTargets());
@@ -72,6 +74,22 @@ public abstract class AbstractDataFetcher<T, P> extends BaseDataFetcher {
       throw new WingsException(GENERIC_EXCEPTION_MSG, USER_SRE);
     }
     return result;
+  }
+
+  private String getAccountId(DataFetchingEnvironment dataFetchingEnvironment) {
+    Object contextObj = dataFetchingEnvironment.getContext();
+
+    if (!(contextObj instanceof GraphQLContext)) {
+      throw new WingsException("Context not a graphqlContext");
+    }
+
+    GraphQLContext context = (GraphQLContext) contextObj;
+    String accountId = context.get("accountId");
+    if (isEmpty(accountId)) {
+      throw new WingsException("Cannot extract accountId from environment");
+    }
+
+    return accountId;
   }
 
   private String getCombinedErrorMessages(WingsException ex) {

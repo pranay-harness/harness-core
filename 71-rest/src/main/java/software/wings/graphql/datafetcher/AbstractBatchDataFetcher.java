@@ -13,7 +13,7 @@ public abstract class AbstractBatchDataFetcher<T, P, K> extends AbstractDataFetc
   }
 
   @Override
-  protected final T fetch(P parameters) {
+  protected final T fetch(P parameters, String accountId) {
     return null;
   }
 }

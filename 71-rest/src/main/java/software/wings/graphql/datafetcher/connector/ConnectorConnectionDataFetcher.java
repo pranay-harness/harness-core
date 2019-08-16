@@ -1,7 +1,5 @@
 package software.wings.graphql.datafetcher.connector;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
@@ -20,6 +18,7 @@ import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.connector.QLConnectorFilter;
+import software.wings.graphql.schema.type.connector.QLConnector;
 import software.wings.graphql.schema.type.connector.QLConnectorsConnection;
 import software.wings.graphql.schema.type.connector.QLConnectorsConnection.QLConnectorsConnectionBuilder;
 import software.wings.graphql.utils.nameservice.NameService;
@@ -27,6 +26,7 @@ import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.SettingsService;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -46,23 +46,38 @@ public class ConnectorConnectionDataFetcher
 
     final List<SettingAttribute> settingAttributes = query.asList();
 
-    final List<SettingAttribute> filteredSettingAttributes =
+    int offset = pageQueryParameters.getOffset();
+    int limit = pageQueryParameters.getLimit();
+
+    List<SettingAttribute> filteredSettingAttributes =
         settingsService.getFilteredSettingAttributes(settingAttributes, null, null);
 
     QLConnectorsConnectionBuilder connectorsConnectionBuilder = QLConnectorsConnection.builder();
 
-    QLPageInfoBuilder pageInfoBuilder = QLPageInfo.builder().hasMore(false).offset(0).limit(0).total(0);
+    QLPageInfoBuilder pageInfoBuilder = QLPageInfo.builder();
 
-    if (isNotEmpty(filteredSettingAttributes)) {
-      pageInfoBuilder.total(filteredSettingAttributes.size()).limit(filteredSettingAttributes.size());
-
-      for (SettingAttribute settingAttribute : filteredSettingAttributes) {
-        connectorsConnectionBuilder.node(
-            ConnectorsController
-                .populateConnector(settingAttribute, ConnectorsController.getConnectorBuilder(settingAttribute))
-                .build());
-      }
+    if (filteredSettingAttributes == null) {
+      filteredSettingAttributes = new ArrayList<>();
     }
+
+    List<SettingAttribute> resp;
+    int total = filteredSettingAttributes.size();
+    if (total <= offset) {
+      resp = new ArrayList<>();
+    } else {
+      int endIdx = Math.min(offset + limit, total);
+      resp = filteredSettingAttributes.subList(offset, endIdx);
+    }
+
+    List<QLConnector> nodes = new ArrayList<>();
+    for (SettingAttribute settingAttribute : resp) {
+      nodes.add(ConnectorsController
+                    .populateConnector(settingAttribute, ConnectorsController.getConnectorBuilder(settingAttribute))
+                    .build());
+    }
+
+    QLPageInfo pageInfo = pageInfoBuilder.total(total).limit(limit).offset(offset).hasMore(total > offset).build();
+    connectorsConnectionBuilder.pageInfo(pageInfo).nodes(nodes);
     return connectorsConnectionBuilder.build();
   }
 

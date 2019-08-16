@@ -23,9 +23,13 @@ public class EnvironmentDataFetcher extends AbstractDataFetcher<QLEnvironment, Q
 
   @Override
   @AuthRule(permissionType = PermissionType.ENV, action = Action.READ)
-  public QLEnvironment fetch(QLEnvironmentQueryParameters qlQuery) {
+  public QLEnvironment fetch(QLEnvironmentQueryParameters qlQuery, String accountId) {
     Environment environment = persistence.get(Environment.class, qlQuery.getEnvironmentId());
     if (environment == null) {
+      throw new InvalidRequestException(ENV_DOES_NOT_EXISTS_MSG, WingsException.USER);
+    }
+
+    if (!environment.getAccountId().equals(accountId)) {
       throw new InvalidRequestException(ENV_DOES_NOT_EXISTS_MSG, WingsException.USER);
     }
 

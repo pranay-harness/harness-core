@@ -2,6 +2,8 @@ package software.wings.graphql.datafetcher.artifact;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
 import software.wings.beans.artifact.Artifact;
 import software.wings.graphql.datafetcher.AbstractDataFetcher;
@@ -16,7 +18,7 @@ public class ArtifactDataFetcher extends AbstractDataFetcher<QLArtifact, QLArtif
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
-  protected QLArtifact fetch(QLArtifactQueryParameters parameters) {
+  protected QLArtifact fetch(QLArtifactQueryParameters parameters, String accountId) {
     Artifact artifact = persistence.get(Artifact.class, parameters.getArtifactId());
     if (artifact == null) {
       /**
@@ -24,6 +26,10 @@ public class ArtifactDataFetcher extends AbstractDataFetcher<QLArtifact, QLArtif
        * not be present, so returning null in those cases and not throwing an exception
        */
       return null;
+    }
+
+    if (!artifact.getAccountId().equals(accountId)) {
+      throw new InvalidRequestException("Artifact does not exist", WingsException.USER);
     }
 
     QLArtifactBuilder qlArtifactBuilder = QLArtifact.builder();

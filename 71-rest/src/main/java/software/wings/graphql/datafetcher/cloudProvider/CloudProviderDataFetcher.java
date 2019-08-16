@@ -19,9 +19,13 @@ public class CloudProviderDataFetcher extends AbstractDataFetcher<QLCloudProvide
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
-  protected QLCloudProvider fetch(QLCloudProviderQueryParameters qlQuery) {
+  protected QLCloudProvider fetch(QLCloudProviderQueryParameters qlQuery, String accountId) {
     SettingAttribute settingAttribute = persistence.get(SettingAttribute.class, qlQuery.getCloudProviderId());
     if (settingAttribute == null) {
+      throw new InvalidRequestException("Cloud Provider does not exist", WingsException.USER);
+    }
+
+    if (!settingAttribute.getAccountId().equals(accountId)) {
       throw new InvalidRequestException("Cloud Provider does not exist", WingsException.USER);
     }
 

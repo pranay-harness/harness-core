@@ -5,6 +5,7 @@ import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
+import software.wings.beans.security.UserGroup;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
@@ -104,6 +105,9 @@ public interface AuthService extends OwnedByAccount {
   void evictUserPermissionCacheForAccount(String accountId, boolean rebuildUserPermissionInfo);
 
   void evictUserPermissionAndRestrictionCacheForAccounts(Set<String> accountIds, List<String> memberIds);
+
+  UserRestrictionInfo getUserRestrictionInfoFromDB(
+      String accountId, UserPermissionInfo userPermissionInfo, List<UserGroup> userGroupList);
 
   User refreshToken(String oldToken);
 
