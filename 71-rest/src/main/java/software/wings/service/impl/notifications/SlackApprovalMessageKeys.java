@@ -2,6 +2,7 @@ package software.wings.service.impl.notifications;
 
 public class SlackApprovalMessageKeys {
   // The paths to pick the Templates of the messages and the JSON payloads
+
   public static final String MESSAGE_IDENTIFIER = "suppressTraditionalApprovalNotification";
   public static final String APPROVAL_MESSAGE_PAYLOAD_TEMPLATE = "/slack/approval-message.json";
   public static final String PIPELINE_APPROVAL_MESSAGE_TEMPLATE = "/slack/pipeline-approval-message.txt";
@@ -33,4 +34,7 @@ public class SlackApprovalMessageKeys {
   // slack-action-message.txt template placeholder keys
   public static final String ACTION = "action";
   public static final String SLACK_USER_ID = "slackUserId";
+
+  // Paused Stage name Values
+  public static final String PAUSED_STAGE_NAME_DEFAULT = " ";
 }

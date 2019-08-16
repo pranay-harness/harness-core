@@ -535,7 +535,7 @@ public class ApprovalState extends State {
     if (EmptyPredicate.isNotEmpty(workflowExecution.getExecutionArgs().getArtifacts())) {
       for (Artifact artifact : workflowExecution.getExecutionArgs().getArtifacts()) {
         artifacts.add(
-            artifact.getArtifactSourceName() + " :" + artifact.getMetadata().get(ArtifactMetadataKeys.buildNo));
+            artifact.getArtifactSourceName() + ": " + artifact.getMetadata().get(ArtifactMetadataKeys.buildNo));
       }
     }
     if (EmptyPredicate.isNotEmpty(workflowExecution.getEnvironments())) {
@@ -601,7 +601,8 @@ public class ApprovalState extends State {
       List<PipelineStageElement> pipelineStageElements = pipelineStage.getPipelineStageElements();
       for (PipelineStageElement pipelineStageElement : pipelineStageElements) {
         if (pipelineStageElement.getName().equals(pipelineApprovalStageName)) {
-          return pipelineStage.getName();
+          return pipelineStage.getName() == null ? SlackApprovalMessageKeys.PAUSED_STAGE_NAME_DEFAULT
+                                                 : pipelineStage.getName();
         }
       }
     }

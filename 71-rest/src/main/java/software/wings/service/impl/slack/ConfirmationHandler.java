@@ -40,9 +40,9 @@ public class ConfirmationHandler implements SlackActionHandler {
 
     String buttonValue = new JSONObject(confirmationParams).toString();
     buttonValue = StringEscapeUtils.escapeJson(buttonValue);
-    String confirmationMessage = slackNotificationMessage + "\n*Are you sure you want to "
-        + (confirmationParams.getActionType().equals(SlackApprovalMessageKeys.BUTTON_ACCEPT) ? "_Approve_" : "_Reject_")
-        + " ?*";
+    String confirmationMessage = slackNotificationMessage + "\nAre you sure you want to "
+        + (confirmationParams.getActionType().equals(SlackApprovalMessageKeys.BUTTON_ACCEPT) ? "*Approve*" : "*Reject*")
+        + " ?";
 
     // Creating APPLICATION_JSON payload from additional-confirmation.json template
     URL templateUrl = this.getClass().getResource(SlackApprovalMessageKeys.ADDITIONAL_CONFIRMATION_MESSAGE_TEMPLATE);
