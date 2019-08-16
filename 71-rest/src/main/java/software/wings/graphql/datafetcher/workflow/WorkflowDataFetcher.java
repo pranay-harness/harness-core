@@ -36,7 +36,6 @@ public class WorkflowDataFetcher extends AbstractDataFetcher<QLWorkflow, QLWorkf
       // TODO: add this to in memory cache
       final String workflowId = persistence.createQuery(WorkflowExecution.class)
                                     .filter(WorkflowExecutionKeys.uuid, qlQuery.getExecutionId())
-                                    .filter(WorkflowExecutionKeys.accountId, accountId)
                                     .project(WorkflowExecutionKeys.workflowId, true)
                                     .get()
                                     .getWorkflowId();
@@ -45,6 +44,10 @@ public class WorkflowDataFetcher extends AbstractDataFetcher<QLWorkflow, QLWorkf
     }
 
     if (workflow == null) {
+      throw new InvalidRequestException(WORKFLOW_DOES_NOT_EXIST_MSG, WingsException.USER);
+    }
+
+    if (!workflow.getAccountId().equals(accountId)) {
       throw new InvalidRequestException(WORKFLOW_DOES_NOT_EXIST_MSG, WingsException.USER);
     }
 

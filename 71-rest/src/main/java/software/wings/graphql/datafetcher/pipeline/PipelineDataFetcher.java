@@ -32,7 +32,6 @@ public class PipelineDataFetcher extends AbstractDataFetcher<QLPipeline, QLPipel
       // TODO: add this to in memory cache
       final String pipelineId = persistence.createQuery(WorkflowExecution.class)
                                     .filter(WorkflowExecutionKeys.uuid, qlQuery.getExecutionId())
-                                    .filter(WorkflowExecutionKeys.accountId, accountId)
                                     .project(WorkflowExecutionKeys.workflowId, true)
                                     .get()
                                     .getWorkflowId();
@@ -41,6 +40,10 @@ public class PipelineDataFetcher extends AbstractDataFetcher<QLPipeline, QLPipel
     }
 
     if (pipeline == null) {
+      throw new InvalidRequestException(PIPELINE_DOES_NOT_EXIST_MSG, WingsException.USER);
+    }
+
+    if (!pipeline.getAccountId().equals(accountId)) {
       throw new InvalidRequestException(PIPELINE_DOES_NOT_EXIST_MSG, WingsException.USER);
     }
 
