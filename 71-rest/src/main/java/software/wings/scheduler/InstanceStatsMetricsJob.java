@@ -2,7 +2,6 @@ package software.wings.scheduler;
 
 import com.google.inject.Inject;
 
-import io.harness.event.model.EventConstants;
 import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.lock.AcquiredLock;
@@ -19,7 +18,6 @@ import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import software.wings.beans.Account;
-import software.wings.beans.instance.dashboard.InstanceStatsUtils;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 
 import java.time.Duration;
@@ -61,11 +59,6 @@ public class InstanceStatsMetricsJob implements Job {
             logger.info("Publishing metric for accountId:[{}]", account.getUuid());
             Integer instanceCount =
                 instanceCountMap.get(account.getUuid()) == null ? 0 : instanceCountMap.get(account.getUuid());
-            eventPublisher.publishInstanceMetric(
-                account.getUuid(), account.getAccountName(), instanceCount, EventConstants.INSTANCE_COUNT_TOTAL);
-            eventPublisher.publishInstanceMetric(account.getUuid(), account.getAccountName(),
-                InstanceStatsUtils.actualUsage(account.getUuid(), instanceStatService),
-                EventConstants.INSTANCE_COUNT_NINETY_FIVE_PERCENTILE);
             globalCount[0] = +instanceCount;
 
           } catch (Exception e) {
@@ -73,12 +66,6 @@ public class InstanceStatsMetricsJob implements Job {
                 account.getAccountName(), e);
           }
         });
-        try {
-          eventPublisher.publishInstanceMetric(Account.GLOBAL_ACCOUNT_ID, Account.GLOBAL_ACCOUNT_ID, globalCount[0],
-              EventConstants.INSTANCE_COUNT_GLOBAL_TOTAL);
-        } catch (Exception e) {
-          logger.warn("Failed to publish global account metrics", e);
-        }
         logger.info("Instance metrics job end");
       } catch (Exception e) {
         logger.warn("Instance metrics job failed to execute", e);

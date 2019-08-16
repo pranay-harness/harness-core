@@ -1593,8 +1593,6 @@ public class UserServiceImpl implements UserService {
   public void logout(User user) {
     authService.invalidateToken(user.getToken());
     evictUserFromCache(user.getUuid());
-    Account account = user.getAccounts().get(0);
-    usageMetricsEventPublisher.publishUserLogoutEvent(account.getUuid(), account.getAccountName());
   }
 
   private void resetUserPassword(String email, char[] password, long tokenIssuedAt) {

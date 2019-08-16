@@ -5,13 +5,7 @@ import com.google.inject.Singleton;
 
 import io.harness.event.handler.EventHandler;
 import io.harness.event.harnessmetrics.CV247Metric;
-import io.harness.event.harnessmetrics.DeploymentDurationEvent;
-import io.harness.event.harnessmetrics.DeploymentMetadataEvent;
 import io.harness.event.harnessmetrics.HarnessMetricsEvent;
-import io.harness.event.harnessmetrics.InstanceMetric;
-import io.harness.event.harnessmetrics.LicenseDataMetric;
-import io.harness.event.harnessmetrics.LoggedInUserMetric;
-import io.harness.event.harnessmetrics.SetupDataMetric;
 import io.harness.event.listener.EventListener;
 import io.harness.event.model.Event;
 import io.harness.event.model.EventType;
@@ -26,12 +20,6 @@ public class HarnessMetricsRegistryHandler implements EventHandler {
   Map<EventType, HarnessMetricsEvent> eventTypeMap = new HashMap<>();
 
   public void registerEventsWithHarnessRegistry() {
-    registerMetrics(new DeploymentDurationEvent());
-    registerMetrics(new DeploymentMetadataEvent());
-    registerMetrics(new LoggedInUserMetric());
-    registerMetrics(new SetupDataMetric());
-    registerMetrics(new InstanceMetric());
-    registerMetrics(new LicenseDataMetric());
     registerMetrics(new CV247Metric());
   }
 

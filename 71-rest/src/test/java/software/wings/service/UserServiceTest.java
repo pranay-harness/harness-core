@@ -142,7 +142,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import javax.cache.Cache;
 
 /**
@@ -523,25 +522,6 @@ public class UserServiceTest extends WingsBaseTest {
 
     UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
     updateOperations.set(UserKeys.reportedMarketoCampaigns, Sets.newHashSet(eventType.name()));
-    verify(wingsPersistence).update(user, updateOperations);
-    verify(wingsPersistence).getWithAppId(User.class, APP_ID, USER_ID);
-    verify(cache).remove(USER_ID);
-  }
-
-  @Test
-  @Category(UnitTests.class)
-  public void updateEventToUserMarketoCampaigns() {
-    EventType eventType = EventType.USER_INVITED_FROM_EXISTING_ACCOUNT;
-    User user = anUser().withAppId(APP_ID).withUuid(USER_ID).withAppId(APP_ID).build();
-    Set<String> existingEventCampaigns = Sets.newHashSet(EventType.USERS_LOGGED_IN.name());
-    user.setReportedMarketoCampaigns(existingEventCampaigns);
-    doReturn(user).when(cache).get(any(String.class));
-    userService.addEventToUserMarketoCampaigns(user.getUuid(), eventType);
-    Set<String> allEventCampaigns = Sets.newHashSet(eventType.name(), EventType.USERS_LOGGED_IN.name());
-    verify(updateOperations).set(UserKeys.reportedMarketoCampaigns, allEventCampaigns);
-
-    UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
-    updateOperations.set(UserKeys.reportedMarketoCampaigns, allEventCampaigns);
     verify(wingsPersistence).update(user, updateOperations);
     verify(wingsPersistence).getWithAppId(User.class, APP_ID, USER_ID);
     verify(cache).remove(USER_ID);

@@ -6,7 +6,6 @@ import com.google.inject.name.Names;
 
 import io.harness.event.handler.EventHandler;
 import io.harness.event.handler.impl.MarketoHandler;
-import io.harness.event.handler.impl.NateroEventHandler;
 import io.harness.event.handler.impl.VerificationEventHandler;
 import io.harness.event.handler.impl.account.AccountChangeHandler;
 import io.harness.event.handler.impl.notifications.AlertNotificationHandler;
@@ -66,6 +65,5 @@ public class EventsModule extends AbstractModule {
 
     eventHandlerMapBinder.addBinding(TimeSeriesHandler.class.getSimpleName())
         .toInstance(new TimeSeriesHandler(eventListener));
-    eventHandlerMapBinder.addBinding("NateroEventHandler").toInstance(new NateroEventHandler(eventListener));
   }
 }
