@@ -15,16 +15,16 @@ public class ChartMuseumCapabilityCheck implements CapabilityCheck {
   @Override
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
     ChartMuseumCapability chartMuseumCapability = (ChartMuseumCapability) delegateCapability;
-    String helmVersionCommand = chartMuseumCapability.getChartMuseumCommand().replace(
+    String chartMuseumVersionCommand = chartMuseumCapability.getChartMuseumCommand().replace(
         "${HELM_PATH}", encloseWithQuotesIfNeeded(InstallUtils.getChartMuseumPath()));
 
-    ProcessExecutor processExecutor = new ProcessExecutor().command(helmVersionCommand);
+    ProcessExecutor processExecutor = new ProcessExecutor().command("/bin/sh", "-c", chartMuseumVersionCommand);
     boolean valid = false;
     try {
       final ProcessResult result = processExecutor.execute();
       valid = result.getExitValue() == 0;
     } catch (Exception e) {
-      String msg = "[Delegate Capability] Failed to execute command with arguments, " + helmVersionCommand;
+      String msg = "[Delegate Capability] Failed to execute command with arguments, " + chartMuseumVersionCommand;
       logger.error(msg);
     }
 

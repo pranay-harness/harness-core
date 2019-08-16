@@ -14,6 +14,7 @@ public class HttpConnectionExecutionCapability extends TcpBasedExecutionCapabili
 
   @Builder
   public HttpConnectionExecutionCapability(String hostName, String scheme, String port, @NonNull String url) {
-    super(hostName, scheme, isNotBlank(port) ? port : scheme.equalsIgnoreCase("HTTPS") ? "443" : "80", url);
+    super(hostName, scheme,
+        isNotBlank(port) ? port : (isNotBlank(scheme) && scheme.equalsIgnoreCase("HTTPS")) ? "443" : "80", url);
   }
 }

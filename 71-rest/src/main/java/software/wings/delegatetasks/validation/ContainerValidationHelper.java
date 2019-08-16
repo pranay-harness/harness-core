@@ -98,6 +98,20 @@ public class ContainerValidationHelper {
     }
   }
 
+  public String getK8sMasterUrl(ContainerServiceParams containerServiceParams) {
+    SettingValue value = containerServiceParams.getSettingAttribute().getValue();
+    if (value instanceof EncryptableSetting && !value.isDecrypted()
+        && isNotEmpty(containerServiceParams.getEncryptionDetails())) {
+      try {
+        encryptionService.decrypt((EncryptableSetting) value, containerServiceParams.getEncryptionDetails());
+      } catch (Exception e) {
+        logger.info("failed to decrypt " + value, e);
+        return null;
+      }
+    }
+    return getKubernetesMasterUrl(containerServiceParams);
+  }
+
   private String getKubernetesMasterUrl(ContainerServiceParams containerServiceParams) {
     SettingAttribute settingAttribute = containerServiceParams.getSettingAttribute();
     SettingValue value = settingAttribute.getValue();

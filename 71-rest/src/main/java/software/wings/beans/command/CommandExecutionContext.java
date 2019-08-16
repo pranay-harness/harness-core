@@ -28,7 +28,6 @@ import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -194,10 +193,10 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
         return CapabilityHelper.generateDelegateCapabilities(cloudProviderSetting.getValue(), cloudProviderCredentials);
       case SSH:
         if (isExecuteOnDelegate()) {
-          return Arrays.asList(IgnoreValidationCapabilityGenerator.buildIgnoreValidationCapability());
+          return Collections.singletonList(IgnoreValidationCapabilityGenerator.buildIgnoreValidationCapability());
         } else {
           String hostName = getHost().getPublicDns();
-          return Arrays.asList(
+          return Collections.singletonList(
               SSHConnectionExecutionCapabilityGenerator.buildSSHConnectionExecutionCapability(hostName));
         }
       case ECS:
@@ -206,13 +205,13 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
         } else if (containerResizeParams != null) {
           region = ((EcsResizeParams) containerResizeParams).getRegion();
         }
-        return Arrays.asList(AwsRegionCapabilityGenerator.buildAwsRegionCapability(region));
+        return Collections.singletonList(AwsRegionCapabilityGenerator.buildAwsRegionCapability(region));
       case AWS_CODEDEPLOY:
         region = codeDeployParams != null ? codeDeployParams.getRegion() : null;
-        return Arrays.asList(AwsRegionCapabilityGenerator.buildAwsRegionCapability(region));
+        return Collections.singletonList(AwsRegionCapabilityGenerator.buildAwsRegionCapability(region));
       case AMI:
       case AWS_LAMBDA:
-        return Arrays.asList(IgnoreValidationCapabilityGenerator.buildIgnoreValidationCapability());
+        return Collections.singletonList(IgnoreValidationCapabilityGenerator.buildIgnoreValidationCapability());
       default:
         unhandled(deploymentType);
         throw new WingsException(ErrorCode.INVALID_ARGUMENT)

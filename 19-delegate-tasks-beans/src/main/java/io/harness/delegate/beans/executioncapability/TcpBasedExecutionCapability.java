@@ -5,7 +5,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NonNull;
 
 @Getter
 @AllArgsConstructor
@@ -13,7 +12,7 @@ public abstract class TcpBasedExecutionCapability implements ExecutionCapability
   protected String hostName;
   protected String scheme;
   protected String port;
-  @NonNull protected String url;
+  protected String url;
 
   @Override
   public String fetchCapabilityBasis() {
