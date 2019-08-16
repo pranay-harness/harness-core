@@ -61,8 +61,9 @@ public class AppResource {
   @Timed
   @ExceptionMetered
   public RestResponse<PageResponse<Application>> list(@BeanParam PageRequest<Application> pageRequest,
-      @QueryParam("appIds") List<String> appIds, @QueryParam("details") @DefaultValue("true") boolean details) {
-    return new RestResponse<>(appService.list(pageRequest, details));
+      @QueryParam("appIds") List<String> appIds, @QueryParam("details") @DefaultValue("true") boolean details,
+      @QueryParam("tagFilter") String tagFilter, @QueryParam("withTags") @DefaultValue("false") boolean withTags) {
+    return new RestResponse<>(appService.list(pageRequest, details, withTags, tagFilter));
   }
 
   /**

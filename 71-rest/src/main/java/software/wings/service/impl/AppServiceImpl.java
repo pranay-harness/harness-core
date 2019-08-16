@@ -72,6 +72,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -128,6 +129,7 @@ public class AppServiceImpl implements AppService {
   @Inject private TemplateService templateService;
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject private EventPublishHelper eventPublishHelper;
+  @Inject private ResourceLookupService resourceLookupService;
 
   @Inject private Queue<PruneEvent> pruneQueue;
   @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
@@ -229,8 +231,10 @@ public class AppServiceImpl implements AppService {
    * @see software.wings.service.intfc.AppService#list(software.wings.dl.PageRequest)
    */
   @Override
-  public PageResponse<Application> list(PageRequest<Application> req, boolean details) {
-    PageResponse<Application> response = wingsPersistence.query(Application.class, req);
+  public PageResponse<Application> list(
+      PageRequest<Application> req, boolean details, boolean withTags, String tagFilter) {
+    PageResponse<Application> response =
+        resourceLookupService.listWithTagFilters(req, tagFilter, EntityType.APPLICATION, withTags);
 
     List<Application> applicationList = response.getResponse();
     if (isEmpty(applicationList)) {
@@ -265,14 +269,14 @@ public class AppServiceImpl implements AppService {
       if (details) {
         PageRequest<Environment> envPageRequest =
             PageRequestBuilder.aPageRequest().addFilter("appId", Operator.IN, appIdArray).build();
-        List<Environment> envList =
-            wingsPersistence.getAllEntities(envPageRequest, () -> environmentService.list(envPageRequest, false));
+        List<Environment> envList = wingsPersistence.getAllEntities(
+            envPageRequest, () -> environmentService.list(envPageRequest, false, false, null));
         appIdEnvMap = envList.stream().collect(groupingBy(Environment::getAppId));
 
         PageRequest<Service> servicePageRequest =
             PageRequestBuilder.aPageRequest().addFilter("appId", Operator.IN, appIdArray).build();
         List<Service> serviceList = wingsPersistence.getAllEntities(
-            servicePageRequest, () -> serviceResourceService.list(servicePageRequest, false, false));
+            servicePageRequest, () -> serviceResourceService.list(servicePageRequest, false, false, false, null));
         appIdServiceMap = serviceList.stream().collect(groupingBy(Service::getAppId));
 
         applicationList.forEach(app -> {
@@ -291,7 +295,7 @@ public class AppServiceImpl implements AppService {
 
   @Override
   public PageResponse<Application> list(PageRequest<Application> req) {
-    return list(req, false);
+    return list(req, false, false, null);
   }
 
   @Override

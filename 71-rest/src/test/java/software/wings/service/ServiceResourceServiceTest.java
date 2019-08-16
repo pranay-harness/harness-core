@@ -160,6 +160,7 @@ import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
@@ -229,6 +230,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Inject @InjectMocks private ServiceResourceService srs;
 
   @Inject @InjectMocks private CommandHelper commandHelper;
+  @Inject @InjectMocks private ResourceLookupService resourceLookupService;
 
   @Spy @InjectMocks private ServiceResourceService spyServiceResourceService = new ServiceResourceServiceImpl();
 
@@ -302,7 +304,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                                  .withCommand(commandBuilder.build())
                                                  .build()))
                         .build());
-    srs.list(request, false, true);
+    srs.list(request, false, true, false, null);
     ArgumentCaptor<PageRequest> argument = ArgumentCaptor.forClass(PageRequest.class);
     verify(mockWingsPersistence).query(eq(Service.class), argument.capture());
     SearchFilter filter = (SearchFilter) argument.getValue().getFilters().get(0);

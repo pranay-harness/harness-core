@@ -47,7 +47,8 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
 
   PageResponse<Workflow> listWorkflowsWithoutOrchestration(PageRequest<Workflow> pageRequest);
 
-  PageResponse<Workflow> listWorkflows(PageRequest<Workflow> pageRequest, Integer previousExecutionsCount);
+  PageResponse<Workflow> listWorkflows(
+      PageRequest<Workflow> pageRequest, Integer previousExecutionsCount, boolean withTags, String tagFilter);
 
   Workflow readWorkflow(@NotNull String appId, @NotNull String workflowId, Integer version);
 

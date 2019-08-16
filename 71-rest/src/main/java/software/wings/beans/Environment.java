@@ -11,7 +11,6 @@ import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.persistence.NameAccess;
-import io.harness.tags.TagAware;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -26,6 +25,7 @@ import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.beans.entityinterface.KeywordsAware;
+import software.wings.beans.entityinterface.TagAware;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;
@@ -66,6 +66,8 @@ public class Environment extends Base implements KeywordsAware, NameAccess, TagA
   @SchemaIgnore private Set<String> keywords;
   @Indexed private String accountId;
   private boolean sample;
+
+  private transient List<HarnessTagLink> tagLinks;
 
   /**
    * Gets name.

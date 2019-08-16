@@ -159,7 +159,7 @@ public class YamlHelper {
     PageRequest<Trigger> pageRequest =
         aPageRequest().addFilter("appId", Operator.EQ, appId).addFilter("name", Operator.EQ, triggerName).build();
 
-    Optional<Trigger> trigger = triggerService.list(pageRequest).getResponse().stream().findFirst();
+    Optional<Trigger> trigger = triggerService.list(pageRequest, false, null).getResponse().stream().findFirst();
     if (!trigger.isPresent()) {
       return null;
     }

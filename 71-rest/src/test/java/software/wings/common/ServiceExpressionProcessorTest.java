@@ -102,7 +102,7 @@ public class ServiceExpressionProcessorTest extends CategoryTest {
     PageResponse<Service> res = new PageResponse<>();
     res.setResponse(services);
 
-    when(serviceResourceService.list(any(PageRequest.class), eq(false), eq(true))).thenReturn(res);
+    when(serviceResourceService.list(any(PageRequest.class), eq(false), eq(true), eq(false), eq(null))).thenReturn(res);
 
     ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context);
     processor.setServiceResourceService(serviceResourceService);
@@ -155,7 +155,7 @@ public class ServiceExpressionProcessorTest extends CategoryTest {
     PageResponse<Service> res = new PageResponse<>();
     res.setResponse(services);
 
-    when(serviceResourceService.list(any(PageRequest.class), eq(false), eq(true))).thenReturn(res);
+    when(serviceResourceService.list(any(PageRequest.class), eq(false), eq(true), eq(false), eq(null))).thenReturn(res);
 
     ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context);
     processor.setServiceResourceService(serviceResourceService);
@@ -212,7 +212,7 @@ public class ServiceExpressionProcessorTest extends CategoryTest {
 
     PageResponse<Service> res = new PageResponse<>();
     res.setResponse(services);
-    when(serviceResourceService.list(any(PageRequest.class), eq(false), eq(true))).thenReturn(res);
+    when(serviceResourceService.list(any(PageRequest.class), eq(false), eq(true), eq(false), eq(null))).thenReturn(res);
 
     ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context);
     processor.setServiceResourceService(serviceResourceService);

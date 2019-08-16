@@ -794,7 +794,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     // 2nd workflow
     createExecutableWorkflow(appId, env);
     PageRequest<Workflow> pageRequest = aPageRequest().addFilter(Workflow.APP_ID_KEY, EQ, appId).build();
-    PageResponse<Workflow> res = workflowService.listWorkflows(pageRequest, null);
+    PageResponse<Workflow> res = workflowService.listWorkflows(pageRequest, null, false, null);
 
     assertThat(res).isNotNull().hasSize(2);
   }

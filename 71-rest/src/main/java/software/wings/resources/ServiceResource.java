@@ -91,14 +91,15 @@ public class ServiceResource {
   @ExceptionMetered
   @ListAPI(ResourceType.SERVICE)
   public RestResponse<PageResponse<Service>> list(@QueryParam("appId") String appId,
+      @QueryParam("tagFilter") String tagFilter, @QueryParam("withTags") @DefaultValue("false") boolean withTags,
       @BeanParam PageRequest<Service> pageRequest, @QueryParam("details") @DefaultValue("true") boolean details) {
     if (appId != null) {
       pageRequest.addFilter("appId", EQ, appId);
     }
     if (!details) {
-      new RestResponse<>(serviceResourceService.list(pageRequest, false, false));
+      return new RestResponse<>(serviceResourceService.list(pageRequest, false, false, withTags, tagFilter));
     }
-    return new RestResponse<>(serviceResourceService.list(pageRequest, true, true));
+    return new RestResponse<>(serviceResourceService.list(pageRequest, true, true, withTags, tagFilter));
   }
 
   /**

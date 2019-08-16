@@ -982,7 +982,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
                                                         .addFieldsIncluded("_id", "name")
                                                         .build();
 
-          PageResponse<Environment> pageResponse = environmentService.list(envPageRequest, false);
+          PageResponse<Environment> pageResponse = environmentService.list(envPageRequest, false, false, null);
 
           List<Environment> environmentList = pageResponse.getResponse();
           if (isNotEmpty(environmentList)) {

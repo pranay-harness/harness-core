@@ -33,6 +33,7 @@ import java.util.Map;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -77,10 +78,11 @@ public class TriggerResource {
   @GET
   @Timed
   @ExceptionMetered
-  public RestResponse<PageResponse<Trigger>> list(
-      @QueryParam("appId") String appId, @BeanParam PageRequest<Trigger> pageRequest) {
+  public RestResponse<PageResponse<Trigger>> list(@QueryParam("appId") String appId,
+      @QueryParam("tagFilter") String tagFilter, @QueryParam("withTags") @DefaultValue("false") boolean withTags,
+      @BeanParam PageRequest<Trigger> pageRequest) {
     pageRequest.addFilter("appId", EQ, appId);
-    return new RestResponse<>(triggerService.list(pageRequest));
+    return new RestResponse<>(triggerService.list(pageRequest, withTags, tagFilter));
   }
 
   /**

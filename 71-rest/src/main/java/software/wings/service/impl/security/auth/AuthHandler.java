@@ -562,7 +562,8 @@ public class AuthHandler {
   private Map<String, List<Base>> getAppIdServiceMap(String accountId) {
     PageRequest<Service> pageRequest =
         aPageRequest().addFilter("accountId", Operator.EQ, accountId).addFieldsIncluded("_id", "appId").build();
-    List<Service> list = getAllEntities(pageRequest, () -> serviceResourceService.list(pageRequest, false, false));
+    List<Service> list =
+        getAllEntities(pageRequest, () -> serviceResourceService.list(pageRequest, false, false, false, null));
     return list.stream().collect(Collectors.groupingBy(Base::getAppId));
   }
 
@@ -581,7 +582,8 @@ public class AuthHandler {
                                                .addFieldsIncluded("_id", "appId", "environmentType")
                                                .build();
 
-    List<Environment> list = getAllEntities(pageRequest, () -> environmentService.list(pageRequest, false));
+    List<Environment> list =
+        getAllEntities(pageRequest, () -> environmentService.list(pageRequest, false, false, null));
 
     return list.stream().collect(Collectors.groupingBy(Base::getAppId));
   }
@@ -681,7 +683,8 @@ public class AuthHandler {
   public Set<String> getEnvIdsByFilter(String appId, EnvFilter envFilter) {
     PageRequest<Environment> pageRequest =
         aPageRequest().addFilter("appId", Operator.EQ, appId).addFieldsIncluded("_id", "environmentType").build();
-    List<Environment> envList = getAllEntities(pageRequest, () -> environmentService.list(pageRequest, false));
+    List<Environment> envList =
+        getAllEntities(pageRequest, () -> environmentService.list(pageRequest, false, false, null));
 
     return getEnvIdsByFilter(envList, envFilter);
   }

@@ -16,7 +16,6 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import io.harness.data.validator.EntityName;
 import io.harness.persistence.NameAccess;
-import io.harness.tags.TagAware;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
@@ -25,6 +24,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
 import software.wings.beans.entityinterface.KeywordsAware;
+import software.wings.beans.entityinterface.TagAware;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -76,6 +76,8 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
   @Transient private String infraDefinitionId;
   @Transient @Getter @Setter private WorkflowCreationFlags creationFlags;
   // }}
+
+  @Getter @Setter private transient List<HarnessTagLink> tagLinks;
 
   private transient List<String> templatizedServiceIds = new ArrayList<>();
 

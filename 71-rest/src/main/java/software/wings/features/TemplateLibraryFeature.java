@@ -82,6 +82,6 @@ public class TemplateLibraryFeature extends AbstractPremiumFeature implements Co
   }
 
   private PageResponse<Service> getServicesForAccount(@NotNull String accountId) {
-    return serviceResourceService.list(ServiceUtils.getServicesPageRequest(accountId, null), false, true);
+    return serviceResourceService.list(ServiceUtils.getServicesPageRequest(accountId, null), false, true, false, null);
   }
 }

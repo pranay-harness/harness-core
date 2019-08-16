@@ -9,7 +9,6 @@ import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import io.harness.persistence.NameAccess;
-import io.harness.tags.TagAware;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -25,7 +24,9 @@ import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.AllowedValueYaml;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
+import software.wings.beans.HarnessTagLink;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.entityinterface.TagAware;
 import software.wings.beans.trigger.ArtifactSelection.ArtifactSelectionKeys;
 import software.wings.beans.trigger.ArtifactTriggerCondition.ArtifactTriggerConditionKeys;
 import software.wings.beans.trigger.Trigger.TriggerKeys;
@@ -72,6 +73,7 @@ public class Trigger extends Base implements NameAccess, TagAware {
   private Map<String, String> workflowVariables;
   private List<ServiceInfraWorkflow> serviceInfraWorkflows;
   private boolean excludeHostsWithSameArtifact;
+  private transient List<HarnessTagLink> tagLinks;
 
   @Builder
   public Trigger(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,

@@ -159,10 +159,10 @@ public class AppContainerServiceImpl implements AppContainerService {
   }
 
   private void ensureAppContainerNotInUse(String appContainerId) {
-    List<Service> services =
-        serviceResourceService
-            .list(aPageRequest().addFilter("appContainer", Operator.EQ, appContainerId).build(), false, true)
-            .getResponse();
+    List<Service> services = serviceResourceService
+                                 .list(aPageRequest().addFilter("appContainer", Operator.EQ, appContainerId).build(),
+                                     false, true, false, null)
+                                 .getResponse();
     if (!services.isEmpty()) {
       throw new InvalidRequestException(
           format("Application Stack is in use by %d %s.", services.size(), plural("service", services.size())));

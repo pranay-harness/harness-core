@@ -103,6 +103,6 @@ public class WorkflowPreDeploymentValidator {
   }
 
   private PageResponse<Service> getServicesForAccount(@NotNull String accountId, List<String> serviceIdList) {
-    return serviceResourceService.list(getServicesPageRequest(accountId, serviceIdList), false, true);
+    return serviceResourceService.list(getServicesPageRequest(accountId, serviceIdList), false, true, false, null);
   }
 }

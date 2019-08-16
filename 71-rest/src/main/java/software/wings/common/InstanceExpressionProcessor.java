@@ -421,7 +421,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
                                                 .addFieldsIncluded(ID_KEY)
                                                 .build();
 
-      PageResponse<Service> services = serviceResourceService.list(svcPageRequest, false, true);
+      PageResponse<Service> services = serviceResourceService.list(svcPageRequest, false, true, false, null);
       return services.getResponse();
     } else {
       ServiceElement serviceElement = context.getContextElement(ContextElementType.SERVICE);

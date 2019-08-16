@@ -4,6 +4,7 @@
 
 package software.wings.resources;
 
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.DUPLICATE_STATE_NAMES;
@@ -21,7 +22,6 @@ import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.WorkflowType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -115,17 +115,24 @@ public class WorkflowResource {
       @QueryParam("previousExecutionsCount") Integer previousExecutionsCount,
       @QueryParam("workflowType") List<String> workflowTypes,
       @QueryParam("details") @DefaultValue("true") boolean details,
-      @QueryParam("withArtifactStreamSummary") @DefaultValue("false") boolean withArtifactStreamSummary) {
+      @QueryParam("withArtifactStreamSummary") @DefaultValue("false") boolean withArtifactStreamSummary,
+      @QueryParam("tagFilter") String tagFilter, @QueryParam("withTags") @DefaultValue("false") boolean withTags) {
     if ((isEmpty(workflowTypes))
         && (pageRequest.getFilters() == null
                || pageRequest.getFilters().stream().noneMatch(
                       searchFilter -> searchFilter.getFieldName().equals("workflowType")))) {
-      pageRequest.addFilter("workflowType", Operator.EQ, WorkflowType.ORCHESTRATION);
+      pageRequest.addFilter("workflowType", EQ, WorkflowType.ORCHESTRATION);
     }
+    if (appId != null) {
+      pageRequest.addFilter("appId", EQ, appId);
+    }
+
     if (!details) {
       return new RestResponse<>(workflowService.listWorkflowsWithoutOrchestration(pageRequest));
     }
-    PageResponse<Workflow> pageResponse = workflowService.listWorkflows(pageRequest, previousExecutionsCount);
+
+    PageResponse<Workflow> pageResponse =
+        workflowService.listWorkflows(pageRequest, previousExecutionsCount, withTags, tagFilter);
     if (withArtifactStreamSummary) {
       if (pageResponse != null && isNotEmpty(pageResponse.getResponse())) {
         for (Workflow workflow : pageResponse.getResponse()) {

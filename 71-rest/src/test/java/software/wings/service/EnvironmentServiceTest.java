@@ -99,6 +99,7 @@ import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
@@ -134,6 +135,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
 
   @Inject @InjectMocks private WingsPersistence realWingsPersistence;
   @Inject @InjectMocks private EnvironmentService environmentService;
+  @Inject @InjectMocks private ResourceLookupService resourceLookupService;
 
   @Spy @InjectMocks private EnvironmentService spyEnvService = new EnvironmentServiceImpl();
 
@@ -186,7 +188,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     when(serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE))
         .thenReturn(serviceTemplatePageResponse);
 
-    PageResponse<Environment> environments = environmentService.list(envPageRequest, true);
+    PageResponse<Environment> environments = environmentService.list(envPageRequest, true, false, null);
 
     assertThat(environments).containsAll(asList(environment));
     assertThat(environments.get(0).getServiceTemplates()).containsAll(asList(serviceTemplate));
@@ -526,7 +528,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
                                                   .build();
     PageResponse<Service> servicesResponse = aPageResponse().withResponse(asList(service)).build();
 
-    when(serviceResourceService.list(servicePageRequest, false, false)).thenReturn(servicesResponse);
+    when(serviceResourceService.list(servicePageRequest, false, false, false, null)).thenReturn(servicesResponse);
 
     List<Service> services = environmentService.getServicesWithOverrides(APP_ID, ENV_ID);
 

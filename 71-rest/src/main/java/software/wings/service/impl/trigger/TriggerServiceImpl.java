@@ -59,6 +59,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.TriggerKey;
 import software.wings.beans.Application;
+import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
 import software.wings.beans.ExecutionArgs;
@@ -114,6 +115,7 @@ import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -171,10 +173,11 @@ public class TriggerServiceImpl implements TriggerService {
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private AuthService authService;
   @Inject private AuthHandler authHandler;
+  @Inject private ResourceLookupService resourceLookupService;
 
   @Override
-  public PageResponse<Trigger> list(PageRequest<Trigger> pageRequest) {
-    return wingsPersistence.query(Trigger.class, pageRequest);
+  public PageResponse<Trigger> list(PageRequest<Trigger> pageRequest, boolean withTags, String tagFilter) {
+    return resourceLookupService.listWithTagFilters(pageRequest, tagFilter, EntityType.TRIGGER, withTags);
   }
 
   @Override

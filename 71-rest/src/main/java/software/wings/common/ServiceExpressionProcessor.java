@@ -206,7 +206,7 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
     if (selectedServices == null) {
       PageRequestBuilder pageRequest =
           aPageRequest().withLimit(PageRequest.UNLIMITED).addFilter("appId", Operator.EQ, getAppId());
-      List<Service> services = serviceResourceService.list(pageRequest.build(), false, true);
+      List<Service> services = serviceResourceService.list(pageRequest.build(), false, true, false, null);
       selectedServices = convertToServiceElements(services);
     }
     return selectedServices;

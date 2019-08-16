@@ -88,7 +88,7 @@ public class UsageMetricsService {
                                                 .addFilter("appId", Operator.IN, apps.toArray())
                                                 .addFieldsIncluded(ID_KEY)
                                                 .build();
-      return serviceResourceService.list(svcPageRequest, false, false).getTotal();
+      return serviceResourceService.list(svcPageRequest, false, false, false, null).getTotal();
     } else {
       return 0;
     }
@@ -114,7 +114,7 @@ public class UsageMetricsService {
                                              .addFilter("appId", Operator.IN, appIds.toArray())
                                              .addFieldsIncluded("_id")
                                              .build();
-      return triggerService.list(pageRequest).getTotal();
+      return triggerService.list(pageRequest, false, null).getTotal();
     } else {
       return 0;
     }
@@ -127,7 +127,7 @@ public class UsageMetricsService {
                                                  .addFilter("appId", Operator.IN, appIds.toArray())
                                                  .addFieldsIncluded("_id")
                                                  .build();
-      return environmentService.list(pageRequest, false).getTotal();
+      return environmentService.list(pageRequest, false, false, null).getTotal();
     } else {
       return 0;
     }

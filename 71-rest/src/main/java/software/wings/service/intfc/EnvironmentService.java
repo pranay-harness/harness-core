@@ -46,7 +46,8 @@ public interface EnvironmentService extends OwnedByApplication {
    * @param withSummary the with summary
    * @return the page response
    */
-  PageResponse<Environment> list(PageRequest<Environment> request, boolean withSummary);
+  PageResponse<Environment> list(
+      PageRequest<Environment> request, boolean withSummary, boolean withTags, String tagFilter);
 
   /**
    * Gets the.

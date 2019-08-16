@@ -67,7 +67,7 @@ public class ServiceExpressionBuilder extends ExpressionBuilder {
     if (entityId.equalsIgnoreCase("All")) {
       List<Service> services = serviceResourceService.list(
           aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, appId).addFieldsIncluded("uuid").build(), false,
-          false);
+          false, false, null);
       return services.stream().map(Service::getUuid).collect(toList());
     } else {
       return asList(Misc.commaCharPattern.split(entityId));

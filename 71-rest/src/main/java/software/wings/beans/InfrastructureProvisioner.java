@@ -8,7 +8,6 @@ import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
 import io.harness.persistence.NameAccess;
-import io.harness.tags.TagAware;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -16,6 +15,7 @@ import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
+import software.wings.beans.entityinterface.TagAware;
 import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
 import software.wings.yaml.BaseEntityYaml;
 
@@ -45,6 +45,7 @@ public abstract class InfrastructureProvisioner extends Base implements NameAcce
   private List<NameValuePair> variables;
   @Valid List<InfrastructureMappingBlueprint> mappingBlueprints;
   @Indexed private String accountId;
+  private transient List<HarnessTagLink> tagLinks;
 
   public InfrastructureProvisioner(String name, String description, String infrastructureProvisionerType,
       List<NameValuePair> variables, List<InfrastructureMappingBlueprint> mappingBlueprints, String accountId,

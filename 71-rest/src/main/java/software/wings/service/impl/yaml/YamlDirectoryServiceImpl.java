@@ -1455,7 +1455,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         accountId, TRIGGER_FOLDER, Trigger.class, directoryPath.add(TRIGGER_FOLDER), app.getUuid(), yamlGitSyncService);
 
     PageRequest<Trigger> pageRequest = aPageRequest().addFilter("appId", Operator.EQ, app.getAppId()).build();
-    List<Trigger> triggers = triggerService.list(pageRequest).getResponse();
+    List<Trigger> triggers = triggerService.list(pageRequest, false, null).getResponse();
 
     if (triggers != null) {
       for (Trigger trigger : triggers) {
