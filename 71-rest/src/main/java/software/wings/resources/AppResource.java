@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
 import com.google.inject.Inject;
@@ -61,8 +62,12 @@ public class AppResource {
   @Timed
   @ExceptionMetered
   public RestResponse<PageResponse<Application>> list(@BeanParam PageRequest<Application> pageRequest,
-      @QueryParam("appIds") List<String> appIds, @QueryParam("details") @DefaultValue("true") boolean details,
-      @QueryParam("tagFilter") String tagFilter, @QueryParam("withTags") @DefaultValue("false") boolean withTags) {
+      @QueryParam("accountId") String accountId, @QueryParam("appIds") List<String> appIds,
+      @QueryParam("details") @DefaultValue("true") boolean details, @QueryParam("tagFilter") String tagFilter,
+      @QueryParam("withTags") @DefaultValue("false") boolean withTags) {
+    if (accountId != null) {
+      pageRequest.addFilter("accountId", EQ, accountId);
+    }
     return new RestResponse<>(appService.list(pageRequest, details, withTags, tagFilter));
   }
 
