@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
@@ -271,7 +272,9 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           .build();
     } else {
       AnalysisContext context =
-          getLogAnalysisContext(executionContext, executionResponse.getStateExecutionData().getCorrelationId());
+          wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
+              .filter(AnalysisContextKeys.stateExecutionId, executionContext.getStateExecutionInstanceId())
+              .get();
       int analysisMinute = executionResponse.getStateExecutionData().getAnalysisMinute();
       for (int i = 0; i < NUM_OF_RETRIES; i++) {
         final LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(
