@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.KmsConfig;
 import software.wings.features.api.AbstractPremiumFeature;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Singleton
+@Slf4j
 public class SecretsManagementFeature extends AbstractPremiumFeature implements ComplianceByRemovingUsage {
   public static final String FEATURE_NAME = "SECRET_MANAGEMENT";
 
@@ -48,7 +50,10 @@ public class SecretsManagementFeature extends AbstractPremiumFeature implements 
 
   @Override
   public boolean isAvailable(String accountType) {
-    return (boolean) getRestrictions(accountType).getOrDefault("isCustomSecretManagerAllowed", true);
+    boolean result = (boolean) getRestrictions(accountType).getOrDefault("isCustomSecretManagerAllowed", true);
+
+    logger.info("Is custom secret manager usage allowed for account type {}? {}", accountType, result);
+    return result;
   }
 
   @Override
@@ -66,10 +71,11 @@ public class SecretsManagementFeature extends AbstractPremiumFeature implements 
   }
 
   private Collection<Usage> getUsages(String accountId) {
-    return getCustomSecretManagers(accountId)
-        .stream()
-        .map(SecretsManagementFeature::toUsage)
-        .collect(Collectors.toList());
+    Collection<Usage> usages =
+        getCustomSecretManagers(accountId).stream().map(SecretsManagementFeature::toUsage).collect(Collectors.toList());
+
+    logger.info("Secret manager usages in account {} are: {}", accountId, usages);
+    return usages;
   }
 
   private static Usage toUsage(EncryptionConfig encryptionConfig) {

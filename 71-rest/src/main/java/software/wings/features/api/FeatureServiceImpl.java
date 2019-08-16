@@ -51,12 +51,13 @@ public class FeatureServiceImpl implements FeatureService {
     for (Provider<Feature> f : featuresByName.values()) {
       Stopwatch featureWatch = Stopwatch.createStarted();
       if (!comply(f.get(), accountId, targetAccountType, requiredInfoToComply)) {
+        logger.warn(String.format("Failed to comply feature [%s]", f.get().getFeatureName()));
         result = false;
       }
-      logger.info(String.format("Total Time taken to comply feature [%s] : %d", f.get().getFeatureName(),
-          featureWatch.elapsed(TimeUnit.SECONDS)));
+      logger.info("Total Time taken to comply feature [{}] : {}", f.get().getFeatureName(),
+          featureWatch.elapsed(TimeUnit.SECONDS));
     }
-    logger.info("Total Time taken to comply account : " + overallWatch.elapsed(TimeUnit.SECONDS));
+    logger.info("Total Time taken to comply account: {}", overallWatch.elapsed(TimeUnit.SECONDS));
 
     return result;
   }

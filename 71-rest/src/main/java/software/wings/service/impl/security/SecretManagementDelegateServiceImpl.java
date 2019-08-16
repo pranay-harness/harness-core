@@ -857,7 +857,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         logger.warn(format("decryption failed. trial num: %d", failedAttempts), e);
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
-            throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER, e)
+            throw new WingsException(ErrorCode.CYBERARK_OPERATION_ERROR, USER, e)
                 .addParam(REASON_KEY, "Decryption failed after " + NUM_OF_RETRIES + " retries");
           }
           sleep(ofMillis(1000));
