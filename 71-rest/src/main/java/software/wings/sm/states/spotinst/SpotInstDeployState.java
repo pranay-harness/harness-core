@@ -28,10 +28,10 @@ import software.wings.api.InstanceElementListParam.InstanceElementListParamBuild
 import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
+import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.ResizeStrategy;
-import software.wings.beans.SpotInstInfrastructureMapping;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
@@ -100,9 +100,8 @@ public class SpotInstDeployState extends State {
     Application app = appService.get(context.getAppId());
     Environment env = workflowStandardParams.getEnv();
 
-    SpotInstInfrastructureMapping spotInstInfrastructureMapping =
-        (SpotInstInfrastructureMapping) infrastructureMappingService.get(
-            app.getUuid(), phaseElement.getInfraMappingId());
+    AwsAmiInfrastructureMapping awsAmiInfrastructureMapping =
+        (AwsAmiInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
 
     // fetch setupContextElement
     SpotInstSetupContextElement spotInstSetupContextElement =
@@ -118,12 +117,12 @@ public class SpotInstDeployState extends State {
 
     // Generate DeployStateExeuctionData, contains commandRequest object.
     SpotInstDeployStateExecutionData stateExecutionData =
-        generateStateExecutionData(spotInstSetupContextElement, activity, spotInstInfrastructureMapping, context, app);
+        generateStateExecutionData(spotInstSetupContextElement, activity, awsAmiInfrastructureMapping, context, app);
 
     SpotInstCommandRequest spotInstCommandRequest = stateExecutionData.getSpotinstCommandRequest();
 
     DelegateTask task = spotInstStateHelper.getDelegateTask(app.getAccountId(), app.getUuid(),
-        TaskType.SPOTINST_COMMAND_TASK, activity.getUuid(), env.getUuid(), spotInstInfrastructureMapping.getUuid(),
+        TaskType.SPOTINST_COMMAND_TASK, activity.getUuid(), env.getUuid(), awsAmiInfrastructureMapping.getUuid(),
         new Object[] {spotInstCommandRequest},
         spotInstStateHelper.generateTimeOutForDelegateTask(
             spotInstCommandRequest.getSpotInstTaskParameters().getTimeoutIntervalInMin()));
@@ -139,7 +138,7 @@ public class SpotInstDeployState extends State {
 
   protected SpotInstDeployStateExecutionData generateStateExecutionData(
       SpotInstSetupContextElement spotInstSetupContextElement, Activity activity,
-      SpotInstInfrastructureMapping spotInstInfrastructureMapping, ExecutionContext context, Application app) {
+      AwsAmiInfrastructureMapping awsAmiInfrastructureMapping, ExecutionContext context, Application app) {
     // Calculate upsize and downsize counts
     Integer upsizeUpdateCount = getUpsizeUpdateCount(spotInstSetupContextElement);
     Integer downsizeUpdateCount = getDownsizeUpdateCount(upsizeUpdateCount, spotInstSetupContextElement);
@@ -150,9 +149,9 @@ public class SpotInstDeployState extends State {
 
     // Generate CommandRequest to be sent to delegate
     SpotInstCommandRequestBuilder requestBuilder =
-        spotInstStateHelper.generateSpotInstCommandRequest(spotInstInfrastructureMapping, context);
+        spotInstStateHelper.generateSpotInstCommandRequest(awsAmiInfrastructureMapping, context);
     SpotInstTaskParameters spotInstTaskParameters = getDeployTaskParameters(context, app, activity.getUuid(),
-        upsizeUpdateCount, downsizeUpdateCount, spotInstInfrastructureMapping, spotInstSetupContextElement);
+        upsizeUpdateCount, downsizeUpdateCount, awsAmiInfrastructureMapping, spotInstSetupContextElement);
 
     SpotInstCommandRequest request = requestBuilder.spotInstTaskParameters(spotInstTaskParameters).build();
     stateExecutionData.setSpotinstCommandRequest(request);
@@ -178,14 +177,14 @@ public class SpotInstDeployState extends State {
     stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
     stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
 
-    SpotInstInfrastructureMapping spotInstInfrastructureMapping =
-        (SpotInstInfrastructureMapping) infrastructureMappingService.get(
+    AwsAmiInfrastructureMapping awsAmiInfrastructureMapping =
+        (AwsAmiInfrastructureMapping) infrastructureMappingService.get(
             stateExecutionData.getAppId(), stateExecutionData.getInfraId());
 
     InstanceElementListParam instanceElementListParam =
         InstanceElementListParamBuilder.anInstanceElementListParam()
             .withInstanceElements(awsStateHelper.generateInstanceElements(
-                spotInstDeployTaskResponse.getEc2InstancesAdded(), spotInstInfrastructureMapping, context))
+                spotInstDeployTaskResponse.getEc2InstancesAdded(), awsAmiInfrastructureMapping, context))
             .build();
 
     return ExecutionResponse.Builder.anExecutionResponse()
@@ -198,8 +197,7 @@ public class SpotInstDeployState extends State {
   }
 
   protected SpotInstTaskParameters getDeployTaskParameters(ExecutionContext context, Application app, String activityId,
-      Integer upsizeUpdateCount, Integer downsizeUpdateCount,
-      SpotInstInfrastructureMapping spotInstInfrastructureMapping,
+      Integer upsizeUpdateCount, Integer downsizeUpdateCount, AwsAmiInfrastructureMapping awsAmiInfrastructureMapping,
       SpotInstSetupContextElement spotInstSetupContextElement) {
     ElastiGroup newElastiGroup = spotInstSetupContextElement.getNewElastiGroupOriginalConfig().clone();
     ElastiGroupCapacity newElastiGroupCapacity = newElastiGroup.getCapacity();
@@ -226,12 +224,12 @@ public class SpotInstDeployState extends State {
       oldElastiGroupCapacity.setMinimum(downsizeUpdateCount);
     }
 
-    return generateSpotInstDeployTaskParameters(app, activityId, spotInstInfrastructureMapping, context,
+    return generateSpotInstDeployTaskParameters(app, activityId, awsAmiInfrastructureMapping, context,
         spotInstSetupContextElement, oldElastiGroup, newElastiGroup);
   }
 
   protected SpotInstDeployTaskParameters generateSpotInstDeployTaskParameters(Application app, String activityId,
-      SpotInstInfrastructureMapping infrastructureMapping, ExecutionContext context,
+      AwsAmiInfrastructureMapping awsAmiInfrastructureMapping, ExecutionContext context,
       SpotInstSetupContextElement spotInstSetupContextElement, ElastiGroup oldElastiGroup, ElastiGroup newElastiGroup) {
     SpotInstCommandRequest commandRequest = spotInstSetupContextElement.getCommandRequest();
 
@@ -240,7 +238,7 @@ public class SpotInstDeployState extends State {
         .accountId(app.getAccountId())
         .appId(app.getAppId())
         .activityId(activityId)
-        .awsRegion(infrastructureMapping.getAwsRegion())
+        .awsRegion(awsAmiInfrastructureMapping.getRegion())
         .commandName(SPOTINST_DEPLOY_COMMAND)
         .workflowExecutionId(context.getWorkflowExecutionId())
         .rollback(isRollback())

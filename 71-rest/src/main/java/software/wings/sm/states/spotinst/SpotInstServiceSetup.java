@@ -37,8 +37,12 @@ import java.util.Map;
 @Slf4j
 public class SpotInstServiceSetup extends State {
   public static final String SPOTINST_SERVICE_SETUP_COMMAND = "Spotinst Service Setup";
+  public static final int DEFAULT_CURRENT_RUNNING_INSTANCE_COUNT = 2;
 
+  @Getter @Setter private Integer minInstances;
   @Getter @Setter private Integer maxInstances;
+  @Getter @Setter private Integer targetInstances;
+
   @Getter @Setter private Integer currentRunningCount;
   @Getter @Setter private String elastiGroupNamePrefix;
   @Getter @Setter private Integer timeoutIntervalInMin;
@@ -154,7 +158,6 @@ public class SpotInstServiceSetup extends State {
             .commandName(SPOTINST_SERVICE_SETUP_COMMAND)
             .maxInstanceCount(stateExecutionData.getMaxInstanceCount())
             .useCurrentRunningInstanceCount(stateExecutionData.isUseCurrentRunningInstanceCount())
-            .currentRunningInstanceCount(stateExecutionData.getCurrentRunningInstanceCount())
             .resizeStrategy(resizeStrategy)
             .spotInstSetupTaskResponse(spotInstSetupTaskResponse)
             .isBlueGreen(blueGreen)
@@ -184,11 +187,18 @@ public class SpotInstServiceSetup extends State {
       return;
     }
 
-    spotInstSetupContextElement.setOldElastiGroupOriginalConfig(fetchOldElasticGroup(spotInstSetupTaskResponse));
+    ElastiGroup oldElastiGroup = fetchOldElasticGroup(spotInstSetupTaskResponse);
+    spotInstSetupContextElement.setOldElastiGroupOriginalConfig(oldElastiGroup);
     spotInstSetupContextElement.setProdListenerArn(spotInstSetupTaskResponse.getProdListenerArn());
     spotInstSetupContextElement.setStageListenerArn(spotInstSetupTaskResponse.getStageListenerArn());
     spotInstSetupContextElement.setStageTargetGroupArn(spotInstSetupTaskResponse.getStageTargetGroupArn());
     spotInstSetupContextElement.setProdTargetGroupArn(spotInstSetupTaskResponse.getProdTargetGroupArn());
+
+    if (oldElastiGroup != null && oldElastiGroup.getCapacity() != null) {
+      spotInstSetupContextElement.setCurrentRunningInstanceCount(oldElastiGroup.getCapacity().getTarget());
+    } else {
+      spotInstSetupContextElement.setCurrentRunningInstanceCount(DEFAULT_CURRENT_RUNNING_INSTANCE_COUNT);
+    }
   }
 
   private ElastiGroup fetchOldElasticGroup(SpotInstSetupTaskResponse spotInstSetupTaskResponse) {

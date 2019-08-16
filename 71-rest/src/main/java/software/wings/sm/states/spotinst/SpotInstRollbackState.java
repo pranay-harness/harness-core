@@ -8,7 +8,7 @@ import io.harness.delegate.task.spotinst.request.SpotInstDeployTaskParameters;
 import io.harness.spotinst.model.ElastiGroup;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
-import software.wings.beans.SpotInstInfrastructureMapping;
+import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest.SpotInstCommandRequestBuilder;
 import software.wings.sm.ExecutionContext;
@@ -34,12 +34,12 @@ public class SpotInstRollbackState extends SpotInstDeployState {
   @Override
   protected SpotInstDeployStateExecutionData generateStateExecutionData(
       SpotInstSetupContextElement spotInstSetupContextElement, Activity activity,
-      SpotInstInfrastructureMapping spotInstInfrastructureMapping, ExecutionContext context, Application app) {
+      AwsAmiInfrastructureMapping awsAmiInfrastructureMapping, ExecutionContext context, Application app) {
     // Generate CommandRequest to be sent to delegate
     SpotInstCommandRequestBuilder requestBuilder =
-        spotInstStateHelper.generateSpotInstCommandRequest(spotInstInfrastructureMapping, context);
+        spotInstStateHelper.generateSpotInstCommandRequest(awsAmiInfrastructureMapping, context);
     SpotInstDeployTaskParameters spotInstTaskParameters = generateRollbackTaskParameters(
-        context, app, activity.getUuid(), spotInstInfrastructureMapping, spotInstSetupContextElement);
+        context, app, activity.getUuid(), awsAmiInfrastructureMapping, spotInstSetupContextElement);
 
     SpotInstCommandRequest request = requestBuilder.spotInstTaskParameters(spotInstTaskParameters).build();
 
@@ -57,12 +57,12 @@ public class SpotInstRollbackState extends SpotInstDeployState {
   }
 
   private SpotInstDeployTaskParameters generateRollbackTaskParameters(ExecutionContext context, Application app,
-      String activityId, SpotInstInfrastructureMapping spotInstInfrastructureMapping,
+      String activityId, AwsAmiInfrastructureMapping awsAmiInfrastructureMapping,
       SpotInstSetupContextElement setupContextElement) {
     ElastiGroup oldElastiGroup = spotInstStateHelper.prepareOldElastiGroupConfigForRollback(setupContextElement);
     ElastiGroup newElastiGroup = spotInstStateHelper.prepareNewElastiGroupConfigForRollback(setupContextElement);
 
     return generateSpotInstDeployTaskParameters(
-        app, activityId, spotInstInfrastructureMapping, context, setupContextElement, oldElastiGroup, newElastiGroup);
+        app, activityId, awsAmiInfrastructureMapping, context, setupContextElement, oldElastiGroup, newElastiGroup);
   }
 }

@@ -47,12 +47,12 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
+import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SpotInstConfig;
-import software.wings.beans.SpotInstInfrastructureMapping;
 import software.wings.beans.TaskType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
@@ -106,20 +106,18 @@ public class SpotInstStateHelper {
       throw new WingsException("Value for Older Active Versions To Keep Must be > 0");
     }
 
-    SpotInstInfrastructureMapping spotInstInfrastructureMapping =
-        (SpotInstInfrastructureMapping) infrastructureMappingService.get(
-            app.getUuid(), phaseElement.getInfraMappingId());
+    AwsAmiInfrastructureMapping awsAmiInfrastructureMapping =
+        (AwsAmiInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
 
     Activity activity = createActivity(
         context, artifact, serviceSetup.getStateType(), SPOTINST_SERVICE_SETUP_COMMAND, CommandUnitType.SPOTINST_SETUP);
 
-    SettingAttribute settingAttribute =
-        settingsService.get(spotInstInfrastructureMapping.getComputeProviderSettingId());
+    SettingAttribute settingAttribute = settingsService.get(awsAmiInfrastructureMapping.getComputeProviderSettingId());
     AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
     List<EncryptedDataDetail> awsEncryptedDataDetails = secretManager.getEncryptionDetails(
         (EncryptableSetting) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
 
-    settingAttribute = settingsService.get(spotInstInfrastructureMapping.getSpotinstConnectorId());
+    settingAttribute = settingsService.get(awsAmiInfrastructureMapping.getSpotinstCloudProvider());
     SpotInstConfig spotInstConfig = (SpotInstConfig) settingAttribute.getValue();
     List<EncryptedDataDetail> spotinstEncryptedDataDetails = secretManager.getEncryptionDetails(
         (EncryptableSetting) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
@@ -132,11 +130,13 @@ public class SpotInstStateHelper {
               ServiceVersionConvention.getPrefix(app.getName(), serviceElement.getName(), env.getName()))
         : Misc.normalizeExpression(context.renderExpression(elastiGroupNamePrefix));
 
-    boolean blueGreen = serviceSetup.isBlueGreen();
-    String elastiGroupOriginalJson = context.renderExpression(spotInstInfrastructureMapping.getElasticGroupJson());
+    String elastiGroupOriginalJson = context.renderExpression(awsAmiInfrastructureMapping.getSpotinstElastiGroupJson());
+    ElastiGroup elastiGroupOriginalConfig = generateOriginalConfigFromJson(elastiGroupOriginalJson, serviceSetup);
+
     // Updated json with placeholder and 0 capacity
-    String elastiGroupJson = generateElastiGroupJsonForDelegateRequest(
-        elastiGroupOriginalJson, serviceSetup, spotInstInfrastructureMapping, artifact.getRevision());
+    String elastiGroupJson =
+        generateElastiGroupJsonForDelegateRequest(elastiGroupOriginalJson, serviceSetup, artifact.getRevision());
+    boolean blueGreen = serviceSetup.isBlueGreen();
 
     SpotInstTaskParameters spotInstTaskParameters =
         SpotInstSetupTaskParameters.builder()
@@ -155,7 +155,7 @@ public class SpotInstStateHelper {
             .targetListenerProtocol(serviceSetup.getTargetListenerProtocol())
             .prodListenerPort(serviceSetup.getProdListenerPort())
             .image(artifact.getRevision())
-            .awsRegion(spotInstInfrastructureMapping.getAwsRegion())
+            .awsRegion(awsAmiInfrastructureMapping.getRegion())
             .build();
 
     SpotInstCommandRequest commandRequest = SpotInstCommandRequest.builder()
@@ -169,15 +169,25 @@ public class SpotInstStateHelper {
     return SpotInstSetupStateExecutionData.builder()
         .envId(env.getUuid())
         .appId(app.getUuid())
-        .infraMappingId(spotInstInfrastructureMapping.getUuid())
+        .infraMappingId(awsAmiInfrastructureMapping.getUuid())
         .commandName(SPOTINST_SERVICE_SETUP_COMMAND)
-        .maxInstanceCount(serviceSetup.getMaxInstances())
+        .maxInstanceCount(serviceSetup.getTargetInstances())
         .useCurrentRunningInstanceCount(serviceSetup.isUseCurrentRunningCount())
         .currentRunningInstanceCount(fetchCurrentRunningCountForSetupRequest(serviceSetup))
         .serviceId(serviceElement.getUuid())
         .spotinstCommandRequest(commandRequest)
-        .elastiGroupOriginalConfig(generateConfigFromJson(elastiGroupOriginalJson))
+        .elastiGroupOriginalConfig(elastiGroupOriginalConfig)
         .build();
+  }
+
+  private ElastiGroup generateOriginalConfigFromJson(
+      String elastiGroupOriginalJson, SpotInstServiceSetup serviceSetup) {
+    ElastiGroup elastiGroup = generateConfigFromJson(elastiGroupOriginalJson);
+    ElastiGroupCapacity groupCapacity = elastiGroup.getCapacity();
+    groupCapacity.setMaximum(serviceSetup.getMaxInstances());
+    groupCapacity.setMinimum(serviceSetup.getMinInstances());
+    groupCapacity.setTarget(serviceSetup.getTargetInstances());
+    return elastiGroup;
   }
 
   private ElastiGroup generateConfigFromJson(String elastiGroupJson) {
@@ -238,15 +248,14 @@ public class SpotInstStateHelper {
         .build();
   }
 
-  private String generateElastiGroupJsonForDelegateRequest(String elastiGroupJson, SpotInstServiceSetup serviceSetup,
-      SpotInstInfrastructureMapping spotInstInfrastructureMapping, String image) {
-    elastiGroupJson =
-        updateElastiGroupJsonWithPlaceholders(elastiGroupJson, serviceSetup, spotInstInfrastructureMapping, image);
+  private String generateElastiGroupJsonForDelegateRequest(
+      String elastiGroupJson, SpotInstServiceSetup serviceSetup, String image) {
+    elastiGroupJson = updateElastiGroupJsonWithPlaceholders(elastiGroupJson, serviceSetup, image);
     return elastiGroupJson;
   }
 
-  private String updateElastiGroupJsonWithPlaceholders(String elastiGroupJson, SpotInstServiceSetup serviceSetup,
-      SpotInstInfrastructureMapping spotInstInfrastructureMapping, String image) {
+  private String updateElastiGroupJsonWithPlaceholders(
+      String elastiGroupJson, SpotInstServiceSetup serviceSetup, String image) {
     java.lang.reflect.Type mapType = new TypeToken<Map<String, Object>>() {}.getType();
     Gson gson = new Gson();
 
@@ -342,15 +351,15 @@ public class SpotInstStateHelper {
   }
 
   public SpotInstCommandRequestBuilder generateSpotInstCommandRequest(
-      SpotInstInfrastructureMapping spotInstInfrastructureMapping, ExecutionContext context) {
+      AwsAmiInfrastructureMapping awsAmiInfrastructureMapping, ExecutionContext context) {
     // Details for SpotInstConfig
-    SettingAttribute settingAttribute = settingsService.get(spotInstInfrastructureMapping.getSpotinstConnectorId());
+    SettingAttribute settingAttribute = settingsService.get(awsAmiInfrastructureMapping.getSpotinstCloudProvider());
     SpotInstConfig spotInstConfig = (SpotInstConfig) settingAttribute.getValue();
     List<EncryptedDataDetail> spotinstEncryptedDataDetails = secretManager.getEncryptionDetails(
         (EncryptableSetting) spotInstConfig, context.getAppId(), context.getWorkflowExecutionId());
 
     // Details for AwsConfig
-    settingAttribute = settingsService.get(spotInstInfrastructureMapping.getComputeProviderSettingId());
+    settingAttribute = settingsService.get(awsAmiInfrastructureMapping.getComputeProviderSettingId());
     AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
     List<EncryptedDataDetail> awsEncryptedDataDetails = secretManager.getEncryptionDetails(
         (EncryptableSetting) awsConfig, context.getAppId(), context.getWorkflowExecutionId());
