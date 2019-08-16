@@ -55,8 +55,7 @@ public class AcrServiceImpl implements AcrService {
       String repository = loginServer + "/" + artifactStreamAttributes.getRepositoryName();
 
       return azureHelperService
-          .listRepositoryTags(config, encryptionDetails, artifactStreamAttributes.getRegistryHostName(),
-              artifactStreamAttributes.getRepositoryName())
+          .listRepositoryTags(config, encryptionDetails, loginServer, artifactStreamAttributes.getRepositoryName())
           .stream()
           .map(tag -> {
             Map<String, String> metadata = new HashMap();
