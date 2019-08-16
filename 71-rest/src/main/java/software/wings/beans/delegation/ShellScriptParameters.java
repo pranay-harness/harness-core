@@ -1,31 +1,40 @@
 package software.wings.beans.delegation;
 
 import static io.harness.govern.Switch.unhandled;
+import static software.wings.common.Constants.HARNESS_KUBE_CONFIG_PATH;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.mixin.IgnoreValidationCapabilityGenerator;
 import io.harness.delegate.task.mixin.SSHConnectionExecutionCapabilityGenerator;
 import io.harness.delegate.task.mixin.SocketConnectivityCapabilityGenerator;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.expression.Expression;
 import lombok.Builder;
 import lombok.Value;
+import software.wings.beans.AzureConfig;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.KerberosConfig;
+import software.wings.beans.KubernetesClusterConfig;
+import software.wings.beans.KubernetesConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.core.local.executors.ShellExecutorConfig;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
+import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.settings.SettingValue;
 import software.wings.sm.states.ShellScriptState;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -162,16 +171,36 @@ public class ShellScriptParameters implements TaskParameters, ExecutionCapabilit
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    List<ExecutionCapability> executionCapabilities = new ArrayList<>();
+
     if (executeOnDelegate) {
-      return containerServiceParams.fetchRequiredExecutionCapabilities();
+      if (containerServiceParams != null) {
+        SettingAttribute settingAttribute = containerServiceParams.getSettingAttribute();
+        if (settingAttribute != null) {
+          SettingValue value = settingAttribute.getValue();
+          boolean useKubernetesDelegate =
+              value instanceof KubernetesClusterConfig && ((KubernetesClusterConfig) value).isUseKubernetesDelegate();
+          boolean isKubernetes = value instanceof KubernetesConfig || value instanceof GcpConfig
+              || value instanceof AzureConfig || value instanceof KubernetesClusterConfig;
+          if (useKubernetesDelegate || (isKubernetes && script.contains(HARNESS_KUBE_CONFIG_PATH))) {
+            return containerServiceParams.fetchRequiredExecutionCapabilities();
+          }
+        }
+      }
+      executionCapabilities.add(IgnoreValidationCapabilityGenerator.buildIgnoreValidationCapability());
+      return executionCapabilities;
     }
     switch (connectionType) {
       case SSH:
-        return Collections.singletonList(
-            SSHConnectionExecutionCapabilityGenerator.buildSSHConnectionExecutionCapability(host));
+        executionCapabilities.addAll(CapabilityHelper.generateKmsHttpCapabilities(keyEncryptedDataDetails));
+        executionCapabilities.add(
+            SSHConnectionExecutionCapabilityGenerator.buildSSHConnectionExecutionCapability(host + ":" + port));
+        return executionCapabilities;
       case WINRM:
-        return Collections.singletonList(SocketConnectivityCapabilityGenerator.buildSocketConnectivityCapability(
+        executionCapabilities.addAll(CapabilityHelper.generateKmsHttpCapabilities(winrmConnectionEncryptedDataDetails));
+        executionCapabilities.add(SocketConnectivityCapabilityGenerator.buildSocketConnectivityCapability(
             host, Integer.toString(winrmConnectionAttributes.getPort())));
+        return executionCapabilities;
       default:
         unhandled(connectionType);
         return null;

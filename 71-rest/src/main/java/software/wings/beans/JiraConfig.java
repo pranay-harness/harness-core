@@ -24,6 +24,7 @@ import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.CollaborationProviderYaml;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @JsonTypeName("JIRA")
@@ -93,6 +94,7 @@ public class JiraConfig extends SettingValue implements EncryptableSetting, Exec
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(baseUrl));
+    return Collections.singletonList(
+        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(baseUrl));
   }
 }

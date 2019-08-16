@@ -18,11 +18,12 @@ public class HelmCapabilityCheck implements CapabilityCheck {
     String helmVersionCommand =
         helmCapability.getHelmCommand().replace("${HELM_PATH}", encloseWithQuotesIfNeeded(InstallUtils.getHelmPath()));
 
-    ProcessExecutor processExecutor = new ProcessExecutor().command(helmVersionCommand);
+    ProcessExecutor processExecutor = new ProcessExecutor().command("/bin/sh", "-c", helmVersionCommand);
     boolean valid = false;
     try {
       final ProcessResult result = processExecutor.execute();
       valid = result.getExitValue() == 0;
+      logger.info("[Delegate Capability] Successfully executed command with arguments" + helmVersionCommand);
     } catch (Exception e) {
       String msg = "[Delegate Capability] Failed to execute command with arguments, " + helmVersionCommand;
       logger.error(msg);

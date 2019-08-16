@@ -19,6 +19,7 @@ import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
@@ -39,10 +40,12 @@ public class WinRmConnectionAttributes extends SettingValue implements Encryptab
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
 
-  // If used in HOST_VALIDATION_TASK handled by add addMergedParamsForCapabilityCheck
+  // Always called inside other ExecutionCapabilityDemander Check ShellScriptParameters and
+  // ConnectivityValidationDelegateRequest
+  // Returning empty list here
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return null;
+    return new ArrayList<>();
   }
 
   public enum AuthenticationScheme { BASIC, NTLM }

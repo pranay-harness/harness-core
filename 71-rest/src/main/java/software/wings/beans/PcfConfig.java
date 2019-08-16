@@ -22,7 +22,7 @@ import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.CloudProviderYaml;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @JsonTypeName("PCF")
@@ -58,7 +58,7 @@ public class PcfConfig extends SettingValue implements EncryptableSetting {
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return Arrays.asList(
+    return Collections.singletonList(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(endpointUrl));
   }
 

@@ -4,7 +4,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.NonNull;
 import lombok.Value;
 
 @Value
@@ -18,7 +17,7 @@ public class SocketConnectivityExecutionCapability extends TcpBasedExecutionCapa
   }
 
   @Builder
-  public SocketConnectivityExecutionCapability(String hostName, String scheme, String port, @NonNull String url) {
+  public SocketConnectivityExecutionCapability(String hostName, String scheme, String port, String url) {
     super(hostName, scheme, isNotBlank(port) ? port : "22", url);
   }
 }

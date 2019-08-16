@@ -23,7 +23,7 @@ import software.wings.settings.UsageRestrictions;
 import software.wings.stencils.DefaultValue;
 import software.wings.yaml.setting.CollaborationProviderYaml;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -76,7 +76,7 @@ public class SmtpConfig extends SettingValue implements EncryptableSetting {
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return Arrays.asList(
+    return Collections.singletonList(
         SocketConnectivityCapabilityGenerator.buildSocketConnectivityCapability(host, String.valueOf(port)));
   }
 

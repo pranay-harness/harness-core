@@ -17,7 +17,6 @@ import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.settings.SettingValue;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -54,16 +53,20 @@ public class ContainerServiceParams implements ExecutionCapabilityDemander {
     }
     SettingValue value = settingAttribute.getValue();
 
+    List<ExecutionCapability> executionCapabilities = CapabilityHelper.generateKmsHttpCapabilities(encryptionDetails);
     if (value instanceof AwsConfig) {
-      return Collections.singletonList(AwsRegionCapabilityGenerator.buildAwsRegionCapability(region));
+      executionCapabilities.add(AwsRegionCapabilityGenerator.buildAwsRegionCapability(region));
     } else if (value instanceof KubernetesClusterConfig) {
-      return CapabilityHelper.generateDelegateCapabilities(value, encryptionDetails);
-    } else if ("None".equals(clusterName)) {
-      return Collections.singletonList(
-          HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-              "https://container.googleapis.com/"));
+      executionCapabilities = CapabilityHelper.generateDelegateCapabilities(value, encryptionDetails);
     } else {
-      return CapabilityHelper.generateDelegateCapabilities(value, encryptionDetails);
+      if ("None".equals(clusterName)) {
+        executionCapabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+            "https://container.googleapis.com/"));
+      } else {
+        executionCapabilities.add(
+            HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(masterUrl));
+      }
     }
+    return executionCapabilities;
   }
 }
