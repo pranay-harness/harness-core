@@ -1,6 +1,7 @@
 package software.wings.service.cyberark;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -8,42 +9,46 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.rule.RealMongo;
 import io.harness.security.encryption.EncryptionType;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.CyberArkConfig;
+import software.wings.beans.KmsConfig;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.User;
-import software.wings.beans.security.HarnessUserGroup;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.api.PremiumFeature;
 import software.wings.resources.CyberArkResource;
 import software.wings.resources.SecretManagementResource;
-import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.security.CyberArkService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.SecretManagerConfigService;
@@ -52,31 +57,41 @@ import software.wings.settings.UsageRestrictions;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashSet;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
 /**
  * @author marklu on 2019-08-09
  */
+@RunWith(Parameterized.class)
 public class CyberArkTest extends WingsBaseTest {
   @Inject private CyberArkResource cyberArkResource;
   @Inject private SecretManagementResource secretManagementResource;
   @Mock private AccountService accountService;
+  @Inject @InjectMocks private KmsService kmsService;
   @Inject @InjectMocks private CyberArkService cyberArkService;
   @Inject @InjectMocks private SecretManagerConfigService secretManagerConfigService;
   @Inject private SecretManager secretManager;
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private HarnessUserGroupService harnessUserGroupService;
   @Mock private SecretManagementDelegateService secretManagementDelegateService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private PremiumFeature secretsManagementFeature;
   private final int numOfEncryptedValsForCyberArk = 1;
+  private final int numOfEncryptedValsForCyberKms = 3;
   private final String userEmail = "mark.lu@harness.io";
   private final String userName = "raghu";
   private final User user = User.Builder.anUser().withEmail(userEmail).withName(userName).build();
   private String userId;
   private String accountId;
+  private String kmsId;
+
+  @Parameter public boolean isGlobalKmsEnabled;
+
+  @Parameters
+  public static Collection<Object[]> data() {
+    return asList(new Object[][] {{true}, {false}});
+  }
 
   @Before
   public void setup() throws IOException, NoSuchFieldException, IllegalAccessException {
@@ -94,7 +109,14 @@ public class CyberArkTest extends WingsBaseTest {
     });
     when(delegateProxyFactory.get(eq(SecretManagementDelegateService.class), any(SyncTaskContext.class)))
         .thenReturn(secretManagementDelegateService);
+    when(secretManagementDelegateService.encrypt(anyString(), anyObject(), any(KmsConfig.class))).then(invocation -> {
+      Object[] args = invocation.getArguments();
+      return encrypt((String) args[0], (char[]) args[1], (KmsConfig) args[2]);
+    });
+
     FieldUtils.writeField(cyberArkService, "delegateProxyFactory", delegateProxyFactory, true);
+    FieldUtils.writeField(kmsService, "delegateProxyFactory", delegateProxyFactory, true);
+    FieldUtils.writeField(secretManager, "kmsService", kmsService, true);
     FieldUtils.writeField(secretManager, "cyberArkService", cyberArkService, true);
     FieldUtils.writeField(wingsPersistence, "secretManager", secretManager, true);
     FieldUtils.writeField(cyberArkResource, "cyberArkService", cyberArkService, true);
@@ -102,13 +124,12 @@ public class CyberArkTest extends WingsBaseTest {
     userId = wingsPersistence.save(user);
     UserThreadLocal.set(user);
 
-    // Add current user to harness user group so that save-global-kms operation can succeed
-    HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder()
-                                            .applyToAllAccounts(true)
-                                            .memberIds(Sets.newHashSet(userId))
-                                            .actions(Sets.newHashSet(Action.READ))
-                                            .build();
-    harnessUserGroupService.save(harnessUserGroup);
+    if (isGlobalKmsEnabled) {
+      final KmsConfig kmsConfig = getKmsConfig();
+      kmsConfig.setName("Global KMS");
+      kmsConfig.setAccountId(Account.GLOBAL_ACCOUNT_ID);
+      kmsId = kmsService.saveGlobalKmsConfig(accountId, kmsConfig);
+    }
   }
 
   @Test
@@ -173,11 +194,15 @@ public class CyberArkTest extends WingsBaseTest {
     assertEquals(name, savedConfig.getName());
     List<EncryptedData> encryptedDataList =
         wingsPersistence.createQuery(EncryptedData.class, excludeAuthority).asList();
-    assertEquals(numOfEncryptedValsForCyberArk, encryptedDataList.size());
-    for (EncryptedData encryptedData : encryptedDataList) {
-      assertEquals(encryptedData.getName(), name + "_clientCertificate");
-      assertEquals(1, encryptedData.getParentIds().size());
-      assertEquals(savedConfig.getUuid(), encryptedData.getParentIds().iterator().next());
+    if (isGlobalKmsEnabled) {
+      assertEquals(numOfEncryptedValsForCyberArk + numOfEncryptedValsForCyberKms, encryptedDataList.size());
+    } else {
+      assertEquals(numOfEncryptedValsForCyberArk, encryptedDataList.size());
+      for (EncryptedData encryptedData : encryptedDataList) {
+        assertEquals(encryptedData.getName(), name + "_clientCertificate");
+        assertEquals(1, encryptedData.getParentIds().size());
+        assertEquals(savedConfig.getUuid(), encryptedData.getParentIds().iterator().next());
+      }
     }
 
     name = UUID.randomUUID().toString();
@@ -196,19 +221,11 @@ public class CyberArkTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  @RealMongo
   public void testEncryptDecrypt() {
     String queryAsPath = "Address=components;Username=svc_account";
     String secretName = "TestSecret";
     String secretValue = "MySecretValue";
-    EncryptedData savedEnryptedData = EncryptedData.builder()
-                                          .name(secretName)
-                                          .path(queryAsPath)
-                                          .encryptionType(EncryptionType.CYBERARK)
-                                          .accountId(accountId)
-                                          .type(SettingVariableTypes.ARTIFACTORY)
-                                          .enabled(true)
-                                          .parentIds(new HashSet<>())
-                                          .build();
 
     String name = UUID.randomUUID().toString();
     CyberArkConfig cyberArkConfig = getCyberArkConfig();
@@ -230,7 +247,12 @@ public class CyberArkTest extends WingsBaseTest {
     encryptedData = secretManager.encrypt(EncryptionType.CYBERARK, accountId, SettingVariableTypes.ARTIFACTORY,
         secretValue.toCharArray(), null, null, secretName, new UsageRestrictions());
     assertNotNull(encryptedData);
-    assertEquals(EncryptionType.LOCAL, encryptedData.getEncryptionType());
+    if (isGlobalKmsEnabled) {
+      assertEquals(EncryptionType.KMS, encryptedData.getEncryptionType());
+      assertEquals(kmsId, encryptedData.getKmsId());
+    } else {
+      assertEquals(EncryptionType.LOCAL, encryptedData.getEncryptionType());
+    }
     assertEquals(SettingVariableTypes.ARTIFACTORY, encryptedData.getType());
     assertNotNull(encryptedData.getEncryptedValue());
   }
