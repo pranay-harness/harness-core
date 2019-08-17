@@ -182,6 +182,7 @@ public abstract class ArtifactStream
     public static final String appId = "appId";
     public static final String uuid = "uuid";
     public static final String settingId = "settingId";
-    public static final String accountId = "accountId";
+    public static final String repositoryFormat = "repositoryFormat";
+    public static final String repositoryType = "repositoryType";
   }
 }

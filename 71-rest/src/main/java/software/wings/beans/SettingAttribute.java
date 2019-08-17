@@ -104,8 +104,8 @@ public class SettingAttribute extends Base implements NameAccess {
   private SettingCategory category = SettingCategory.SETTING;
   private List<String> appIds;
   private UsageRestrictions usageRestrictions;
-  @Transient private int artifactStreamCount;
-  @Transient private List<ArtifactStreamSummary> artifactStreams;
+  private transient long artifactStreamCount;
+  private transient List<ArtifactStreamSummary> artifactStreams;
   private boolean sample;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore @Transient private transient EncryptionType encryptionType;

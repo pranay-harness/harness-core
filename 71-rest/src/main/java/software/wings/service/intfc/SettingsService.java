@@ -13,6 +13,7 @@ import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
+import software.wings.utils.ArtifactType;
 
 import java.util.List;
 import java.util.Map;
@@ -33,7 +34,7 @@ public interface SettingsService extends OwnedByAccount {
 
   PageResponse<SettingAttribute> list(PageRequest<SettingAttribute> req, String appIdFromRequest,
       String envIdFromRequest, String accountId, boolean gitSshConfigOnly, boolean withArtifactStreamCount,
-      String artifactStreamSearchString, int maxResults, String serviceId);
+      String artifactStreamSearchString, int maxArtifactStreams, ArtifactType artifactType);
 
   List<SettingAttribute> getFilteredSettingAttributes(
       List<SettingAttribute> inputSettingAttributes, String appIdFromRequest, String envIdFromRequest);
