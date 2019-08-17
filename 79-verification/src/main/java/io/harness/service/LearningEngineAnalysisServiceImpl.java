@@ -501,7 +501,13 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     if (stateExecutionId.contains(CV_24x7_STATE_EXECUTION)) {
       return true;
     }
-    return managerClientHelper.callManagerWithRetry(managerClient.isStateValid(appId, stateExecutionId)).getResource();
+    try {
+      return managerClientHelper.callManagerWithRetry(managerClient.isStateValid(appId, stateExecutionId))
+          .getResource();
+    } catch (Exception e) {
+      logger.error("for {} failed to reach to manager. Will assume that state is still valid", e);
+      return true;
+    }
   }
   /**
    *
