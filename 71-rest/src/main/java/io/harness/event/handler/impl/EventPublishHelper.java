@@ -420,7 +420,7 @@ public class EventPublishHelper {
       Map<String, String> properties = new HashMap<>();
       properties.put(ACCOUNT_ID, accountId);
       publishEvent(EventType.FIRST_DELEGATE_REGISTERED, properties);
-      publishAccountEvent(
+      publishDelegateInstalledAccountEvent(
           accountId, AccountEvent.builder().accountEventType(AccountEventType.DELEGATE_INSTALLED).build());
     });
   }
@@ -850,7 +850,6 @@ public class EventPublishHelper {
 
   /**
    * Run sample pipeline
-   * Install Harness Delegate
    * Connect to a cloud provider
    * Connect to an artifact repo
    * Create an app
@@ -881,9 +880,7 @@ public class EventPublishHelper {
       if (!shouldPublishAccountEventForAccount(accountId, accountEvent)) {
         return;
       }
-
       accountService.updateAccountEvents(accountId, accountEvent);
-
       Map<String, String> properties = new HashMap<>();
       properties.put(ACCOUNT_ID, accountId);
       properties.put(EMAIL_ID, userEmail);
@@ -892,7 +889,23 @@ public class EventPublishHelper {
       if (isNotEmpty(accountEvent.getCategory())) {
         properties.put(CATEGORY, accountEvent.getCategory());
       }
+      publishEvent(EventType.CUSTOM, properties);
+    });
+  }
 
+  public void publishDelegateInstalledAccountEvent(String accountId, AccountEvent accountEvent) {
+    if (!checkIfMarketoOrSegmentIsEnabled()) {
+      return;
+    }
+    executorService.submit(() -> {
+      if (!shouldPublishAccountEventForAccount(accountId, accountEvent)) {
+        return;
+      }
+      accountService.updateAccountEvents(accountId, accountEvent);
+      Map<String, String> properties = new HashMap<>();
+      properties.put(ACCOUNT_ID, accountId);
+      properties.put(ACCOUNT_EVENT, String.valueOf(true));
+      properties.put(CUSTOM_EVENT_NAME, accountEvent.getCustomMsg());
       publishEvent(EventType.CUSTOM, properties);
     });
   }
