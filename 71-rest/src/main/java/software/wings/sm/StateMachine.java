@@ -3,6 +3,7 @@ package software.wings.sm;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static software.wings.sm.ExpressionProcessor.EXPRESSION_PREFIX;
 import static software.wings.sm.StateType.REPEAT;
@@ -27,6 +28,7 @@ import io.harness.serializer.MapperUtils;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Indexed;
@@ -316,7 +318,14 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
 
       // populate properties
       if (node.getProperties() != null) {
-        MapperUtils.mapObject(node.getProperties(), state);
+        try {
+          MapperUtils.mapObject(node.getProperties(), state);
+        } catch (Exception e) {
+          logger.error(
+              format("Error mapping properties for state: [%s] of type: [%s]", state.getName(), state.getStateType()),
+              e);
+          logger.error("Properties: " + StringUtils.join(node.getProperties()));
+        }
       }
 
       state.setId(node.getId());
