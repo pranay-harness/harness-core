@@ -107,7 +107,12 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
   @Override
   public KmsConfig getGlobalKmsConfig() {
-    return wingsPersistence.createQuery(KmsConfig.class).field(ACCOUNT_ID_KEY).equal(GLOBAL_ACCOUNT_ID).get();
+    KmsConfig globalKmsConfig =
+        wingsPersistence.createQuery(KmsConfig.class).field(ACCOUNT_ID_KEY).equal(GLOBAL_ACCOUNT_ID).get();
+
+    // Secrets field of raw KmsConfig are encrypted record IDs. It needs to be decrypted to be used.
+    decryptKmsConfigSecrets(globalKmsConfig);
+    return globalKmsConfig;
   }
 
   @Override
@@ -305,12 +310,17 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
                               .filter("_id", entityId)
                               .get();
 
+    // Secrets field of raw KmsConfig are encrypted record IDs. It needs to be decrypted to be used.
+    decryptKmsConfigSecrets(kmsConfig);
+
+    return kmsConfig;
+  }
+
+  private void decryptKmsConfigSecrets(KmsConfig kmsConfig) {
     if (kmsConfig != null) {
       kmsConfig.setAccessKey(new String(decryptKey(kmsConfig.getAccessKey().toCharArray())));
       kmsConfig.setSecretKey(new String(decryptKey(kmsConfig.getSecretKey().toCharArray())));
       kmsConfig.setKmsArn(new String(decryptKey(kmsConfig.getKmsArn().toCharArray())));
     }
-
-    return kmsConfig;
   }
 }

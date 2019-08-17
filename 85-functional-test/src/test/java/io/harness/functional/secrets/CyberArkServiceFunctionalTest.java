@@ -98,9 +98,9 @@ public class CyberArkServiceFunctionalTest extends AbstractFunctionalTest {
       assertEquals(":m23LF6f", decryptedSecret);
     } finally {
       if (secretId != null) {
-        boolean isDeletionDone = SecretsRestUtils.deleteSecret(getAccount().getUuid(), bearerToken, secretId);
-        assertTrue(isDeletionDone);
-        logger.info("Secret with id {} has been deleted: ", secretId, isDeletionDone);
+        boolean deleted = SecretsRestUtils.deleteSecret(getAccount().getUuid(), bearerToken, secretId);
+        assertTrue(deleted);
+        logger.info("Secret with id {} has been deleted: {}", secretId, deleted);
       }
       if (secretsManagerId != null) {
         deleteSecretsManager(getAccount().getUuid(), secretsManagerId);

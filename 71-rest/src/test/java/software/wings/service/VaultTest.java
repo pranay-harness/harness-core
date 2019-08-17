@@ -755,13 +755,7 @@ public class VaultTest extends WingsBaseTest {
     assertEquals("Created", secretChangeLog.getDescription());
 
     final String newPassWord = UUID.randomUUID().toString();
-    final AppDynamicsConfig newAppDynamicsConfig = AppDynamicsConfig.builder()
-                                                       .accountId(accountId)
-                                                       .controllerUrl(UUID.randomUUID().toString())
-                                                       .username(UUID.randomUUID().toString())
-                                                       .password(newPassWord.toCharArray())
-                                                       .accountname(UUID.randomUUID().toString())
-                                                       .build();
+    final AppDynamicsConfig newAppDynamicsConfig = getAppDynamicsConfig(accountId, newPassWord);
 
     updatedAppId = UUID.randomUUID().toString();
     String updatedName = UUID.randomUUID().toString();
@@ -1424,19 +1418,5 @@ public class VaultTest extends WingsBaseTest {
   private void stopTransitionListener(Thread thread) throws InterruptedException {
     transitionEventListener.shutDown();
     thread.join();
-  }
-
-  private VaultConfig getNonDefaultVaultConfig() {
-    VaultConfig vaultConfig = getVaultConfig();
-    vaultConfig.setDefault(false);
-
-    return vaultConfig;
-  }
-
-  private VaultConfig getDefaultVaultConfig() {
-    VaultConfig vaultConfig = getVaultConfig();
-    vaultConfig.setDefault(true);
-
-    return vaultConfig;
   }
 }
