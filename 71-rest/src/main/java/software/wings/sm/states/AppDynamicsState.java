@@ -42,6 +42,7 @@ import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.appdynamics.AppdynamicsTimeSeries;
+import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.sm.ExecutionContext;
@@ -185,8 +186,15 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
       if (appIdExpression != null) {
         applicationId = templateExpressionProcessor.resolveTemplateExpression(context, appIdExpression);
         if (isTriggerBased) {
-          // applicationId will actually contain App Name
-          applicationId = appdynamicsService.getAppDynamicsApplicationByName(analysisServerConfigId, applicationId);
+          // if its an appId we should be able to get application with that id
+          NewRelicApplication appDynamicsApplication =
+              appdynamicsService.getAppDynamicsApplication(analysisServerConfigId, applicationId);
+
+          // if no application with this id then try to resolve the name
+          if (appDynamicsApplication == null) {
+            // applicationId will actually contain App Name
+            applicationId = appdynamicsService.getAppDynamicsApplicationByName(analysisServerConfigId, applicationId);
+          }
         }
       }
       TemplateExpression tierIdExpression =
@@ -194,8 +202,12 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
       if (tierIdExpression != null) {
         tierId = templateExpressionProcessor.resolveTemplateExpression(context, tierIdExpression);
         if (isTriggerBased) {
-          // tierId will actually contain tier Name
-          tierId = appdynamicsService.getTierByName(analysisServerConfigId, applicationId, tierId);
+          final AppdynamicsTier tier =
+              appdynamicsService.getTier(analysisServerConfigId, Long.parseLong(applicationId), tierId);
+          if (tier == null) {
+            // tierId will actually contain tier Name
+            tierId = appdynamicsService.getTierByName(analysisServerConfigId, applicationId, tierId);
+          }
         }
       }
     }
