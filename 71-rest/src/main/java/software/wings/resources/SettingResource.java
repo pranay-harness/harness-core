@@ -5,6 +5,7 @@ import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
@@ -32,8 +33,10 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.CustomArtifactServerConfig;
+import software.wings.beans.EntityType;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.ValidationResult;
@@ -50,6 +53,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.AwsHelperResourceService;
 import software.wings.service.intfc.AzureResourceService;
 import software.wings.service.intfc.BuildSourceService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.SecretManager;
@@ -57,6 +61,7 @@ import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
+import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryFormat;
 import software.wings.utils.RepositoryType;
 
@@ -100,6 +105,7 @@ public class SettingResource {
   @Inject private AwsHelperResourceService awsHelperResourceService;
   @Inject private YamlGitService yamlGitService;
   @Inject private AccountService accountService;
+  @Inject private ServiceResourceService serviceResourceService;
 
   /**
    * List.
@@ -119,7 +125,8 @@ public class SettingResource {
       @QueryParam("gitSshConfigOnly") boolean gitSshConfigOnly,
       @QueryParam("withArtifactStreamCount") boolean withArtifactStreamCount,
       @QueryParam("artifactStreamSearchString") String artifactStreamSearchString,
-      @DefaultValue(LIMIT) @QueryParam("maxResults") int maxResults, @QueryParam("serviceId") String serviceId,
+      @DefaultValue(LIMIT) @QueryParam("maxArtifactStreams") int maxArtifactStreams,
+      @QueryParam("entityId") String entityId, @QueryParam("entityType") String entityType,
       @BeanParam PageRequest<SettingAttribute> pageRequest) {
     pageRequest.addFilter("appId", EQ, appId);
     if (isNotEmpty(settingVariableTypes)) {
@@ -130,9 +137,23 @@ public class SettingResource {
       pageRequest.addFilter("accountId", EQ, accountId);
       pageRequest.addFilter("value.type", EQ, SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES.name());
     }
-
-    PageResponse<SettingAttribute> result = settingsService.list(pageRequest, currentAppId, currentEnvId, accountId,
-        gitSshConfigOnly, withArtifactStreamCount, artifactStreamSearchString, maxResults, serviceId);
+    PageResponse<SettingAttribute> result;
+    if (withArtifactStreamCount || artifactStreamSearchString != null || entityId != null || gitSshConfigOnly) {
+      ArtifactType artifactType = null;
+      if (entityType != null && entityId != null) {
+        if (entityType.equals(EntityType.SERVICE.name())) {
+          Service service = serviceResourceService.get(entityId);
+          if (service == null) {
+            throw new WingsException(format("Service with id: [%s] not found", entityId));
+          }
+          artifactType = service.getArtifactType();
+        }
+      }
+      result = settingsService.list(pageRequest, currentAppId, currentEnvId, accountId, gitSshConfigOnly,
+          withArtifactStreamCount, artifactStreamSearchString, maxArtifactStreams, artifactType);
+    } else {
+      result = settingsService.list(pageRequest, currentAppId, currentEnvId);
+    }
     result.forEach(this ::maskEncryptedFields);
     return new RestResponse<>(result);
   }
