@@ -1,5 +1,7 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.ExecutionStatus.ERROR;
+import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
@@ -10,6 +12,7 @@ import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -23,6 +26,7 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.exception.WingsException;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,6 +47,7 @@ import software.wings.metrics.MetricType;
 import software.wings.metrics.appdynamics.AppdynamicsConstants;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
+import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -180,7 +185,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   @Category(UnitTests.class)
   public void shouldTestNonTemplatizedBadTier() {
     ExecutionResponse executionResponse = setupNonTemplatized(true).execute(executionContext);
-    assertEquals(ExecutionStatus.ERROR, executionResponse.getExecutionStatus());
+    assertEquals(ERROR, executionResponse.getExecutionStatus());
     assertEquals(
         "Error while fetching from AppDynamics. ApplicationId : 30444 and TierId : 123aa in AppDynamics setup must be valid numbers",
         executionResponse.getErrorMessage());
@@ -313,5 +318,112 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     Map<String, String> invalidFields = appDynamicsState.validateFields();
     assertTrue("Size should be 1", invalidFields.size() == 1);
     assertEquals("Fields Missing", "Invalid Required Fields", invalidFields.keySet().iterator().next());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldTestTriggered() throws IOException {
+    AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
+                                              .accountId(accountId)
+                                              .controllerUrl("appd-url")
+                                              .username("appd-user")
+                                              .password("appd-pwd".toCharArray())
+                                              .build();
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId(accountId)
+                                            .withName("appd-config")
+                                            .withValue(appDynamicsConfig)
+                                            .build();
+    wingsPersistence.save(settingAttribute);
+    appDynamicsState.setAnalysisServerConfigId(settingAttribute.getUuid());
+
+    AppDynamicsState spyAppDynamicsState = spy(appDynamicsState);
+    doReturn(true).when(spyAppDynamicsState).isTriggerBasedDeployment(executionContext);
+    when(appdynamicsService.getAppDynamicsApplication(anyString(), anyString())).thenReturn(null);
+    doThrow(new WingsException("Can not find application by name"))
+        .when(appdynamicsService)
+        .getAppDynamicsApplicationByName(anyString(), anyString());
+    when(appdynamicsService.getTier(anyString(), anyLong(), anyString())).thenReturn(null);
+    doThrow(new WingsException("Can not find tier by name"))
+        .when(appdynamicsService)
+        .getTier(anyString(), anyLong(), anyString());
+
+    doReturn(asList(TemplateExpression.builder()
+                        .fieldName("analysisServerConfigId")
+                        .expression("${AppDynamics_Server}")
+                        .metadata(ImmutableMap.of("entityType", "APPDYNAMICS_CONFIGID"))
+                        .build(),
+                 TemplateExpression.builder()
+                     .fieldName("applicationId")
+                     .expression("${AppDynamics_App}")
+                     .metadata(ImmutableMap.of("entityType", "APPDYNAMICS_APPID"))
+                     .build(),
+                 TemplateExpression.builder()
+                     .fieldName("tierId")
+                     .expression("${AppDynamics_Tier}")
+                     .metadata(ImmutableMap.of("entityType", "APPDYNAMICS_TIERID"))
+                     .build()))
+        .when(spyAppDynamicsState)
+        .getTemplateExpressions();
+
+    doReturn(Collections.singletonMap("test", DEFAULT_GROUP_NAME))
+        .when(spyAppDynamicsState)
+        .getCanaryNewHostNames(executionContext);
+    doReturn(Collections.singletonMap("control", DEFAULT_GROUP_NAME))
+        .when(spyAppDynamicsState)
+        .getLastExecutionNodes(executionContext);
+    doReturn(workflowId).when(spyAppDynamicsState).getWorkflowId(executionContext);
+    doReturn(serviceId).when(spyAppDynamicsState).getPhaseServiceId(executionContext);
+
+    when(metricAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(
+             StateType.APP_DYNAMICS, appId, workflowId, serviceId, infraMappingId, environment.getUuid()))
+        .thenReturn(workflowExecutionId);
+    when(executionContext.renderExpression("${workflow.variables.AppDynamics_Server}"))
+        .thenReturn(settingAttribute.getUuid());
+    when(executionContext.renderExpression("${workflow.variables.AppDynamics_App}")).thenReturn("30444");
+    when(executionContext.renderExpression("${workflow.variables.AppDynamics_Tier}")).thenReturn("30889");
+    doReturn(Environment.Builder.anEnvironment().uuid(UUID.randomUUID().toString()).build())
+        .when(workflowStandardParams)
+        .getEnv();
+    when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
+
+    ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
+    assertEquals(ERROR, executionResponse.getExecutionStatus());
+    assertEquals("Can not find application by name", executionResponse.getErrorMessage());
+
+    doReturn(NewRelicApplication.builder().build())
+        .when(appdynamicsService)
+        .getAppDynamicsApplication(anyString(), anyString());
+    executionResponse = spyAppDynamicsState.execute(executionContext);
+    assertEquals(ERROR, executionResponse.getExecutionStatus());
+    assertEquals("Can not find tier by name", executionResponse.getErrorMessage());
+
+    long tierId = 30889;
+    doReturn(AppdynamicsTier.builder().name(generateUuid()).id(tierId).build())
+        .when(appdynamicsService)
+        .getTier(anyString(), anyLong(), anyString());
+    doReturn(Sets.newHashSet(AppdynamicsTier.builder().name(generateUuid()).id(tierId).build()))
+        .when(appdynamicsService)
+        .getTiers(anyString(), anyLong());
+    executionResponse = spyAppDynamicsState.execute(executionContext);
+    assertEquals(RUNNING, executionResponse.getExecutionStatus());
+
+    when(appdynamicsService.getTier(anyString(), anyLong(), anyString())).thenReturn(null);
+    doThrow(new WingsException("No tier found"))
+        .when(appdynamicsService)
+        .getTierByName(anyString(), anyString(), anyString());
+
+    executionResponse = spyAppDynamicsState.execute(executionContext);
+    assertEquals(ERROR, executionResponse.getExecutionStatus());
+    assertEquals("No tier found", executionResponse.getErrorMessage());
+
+    when(appdynamicsService.getAppDynamicsApplication(anyString(), anyString())).thenReturn(null);
+    doThrow(new WingsException("No app found"))
+        .when(appdynamicsService)
+        .getAppDynamicsApplicationByName(anyString(), anyString());
+
+    executionResponse = spyAppDynamicsState.execute(executionContext);
+    assertEquals(ERROR, executionResponse.getExecutionStatus());
+    assertEquals("No app found", executionResponse.getErrorMessage());
   }
 }
