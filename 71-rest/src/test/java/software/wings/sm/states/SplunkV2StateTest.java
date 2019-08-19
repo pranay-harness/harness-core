@@ -36,7 +36,6 @@ import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
-import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
@@ -342,11 +341,6 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
 
-    wingsPersistence.save(AnalysisContext.builder()
-                              .stateExecutionId(executionContext.getStateExecutionInstanceId())
-                              .appId(appId)
-                              .query(splunkState.getQuery())
-                              .build());
     ExecutionResponse executionResponse = spyState.handleAsyncResponse(executionContext, responseMap);
     assertEquals(ExecutionStatus.SUCCESS, executionResponse.getExecutionStatus());
     assertEquals("No data found with given queries. Skipped Analysis", executionResponse.getErrorMessage());
