@@ -26,7 +26,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import com.amazonaws.services.ec2.model.Instance;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.github.reinert.jjschema.Attributes;
@@ -34,13 +33,12 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.K8sPod;
 import io.harness.time.Timestamp;
 import io.harness.waiter.WaitNotifyEngine;
+import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
-import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
@@ -51,7 +49,6 @@ import software.wings.api.PhaseExecutionData;
 import software.wings.api.ServiceElement;
 import software.wings.api.k8s.K8sElement;
 import software.wings.app.MainConfiguration;
-import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
@@ -94,7 +91,6 @@ import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.StateExecutionService.CurrentPhase;
 import software.wings.service.intfc.WorkflowExecutionBaselineService;
 import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.sm.ContextElement;
@@ -116,7 +112,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -141,30 +136,51 @@ public abstract class AbstractAnalysisState extends State {
   private static final int TIMEOUT_BUFFER = 150; // 150 Minutes.
   private static final int MAX_WORKFLOW_TIMEOUT = 4 * 60; // 4 hours
 
-  @Inject protected WorkflowExecutionService workflowExecutionService;
-  @Inject protected WaitNotifyEngine waitNotifyEngine;
-  @Inject protected SettingsService settingsService;
-  @Inject protected WingsPersistence wingsPersistence;
-  @Inject protected AppService appService;
-  @Inject protected DelegateService delegateService;
-  @Inject protected SecretManager secretManager;
-  @Inject @SchemaIgnore protected MainConfiguration configuration;
-  @Inject @SchemaIgnore protected ContainerInstanceHandler containerInstanceHandler;
-  @Inject @SchemaIgnore protected InfrastructureMappingService infraMappingService;
-  @Inject protected TemplateExpressionProcessor templateExpressionProcessor;
-  @Inject @SchemaIgnore protected WorkflowExecutionBaselineService workflowExecutionBaselineService;
-  @Inject @SchemaIgnore protected ContinuousVerificationService continuousVerificationService;
-  @Inject @SchemaIgnore private AwsHelperService awsHelperService;
-  @Inject @SchemaIgnore private DelegateProxyFactory delegateProxyFactory;
-  @Inject protected FeatureFlagService featureFlagService;
-  @Inject private HostService hostService;
-  @Inject protected StateExecutionService stateExecutionService;
-  @Inject @SchemaIgnore protected ServiceResourceService serviceResourceService;
-  @Inject @SchemaIgnore protected K8sStateHelper k8sStateHelper;
+  @Transient @Inject protected WorkflowExecutionService workflowExecutionService;
+
+  @Transient @Inject protected WaitNotifyEngine waitNotifyEngine;
+
+  @Transient @Inject protected SettingsService settingsService;
+
+  @Inject @Transient protected WingsPersistence wingsPersistence;
+
+  @Transient @Inject protected AppService appService;
+
+  @Transient @Inject protected DelegateService delegateService;
+
+  @Inject @Transient protected SecretManager secretManager;
+
+  @Transient @Inject @SchemaIgnore protected MainConfiguration configuration;
+
+  @Transient @Inject @SchemaIgnore protected ContainerInstanceHandler containerInstanceHandler;
+
+  @Transient @Inject @SchemaIgnore protected InfrastructureMappingService infraMappingService;
+
+  @Transient @Inject protected TemplateExpressionProcessor templateExpressionProcessor;
+
+  @Transient @Inject @SchemaIgnore protected WorkflowExecutionBaselineService workflowExecutionBaselineService;
+
+  @Transient @Inject @SchemaIgnore protected ContinuousVerificationService continuousVerificationService;
+
+  @Transient @Inject @SchemaIgnore private AwsHelperService awsHelperService;
+
+  @Transient @Inject @SchemaIgnore private DelegateProxyFactory delegateProxyFactory;
+
+  @Transient @Inject protected FeatureFlagService featureFlagService;
+
+  @Transient @Inject private HostService hostService;
+
+  @Transient @Inject protected StateExecutionService stateExecutionService;
+
+  @Transient @Inject @SchemaIgnore protected ServiceResourceService serviceResourceService;
+
+  @Transient @Inject @SchemaIgnore protected K8sStateHelper k8sStateHelper;
+
   @Inject private transient ExpressionEvaluator evaluator;
+
   @Inject private AccountService accountService;
-  @Inject @SchemaIgnore protected CVActivityLogService cvActivityLogService;
-  @Inject private AwsAsgHelperServiceManager awsAsgHelperServiceManager;
+
+  @Transient @Inject @SchemaIgnore protected CVActivityLogService cvActivityLogService;
 
   protected String hostnameField;
 
@@ -298,10 +314,6 @@ public abstract class AbstractAnalysisState extends State {
 
     if (infrastructureMapping instanceof PcfInfrastructureMapping) {
       return getPcfHostNames(context, true);
-    }
-
-    if (infrastructureMapping instanceof AwsAmiInfrastructureMapping) {
-      return getAwsAmiHostNames(context, (AwsAmiInfrastructureMapping) infrastructureMapping);
     }
 
     DeploymentType deploymentType = serviceResourceService.getDeploymentType(infrastructureMapping, null, serviceId);
@@ -545,7 +557,6 @@ public abstract class AbstractAnalysisState extends State {
                 hosts.put(instanceStatusSummary.getInstanceElement().getHostName(),
                     getGroupName(instanceStatusSummary.getInstanceElement(), deploymentType));
               } else {
-                fillHostDetail(instanceStatusSummary.getInstanceElement(), context);
                 hosts.put(context.renderExpression(getHostnameTemplate(),
                               StateExecutionContext.builder()
                                   .contextElements(Lists.newArrayList(instanceStatusSummary.getInstanceElement()))
@@ -590,7 +601,6 @@ public abstract class AbstractAnalysisState extends State {
       if (isEmpty(getHostnameTemplate())) {
         rv.put(instanceElement.getHostName(), getGroupName(instanceElement, deploymentType));
       } else {
-        fillHostDetail(instanceElement, context);
         rv.put(context.renderExpression(getHostnameTemplate(),
                    StateExecutionContext.builder().contextElements(Lists.newArrayList(instanceElement)).build()),
             getGroupName(instanceElement, deploymentType));
@@ -627,53 +637,6 @@ public abstract class AbstractAnalysisState extends State {
       }
     });
     return rv;
-  }
-
-  private Map<String, String> getAwsAmiHostNames(
-      ExecutionContext context, AwsAmiInfrastructureMapping infrastructureMapping) {
-    Map<String, String> hosts = new HashMap<>();
-    final String providerSettingId = infrastructureMapping.getComputeProviderSettingId();
-    final SettingAttribute settingAttribute = settingsService.get(providerSettingId);
-    if (settingAttribute == null) {
-      throw new WingsException("Could not find cloud provider setting with id " + providerSettingId + " for infra "
-          + infrastructureMapping.getUuid());
-    }
-    AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
-    Preconditions.checkNotNull(awsConfig, "No aws config set for " + providerSettingId);
-    AmiServiceSetupElement serviceSetupElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
-    if (serviceSetupElement == null) {
-      throw new WingsException("Could not find service element for  " + context.getStateExecutionInstanceId());
-    }
-    Set<String> asgNames = new HashSet<>();
-    asgNames.addAll(serviceSetupElement.getPreDeploymentData().getAsgNameToDesiredCapacity().keySet());
-    getLogger().info("For {} going to fetch instance from asg {}", context.getStateExecutionInstanceId(), asgNames);
-
-    asgNames.forEach(asgName -> {
-      final List<Instance> instances = awsAsgHelperServiceManager.listAutoScalingGroupInstances(awsConfig,
-          secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowExecutionId()),
-          infrastructureMapping.getRegion(), asgName, context.getAppId());
-
-      if (isNotEmpty(instances)) {
-        instances.forEach(instance -> {
-          String hostNameExpression =
-              isNotEmpty(hostnameTemplate) ? hostnameTemplate : infrastructureMapping.getHostNameConvention();
-          if (isEmpty(hostNameExpression)) {
-            hosts.put(instance.getPrivateDnsName(), DEFAULT_GROUP_NAME);
-          } else {
-            hosts.put(context.renderExpression(hostNameExpression,
-                          StateExecutionContext.builder()
-                              .contextElements(Lists.newArrayList(aHostElement()
-                                                                      .withHostName(instance.getPrivateDnsName())
-                                                                      .withIp(instance.getPrivateIpAddress())
-                                                                      .withEc2Instance(instance)
-                                                                      .build()))
-                              .build()),
-                DEFAULT_GROUP_NAME);
-          }
-        });
-      }
-    });
-    return hosts;
   }
 
   protected boolean isAwsLambdaState(ExecutionContext context) {
@@ -774,14 +737,10 @@ public abstract class AbstractAnalysisState extends State {
   private void fillHostDetail(InstanceElement instanceElement, ExecutionContext context) {
     Preconditions.checkNotNull(instanceElement);
     HostElement hostElement = instanceElement.getHost();
-    if (hostElement == null) {
-      getLogger().info("for {} no host element set for {}", context.getStateExecutionInstanceId(), instanceElement);
-      return;
-    }
+    Preconditions.checkNotNull(hostElement, "host element null for " + instanceElement);
     Host host =
         hostService.get(context.getAppId(), ((ExecutionContextImpl) context).getEnv().getUuid(), hostElement.getUuid());
     if (host == null) {
-      getLogger().info("for {} no host found for {}", context.getStateExecutionInstanceId(), hostElement);
       return;
     }
     instanceElement.setHost(aHostElement()
