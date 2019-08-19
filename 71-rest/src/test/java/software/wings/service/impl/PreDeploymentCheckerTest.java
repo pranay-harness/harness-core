@@ -85,8 +85,7 @@ public class PreDeploymentCheckerTest extends WingsBaseTest {
     when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.ONPREM);
 
     String accountId = "some-account-id";
-    String appId = "some-app-id";
-    rateLimitChecker.check(accountId, appId);
+    rateLimitChecker.check(accountId);
 
     verifyZeroInteractions(limitCheckerFactory);
   }

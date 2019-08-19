@@ -20,9 +20,11 @@ import software.wings.service.intfc.deployment.PreDeploymentChecker;
 
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 @Slf4j
 @Singleton
+@ParametersAreNonnullByDefault
 public class DeploymentRateLimitChecker implements PreDeploymentChecker {
   private static final int PERCENT_TO_WARN_ON_DEFAULT = 85;
   private static final int LONG_LIMIT_DURATION = 24;
@@ -45,7 +47,7 @@ public class DeploymentRateLimitChecker implements PreDeploymentChecker {
    * deployments, useful to give some warnings, though.
    */
   @Override
-  public void check(String accountId, String appId) {
+  public void check(String accountId) {
     String deployMode = System.getenv(DeployMode.DEPLOY_MODE);
     if (DeployMode.isOnPrem(deployMode)) {
       return;

@@ -253,6 +253,7 @@ import software.wings.service.impl.aws.manager.AwsIamHelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsLambdaHelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsRoute53HelperServiceManagerImpl;
 import software.wings.service.impl.compliance.GovernanceConfigServiceImpl;
+import software.wings.service.impl.deployment.checks.AccountExpirationChecker;
 import software.wings.service.impl.deployment.checks.DeploymentRateLimitChecker;
 import software.wings.service.impl.deployment.checks.SIUsageChecker;
 import software.wings.service.impl.dynatrace.DynaTraceServiceImpl;
@@ -436,6 +437,7 @@ import software.wings.service.intfc.aws.manager.AwsIamHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsLambdaHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsRoute53HelperServiceManager;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
+import software.wings.service.intfc.deployment.AccountExpiryCheck;
 import software.wings.service.intfc.deployment.PreDeploymentChecker;
 import software.wings.service.intfc.deployment.RateLimitCheck;
 import software.wings.service.intfc.deployment.ServiceInstanceUsage;
@@ -825,6 +827,7 @@ public class WingsModule extends DependencyModule {
 
     bind(PreDeploymentChecker.class).annotatedWith(RateLimitCheck.class).to(DeploymentRateLimitChecker.class);
     bind(PreDeploymentChecker.class).annotatedWith(ServiceInstanceUsage.class).to(SIUsageChecker.class);
+    bind(PreDeploymentChecker.class).annotatedWith(AccountExpiryCheck.class).to(AccountExpirationChecker.class);
 
     bind(ExecutorService.class)
         .annotatedWith(Names.named("verificationDataCollector"))

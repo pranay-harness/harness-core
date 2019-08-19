@@ -75,6 +75,6 @@ public class GovernanceConfigResource {
   public RestResponse<GovernanceConfig> update(
       @PathParam("accountId") String accountId, GovernanceConfig governanceConfig) {
     governanceConfig.setAccountId(accountId);
-    return new RestResponse<>(governanceConfigService.update(accountId, governanceConfig));
+    return new RestResponse<>(governanceConfigService.upsert(accountId, governanceConfig));
   }
 }

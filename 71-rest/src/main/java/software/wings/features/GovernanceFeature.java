@@ -34,7 +34,7 @@ public class GovernanceFeature extends AbstractPremiumFeature implements Complia
     }
 
     GovernanceConfig governanceConfig = GovernanceConfig.builder().accountId(accountId).deploymentFreeze(false).build();
-    governanceConfigService.update(accountId, governanceConfig);
+    governanceConfigService.upsert(accountId, governanceConfig);
 
     return isUsageCompliantWithRestrictions(accountId, targetAccountType);
   }
