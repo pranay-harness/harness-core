@@ -112,8 +112,8 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   public void runArtifactoryConnectorCRUDTests() {
     retry.executeWithRetry(this ::TC13_createArtifactoryConnector, booleanMatcher, true);
     logger.info(String.format("Created Artifactory Connector with id %s", ArtifactoryConnectorId));
-    TC14_updateArtifactoryConnector();
-    logger.info(String.format("Updated  Artifactory Connector with id %s", ArtifactoryConnectorId));
+    // TC14_updateArtifactoryConnector();
+    // logger.info(String.format("Updated  Artifactory Connector with id %s", ArtifactoryConnectorId));
     TC15_deleteArtifactoryConnector();
     logger.info(String.format("Deleted Artifactory Connector with id %s", ArtifactoryConnectorId));
   }
