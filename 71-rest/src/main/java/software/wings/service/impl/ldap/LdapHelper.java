@@ -341,6 +341,12 @@ public class LdapHelper {
       if (response.getResult()) {
         return LdapResponse.builder().status(Status.SUCCESS).message(LdapConstants.AUTHENTICATION_SUCCESS).build();
       } else {
+        if (response.getResultCode() != null && response.getAuthenticationResultCode() != null) {
+          logger.info("LDAP auth failed with response: identifier:[%s],authenticationResultCode:[%s],resultCode:[%s]",
+              identifier, response.getAuthenticationResultCode(), response.getResultCode().name());
+        } else {
+          logger.info("LDAP auth failed, response not available for identifier:[%s]", identifier);
+        }
         return LdapResponse.builder()
             .status(Status.FAILURE)
             .message(response.getResultCode() == null ? "" : response.getResultCode().toString())
