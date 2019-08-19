@@ -17,6 +17,7 @@ import io.harness.mongo.MongoModule;
 import io.harness.serializer.YamlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.log4j.LogManager;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import ru.vyarus.guice.validator.ValidationModule;
 
@@ -38,13 +39,16 @@ public class EventServiceApplication {
   }
 
   public static void main(String[] args) throws IOException, InterruptedException {
+    logger.info("Starting event service application...");
+
     File configFile = new File(args[1]);
     EventServiceConfig config =
         new YamlUtils().read(FileUtils.readFileToString(configFile, UTF_8), EventServiceConfig.class);
     new EventServiceApplication(config).run();
   }
 
-  private void run() throws IOException, InterruptedException {
+  private void run() throws InterruptedException {
+    logger.info("Starting application using config: {}", config);
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
                                             .configure()
                                             .parameterNameProvider(new ReflectionParameterNameProvider())
@@ -66,7 +70,13 @@ public class EventServiceApplication {
     Injector injector = Guice.createInjector(modules);
 
     GrpcEventServer server = injector.getInstance(GrpcEventServer.class);
-    Runtime.getRuntime().addShutdownHook(new Thread(xxxxxxxx:shutdown));
+    logger.info("Server startup complete");
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      logger.info("Shutting down server...");
+      server.shutdown();
+    }));
     server.awaitTermination();
+    logger.info("Server shutdown complete");
+    LogManager.shutdown();
   }
 }

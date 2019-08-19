@@ -27,6 +27,7 @@ public class EventPublisherServerImpl extends EventPublisherGrpc.EventPublisherI
 
   @Override
   public void publish(PublishRequest request, StreamObserver<PublishResponse> responseObserver) {
+    logger.info("Received publish request");
     String accountId = requireNonNull(DelegateAuthCallCredentials.ACCOUNT_ID_CTX_KEY.get(Context.current()));
     List<PublishedMessage> publishedMessages =
         request.getMessagesList()
@@ -41,6 +42,7 @@ public class EventPublisherServerImpl extends EventPublisherGrpc.EventPublisherI
             .collect(Collectors.toList());
     try {
       hPersistence.save(publishedMessages);
+      logger.info("Published messages persisted");
       responseObserver.onNext(PublishResponse.newBuilder().build());
     } catch (Exception e) {
       logger.warn("Encountered error while persisting messages", e);
