@@ -240,13 +240,14 @@ public class SecretManagerImpl implements SecretManager {
           // CyberArk encrypt need to use decrypt of the secret reference as a way of validating the reference is valid.
           // If the  CyberArk reference is not valid, an exception will be throw.
           cyberArkService.decrypt(encryptedData, accountId, cyberArkConfig);
-        } else if (isNotEmpty(toEncrypt)) {
+        } else {
           KmsConfig fallbackKmsConfig = kmsService.getGlobalKmsConfig();
           if (fallbackKmsConfig != null) {
             logger.info(
                 "CyberArk doesn't support creating new secret. This new secret text will be created in the global KMS SecretStore instead");
             rv = kmsService.encrypt(secret, accountId, fallbackKmsConfig);
             rv.setEncryptionType(KMS);
+            rv.setKmsId(fallbackKmsConfig.getUuid());
           } else {
             logger.info(
                 "CyberArk doesn't support creating new secret. This new secret text will be created in the local Harness SecretStore instead");
