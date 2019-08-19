@@ -4,6 +4,7 @@ import io.harness.dashboard.DashboardSettings;
 import io.harness.marketplace.gcp.events.AccountActiveEvent;
 import io.harness.marketplace.gcp.events.GcpMarketplaceEvent;
 import io.harness.mongo.HObjectFactory;
+import io.harness.mongo.HObjectFactory.NotFoundClass;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.notifications.NotificationReceiverInfo;
 import io.harness.perpetualtask.PerpetualTaskRecord;
@@ -36,6 +37,7 @@ import software.wings.api.DeploymentEvent;
 import software.wings.api.DeploymentSummary;
 import software.wings.api.DeploymentTimeSeriesEvent;
 import software.wings.api.EcsStepExecutionSummary;
+import software.wings.api.ElbStateExecutionData;
 import software.wings.api.EmailStateExecutionData;
 import software.wings.api.EnvStateExecutionData;
 import software.wings.api.ForkElement;
@@ -100,6 +102,7 @@ import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionDat
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditRecord;
+import software.wings.audit.EntityAuditRecord;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.Account;
 import software.wings.beans.ActionableNotification;
@@ -931,6 +934,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("api.ecs.EcsListenerUpdateStateExecutionData", EcsListenerUpdateStateExecutionData.class);
     w.put("api.ecs.EcsRoute53WeightUpdateStateExecutionData", EcsRoute53WeightUpdateStateExecutionData.class);
     w.put("api.EcsStepExecutionSummary", EcsStepExecutionSummary.class);
+    w.put("api.ElbStateExecutionData", ElbStateExecutionData.class);
     w.put("api.EmailStateExecutionData", EmailStateExecutionData.class);
     w.put("api.EnvStateExecutionData", EnvStateExecutionData.class);
     w.put("api.ForkElement", ForkElement.class);
@@ -985,6 +989,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("api.terraform.TerraformProvisionInheritPlanElement", TerraformProvisionInheritPlanElement.class);
     w.put("api.TerraformExecutionData", TerraformExecutionData.class);
     w.put("api.TerraformOutputInfoElement", TerraformOutputInfoElement.class);
+    w.put("audit.EntityAuditRecord", EntityAuditRecord.class);
     w.put("beans.alert.ApprovalNeededAlert", ApprovalNeededAlert.class);
     w.put("beans.alert.ArtifactCollectionFailedAlert", ArtifactCollectionFailedAlert.class);
     w.put("beans.alert.cv.ContinuousVerificationAlertData", ContinuousVerificationAlertData.class);
@@ -1055,6 +1060,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.container.EcsContainerTask", EcsContainerTask.class);
     w.put("beans.container.KubernetesContainerTask", KubernetesContainerTask.class);
     w.put("beans.CustomArtifactServerConfig", CustomArtifactServerConfig.class);
+    w.put("beans.CyberArkConfig", CyberArkConfig.class);
     w.put("beans.DatadogConfig", DatadogConfig.class);
     w.put("beans.DockerConfig", DockerConfig.class);
     w.put("beans.DynaTraceConfig", DynaTraceConfig.class);
@@ -1114,7 +1120,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.yaml.GitDiffRequest", GitDiffRequest.class);
     w.put("beans.yaml.GitDiffResult", GitDiffResult.class);
     w.put("beans.yaml.GitFetchFilesFromMultipleRepoResult", GitFetchFilesFromMultipleRepoResult.class);
-    w.put("beans.CyberArkConfig", CyberArkConfig.class);
     w.put("collect.ArtifactCollectionCallback", ArtifactCollectionCallback.class);
     w.put("delegatetasks.buildsource.BuildSourceCallback", BuildSourceCallback.class);
     w.put("delegatetasks.buildsource.BuildSourceCleanupCallback", BuildSourceCleanupCallback.class);
@@ -1151,6 +1156,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("service.impl.analysis.CustomLogDataCollectionInfo", CustomLogDataCollectionInfo.class);
     w.put("service.impl.analysis.DataCollectionCallback", DataCollectionCallback.class);
     w.put("service.impl.analysis.DataCollectionTaskResult", DataCollectionTaskResult.class);
+    w.put("service.impl.analysis.LogAnalysisExecutionData", NotFoundClass.class);
     w.put("service.impl.aws.model.AwsAmiServiceDeployResponse", AwsAmiServiceDeployResponse.class);
     w.put("service.impl.aws.model.AwsAmiServiceSetupResponse", AwsAmiServiceSetupResponse.class);
     w.put("service.impl.aws.model.AwsAmiSwitchRoutesResponse", AwsAmiSwitchRoutesResponse.class);
