@@ -487,12 +487,13 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
                                                          .asList();
     assertEquals(1, analysisTasks.size());
     LearningEngineAnalysisTask analysisTask = analysisTasks.get(0);
-    assertEquals(currentMinute - CRON_POLL_INTERVAL_IN_MINUTES * (numOfUnitsToBeAnalyized - 1),
-        analysisTask.getAnalysis_minute());
-    assertEquals(analysisTask.getAnalysis_minute() - PREDECTIVE_HISTORY_MINUTES - CRON_POLL_INTERVAL_IN_MINUTES + 1,
-        analysisTask.getAnalysis_start_min());
+    // this is beyond 2 hours, so analysis start minute should be currentTime - 2 hours. analysisMin should be
+    // currentTime - 1h45m
     assertEquals(
-        analysisTask.getAnalysis_minute() - CRON_POLL_INTERVAL_IN_MINUTES, analysisTask.getPrediction_start_time());
+        currentMinute - PREDECTIVE_HISTORY_MINUTES + CRON_POLL_INTERVAL_IN_MINUTES, analysisTask.getAnalysis_minute());
+    assertEquals(currentMinute - PREDECTIVE_HISTORY_MINUTES * 2 + 1, analysisTask.getAnalysis_start_min());
+    assertEquals(
+        analysisTask.getAnalysis_start_min() + PREDECTIVE_HISTORY_MINUTES - 1, analysisTask.getPrediction_start_time());
 
     continuousVerificationService.triggerServiceGuardTimeSeriesAnalysis(accountId);
     analysisTasks = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
@@ -501,19 +502,17 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
                         .asList();
     assertEquals(1, analysisTasks.size());
 
-    analysisTask = analysisTasks.get(0);
-    assertEquals(currentMinute - CRON_POLL_INTERVAL_IN_MINUTES * (numOfUnitsToBeAnalyized - 1),
-        analysisTask.getAnalysis_minute());
-    assertEquals(analysisTask.getAnalysis_minute() - PREDECTIVE_HISTORY_MINUTES - CRON_POLL_INTERVAL_IN_MINUTES + 1,
-        analysisTask.getAnalysis_start_min());
+    // there has been no new analysis saved since the previous trigger, so no new task should be created
     assertEquals(
-        analysisTask.getAnalysis_minute() - CRON_POLL_INTERVAL_IN_MINUTES, analysisTask.getPrediction_start_time());
+        currentMinute - PREDECTIVE_HISTORY_MINUTES + CRON_POLL_INTERVAL_IN_MINUTES, analysisTask.getAnalysis_minute());
+    assertEquals(currentMinute - PREDECTIVE_HISTORY_MINUTES * 2 + 1, analysisTask.getAnalysis_start_min());
+    assertEquals(
+        analysisTask.getAnalysis_start_min() + PREDECTIVE_HISTORY_MINUTES - 1, analysisTask.getPrediction_start_time());
 
     timeSeriesMLAnalysisRecord = TimeSeriesMLAnalysisRecord.builder().build();
     timeSeriesMLAnalysisRecord.setAppId(appId);
     timeSeriesMLAnalysisRecord.setCvConfigId(cvConfigId);
-    timeSeriesMLAnalysisRecord.setAnalysisMinute(
-        (int) (currentMinute - CRON_POLL_INTERVAL_IN_MINUTES * (numOfUnitsToBeAnalyized - 1)));
+    timeSeriesMLAnalysisRecord.setAnalysisMinute((int) analysisTask.getAnalysis_minute());
     wingsPersistence.save(timeSeriesMLAnalysisRecord);
     analysisTask.setExecutionStatus(ExecutionStatus.SUCCESS);
     wingsPersistence.save(analysisTask);
