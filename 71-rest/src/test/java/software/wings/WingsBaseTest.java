@@ -15,6 +15,7 @@ import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.CyberArkConfig;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.SettingAttribute;
@@ -197,6 +198,27 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
     return SettingAttribute.Builder.aSettingAttribute()
         .withAccountId(appDynamicsConfig.getAccountId())
         .withValue(appDynamicsConfig)
+        .withAppId(UUID.randomUUID().toString())
+        .withCategory(SettingCategory.CONNECTOR)
+        .withEnvId(UUID.randomUUID().toString())
+        .withName(UUID.randomUUID().toString())
+        .build();
+  }
+
+  protected JenkinsConfig getJenkinsConfig(String accountId, String password) {
+    return JenkinsConfig.builder()
+        .accountId(accountId)
+        .jenkinsUrl(UUID.randomUUID().toString())
+        .username(UUID.randomUUID().toString())
+        .password(password.toCharArray())
+        .authMechanism(JenkinsConfig.USERNAME_PASSWORD_FIELD)
+        .build();
+  }
+
+  protected SettingAttribute getSettingAttribute(JenkinsConfig jenkinsConfig) {
+    return SettingAttribute.Builder.aSettingAttribute()
+        .withAccountId(jenkinsConfig.getAccountId())
+        .withValue(jenkinsConfig)
         .withAppId(UUID.randomUUID().toString())
         .withCategory(SettingCategory.CONNECTOR)
         .withEnvId(UUID.randomUUID().toString())
