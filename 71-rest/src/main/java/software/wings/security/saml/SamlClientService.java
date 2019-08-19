@@ -122,6 +122,7 @@ public class SamlClientService {
     return getSamlClient(samlSettings);
   }
 
+  // TODO: this method should return HIterator and close at the end
   public Iterator<SamlSettings> getSamlSettingsFromOrigin(String origin) {
     return ssoSettingService.getSamlSettingsIteratorByOrigin(origin);
   }

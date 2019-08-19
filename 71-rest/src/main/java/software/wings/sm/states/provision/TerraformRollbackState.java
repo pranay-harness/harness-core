@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.persistence.HIterator;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +35,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
 import software.wings.utils.GitUtilsManager;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -73,96 +73,97 @@ public class TerraformRollbackState extends TerraformProvisionState {
     String workspace = context.renderExpression(getWorkspace());
     workspace = handleDefaultWorkspace(workspace);
     String entityId = generateEntityId(context, workspace);
-    Iterator<TerraformConfig> configIterator = wingsPersistence.createQuery(TerraformConfig.class)
-                                                   .filter(TerraformConfig.APP_ID_KEY, context.getAppId())
-                                                   .filter(TerraformConfig.ENTITY_ID_KEY, entityId)
-                                                   .order(Sort.descending(TerraformConfigKeys.createdAt))
-                                                   .iterator();
-
-    if (!configIterator.hasNext()) {
-      return anExecutionResponse()
-          .withExecutionStatus(SUCCESS)
-          .withErrorMessage("No Rollback Required. Provisioning seems to have failed.")
-          .build();
-    }
-
-    TerraformConfig configParameter = null;
-    TerraformConfig currentConfig = null;
-    while (configIterator.hasNext()) {
-      configParameter = configIterator.next();
-
-      if (configParameter.getWorkflowExecutionId().equals(context.getWorkflowExecutionId())) {
-        if (currentConfig == null) {
-          currentConfig = configParameter;
-        }
-      } else {
-        TerraformCommand savedCommand = configParameter.getCommand();
-        rollbackCommand = savedCommand != null ? savedCommand : TerraformCommand.APPLY;
-        break;
-      }
-    }
-
-    if (configParameter == currentConfig) {
-      rollbackCommand = TerraformCommand.DESTROY;
-    }
-
-    final String fileId = fileService.getLatestFileId(entityId, TERRAFORM_STATE);
-    final GitConfig gitConfig = gitUtilsManager.getGitConfig(configParameter.getSourceRepoSettingId());
-    if (StringUtils.isNotEmpty(configParameter.getSourceRepoReference())) {
-      gitConfig.setReference(configParameter.getSourceRepoReference());
-      String branch = context.renderExpression(terraformProvisioner.getSourceRepoBranch());
-      if (isNotEmpty(branch)) {
-        gitConfig.setBranch(branch);
-      }
-    }
-
-    List<NameValuePair> allVariables = configParameter.getVariables();
-    Map<String, String> textVariables = null;
-    Map<String, EncryptedDataDetail> encryptedTextVariables = null;
-    if (allVariables != null) {
-      textVariables = infrastructureProvisionerService.extractTextVariables(allVariables, context);
-      encryptedTextVariables =
-          infrastructureProvisionerService.extractEncryptedTextVariables(allVariables, context.getAppId());
-    }
-
-    List<NameValuePair> allBackendConfigs = configParameter.getBackendConfigs();
-    Map<String, String> backendConfigs = null;
-    Map<String, EncryptedDataDetail> encryptedBackendConfigs = null;
-    if (allBackendConfigs != null) {
-      backendConfigs = infrastructureProvisionerService.extractTextVariables(allBackendConfigs, context);
-      encryptedBackendConfigs =
-          infrastructureProvisionerService.extractEncryptedTextVariables(allBackendConfigs, context.getAppId());
-    }
-
-    List<String> targets = configParameter.getTargets();
-    targets = resolveTargets(targets, context);
-
-    ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
-    TerraformProvisionParameters parameters =
-        TerraformProvisionParameters.builder()
-            .accountId(executionContext.getApp().getAccountId())
-            .activityId(activityId)
-            .appId(executionContext.getAppId())
-            .currentStateFileId(fileId)
-            .entityId(entityId)
-            .command(rollbackCommand)
-            .commandUnit(TerraformCommandUnit.Rollback)
-            .sourceRepoSettingId(configParameter.getSourceRepoSettingId())
-            .sourceRepo(gitConfig)
-            .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null))
-            .scriptPath(path)
-            .variables(textVariables)
-            .encryptedVariables(encryptedTextVariables)
-            .backendConfigs(backendConfigs)
-            .encryptedBackendConfigs(encryptedBackendConfigs)
-            .targets(targets)
-            .runPlanOnly(false)
-            .tfVarFiles(configParameter.getTfVarFiles())
-            .workspace(workspace)
-            .delegateTag(configParameter.getDelegateTag())
+    try (HIterator<TerraformConfig> configIterator =
+             new HIterator(wingsPersistence.createQuery(TerraformConfig.class)
+                               .filter(TerraformConfigKeys.appId, context.getAppId())
+                               .filter(TerraformConfigKeys.entityId, entityId)
+                               .order(Sort.descending(TerraformConfigKeys.createdAt))
+                               .fetch())) {
+      if (!configIterator.hasNext()) {
+        return anExecutionResponse()
+            .withExecutionStatus(SUCCESS)
+            .withErrorMessage("No Rollback Required. Provisioning seems to have failed.")
             .build();
+      }
 
-    return createAndRunTask(activityId, executionContext, parameters, configParameter.getDelegateTag());
+      TerraformConfig configParameter = null;
+      TerraformConfig currentConfig = null;
+      while (configIterator.hasNext()) {
+        configParameter = configIterator.next();
+
+        if (configParameter.getWorkflowExecutionId().equals(context.getWorkflowExecutionId())) {
+          if (currentConfig == null) {
+            currentConfig = configParameter;
+          }
+        } else {
+          TerraformCommand savedCommand = configParameter.getCommand();
+          rollbackCommand = savedCommand != null ? savedCommand : TerraformCommand.APPLY;
+          break;
+        }
+      }
+
+      if (configParameter == currentConfig) {
+        rollbackCommand = TerraformCommand.DESTROY;
+      }
+
+      final String fileId = fileService.getLatestFileId(entityId, TERRAFORM_STATE);
+      final GitConfig gitConfig = gitUtilsManager.getGitConfig(configParameter.getSourceRepoSettingId());
+      if (StringUtils.isNotEmpty(configParameter.getSourceRepoReference())) {
+        gitConfig.setReference(configParameter.getSourceRepoReference());
+        String branch = context.renderExpression(terraformProvisioner.getSourceRepoBranch());
+        if (isNotEmpty(branch)) {
+          gitConfig.setBranch(branch);
+        }
+      }
+
+      List<NameValuePair> allVariables = configParameter.getVariables();
+      Map<String, String> textVariables = null;
+      Map<String, EncryptedDataDetail> encryptedTextVariables = null;
+      if (allVariables != null) {
+        textVariables = infrastructureProvisionerService.extractTextVariables(allVariables, context);
+        encryptedTextVariables =
+            infrastructureProvisionerService.extractEncryptedTextVariables(allVariables, context.getAppId());
+      }
+
+      List<NameValuePair> allBackendConfigs = configParameter.getBackendConfigs();
+      Map<String, String> backendConfigs = null;
+      Map<String, EncryptedDataDetail> encryptedBackendConfigs = null;
+      if (allBackendConfigs != null) {
+        backendConfigs = infrastructureProvisionerService.extractTextVariables(allBackendConfigs, context);
+        encryptedBackendConfigs =
+            infrastructureProvisionerService.extractEncryptedTextVariables(allBackendConfigs, context.getAppId());
+      }
+
+      List<String> targets = configParameter.getTargets();
+      targets = resolveTargets(targets, context);
+
+      ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
+      TerraformProvisionParameters parameters =
+          TerraformProvisionParameters.builder()
+              .accountId(executionContext.getApp().getAccountId())
+              .activityId(activityId)
+              .appId(executionContext.getAppId())
+              .currentStateFileId(fileId)
+              .entityId(entityId)
+              .command(rollbackCommand)
+              .commandUnit(TerraformCommandUnit.Rollback)
+              .sourceRepoSettingId(configParameter.getSourceRepoSettingId())
+              .sourceRepo(gitConfig)
+              .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null))
+              .scriptPath(path)
+              .variables(textVariables)
+              .encryptedVariables(encryptedTextVariables)
+              .backendConfigs(backendConfigs)
+              .encryptedBackendConfigs(encryptedBackendConfigs)
+              .targets(targets)
+              .runPlanOnly(false)
+              .tfVarFiles(configParameter.getTfVarFiles())
+              .workspace(workspace)
+              .delegateTag(configParameter.getDelegateTag())
+              .build();
+
+      return createAndRunTask(activityId, executionContext, parameters, configParameter.getDelegateTag());
+    }
   }
 
   @Override
@@ -179,8 +180,8 @@ public class TerraformRollbackState extends TerraformProvisionState {
       } else if (terraformExecutionData.getCommandExecuted() == TerraformCommand.DESTROY) {
         Query<TerraformConfig> query =
             wingsPersistence.createQuery(TerraformConfig.class)
-                .filter(TerraformConfig.ENTITY_ID_KEY, generateEntityId(context, terraformExecutionData.getWorkspace()))
-                .filter(TerraformConfig.WORKFLOW_EXECUTION_ID_KEY, context.getWorkflowExecutionId());
+                .filter(TerraformConfigKeys.entityId, generateEntityId(context, terraformExecutionData.getWorkspace()))
+                .filter(TerraformConfigKeys.workflowExecutionId, context.getWorkflowExecutionId());
 
         wingsPersistence.delete(query);
       }

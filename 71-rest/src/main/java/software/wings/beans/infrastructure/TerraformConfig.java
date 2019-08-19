@@ -26,14 +26,9 @@ import javax.validation.constraints.NotNull;
 @HarnessExportableEntity
 @FieldNameConstants(innerTypeName = "TerraformConfigKeys")
 public class TerraformConfig implements PersistentEntity, UuidAware, CreatedAtAware {
-  public static final String APP_ID_KEY = "appId";
-
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @Indexed @NotNull @SchemaIgnore protected String appId;
   @SchemaIgnore @Indexed private long createdAt;
-
-  public static final String ENTITY_ID_KEY = "entityId";
-  public static final String WORKFLOW_EXECUTION_ID_KEY = "workflowExecutionId";
 
   private final String sourceRepoSettingId;
   /**

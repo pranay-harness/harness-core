@@ -12,6 +12,7 @@ import io.harness.mongo.HObjectFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Key;
+import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Criteria;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.MorphiaIterator;
@@ -122,6 +123,11 @@ public class HQuery<T> extends QueryImpl<T> {
   @Override
   public long count() {
     return HPersistence.retry(() -> super.count());
+  }
+
+  @Override
+  public long count(final CountOptions options) {
+    return HPersistence.retry(() -> super.count(options));
   }
 
   public MorphiaIterator<T, T> fetch() {

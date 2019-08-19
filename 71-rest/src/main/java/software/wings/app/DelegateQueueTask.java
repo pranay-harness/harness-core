@@ -19,6 +19,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
+import io.harness.persistence.HIterator;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
@@ -36,7 +37,6 @@ import software.wings.service.intfc.AssignDelegateService;
 
 import java.time.Clock;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -209,24 +209,24 @@ public class DelegateQueueTask implements Runnable {
             new WhereCriteria("this." + DelegateTaskKeys.lastBroadcastAt + " < " + now + " - Math.pow(2, this."
                 + DelegateTaskKeys.broadcastCount + ") * " + REBROADCAST_FACTOR)));
 
-    Iterator<DelegateTask> iterator = unassignedTasksQuery.iterator();
+    try (HIterator<DelegateTask> iterator = new HIterator(unassignedTasksQuery.fetch())) {
+      UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
+                                                            .set(DelegateTaskKeys.lastBroadcastAt, now)
+                                                            .inc(DelegateTaskKeys.broadcastCount)
+                                                            .unset(DelegateTaskKeys.preAssignedDelegateId);
 
-    UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
-                                                          .set(DelegateTaskKeys.lastBroadcastAt, now)
-                                                          .inc(DelegateTaskKeys.broadcastCount)
-                                                          .unset(DelegateTaskKeys.preAssignedDelegateId);
+      int count = 0;
+      while (iterator.hasNext()) {
+        DelegateTask delegateTask = iterator.next();
+        wingsPersistence.update(delegateTask, updateOperations);
+        logger.info("Rebroadcast queued task [{}], broadcast count: {}", delegateTask.getUuid(),
+            delegateTask.getBroadcastCount());
+        delegateTask.setPreAssignedDelegateId(null);
+        broadcasterFactory.lookup("/stream/delegate/" + delegateTask.getAccountId(), true).broadcast(delegateTask);
+        count++;
+      }
 
-    int count = 0;
-    while (iterator.hasNext()) {
-      DelegateTask delegateTask = iterator.next();
-      wingsPersistence.update(delegateTask, updateOperations);
-      logger.info("Rebroadcast queued task [{}], broadcast count: {}", delegateTask.getUuid(),
-          delegateTask.getBroadcastCount());
-      delegateTask.setPreAssignedDelegateId(null);
-      broadcasterFactory.lookup("/stream/delegate/" + delegateTask.getAccountId(), true).broadcast(delegateTask);
-      count++;
+      logger.info("{} tasks were rebroadcast", count);
     }
-
-    logger.info("{} tasks were rebroadcast", count);
   }
 }

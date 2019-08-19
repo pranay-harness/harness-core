@@ -17,6 +17,7 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
+import io.harness.persistence.HIterator;
 import io.harness.scheduler.PersistentScheduler;
 import org.hibernate.validator.constraints.NotBlank;
 import software.wings.beans.Account;
@@ -192,7 +193,8 @@ public class SSOSettingServiceImpl implements SSOSettingService {
 
   @Override
   public Iterator<SamlSettings> getSamlSettingsIteratorByOrigin(@NotNull String origin) {
-    return wingsPersistence.createQuery(SamlSettings.class, excludeAuthority).field("origin").equal(origin).iterator();
+    return new HIterator(
+        wingsPersistence.createQuery(SamlSettings.class, excludeAuthority).field("origin").equal(origin).fetch());
   }
 
   @Override

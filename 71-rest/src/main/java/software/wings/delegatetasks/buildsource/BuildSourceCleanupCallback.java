@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
+import io.harness.persistence.HIterator;
 import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.NotifyCallback;
 import lombok.Data;
@@ -108,11 +109,14 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
         ? new HashSet<>()
         : builds.parallelStream().map(BuildDetails::getNumber).collect(Collectors.toSet());
     List<Artifact> deletedArtifactsNew = new ArrayList<>();
-    artifactService.prepareArtifactWithMetadataQuery(artifactStream).fetch().forEach(artifact -> {
-      if (!buildNumbers.contains(artifact.getBuildNo())) {
-        deletedArtifactsNew.add(artifact);
+    try (HIterator<Artifact> artifacts =
+             new HIterator<Artifact>(artifactService.prepareArtifactWithMetadataQuery(artifactStream).fetch())) {
+      for (Artifact artifact : artifacts) {
+        if (!buildNumbers.contains(artifact.getBuildNo())) {
+          deletedArtifactsNew.add(artifact);
+        }
       }
-    });
+    }
 
     if (isEmpty(deletedArtifactsNew)) {
       return;

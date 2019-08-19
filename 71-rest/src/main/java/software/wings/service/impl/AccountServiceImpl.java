@@ -702,15 +702,11 @@ public class AccountServiceImpl implements AccountService {
       throw new InvalidRequestException("Deleted AccountId: " + accountId);
     }
 
-    List<Account> accounts = new ArrayList<>();
-    Iterator<Account> iterator = wingsPersistence.createQuery(Account.class, excludeAuthority)
-                                     .field(Mapper.ID_KEY)
-                                     .in(asList(accountId, GLOBAL_ACCOUNT_ID))
-                                     .project("delegateConfiguration", true)
-                                     .fetch();
-    while (iterator.hasNext()) {
-      accounts.add(iterator.next());
-    }
+    List<Account> accounts = wingsPersistence.createQuery(Account.class, excludeAuthorityCount)
+                                 .field(Mapper.ID_KEY)
+                                 .in(asList(accountId, GLOBAL_ACCOUNT_ID))
+                                 .project("delegateConfiguration", true)
+                                 .asList();
 
     Optional<Account> specificAccount =
         accounts.stream().filter(account -> StringUtils.equals(accountId, account.getUuid())).findFirst();

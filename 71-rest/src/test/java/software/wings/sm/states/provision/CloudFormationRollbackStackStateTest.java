@@ -36,6 +36,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import software.wings.WingsBaseTest;
@@ -62,7 +63,6 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.WorkflowStandardParams;
 
-import java.util.Iterator;
 import java.util.Map;
 
 public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
@@ -95,8 +95,8 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
     doReturn(mockQuery).when(mockWingsPersistence).createQuery(any());
     doReturn(mockQuery).when(mockQuery).filter(anyString(), anyString());
     doReturn(mockQuery).when(mockQuery).order(any(Sort[].class));
-    Iterator mockIterator = mock(Iterator.class);
-    doReturn(mockIterator).when(mockQuery).iterator();
+    MorphiaIterator mockIterator = mock(MorphiaIterator.class);
+    doReturn(mockIterator).when(mockQuery).fetch();
     doReturn(false).when(mockIterator).hasNext();
     doReturn(env).when(mockContext).getEnv();
     Activity activity = Activity.builder().build();
