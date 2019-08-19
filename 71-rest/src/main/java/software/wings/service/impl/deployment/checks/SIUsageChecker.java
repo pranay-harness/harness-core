@@ -1,6 +1,7 @@
 package software.wings.service.impl.deployment.checks;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
@@ -14,7 +15,11 @@ import software.wings.service.intfc.deployment.PreDeploymentChecker;
 import software.wings.service.intfc.instance.licensing.InstanceUsageLimitChecker;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 @Slf4j
+@Singleton
+@ParametersAreNonnullByDefault
 public class SIUsageChecker implements PreDeploymentChecker {
   private static final int NUM_DAYS_TO_CHECK_FOR = 2;
 
@@ -33,7 +38,7 @@ public class SIUsageChecker implements PreDeploymentChecker {
   }
 
   @Override
-  public void check(String accountId, String appId) throws InstanceUsageExceededLimitException {
+  public void check(String accountId) throws InstanceUsageExceededLimitException {
     double ninetyFifthPercentileUsage = InstanceStatsUtils.actualUsage(accountId, instanceStatService);
 
     // has the customer reached 3x of limit?

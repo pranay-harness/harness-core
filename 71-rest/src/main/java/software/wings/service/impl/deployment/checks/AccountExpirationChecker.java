@@ -6,12 +6,14 @@ import static io.harness.exception.WingsException.USER;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.sun.istack.Nullable;
 import io.harness.exception.WingsException;
 import software.wings.licensing.LicenseService;
 import software.wings.service.intfc.deployment.PreDeploymentChecker;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 @Singleton
+@ParametersAreNonnullByDefault
 public class AccountExpirationChecker implements PreDeploymentChecker {
   private final LicenseService licenseService;
 
@@ -24,7 +26,7 @@ public class AccountExpirationChecker implements PreDeploymentChecker {
    * CHecks if an account's license is expired.
    */
   @Override
-  public void check(String accountId, @Nullable String appId) {
+  public void check(String accountId) {
     boolean isAccountExpired = licenseService.isAccountExpired(accountId);
     if (isAccountExpired) {
       throw new WingsException(GENERAL_ERROR, USER)

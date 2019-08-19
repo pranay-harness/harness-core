@@ -9,5 +9,5 @@ import software.wings.service.intfc.ownership.OwnedByAccount;
 public interface GovernanceConfigService extends OwnedByAccount {
   GovernanceConfig get(String accountId);
 
-  GovernanceConfig update(String accountId, GovernanceConfig governanceConfig);
+  GovernanceConfig upsert(String accountId, GovernanceConfig governanceConfig);
 }

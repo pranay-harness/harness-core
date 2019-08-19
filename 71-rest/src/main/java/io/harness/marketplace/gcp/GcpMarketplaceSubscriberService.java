@@ -16,7 +16,7 @@ public class GcpMarketplaceSubscriberService implements Managed {
   @Inject private FeatureFlagService featureFlagService;
 
   @Override
-  public void start() throws Exception {
+  public void start() {
     try {
       boolean featEnabled =
           featureFlagService.isEnabled(FeatureName.GCP_MARKETPLACE_INTEGRATION, Account.GLOBAL_ACCOUNT_ID);
@@ -30,7 +30,7 @@ public class GcpMarketplaceSubscriberService implements Managed {
   }
 
   @Override
-  public void stop() throws Exception {
+  public void stop() {
     if (null != this.gcpMarketplaceTopicSubscriber) {
       this.gcpMarketplaceTopicSubscriber.stopAsync();
     } else {

@@ -1010,7 +1010,7 @@ public class AccountServiceImpl implements AccountService {
       wingsPersistence.save(governanceConfig);
     } else {
       governanceConfig.setDeploymentFreeze(freeze);
-      governanceConfigService.update(accountId, governanceConfig);
+      governanceConfigService.upsert(accountId, governanceConfig);
     }
     logger.info("Set deployment freeze for account {} to: {}", accountId, freeze);
   }
