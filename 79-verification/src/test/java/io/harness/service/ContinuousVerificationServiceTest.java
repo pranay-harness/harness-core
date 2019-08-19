@@ -23,7 +23,9 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.TaskType.ELK_COLLECT_LOG_DATA;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
+import static software.wings.common.VerificationConstants.TIME_DELAY_QUERY_MINS;
 import static software.wings.common.VerificationConstants.VERIFICATION_SERVICE_BASE_URL;
+import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.service.intfc.analysis.LogAnalysisResource.ANALYSIS_GET_24X7_ALL_LOGS_URL;
 import static software.wings.service.intfc.analysis.LogAnalysisResource.ANALYSIS_GET_24X7_LOG_URL;
@@ -52,6 +54,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -84,10 +87,12 @@ import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisStatus;
 import software.wings.service.impl.analysis.MLAnalysisType;
+import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskKeys;
+import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
 import software.wings.service.intfc.AlertService;
@@ -103,6 +108,7 @@ import software.wings.service.intfc.verification.CVTaskService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.DatadogLogState;
 import software.wings.verification.CVConfiguration;
+import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
@@ -1460,5 +1466,100 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         .startDataCollectionMinute(startMinute)
         .hostNameField("pod_name")
         .build();
+  }
+
+  private DatadogCVServiceConfiguration getNRConfig() {
+    Map<String, String> dockerMetrics = new HashMap<>();
+    dockerMetrics.put("service_name:harness", "docker.cpu.usage, docker.mem.rss");
+    DatadogCVServiceConfiguration config = DatadogCVServiceConfiguration.builder().dockerMetrics(dockerMetrics).build();
+    config.setConnectorId(datadogConnectorId);
+    config.setUuid(generateUuid());
+    config.setAccountId(accountId);
+    config.setAppId(appId);
+    config.setServiceId(serviceId);
+    config.setEnabled24x7(true);
+    config.setStateType(StateType.DATA_DOG);
+    return config;
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testDataCollectionAfter2Hours() throws Exception {
+    long currentTime = Timestamp.currentMinuteBoundary();
+
+    DatadogCVServiceConfiguration nrConfig = getNRConfig();
+    wingsPersistence.save(nrConfig);
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(nrConfig));
+    // create metric data
+    NewRelicMetricDataRecord dataRecord =
+        NewRelicMetricDataRecord.builder()
+            .cvConfigId(nrConfig.getUuid())
+            .dataCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(currentTime) - 400)
+            .level(ClusterLevel.HF)
+            .build();
+
+    wingsPersistence.save(dataRecord);
+    long expectedEnd = currentTime - TimeUnit.MINUTES.toMillis(2);
+    long expectedStart = expectedEnd - TimeUnit.MINUTES.toMillis(PREDECTIVE_HISTORY_MINUTES * 2);
+    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
+        .thenReturn(managerFeatureFlagCall);
+    ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    continuousVerificationService.triggerAPMDataCollection(accountId);
+    verify(delegateService).queueTask(taskCaptor.capture());
+    APMDataCollectionInfo info = (APMDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
+    assertEquals(expectedStart, info.getStartTime());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testDataCollectionHappyCase() throws Exception {
+    long currentTime = Timestamp.currentMinuteBoundary();
+
+    DatadogCVServiceConfiguration nrConfig = getNRConfig();
+    wingsPersistence.save(nrConfig);
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(nrConfig));
+    // create metric data
+    NewRelicMetricDataRecord dataRecord =
+        NewRelicMetricDataRecord.builder()
+            .cvConfigId(nrConfig.getUuid())
+            .dataCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(currentTime) - 60)
+            .level(ClusterLevel.HF)
+            .build();
+
+    wingsPersistence.save(dataRecord);
+    long expectedEnd = currentTime - TimeUnit.MINUTES.toMillis(2);
+    long expectedStart = TimeUnit.MINUTES.toMillis(TimeUnit.MILLISECONDS.toMinutes(currentTime) - 60);
+    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
+        .thenReturn(managerFeatureFlagCall);
+    ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    continuousVerificationService.triggerAPMDataCollection(accountId);
+    verify(delegateService).queueTask(taskCaptor.capture());
+    APMDataCollectionInfo info = (APMDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
+    assertEquals(expectedStart, info.getStartTime());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testDataCollectionFirstCollection() throws Exception {
+    long currentTime = Timestamp.currentMinuteBoundary();
+
+    DatadogCVServiceConfiguration nrConfig = getNRConfig();
+    wingsPersistence.save(nrConfig);
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(nrConfig));
+
+    long expectedStart = currentTime - TimeUnit.MINUTES.toMillis(TIME_DELAY_QUERY_MINS + 135);
+    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
+        .thenReturn(managerFeatureFlagCall);
+    ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    continuousVerificationService.triggerAPMDataCollection(accountId);
+    verify(delegateService).queueTask(taskCaptor.capture());
+    APMDataCollectionInfo info = (APMDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
+    assertEquals(expectedStart, info.getStartTime());
   }
 }

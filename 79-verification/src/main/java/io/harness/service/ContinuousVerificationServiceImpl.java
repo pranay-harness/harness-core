@@ -47,6 +47,7 @@ import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
+import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import software.wings.beans.FeatureName;
@@ -122,12 +123,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         .filter(cvConfiguration
             -> cvConfiguration.isEnabled24x7() && getMetricAnalysisStates().contains(cvConfiguration.getStateType()))
         .forEach(cvConfiguration -> {
-          long maxCVCollectionMinute =
-              timeSeriesAnalysisService.getMaxCVCollectionMinute(cvConfiguration.getAppId(), cvConfiguration.getUuid());
-          long startTime = maxCVCollectionMinute <= 0 || endMinute - maxCVCollectionMinute > PREDECTIVE_HISTORY_MINUTES
-              ? TimeUnit.MINUTES.toMillis(endMinute) - TimeUnit.MINUTES.toMillis(PREDECTIVE_HISTORY_MINUTES)
-                  - TimeUnit.SECONDS.toMillis(CRON_POLL_INTERVAL)
-              : TimeUnit.MINUTES.toMillis(maxCVCollectionMinute);
+          long startTime = getDataCollectionStartMinForAPM(cvConfiguration, endMinute);
           long endTime = TimeUnit.MINUTES.toMillis(endMinute);
           if (endTime - startTime >= TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES / 3)) {
             enqueueTask(accountId, cvConfiguration.getUuid(), startTime, endTime);
@@ -143,6 +139,28 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return true;
   }
 
+  private long getDataCollectionStartMinForAPM(CVConfiguration cvConfiguration, long endMinute) {
+    long maxCVCollectionMinute =
+        timeSeriesAnalysisService.getMaxCVCollectionMinute(cvConfiguration.getAppId(), cvConfiguration.getUuid());
+    long startTime;
+    if (maxCVCollectionMinute <= 0) {
+      // no collection has been done so far
+      startTime = TimeUnit.MINUTES.toMillis(endMinute) - TimeUnit.MINUTES.toMillis(PREDECTIVE_HISTORY_MINUTES)
+          - TimeUnit.SECONDS.toMillis(CRON_POLL_INTERVAL);
+    } else if (endMinute - maxCVCollectionMinute > PREDECTIVE_HISTORY_MINUTES) {
+      // the last collection was more than 2 hours ago.
+      // So our analysis is going to start from 2hours (with 2 hours before that as history)
+      startTime = TimeUnit.MINUTES.toMillis(endMinute - PREDECTIVE_HISTORY_MINUTES * 2);
+      logger.info(
+          "The last datacollection for {} was more than 2 hours ago, so we will restart from 2hours. Setting start time to {}",
+          cvConfiguration.getUuid(), startTime);
+    } else {
+      // All is well. Happy case.
+      startTime = TimeUnit.MINUTES.toMillis(maxCVCollectionMinute);
+    }
+    return startTime;
+  }
+
   private void activityLogCVDataCollection(String cvConfigId, long endMinute, long startTime, long endTime) {
     cvActivityLogService.getLoggerByCVConfigId(cvConfigId, TimeUnit.MINUTES.toMillis(endMinute))
         .info("Submitting Data collection task to manager for time range %t to %t", startTime, endTime);
@@ -154,6 +172,26 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
   }
 
+  private long getAnalysisStartMinuteForAPM(CVConfiguration cvConfiguration, long lastCVDataCollectionMinute) {
+    long lastCVAnalysisMinute =
+        timeSeriesAnalysisService.getLastCVAnalysisMinute(cvConfiguration.getAppId(), cvConfiguration.getUuid());
+    long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+    if (lastCVAnalysisMinute <= 0) {
+      logger.info(
+          "For account {} and CV config {} name {} type {} no analysis has been done yet. This is going to be first analysis",
+          cvConfiguration.getAccountId(), cvConfiguration.getUuid(), cvConfiguration.getName(),
+          cvConfiguration.getStateType());
+      return lastCVDataCollectionMinute - TimeUnit.SECONDS.toMinutes(CRON_POLL_INTERVAL);
+    } else if (lastCVAnalysisMinute + PREDECTIVE_HISTORY_MINUTES < currentMinute) {
+      // it has been more than 2 hours since we did analysis, so we should just do for current time - 2hours and take
+      // over from there.
+      logger.info("The last analysis was more than 2 hours ago. We're restarting the analysis from minute: {} for {}",
+          currentMinute - PREDECTIVE_HISTORY_MINUTES, cvConfiguration.getUuid());
+      return currentMinute - PREDECTIVE_HISTORY_MINUTES;
+    } else {
+      return lastCVAnalysisMinute;
+    }
+  }
   @Override
   @Counted
   @Timed
@@ -191,11 +229,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                   cvConfiguration.getAccountId(), cvConfiguration.getUuid(), cvConfiguration.getName(),
                   cvConfiguration.getStateType());
             }
-
+            long analysisStartMinute = getAnalysisStartMinuteForAPM(cvConfiguration, lastCVDataCollectionMinute);
             if (lastCVDataCollectionMinute - lastCVAnalysisMinute >= TimeUnit.SECONDS.toMinutes(CRON_POLL_INTERVAL)) {
-              long analysisStartMinute = lastCVAnalysisMinute <= 0
-                  ? lastCVDataCollectionMinute - TimeUnit.SECONDS.toMinutes(CRON_POLL_INTERVAL)
-                  : lastCVAnalysisMinute;
               long endMinute = analysisStartMinute + TimeUnit.SECONDS.toMinutes(CRON_POLL_INTERVAL);
 
               // since analysis startMin is inclusive in LE, we  need to add 1.
