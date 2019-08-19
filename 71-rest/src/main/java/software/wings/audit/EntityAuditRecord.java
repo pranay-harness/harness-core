@@ -34,4 +34,5 @@ public class EntityAuditRecord {
   private String affectedResourceName;
   private String affectedResourceType;
   private String affectedResourceOperation;
+  private long createdAt;
 }

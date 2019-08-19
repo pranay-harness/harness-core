@@ -125,6 +125,7 @@ import software.wings.scheduler.ZombieHunterJob;
 import software.wings.scheduler.approval.ApprovalPollingHandler;
 import software.wings.scheduler.artifact.ArtifactCleanupHandler;
 import software.wings.scheduler.artifact.ArtifactCollectionHandler;
+import software.wings.scheduler.audit.EntityAuditRecordHandler;
 import software.wings.scheduler.ecs.ECSPollingHandler;
 import software.wings.scheduler.events.segment.SegmentGroupEventJob.SegmentGroupEventJobExecutor;
 import software.wings.scheduler.instance.InstanceSyncHandler;
@@ -615,6 +616,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     GCPBillingHandler.GCPBillingExecutor.registerIterators(injector);
     SegmentGroupEventJobExecutor.registerIterators(injector);
     BarrierServiceImpl.registerIterators(injector);
+    EntityAuditRecordHandler.EntityAuditRecordExecutor.registerIterators(injector);
   }
 
   private void registerCronJobs(Injector injector) {
