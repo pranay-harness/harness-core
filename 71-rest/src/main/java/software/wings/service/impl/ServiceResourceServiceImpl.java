@@ -335,9 +335,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
       sendNotificationAsync(savedService, NotificationMessageType.ENTITY_CREATE_NOTIFICATION);
 
-      if (!createdFromYaml) {
-        yamlPushService.pushYamlChangeSet(accountId, null, savedService, Type.CREATE, service.isSyncFromGit(), false);
-      }
+      yamlPushService.pushYamlChangeSet(accountId, null, savedService, Type.CREATE, service.isSyncFromGit(), false);
 
       if (!savedService.isSample()) {
         eventPublishHelper.publishAccountEvent(

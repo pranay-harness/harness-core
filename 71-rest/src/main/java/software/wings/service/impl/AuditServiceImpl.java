@@ -18,6 +18,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static org.mongodb.morphia.query.Sort.descending;
 import static software.wings.service.intfc.FileService.FileBucket;
+import static software.wings.service.intfc.security.SecretManager.CREATED_AT_KEY;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -33,6 +34,7 @@ import io.harness.exception.WingsException.ExecutionContext;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.logging.ExceptionLogger;
 import io.harness.manage.GlobalContextManager;
+import io.harness.persistence.HIterator;
 import io.harness.persistence.NameAccess;
 import io.harness.persistence.UuidAccess;
 import io.harness.stream.BoundedInputStream;
@@ -40,12 +42,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.audit.AuditHeader;
+import software.wings.audit.AuditHeader.AuditHeaderKeys;
 import software.wings.audit.AuditHeader.RequestType;
 import software.wings.audit.AuditHeaderYamlResponse;
 import software.wings.audit.AuditHeaderYamlResponse.AuditHeaderYamlResponseBuilder;
 import software.wings.audit.AuditRecord;
+import software.wings.audit.AuditRecord.AuditRecordKeys;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.audit.EntityAuditRecord.EntityAuditRecordBuilder;
 import software.wings.audit.ResourceType;
@@ -73,6 +78,7 @@ import software.wings.yaml.YamlPayload;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -121,6 +127,43 @@ public class AuditServiceImpl implements AuditService {
   @Override
   public PageResponse<AuditHeader> list(PageRequest<AuditHeader> req) {
     return wingsPersistence.query(AuditHeader.class, req);
+  }
+
+  @Override
+  public AuditRecord fetchMostRecentAuditRecord(String auditHeaderId) {
+    return wingsPersistence.createQuery(AuditRecord.class, excludeAuthority)
+        .filter(AuditRecordKeys.auditHeaderId, auditHeaderId)
+        .order(Sort.descending(CREATED_AT_KEY))
+        .get();
+  }
+
+  @Override
+  public List<AuditRecord> fetchEntityAuditRecordsOlderThanGivenTime(String auditHeaderId, long timestamp) {
+    List<AuditRecord> auditRecords = new ArrayList<>();
+    try (HIterator<AuditRecord> iterator =
+             new HIterator<>(wingsPersistence.createQuery(AuditRecord.class, excludeAuthority)
+                                 .filter(AuditRecordKeys.auditHeaderId, auditHeaderId)
+                                 .field(AuditRecordKeys.createdAt)
+                                 .lessThanOrEq(timestamp)
+                                 .order(Sort.ascending(CREATED_AT_KEY))
+                                 .fetch())) {
+      while (iterator.hasNext()) {
+        auditRecords.add(iterator.next());
+      }
+    }
+
+    return auditRecords;
+  }
+
+  @Override
+  public void addEntityAuditRecordsToSet(
+      List<EntityAuditRecord> entityAuditRecords, String accountId, String auditHeaderId) {
+    UpdateOperations<AuditHeader> operations = wingsPersistence.createUpdateOperations(AuditHeader.class);
+    operations.addToSet(AuditHeaderKeys.entityAuditRecords, entityAuditRecords);
+    // @TODO: Following line id needed for now. Once pr for stamping accountId at auditFilter level is merged, remove
+    // following line.
+    operations.set(AuditHeaderKeys.accountId, accountId);
+    wingsPersistence.update(wingsPersistence.createQuery(AuditHeader.class).filter(ID_KEY, auditHeaderId), operations);
   }
 
   @Override
@@ -346,6 +389,11 @@ public class AuditServiceImpl implements AuditService {
     logger.info("Deleted audit records older than {} days", days);
   }
 
+  @Override
+  public boolean deleteTempAuditRecords(List<String> ids) {
+    return wingsPersistence.delete(wingsPersistence.createQuery(AuditRecord.class).field(AuditRecordKeys.uuid).in(ids));
+  }
+
   public <T> void handleEntityCrudOperation(String accountId, T oldEntity, T newEntity, Type type) {
     registerAuditActions(accountId, oldEntity, newEntity, type);
   }
@@ -401,11 +449,15 @@ public class AuditServiceImpl implements AuditService {
       }
 
       if (featureFlagService.isEnabled(FeatureName.ENTITY_AUDIT_RECORD, accountId)) {
+        long now = System.currentTimeMillis();
+        // Setting createdAt in EntityAuditRecord
+        record.setCreatedAt(now);
         AuditRecord auditRecord = AuditRecord.builder()
-                                      .accountId(accountId)
                                       .auditHeaderId(auditHeaderId)
                                       .entityAuditRecord(record)
-                                      .createdAt(System.currentTimeMillis())
+                                      .createdAt(now)
+                                      .accountId(accountId)
+                                      .nextIteration(now + TimeUnit.MINUTES.toMillis(3))
                                       .build();
 
         wingsPersistence.save(auditRecord);

@@ -5,11 +5,14 @@ import io.harness.beans.PageResponse;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
 import software.wings.audit.AuditHeaderYamlResponse;
+import software.wings.audit.AuditRecord;
+import software.wings.audit.EntityAuditRecord;
 import software.wings.beans.Event.Type;
 import software.wings.beans.User;
 import software.wings.service.intfc.entitycrud.EntityCrudOperationObserver;
 
 import java.io.InputStream;
+import java.util.List;
 
 /**
  * HttpAuditService.
@@ -50,6 +53,16 @@ public interface AuditService extends EntityCrudOperationObserver {
    * @return the page response
    */
   PageResponse<AuditHeader> list(PageRequest<AuditHeader> req);
+
+  // ---- Following 3 methods are for AuditRecord collection.
+  AuditRecord fetchMostRecentAuditRecord(String id);
+
+  List<AuditRecord> fetchEntityAuditRecordsOlderThanGivenTime(String auditHeaderId, long timestamp);
+
+  boolean deleteTempAuditRecords(List<String> ids);
+  // ----
+
+  void addEntityAuditRecordsToSet(List<EntityAuditRecord> entityAuditRecords, String accountId, String auditHeaderId);
 
   /**
    * Update user.
