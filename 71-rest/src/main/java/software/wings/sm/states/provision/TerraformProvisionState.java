@@ -63,6 +63,7 @@ import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommand;
 import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommandUnit;
 import software.wings.beans.infrastructure.TerraformConfig;
+import software.wings.beans.infrastructure.TerraformConfig.TerraformConfigKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.GitConfigHelperService;
@@ -718,7 +719,7 @@ public abstract class TerraformProvisionState extends State {
   protected void deleteTerraformConfig(ExecutionContext context, TerraformExecutionData terraformExecutionData) {
     Query<TerraformConfig> query =
         wingsPersistence.createQuery(TerraformConfig.class)
-            .filter(TerraformConfig.ENTITY_ID_KEY, generateEntityId(context, terraformExecutionData.getWorkspace()));
+            .filter(TerraformConfigKeys.entityId, generateEntityId(context, terraformExecutionData.getWorkspace()));
 
     wingsPersistence.delete(query);
   }

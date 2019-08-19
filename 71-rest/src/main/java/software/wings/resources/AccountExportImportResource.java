@@ -22,6 +22,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HIterator;
 import io.harness.persistence.PersistentEntity;
 import io.harness.rest.RestResponse;
 import io.harness.scheduler.PersistentScheduler;
@@ -617,14 +618,13 @@ public class AccountExportImportResource {
   private List<Trigger> getAllScheduledTriggersForAccount(String accountId, List<String> appIds) {
     List<Trigger> triggers = new ArrayList<>();
     Query<Trigger> query = wingsPersistence.createQuery(Trigger.class).filter("appId in", appIds);
-    Iterator<Trigger> iterator = query.iterator();
-    while (iterator.hasNext()) {
-      Trigger trigger = iterator.next();
-      if (trigger.getCondition().getConditionType() == TriggerConditionType.SCHEDULED) {
-        triggers.add(trigger);
+    try (HIterator<Trigger> iterator = new HIterator<>(query.fetch())) {
+      for (Trigger trigger : iterator) {
+        if (trigger.getCondition().getConditionType() == TriggerConditionType.SCHEDULED) {
+          triggers.add(trigger);
+        }
       }
     }
-
     return triggers;
   }
 

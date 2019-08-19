@@ -20,11 +20,11 @@ public class HKeyIterator<T> implements AutoCloseable, Iterator<Key<T>> {
 
   @Override
   public boolean hasNext() {
-    return iterator.hasNext();
+    return HPersistence.retry(() -> iterator.hasNext());
   }
 
   @Override
   public Key<T> next() {
-    return iterator.next();
+    return HPersistence.retry(() -> iterator.next());
   }
 }
