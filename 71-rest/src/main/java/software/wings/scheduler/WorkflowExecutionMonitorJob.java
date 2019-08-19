@@ -114,7 +114,7 @@ public class WorkflowExecutionMonitorJob implements Job {
         }
 
         if (!hasActiveStates
-            && workflowExecution.getCreatedAt() < System.currentTimeMillis() + WorkflowExecution.EXPIRY.toMillis()) {
+            && workflowExecution.getCreatedAt() < System.currentTimeMillis() - WorkflowExecution.EXPIRY.toMillis()) {
           logger.warn("WorkflowExecution {} is in non final state, but there is no active state execution for it.",
               workflowExecution.getUuid());
 
