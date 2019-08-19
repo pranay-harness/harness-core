@@ -1,5 +1,7 @@
 package io.harness.testframework.restutils;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
 import io.restassured.http.ContentType;
@@ -37,6 +39,11 @@ public class ExecutionRestUtils {
                                                                          .body(executionArgs, ObjectMapperType.GSON)
                                                                          .post("/executions")
                                                                          .as(workflowExecutionType.getType());
+
+    assertThat(savedWorkflowExecutionResponse.getResource())
+        .withFailMessage(savedWorkflowExecutionResponse.toString())
+        .isNotNull();
+
     return savedWorkflowExecutionResponse.getResource();
   }
 

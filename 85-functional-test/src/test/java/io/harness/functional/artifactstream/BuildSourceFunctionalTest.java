@@ -195,7 +195,7 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
                                                          .contentType(ContentType.JSON)
                                                          .get("/settings/build-sources/plans")
                                                          .as(artifactStreamType.getType());
-    assertThat(restResponse.getResource()).isNotNull();
+    assertThat(restResponse.getResource()).withFailMessage(restResponse.toString()).isNotNull();
     assertThat(restResponse.getResource().size()).isGreaterThan(0);
     assertThat(restResponse.getResource().containsKey("harness-maven"));
   }

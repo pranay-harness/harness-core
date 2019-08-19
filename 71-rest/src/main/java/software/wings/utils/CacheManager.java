@@ -104,8 +104,19 @@ public class CacheManager {
   }
 
   public void resetAllCaches() {
-    getUserCache().clear();
-    getUserPermissionInfoCache().clear();
-    getWhitelistConfigCache().clear();
+    Cache<String, User> userCache = getUserCache();
+    if (userCache != null) {
+      userCache.clear();
+    }
+
+    Cache<String, UserPermissionInfo> userPermissionInfoCache = getUserPermissionInfoCache();
+    if (userPermissionInfoCache != null) {
+      userPermissionInfoCache.clear();
+    }
+
+    Cache<String, WhitelistConfig> whitelistConfigCache = getWhitelistConfigCache();
+    if (whitelistConfigCache != null) {
+      whitelistConfigCache.clear();
+    }
   }
 }
