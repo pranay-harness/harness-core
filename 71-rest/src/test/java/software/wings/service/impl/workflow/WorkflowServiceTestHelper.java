@@ -631,7 +631,7 @@ public class WorkflowServiceTestHelper {
     List<WorkflowPhase> workflowPhases = ((BasicOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
     assertThat(orchestrationWorkflow.getTemplatizedServiceIds()).isNotNull().contains(SERVICE_ID);
     assertThat(orchestrationWorkflow.getTemplatizedInfraMappingIds()).isNotNull().contains(INFRA_MAPPING_ID);
-    assertThat(orchestrationWorkflow).extracting("userVariables").isNotEmpty();
+    assertThat(orchestrationWorkflow).extracting("userVariables").isNotNull();
     assertThat(
         orchestrationWorkflow.getUserVariables().stream().anyMatch(variable -> variable.getName().equals("Service")))
         .isTrue();
@@ -819,7 +819,7 @@ public class WorkflowServiceTestHelper {
   public static void assertTemplatizedOrchestrationWorkflow(OrchestrationWorkflow orchestrationWorkflow) {
     assertThat(orchestrationWorkflow.getTemplatizedServiceIds()).isNotNull().doesNotContain(SERVICE_ID);
     assertThat(orchestrationWorkflow.getTemplatizedInfraMappingIds()).isNotNull().contains(INFRA_MAPPING_ID);
-    assertThat(orchestrationWorkflow).extracting("userVariables").isNotEmpty();
+    assertThat(orchestrationWorkflow).extracting("userVariables").isNotNull();
     assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
                    variable -> variable.getName().equals("ServiceInfra_SSH")))
         .isTrue();
@@ -832,7 +832,7 @@ public class WorkflowServiceTestHelper {
       OrchestrationWorkflow orchestrationWorkflow, List<WorkflowPhase> workflowPhases) {
     assertThat(orchestrationWorkflow.getTemplatizedServiceIds()).isNullOrEmpty();
     assertThat(orchestrationWorkflow.getTemplatizedInfraMappingIds()).isNotNull().contains(INFRA_MAPPING_ID);
-    assertThat(orchestrationWorkflow).extracting("userVariables").isNotEmpty();
+    assertThat(orchestrationWorkflow).extracting("userVariables").isNotNull();
     assertThat(
         orchestrationWorkflow.getUserVariables().stream().anyMatch(variable -> variable.getName().equals("Service")))
         .isFalse();

@@ -561,8 +561,8 @@ public class DelegateServiceTest extends WingsBaseTest {
       assertThat(tarArchiveInputStream.getNextEntry().getName()).isEqualTo(DELEGATE_DIR + "/");
 
       TarArchiveEntry file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
-      assertThat(file).extracting(TarArchiveEntry::getName).containsExactly(DELEGATE_DIR + "/start.sh");
-      assertThat(file).extracting(TarArchiveEntry::getMode).containsExactly(0755);
+      assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/start.sh");
+      assertThat(file).extracting(TarArchiveEntry::getMode).isEqualTo(0755);
 
       byte[] buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
@@ -570,8 +570,8 @@ public class DelegateServiceTest extends WingsBaseTest {
           .isEqualTo(CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedStart.sh"))));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
-      assertThat(file).extracting(TarArchiveEntry::getName).containsExactly(DELEGATE_DIR + "/delegate.sh");
-      assertThat(file).extracting(TarArchiveEntry::getMode).containsExactly(0755);
+      assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/delegate.sh");
+      assertThat(file).extracting(TarArchiveEntry::getMode).isEqualTo(0755);
 
       buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
@@ -580,8 +580,8 @@ public class DelegateServiceTest extends WingsBaseTest {
               CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedDelegate.sh"))));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
-      assertThat(file).extracting(TarArchiveEntry::getName).containsExactly(DELEGATE_DIR + "/stop.sh");
-      assertThat(file).extracting(TarArchiveEntry::getMode).containsExactly(0755);
+      assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/stop.sh");
+      assertThat(file).extracting(TarArchiveEntry::getMode).isEqualTo(0755);
 
       buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
@@ -589,7 +589,7 @@ public class DelegateServiceTest extends WingsBaseTest {
           .isEqualTo(CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedStop.sh"))));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
-      assertThat(file).extracting(TarArchiveEntry::getName).containsExactly(DELEGATE_DIR + "/setup-proxy.sh");
+      assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/setup-proxy.sh");
       buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
@@ -597,7 +597,7 @@ public class DelegateServiceTest extends WingsBaseTest {
               CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedSetupProxy.sh"))));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
-      assertThat(file).extracting(TarArchiveEntry::getName).containsExactly(DELEGATE_DIR + "/README.txt");
+      assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/README.txt");
     }
   }
 
@@ -613,10 +613,8 @@ public class DelegateServiceTest extends WingsBaseTest {
       assertThat(tarArchiveInputStream.getNextEntry().getName()).isEqualTo(DOCKER_DELEGATE + "/");
 
       TarArchiveEntry file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
-      assertThat(file)
-          .extracting(ArchiveEntry::getName)
-          .containsExactly(DOCKER_DELEGATE + "/launch-harness-delegate.sh");
-      assertThat(file).extracting(TarArchiveEntry::getMode).containsExactly(0755);
+      assertThat(file).extracting(ArchiveEntry::getName).isEqualTo(DOCKER_DELEGATE + "/launch-harness-delegate.sh");
+      assertThat(file).extracting(TarArchiveEntry::getMode).isEqualTo(0755);
 
       byte[] buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
@@ -625,7 +623,7 @@ public class DelegateServiceTest extends WingsBaseTest {
               new InputStreamReader(getClass().getResourceAsStream("/expectedLaunchHarnessDelegate.sh"))));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
-      assertThat(file).extracting(ArchiveEntry::getName).containsExactly(DOCKER_DELEGATE + "/README.txt");
+      assertThat(file).extracting(ArchiveEntry::getName).isEqualTo(DOCKER_DELEGATE + "/README.txt");
     }
   }
 
@@ -653,9 +651,7 @@ public class DelegateServiceTest extends WingsBaseTest {
       assertThat(tarArchiveInputStream.getNextEntry().getName()).isEqualTo(KUBERNETES_DELEGATE + "/");
 
       TarArchiveEntry file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
-      assertThat(file)
-          .extracting(ArchiveEntry::getName)
-          .containsExactly(KUBERNETES_DELEGATE + "/harness-delegate.yaml");
+      assertThat(file).extracting(ArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/harness-delegate.yaml");
       byte[] buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
@@ -663,7 +659,7 @@ public class DelegateServiceTest extends WingsBaseTest {
               new InputStreamReader(getClass().getResourceAsStream("/expectedHarnessDelegate.yaml"))));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
-      assertThat(file).extracting(TarArchiveEntry::getName).containsExactly(KUBERNETES_DELEGATE + "/README.txt");
+      assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/README.txt");
     }
   }
 

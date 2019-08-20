@@ -117,7 +117,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
                          .build());
 
     sm = workflowService.createStateMachine(sm);
-    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
+    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).isNotNull();
 
     String smId = sm.getUuid();
     logger.info("Going to trigger state machine");
@@ -178,7 +178,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
                          .build());
 
     sm = workflowService.createStateMachine(sm);
-    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
+    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).isNotNull();
 
     String smId = sm.getUuid();
     logger.info("Going to trigger state machine");
@@ -241,7 +241,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
                          .build());
 
     sm = workflowService.createStateMachine(sm);
-    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
+    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).isNotNull();
 
     String smId = sm.getUuid();
     logger.info("Going to trigger state machine");
@@ -311,7 +311,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
                          .build());
 
     sm = workflowService.createStateMachine(sm);
-    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
+    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).isNotNull();
 
     logger.info("Going to trigger state machine");
     String executionUuid = createWorkflowExecution(sm);
@@ -374,7 +374,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
                          .build());
 
     sm = workflowService.createStateMachine(sm);
-    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
+    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).isNotNull();
 
     logger.info("Going to trigger state machine");
     String executionUuid = createWorkflowExecution(sm);
@@ -447,7 +447,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
                          .build());
 
     sm = workflowService.createStateMachine(sm);
-    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
+    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).isNotNull();
 
     logger.info("Going to trigger state machine");
     String executionUuid = createWorkflowExecution(sm);
@@ -510,7 +510,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
                          .build());
 
     sm = workflowService.createStateMachine(sm);
-    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
+    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).isNotNull();
 
     logger.info("Going to trigger state machine");
     String executionUuid = createWorkflowExecution(sm);
@@ -573,7 +573,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
                          .build());
 
     sm = workflowService.createStateMachine(sm);
-    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
+    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).isNotNull();
 
     logger.info("Going to trigger state machine");
     String executionUuid = createWorkflowExecution(sm);
@@ -659,7 +659,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
                          .build());
 
     sm = workflowService.createStateMachine(sm);
-    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
+    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).isNotNull();
 
     logger.info("Going to trigger state machine");
     String executionUuid = createWorkflowExecution(sm);
@@ -718,7 +718,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
                          .build());
 
     sm = workflowService.createStateMachine(sm);
-    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
+    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).isNotNull();
 
     logger.info("Going to trigger state machine");
     String executionUuid = generateUuid();
@@ -771,7 +771,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
                          .build());
 
     sm = workflowService.createStateMachine(sm);
-    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
+    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).isNotNull();
 
     logger.info("Going to trigger state machine");
     String executionUuid = createWorkflowExecution(sm);
@@ -830,7 +830,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
                          .build());
 
     sm = workflowService.createStateMachine(sm);
-    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
+    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).isNotNull();
 
     String smId = sm.getUuid();
     logger.info("Going to trigger state machine");

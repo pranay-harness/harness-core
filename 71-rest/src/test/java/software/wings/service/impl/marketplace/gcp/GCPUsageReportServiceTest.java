@@ -38,7 +38,7 @@ public class GCPUsageReportServiceTest extends WingsBaseTest {
     Instant lastGCPUsageReportTime = gcpUsageReportService.fetchLastGCPUsageReportTime(TEST_ACCOUNT_ID);
 
     assertThat(lastGCPUsageReportTime).isNotNull();
-    assertThat(lastGCPUsageReportTime).isEqualByComparingTo(endInstance);
+    assertThat(lastGCPUsageReportTime).isEqualTo(endInstance);
 
     GCPUsageReport gcpUsageReportNew = new GCPUsageReport(
         TEST_ACCOUNT_ID, TEST_CONSUMER_ID, TEST_OPERATION_ID, TEST_ENTITLEMENT_NAME, startInstance, endInstance, 5);
@@ -46,6 +46,6 @@ public class GCPUsageReportServiceTest extends WingsBaseTest {
     Instant lastGCPUsageReportTimeLatest = gcpUsageReportService.fetchLastGCPUsageReportTime(TEST_ACCOUNT_ID);
 
     assertThat(lastGCPUsageReportTimeLatest).isNotNull();
-    assertThat(lastGCPUsageReportTimeLatest).isEqualByComparingTo(endInstance);
+    assertThat(lastGCPUsageReportTimeLatest).isEqualTo(endInstance);
   }
 }

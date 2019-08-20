@@ -148,7 +148,6 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   @Parameters(method = "getData")
-  @TestCaseName("{method}-{0}")
   public void testShouldDownloadArtifactThroughPowerShell(ArtifactStreamType artifactStreamType) {
     ShellCommandExecutionContext context = null;
     switch (artifactStreamType) {
@@ -200,7 +199,6 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   @Parameters(method = "getScriptType")
-  @TestCaseName("{method}-{0}")
   public void shouldDownloadFromArtifactoryAsAnonymous(ScriptType scriptType) {
     downloadArtifactCommandUnit.setScriptType(scriptType);
     downloadArtifactCommandUnit.setCommandPath(WingsTestConstants.DESTINATION_DIR_PATH);

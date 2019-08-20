@@ -258,9 +258,9 @@ public class PipelineServiceTest extends WingsBaseTest {
     Pipeline argumentCaptorValue = pipelineArgumentCaptor.getValue();
     assertThat(argumentCaptorValue)
         .isNotNull()
-        .extracting("failureStrategies")
-        .doesNotContainNull()
-        .contains(asList(failureStrategy));
+        .extracting(Pipeline::getFailureStrategies)
+        .asList()
+        .containsExactly(failureStrategy);
     assertThat(argumentCaptorValue.getKeywords())
         .isNotNull()
         .contains(WorkflowType.PIPELINE.name().toLowerCase(), pipeline.getName().toLowerCase());
@@ -294,9 +294,9 @@ public class PipelineServiceTest extends WingsBaseTest {
 
     assertThat(updatedPipeline)
         .isNotNull()
-        .extracting("failureStrategies")
-        .doesNotContainNull()
-        .contains(asList(failureStrategy));
+        .extracting(Pipeline::getFailureStrategies)
+        .asList()
+        .containsExactly(failureStrategy);
 
     verify(wingsPersistence, times(2)).getWithAppId(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
     verify(wingsPersistence).createQuery(Pipeline.class);

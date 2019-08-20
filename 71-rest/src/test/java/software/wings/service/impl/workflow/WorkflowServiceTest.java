@@ -412,10 +412,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
                          .build());
 
     sm = workflowService.createStateMachine(sm);
-    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
+    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).isNotNull();
     String smId = sm.getUuid();
     sm = wingsPersistence.get(StateMachine.class, smId);
-    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
+    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).isNotNull();
   }
 
   /**
@@ -2422,7 +2422,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     workflowPhases = ((BasicOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
     assertThat(orchestrationWorkflow.getTemplatizedServiceIds()).isNotNull().contains(SERVICE_ID);
     assertThat(orchestrationWorkflow.getTemplatizedInfraMappingIds()).isNotNull().contains(INFRA_MAPPING_ID);
-    assertThat(orchestrationWorkflow).extracting("userVariables").isNotEmpty();
+    assertThat(orchestrationWorkflow).extracting("userVariables").isNotNull();
     assertThat(
         orchestrationWorkflow.getUserVariables().stream().anyMatch(variable -> variable.getName().equals("Service")))
         .isFalse();
@@ -2483,7 +2483,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     List<WorkflowPhase> workflowPhases = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
     assertThat(orchestrationWorkflow.getTemplatizedServiceIds()).isNotNull().doesNotContain(SERVICE_ID);
     assertThat(orchestrationWorkflow.getTemplatizedInfraMappingIds()).isNotNull().contains(INFRA_MAPPING_ID);
-    assertThat(orchestrationWorkflow).extracting("userVariables").isNotEmpty();
+    assertThat(orchestrationWorkflow).extracting("userVariables").isNotNull();
     assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
                    variable -> variable.getName().equals("ServiceInfra_SSH")))
         .isTrue();
@@ -2518,7 +2518,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     workflowPhases = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
     assertThat(orchestrationWorkflow.getTemplatizedServiceIds()).isNotNull().doesNotContain(SERVICE_ID);
     assertThat(orchestrationWorkflow.getTemplatizedInfraMappingIds()).isNotNull().contains(INFRA_MAPPING_ID);
-    assertThat(orchestrationWorkflow).extracting("userVariables").isNotEmpty();
+    assertThat(orchestrationWorkflow).extracting("userVariables").isNotNull();
     assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
                    variable -> variable.getName().equals("ServiceInfra_SSH")))
         .isTrue();
@@ -2807,7 +2807,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflow5).isNotNull();
     CanaryOrchestrationWorkflow orchestrationWorkflow5 =
         (CanaryOrchestrationWorkflow) workflow5.getOrchestrationWorkflow();
-    assertThat(orchestrationWorkflow5).extracting("userVariables").isNotEmpty();
+    assertThat(orchestrationWorkflow5).extracting("userVariables").isNotNull();
     assertThat(orchestrationWorkflow5.getUserVariables())
         .extracting(variable -> variable.obtainEntityType())
         .containsSequence(APPDYNAMICS_CONFIGID, EntityType.APPDYNAMICS_APPID, EntityType.APPDYNAMICS_TIERID,

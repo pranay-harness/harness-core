@@ -222,7 +222,7 @@ public class HttpStateTest extends WingsBaseTest {
 
     ExecutionResponse response = getHttpState(jsonHttpStateBuilder.but(), context).execute(context);
 
-    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(true);
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
 
     response = asyncExecutionResponse;
 
@@ -280,7 +280,7 @@ public class HttpStateTest extends WingsBaseTest {
 
     ExecutionResponse response = getHttpState(jsonHttpStateBuilder.but(), context).execute(context);
 
-    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(true);
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
 
     response = asyncExecutionResponse;
 
@@ -315,7 +315,7 @@ public class HttpStateTest extends WingsBaseTest {
 
     ExecutionResponse response = getHttpState(httpStateBuilder.but(), context).execute(context);
 
-    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(true);
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
 
     response = asyncExecutionResponse;
 
@@ -350,7 +350,7 @@ public class HttpStateTest extends WingsBaseTest {
     httpStateBuilder.withTemplateVariables(asList(aVariable().name("status").value("Enabled").build()));
     ExecutionResponse response = getHttpState(httpStateBuilder.but(), context).execute(context);
 
-    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(true);
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
 
     response = asyncExecutionResponse;
 
@@ -397,10 +397,10 @@ public class HttpStateTest extends WingsBaseTest {
     ExecutionResponse response =
         getHttpState(httpStateBuilder.withUrl("http://localhost:8088/health/status").but(), context).execute(context);
 
-    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(true);
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
 
     response = asyncExecutionResponse;
-    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(false);
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(false);
     assertThat(response.getStateExecutionData())
         .isNotNull()
         .isInstanceOf(HttpStateExecutionData.class)
@@ -431,7 +431,7 @@ public class HttpStateTest extends WingsBaseTest {
 
     ExecutionResponse response = getHttpState(httpStateBuilder.but(), context).execute(context);
 
-    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(true);
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
 
     response = asyncExecutionResponse;
     assertThat(response.getStateExecutionData()).isNotNull().isInstanceOf(HttpStateExecutionData.class);
@@ -460,7 +460,7 @@ public class HttpStateTest extends WingsBaseTest {
 
     ExecutionResponse response =
         getHttpState(httpStateBuilder.but().withSocketTimeoutMillis(1000), context).execute(context);
-    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(true);
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
 
     response = asyncExecutionResponse;
     assertThat(response.getStateExecutionData())
@@ -489,7 +489,7 @@ public class HttpStateTest extends WingsBaseTest {
                              .willReturn(aResponse().withStatus(200).withFault(Fault.EMPTY_RESPONSE)));
 
     ExecutionResponse response = getHttpState(httpStateBuilder.but(), context).execute(context);
-    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(true);
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
 
     response = asyncExecutionResponse;
     assertThat(response.getStateExecutionData())
@@ -518,7 +518,7 @@ public class HttpStateTest extends WingsBaseTest {
                              .willReturn(aResponse().withStatus(200).withFault(Fault.MALFORMED_RESPONSE_CHUNK)));
 
     ExecutionResponse response = getHttpState(httpStateBuilder.but(), context).execute(context);
-    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(true);
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
 
     response = asyncExecutionResponse;
     assertThat(response.getStateExecutionData())
@@ -546,7 +546,7 @@ public class HttpStateTest extends WingsBaseTest {
                              .willReturn(aResponse().withStatus(200).withFault(Fault.RANDOM_DATA_THEN_CLOSE)));
 
     ExecutionResponse response = getHttpState(httpStateBuilder.but(), context).execute(context);
-    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(true);
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
 
     response = asyncExecutionResponse;
     assertThat(response.getStateExecutionData())
@@ -573,7 +573,7 @@ public class HttpStateTest extends WingsBaseTest {
     ExecutionResponse response =
         getHttpState(httpStateBuilder.but().withUrl("http://${host.hostName}:81/health/status"), context)
             .execute(context);
-    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(true);
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
 
     response = asyncExecutionResponse;
     assertThat(response.getStateExecutionData())

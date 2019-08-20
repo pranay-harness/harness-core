@@ -592,7 +592,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
                                               .build();
       wingsPersistence.save(settingAttribute);
       SettingAttribute result = wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
-      assertThat(result).isNotNull().isEqualToComparingFieldByFieldRecursively(settingAttribute);
+      assertThat(result).isNotNull().usingRecursiveComparison().isEqualTo(settingAttribute);
       SettingAttribute undecryptedResult = wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
       assertThat(undecryptedResult).isNotNull();
       assertThat(Arrays.equals(password.toCharArray(), ((JenkinsConfig) undecryptedResult.getValue()).getPassword()))

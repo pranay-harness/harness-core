@@ -8,7 +8,6 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
-import junitparams.naming.TestCaseName;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -37,7 +36,6 @@ public class CommandUnitTypeTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   @Parameters(method = "getData")
-  @TestCaseName("{method}{0}")
   public void shouldCreateNewInstanceFor(String commandUnitTypeName) throws Exception {
     CommandUnitType commandUnitType = CommandUnitType.valueOf(UPPER_CAMEL.to(UPPER_UNDERSCORE, commandUnitTypeName));
     assertThat(commandUnitType).isNotNull();

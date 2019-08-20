@@ -8,7 +8,6 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
-import junitparams.naming.TestCaseName;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -36,10 +35,9 @@ public class StateTypeTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   @Parameters(method = "getData")
-  @TestCaseName("{method}{0}")
   public void shouldCreateNewInstanceFor(String stateTypeName) throws Exception {
     StateType stateType = StateType.valueOf(UPPER_CAMEL.to(UPPER_UNDERSCORE, stateTypeName));
     assertThat(stateType).isNotNull();
-    assertThat(stateType.newInstance("name")).isNotNull().extracting(State::getName).containsExactly("name");
+    assertThat(stateType.newInstance("name")).isNotNull().extracting(State::getName).isEqualTo("name");
   }
 }

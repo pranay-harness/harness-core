@@ -150,7 +150,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
     TemplateFolder templateFolder = templateFolderService.getTemplateTree(GLOBAL_ACCOUNT_ID, null, null);
     assertThat(templateFolder).isNotNull();
     assertThat(templateFolder.getChildren()).isNotEmpty();
-    assertThat(templateFolder).extracting(TemplateFolder::getName).contains(HARNESS_GALLERY);
+    assertThat(templateFolder).extracting(TemplateFolder::getName).isEqualTo(HARNESS_GALLERY);
   }
 
   @Test
@@ -158,7 +158,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
   public void shouldGetGlobalTemplateTree() {
     TemplateFolder templateFolder = templateFolderService.getTemplateTree(GLOBAL_ACCOUNT_ID, null, null);
     assertThat(templateFolder).isNotNull();
-    assertThat(templateFolder).extracting(TemplateFolder::getName).contains(HARNESS_GALLERY);
+    assertThat(templateFolder).extracting(TemplateFolder::getName).isEqualTo(HARNESS_GALLERY);
     assertThat(templateFolder.getChildren())
         .isNotEmpty()
         .extracting(templateFolder1 -> templateFolder1.getName().contains(TOMCAT_COMMANDS));
@@ -173,7 +173,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
     TemplateFolder templateFolder = templateFolderService.getTemplateTree(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, null);
     assertThat(templateFolder).isNotNull();
     assertThat(templateFolder.getChildren()).isNotEmpty();
-    assertThat(templateFolder).extracting(TemplateFolder::getName).contains(HARNESS_GALLERY);
+    assertThat(templateFolder).extracting(TemplateFolder::getName).isEqualTo(HARNESS_GALLERY);
     assertThat(templateFolder.getChildren())
         .isNotEmpty()
         .extracting(templateFolder1 -> templateFolder1.getName())
@@ -190,7 +190,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
     TemplateFolder templateFolder = templateFolderService.getTemplateTree(GLOBAL_ACCOUNT_ID, TOMCAT_COMMANDS, null);
     assertThat(templateFolder).isNotNull();
     assertThat(templateFolder.getChildren()).isNotEmpty();
-    assertThat(templateFolder).extracting(TemplateFolder::getName).contains(HARNESS_GALLERY);
+    assertThat(templateFolder).extracting(TemplateFolder::getName).isEqualTo(HARNESS_GALLERY);
     assertThat(templateFolder.getChildren()).isNotEmpty();
 
     assertThat(templateFolder.getChildren())
@@ -209,7 +209,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
         templateFolderService.getTemplateTree(GLOBAL_ACCOUNT_ID, null, Arrays.asList(SSH.name()));
     assertThat(templateFolder).isNotNull();
     assertThat(templateFolder.getChildren()).isNotEmpty();
-    assertThat(templateFolder).extracting(TemplateFolder::getName).contains(HARNESS_GALLERY);
+    assertThat(templateFolder).extracting(TemplateFolder::getName).isEqualTo(HARNESS_GALLERY);
     assertThat(templateFolder.getChildren()).isNotEmpty();
 
     assertThat(templateFolder.getChildren())
@@ -229,7 +229,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
     assertThat(templateFolder).isNotNull();
     assertThat(templateFolder.getAccountId()).isNotNull().isEqualTo(GLOBAL_ACCOUNT_ID);
     assertThat(templateFolder.getChildren()).isNotEmpty();
-    assertThat(templateFolder).extracting(TemplateFolder::getName).contains(HARNESS_GALLERY);
+    assertThat(templateFolder).extracting(TemplateFolder::getName).isEqualTo(HARNESS_GALLERY);
     assertThat(templateFolder.getChildren()).isNotEmpty();
 
     assertThat(templateFolder.getChildren())
@@ -260,7 +260,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
 
     assertThat(templateFolder).isNotNull();
     assertThat(templateFolder.getAccountId()).isNotNull().isEqualTo(ACCOUNT_ID);
-    assertThat(templateFolder).extracting(TemplateFolder::getName).contains(HARNESS_GALLERY);
+    assertThat(templateFolder).extracting(TemplateFolder::getName).isEqualTo(HARNESS_GALLERY);
     assertThat(templateFolder.getChildren())
         .isNotEmpty()
         .extracting(templateFolder1 -> templateFolder1.getName().contains(TOMCAT_COMMANDS));
@@ -279,7 +279,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
     TemplateFolder templateFolder = templateFolderService.getTemplateTree(ACCOUNT_ID, null, null);
     assertThat(templateFolder).isNotNull();
     assertThat(templateFolder.getAccountId()).isNotNull().isEqualTo(ACCOUNT_ID);
-    assertThat(templateFolder).extracting(TemplateFolder::getName).contains(HARNESS_GALLERY);
+    assertThat(templateFolder).extracting(TemplateFolder::getName).isEqualTo(HARNESS_GALLERY);
     assertThat(templateFolder.getChildren())
         .isNotEmpty()
         .extracting(templateFolder1 -> templateFolder1.getName().contains(TOMCAT_COMMANDS));
@@ -307,7 +307,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
     assertThat(templateFolder).isNotNull();
     assertThat(templateFolder.getAccountId()).isNotNull().isEqualTo(ACCOUNT_ID);
     assertThat(templateFolder.getChildren()).isNotEmpty();
-    assertThat(templateFolder).extracting(TemplateFolder::getName).contains(TEMPLATE_GALLERY);
+    assertThat(templateFolder).extracting(TemplateFolder::getName).isEqualTo(TEMPLATE_GALLERY);
     assertThat(templateFolder.getChildren()).isNotEmpty();
 
     assertThat(templateFolder.getChildren())
@@ -515,7 +515,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
     TemplateFolder templateFolder = templateFolderService.getTemplateTree(ACCOUNT_ID, GLOBAL_APP_ID, null, null);
     assertThat(templateFolder).isNotNull();
     assertThat(templateFolder.getAccountId()).isNotNull().isEqualTo(ACCOUNT_ID);
-    assertThat(templateFolder).extracting(TemplateFolder::getName).contains(HARNESS_GALLERY);
+    assertThat(templateFolder).extracting(TemplateFolder::getName).isEqualTo(HARNESS_GALLERY);
     assertThat(templateFolder.getChildren())
         .isNotEmpty()
         .extracting(templateFolder1 -> templateFolder1.getName().contains(TOMCAT_COMMANDS));
@@ -534,7 +534,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
     TemplateFolder templateFolder = templateFolderService.getTemplateTree(GLOBAL_ACCOUNT_ID, APP_ID, null, null);
     assertThat(templateFolder).isNotNull();
     assertThat(templateFolder.getAccountId()).isNotNull().isEqualTo(GLOBAL_ACCOUNT_ID);
-    assertThat(templateFolder).extracting(TemplateFolder::getName).contains(HARNESS_GALLERY);
+    assertThat(templateFolder).extracting(TemplateFolder::getName).isEqualTo(HARNESS_GALLERY);
     assertThat(templateFolder.getChildren())
         .isNotEmpty()
         .extracting(templateFolder1 -> templateFolder1.getName().contains(TEMPLATE_FOLDER_NAME));
@@ -564,9 +564,9 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
     TemplateFolder templateFolder = templateFolderService.getTemplateTree(GLOBAL_ACCOUNT_ID, "super", null);
     assertThat(templateFolder).isNotNull();
     assertThat(templateFolder.getChildren()).isNotEmpty();
-    assertThat(templateFolder).extracting(TemplateFolder::getName).contains(HARNESS_GALLERY);
+    assertThat(templateFolder).extracting(TemplateFolder::getName).isEqualTo(HARNESS_GALLERY);
     assertThat(templateFolder.getChildren().size()).isEqualTo(1);
-    assertThat(templateFolder.getChildren().get(0)).extracting(TemplateFolder::getName).contains(TEMPLATE_FOLDER_NAME);
+    assertThat(templateFolder.getChildren().get(0)).extracting(TemplateFolder::getName).isEqualTo(TEMPLATE_FOLDER_NAME);
   }
 
   @Test

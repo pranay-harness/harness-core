@@ -102,9 +102,7 @@ public class PauseStateTest extends WingsBaseTest {
     pauseState.setSubject("subject");
 
     ExecutionResponse executionResponse = pauseState.execute(context);
-    assertThat(executionResponse)
-        .extracting(ExecutionResponse::getExecutionStatus)
-        .containsExactly(ExecutionStatus.PAUSED);
+    assertThat(executionResponse).extracting(ExecutionResponse::getExecutionStatus).isEqualTo(ExecutionStatus.PAUSED);
     assertThat(executionResponse.getStateExecutionData())
         .isInstanceOf(EmailStateExecutionData.class)
         .isEqualTo(expected.but().build());

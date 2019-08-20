@@ -92,12 +92,12 @@ public class JsonUtilsTest extends CategoryTest {
         JsonUtils.asObject("{\"baseType\":\"A\",\"name\":\"io.harness.serializer.JsonUtilsTest$BaseA\"}", Base.class))
         .isInstanceOf(BaseA.class)
         .extracting(Base::getBaseType)
-        .containsExactly(BaseType.A);
+        .isEqualTo(BaseType.A);
     assertThat(
         JsonUtils.asObject("{\"baseType\":\"B\",\"name\":\"io.harness.serializer.JsonUtilsTest$BaseB\"}", Base.class))
         .isInstanceOf(BaseB.class)
         .extracting(Base::getBaseType)
-        .containsExactly(BaseType.B);
+        .isEqualTo(BaseType.B);
   }
 
   @Test
@@ -118,11 +118,11 @@ public class JsonUtilsTest extends CategoryTest {
     assertThat(JsonUtils.asObject("{\"eventType\":\"A\", \"x\": \"A\"}", TypeA.class))
         .isInstanceOf(TypeA.class)
         .extracting(TypeA::getX)
-        .containsExactly("A");
+        .isEqualTo("A");
     assertThat(JsonUtils.asObject("{\"eventType\":\"B\", \"x\": \"B\"}", TypeA.class))
         .isInstanceOf(TypeB.class)
         .extracting(TypeA::getX)
-        .containsExactly("B");
+        .isEqualTo("B");
   }
 
   @Test
