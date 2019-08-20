@@ -1,5 +1,6 @@
 package software.wings.service.impl.verification;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -47,7 +48,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   public void testGetMetricTemplateNewRelic() {
     Map<String, TimeSeriesMetricDefinition> actualDefinitions =
         cvConfigurationService.getMetricDefinitionMap(StateType.NEW_RELIC, null);
-    assertEquals(0, actualDefinitions.size());
+    assertThat(actualDefinitions).isEmpty();
   }
 
   @Test
@@ -55,7 +56,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   public void testGetMetricTemplateDynaTrace() {
     Map<String, TimeSeriesMetricDefinition> actualDefinitions =
         cvConfigurationService.getMetricDefinitionMap(StateType.DYNA_TRACE, null);
-    assertEquals(0, actualDefinitions.size());
+    assertThat(actualDefinitions).isEmpty();
   }
 
   @Test

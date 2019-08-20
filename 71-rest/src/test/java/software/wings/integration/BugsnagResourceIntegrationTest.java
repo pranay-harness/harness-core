@@ -3,6 +3,7 @@ package software.wings.integration;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static javax.ws.rs.client.Entity.entity;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -85,7 +86,7 @@ public class BugsnagResourceIntegrationTest extends BaseIntegrationTest {
     RestResponse<Set<BugsnagApplication>> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<Set<BugsnagApplication>>>() {});
 
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
     assertFalse(restResponse.getResource().isEmpty());
 
     for (BugsnagApplication app : restResponse.getResource()) {
@@ -102,7 +103,7 @@ public class BugsnagResourceIntegrationTest extends BaseIntegrationTest {
     RestResponse<Set<BugsnagApplication>> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<Set<BugsnagApplication>>>() {});
 
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
     assertFalse(restResponse.getResource().isEmpty());
 
     for (BugsnagApplication app : restResponse.getResource()) {

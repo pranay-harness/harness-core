@@ -120,7 +120,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
     WebTarget target = client.target(API_BASE + "/account/" + accountId + "/status");
     RestResponse<String> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<String>>() {});
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
     String accountStatus = restResponse.getResource();
     assertNotNull(accountStatus);
     assertTrue(AccountStatus.isValid(accountStatus));
@@ -134,7 +134,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
         + "&migratedTo=" + Utils.urlEncode(migratedToClusterUrl));
     RestResponse<Boolean> restResponse =
         getRequestBuilderWithAuthHeader(target).post(null, new GenericType<RestResponse<Boolean>>() {});
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
     Boolean statusUpdated = restResponse.getResource();
     assertNotNull(statusUpdated);
     assertTrue(statusUpdated);

@@ -6,6 +6,7 @@ import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -97,7 +98,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     WebTarget target = client.target(API_BASE + "/users/disable/" + userId + "?accountId=" + userAccountId);
     RestResponse<Boolean> restResponse = getRequestBuilderWithAuthHeader(target).put(
         entity(defaultEmail, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
     assertTrue(restResponse.getResource());
 
     // 2. User should be disabled after disable operation above
@@ -117,7 +118,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     target = client.target(API_BASE + "/users/enable/" + userId + "?accountId=" + userAccountId);
     restResponse = getRequestBuilderWithAuthHeader(target).put(
         entity(defaultEmail, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
     assertTrue(restResponse.getResource());
 
     // 5. User should not be disabled after enabled above
@@ -174,7 +175,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   public void testValidEmail() {
     WebTarget target = client.target(API_BASE + "/users/verify-email?email=" + validEmail);
     RestResponse<Boolean> restResponse = getRequestBuilder(target).get(new GenericType<RestResponse<Boolean>>() {});
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
     assertTrue(restResponse.getResource());
   }
 
@@ -183,7 +184,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   public void testValidEmailWithSpace() {
     WebTarget target = client.target(API_BASE + "/users/verify-email?email=%20" + validEmail + "%20");
     RestResponse<Boolean> restResponse = getRequestBuilder(target).get(new GenericType<RestResponse<Boolean>>() {});
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
     assertTrue(restResponse.getResource());
   }
 
@@ -193,7 +194,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     WebTarget target = client.target(API_BASE + "/users/switch-account?accountId=" + accountId);
     RestResponse<User> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<User>>() {});
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
     User user = restResponse.getResource();
     assertNotNull(user);
     String jwtToken = user.getToken();
@@ -201,7 +202,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
     // Switch again, a new token should be generated.
     restResponse = getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<User>>() {});
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
     user = restResponse.getResource();
     assertNotNull(user);
     String newJwtToken = user.getToken();
@@ -215,7 +216,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
         client.target(API_BASE + "/users/logintype?userName=" + adminUserEmail + "&accountId=" + accountId);
     RestResponse<LoginTypeResponse> restResponse =
         target.request().get(new GenericType<RestResponse<LoginTypeResponse>>() {});
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
     LoginTypeResponse loginTypeResponse = restResponse.getResource();
     assertNotNull(loginTypeResponse);
     assertEquals(AuthenticationMechanism.USER_PASSWORD, loginTypeResponse.getAuthenticationMechanism());
@@ -229,7 +230,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
         "Basic " + encodeBase64String(format("%s:%s", adminUserEmail, new String(adminPassword)).getBytes());
     RestResponse<User> restResponse =
         target.request().header("Authorization", basicAuthValue).get(new GenericType<RestResponse<User>>() {});
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
     User user = restResponse.getResource();
     assertNotNull(user);
     assertNotNull(user.getToken());
@@ -241,7 +242,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     WebTarget target = client.target(API_BASE + "/users/set-default-account/" + accountId);
     RestResponse<Boolean> restResponse = getRequestBuilderWithAuthHeader(target).put(
         entity(accountId, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
     Boolean result = restResponse.getResource();
     assertNotNull(result);
     assertTrue(result);
@@ -257,7 +258,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
         target.request()
             .header(HttpHeaders.AUTHORIZATION, AuthenticationFilter.IDENTITY_SERVICE_PREFIX + identityServiceToken)
             .get(new GenericType<RestResponse<User>>() {});
-    assertEquals(0, response.getResponseMessages().size());
+    assertThat(response.getResponseMessages()).isEmpty();
     User user = response.getResource();
     assertNotNull(user);
     assertNotNull(user.getToken());
@@ -278,7 +279,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
             .header(HttpHeaders.AUTHORIZATION, AuthenticationFilter.IDENTITY_SERVICE_PREFIX + identityServiceToken)
             .header(AuthenticationFilter.USER_IDENTITY_HEADER, adminUser.getUuid())
             .get(new GenericType<RestResponse<User>>() {});
-    assertEquals(0, response.getResponseMessages().size());
+    assertThat(response.getResponseMessages()).isEmpty();
     User user = response.getResource();
     assertNotNull(user);
     assertNotNull(user.getAccounts());
@@ -315,12 +316,12 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     // Trial signup with just one email address, nothing else.
     RestResponse<Boolean> response =
         target.request().post(entity(userInvite, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
-    assertEquals(0, response.getResponseMessages().size());
+    assertThat(response.getResponseMessages()).isEmpty();
     assertTrue(response.getResource());
 
     // Trial signup again using the same email should succeed. A new verification email will be sent.
     response = target.request().post(entity(userInvite, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
-    assertEquals(0, response.getResponseMessages().size());
+    assertThat(response.getResponseMessages()).isEmpty();
     assertTrue(response.getResource());
 
     userInvite = wingsPersistence.createQuery(UserInvite.class).filter(UserInviteKeys.email, email).get();
@@ -353,7 +354,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
       response =
           target.request().post(entity(userInvite, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
     }
-    assertEquals(0, response.getResponseMessages().size());
+    assertThat(response.getResponseMessages()).isEmpty();
     assertFalse(response.getResource());
 
     // Delete the user just created as a cleanup
@@ -384,7 +385,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
                                                                    .build(),
                                                             APPLICATION_JSON),
         new GenericType<RestResponse<User>>() {});
-    assertEquals(0, response.getResponseMessages().size());
+    assertThat(response.getResponseMessages()).isEmpty();
     final User savedUser = response.getResource();
     assertEquals(name, savedUser.getName());
     assertEquals(email, savedUser.getEmail());
@@ -470,7 +471,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
       logger.info(new String(ByteStreams.toByteArray((InputStream) e.getResponse().getEntity())));
       Assert.fail();
     }
-    assertEquals(0, response.getResponseMessages().size());
+    assertThat(response.getResponseMessages()).isEmpty();
     final User savedUser = response.getResource();
     assertEquals(name.trim(), savedUser.getName());
     assertEquals(email.trim(), savedUser.getEmail());
@@ -625,7 +626,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     WebTarget target = client.target(API_BASE + "/users/resend-invitation-email?accountId=" + accountId);
     RestResponse<Boolean> response = getRequestBuilderWithAuthHeader(target).post(
         entity(request, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
-    assertEquals(0, response.getResponseMessages().size());
+    assertThat(response.getResponseMessages()).isEmpty();
     assertNotNull(response.getResource());
     assertTrue(response.getResource());
   }
@@ -645,7 +646,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     WebTarget target = client.target(API_BASE + "/users/invites/trial/" + inviteId + "/new-signin");
     RestResponse<User> response =
         target.request().put(entity(inviteId, APPLICATION_JSON), new GenericType<RestResponse<User>>() {});
-    assertEquals(0, response.getResponseMessages().size());
+    assertThat(response.getResponseMessages()).isEmpty();
     assertNotNull(response.getResource());
 
     return response.getResource();
@@ -657,7 +658,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     WebTarget target = client.target(API_BASE + "/users/invites?accountId=" + accountId);
     RestResponse<List<UserInvite>> response = getRequestBuilderWithAuthHeader(target).post(
         entity(userInviteJson, APPLICATION_JSON), new GenericType<RestResponse<List<UserInvite>>>() {});
-    assertEquals(0, response.getResponseMessages().size());
+    assertThat(response.getResponseMessages()).isEmpty();
     assertNotNull(response.getResource());
     assertEquals(1, response.getResource().size());
 
@@ -668,7 +669,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     WebTarget target = client.target(API_BASE + "/users/invites/" + inviteId + "?accountId=" + accountId);
     RestResponse<User> response =
         target.request().put(entity(userInvite, APPLICATION_JSON), new GenericType<RestResponse<User>>() {});
-    assertEquals(0, response.getResponseMessages().size());
+    assertThat(response.getResponseMessages()).isEmpty();
     assertNotNull(response.getResource());
 
     return response.getResource();

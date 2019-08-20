@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -111,7 +112,7 @@ public class KmsAlertTest extends WingsBaseTest {
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
     secretManager.checkAndAlertForInvalidManagers();
     Thread.sleep(2000);
-    assertEquals(0, alertService.list(pageRequest).size());
+    assertThat(alertService.list(pageRequest)).isEmpty();
 
     pageRequest = aPageRequest()
                       .addFilter("status", Operator.EQ, AlertStatus.Closed)
@@ -151,7 +152,7 @@ public class KmsAlertTest extends WingsBaseTest {
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
     vaultService.renewTokens(accountId);
     Thread.sleep(2000);
-    assertEquals(0, alertService.list(pageRequest).size());
+    assertThat(alertService.list(pageRequest)).isEmpty();
     savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
     assertTrue(savedVaultConfig.getRenewedAt() > 0);
 
@@ -187,7 +188,7 @@ public class KmsAlertTest extends WingsBaseTest {
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
     secretManager.checkAndAlertForInvalidManagers();
     Thread.sleep(2000);
-    assertEquals(0, alertService.list(pageRequest).size());
+    assertThat(alertService.list(pageRequest)).isEmpty();
 
     pageRequest = aPageRequest()
                       .addFilter("status", Operator.EQ, AlertStatus.Closed)

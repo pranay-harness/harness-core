@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static java.util.Arrays.asList;
 import static net.sf.ezmorph.test.ArrayAssertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -123,7 +124,7 @@ public class AwsCodeDeployServiceTest extends WingsBaseTest {
     List<Instance> instanceList =
         awsCodeDeployService.listDeploymentInstances(Regions.US_EAST_1.getName(), null, null, "deploymentId");
     assertNotNull(instanceList);
-    assertEquals(0, instanceList.size());
+    assertThat(instanceList).isEmpty();
 
     listDeploymentInstancesResult.setInstancesList(Collections.singletonList("Ec2InstanceId"));
     doReturn(listDeploymentInstancesResult).when(awsHelperService).listDeploymentInstances(any(), any(), any(), any());

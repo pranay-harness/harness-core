@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -167,7 +168,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
 
     // 4. No secret manager will be returned
     List<SecretManagerConfig> secretManagers = secretManager.listSecretManagers(accountId);
-    assertEquals(0, secretManagers.size());
+    assertThat(secretManagers).isEmpty();
 
     // 5. Create new VAULT secret manager should fail.
     try {
@@ -706,7 +707,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(multiPart, MediaType.MULTIPART_FORM_DATA_TYPE), new GenericType<RestResponse<String>>() {});
     // Verify vault config was successfully created.
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
     String encryptedDataId = restResponse.getResource();
     assertTrue(isNotEmpty(encryptedDataId));
 
@@ -724,7 +725,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(multiPart, MediaType.MULTIPART_FORM_DATA_TYPE), new GenericType<RestResponse<String>>() {});
     // Verify vault config was successfully created.
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
     String encryptedDataId = restResponse.getResource();
     assertTrue(isNotEmpty(encryptedDataId));
 
@@ -737,7 +738,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(secretText, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
     // Verify vault config was successfully created.
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
     String encryptedDataId = restResponse.getResource();
     assertTrue(isNotEmpty(encryptedDataId));
 
@@ -750,7 +751,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     RestResponse<Boolean> restResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(secretText, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
     // Verify vault config was successfully created.
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
     Boolean updated = restResponse.getResource();
     assertTrue(updated);
   }
@@ -766,7 +767,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     RestResponse<List<String>> restResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(multiPart, MediaType.MULTIPART_FORM_DATA_TYPE), new GenericType<RestResponse<List<String>>>() {});
     // Verify vault config was successfully created.
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
     assertNotNull(restResponse.getResource());
   }
 
@@ -775,7 +776,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     RestResponse<Boolean> restResponse =
         getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse<Boolean>>() {});
     // Verify vault config was successfully created.
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
     Boolean deleted = restResponse.getResource();
     assertTrue(deleted);
   }
@@ -785,7 +786,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     RestResponse<Boolean> restResponse =
         getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse<Boolean>>() {});
     // Verify vault config was successfully created.
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
     Boolean deleted = restResponse.getResource();
     assertTrue(deleted);
   }
@@ -796,7 +797,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     RestResponse<List<SecretChangeLog>> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<SecretChangeLog>>>() {});
     // Verify vault config was successfully created.
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
     assertTrue(restResponse.getResource().size() > 0);
   }
 
@@ -805,7 +806,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(vaultConfig, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
     // Verify vault config was successfully created.
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
     String vaultConfigId = restResponse.getResource();
     assertTrue(isNotEmpty(vaultConfigId));
 
@@ -817,7 +818,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(kmsConfig, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
     // Verify vault config was successfully created.
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
     String kmsConfigId = restResponse.getResource();
     assertTrue(isNotEmpty(kmsConfigId));
 
@@ -836,7 +837,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     RestResponse<Boolean> deleteRestResponse =
         getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse<Boolean>>() {});
     // Verify the vault config was deleted successfully
-    assertEquals(0, deleteRestResponse.getResponseMessages().size());
+    assertThat(deleteRestResponse.getResponseMessages()).isEmpty();
     assertTrue(deleteRestResponse.getResource());
     assertNull(wingsPersistence.get(VaultConfig.class, vaultConfigId));
   }
@@ -847,7 +848,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     RestResponse<Boolean> deleteRestResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<Boolean>>() {});
     // Verify the vault config was deleted successfully
-    assertEquals(0, deleteRestResponse.getResponseMessages().size());
+    assertThat(deleteRestResponse.getResponseMessages()).isEmpty();
     assertTrue(deleteRestResponse.getResource());
     assertNull(wingsPersistence.get(KmsConfig.class, kmsConfigId));
   }
@@ -921,7 +922,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     RestResponse<List<SettingAttribute>> response =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<SettingAttribute>>>() {});
     // Verify the vault config was deleted successfully
-    assertEquals(0, response.getResponseMessages().size());
+    assertThat(response.getResponseMessages()).isEmpty();
     assertTrue(response.getResource().size() > 0);
     return response.getResource();
   }

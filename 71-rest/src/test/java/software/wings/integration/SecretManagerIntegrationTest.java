@@ -2,7 +2,7 @@ package software.wings.integration;
 
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -40,7 +40,7 @@ public class SecretManagerIntegrationTest extends BaseIntegrationTest {
     RestResponse<String> createResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(generateSecretText("MySecret"), APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
     // Verify vault config was successfully created.
-    assertEquals(0, createResponse.getResponseMessages().size());
+    assertThat(createResponse.getResponseMessages()).isEmpty();
     String secretUuid = createResponse.getResource();
     assertNotNull(secretUuid);
 
@@ -49,7 +49,7 @@ public class SecretManagerIntegrationTest extends BaseIntegrationTest {
     RestResponse<Boolean> updateResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(generateSecretText("MySecret2"), APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
     // Verify vault config was successfully created.
-    assertEquals(0, updateResponse.getResponseMessages().size());
+    assertThat(updateResponse.getResponseMessages()).isEmpty();
     assertTrue(updateResponse.getResource());
 
     // 2. Delete the secret text.
@@ -57,7 +57,7 @@ public class SecretManagerIntegrationTest extends BaseIntegrationTest {
     RestResponse<Boolean> deleteResponse =
         getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse<Boolean>>() {});
     // Verify vault config was successfully created.
-    assertEquals(0, deleteResponse.getResponseMessages().size());
+    assertThat(deleteResponse.getResponseMessages()).isEmpty();
     assertTrue(deleteResponse.getResource());
   }
 
@@ -69,7 +69,7 @@ public class SecretManagerIntegrationTest extends BaseIntegrationTest {
     RestResponse<String> createResponse = getRequestBuilderWithAuthHeader(target).post(
         generateSecretFileForm("TestSecretFile", null), new GenericType<RestResponse<String>>() {});
     // Verify vault config was successfully created.
-    assertEquals(0, createResponse.getResponseMessages().size());
+    assertThat(createResponse.getResponseMessages()).isEmpty();
     String secretUuid = createResponse.getResource();
     assertNotNull(secretUuid);
 
@@ -78,7 +78,7 @@ public class SecretManagerIntegrationTest extends BaseIntegrationTest {
     RestResponse<Boolean> updateResponse = getRequestBuilderWithAuthHeader(target).post(
         generateSecretFileForm("TestSecretFile", secretUuid), new GenericType<RestResponse<Boolean>>() {});
     // Verify vault config was successfully created.
-    assertEquals(0, updateResponse.getResponseMessages().size());
+    assertThat(updateResponse.getResponseMessages()).isEmpty();
     assertTrue(updateResponse.getResource());
 
     // 2. Delete the encrypted file.
@@ -86,7 +86,7 @@ public class SecretManagerIntegrationTest extends BaseIntegrationTest {
     RestResponse<Boolean> deleteResponse =
         getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse<Boolean>>() {});
     // Verify vault config was successfully created.
-    assertEquals(0, deleteResponse.getResponseMessages().size());
+    assertThat(deleteResponse.getResponseMessages()).isEmpty();
     assertTrue(deleteResponse.getResource());
   }
 

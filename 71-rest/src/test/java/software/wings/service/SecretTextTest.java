@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -2153,7 +2154,7 @@ public class SecretTextTest extends WingsBaseTest {
     encryptedDataList =
         secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, null, null, true, pageRequest)
             .getResource();
-    assertEquals(0, encryptedDataList.size());
+    assertThat(encryptedDataList).isEmpty();
 
     pageRequest = aPageRequest()
                       .addFilter("accountId", Operator.EQ, accountId)

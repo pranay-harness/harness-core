@@ -1,6 +1,7 @@
 package software.wings.verification;
 
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.when;
@@ -100,7 +101,7 @@ public class CVActivityLogServiceTest extends BaseIntegrationTest {
   @Category(IntegrationTests.class)
   public void testFindByCVConfigIdToReturnEmptyIfNoLogs() {
     String cvConfigId = generateUUID();
-    assertEquals(0, cvActivityLogService.findByCVConfigId(cvConfigId, 0, System.currentTimeMillis()).size());
+    assertThat(cvActivityLogService.findByCVConfigId(cvConfigId, 0, System.currentTimeMillis())).isEmpty();
   }
 
   @Test

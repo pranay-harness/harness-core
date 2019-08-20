@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -666,7 +667,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
 
     count = usageRestrictionsService.removeAppEnvReferences(ACCOUNT_ID, APP_ID_1, ENV_ID_1);
     assertEquals(1, count);
-    assertEquals(0, usageRestrictions.getAppEnvRestrictions().size());
+    assertThat(usageRestrictions.getAppEnvRestrictions()).isEmpty();
     verify(settingsService, times(1))
         .updateUsageRestrictionsInternal(eq(SETTING_ATTRIBUTE_ID), any(UsageRestrictions.class));
     verifyZeroInteractions(secretManager);
@@ -685,7 +686,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
 
     count = usageRestrictionsService.removeAppEnvReferences(ACCOUNT_ID, APP_ID_1, null);
     assertEquals(1, count);
-    assertEquals(0, usageRestrictions.getAppEnvRestrictions().size());
+    assertThat(usageRestrictions.getAppEnvRestrictions()).isEmpty();
     verify(settingsService, times(1))
         .updateUsageRestrictionsInternal(eq(SETTING_ATTRIBUTE_ID), any(UsageRestrictions.class));
     verifyZeroInteractions(secretManager);
@@ -712,7 +713,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
 
     int count = usageRestrictionsService.purgeDanglingAppEnvReferences(ACCOUNT_ID);
     assertEquals(1, count);
-    assertEquals(0, usageRestrictions.getAppEnvRestrictions().size());
+    assertThat(usageRestrictions.getAppEnvRestrictions()).isEmpty();
     verify(settingsService, times(1)).updateUsageRestrictionsInternal(anyString(), any(UsageRestrictions.class));
   }
 

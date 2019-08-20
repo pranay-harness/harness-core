@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.delegatecapability;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -95,7 +96,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
 
     Map encryptionMap = CapabilityHelper.fetchEncryptionDetailsListFromParameters(taskData);
     assertNotNull(encryptionMap);
-    assertEquals(0, encryptionMap.size());
+    assertThat(encryptionMap).isEmpty();
   }
 
   @Test

@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance.stats.collector;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -77,7 +78,7 @@ public class InstanceMapperTest extends WingsBaseTest {
     assertEquals(ts, statsSnapshot.getTimestamp());
     assertEquals(accountId, statsSnapshot.getAccountId());
     assertEquals(instances.size(), statsSnapshot.getTotal());
-    assertEquals(0, statsSnapshot.getAggregateCounts().size());
+    assertThat(statsSnapshot.getAggregateCounts()).isEmpty();
     assertEquals(0,
         statsSnapshot.getAggregateCounts().stream().filter(it -> it.getEntityType() == EntityType.APPLICATION).count());
 

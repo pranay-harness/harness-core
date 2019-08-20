@@ -2,6 +2,7 @@ package software.wings.integration;
 
 import static io.harness.rule.OwnerRule.MARK;
 import static javax.ws.rs.client.Entity.entity;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
@@ -240,12 +241,12 @@ public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
     if (create) {
       restResponse = getRequestBuilderWithAuthHeader(target).post(
           entity(multiPart, MediaType.MULTIPART_FORM_DATA), new GenericType<RestResponse<Object>>() {});
-      assertEquals(0, restResponse.getResponseMessages().size());
+      assertThat(restResponse.getResponseMessages()).isEmpty();
       assertNotNull(restResponse.getResource());
     } else {
       restResponse = getRequestBuilderWithAuthHeader(target).put(
           entity(multiPart, MediaType.MULTIPART_FORM_DATA), new GenericType<RestResponse<Object>>() {});
-      assertEquals(0, restResponse.getResponseMessages().size());
+      assertThat(restResponse.getResponseMessages()).isEmpty();
     }
 
     return restResponse.getResource();
@@ -255,14 +256,14 @@ public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
     WebTarget target = client.target(API_BASE + "/configs/" + configId + "?appId=" + appId);
     RestResponse<Void> restResponse =
         getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse<Void>>() {});
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
   }
 
   private ConfigFile getConfig(String appId, String configId) {
     WebTarget target = client.target(API_BASE + "/configs/" + configId + "?appId=" + appId);
     RestResponse<ConfigFile> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<ConfigFile>>() {});
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
     assertNotNull(restResponse.getResource());
 
     return restResponse.getResource();

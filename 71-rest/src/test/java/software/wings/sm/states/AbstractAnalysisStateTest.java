@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -176,7 +177,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
       nodes.remove("serviceA"
           + "-" + i);
     }
-    assertEquals(0, nodes.size());
+    assertThat(nodes).isEmpty();
   }
 
   @Test
@@ -281,7 +282,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
       nodes.remove("serviceA"
           + "-" + i);
     }
-    assertEquals(0, nodes.size());
+    assertThat(nodes).isEmpty();
   }
 
   @Test
@@ -318,7 +319,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
       nodes.remove("serviceA"
           + "-" + i + ".harness.com");
     }
-    assertEquals(0, nodes.size());
+    assertThat(nodes).isEmpty();
   }
 
   @Test
@@ -361,6 +362,6 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
       nodes.remove("serviceA"
           + "-" + i + ".harness.com");
     }
-    assertEquals(0, nodes.size());
+    assertThat(nodes).isEmpty();
   }
 }
