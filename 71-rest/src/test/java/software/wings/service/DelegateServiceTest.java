@@ -877,8 +877,8 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldCheckForProfileWithSecrets() {
     EncryptedData encryptedData = EncryptedData.builder().build();
     encryptedData.setUuid(generateUuid());
-    List<EncryptedDataDetail> encryptionDetails =
-        ImmutableList.of(EncryptedDataDetail.builder().encryptedData(encryptedData).build());
+    List<EncryptedDataDetail> encryptionDetails = ImmutableList.of(
+        EncryptedDataDetail.builder().encryptedData(SecretManager.buildRecordData(encryptedData)).build());
     ServiceVariable serviceVariable = ServiceVariable.builder()
                                           .accountId(ACCOUNT_ID)
                                           .type(ENCRYPTED_TEXT)

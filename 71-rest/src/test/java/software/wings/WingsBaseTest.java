@@ -5,6 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import io.harness.CategoryTest;
 import io.harness.MockableTestMixin;
 import io.harness.exception.KmsOperationException;
+import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
 import org.junit.Rule;
 import org.mockito.junit.MockitoJUnit;
@@ -62,7 +63,7 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
         .build();
   }
 
-  protected char[] decrypt(EncryptedData data, KmsConfig kmsConfig) throws Exception {
+  protected char[] decrypt(EncryptedRecord data, KmsConfig kmsConfig) throws Exception {
     return SecretManagementDelegateServiceImpl
         .decrypt(data.getEncryptedValue(), new SecretKeySpec(plainTextKey.getBytes(), "AES"))
         .toCharArray();
@@ -87,7 +88,7 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
         .build();
   }
 
-  protected char[] decrypt(EncryptedData data, CyberArkConfig cyberArkConfig) throws Exception {
+  protected char[] decrypt(EncryptedRecord data, CyberArkConfig cyberArkConfig) throws Exception {
     return "Cyberark1".toCharArray();
   }
 
@@ -114,7 +115,7 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
         .build();
   }
 
-  protected char[] decrypt(EncryptedData data, VaultConfig vaultConfig) throws IOException {
+  protected char[] decrypt(EncryptedRecord data, VaultConfig vaultConfig) throws IOException {
     if (data.getEncryptedValue() == null) {
       return null;
     }

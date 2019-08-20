@@ -53,6 +53,7 @@ import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.UuidAware;
 import io.harness.queue.Queue;
+import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.stream.BoundedInputStream;
@@ -293,7 +294,7 @@ public class SecretManagerImpl implements SecretManager {
 
     return Optional.of(EncryptedDataDetail.builder()
                            .encryptionType(encryptedData.getEncryptionType())
-                           .encryptedData(encryptedData)
+                           .encryptedData(SecretManager.buildRecordData(encryptedData))
                            .encryptionConfig(encryptionConfig)
                            .fieldName(fieldName)
                            .build());
@@ -319,7 +320,7 @@ public class SecretManagerImpl implements SecretManager {
               encryptedRefField.get(object) == null, "both encrypted and non encrypted field set for " + object);
           encryptedDataDetails.add(EncryptedDataDetail.builder()
                                        .encryptionType(LOCAL)
-                                       .encryptedData(EncryptedData.builder()
+                                       .encryptedData(EncryptedRecordData.builder()
                                                           .encryptionKey(object.getAccountId())
                                                           .encryptedValue((char[]) f.get(object))
                                                           .build())
@@ -341,7 +342,7 @@ public class SecretManagerImpl implements SecretManager {
 
           EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder()
                                                         .encryptionType(encryptedData.getEncryptionType())
-                                                        .encryptedData(encryptedData)
+                                                        .encryptedData(SecretManager.buildRecordData(encryptedData))
                                                         .encryptionConfig(encryptionConfig)
                                                         .fieldName(f.getName())
                                                         .build();

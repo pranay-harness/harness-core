@@ -17,6 +17,7 @@ import com.coveo.saml.SamlException;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.security.encryption.EncryptedRecordData;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,7 +41,6 @@ import software.wings.helpers.ext.ldap.LdapConstants;
 import software.wings.helpers.ext.ldap.LdapResponse;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.SSOConfig;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.security.saml.SamlClientService;
 import software.wings.service.intfc.AccountService;
@@ -73,7 +73,7 @@ public class SSOServiceTest extends WingsBaseTest {
 
   @Before
   public void setup() {
-    EncryptedData encryptedData = mock(EncryptedData.class);
+    EncryptedRecordData encryptedData = mock(EncryptedRecordData.class);
     EncryptedDataDetail encryptedDataDetail = mock(EncryptedDataDetail.class);
     when(SECRET_MANAGER.encryptedDataDetails(eq(ACCOUNT_ID), eq(LdapConstants.BIND_PASSWORD_KEY), any()))
         .thenReturn(Optional.of(encryptedDataDetail));

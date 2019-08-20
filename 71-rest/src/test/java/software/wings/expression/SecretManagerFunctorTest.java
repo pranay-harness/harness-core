@@ -54,8 +54,11 @@ public class SecretManagerFunctorTest extends WingsBaseTest {
 
     ServiceVariable serviceVariable = buildServiceVariable(secretName, encryptedData);
 
-    List<EncryptedDataDetail> localEncryptedDetails = Arrays.asList(
-        EncryptedDataDetail.builder().encryptedData(encryptedData).encryptionType(EncryptionType.LOCAL).build());
+    List<EncryptedDataDetail> localEncryptedDetails =
+        Arrays.asList(EncryptedDataDetail.builder()
+                          .encryptedData(SecretManager.buildRecordData(encryptedData))
+                          .encryptionType(EncryptionType.LOCAL)
+                          .build());
 
     when(secretManager.getEncryptionDetails(serviceVariable, APP_ID, WORKFLOW_EXECUTION_ID))
         .thenReturn(localEncryptedDetails);
@@ -126,11 +129,12 @@ public class SecretManagerFunctorTest extends WingsBaseTest {
     ServiceVariable serviceVariable = buildServiceVariable(secretName, encryptedData);
     final KmsConfig kmsConfig = KmsConfig.builder().build();
     kmsConfig.setUuid(UUIDGenerator.generateUuid());
-    List<EncryptedDataDetail> nonLocalEncryptedVariables = Arrays.asList(EncryptedDataDetail.builder()
-                                                                             .encryptedData(encryptedData)
-                                                                             .encryptionConfig(kmsConfig)
-                                                                             .encryptionType(EncryptionType.KMS)
-                                                                             .build());
+    List<EncryptedDataDetail> nonLocalEncryptedVariables =
+        Arrays.asList(EncryptedDataDetail.builder()
+                          .encryptedData(SecretManager.buildRecordData(encryptedData))
+                          .encryptionConfig(kmsConfig)
+                          .encryptionType(EncryptionType.KMS)
+                          .build());
 
     when(secretManager.getEncryptionDetails(serviceVariable, APP_ID, WORKFLOW_EXECUTION_ID))
         .thenReturn(nonLocalEncryptedVariables);
