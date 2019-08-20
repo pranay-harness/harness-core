@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.Account;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.User;
@@ -18,7 +19,6 @@ import software.wings.beans.sso.LdapSettings;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.helpers.ext.ldap.LdapResponse;
 import software.wings.helpers.ext.ldap.LdapResponse.Status;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.ldap.LdapDelegateService;

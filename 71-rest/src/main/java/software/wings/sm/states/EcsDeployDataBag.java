@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.api.ContainerRollbackRequestElement;
@@ -9,7 +10,6 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
-import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 

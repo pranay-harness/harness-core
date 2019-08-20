@@ -8,6 +8,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.SocketConnectivityCapabilityGenerator;
 import io.harness.exception.WingsException;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -16,7 +17,6 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotBlank;
 import software.wings.helpers.ext.ldap.LdapConstants;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 

@@ -36,6 +36,7 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -65,7 +66,6 @@ import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCom
 import software.wings.beans.infrastructure.TerraformConfig;
 import software.wings.beans.infrastructure.TerraformConfig.TerraformConfigKeys;
 import software.wings.dl.WingsPersistence;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;

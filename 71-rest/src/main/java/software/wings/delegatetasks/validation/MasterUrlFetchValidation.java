@@ -6,12 +6,12 @@ import static java.util.Collections.singletonList;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.task.utils.KmsUtils;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.VaultConfig;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.MasterUrlFetchTaskParameter;
 

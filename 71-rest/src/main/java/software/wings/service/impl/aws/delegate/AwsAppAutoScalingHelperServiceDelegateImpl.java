@@ -36,8 +36,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.AwsConfig;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
 
 import java.io.IOException;

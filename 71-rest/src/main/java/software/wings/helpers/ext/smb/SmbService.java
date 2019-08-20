@@ -1,8 +1,8 @@
 package software.wings.helpers.ext.smb;
 
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.SmbConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 

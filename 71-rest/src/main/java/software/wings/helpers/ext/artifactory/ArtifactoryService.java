@@ -1,11 +1,11 @@
 package software.wings.helpers.ext.artifactory;
 
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.waiter.ListNotifyResponseData;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryType;
 

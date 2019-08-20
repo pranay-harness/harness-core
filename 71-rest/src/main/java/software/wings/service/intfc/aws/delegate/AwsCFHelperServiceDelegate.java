@@ -1,9 +1,9 @@
 package software.wings.service.intfc.aws.delegate;
 
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.aws.model.AwsCFTemplateParamsData;
 
 import java.util.List;

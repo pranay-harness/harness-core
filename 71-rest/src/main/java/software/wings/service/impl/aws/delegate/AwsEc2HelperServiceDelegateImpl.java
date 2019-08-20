@@ -36,8 +36,8 @@ import com.amazonaws.services.ec2.model.SecurityGroup;
 import com.amazonaws.services.ec2.model.Subnet;
 import com.amazonaws.services.ec2.model.TagDescription;
 import com.amazonaws.services.ec2.model.Vpc;
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.AwsConfig;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 
 import java.util.ArrayList;

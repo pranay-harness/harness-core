@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import io.harness.exception.HarnessException;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentInfo;
@@ -25,7 +26,6 @@ import software.wings.beans.infrastructure.instance.info.HostInstanceInfo;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.helpers.ext.azure.AzureHelperService;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.Validator;
 
 import java.util.List;

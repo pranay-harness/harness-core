@@ -1,11 +1,11 @@
 package software.wings.service.intfc;
 
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.SmbConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 

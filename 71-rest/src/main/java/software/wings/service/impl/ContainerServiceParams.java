@@ -5,6 +5,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.AwsRegionCapabilityGenerator;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.AwsConfig;
@@ -14,7 +15,6 @@ import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.settings.SettingValue;
 
 import java.util.List;

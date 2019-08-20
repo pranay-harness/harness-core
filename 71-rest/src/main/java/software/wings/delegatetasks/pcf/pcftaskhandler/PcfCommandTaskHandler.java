@@ -2,6 +2,7 @@ package software.wings.delegatetasks.pcf.pcftaskhandler;
 
 import com.google.inject.Inject;
 
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
@@ -9,7 +10,6 @@ import software.wings.delegatetasks.pcf.PcfCommandTaskHelper;
 import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.List;

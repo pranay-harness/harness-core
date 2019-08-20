@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.waiter.ListNotifyResponseData;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
@@ -14,7 +15,6 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.helpers.ext.jenkins.Jenkins;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.jenkins.JenkinsUtils;
 import software.wings.service.intfc.security.EncryptionService;
 

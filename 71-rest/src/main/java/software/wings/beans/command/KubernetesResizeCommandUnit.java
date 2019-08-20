@@ -20,6 +20,7 @@ import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -44,7 +45,6 @@ import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.helpers.ext.azure.AzureHelperService;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.Misc;
 
 import java.util.ArrayList;

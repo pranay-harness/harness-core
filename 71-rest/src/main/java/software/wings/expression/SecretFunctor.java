@@ -7,10 +7,10 @@ import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.LateBindingMap;
 import io.harness.expression.SecretString;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import software.wings.beans.ServiceVariable;
 import software.wings.security.encryption.EncryptedData;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 

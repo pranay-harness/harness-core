@@ -8,13 +8,13 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.helpers.ext.external.comm.handlers.EmailHandler;
 import software.wings.helpers.ext.mail.SmtpConfig;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.settings.SettingValue;
 import software.wings.settings.validation.ConnectivityValidationDelegateRequest;
 import software.wings.settings.validation.SshConnectionConnectivityValidationAttributes;

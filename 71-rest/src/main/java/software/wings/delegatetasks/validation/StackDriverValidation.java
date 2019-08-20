@@ -9,10 +9,10 @@ import com.google.api.services.monitoring.v3.MonitoringScopes;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GcpConfig;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackDriverLogDataCollectionInfo;
 import software.wings.service.intfc.security.EncryptionService;

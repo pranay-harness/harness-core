@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.ldaptive.LdapAttribute;
@@ -21,7 +22,6 @@ import software.wings.helpers.ext.ldap.LdapConstants;
 import software.wings.helpers.ext.ldap.LdapGroupConfig;
 import software.wings.helpers.ext.ldap.LdapResponse;
 import software.wings.helpers.ext.ldap.LdapUserConfig;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.ldap.LdapDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
 

@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -21,7 +22,6 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.config.LogzConfig;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.logz.LogzRestClient;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;

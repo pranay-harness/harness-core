@@ -14,6 +14,7 @@ import io.harness.delegate.task.mixin.IgnoreValidationCapabilityGenerator;
 import io.harness.delegate.task.mixin.SSHConnectionExecutionCapabilityGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Data;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AppContainer;
@@ -26,7 +27,6 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.infrastructure.Host;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
-import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.Collections;
 import java.util.List;

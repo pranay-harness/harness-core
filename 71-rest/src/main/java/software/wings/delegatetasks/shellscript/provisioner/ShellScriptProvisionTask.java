@@ -18,6 +18,7 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
@@ -28,7 +29,6 @@ import software.wings.core.local.executors.ShellExecutorFactory;
 import software.wings.core.ssh.executors.ScriptProcessExecutor;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.DelegateLogService;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.File;

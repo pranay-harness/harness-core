@@ -4,12 +4,12 @@ import static software.wings.api.AwsCodeDeployRequestElement.AWS_CODE_DEPLOY_REQ
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.context.ContextElementType;
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.api.AwsCodeDeployRequestElement;
 import software.wings.api.CommandStateExecutionData.Builder;
 import software.wings.beans.CodeDeployInfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CodeDeployParams;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 

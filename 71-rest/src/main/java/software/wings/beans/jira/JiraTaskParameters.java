@@ -2,12 +2,12 @@ package software.wings.beans.jira;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.JiraConfig;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.delegatetasks.jira.JiraAction;
-import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 import java.util.Map;

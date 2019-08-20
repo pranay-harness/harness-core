@@ -93,6 +93,7 @@ import io.harness.perpetualtask.PerpetualTaskWorker;
 import io.harness.rest.RestResponse;
 import io.harness.security.TokenGenerator;
 import io.harness.security.encryption.DelegateDecryptionService;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.serializer.JsonUtils;
@@ -143,7 +144,6 @@ import software.wings.delegatetasks.LogSanitizer;
 import software.wings.delegatetasks.TaskLogContext;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.delegatetasks.validation.DelegateValidateTask;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.security.EncryptionService;
 

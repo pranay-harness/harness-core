@@ -17,11 +17,11 @@ import com.amazonaws.services.ecs.model.ServiceEvent;
 import com.amazonaws.services.ecs.model.Tag;
 import com.amazonaws.services.ecs.model.TagResourceRequest;
 import com.amazonaws.services.ecs.model.UntagResourceRequest;
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.UpdateServiceCountRequestData;
 import software.wings.cloudprovider.aws.EcsContainerService;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 
 import java.util.List;

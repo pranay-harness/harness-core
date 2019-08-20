@@ -15,8 +15,8 @@ import com.amazonaws.services.ecr.model.DescribeRepositoriesRequest;
 import com.amazonaws.services.ecr.model.DescribeRepositoriesResult;
 import com.amazonaws.services.ecr.model.GetAuthorizationTokenRequest;
 import com.amazonaws.services.ecr.model.Repository;
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.AwsConfig;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.aws.delegate.AwsEcrHelperServiceDelegate;
 
 import java.util.List;

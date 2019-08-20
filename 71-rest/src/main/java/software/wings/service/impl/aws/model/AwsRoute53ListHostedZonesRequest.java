@@ -2,11 +2,11 @@ package software.wings.service.impl.aws.model;
 
 import static software.wings.service.impl.aws.model.AwsRoute53Request.AwsRoute53RequestType.LIST_HOSTED_ZONES;
 
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.AwsConfig;
-import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 

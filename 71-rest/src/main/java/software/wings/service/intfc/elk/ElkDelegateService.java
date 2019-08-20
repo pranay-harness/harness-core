@@ -1,9 +1,9 @@
 package software.wings.service.intfc.elk;
 
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.elk.ElkIndexTemplate;
 import software.wings.service.impl.elk.ElkLogFetchRequest;

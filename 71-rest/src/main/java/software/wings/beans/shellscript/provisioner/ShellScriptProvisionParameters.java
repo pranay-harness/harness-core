@@ -1,9 +1,9 @@
 package software.wings.beans.shellscript.provisioner;
 
 import io.harness.delegate.task.TaskParameters;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Value;
-import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.Map;
 

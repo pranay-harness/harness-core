@@ -426,7 +426,6 @@ import software.wings.security.WorkflowFilter;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 import software.wings.security.encryption.EncryptedData;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.MasterUrlFetchTaskParameter;
@@ -1004,7 +1003,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AuthenticationMechanism.class, 5357);
     kryo.register(TwoFactorAuthenticationMechanism.class, 5358);
     kryo.register(EncryptedData.class, 5124);
-    kryo.register(EncryptedDataDetail.class, 5125);
     kryo.register(SecretChangeLog.class, 5598);
     kryo.register(EnvFilter.class, 5250);
     kryo.register(GenericEntityFilter.class, 5249);

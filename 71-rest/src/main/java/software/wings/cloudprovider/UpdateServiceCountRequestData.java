@@ -1,11 +1,11 @@
 package software.wings.cloudprovider;
 
 import com.amazonaws.services.ecs.model.ServiceEvent;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 

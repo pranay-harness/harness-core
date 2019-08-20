@@ -9,6 +9,7 @@ import io.harness.delegate.beans.SecretDetail;
 import io.harness.exception.FunctorException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionFunctor;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import lombok.Builder;
@@ -16,7 +17,6 @@ import lombok.Builder.Default;
 import lombok.Value;
 import software.wings.beans.ServiceVariable;
 import software.wings.security.encryption.EncryptedData;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 

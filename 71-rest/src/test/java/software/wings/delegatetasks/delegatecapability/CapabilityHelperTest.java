@@ -9,6 +9,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.task.http.HttpTaskParameters;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import org.junit.Test;
@@ -17,7 +18,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
-import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.ArrayList;
 import java.util.Collection;

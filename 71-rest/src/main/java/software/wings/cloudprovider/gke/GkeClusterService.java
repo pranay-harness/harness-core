@@ -2,10 +2,10 @@ package software.wings.cloudprovider.gke;
 
 import com.google.api.services.container.model.NodePoolAutoscaling;
 
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 import java.util.Map;

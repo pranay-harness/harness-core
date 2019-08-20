@@ -1,11 +1,11 @@
 package software.wings.helpers.ext.nexus;
 
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.waiter.ListNotifyResponseData;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.NexusConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.io.InputStream;
 import java.util.List;

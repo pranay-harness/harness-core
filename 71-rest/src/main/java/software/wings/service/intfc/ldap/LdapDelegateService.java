@@ -1,12 +1,12 @@
 package software.wings.service.intfc.ldap;
 
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.TaskType;
 import software.wings.beans.sso.LdapGroupResponse;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapTestResponse;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.helpers.ext.ldap.LdapResponse;
-import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.Collection;
 

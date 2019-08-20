@@ -1,8 +1,8 @@
 package software.wings.helpers.ext.docker;
 
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.DockerConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 

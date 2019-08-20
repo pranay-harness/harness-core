@@ -3,7 +3,6 @@ package software.wings.sm.states.spotinst;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import io.harness.delegate.task.spotinst.request.SpotInstDeployTaskParameters;
 import io.harness.spotinst.model.ElastiGroup;
 import software.wings.beans.Activity;

@@ -28,6 +28,7 @@ import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.waiter.ErrorNotifyResponseData;
 import lombok.Getter;
 import lombok.Setter;
@@ -57,7 +58,6 @@ import software.wings.beans.delegation.ShellScriptParameters.ShellScriptParamete
 import software.wings.beans.template.TemplateUtils;
 import software.wings.common.Constants;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.SSHKeyDataProvider;

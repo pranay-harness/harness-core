@@ -8,6 +8,7 @@ import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
@@ -18,7 +19,6 @@ import software.wings.beans.KubernetesConfig;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
 

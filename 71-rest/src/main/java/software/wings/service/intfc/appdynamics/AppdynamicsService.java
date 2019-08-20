@@ -1,7 +1,7 @@
 package software.wings.service.intfc.appdynamics;
 
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.SettingAttribute;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.appdynamics.AppdynamicsSetupTestNodeData;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;

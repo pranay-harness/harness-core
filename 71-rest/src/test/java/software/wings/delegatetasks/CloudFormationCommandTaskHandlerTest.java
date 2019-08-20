@@ -24,6 +24,7 @@ import com.amazonaws.services.cloudformation.model.Output;
 import com.amazonaws.services.cloudformation.model.Stack;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.security.encryption.EncryptedDataDetail;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -47,7 +48,6 @@ import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateSt
 import software.wings.helpers.ext.cloudformation.response.CloudFormationListStacksResponse;
 import software.wings.helpers.ext.cloudformation.response.ExistingStackInfo;
 import software.wings.helpers.ext.cloudformation.response.StackSummaryInfo;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.aws.delegate.AwsCFHelperServiceDelegate;
 import software.wings.service.intfc.security.EncryptionService;

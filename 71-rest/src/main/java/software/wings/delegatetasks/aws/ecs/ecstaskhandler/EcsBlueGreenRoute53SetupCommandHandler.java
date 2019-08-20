@@ -11,6 +11,7 @@ import com.google.inject.Singleton;
 
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
@@ -21,7 +22,6 @@ import software.wings.helpers.ext.ecs.request.EcsBGRoute53ServiceSetupRequest;
 import software.wings.helpers.ext.ecs.request.EcsCommandRequest;
 import software.wings.helpers.ext.ecs.response.EcsBGRoute53ServiceSetupResponse;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
-import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 

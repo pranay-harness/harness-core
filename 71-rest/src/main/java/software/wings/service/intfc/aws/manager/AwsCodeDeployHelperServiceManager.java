@@ -1,8 +1,8 @@
 package software.wings.service.intfc.aws.manager;
 
 import com.amazonaws.services.ec2.model.Instance;
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.AwsConfig;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.aws.model.AwsCodeDeployS3LocationData;
 
 import java.util.List;

@@ -7,11 +7,11 @@ import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.SyncTaskContext;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.intfc.sumo.SumoDelegateService;

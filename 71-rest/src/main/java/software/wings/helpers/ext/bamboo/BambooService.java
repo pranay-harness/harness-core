@@ -1,8 +1,8 @@
 package software.wings.helpers.ext.bamboo;
 
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.BambooConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.io.InputStream;
 import java.util.List;
