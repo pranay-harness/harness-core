@@ -60,9 +60,9 @@ public class SpotInstDeployStateExecutionData extends StateExecutionData impleme
 
     putNotNull(executionDetails, "oldElastiGroupId",
         ExecutionDataValue.builder().value(oldElastiGroupId).displayName("Old ElastiGroup ID").build());
-    putNotNull(executionDetails, "newElastiGroupName",
+    putNotNull(executionDetails, "oldElastiGroupName",
         ExecutionDataValue.builder().value(oldElastiGroupName).displayName("Old ElastiGroup Name").build());
-    putNotNull(executionDetails, "newDesiredCount",
+    putNotNull(executionDetails, "oldDesiredCount",
         ExecutionDataValue.builder().value(oldDesiredCount).displayName("Old Group Desired Count: ").build());
 
     return executionDetails;

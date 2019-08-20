@@ -106,6 +106,9 @@ public class SpotInstStateHelper {
       throw new WingsException("Value for Older Active Versions To Keep Must be > 0");
     }
 
+    // Remove when CurrentRunningCount is supported
+    serviceSetup.setUseCurrentRunningCount(false);
+
     AwsAmiInfrastructureMapping awsAmiInfrastructureMapping =
         (AwsAmiInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
 
