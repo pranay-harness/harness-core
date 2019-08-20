@@ -33,7 +33,7 @@ public class TwoFactorAuthenticationTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void verifyTwoFactorAuthLogin() {
     defaultPassword = scmSecret.decryptToString(new SecretName("user_default_password"));
-    User user = Setup.loginUser(defaultUser, defaultPassword);
+    User user = Setup.retryLogin(defaultUser, defaultPassword);
     assertNotNull("User Object Should not be null", user.getToken());
     TwoFactorAuthenticationSettings otpSettings =
         TwoFactorAuthRestUtils.getOtpSettings(getAccount().getUuid(), user.getToken());
