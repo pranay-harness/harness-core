@@ -783,7 +783,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
           return EncryptedDataDetail.builder()
               .encryptionType(encryptedData.getEncryptionType())
-              .encryptedData(encryptedData)
+              .encryptedData(SecretManager.buildRecordData(encryptedData))
               .encryptionConfig(encryptionConfig)
               .build();
         }));

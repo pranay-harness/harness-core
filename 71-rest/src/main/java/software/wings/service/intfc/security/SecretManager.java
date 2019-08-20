@@ -3,6 +3,7 @@ package software.wings.service.intfc.security;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.persistence.UuidAware;
+import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.stream.BoundedInputStream;
 import software.wings.annotation.EncryptableSetting;
@@ -128,4 +129,16 @@ public interface SecretManager extends OwnedByAccount {
   boolean transitionAllSecretsToHarnessSecretManager(String accountId);
 
   void clearDefaultFlagOfSecretManagers(String accountId);
+
+  static EncryptedRecordData buildRecordData(EncryptedData encryptedData) {
+    return EncryptedRecordData.builder()
+        .uuid(encryptedData.getUuid())
+        .name(encryptedData.getName())
+        .path(encryptedData.getPath())
+        .encryptionKey(encryptedData.getEncryptionKey())
+        .encryptedValue(encryptedData.getEncryptedValue())
+        .kmsId(encryptedData.getKmsId())
+        .encryptionType(encryptedData.getEncryptionType())
+        .build();
+  }
 }

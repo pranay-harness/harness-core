@@ -37,6 +37,7 @@ import io.harness.exception.WingsException;
 import io.harness.expression.SecretString;
 import io.harness.persistence.UuidAware;
 import io.harness.rule.RealMongo;
+import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.stream.BoundedInputStream;
 import lombok.extern.slf4j.Slf4j;
@@ -172,7 +173,7 @@ public class SecretTextTest extends WingsBaseTest {
 
     when(secretManagementDelegateService.decrypt(anyObject(), any(KmsConfig.class))).then(invocation -> {
       Object[] args = invocation.getArguments();
-      return decrypt((EncryptedData) args[0], (KmsConfig) args[1]);
+      return decrypt((EncryptedRecord) args[0], (KmsConfig) args[1]);
     });
 
     when(secretManagementDelegateService.encrypt(anyString(), anyString(), anyString(), any(SettingVariableTypes.class),
@@ -185,7 +186,7 @@ public class SecretTextTest extends WingsBaseTest {
 
     when(secretManagementDelegateService.decrypt(anyObject(), any(VaultConfig.class))).then(invocation -> {
       Object[] args = invocation.getArguments();
-      return decrypt((EncryptedData) args[0], (VaultConfig) args[1]);
+      return decrypt((EncryptedRecord) args[0], (VaultConfig) args[1]);
     });
 
     when(delegateProxyFactory.get(eq(SecretManagementDelegateService.class), any(SyncTaskContext.class)))

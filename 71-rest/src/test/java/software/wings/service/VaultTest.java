@@ -31,6 +31,7 @@ import io.harness.queue.Queue;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.rule.RealMongo;
 import io.harness.rule.RepeatRule.Repeat;
+import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.stream.BoundedInputStream;
@@ -163,7 +164,7 @@ public class VaultTest extends WingsBaseTest {
 
     when(secretManagementDelegateService.decrypt(anyObject(), any(VaultConfig.class))).then(invocation -> {
       Object[] args = invocation.getArguments();
-      return decrypt((EncryptedData) args[0], (VaultConfig) args[1]);
+      return decrypt((EncryptedRecord) args[0], (VaultConfig) args[1]);
     });
 
     when(secretManagementDelegateService.encrypt(anyString(), anyObject(), anyObject())).then(invocation -> {
@@ -173,7 +174,7 @@ public class VaultTest extends WingsBaseTest {
 
     when(secretManagementDelegateService.decrypt(anyObject(), any(KmsConfig.class))).then(invocation -> {
       Object[] args = invocation.getArguments();
-      return decrypt((EncryptedData) args[0], (KmsConfig) args[1]);
+      return decrypt((EncryptedRecord) args[0], (KmsConfig) args[1]);
     });
     when(delegateProxyFactory.get(eq(SecretManagementDelegateService.class), any(SyncTaskContext.class)))
         .thenReturn(secretManagementDelegateService);
@@ -1166,7 +1167,7 @@ public class VaultTest extends WingsBaseTest {
         encryptedEntities.put(settingAttribute.getUuid(), settingAttribute);
       }
 
-      Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
+      Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
                                        .filter(EncryptedDataKeys.type, SettingVariableTypes.APP_DYNAMICS);
       assertEquals(numOfSettingAttributes, query.count());
       for (EncryptedData data : query.asList()) {
@@ -1181,7 +1182,7 @@ public class VaultTest extends WingsBaseTest {
       secretManager.transitionSecrets(
           accountId, EncryptionType.KMS, fromConfig.getUuid(), EncryptionType.VAULT, toConfig.getUuid());
       Thread.sleep(TimeUnit.SECONDS.toMillis(10));
-      query = wingsPersistence.createQuery(EncryptedData.class)
+      query = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
                   .filter(EncryptedDataKeys.type, SettingVariableTypes.APP_DYNAMICS);
 
       assertEquals(numOfSettingAttributes, query.count());

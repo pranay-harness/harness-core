@@ -48,6 +48,7 @@ import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.rest.RestResponse;
 import io.harness.rule.RealMongo;
 import io.harness.rule.RepeatRule.Repeat;
+import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoUtils;
 import io.harness.stream.BoundedInputStream;
@@ -209,7 +210,7 @@ public class KmsTest extends WingsBaseTest {
 
     when(secretManagementDelegateService.decrypt(anyObject(), any(KmsConfig.class))).then(invocation -> {
       Object[] args = invocation.getArguments();
-      return decrypt((EncryptedData) args[0], (KmsConfig) args[1]);
+      return decrypt((EncryptedRecord) args[0], (KmsConfig) args[1]);
     });
     when(delegateProxyFactory.get(eq(SecretManagementDelegateService.class), any(SyncTaskContext.class)))
         .thenReturn(secretManagementDelegateService);
