@@ -230,8 +230,9 @@ public class VerificationServiceApplication extends Application<VerificationServ
 
   private void registerGaugeMetric(String metricName, String[] labels) {
     harnessMetricRegistry.registerGaugeMetric(metricName, labels, getDataAnalysisMetricHelpDocument());
-    final String env = System.getenv("ENV");
+    String env = System.getenv("ENV");
     if (isNotEmpty(env)) {
+      env = env.replaceAll("-", "_");
       harnessMetricRegistry.registerGaugeMetric(env + "_" + metricName, labels, getDataAnalysisMetricHelpDocument());
     }
   }

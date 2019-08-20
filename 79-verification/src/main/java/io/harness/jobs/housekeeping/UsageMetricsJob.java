@@ -57,7 +57,10 @@ public class UsageMetricsJob implements Job {
   }
 
   private void recordQueuedTaskMetric() {
-    final String env = System.getenv("ENV");
+    String env = System.getenv("ENV");
+    if (isNotEmpty(env)) {
+      env = env.replaceAll("-", "_");
+    }
     LearningEngineAnalysisTask lastQueuedAnalysisTask =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
             .filter(LearningEngineAnalysisTaskKeys.executionStatus, QUEUED)
