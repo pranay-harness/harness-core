@@ -8,6 +8,8 @@ import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Key;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.GoogleDataStoreAware;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,11 +29,12 @@ import java.util.List;
 @org.mongodb.morphia.annotations.Entity(value = "supervisedTSThreshold", noClassnameStored = true)
 @Data
 @Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "SupervisedTSThresholdKeys")
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-public class SupervisedTSThreshold implements GoogleDataStoreAware {
+public class SupervisedTSThreshold implements GoogleDataStoreAware, CreatedAtAware {
   public static final String connector = ":";
 
   @Id private String uuid;
@@ -44,6 +47,7 @@ public class SupervisedTSThreshold implements GoogleDataStoreAware {
   private Double standardDeviation;
   private Double minThreshold;
   private Double maxThreshold;
+  private long createdAt;
 
   public static String getKey(String accountId, String serviceId, String transactionName, String metricName) {
     return String.join(connector, accountId, serviceId, transactionName, metricName);

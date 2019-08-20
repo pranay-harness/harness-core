@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -51,6 +52,35 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
   @Inject private AnalysisService analysisService;
 
   @Override
+  public ExperimentPerformance getMetricExpAnalysisPerformance(
+      PageRequest<ExperimentalMetricAnalysisRecord> pageRequest) {
+    pageRequest.addFieldsIncluded(ExperimentalMetricAnalysisRecordKeys.experimentStatus)
+        .addFilter(ExperimentalMetricAnalysisRecordKeys.experimentStatus, EQ, ExperimentStatus.SUCCESS)
+        .addFilter(MetricAnalysisRecordKeys.analysisMinute, SearchFilter.Operator.EQ, 0);
+
+    long success =
+        wingsPersistence.query(ExperimentalMetricAnalysisRecord.class, pageRequest, excludeAuthority).getTotal();
+
+    pageRequest.addFieldsIncluded(ExperimentalMetricAnalysisRecordKeys.experimentStatus)
+        .addFilter(ExperimentalMetricAnalysisRecordKeys.experimentStatus, EQ, ExperimentStatus.FAILURE)
+        .addFilter(MetricAnalysisRecordKeys.analysisMinute, SearchFilter.Operator.EQ, 0);
+
+    long failure =
+        wingsPersistence.query(ExperimentalMetricAnalysisRecord.class, pageRequest, excludeAuthority).getTotal();
+
+    pageRequest.addFieldsIncluded(ExperimentalMetricAnalysisRecordKeys.experimentStatus)
+        .addFilter(MetricAnalysisRecordKeys.analysisMinute, SearchFilter.Operator.EQ, 0);
+
+    long total =
+        wingsPersistence.query(ExperimentalMetricAnalysisRecord.class, pageRequest, excludeAuthority).getTotal();
+
+    return ExperimentPerformance.builder()
+        .improvementPercentage(success * 100.0 / total)
+        .declinePercentage(failure * 100.0 / total)
+        .build();
+  }
+
+  @Override
   public PageResponse<ExpAnalysisInfo> getMetricExpAnalysisInfoList(
       PageRequest<ExperimentalMetricAnalysisRecord> pageRequest) {
     List<ExpAnalysisInfo> result = new ArrayList<>();
@@ -63,6 +93,7 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
         .addFieldsIncluded(ExperimentalMetricAnalysisRecordKeys.experimentName)
         .addFieldsIncluded(ExperimentalMetricAnalysisRecordKeys.envId)
         .addFieldsIncluded(MetricAnalysisRecordKeys.workflowExecutionId)
+        .addFieldsIncluded(MetricAnalysisRecord.BaseKeys.createdAt)
         .addFilter(MetricAnalysisRecordKeys.analysisMinute, SearchFilter.Operator.EQ, 0);
 
     PageResponse<ExperimentalMetricAnalysisRecord> analysisRecords =
@@ -78,6 +109,7 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
                        .expName(record.getExperimentName())
                        .envId(record.getEnvId())
                        .workflowExecutionId(record.getWorkflowExecutionId())
+                       .mismatch(record.isMismatched())
                        .build());
         stateExecutionIds.add(record.getStateExecutionId());
       }
@@ -119,12 +151,27 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
   }
 
   @Override
+  public ExperimentalMetricRecord markExperimentStatus(
+      String stateExecutionId, StateType stateType, String experimentName, ExperimentStatus experimentStatus) {
+    List<ExperimentalMetricAnalysisRecord> experimentalAnalysisRecords =
+        wingsPersistence.createQuery(ExperimentalMetricAnalysisRecord.class, excludeAuthority)
+            .filter(MetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
+            .filter(ExperimentalMetricAnalysisRecordKeys.experimentName, experimentName)
+            .order(Sort.descending(MetricAnalysisRecordKeys.analysisMinute))
+            .asList();
+    experimentalAnalysisRecords.forEach(record -> record.setExperimentStatus(experimentStatus));
+    wingsPersistence.save(experimentalAnalysisRecords);
+    return getExperimentalMetricAnalysisSummary(stateExecutionId, stateType, experimentName);
+  }
+
+  @Override
   public ExperimentalMetricRecord getExperimentalMetricAnalysisSummary(
       String stateExecutionId, StateType stateType, String expName) {
     ExperimentalMetricAnalysisRecord experimentalAnalysisRecord =
         wingsPersistence.createQuery(ExperimentalMetricAnalysisRecord.class, excludeAuthority)
             .filter(MetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
             .order(Sort.descending(MetricAnalysisRecordKeys.analysisMinute))
+            .filter(ExperimentalMetricAnalysisRecordKeys.experimentName, expName)
             .get();
     TimeSeriesMLAnalysisRecord analysisRecord =
         wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
@@ -132,6 +179,68 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
             .order(Sort.descending(MetricAnalysisRecordKeys.analysisMinute))
             .get();
 
+    return getExperimentalMetricAnalysisSummary(
+        stateExecutionId, stateType, experimentalAnalysisRecord, analysisRecord);
+  }
+
+  @Override
+  public void updateMismatchStatusForExperimentalRecord(String stateExecutionId, Integer analysisMinute) {
+    try {
+      if (stateExecutionId == null || analysisMinute == null) {
+        logger.info("Cannot update experimental status for state execution id null");
+        return;
+      }
+      ExperimentalMetricAnalysisRecord experimentalRecord =
+          wingsPersistence.createQuery(ExperimentalMetricAnalysisRecord.class)
+              .filter(MetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
+              .filter(MetricAnalysisRecordKeys.analysisMinute, analysisMinute)
+              .get();
+      TimeSeriesMLAnalysisRecord analysisRecord =
+          wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
+              .filter(MetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
+              .filter(MetricAnalysisRecordKeys.analysisMinute, analysisMinute)
+              .get();
+
+      if (analysisRecord == null || experimentalRecord == null) {
+        return;
+      }
+
+      ExperimentalMetricRecord experimentalMetricRecord = getExperimentalMetricAnalysisSummary(
+          stateExecutionId, analysisRecord.getStateType(), experimentalRecord, analysisRecord);
+
+      boolean matched =
+          experimentalMetricRecord.getRiskLevel().equals(experimentalMetricRecord.getExperimentalRiskLevel());
+
+      if (matched) {
+        for (ExperimentalMetricRecord.ExperimentalMetricAnalysis metricAnalysis :
+            experimentalMetricRecord.getMetricAnalysis()) {
+          matched = metricAnalysis.getExperimentalRiskLevel().equals(metricAnalysis.getRiskLevel());
+          if (!matched) {
+            break;
+          }
+
+          for (ExperimentalMetricRecord.ExperimentalMetricAnalysisValue value : metricAnalysis.getMetricValues()) {
+            matched = value.getRiskLevel().equals(value.getExperimentalRiskLevel());
+            if (!matched) {
+              break;
+            }
+          }
+
+          if (!matched) {
+            break;
+          }
+        }
+      }
+
+      experimentalRecord.setMismatched(!matched);
+      wingsPersistence.save(experimentalRecord);
+    } catch (Exception e) {
+      logger.info("Exception while saving mismatched status for experiment {}", stateExecutionId, e);
+    }
+  }
+
+  private ExperimentalMetricRecord getExperimentalMetricAnalysisSummary(String stateExecutionId, StateType stateType,
+      ExperimentalMetricAnalysisRecord experimentalAnalysisRecord, TimeSeriesMLAnalysisRecord analysisRecord) {
     experimentalAnalysisRecord.decompressTransactions();
 
     if (analysisRecord == null) {
@@ -148,6 +257,9 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
                                                 .analysisMinute(analysisRecord.getAnalysisMinute())
                                                 .stateType(stateType)
                                                 .mlAnalysisType(TimeSeriesMlAnalysisType.COMPARATIVE)
+                                                .baseLineExecutionId(analysisRecord.getBaseLineExecutionId())
+                                                .mismatch(experimentalAnalysisRecord.isMismatched())
+                                                .experimentStatus(experimentalAnalysisRecord.getExperimentStatus())
                                                 .build();
 
     List<ExperimentalMetricRecord.ExperimentalMetricAnalysis> metricAnalysis = new ArrayList<>();

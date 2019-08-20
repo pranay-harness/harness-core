@@ -74,4 +74,8 @@ public interface VerificationManagerClient {
   @GET("logml" + LogAnalysisResource.GET_FEEDBACK_LIST_LE)
   Call<RestResponse<List<CVFeedbackRecord>>> getFeedbackList(
       @Query("cvConfigId") String cvConfigId, @Query("stateExecutionId") String stateExecutionId);
+
+  @POST(VerificationConstants.LEARNING_METRIC_EXP_URL + VerificationConstants.UPDATE_MISMATCH)
+  Call<RestResponse<Boolean>> updateMismatchStatusInExperiment(
+      @Query("stateExecutionId") String stateExecutionId, @Query("analysisMinute") Integer analysisMinute);
 }

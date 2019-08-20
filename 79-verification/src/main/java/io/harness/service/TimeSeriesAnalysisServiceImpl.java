@@ -47,6 +47,7 @@ import software.wings.metrics.Threshold;
 import software.wings.metrics.ThresholdCategory;
 import software.wings.metrics.TimeSeriesDataRecord;
 import software.wings.metrics.TimeSeriesMetricDefinition;
+import software.wings.service.impl.analysis.ExperimentStatus;
 import software.wings.service.impl.analysis.ExperimentalMetricAnalysisRecord;
 import software.wings.service.impl.analysis.MetricAnalysisRecord;
 import software.wings.service.impl.analysis.MetricAnalysisRecord.MetricAnalysisRecordKeys;
@@ -288,8 +289,15 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     mlAnalysisResponse.compressTransactions();
 
     if (mlAnalysisResponse instanceof ExperimentalMetricAnalysisRecord) {
+      ((ExperimentalMetricAnalysisRecord) mlAnalysisResponse).setExperimentStatus(ExperimentStatus.UNDETERMINED);
       learningEngineService.markExpTaskCompleted(taskId);
       wingsPersistence.save(mlAnalysisResponse);
+      try {
+        managerClientHelper.callManagerWithRetry(
+            managerClient.updateMismatchStatusInExperiment(stateExecutionId, analysisMinute));
+      } catch (Exception e) {
+        logger.info("Exception while updating mismatch status {}", mlAnalysisResponse.getStateExecutionId(), e);
+      }
       return true;
     } else {
       saveTimeSeriesMLScores(timeSeriesMLScores);
@@ -347,6 +355,13 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     }
     wingsPersistence.save(mlAnalysisResponse);
     wingsPersistence.save(riskSummary);
+
+    try {
+      managerClientHelper.callManagerWithRetry(
+          managerClient.updateMismatchStatusInExperiment(stateExecutionId, analysisMinute));
+    } catch (Exception e) {
+      logger.info("Exception while updating mismatch status {}", mlAnalysisResponse.getStateExecutionId(), e);
+    }
 
     if (mlAnalysisResponse.getOverallMetricScores() == null) {
       mlAnalysisResponse.setOverallMetricScores(new HashMap<>());

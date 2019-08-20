@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.metrics.RiskLevel;
+import software.wings.service.impl.analysis.ExperimentStatus;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.sm.StateType;
 
@@ -30,6 +31,10 @@ public class ExperimentalMetricRecord {
   private TimeSeriesMlAnalysisType mlAnalysisType;
 
   private List<ExperimentalMetricAnalysis> metricAnalysis;
+
+  private String baseLineExecutionId;
+  private boolean mismatch;
+  private ExperimentStatus experimentStatus;
 
   @Data
   @Builder

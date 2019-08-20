@@ -31,5 +31,7 @@ import org.mongodb.morphia.annotations.Indexes;
 @IgnoreUnusedIndex
 public class ExperimentalMetricAnalysisRecord extends MetricAnalysisRecord {
   private String envId;
+  @Builder.Default private boolean mismatched = true;
+  @Builder.Default private ExperimentStatus experimentStatus = ExperimentStatus.UNDETERMINED;
   @NotEmpty private String experimentName;
 }
