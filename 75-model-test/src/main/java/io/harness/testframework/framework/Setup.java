@@ -69,4 +69,9 @@ public class Setup {
         .post("/users/" + userId + "/logout")
         .getStatusCode();
   }
+
+  // TODO: Need to update and use this method
+  public static RequestSpecification git(String repoName) {
+    return given().spec(rqProvider.useGitSpec(repoName));
+  }
 }

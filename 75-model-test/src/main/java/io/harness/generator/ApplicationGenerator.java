@@ -85,6 +85,10 @@ public class ApplicationGenerator {
       builder.name(random.nextObject(String.class));
     }
 
+    if (application != null && application.getYamlGitConfig() != null) {
+      builder.yamlGitConfig(application.getYamlGitConfig());
+    }
+
     Application existing = exists(builder.build());
     if (existing != null) {
       return existing;
