@@ -1,6 +1,6 @@
 package software.wings.beans.command;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.command.CommandUnitType.EXEC;
 
 import com.google.common.base.MoreObjects;
@@ -19,6 +19,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.stencils.DefaultValue;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -51,24 +52,15 @@ public class ExecCommandUnit extends SshCommandUnit {
   @Override
   @SchemaIgnore
   public boolean isArtifactNeeded() {
-    // TODO: ASR: update this method
-    if (isEmpty(commandString)) {
-      return false;
-    }
-    return commandString.contains("${artifact.") || commandString.contains("${ARTIFACT_FILE_NAME}")
-        || commandString.contains("${artifacts.");
+    Set<String> serviceArtifactVariableNames = new HashSet<>();
+    updateServiceArtifactVariableNames(serviceArtifactVariableNames);
+    return isNotEmpty(serviceArtifactVariableNames);
   }
 
   @SchemaIgnore
   @Override
   public void updateServiceArtifactVariableNames(Set<String> serviceArtifactVariableNames) {
     ExpressionEvaluator.updateServiceArtifactVariableNames(commandString, serviceArtifactVariableNames);
-  }
-
-  @SchemaIgnore
-  @Override
-  public void updateWorkflowVariableNames(Set<String> workflowVariableNames) {
-    ExpressionEvaluator.updateWorkflowVariableNames(commandString, workflowVariableNames);
   }
 
   @Override

@@ -15,6 +15,7 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.serializer.KryoUtils;
 import io.harness.serializer.MapperUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -447,7 +448,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
             throw new InvalidRequestException(
                 format("Artifact variable [%s] has invalid Entity Type", artifactVariable.getName()), USER);
         }
-        if (artifactVariable.getName().equals("artifact")) {
+        if (artifactVariable.getName().equals(ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME)) {
           saveArtifactToSweepingOutput(stateExecutionInstance.getAppId(), phaseExecutionId, artifactVariable, artifact);
         }
       }
@@ -566,7 +567,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
               format("Artifact variable [%s] has invalid Entity Type", artifactVariable.getName()), USER);
       }
       artifactsMap.put(artifactVariable.getName(), artifact);
-      if (artifactVariable.getName().equals("artifact")) {
+      if (artifactVariable.getName().equals(ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME)) {
         saveArtifactToSweepingOutput(stateExecutionInstance.getAppId(), phaseExecutionId, artifactVariable, artifact);
       }
     }

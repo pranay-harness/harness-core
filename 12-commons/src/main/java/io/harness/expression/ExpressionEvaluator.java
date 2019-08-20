@@ -27,10 +27,13 @@ import java.util.regex.Pattern;
  * The Class ExpressionEvaluator.
  */
 public class ExpressionEvaluator {
+  public static final String DEFAULT_ARTIFACT_VARIABLE_NAME = "artifact";
+  public static final String ARTIFACT_FILE_NAME_VARIABLE = "ARTIFACT_FILE_NAME";
+
   public static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^{}]*}");
   public static final Pattern variableNamePattern = Pattern.compile("^[-_a-zA-Z][-_\\w]*$");
-  private static final Pattern serviceArtifactVariablePattern = Pattern.compile("\\$\\{artifacts\\.([^.{}]+)\\.");
-  private static final Pattern workflowVariablePattern = Pattern.compile("\\$\\{workflow\\.variables\\.([^.}]+)}");
+  private static final Pattern serviceDefaultArtifactVariablePattern = Pattern.compile("\\$\\{artifact[.}]");
+  private static final Pattern serviceArtifactVariablePattern = Pattern.compile("\\$\\{artifacts\\.([^.{}]+)[.}]");
 
   public static final int EXPANSION_LIMIT = 256 * 1024; // 256 KB
   private static final int EXPANSION_MULTIPLIER_LIMIT = 10;
@@ -203,25 +206,22 @@ public class ExpressionEvaluator {
       return;
     }
 
-    // TODO: ASR: IMP: ARTIFACT_FILE_NAME behaved differently for multi artifact
-    if (str.contains("${artifact.") || str.contains("${ARTIFACT_FILE_NAME}")) {
-      serviceArtifactVariableNames.add("artifact");
+    // TODO: ASR: IMP: ARTIFACT_FILE_NAME behaves differently for multi artifact
+    // Matches ${ARTIFACT_FILE_NAME}
+    if (str.contains("${" + ARTIFACT_FILE_NAME_VARIABLE + "}")) {
+      serviceArtifactVariableNames.add(DEFAULT_ARTIFACT_VARIABLE_NAME);
     }
 
-    Matcher matcher = serviceArtifactVariablePattern.matcher(str);
+    // Matches ${artifact} or ${artifact.buildNo}
+    Matcher matcher = serviceDefaultArtifactVariablePattern.matcher(str);
+    if (matcher.find()) {
+      serviceArtifactVariableNames.add(DEFAULT_ARTIFACT_VARIABLE_NAME);
+    }
+
+    // Matches ${artifacts.artifact} or ${artifacts.artifact.buildNo}
+    matcher = serviceArtifactVariablePattern.matcher(str);
     while (matcher.find()) {
       serviceArtifactVariableNames.add(matcher.group(1));
-    }
-  }
-
-  public static void updateWorkflowVariableNames(String str, Set<String> workflowVariableNames) {
-    if (str == null) {
-      return;
-    }
-
-    Matcher matcher = workflowVariablePattern.matcher(str);
-    while (matcher.find()) {
-      workflowVariableNames.add(matcher.group(1));
     }
   }
 

@@ -86,11 +86,6 @@ public interface CommandUnit {
   @SchemaIgnore void updateServiceArtifactVariableNames(Set<String> serviceArtifactVariableNames);
 
   /**
-   * Updates the workflow variable names used.
-   */
-  @SchemaIgnore void updateWorkflowVariableNames(Set<String> workflowVariableNames);
-
-  /**
    * Gets deployment type.
    *
    * @return the deployment type

@@ -26,6 +26,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,6 +47,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.WorkflowStandardParams;
 
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 public class EnvStateTest extends WingsBaseTest {
@@ -55,7 +57,10 @@ public class EnvStateTest extends WingsBaseTest {
   @Mock private Workflow workflow;
   @Mock private CanaryOrchestrationWorkflow canaryOrchestrationWorkflow;
   private static final WorkflowElement workflowElement =
-      WorkflowElement.builder().artifactVariables(asList(ArtifactVariable.builder().name("artifact").build())).build();
+      WorkflowElement.builder()
+          .artifactVariables(Collections.singletonList(
+              ArtifactVariable.builder().name(ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME).build()))
+          .build();
   private static final WorkflowStandardParams WORKFLOW_STANDARD_PARAMS = aWorkflowStandardParams()
                                                                              .withAppId(APP_ID)
                                                                              .withArtifactIds(asList(ARTIFACT_ID))

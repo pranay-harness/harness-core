@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.expression.ExpressionEvaluator;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.Variable;
@@ -113,6 +114,8 @@ public abstract class AbstractCommandUnit implements CommandUnit {
   @Override
   @SchemaIgnore
   public boolean isArtifactNeeded() {
+    // NOTE: Whenever this method is overridden, updateServiceArtifactVariableNames might also need to be updated to
+    // prevent infinite recursion.
     return artifactNeeded;
   }
 
@@ -120,13 +123,9 @@ public abstract class AbstractCommandUnit implements CommandUnit {
   @Override
   public void updateServiceArtifactVariableNames(Set<String> serviceArtifactVariableNames) {
     if (isArtifactNeeded()) {
-      serviceArtifactVariableNames.add("artifact");
+      serviceArtifactVariableNames.add(ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME);
     }
   }
-
-  @SchemaIgnore
-  @Override
-  public void updateWorkflowVariableNames(Set<String> workflowVariableNames) {}
 
   /**
    * Sets artifact needed.

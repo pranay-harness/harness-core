@@ -263,8 +263,6 @@ import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
@@ -278,10 +276,6 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Slf4j
 public class WorkflowServiceImpl implements WorkflowService, DataProvider {
-  private static final Pattern serviceArtifactVariablePattern = Pattern.compile("\\$\\{artifacts\\.([^.{}]+)}");
-  private static final Pattern serviceArtifactVariablePropertyPattern =
-      Pattern.compile("\\$\\{artifacts\\.([^.{}]+)\\.");
-
   private static final String VERIFY = "Verify";
   private static final String ROLLBACK_PROVISION_INFRASTRUCTURE = "Rollback Provision Infrastructure";
 
@@ -2688,38 +2682,60 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     // map of serviceId to artifact variables used in the workflow
     Map<String, Set<String>> serviceArtifactVariableNamesMap = new HashMap<>();
 
-    // Set of workflow artifact variables used in the workflow.
-    Set<String> workflowVariableNames = new HashSet<>();
-
     // Process PreDeploymentSteps.
-    updateArtifactVariableNames(appId, "", canaryOrchestrationWorkflow.getPreDeploymentSteps(), null, null,
-        serviceArtifactVariableNamesMap, workflowVariableNames);
+    updateArtifactVariableNames(
+        appId, "", canaryOrchestrationWorkflow.getPreDeploymentSteps(), null, null, serviceArtifactVariableNamesMap);
 
     // Process WorkflowPhases.
     for (WorkflowPhase phase : canaryOrchestrationWorkflow.getWorkflowPhases()) {
-      updateArtifactVariableNames(
-          appId, phase, workflowVariablesMap, serviceArtifactVariableNamesMap, workflowVariableNames);
+      updateArtifactVariableNames(appId, phase, workflowVariablesMap, serviceArtifactVariableNamesMap);
     }
 
-    boolean requiresArtifact = serviceArtifactVariableNamesMap.size() + workflowVariableNames.size() > 0;
+    boolean requiresArtifact = serviceArtifactVariableNamesMap.size() > 0;
 
     // Process RollbackWorkflowPhases.
     for (WorkflowPhase phase : canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().values()) {
-      updateArtifactVariableNames(
-          appId, phase, workflowVariablesMap, serviceArtifactVariableNamesMap, workflowVariableNames);
+      updateArtifactVariableNames(appId, phase, workflowVariablesMap, serviceArtifactVariableNamesMap);
     }
 
-    if (!requiresArtifact && (serviceArtifactVariableNamesMap.size() + workflowVariableNames.size() > 0)) {
+    if (!requiresArtifact && serviceArtifactVariableNamesMap.size() > 0) {
       logger.warn(
           "Phase Steps do not need artifact. However, Rollback steps needed artifact for the workflow {} of the app {}",
           workflow.getUuid(), appId);
     }
 
+    // Set of workflow artifact variables used in the workflow.
+    Set<String> workflowVariableNames = new HashSet<>();
     if (serviceArtifactVariableNamesMap.containsKey("")) {
       Set<String> implicitWorkflowVariableNames = serviceArtifactVariableNamesMap.get("");
       if (isNotEmpty(implicitWorkflowVariableNames)) {
+        // These artifact variables weren't defined in the context of any service, hence, they must be as workflow
+        // variables.
         workflowVariableNames.addAll(implicitWorkflowVariableNames);
       }
+    }
+
+    // List of variables defined at the workflow variable with type ARTIFACT.
+    List<Variable> workflowVariables = canaryOrchestrationWorkflow.getUserVariables();
+    Map<String, Variable> workflowArtifactVariableNamesMap =
+        workflowVariables.stream()
+            .filter(variable -> variable.getType().equals(VariableType.ARTIFACT))
+            .collect(Collectors.toMap(Variable::getName, Function.identity()));
+
+    // Filter out invalid workflow artifact variable names which are used while deployment/execution, but it are not
+    // defined for the workflow. This will lead to runtime error, so instead we are throwing an error while fetching
+    // deployment metadata.
+    Set<String> invalidWorkflowVariableNames =
+        workflowVariableNames.stream()
+            .filter(variableName -> !workflowArtifactVariableNamesMap.containsKey(variableName))
+            .collect(Collectors.toSet());
+    if (invalidWorkflowVariableNames.size() > 0) {
+      // Throw an exception if invalid workflow artifact variable names were found.
+      throw new InvalidRequestException(
+          format(
+              "Artifact variables [%s] are used but not defined for the workflow [%s]. Please ensure these variable names are defined for this workflow.",
+              String.join(",", invalidWorkflowVariableNames), workflow.getName()),
+          USER);
     }
 
     serviceArtifactVariableNamesMap = serviceArtifactVariableNamesMap.entrySet()
@@ -2758,6 +2774,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         Set<String> invalidVariableNames = new HashSet<>();
         for (String variableName : serviceArtifactVariableNames) {
           if (!variableNames.containsKey(variableName)) {
+            if (workflowArtifactVariableNamesMap.containsKey(variableName)) {
+              continue;
+            }
+
             // Artifact variable name `variableName` is used while deployment/execution, but it is not defined for the
             // service. This will lead to runtime error, so instead we are throwing an error while fetching deployment
             // metadata. We collect all the invalid variable names for this service and throw a single error at the end.
@@ -2805,12 +2825,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         }
 
         if (isNotEmpty(invalidVariableNames)) {
-          // Throw an exception in invalid artifact variable names were found for the current service.
+          // Throw an exception if invalid artifact variable names were found for the current service.
           Service service = serviceResourceService.get(serviceId);
           notNullCheck("Service does not exist: " + serviceId, service, USER);
           throw new InvalidRequestException(
               format(
-                  "Undefined artifact variables [%s] are used while deploying the service [%s]. Please ensure these variable names are defined for this service.",
+                  "Artifact variables [%s] are used but not defined for the service [%s]. Please ensure these variable names are defined for this service.",
                   String.join(",", invalidVariableNames), service.getName()),
               USER);
         }
@@ -2819,29 +2839,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           artifactNeededServiceIds.add(serviceId);
         }
       }
-    }
-
-    // List of variables defined at the workflow variable with type ARTIFACT.
-    List<Variable> workflowVariables = canaryOrchestrationWorkflow.getUserVariables();
-    Map<String, Variable> workflowArtifactVariableNamesMap =
-        workflowVariables.stream()
-            .filter(variable -> variable.getType().equals(VariableType.ARTIFACT))
-            .collect(Collectors.toMap(Variable::getName, Function.identity()));
-
-    // Filter out invalid workflow artifact variable names which are used while deployment/execution, but it are not
-    // defined for the workflow. This will lead to runtime error, so instead we are throwing an error while fetching
-    // deployment metadata.
-    Set<String> invalidWorkflowVariableNames =
-        workflowVariableNames.stream()
-            .filter(variableName -> !workflowArtifactVariableNamesMap.containsKey(variableName))
-            .collect(Collectors.toSet());
-    if (invalidWorkflowVariableNames.size() > 0) {
-      // Throw an exception in invalid workflow artifact variable names were found.
-      throw new InvalidRequestException(
-          format(
-              "Undefined artifact variables [%s] are used while deploying the workflow [%s]. Please ensure these variable names are defined for this workflow.",
-              String.join(",", invalidWorkflowVariableNames), workflow.getName()),
-          USER);
     }
 
     // Copy over all the service variables as well as they might have been overridden by workflow variables
@@ -2946,8 +2943,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   private void updateArtifactVariableNames(String appId, WorkflowPhase workflowPhase,
-      Map<String, String> workflowVariablesMap, Map<String, Set<String>> serviceArtifactVariableNamesMap,
-      Set<String> workflowVariableNames) {
+      Map<String, String> workflowVariablesMap, Map<String, Set<String>> serviceArtifactVariableNamesMap) {
     if (workflowPhase == null || workflowPhase.getPhaseSteps() == null) {
       return;
     }
@@ -2970,14 +2966,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (phaseStep.getSteps() == null) {
         continue;
       }
-      updateArtifactVariableNames(appId, serviceId, phaseStep, workflowPhase, workflowVariablesMap,
-          serviceArtifactVariableNamesMap, workflowVariableNames);
+      updateArtifactVariableNames(
+          appId, serviceId, phaseStep, workflowPhase, workflowVariablesMap, serviceArtifactVariableNamesMap);
     }
   }
 
   private void updateArtifactVariableNames(String appId, String serviceId, PhaseStep phaseStep,
       WorkflowPhase workflowPhase, Map<String, String> workflowVariables,
-      Map<String, Set<String>> serviceArtifactVariableNamesMap, Set<String> workflowVariableNames) {
+      Map<String, Set<String>> serviceArtifactVariableNamesMap) {
     // NOTE: If serviceId is "", we assume those artifact variables to be workflow variables.
     boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(appId));
     Set<String> serviceArtifactVariableNames;
@@ -2997,8 +2993,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                     .map(Variable::getValue)
                                     .collect(toList());
           if (isNotEmpty(values)) {
-            updateArtifactVariablesNeededForTemplate(
-                serviceArtifactVariableNames, workflowVariableNames, values.toArray());
+            updateArtifactVariablesNeededForTemplate(serviceArtifactVariableNames, values.toArray());
           }
         }
       }
@@ -3009,7 +3004,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
               step.getTemplateUuid(), step.getTemplateVersion(), EntityType.COMMAND);
           if (command != null) {
             command.updateServiceArtifactVariableNames(serviceArtifactVariableNames);
-            command.updateWorkflowVariableNames(workflowVariableNames);
           }
         }
         if (serviceId != null) {
@@ -3019,23 +3013,21 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                 appId, serviceId, (String) step.getProperties().get("commandName"));
             if (serviceCommand != null && serviceCommand.getCommand() != null) {
               serviceCommand.getCommand().updateServiceArtifactVariableNames(serviceArtifactVariableNames);
-              serviceCommand.getCommand().updateWorkflowVariableNames(workflowVariableNames);
             }
           }
         }
       } else if (HTTP.name().equals(step.getType())) {
-        updateArtifactVariablesNeeded(serviceArtifactVariableNames, workflowVariableNames,
-            step.getProperties().get("url"), step.getProperties().get("body"), step.getProperties().get("assertion"));
+        updateArtifactVariablesNeeded(serviceArtifactVariableNames, step.getProperties().get("url"),
+            step.getProperties().get("body"), step.getProperties().get("assertion"));
       } else if (SHELL_SCRIPT.name().equals(step.getType())) {
-        updateArtifactVariablesNeeded(
-            serviceArtifactVariableNames, workflowVariableNames, step.getProperties().get("scriptString"));
+        updateArtifactVariablesNeeded(serviceArtifactVariableNames, step.getProperties().get("scriptString"));
       } else if (CLOUD_FORMATION_CREATE_STACK.name().equals(step.getType())) {
         List<Map> variables = (List<Map>) step.getProperties().get("variables");
         if (variables != null) {
           List<String> values = (List<String>) variables.stream()
                                     .flatMap(element -> element.values().stream())
                                     .collect(Collectors.toList());
-          updateArtifactVariablesNeeded(serviceArtifactVariableNames, workflowVariableNames, values.toArray());
+          updateArtifactVariablesNeeded(serviceArtifactVariableNames, values.toArray());
         }
       } else if (kubernetesArtifactNeededStateTypes.contains(step.getType())
           || ecsArtifactNeededStateTypes.contains(step.getType())
@@ -3053,7 +3045,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             ServiceTemplate serviceTemplate = serviceTemplateService.get(appId, serviceId, infraDefiniton.getEnvId());
             if (serviceTemplate != null) {
               serviceResourceService.updateArtifactVariableNamesForHelm(
-                  appId, serviceTemplate.getUuid(), serviceArtifactVariableNames, workflowVariableNames);
+                  appId, serviceTemplate.getUuid(), serviceArtifactVariableNames);
             }
           }
         } else {
@@ -3061,8 +3053,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           if (isNotEmpty(infraMappingId) && !matchesVariablePattern(infraMappingId)) {
             InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
             if (infrastructureMapping != null) {
-              serviceResourceService.updateArtifactVariableNamesForHelm(appId,
-                  infrastructureMapping.getServiceTemplateId(), serviceArtifactVariableNames, workflowVariableNames);
+              serviceResourceService.updateArtifactVariableNamesForHelm(
+                  appId, infrastructureMapping.getServiceTemplateId(), serviceArtifactVariableNames);
             }
           }
         }
@@ -3072,13 +3064,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           String infraDefinitionId = getInfraDefinitionId(workflowPhase, workflowVariables);
           if (isNotEmpty(infraDefinitionId) && !matchesVariablePattern(infraDefinitionId)) {
             k8sStateHelper.updateManifestsArtifactVariableNamesInfraDefinition(
-                appId, infraDefinitionId, serviceArtifactVariableNames, workflowVariableNames, serviceId);
+                appId, infraDefinitionId, serviceArtifactVariableNames, serviceId);
           }
         } else {
           String infraMappingId = getInfraMappingId(workflowPhase, workflowVariables);
           if (isNotEmpty(infraMappingId) && !matchesVariablePattern(infraMappingId)) {
-            k8sStateHelper.updateManifestsArtifactVariableNames(
-                appId, infraMappingId, serviceArtifactVariableNames, workflowVariableNames);
+            k8sStateHelper.updateManifestsArtifactVariableNames(appId, infraMappingId, serviceArtifactVariableNames);
           }
         }
       }
@@ -3116,8 +3107,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         -> arg != null && (((String) arg).contains("${artifact.") || ((String) arg).contains("${ARTIFACT_FILE_NAME}")));
   }
 
-  private void updateArtifactVariablesNeeded(
-      Set<String> serviceArtifactVariableNames, Set<String> workflowVariableNames, Object... args) {
+  private void updateArtifactVariablesNeeded(Set<String> serviceArtifactVariableNames, Object... args) {
     for (Object arg : args) {
       if (!(arg instanceof String)) {
         continue;
@@ -3125,45 +3115,22 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
       String str = (String) arg;
       ExpressionEvaluator.updateServiceArtifactVariableNames(str, serviceArtifactVariableNames);
-      ExpressionEvaluator.updateWorkflowVariableNames(str, workflowVariableNames);
     }
   }
 
-  private void updateArtifactVariablesNeededForTemplate(
-      Set<String> serviceArtifactVariableNames, Set<String> workflowVariableNames, Object... args) {
+  private void updateArtifactVariablesNeededForTemplate(Set<String> serviceArtifactVariableNames, Object... args) {
     for (Object arg : args) {
       if (!(arg instanceof String)) {
         continue;
       }
 
       String str = (String) arg;
-      updateServiceArtifactVariableNames(str, serviceArtifactVariableNames);
-      ExpressionEvaluator.updateWorkflowVariableNames(str, workflowVariableNames);
-    }
-  }
-
-  private void updateServiceArtifactVariableNames(String str, Set<String> serviceArtifactVariableNames) {
-    // TODO: ASR: IMP: ARTIFACT_FILE_NAME behaved differently for multi artifact
-    if (str.contains("${artifact.") || str.contains("${ARTIFACT_FILE_NAME}") || str.equals("${artifact}")) {
-      serviceArtifactVariableNames.add("artifact");
-    }
-
-    // case 1: artifact variable in template has the value ${artifacts.artifact}
-    Matcher matcher = serviceArtifactVariablePattern.matcher(str);
-    if (matcher.find()) {
-      serviceArtifactVariableNames.add(matcher.group(1));
-    }
-
-    // case 2: text variable in template referencing some property of artifact variable like
-    // ${artifacts.artifact.metadata.url}
-    matcher = serviceArtifactVariablePropertyPattern.matcher(str);
-    if (matcher.find()) {
-      serviceArtifactVariableNames.add(matcher.group(1));
+      ExpressionEvaluator.updateServiceArtifactVariableNames(str, serviceArtifactVariableNames);
     }
   }
 
   private void updateDefaultArtifactVariablesNeeded(Set<String> serviceArtifactVariableNames) {
-    serviceArtifactVariableNames.add("artifact");
+    serviceArtifactVariableNames.add(ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME);
   }
 
   private boolean isDynamicInfrastructure(String appId, String infrastructureMappingId) {

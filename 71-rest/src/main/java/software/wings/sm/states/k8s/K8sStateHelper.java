@@ -304,20 +304,20 @@ public class K8sStateHelper {
     return false;
   }
 
-  public void updateManifestsArtifactVariableNames(String appId, String infraMappingId,
-      Set<String> serviceArtifactVariableNames, Set<String> workflowVariableNames) {
+  public void updateManifestsArtifactVariableNames(
+      String appId, String infraMappingId, Set<String> serviceArtifactVariableNames) {
     InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, infraMappingId);
     if (infraMapping == null) {
       throw new InvalidRequestException(
           format("Infra mapping not found for appId %s infraMappingId %s", appId, infraMappingId));
     }
 
-    updateManifestsArtifactVariableNames(appId, serviceArtifactVariableNames, workflowVariableNames,
-        infraMapping.getServiceId(), infraMapping.getEnvId());
+    updateManifestsArtifactVariableNames(
+        appId, serviceArtifactVariableNames, infraMapping.getServiceId(), infraMapping.getEnvId());
   }
 
-  public void updateManifestsArtifactVariableNamesInfraDefinition(String appId, String infraDefinitionId,
-      Set<String> serviceArtifactVariableNames, Set<String> workflowVariableNames, String serviceId) {
+  public void updateManifestsArtifactVariableNamesInfraDefinition(
+      String appId, String infraDefinitionId, Set<String> serviceArtifactVariableNames, String serviceId) {
     InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefinitionId);
     if (infrastructureDefinition == null) {
       throw new InvalidRequestException(
@@ -325,31 +325,30 @@ public class K8sStateHelper {
     }
 
     updateManifestsArtifactVariableNames(
-        appId, serviceArtifactVariableNames, workflowVariableNames, serviceId, infrastructureDefinition.getEnvId());
+        appId, serviceArtifactVariableNames, serviceId, infrastructureDefinition.getEnvId());
   }
 
-  public void updateManifestsArtifactVariableNames(String appId, Set<String> serviceArtifactVariableNames,
-      Set<String> workflowVariableNames, String serviceId, String envId) {
+  public void updateManifestsArtifactVariableNames(
+      String appId, Set<String> serviceArtifactVariableNames, String serviceId, String envId) {
     ApplicationManifest applicationManifest = applicationManifestService.getK8sManifestByServiceId(appId, serviceId);
-    updateManifestFileVariableNames(applicationManifest, serviceArtifactVariableNames, workflowVariableNames);
+    updateManifestFileVariableNames(applicationManifest, serviceArtifactVariableNames);
 
     applicationManifest = applicationManifestService.getByEnvId(appId, envId, AppManifestKind.VALUES);
-    updateManifestFileVariableNames(applicationManifest, serviceArtifactVariableNames, workflowVariableNames);
+    updateManifestFileVariableNames(applicationManifest, serviceArtifactVariableNames);
 
     applicationManifest =
         applicationManifestService.getByEnvAndServiceId(appId, envId, serviceId, AppManifestKind.VALUES);
-    updateManifestFileVariableNames(applicationManifest, serviceArtifactVariableNames, workflowVariableNames);
+    updateManifestFileVariableNames(applicationManifest, serviceArtifactVariableNames);
   }
 
-  private void updateManifestFileVariableNames(ApplicationManifest applicationManifest,
-      Set<String> serviceArtifactVariableNames, Set<String> workflowVariableNames) {
+  private void updateManifestFileVariableNames(
+      ApplicationManifest applicationManifest, Set<String> serviceArtifactVariableNames) {
     if (applicationManifest != null && StoreType.Local.equals(applicationManifest.getStoreType())) {
       ManifestFile manifestFile =
           applicationManifestService.getManifestFileByFileName(applicationManifest.getUuid(), values_filename);
       if (manifestFile != null) {
         String content = manifestFile.getFileContent();
         ExpressionEvaluator.updateServiceArtifactVariableNames(content, serviceArtifactVariableNames);
-        ExpressionEvaluator.updateWorkflowVariableNames(content, workflowVariableNames);
       }
     }
   }

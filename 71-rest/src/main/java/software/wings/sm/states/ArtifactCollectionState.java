@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.expression.ExpressionEvaluator;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -268,7 +269,7 @@ public class ArtifactCollectionState extends State {
   }
 
   private String fetchArtifactVariableName() {
-    return isBlank(artifactVariableName) ? "artifact" : artifactVariableName;
+    return isBlank(artifactVariableName) ? ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME : artifactVariableName;
   }
 
   private boolean isMultiArtifact(String accountId) {
