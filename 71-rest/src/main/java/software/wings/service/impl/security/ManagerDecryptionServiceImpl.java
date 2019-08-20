@@ -41,7 +41,8 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
     }
     // decrypt locally encrypted variables in manager
     encryptedDataDetails.stream()
-        .filter(encryptedDataDetail -> encryptedDataDetail.getEncryptionType() == EncryptionType.LOCAL)
+        .filter(
+            encryptedDataDetail -> encryptedDataDetail.getEncryptedData().getEncryptionType() == EncryptionType.LOCAL)
         .forEach(encryptedDataDetail -> {
           SimpleEncryption encryption = new SimpleEncryption(encryptedDataDetail.getEncryptedData().getEncryptionKey());
           char[] decryptChars = encryption.decryptChars(encryptedDataDetail.getEncryptedData().getEncryptedValue());
@@ -59,7 +60,8 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
     // filter non local encrypted values and send to delegate to decrypt
     List<EncryptedDataDetail> nonLocalEncryptedDetails =
         encryptedDataDetails.stream()
-            .filter(encryptedDataDetail -> encryptedDataDetail.getEncryptionType() != EncryptionType.LOCAL)
+            .filter(encryptedDataDetail
+                -> encryptedDataDetail.getEncryptedData().getEncryptionType() != EncryptionType.LOCAL)
             .collect(Collectors.toList());
 
     // if nothing left to decrypt return

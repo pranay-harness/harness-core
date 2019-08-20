@@ -782,7 +782,6 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
               secretManager.getSecretManager(accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
 
           return EncryptedDataDetail.builder()
-              .encryptionType(encryptedData.getEncryptionType())
               .encryptedData(SecretManager.buildRecordData(encryptedData))
               .encryptionConfig(encryptionConfig)
               .build();

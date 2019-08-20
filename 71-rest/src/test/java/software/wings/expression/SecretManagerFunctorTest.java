@@ -47,18 +47,16 @@ public class SecretManagerFunctorTest extends WingsBaseTest {
     SecretManagerFunctor secretManagerFunctor = buildFunctor(token);
     assertFunctor(secretManagerFunctor);
 
-    final EncryptedData encryptedData = EncryptedData.builder().accountId(ACCOUNT_ID).build();
+    final EncryptedData encryptedData =
+        EncryptedData.builder().encryptionType(EncryptionType.LOCAL).accountId(ACCOUNT_ID).build();
     encryptedData.setUuid(UUIDGenerator.generateUuid());
 
     when(secretManager.getSecretMappedToAppByName(ACCOUNT_ID, APP_ID, ENV_ID, secretName)).thenReturn(encryptedData);
 
     ServiceVariable serviceVariable = buildServiceVariable(secretName, encryptedData);
 
-    List<EncryptedDataDetail> localEncryptedDetails =
-        Arrays.asList(EncryptedDataDetail.builder()
-                          .encryptedData(SecretManager.buildRecordData(encryptedData))
-                          .encryptionType(EncryptionType.LOCAL)
-                          .build());
+    List<EncryptedDataDetail> localEncryptedDetails = Arrays.asList(
+        EncryptedDataDetail.builder().encryptedData(SecretManager.buildRecordData(encryptedData)).build());
 
     when(secretManager.getEncryptionDetails(serviceVariable, APP_ID, WORKFLOW_EXECUTION_ID))
         .thenReturn(localEncryptedDetails);
@@ -133,7 +131,6 @@ public class SecretManagerFunctorTest extends WingsBaseTest {
         Arrays.asList(EncryptedDataDetail.builder()
                           .encryptedData(SecretManager.buildRecordData(encryptedData))
                           .encryptionConfig(kmsConfig)
-                          .encryptionType(EncryptionType.KMS)
                           .build());
 
     when(secretManager.getEncryptionDetails(serviceVariable, APP_ID, WORKFLOW_EXECUTION_ID))

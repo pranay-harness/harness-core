@@ -10,6 +10,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import org.junit.Test;
@@ -84,7 +85,10 @@ public class CapabilityHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testFetchEncryptionDetailsListFromParameters() {
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
-    encryptedDataDetails.add(EncryptedDataDetail.builder().encryptionType(EncryptionType.LOCAL).build());
+    encryptedDataDetails.add(
+        EncryptedDataDetail.builder()
+            .encryptedData(EncryptedRecordData.builder().encryptionType(EncryptionType.LOCAL).build())
+            .build());
 
     TaskData taskData =
         TaskData.builder().parameters(new Object[] {JenkinsConfig.builder().build(), encryptedDataDetails}).build();
@@ -98,10 +102,11 @@ public class CapabilityHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testFetchEncryptionDetailsListFromParameters_VaultConfig() throws Exception {
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
-    encryptedDataDetails.add(EncryptedDataDetail.builder()
-                                 .encryptionType(EncryptionType.VAULT)
-                                 .encryptionConfig(VaultConfig.builder().vaultUrl(HTTP_VAUTL_URL).build())
-                                 .build());
+    encryptedDataDetails.add(
+        EncryptedDataDetail.builder()
+            .encryptedData(EncryptedRecordData.builder().encryptionType(EncryptionType.VAULT).build())
+            .encryptionConfig(VaultConfig.builder().vaultUrl(HTTP_VAUTL_URL).build())
+            .build());
 
     TaskData taskData =
         TaskData.builder().parameters(new Object[] {JenkinsConfig.builder().build(), encryptedDataDetails}).build();
@@ -120,10 +125,11 @@ public class CapabilityHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testFetchEncryptionDetailsListFromParameters_KmsConfig() throws Exception {
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
-    encryptedDataDetails.add(EncryptedDataDetail.builder()
-                                 .encryptionType(EncryptionType.KMS)
-                                 .encryptionConfig(KmsConfig.builder().region(US_EAST_2).build())
-                                 .build());
+    encryptedDataDetails.add(
+        EncryptedDataDetail.builder()
+            .encryptedData(EncryptedRecordData.builder().encryptionType(EncryptionType.KMS).build())
+            .encryptionConfig(KmsConfig.builder().region(US_EAST_2).build())
+            .build());
 
     TaskData taskData =
         TaskData.builder().parameters(new Object[] {JenkinsConfig.builder().build(), encryptedDataDetails}).build();

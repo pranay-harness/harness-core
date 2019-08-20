@@ -73,7 +73,7 @@ public class EncryptionServiceImpl implements EncryptionService {
 
   @Override
   public char[] getDecryptedValue(EncryptedDataDetail encryptedDataDetail) throws IOException {
-    switch (encryptedDataDetail.getEncryptionType()) {
+    switch (encryptedDataDetail.getEncryptedData().getEncryptionType()) {
       case LOCAL:
         SimpleEncryption encryption = new SimpleEncryption(encryptedDataDetail.getEncryptedData().getEncryptionKey());
         return encryption.decryptChars(encryptedDataDetail.getEncryptedData().getEncryptedValue());
@@ -98,7 +98,8 @@ public class EncryptionServiceImpl implements EncryptionService {
             encryptedDataDetail.getEncryptedData(), (CyberArkConfig) encryptedDataDetail.getEncryptionConfig());
 
       default:
-        throw new IllegalStateException("invalid encryption type: " + encryptedDataDetail.getEncryptionType());
+        throw new IllegalStateException(
+            "invalid encryption type: " + encryptedDataDetail.getEncryptedData().getEncryptionType());
     }
   }
 }

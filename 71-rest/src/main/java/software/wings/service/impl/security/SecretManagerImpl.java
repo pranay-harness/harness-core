@@ -293,7 +293,6 @@ public class SecretManagerImpl implements SecretManager {
         getSecretManager(accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
 
     return Optional.of(EncryptedDataDetail.builder()
-                           .encryptionType(encryptedData.getEncryptionType())
                            .encryptedData(SecretManager.buildRecordData(encryptedData))
                            .encryptionConfig(encryptionConfig)
                            .fieldName(fieldName)
@@ -319,8 +318,8 @@ public class SecretManagerImpl implements SecretManager {
           Preconditions.checkState(
               encryptedRefField.get(object) == null, "both encrypted and non encrypted field set for " + object);
           encryptedDataDetails.add(EncryptedDataDetail.builder()
-                                       .encryptionType(LOCAL)
                                        .encryptedData(EncryptedRecordData.builder()
+                                                          .encryptionType(LOCAL)
                                                           .encryptionKey(object.getAccountId())
                                                           .encryptedValue((char[]) f.get(object))
                                                           .build())
@@ -341,7 +340,6 @@ public class SecretManagerImpl implements SecretManager {
               getSecretManager(object.getAccountId(), encryptedData.getKmsId(), encryptedData.getEncryptionType());
 
           EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder()
-                                                        .encryptionType(encryptedData.getEncryptionType())
                                                         .encryptedData(SecretManager.buildRecordData(encryptedData))
                                                         .encryptionConfig(encryptionConfig)
                                                         .fieldName(f.getName())

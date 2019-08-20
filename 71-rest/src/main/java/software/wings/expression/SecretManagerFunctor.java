@@ -76,7 +76,8 @@ public class SecretManagerFunctor implements ExpressionFunctor {
 
     final List<EncryptedDataDetail> localEncryptedDetails =
         encryptedDataDetails.stream()
-            .filter(encryptedDataDetail -> encryptedDataDetail.getEncryptionType() == EncryptionType.LOCAL)
+            .filter(encryptedDataDetail
+                -> encryptedDataDetail.getEncryptedData().getEncryptionType() == EncryptionType.LOCAL)
             .collect(Collectors.toList());
 
     if (isNotEmpty(localEncryptedDetails)) {
@@ -88,7 +89,8 @@ public class SecretManagerFunctor implements ExpressionFunctor {
 
     List<EncryptedDataDetail> nonLocalEncryptedDetails =
         encryptedDataDetails.stream()
-            .filter(encryptedDataDetail -> encryptedDataDetail.getEncryptionType() != EncryptionType.LOCAL)
+            .filter(encryptedDataDetail
+                -> encryptedDataDetail.getEncryptedData().getEncryptionType() != EncryptionType.LOCAL)
             .collect(Collectors.toList());
 
     if (nonLocalEncryptedDetails.size() != 1) {
