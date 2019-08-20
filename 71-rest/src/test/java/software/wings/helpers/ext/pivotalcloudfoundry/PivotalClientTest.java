@@ -95,7 +95,7 @@ public class PivotalClientTest extends WingsBaseTest {
       }
 
       applicationDetail = pcfClient.getApplicationByName(pcfRequestConfig);
-      assertEquals(0, applicationDetail.getUrls().size());
+      assertThat( applicationDetail.getUrls()).isEmpty();
 
       // delete application
       pcfClient.deleteApplication(pcfRequestConfig);

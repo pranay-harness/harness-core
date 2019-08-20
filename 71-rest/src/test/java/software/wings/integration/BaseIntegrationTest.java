@@ -9,7 +9,6 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
@@ -309,7 +308,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
                    .build(),
             APPLICATION_JSON),
         new GenericType<RestResponse<User>>() {});
-    assertEquals(0, response.getResponseMessages().size());
+    assertThat(response.getResponseMessages()).isEmpty();
     wingsPersistence.update(wingsPersistence.createQuery(User.class).filter(UserKeys.email, email),
         wingsPersistence.createUpdateOperations(User.class).set("emailVerified", true));
     Thread.sleep(2000);

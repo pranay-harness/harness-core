@@ -9,6 +9,7 @@ import static io.harness.rule.OwnerRule.SRIRAM;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -165,7 +166,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     RestResponse<List<NewRelicApplication>> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicApplication>>>() {});
 
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
     assertFalse(restResponse.getResource().isEmpty());
 
     for (NewRelicApplication app : restResponse.getResource()) {
@@ -186,7 +187,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     RestResponse<List<NewRelicApplication>> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicApplication>>>() {});
 
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
     assertFalse(restResponse.getResource().isEmpty());
   }
 
@@ -198,7 +199,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     RestResponse<List<NewRelicApplicationInstance>> restResponse = getRequestBuilderWithAuthHeader(target).get(
         new GenericType<RestResponse<List<NewRelicApplicationInstance>>>() {});
 
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
     assertFalse("failed" + restResponse.getResponseMessages(), restResponse.getResource().isEmpty());
   }
 
@@ -211,7 +212,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     RestResponse<List<NewRelicMetric>> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicMetric>>>() {});
 
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
     assertTrue(restResponse.getResource().size() >= 0);
   }
 
@@ -257,7 +258,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     target = client.target(API_BASE + "/newrelic/node-data?settingId=" + newRelicConfigId + "&accountId=" + accountId);
     RestResponse<VerificationNodeDataSetupResponse> metricResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(testNodeData, APPLICATION_JSON), new GenericType<RestResponse<VerificationNodeDataSetupResponse>>() {});
-    assertEquals(0, metricResponse.getResponseMessages().size());
+    assertThat(metricResponse.getResponseMessages()).isEmpty();
     assertTrue(metricResponse.getResource().isProviderReachable());
     assertTrue(metricResponse.getResource().getLoadResponse().isLoadPresent());
     assertNotNull(metricResponse.getResource().getLoadResponse().getLoadResponse());

@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.google.inject.Inject;
@@ -75,7 +76,7 @@ public class AlertNotificationRuleServiceTest extends WingsBaseTest {
 
     alertNotificationRuleService.deleteByAccountId(ACCOUNT_1_ID);
 
-    assertEquals(0, alertNotificationRuleService.getAll(ACCOUNT_1_ID).size());
+    assertThat(alertNotificationRuleService.getAll(ACCOUNT_1_ID)).isEmpty();
     assertEquals(rulesOfAccount2, alertNotificationRuleService.getAll(ACCOUNT_2_ID));
   }
 
@@ -92,7 +93,7 @@ public class AlertNotificationRuleServiceTest extends WingsBaseTest {
 
     alertNotificationRuleService.deleteById(savedRuleInAccount1.getUuid(), savedRuleInAccount1.getAccountId());
 
-    assertEquals(0, alertNotificationRuleService.getAll(ACCOUNT_1_ID).size());
+    assertThat(alertNotificationRuleService.getAll(ACCOUNT_1_ID)).isEmpty();
     assertEquals(1, alertNotificationRuleService.getAll(ACCOUNT_2_ID).size());
     assertEquals(savedRuleInAccount2, alertNotificationRuleService.getAll(ACCOUNT_2_ID).get(0));
   }

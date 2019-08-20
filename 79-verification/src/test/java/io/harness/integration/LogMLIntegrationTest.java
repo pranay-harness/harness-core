@@ -5,6 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -646,7 +647,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     LogMLAnalysisSummary logMLAnalysisSummary =
         mgrAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
     assertEquals(1, logMLAnalysisSummary.getControlClusters().size());
-    assertEquals(0, logMLAnalysisSummary.getTestClusters().size());
+    assertThat(logMLAnalysisSummary.getTestClusters()).isEmpty();
     assertEquals("No new data for the given queries. Showing baseline data if any.",
         logMLAnalysisSummary.getAnalysisSummaryMessage());
   }
@@ -1108,7 +1109,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
         mgrAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SUMO);
     assertEquals(1, logMLAnalysisSummary.getControlClusters().size());
     assertEquals(1, logMLAnalysisSummary.getTestClusters().size());
-    assertEquals(0, logMLAnalysisSummary.getUnknownClusters().size());
+    assertThat(logMLAnalysisSummary.getUnknownClusters()).isEmpty();
     assertEquals(5, logMLAnalysisSummary.getControlClusters().get(0).getHostSummary().size());
     assertEquals(5, logMLAnalysisSummary.getTestClusters().get(0).getHostSummary().size());
     assertEquals(numOfNodes * messageCount,

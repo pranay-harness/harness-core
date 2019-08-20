@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.RAGHU;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -99,7 +100,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     RestResponse<List<NewRelicApplication>> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicApplication>>>() {});
 
-    assertEquals(0, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).isEmpty();
     assertFalse(restResponse.getResource().isEmpty());
 
     for (NewRelicApplication app : restResponse.getResource()) {
@@ -278,7 +279,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
               getRequestBuilderWithAuthHeader(target).post(entity(testNodeData, APPLICATION_JSON),
                   new GenericType<RestResponse<VerificationNodeDataSetupResponse>>() {});
 
-          assertEquals(0, metricResponse.getResponseMessages().size());
+          assertThat(metricResponse.getResponseMessages()).isEmpty();
           assertTrue(metricResponse.getResource().isProviderReachable());
           assertTrue(metricResponse.getResource().getLoadResponse().isLoadPresent());
           assertNotNull(metricResponse.getResource().getLoadResponse().getLoadResponse());

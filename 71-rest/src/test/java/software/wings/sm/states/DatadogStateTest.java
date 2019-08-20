@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static software.wings.api.DeploymentType.KUBERNETES;
@@ -250,6 +251,6 @@ public class DatadogStateTest extends WingsBaseTest {
     customMetricMap.put("service:todolist", metrics);
 
     Map<String, String> invalidFields = DatadogState.validateDatadogCustomMetrics(customMetricMap);
-    assertEquals(0, invalidFields.size());
+    assertThat(invalidFields).isEmpty();
   }
 }

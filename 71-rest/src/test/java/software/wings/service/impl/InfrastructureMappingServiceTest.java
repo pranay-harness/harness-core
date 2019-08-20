@@ -995,10 +995,10 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     assertEquals(keyValuePairs.get("vpcId"), StringUtils.EMPTY);
 
     assertNotNull(keyValuePairs.get("subnetIds"));
-    assertEquals(0, ((List) keyValuePairs.get("subnetIds")).size());
+    assertThat((List) keyValuePairs.get("subnetIds")).isEmpty();
 
     assertNotNull(keyValuePairs.get("securityGroupIds"));
-    assertEquals(0, ((List) keyValuePairs.get("securityGroupIds")).size());
+    assertThat((List) keyValuePairs.get("securityGroupIds")).isEmpty();
   }
 
   @Test

@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.service.LearningEngineAnalysisServiceImpl.BACKOFF_LIMIT;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -317,7 +318,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     Set<LogDataRecord> logData = analysisService.getLogData(
         logRequest, false, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2, accountId);
-    assertEquals(0, logData.size());
+    assertThat(logData).isEmpty();
   }
 
   @Test
@@ -1026,7 +1027,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertEquals(31, records.getControl_clusters().size());
     assertEquals(26, records.getTest_clusters().size());
     assertEquals(4, records.getUnknown_clusters().size());
-    assertEquals(0, records.getCluster_scores().getTest().size());
+    assertThat(records.getCluster_scores().getTest()).isEmpty();
     assertEquals(4, records.getCluster_scores().getUnknown().size());
   }
 
@@ -1480,7 +1481,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     logsCVConfiguration.setUuid(logMLAnalysisRecord.getCvConfigId());
     wingsPersistence.save(logsCVConfiguration);
 
-    assertEquals(0, wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList().size());
+    assertThat(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList()).isEmpty();
     analysisService.save24X7LogAnalysisRecords(logMLAnalysisRecord.getAppId(), logMLAnalysisRecord.getCvConfigId(),
         logMLAnalysisRecord.getLogCollectionMinute(), null, logMLAnalysisRecord, Optional.empty(), Optional.empty());
 

@@ -2,6 +2,7 @@ package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
 import static java.util.Collections.emptyList;
 import static java.util.Optional.of;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -617,7 +618,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     assertEquals(1, ecsContainerTask.getContainerDefinitions().get(0).getCpu().intValue());
     assertEquals(256, ecsContainerTask.getContainerDefinitions().get(0).getMemory().intValue());
     assertNotNull(ecsContainerTask.getContainerDefinitions().get(0).getPortMappings());
-    assertEquals(0, ecsContainerTask.getContainerDefinitions().get(0).getPortMappings().size());
+    assertThat(ecsContainerTask.getContainerDefinitions().get(0).getPortMappings()).isEmpty();
     assertNull(ecsContainerTask.getContainerDefinitions().get(0).getLogConfiguration());
   }
 

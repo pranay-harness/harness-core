@@ -6,6 +6,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rest.RestResponse.Builder.aRestResponse;
 import static io.harness.rule.OwnerRule.PARNIAN;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -550,7 +551,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
     assertEquals(1, collection.find().size());
 
     continuousVerificationService.cleanupStuckLocks();
-    assertEquals(0, collection.find().size());
+    assertThat(collection.find().size()).isEqualTo(0);
 
     // insert and see its not deleted
     lockObject.put(ID_KEY, new ObjectId());

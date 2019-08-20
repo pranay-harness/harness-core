@@ -2853,7 +2853,7 @@ public class KmsTest extends WingsBaseTest {
         (List<SecretUsageLog>) secretManagementResource
             .getUsageLogs(aPageRequest().build(), accountId, savedAttributeId, SettingVariableTypes.SERVICE_VARIABLE)
             .getResource();
-    assertEquals(0, usageLogs.size());
+    assertThat(usageLogs).isEmpty();
 
     ServiceVariable savedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
     secretManager.getEncryptionDetails(savedAttribute, appId, workflowExecutionId);
@@ -2883,7 +2883,7 @@ public class KmsTest extends WingsBaseTest {
     usageLogs = (List<SecretUsageLog>) secretManagementResource
                     .getUsageLogs(aPageRequest().build(), accountId, appDAttributeId, SettingVariableTypes.APP_DYNAMICS)
                     .getResource();
-    assertEquals(0, usageLogs.size());
+    assertThat(usageLogs).isEmpty();
     int numOfAccess = 13;
     for (int i = 0; i < numOfAccess; i++) {
       secretManager.getEncryptionDetails((EncryptableSetting) appDAttribute.getValue(), appId, workflowExecutionId);

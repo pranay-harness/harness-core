@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -223,7 +224,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
       expectedDirPaths.remove(envChildNode.getDirectoryPath().getPath());
     }
 
-    assertEquals(0, expectedDirPaths.size());
+    assertThat(expectedDirPaths).isEmpty();
   }
 
   private void performServiceNodeValidation(FolderNode serviceFolderNode) {
@@ -248,7 +249,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
       expectedDirPaths.remove(serviceChildNode.getDirectoryPath().getPath());
     }
 
-    assertEquals(0, expectedDirPaths.size());
+    assertThat(expectedDirPaths).isEmpty();
   }
 
   private void performMocking() {
