@@ -90,7 +90,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   private final String previousWorkflowExecutionId = UUID.randomUUID().toString();
   private final String infraMappingId = generateUuid();
 
-  private static final String PHASE_PARAM = "PHASE_PARAM";
+  public static final String PHASE_PARAM = "PHASE_PARAM";
   @Before
   public void setup() {
     initMocks(this);

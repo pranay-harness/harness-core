@@ -1,17 +1,32 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.ExecutionStatus.ERROR;
+import static io.harness.beans.ExecutionStatus.RUNNING;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
+import io.harness.context.ContextElementType;
+import io.harness.exception.WingsException;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,21 +34,37 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import software.wings.api.DeploymentType;
+import software.wings.beans.AccountType;
+import software.wings.beans.Environment;
+import software.wings.beans.NewRelicConfig;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.TemplateExpression;
+import software.wings.beans.WorkflowExecution;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
+import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
+import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.newrelic.NewRelicService;
+import software.wings.service.intfc.verification.CVActivityLogService.Logger;
+import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
 import software.wings.sm.states.NewRelicState.Metric;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 /**
  * author: Praveen
@@ -46,7 +77,10 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   private List<Metric> expectedMetrics;
 
   @Mock private MetricDataAnalysisService metricAnalysisService;
+  @Mock private InfrastructureMappingService infraMappingService;
   @Inject @InjectMocks private NewRelicService newRelicService;
+  private String infraMappingId;
+  private NewRelicState newRelicState;
 
   @Before
   public void setup() throws Exception {
@@ -76,6 +110,44 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
                            .build();
 
     expectedMetrics = Arrays.asList(requestsPerMinuteMetric, averageResponseTimeMetric, errorMetric, apdexScoreMetric);
+    infraMappingId = generateUuid();
+    when(executionContext.getAccountId()).thenReturn(accountId);
+    when(executionContext.getContextElement(ContextElementType.PARAM, AbstractAnalysisStateTest.PHASE_PARAM))
+        .thenReturn(phaseElement);
+    when(phaseElement.getInfraMappingId()).thenReturn(infraMappingId);
+    when(executionContext.getAppId()).thenReturn(appId);
+    when(infraMappingService.get(anyString(), anyString()))
+        .thenReturn(anAwsInfrastructureMapping().withDeploymentType(DeploymentType.KUBERNETES.name()).build());
+
+    newRelicState = new NewRelicState("NewRelicState");
+    newRelicState.setApplicationId("30444");
+    newRelicState.setTimeDuration("6000");
+
+    AccountService accountService = mock(AccountService.class);
+    when(accountService.getAccountType(anyString())).thenReturn(Optional.of(AccountType.PAID));
+
+    FieldUtils.writeField(newRelicState, "appService", appService, true);
+    FieldUtils.writeField(newRelicState, "configuration", configuration, true);
+    FieldUtils.writeField(newRelicState, "settingsService", settingsService, true);
+    FieldUtils.writeField(newRelicState, "waitNotifyEngine", waitNotifyEngine, true);
+    FieldUtils.writeField(newRelicState, "delegateService", delegateService, true);
+    FieldUtils.writeField(newRelicState, "wingsPersistence", wingsPersistence, true);
+    FieldUtils.writeField(newRelicState, "secretManager", secretManager, true);
+    FieldUtils.writeField(newRelicState, "metricAnalysisService", metricAnalysisService, true);
+    FieldUtils.writeField(newRelicState, "templateExpressionProcessor", templateExpressionProcessor, true);
+    FieldUtils.writeField(newRelicState, "workflowExecutionService", workflowExecutionService, true);
+    FieldUtils.writeField(newRelicState, "continuousVerificationService", continuousVerificationService, true);
+    FieldUtils.writeField(newRelicState, "workflowExecutionBaselineService", workflowExecutionBaselineService, true);
+    FieldUtils.writeField(newRelicState, "newRelicService", newRelicService, true);
+    FieldUtils.writeField(newRelicState, "featureFlagService", featureFlagService, true);
+    FieldUtils.writeField(newRelicState, "infraMappingService", infraMappingService, true);
+    FieldUtils.writeField(newRelicState, "versionInfoManager", versionInfoManager, true);
+    //    FieldUtils.writeField(newRelicState, "serviceResourceService", serviceResourceService, true);
+    FieldUtils.writeField(newRelicState, "appService", appService, true);
+    FieldUtils.writeField(newRelicState, "accountService", accountService, true);
+    FieldUtils.writeField(newRelicState, "cvActivityLogService", cvActivityLogService, true);
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(mock(Logger.class));
+
     setupCommonMocks();
   }
 
@@ -222,5 +294,92 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
 
     String dummy = NewRelicState.getMetricTypeForMetric("incorrectName");
     assertNull(dummy);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldTestTriggered() throws IOException, IllegalAccessException {
+    NewRelicConfig newRelicConfig = NewRelicConfig.builder()
+                                        .accountId(accountId)
+                                        .newRelicUrl("newrelic-url")
+                                        .apiKey(generateUuid().toCharArray())
+                                        .build();
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId(accountId)
+                                            .withName("relic-config")
+                                            .withValue(newRelicConfig)
+                                            .build();
+    wingsPersistence.save(settingAttribute);
+    newRelicState.setAnalysisServerConfigId(settingAttribute.getUuid());
+    wingsPersistence.save(WorkflowExecution.builder()
+                              .appId(appId)
+                              .uuid(workflowExecutionId)
+                              .triggeredBy(EmbeddedUser.builder().name("Deployment Trigger workflow").build())
+                              .build());
+
+    final NewRelicService mockNewRelicService = mock(NewRelicService.class);
+    FieldUtils.writeField(newRelicState, "newRelicService", mockNewRelicService, true);
+    doThrow(new WingsException("Can not find application by id"))
+        .when(mockNewRelicService)
+        .resolveApplicationId(anyString(), anyString());
+
+    doThrow(new WingsException("Can not find application by name"))
+        .when(mockNewRelicService)
+        .resolveApplicationName(anyString(), anyString());
+
+    NewRelicState spyNewRelicState = spy(newRelicState);
+    doReturn(false).when(spyNewRelicState).isEligibleForPerMinuteTask(accountId);
+    doReturn(false).when(spyNewRelicState).isDemoPath(accountId);
+
+    doReturn(asList(TemplateExpression.builder()
+                        .fieldName("analysisServerConfigId")
+                        .expression("${NewRelic_Server}")
+                        .metadata(ImmutableMap.of("entityType", "NEWRELIC_CONFIGID"))
+                        .build(),
+                 TemplateExpression.builder()
+                     .fieldName("applicationId")
+                     .expression("${NewRelic_App}")
+                     .metadata(ImmutableMap.of("entityType", "NEWRELIC_APPID"))
+                     .build()))
+        .when(spyNewRelicState)
+        .getTemplateExpressions();
+
+    doReturn(Collections.singletonMap("test", DEFAULT_GROUP_NAME))
+        .when(spyNewRelicState)
+        .getCanaryNewHostNames(executionContext);
+    doReturn(Collections.singletonMap("control", DEFAULT_GROUP_NAME))
+        .when(spyNewRelicState)
+        .getLastExecutionNodes(executionContext);
+    doReturn(workflowId).when(spyNewRelicState).getWorkflowId(executionContext);
+    doReturn(serviceId).when(spyNewRelicState).getPhaseServiceId(executionContext);
+
+    when(metricAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(
+             StateType.NEW_RELIC, appId, workflowId, serviceId, infraMappingId, environment.getUuid()))
+        .thenReturn(workflowExecutionId);
+    when(executionContext.renderExpression("${workflow.variables.NewRelic_Server}"))
+        .thenReturn(settingAttribute.getUuid());
+    when(executionContext.renderExpression("${workflow.variables.NewRelic_App}")).thenReturn("30444");
+    doReturn(Environment.Builder.anEnvironment().uuid(UUID.randomUUID().toString()).build())
+        .when(workflowStandardParams)
+        .getEnv();
+    when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
+
+    ExecutionResponse executionResponse = spyNewRelicState.execute(executionContext);
+    assertEquals(ERROR, executionResponse.getExecutionStatus());
+    assertEquals("Can not find application by name", executionResponse.getErrorMessage());
+
+    doReturn(NewRelicApplication.builder().build())
+        .when(mockNewRelicService)
+        .resolveApplicationId(anyString(), anyString());
+    executionResponse = spyNewRelicState.execute(executionContext);
+    assertEquals(RUNNING, executionResponse.getExecutionStatus());
+
+    doThrow(new RuntimeException("Can not find application by id"))
+        .when(mockNewRelicService)
+        .resolveApplicationId(anyString(), anyString());
+
+    executionResponse = spyNewRelicState.execute(executionContext);
+    assertEquals(ERROR, executionResponse.getExecutionStatus());
+    assertEquals("RuntimeException: Can not find application by id", executionResponse.getErrorMessage());
   }
 }

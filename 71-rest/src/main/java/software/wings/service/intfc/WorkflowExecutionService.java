@@ -28,6 +28,7 @@ import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.trigger.Trigger;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.WorkflowExecutionUpdate;
+import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
@@ -178,4 +179,6 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   List<WorkflowExecution> getLastSuccessfulWorkflowExecutions(String appId, String workflowId, String serviceId);
 
   boolean appendInfraMappingId(String appId, String workflowExecutionId, String infraMappingId);
+
+  boolean isTriggerBasedDeployment(ExecutionContext context);
 }

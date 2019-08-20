@@ -174,7 +174,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
 
     SettingAttribute settingAttribute = null;
     if (!isEmpty(getTemplateExpressions())) {
-      boolean isTriggerBased = isTriggerBasedDeployment(context);
+      boolean isTriggerBased = workflowExecutionService.isTriggerBasedDeployment(context);
       TemplateExpression configIdExpression =
           templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "analysisServerConfigId");
       if (configIdExpression != null) {

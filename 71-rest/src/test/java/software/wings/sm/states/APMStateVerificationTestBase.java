@@ -28,6 +28,7 @@ import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
+import software.wings.common.TemplateExpressionProcessor;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.PermissionAttribute.Action;
@@ -79,6 +80,7 @@ public class APMStateVerificationTestBase extends WingsBaseTest {
   @Inject protected ContinuousVerificationService continuousVerificationService;
   @Inject protected WorkflowExecutionBaselineService workflowExecutionBaselineService;
   @Inject protected FeatureFlagService featureFlagService;
+  @Inject protected TemplateExpressionProcessor templateExpressionProcessor;
 
   @Inject protected WorkflowExecutionService workflowExecutionService;
 

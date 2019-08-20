@@ -26,13 +26,15 @@ import software.wings.beans.TemplateExpression;
 import software.wings.common.Constants;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
+import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicMarkerExecutionData;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
@@ -45,14 +47,15 @@ import java.util.UUID;
 
 @Attributes
 public class NewRelicDeploymentMarkerState extends State {
-  @Transient @Inject private DelegateService delegateService;
-  @Transient @Inject protected SettingsService settingsService;
+  @Inject private DelegateService delegateService;
+  @Inject private SettingsService settingsService;
 
   @Inject @Transient protected SecretManager secretManager;
 
-  @Transient @Inject protected WaitNotifyEngine waitNotifyEngine;
-
-  @Transient @Inject protected TemplateExpressionProcessor templateExpressionProcessor;
+  @Inject private WaitNotifyEngine waitNotifyEngine;
+  @Inject private TemplateExpressionProcessor templateExpressionProcessor;
+  @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private NewRelicService newRelicService;
 
   @Attributes(required = true, title = "New Relic Server") private String analysisServerConfigId;
 
@@ -91,6 +94,18 @@ public class NewRelicDeploymentMarkerState extends State {
           templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "applicationId");
       if (appIdExpression != null) {
         finalNewRelicApplicationId = templateExpressionProcessor.resolveTemplateExpression(context, appIdExpression);
+
+        final boolean triggerBasedDeployment = workflowExecutionService.isTriggerBasedDeployment(context);
+        if (triggerBasedDeployment) {
+          try {
+            newRelicService.resolveApplicationId(finalServerConfigId, finalNewRelicApplicationId);
+          } catch (WingsException e) {
+            // see if we can resolve the marker by name
+            final NewRelicApplication newRelicApplication =
+                newRelicService.resolveApplicationName(finalServerConfigId, finalNewRelicApplicationId);
+            finalNewRelicApplicationId = String.valueOf(newRelicApplication.getId());
+          }
+        }
       }
     }
 
@@ -128,9 +143,9 @@ public class NewRelicDeploymentMarkerState extends State {
     String delegateTaskId =
         delegateService.queueTask(DelegateTask.builder()
                                       .async(true)
-                                      .accountId(((ExecutionContextImpl) context).getApp().getAccountId())
+                                      .accountId(context.getApp().getAccountId())
                                       .waitId(correlationId)
-                                      .appId(((ExecutionContextImpl) context).getApp().getAppId())
+                                      .appId(context.getApp().getAppId())
                                       .data(TaskData.builder()
                                                 .taskType(TaskType.NEWRELIC_POST_DEPLOYMENT_MARKER.name())
                                                 .parameters(new Object[] {dataCollectionInfo})

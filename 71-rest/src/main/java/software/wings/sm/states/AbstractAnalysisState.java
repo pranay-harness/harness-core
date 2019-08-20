@@ -281,15 +281,6 @@ public abstract class AbstractAnalysisState extends State {
     return wingsPersistence.save(context);
   }
 
-  protected boolean isTriggerBasedDeployment(ExecutionContext context) {
-    WorkflowExecution workflowExecution =
-        workflowExecutionService.getWorkflowExecution(context.getAppId(), context.getWorkflowExecutionId());
-    if (workflowExecution.getTriggeredBy() != null
-        && workflowExecution.getTriggeredBy().getName().contains("Deployment Trigger")) {
-      return true;
-    }
-    return false;
-  }
   protected Map<String, String> getLastExecutionNodes(ExecutionContext context) {
     String serviceId = getPhaseServiceId(context);
     Service service = serviceResourceService.get(context.getAppId(), serviceId, false);
