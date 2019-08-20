@@ -9,6 +9,8 @@ import static org.junit.Assert.assertTrue;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
+import static software.wings.common.VerificationConstants.PREDECTIVE_HISTORY_MINUTES;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -38,6 +40,7 @@ import software.wings.service.impl.analysis.LogMLAnalysisStatus;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLClusterSummary;
 import software.wings.service.impl.analysis.LogMLFeedbackSummary;
+import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster.MessageFrequency;
 import software.wings.service.intfc.verification.CV24x7DashboardService;
@@ -310,5 +313,128 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
     LogMLAnalysisSummary summary = cv24x7DashboardService.getAnalysisSummary(cvConfigId, startTime, endTime, appId);
 
     assertEquals(20, summary.getUnknownClusters().size());
+  }
+
+  private void createSumoConfigWithBaseline(String cvConfigId, long currentTime, long baselineEndDelta) {
+    LogsCVConfiguration sumoCOnfig = new LogsCVConfiguration();
+    sumoCOnfig.setAppId(appId);
+    sumoCOnfig.setQuery("exception");
+    sumoCOnfig.setStateType(StateType.SUMO);
+    sumoCOnfig.setUuid(cvConfigId);
+    sumoCOnfig.setBaselineStartMinute(currentTime - baselineEndDelta * 2);
+    sumoCOnfig.setBaselineEndMinute(currentTime - baselineEndDelta);
+    wingsPersistence.save(sumoCOnfig);
+  }
+  @Test
+  @Category(UnitTests.class)
+  public void testGetCurrentWindowLogsHappyCase() {
+    long currentTime = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+
+    String cvConfigId = generateUuid();
+    createSumoConfigWithBaseline(cvConfigId, currentTime, 30);
+
+    LogMLAnalysisRecord previousAnalysis = LogMLAnalysisRecord.builder()
+                                               .cvConfigId(cvConfigId)
+                                               .logCollectionMinute((int) currentTime - 15)
+                                               .query("exception")
+                                               .build();
+
+    wingsPersistence.save(previousAnalysis);
+
+    long currentEndTime = cv24x7DashboardService.getCurrentAnalysisWindow(cvConfigId);
+    assertEquals(TimeUnit.MINUTES.toMillis(currentTime), currentEndTime);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetCurrentWindowLogsNoPreviousAnalysis() {
+    long currentTime = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+    String cvConfigId = generateUuid();
+    createSumoConfigWithBaseline(cvConfigId, currentTime, 30);
+    long currentEndTime = cv24x7DashboardService.getCurrentAnalysisWindow(cvConfigId);
+    LogsCVConfiguration config = (LogsCVConfiguration) cvConfigurationService.getConfiguration(cvConfigId);
+    assertEquals(TimeUnit.MINUTES.toMillis(config.getBaselineStartMinute() + 15), currentEndTime);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetCurrentWindowLogsMoreThan2HoursSinceLast() {
+    long currentTime = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+    String cvConfigId = generateUuid();
+    createSumoConfigWithBaseline(cvConfigId, currentTime, 150);
+
+    LogMLAnalysisRecord previousAnalysis = LogMLAnalysisRecord.builder()
+                                               .cvConfigId(cvConfigId)
+                                               .logCollectionMinute((int) currentTime - 135)
+                                               .query("exception")
+                                               .build();
+    wingsPersistence.save(previousAnalysis);
+    long currentEndTime = cv24x7DashboardService.getCurrentAnalysisWindow(cvConfigId);
+    long expectedCurrentWindowEnd = currentTime - PREDECTIVE_HISTORY_MINUTES + CRON_POLL_INTERVAL_IN_MINUTES;
+    if (Math.floorMod(expectedCurrentWindowEnd - 1, CRON_POLL_INTERVAL_IN_MINUTES) != 0) {
+      expectedCurrentWindowEnd -= Math.floorMod(expectedCurrentWindowEnd - 1, CRON_POLL_INTERVAL_IN_MINUTES);
+    }
+
+    assertEquals(TimeUnit.MINUTES.toMillis(expectedCurrentWindowEnd), currentEndTime);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetCurrentWindowLogsWithinBaselineWindow() {
+    long currentTime = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+    String cvConfigId = generateUuid();
+    createSumoConfigWithBaseline(cvConfigId, currentTime, 150);
+
+    LogMLAnalysisRecord previousAnalysis = LogMLAnalysisRecord.builder()
+                                               .cvConfigId(cvConfigId)
+                                               .logCollectionMinute((int) currentTime - 200)
+                                               .query("exception")
+                                               .build();
+    wingsPersistence.save(previousAnalysis);
+    long currentEndTime = cv24x7DashboardService.getCurrentAnalysisWindow(cvConfigId);
+    long expectedCurrentWindowEnd = currentTime - 200 + CRON_POLL_INTERVAL_IN_MINUTES;
+    assertEquals(TimeUnit.MINUTES.toMillis(expectedCurrentWindowEnd), currentEndTime);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetCurrentWindowTimeSeriesHappyCase() {
+    long currentTime = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+    String cvConfigId = createNRConfig();
+
+    TimeSeriesMLAnalysisRecord record = TimeSeriesMLAnalysisRecord.builder().build();
+    record.setCvConfigId(cvConfigId);
+    record.setAnalysisMinute((int) currentTime - CRON_POLL_INTERVAL_IN_MINUTES * 2);
+    wingsPersistence.save(record);
+
+    long currentEndTime = cv24x7DashboardService.getCurrentAnalysisWindow(cvConfigId);
+
+    assertEquals(TimeUnit.MINUTES.toMillis(currentTime - CRON_POLL_INTERVAL_IN_MINUTES), currentEndTime);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetCurrentWindowTimeSeriesNoPreviousAnalysis() {
+    String cvConfigId = createNRConfig();
+    long currentTime = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+    long currentEndTime = cv24x7DashboardService.getCurrentAnalysisWindow(cvConfigId);
+    assertEquals(TimeUnit.MINUTES.toMillis(currentTime), currentEndTime);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetCurrentWindowTimeSeriesMoreThan2HoursSinceLastAnalysis() {
+    long currentTime = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+    String cvConfigId = createNRConfig();
+
+    TimeSeriesMLAnalysisRecord record = TimeSeriesMLAnalysisRecord.builder().build();
+    record.setCvConfigId(cvConfigId);
+    record.setAnalysisMinute((int) currentTime - PREDECTIVE_HISTORY_MINUTES * 2);
+    wingsPersistence.save(record);
+
+    long currentEndTime = cv24x7DashboardService.getCurrentAnalysisWindow(cvConfigId);
+
+    assertEquals(TimeUnit.MINUTES.toMillis(currentTime - PREDECTIVE_HISTORY_MINUTES + CRON_POLL_INTERVAL_IN_MINUTES),
+        currentEndTime);
   }
 }

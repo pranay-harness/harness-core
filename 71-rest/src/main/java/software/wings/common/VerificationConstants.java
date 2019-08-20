@@ -48,6 +48,7 @@ public class VerificationConstants {
   public static final String LOG_24x7_SUMMARY = "/log-24x7-summary";
   public static final String GET_LOG_FEEDBACKS = "/log-ml-feedbacks";
   public static final String LIST_METRIC_TAGS = "/metric-tags";
+  public static final String GET_CURRENT_ANALYSIS_WINDOW = "/current-analysis-window";
   public static final String STACKDRIVER_URL = "http://monitoring.googleapis.com";
   public static final String ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL = "/save-analysis-records";
   public static final String ANALYSIS_STATE_GET_ANALYSIS_SUMMARY_URL = "/get-analysis-summary";
@@ -107,6 +108,7 @@ public class VerificationConstants {
   public static final int DELAY_MINUTES = 2;
 
   public static final int CRON_POLL_INTERVAL_IN_MINUTES = 15;
+  public static final int PREDECTIVE_HISTORY_MINUTES = 120;
   public static final long CRON_POLL_INTERVAL = TimeUnit.MINUTES.toSeconds(CRON_POLL_INTERVAL_IN_MINUTES); // in seconds
   public static final int DEFAULT_DATA_COLLECTION_INTERVAL_IN_SECONDS = 60;
   public static final int DEFAULT_LE_AUTOSCALE_DATA_COLLECTION_INTERVAL_IN_SECONDS = 60;

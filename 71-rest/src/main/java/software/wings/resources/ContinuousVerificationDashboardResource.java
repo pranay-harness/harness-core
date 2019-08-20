@@ -206,4 +206,12 @@ public class ContinuousVerificationDashboardResource {
       @QueryParam("startTime") long startTime, @QueryParam("endTime") long endTime) {
     return new RestResponse<>(cv24x7DashboardService.getMetricTags(accountId, appId, cvConfigId, startTime, endTime));
   }
+
+  @GET
+  @Path(VerificationConstants.GET_CURRENT_ANALYSIS_WINDOW)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Long> getCurrenAnalysistWindow(@QueryParam("cvConfigId") String cvConfigId) {
+    return new RestResponse<>(cv24x7DashboardService.getCurrentAnalysisWindow(cvConfigId));
+  }
 }
