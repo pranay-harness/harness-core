@@ -1,9 +1,9 @@
 package migrations.all;
 
 import static io.harness.rule.OwnerRule.JATIN;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNull;
 
 import com.google.inject.Inject;
 
@@ -47,7 +47,7 @@ public class InitWorkflowCountersIntegrationTest extends BaseIntegrationTest {
 
     Action action = new Action(WingsIntegrationTestConstants.INTEGRATION_TEST_ACCOUNT_ID, ActionType.CREATE_WORKFLOW);
     Counter initialCount = counterService.get(action);
-    assertNull(initialCount);
+    assertThat(initialCount).isNull();
 
     initWorkflowCounters.migrate();
 

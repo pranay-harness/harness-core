@@ -3,7 +3,6 @@ package software.wings.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
@@ -158,7 +157,7 @@ public class InstanceServiceTest extends WingsBaseTest {
     instanceService.delete(Sets.newHashSet(instanceId));
 
     Instance instanceAfterDelete = instanceService.get(instanceId);
-    assertNull(instanceAfterDelete);
+    assertThat(instanceAfterDelete).isNull();
   }
 
   private void compare(Instance lhs, Instance rhs) {

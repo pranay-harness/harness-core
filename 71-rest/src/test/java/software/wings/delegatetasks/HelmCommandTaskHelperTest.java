@@ -1,8 +1,8 @@
 package software.wings.delegatetasks;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.google.inject.Inject;
@@ -48,8 +48,8 @@ public class HelmCommandTaskHelperTest extends WingsBaseTest {
     assertTrue(optional.isPresent());
     HelmDeployChartSpec helmDeployChartSpec = optional.get().getHelmDeployChartSpec();
     assertEquals("http://storage.googleapis.com/kubernetes-charts", helmDeployChartSpec.getUrl());
-    assertNull(helmDeployChartSpec.getName());
-    assertNull(helmDeployChartSpec.getVersion());
+    assertThat(helmDeployChartSpec.getName()).isNull();
+    assertThat(helmDeployChartSpec.getVersion()).isNull();
   }
 
   @Test

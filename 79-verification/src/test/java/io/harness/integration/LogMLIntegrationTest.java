@@ -9,7 +9,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -316,7 +315,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
     RestResponse<LogMLAnalysisSummary> restResponse =
         getRequestBuilderWithAuthHeader(getTarget).get(new GenericType<RestResponse<LogMLAnalysisSummary>>() {});
-    assertNull(restResponse.getResource());
+    assertThat(restResponse.getResource()).isNull();
 
     wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"),
         wingsPersistence.createUpdateOperations(FeatureFlag.class).addToSet("accountIds", accountId));
@@ -378,7 +377,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
     RestResponse<LogMLAnalysisSummary> restResponse =
         getRequestBuilderWithAuthHeader(getTarget).get(new GenericType<RestResponse<LogMLAnalysisSummary>>() {});
-    assertNull(restResponse.getResource());
+    assertThat(restResponse.getResource()).isNull();
 
     wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"),
         wingsPersistence.createUpdateOperations(FeatureFlag.class).addToSet("accountIds", accountId));

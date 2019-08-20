@@ -1,9 +1,9 @@
 package software.wings.yaml.handler;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -98,7 +98,7 @@ public class ApplicationYamlHandlerTest extends BaseYamlHandlerTest {
     yamlHandler.delete(changeContext);
 
     Application application = yamlHandler.get(ACCOUNT_ID, validYamlFilePath);
-    assertNull(application);
+    assertThat(application).isNull();
   }
 
   @Test

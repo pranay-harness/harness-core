@@ -11,7 +11,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -584,7 +583,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     LogMLAnalysisSummary analysisSummary =
         managerAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
-    assertNull(analysisSummary);
+    assertThat(analysisSummary).isNull();
   }
 
   @Test
@@ -665,15 +664,15 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
                                                   .filter(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId)
                                                   .get();
     assertNotNull(logMLAnalysisRecord);
-    assertNull(logMLAnalysisRecord.toString(), logMLAnalysisRecord.getUnknown_events());
-    assertNull(logMLAnalysisRecord.toString(), logMLAnalysisRecord.getTest_events());
-    assertNull(logMLAnalysisRecord.toString(), logMLAnalysisRecord.getControl_events());
-    assertNull(logMLAnalysisRecord.toString(), logMLAnalysisRecord.getControl_clusters());
-    assertNull(logMLAnalysisRecord.toString(), logMLAnalysisRecord.getUnknown_clusters());
-    assertNull(logMLAnalysisRecord.toString(), logMLAnalysisRecord.getTest_clusters());
-    assertNull(logMLAnalysisRecord.toString(), logMLAnalysisRecord.getIgnore_clusters());
+    assertThat(logMLAnalysisRecord.getUnknown_events()).isNull();
+    assertThat(logMLAnalysisRecord.getTest_events()).isNull();
+    assertThat(logMLAnalysisRecord.getControl_events()).isNull();
+    assertThat(logMLAnalysisRecord.getControl_clusters()).isNull();
+    assertThat(logMLAnalysisRecord.getUnknown_clusters()).isNull();
+    assertThat(logMLAnalysisRecord.getTest_clusters()).isNull();
+    assertThat(logMLAnalysisRecord.getIgnore_clusters()).isNull();
     assertTrue(isNotEmpty(logMLAnalysisRecord.getProtoSerializedAnalyisDetails()));
-    assertNull(logMLAnalysisRecord.getAnalysisDetailsCompressedJson());
+    assertThat(logMLAnalysisRecord.getAnalysisDetailsCompressedJson()).isNull();
 
     LogMLAnalysisRecord logAnalysisRecord = analysisService.getLogAnalysisRecords(
         LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId, record.getLogCollectionMinute(), false);
@@ -781,13 +780,13 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
                                                   .filter(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId)
                                                   .get();
     assertNotNull(logMLAnalysisRecord);
-    assertNull(logMLAnalysisRecord.getUnknown_events());
-    assertNull(logMLAnalysisRecord.getTest_events());
-    assertNull(logMLAnalysisRecord.getControl_events());
-    assertNull(logMLAnalysisRecord.getControl_clusters());
-    assertNull(logMLAnalysisRecord.getUnknown_clusters());
-    assertNull(logMLAnalysisRecord.getTest_clusters());
-    assertNull(logMLAnalysisRecord.getIgnore_clusters());
+    assertThat(logMLAnalysisRecord.getUnknown_events()).isNull();
+    assertThat(logMLAnalysisRecord.getTest_events()).isNull();
+    assertThat(logMLAnalysisRecord.getControl_events()).isNull();
+    assertThat(logMLAnalysisRecord.getControl_clusters()).isNull();
+    assertThat(logMLAnalysisRecord.getUnknown_clusters()).isNull();
+    assertThat(logMLAnalysisRecord.getTest_clusters()).isNull();
+    assertThat(logMLAnalysisRecord.getIgnore_clusters()).isNull();
 
     LogMLAnalysisSummary analysisSummary =
         managerAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
@@ -1276,16 +1275,16 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     compressedLogMLAnalysisRecord.compressLogAnalysisRecord();
     assertNotNull(compressedLogMLAnalysisRecord.getProtoSerializedAnalyisDetails());
-    assertNull(compressedLogMLAnalysisRecord.getUnknown_events());
-    assertNull(compressedLogMLAnalysisRecord.getTest_events());
-    assertNull(compressedLogMLAnalysisRecord.getControl_events());
-    assertNull(compressedLogMLAnalysisRecord.getControl_clusters());
-    assertNull(compressedLogMLAnalysisRecord.getTest_clusters());
-    assertNull(compressedLogMLAnalysisRecord.getUnknown_clusters());
-    assertNull(compressedLogMLAnalysisRecord.getIgnore_clusters());
+    assertThat(compressedLogMLAnalysisRecord.getUnknown_events()).isNull();
+    assertThat(compressedLogMLAnalysisRecord.getTest_events()).isNull();
+    assertThat(compressedLogMLAnalysisRecord.getControl_events()).isNull();
+    assertThat(compressedLogMLAnalysisRecord.getControl_clusters()).isNull();
+    assertThat(compressedLogMLAnalysisRecord.getTest_clusters()).isNull();
+    assertThat(compressedLogMLAnalysisRecord.getUnknown_clusters()).isNull();
+    assertThat(compressedLogMLAnalysisRecord.getIgnore_clusters()).isNull();
 
     compressedLogMLAnalysisRecord.decompressLogAnalysisRecord();
-    assertNull(compressedLogMLAnalysisRecord.getProtoSerializedAnalyisDetails());
+    assertThat(compressedLogMLAnalysisRecord.getProtoSerializedAnalyisDetails()).isNull();
     assertNotNull(compressedLogMLAnalysisRecord.getUnknown_events());
     assertNotNull(compressedLogMLAnalysisRecord.getTest_events());
     assertNotNull(compressedLogMLAnalysisRecord.getControl_events());
@@ -1324,8 +1323,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertFalse(logMLAnalysisRecord.getUnknown_clusters().isEmpty());
     assertFalse(logMLAnalysisRecord.getTest_clusters().isEmpty());
     assertFalse(logMLAnalysisRecord.getIgnore_clusters().isEmpty());
-    assertNull(logMLAnalysisRecord.getAnalysisDetailsCompressedJson());
-    assertNull(logMLAnalysisRecord.getProtoSerializedAnalyisDetails());
+    assertThat(logMLAnalysisRecord.getAnalysisDetailsCompressedJson()).isNull();
+    assertThat(logMLAnalysisRecord.getProtoSerializedAnalyisDetails()).isNull();
 
     // save using json compression
     LogMLAnalysisRecord logAnalysisDetails = LogMLAnalysisRecord.builder()
@@ -1350,27 +1349,27 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     LogMLAnalysisRecord savedMlAnalysisRecord =
         wingsPersistence.get(LogMLAnalysisRecord.class, logMLAnalysisRecord.getUuid());
-    assertNull(savedMlAnalysisRecord.getUnknown_events());
-    assertNull(savedMlAnalysisRecord.getTest_events());
-    assertNull(savedMlAnalysisRecord.getControl_events());
-    assertNull(savedMlAnalysisRecord.getControl_clusters());
-    assertNull(savedMlAnalysisRecord.getUnknown_clusters());
-    assertNull(savedMlAnalysisRecord.getTest_clusters());
-    assertNull(savedMlAnalysisRecord.getIgnore_clusters());
-    assertNull(savedMlAnalysisRecord.getProtoSerializedAnalyisDetails());
+    assertThat(savedMlAnalysisRecord.getUnknown_events()).isNull();
+    assertThat(savedMlAnalysisRecord.getTest_events()).isNull();
+    assertThat(savedMlAnalysisRecord.getControl_events()).isNull();
+    assertThat(savedMlAnalysisRecord.getControl_clusters()).isNull();
+    assertThat(savedMlAnalysisRecord.getUnknown_clusters()).isNull();
+    assertThat(savedMlAnalysisRecord.getTest_clusters()).isNull();
+    assertThat(savedMlAnalysisRecord.getIgnore_clusters()).isNull();
+    assertThat(savedMlAnalysisRecord.getProtoSerializedAnalyisDetails()).isNull();
     assertNotNull(savedMlAnalysisRecord.getAnalysisDetailsCompressedJson());
 
     analysisService.getLogAnalysisRecords(LogMLAnalysisRecordKeys.cvConfigId, logMLAnalysisRecord.getCvConfigId(),
         logMLAnalysisRecord.getLogCollectionMinute(), true);
     savedMlAnalysisRecord = wingsPersistence.get(LogMLAnalysisRecord.class, logMLAnalysisRecord.getUuid());
-    assertNull(savedMlAnalysisRecord.getUnknown_events());
-    assertNull(savedMlAnalysisRecord.getTest_events());
-    assertNull(savedMlAnalysisRecord.getControl_events());
-    assertNull(savedMlAnalysisRecord.getControl_clusters());
-    assertNull(savedMlAnalysisRecord.getUnknown_clusters());
-    assertNull(savedMlAnalysisRecord.getTest_clusters());
-    assertNull(savedMlAnalysisRecord.getIgnore_clusters());
-    assertNull(savedMlAnalysisRecord.getAnalysisDetailsCompressedJson());
+    assertThat(savedMlAnalysisRecord.getUnknown_events()).isNull();
+    assertThat(savedMlAnalysisRecord.getTest_events()).isNull();
+    assertThat(savedMlAnalysisRecord.getControl_events()).isNull();
+    assertThat(savedMlAnalysisRecord.getControl_clusters()).isNull();
+    assertThat(savedMlAnalysisRecord.getUnknown_clusters()).isNull();
+    assertThat(savedMlAnalysisRecord.getTest_clusters()).isNull();
+    assertThat(savedMlAnalysisRecord.getIgnore_clusters()).isNull();
+    assertThat(savedMlAnalysisRecord.getAnalysisDetailsCompressedJson()).isNull();
     assertNotNull(savedMlAnalysisRecord.getProtoSerializedAnalyisDetails());
 
     LogMLAnalysisRecord logMLAnalysisRecordToCompare;
@@ -1386,19 +1385,19 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertNotNull(logMLAnalysisRecordToCompare.getTest_clusters());
     assertNotNull(logMLAnalysisRecordToCompare.getUnknown_clusters());
     assertNotNull(logMLAnalysisRecordToCompare.getIgnore_clusters());
-    assertNull(logMLAnalysisRecordToCompare.getAnalysisDetailsCompressedJson());
-    assertNull(logMLAnalysisRecordToCompare.getProtoSerializedAnalyisDetails());
+    assertThat(logMLAnalysisRecordToCompare.getAnalysisDetailsCompressedJson()).isNull();
+    assertThat(logMLAnalysisRecordToCompare.getProtoSerializedAnalyisDetails()).isNull();
 
     logMLAnalysisRecord = analysisService.getLogAnalysisRecords(LogMLAnalysisRecordKeys.cvConfigId,
         logMLAnalysisRecord.getCvConfigId(), logMLAnalysisRecord.getLogCollectionMinute(), true);
-    assertNull(logMLAnalysisRecord.getUnknown_events());
-    assertNull(logMLAnalysisRecord.getTest_events());
-    assertNull(logMLAnalysisRecord.getControl_events());
-    assertNull(logMLAnalysisRecord.getControl_clusters());
-    assertNull(logMLAnalysisRecord.getUnknown_clusters());
-    assertNull(logMLAnalysisRecord.getTest_clusters());
-    assertNull(logMLAnalysisRecord.getIgnore_clusters());
-    assertNull(logMLAnalysisRecord.getAnalysisDetailsCompressedJson());
+    assertThat(logMLAnalysisRecord.getUnknown_events()).isNull();
+    assertThat(logMLAnalysisRecord.getTest_events()).isNull();
+    assertThat(logMLAnalysisRecord.getControl_events()).isNull();
+    assertThat(logMLAnalysisRecord.getControl_clusters()).isNull();
+    assertThat(logMLAnalysisRecord.getUnknown_clusters()).isNull();
+    assertThat(logMLAnalysisRecord.getTest_clusters()).isNull();
+    assertThat(logMLAnalysisRecord.getIgnore_clusters()).isNull();
+    assertThat(logMLAnalysisRecord.getAnalysisDetailsCompressedJson()).isNull();
     assertNotNull(logMLAnalysisRecord.getProtoSerializedAnalyisDetails());
 
     logMLAnalysisRecord.decompressLogAnalysisRecord();
@@ -1420,8 +1419,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertNotNull(logMLAnalysisRecord.getUnknown_clusters());
     assertNotNull(logMLAnalysisRecord.getTest_clusters());
     assertNotNull(logMLAnalysisRecord.getIgnore_clusters());
-    assertNull(logMLAnalysisRecord.getAnalysisDetailsCompressedJson());
-    assertNull(logMLAnalysisRecord.getProtoSerializedAnalyisDetails());
+    assertThat(logMLAnalysisRecord.getAnalysisDetailsCompressedJson()).isNull();
+    assertThat(logMLAnalysisRecord.getProtoSerializedAnalyisDetails()).isNull();
 
     assertEquals(logMLAnalysisRecord.getAnalysisStatus(), logMLAnalysisRecordToCompare.getAnalysisStatus());
     assertEquals(logMLAnalysisRecord.getUnknown_events(), logMLAnalysisRecordToCompare.getUnknown_events());
@@ -1601,7 +1600,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
                                             .asList();
 
     assertFalse(created);
-    assertNull(feedbackRecord);
+    assertThat(feedbackRecord).isNull();
     assertTrue(isEmpty(records));
   }
 

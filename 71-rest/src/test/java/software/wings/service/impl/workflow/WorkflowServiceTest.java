@@ -14,7 +14,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.util.Lists.newArrayList;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -3037,7 +3036,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     PhaseStep phaseStep = createPhaseStep(generateUuid());
     Workflow workflow = constructWorkflowWithParam(phaseStep);
     workflowService.createWorkflow(workflow);
-    assertNull(workflowService.settingsServiceDeleting(settingAttribute));
+    assertThat(workflowService.settingsServiceDeleting(settingAttribute)).isNull();
 
     // Create a workflow with a specific Jenkins Id
     phaseStep = createPhaseStep(uuid);

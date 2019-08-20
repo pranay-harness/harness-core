@@ -9,7 +9,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -286,7 +285,7 @@ public class SecretTextTest extends WingsBaseTest {
 
     String savedAttributeId = wingsPersistence.save(serviceVariable);
     ServiceVariable savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
-    assertNull(savedVariable.getValue());
+    assertThat(savedVariable.getValue()).isNull();
     assertEquals(secretId, savedVariable.getEncryptedValue());
 
     encryptionService.decrypt(
@@ -315,7 +314,7 @@ public class SecretTextTest extends WingsBaseTest {
         accountId, secretId, SecretText.builder().name(newSecretName).value(secretValue).build());
 
     savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
-    assertNull(savedVariable.getValue());
+    assertThat(savedVariable.getValue()).isNull();
     assertEquals(secretId, savedVariable.getEncryptedValue());
 
     encryptionService.decrypt(
@@ -341,7 +340,7 @@ public class SecretTextTest extends WingsBaseTest {
     assertEquals("Created", changeLogs.get(3).getDescription());
 
     savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
-    assertNull(savedVariable.getValue());
+    assertThat(savedVariable.getValue()).isNull();
     assertEquals(secretId, savedVariable.getEncryptedValue());
 
     encryptionService.decrypt(
@@ -414,7 +413,7 @@ public class SecretTextTest extends WingsBaseTest {
     assertTrue(encryptedData.getParentIds().contains(savedAttributeId));
 
     ServiceVariable savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
-    assertNull(savedVariable.getValue());
+    assertThat(savedVariable.getValue()).isNull();
     assertEquals(secretId, savedVariable.getEncryptedValue());
 
     encryptionService.decrypt(
@@ -471,7 +470,7 @@ public class SecretTextTest extends WingsBaseTest {
     assertTrue(encryptedData.getParentIds().contains(savedAttributeId));
 
     savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
-    assertNull(savedVariable.getValue());
+    assertThat(savedVariable.getValue()).isNull();
     assertEquals(secretId, savedVariable.getEncryptedValue());
 
     encryptionService.decrypt(
@@ -970,7 +969,7 @@ public class SecretTextTest extends WingsBaseTest {
         assertEquals(kmsId, secret.getKmsId());
         assertEquals(encryptionType, secret.getEncryptionType());
         assertEquals(SECRET_TEXT, secret.getType());
-        assertNull(secret.getEncryptedBy());
+        assertThat(secret.getEncryptedBy()).isNull();
         assertEquals(0, secret.getSetupUsage());
         assertEquals(0, secret.getRunTimeUsage());
         assertEquals(0, secret.getChangeLog());
@@ -1458,7 +1457,7 @@ public class SecretTextTest extends WingsBaseTest {
     String savedAttributeId = wingsPersistence.save(serviceVariable);
 
     ServiceVariable savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
-    assertNull(savedVariable.getValue());
+    assertThat(savedVariable.getValue()).isNull();
     assertEquals(secretId, savedVariable.getEncryptedValue());
 
     encryptionService.decrypt(
@@ -1493,7 +1492,7 @@ public class SecretTextTest extends WingsBaseTest {
     assertEquals(SECRET_TEXT, encryptedData.getType());
 
     savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
-    assertNull(savedVariable.getValue());
+    assertThat(savedVariable.getValue()).isNull();
     assertEquals(secretId, savedVariable.getEncryptedValue());
 
     encryptionService.decrypt(
@@ -1610,11 +1609,11 @@ public class SecretTextTest extends WingsBaseTest {
           if (j != numOfServiceVariables - 1) {
             assertEquals(numOfServiceVariables - j - 1, oldEncryptedData.getSearchTags().get(serviceName).get());
           } else {
-            assertNull(oldEncryptedData.getSearchTags().get(serviceName));
+            assertThat(oldEncryptedData.getSearchTags().get(serviceName)).isNull();
           }
           assertEquals(j + 1, newEncryptedData.getSearchTags().get(serviceName).get());
 
-          assertNull(oldEncryptedData.getSearchTags().get(serviceVariable.getName()));
+          assertThat(oldEncryptedData.getSearchTags().get(serviceVariable.getName())).isNull();
           assertEquals(1, newEncryptedData.getSearchTags().get(serviceVariable.getName()).get());
         } else {
           assertEquals(1, oldEncryptedData.getSearchTags().size());
@@ -1652,7 +1651,7 @@ public class SecretTextTest extends WingsBaseTest {
             assertEquals(numOfServiceVariables - j - 1, newEncryptedData.getSearchTags().get(serviceName).get());
           }
 
-          assertNull(newEncryptedData.getSearchTags().get(serviceVariable.getName()));
+          assertThat(newEncryptedData.getSearchTags().get(serviceVariable.getName())).isNull();
         } else {
           assertEquals(1, newEncryptedData.getSearchTags().size());
           assertEquals(1, newEncryptedData.getSearchTags().get("name2").get());
@@ -1787,14 +1786,14 @@ public class SecretTextTest extends WingsBaseTest {
             String serviceId = serviceTemplate.getServiceId();
             String serviceName = serviceResourceService.get(appId, serviceId).getName();
             if (j == numOfEnvs - 1 && k == numOfServiceVariables - 1) {
-              assertNull(oldEncryptedData.getSearchTags().get(serviceName));
+              assertThat(oldEncryptedData.getSearchTags().get(serviceName)).isNull();
             } else {
               assertEquals(numOfEnvs * numOfServiceVariables - j * numOfServiceVariables - k - 1,
                   oldEncryptedData.getSearchTags().get(serviceName).get());
             }
             assertEquals(j * numOfServiceVariables + k + 1, newEncryptedData.getSearchTags().get(serviceName).get());
 
-            assertNull(oldEncryptedData.getSearchTags().get(serviceVariable.getName()));
+            assertThat(oldEncryptedData.getSearchTags().get(serviceVariable.getName())).isNull();
             assertEquals(k + 1, newEncryptedData.getSearchTags().get(serviceTemplate.getName()).get());
           } else {
             assertEquals(1, oldEncryptedData.getSearchTags().size());
@@ -1830,13 +1829,13 @@ public class SecretTextTest extends WingsBaseTest {
             String serviceName = serviceResourceService.get(appId, serviceId).getName();
 
             if (j == numOfEnvs - 1 && k == numOfServiceVariables - 1) {
-              assertNull(newEncryptedData.getSearchTags().get(serviceName));
+              assertThat(newEncryptedData.getSearchTags().get(serviceName)).isNull();
             } else {
               assertEquals(numOfEnvs * numOfServiceVariables - j * numOfServiceVariables - k - 1,
                   newEncryptedData.getSearchTags().get(serviceName).get());
             }
 
-            assertNull(newEncryptedData.getSearchTags().get(serviceVariable.getName()));
+            assertThat(newEncryptedData.getSearchTags().get(serviceVariable.getName())).isNull();
           } else {
             assertEquals(1, newEncryptedData.getSearchTags().size());
             assertEquals(1, newEncryptedData.getSearchTags().get("name2").get());
@@ -1938,11 +1937,11 @@ public class SecretTextTest extends WingsBaseTest {
           String envId = serviceVariable.getEntityId();
           String envName = environmentService.get(appId, envId).getName();
           if (k == numOfServiceVariables - 1) {
-            assertNull(oldEncryptedData.getSearchTags().get(envName));
+            assertThat(oldEncryptedData.getSearchTags().get(envName)).isNull();
           } else {
             assertEquals(numOfServiceVariables - k - 1, oldEncryptedData.getSearchTags().get(envName).get());
           }
-          assertNull(oldEncryptedData.getSearchTags().get(serviceVariable.getName()));
+          assertThat(oldEncryptedData.getSearchTags().get(serviceVariable.getName())).isNull();
           assertEquals(k + 1, newEncryptedData.getSearchTags().get(envName).get());
         } else {
           assertEquals(1, oldEncryptedData.getSearchTags().size());
@@ -1974,12 +1973,12 @@ public class SecretTextTest extends WingsBaseTest {
           String envName = environmentService.get(appId, envId).getName();
 
           if (k == numOfServiceVariables - 1) {
-            assertNull(newEncryptedData.getSearchTags().get(envName));
+            assertThat(newEncryptedData.getSearchTags().get(envName)).isNull();
           } else {
             assertEquals(numOfServiceVariables - k - 1, newEncryptedData.getSearchTags().get(envName).get());
           }
 
-          assertNull(newEncryptedData.getSearchTags().get(serviceVariable.getName()));
+          assertThat(newEncryptedData.getSearchTags().get(serviceVariable.getName())).isNull();
         } else {
           assertEquals(1, newEncryptedData.getSearchTags().size());
           assertEquals(1, newEncryptedData.getKeywords().size());
@@ -2043,8 +2042,8 @@ public class SecretTextTest extends WingsBaseTest {
     assertTrue(isEmpty(encryptedData.getAppIds()));
     assertTrue(isEmpty(encryptedData.getServiceIds()));
     assertTrue(isEmpty(encryptedData.getEnvIds()));
-    assertNull(encryptedData.getServiceVariableIds());
-    assertNull(encryptedData.getSearchTags());
+    assertThat(encryptedData.getServiceVariableIds()).isNull();
+    assertThat(encryptedData.getSearchTags()).isNull();
 
     serviceVariableService.updateSearchTagsForSecrets(accountId);
 

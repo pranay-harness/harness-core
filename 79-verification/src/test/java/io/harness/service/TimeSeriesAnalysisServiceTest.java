@@ -2,9 +2,9 @@ package io.harness.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
@@ -139,15 +139,15 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
 
     TimeSeriesDataRecord savedRecord = wingsPersistence.get(TimeSeriesDataRecord.class, recordId);
 
-    assertNull(savedRecord.getValues());
-    assertNull(savedRecord.getDeeplinkMetadata());
+    assertThat(savedRecord.getValues()).isNull();
+    assertThat(savedRecord.getDeeplinkMetadata()).isNull();
     assertNotNull(savedRecord.getValuesBytes());
 
     savedRecord.decompress();
 
     assertNotNull(savedRecord.getValues());
     assertNotNull(savedRecord.getDeeplinkMetadata());
-    assertNull(savedRecord.getValuesBytes());
+    assertThat(savedRecord.getValuesBytes()).isNull();
 
     assertEquals(values, savedRecord.getValues());
     assertEquals(deeplinkMetadata, savedRecord.getDeeplinkMetadata());

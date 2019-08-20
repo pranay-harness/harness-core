@@ -11,7 +11,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static software.wings.beans.User.Builder.anUser;
@@ -361,9 +360,9 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     userService.delete(savedUser.getAccounts().get(0).getUuid(), savedUser.getUuid());
 
     // Verify user is deleted
-    assertNull(userService.getUserByEmail(email));
+    assertThat(userService.getUserByEmail(email)).isNull();
     // Verify user invite is deleted
-    assertNull(wingsPersistence.createQuery(UserInvite.class).filter(UserInviteKeys.email, email).get());
+    assertThat(wingsPersistence.createQuery(UserInvite.class).filter(UserInviteKeys.email, email).get()).isNull();
   }
 
   @Test
@@ -389,7 +388,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     final User savedUser = response.getResource();
     assertEquals(name, savedUser.getName());
     assertEquals(email, savedUser.getEmail());
-    assertNull(savedUser.getPassword());
+    assertThat(savedUser.getPassword()).isNull();
     assertEquals(1, savedUser.getAccounts().size());
     assertEquals(accountName, savedUser.getAccounts().get(0).getAccountName());
     assertEquals(companyName, savedUser.getAccounts().get(0).getCompanyName());
@@ -398,9 +397,9 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     userService.delete(savedUser.getAccounts().get(0).getUuid(), savedUser.getUuid());
 
     // Verify user is deleted
-    assertNull(userService.getUserByEmail(email));
+    assertThat(userService.getUserByEmail(email)).isNull();
     // Verify user invite is deleted
-    assertNull(wingsPersistence.createQuery(UserInvite.class).filter(UserInviteKeys.email, email).get());
+    assertThat(wingsPersistence.createQuery(UserInvite.class).filter(UserInviteKeys.email, email).get()).isNull();
   }
 
   @Test
@@ -475,7 +474,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     final User savedUser = response.getResource();
     assertEquals(name.trim(), savedUser.getName());
     assertEquals(email.trim(), savedUser.getEmail());
-    assertNull(savedUser.getPassword());
+    assertThat(savedUser.getPassword()).isNull();
     assertEquals(1, savedUser.getAccounts().size());
     assertEquals(accountName.trim(), savedUser.getAccounts().get(0).getAccountName());
     assertEquals(companyName.trim(), savedUser.getAccounts().get(0).getCompanyName());
@@ -602,7 +601,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
                           .build();
 
     assertFalse(accountService.exists(account.getAccountName()));
-    assertNull(accountService.getByName(account.getCompanyName()));
+    assertThat(accountService.getByName(account.getCompanyName())).isNull();
 
     WebTarget target = client.target(API_BASE + "/users/account");
     RestResponse<Account> response = getRequestBuilderWithAuthHeader(target).post(

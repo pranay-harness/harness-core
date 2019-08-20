@@ -1,8 +1,8 @@
 package io.harness.limits.configuration;
 
 import static io.harness.limits.ActionType.CREATE_APPLICATION;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.google.inject.Inject;
@@ -58,7 +58,7 @@ public class LimitConfigurationServiceMongoIntegrationTest extends BaseIntegrati
     assertEquals(cl, fetchedValue);
 
     fetchedValue = configuredLimitService.get("non-existent-id", CREATE_APPLICATION);
-    assertNull("fetched value should be null for not configured limit", fetchedValue);
+    assertThat(fetchedValue).isNull();
   }
 
   @Test

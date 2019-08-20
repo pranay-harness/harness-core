@@ -13,7 +13,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
@@ -412,7 +411,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     List<NewRelicMetricAnalysisRecord> savedRecords = restResponse.getResource();
     assertEquals(1, savedRecords.size());
     NewRelicMetricAnalysisRecord savedRecord = savedRecords.get(0);
-    assertNull(savedRecord.getWorkflowExecutionId());
+    assertThat(savedRecord.getWorkflowExecutionId()).isNull();
 
     wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"),
         wingsPersistence.createUpdateOperations(FeatureFlag.class).addToSet("accountIds", accountId));
@@ -473,7 +472,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     List<NewRelicMetricAnalysisRecord> savedRecords = restResponse.getResource();
     assertEquals(1, savedRecords.size());
     NewRelicMetricAnalysisRecord savedRecord = savedRecords.get(0);
-    assertNull(savedRecord.getWorkflowExecutionId());
+    assertThat(savedRecord.getWorkflowExecutionId()).isNull();
 
     wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"),
         wingsPersistence.createUpdateOperations(FeatureFlag.class).addToSet("accountIds", accountId));

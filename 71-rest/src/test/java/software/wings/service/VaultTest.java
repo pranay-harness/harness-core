@@ -5,10 +5,10 @@ import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -526,12 +526,12 @@ public class VaultTest extends WingsBaseTest {
     final String password = UUID.randomUUID().toString();
     EncryptedData encryptedData =
         vaultService.encrypt(name, keyToEncrypt, accountId, SettingVariableTypes.APP_DYNAMICS, vaultConfig, null);
-    assertNull(encryptedData.getEncryptedValue());
+    assertThat(encryptedData.getEncryptedValue()).isNull();
     assertNotNull(encryptedData.getEncryptionKey());
     assertFalse(isBlank(encryptedData.getEncryptionKey()));
 
     char[] decryptedValue = vaultService.decrypt(encryptedData, accountId, vaultConfig);
-    assertNull(decryptedValue);
+    assertThat(decryptedValue).isNull();
 
     String randomPassword = UUID.randomUUID().toString();
     final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, randomPassword);
@@ -566,7 +566,7 @@ public class VaultTest extends WingsBaseTest {
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     assertEquals(appDynamicsConfig, savedAttribute.getValue());
-    assertNull(((AppDynamicsConfig) savedAttribute.getValue()).getPassword());
+    assertThat(((AppDynamicsConfig) savedAttribute.getValue()).getPassword()).isNull();
     assertFalse(isBlank(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword()));
 
     Query<EncryptedData> query =
@@ -620,7 +620,7 @@ public class VaultTest extends WingsBaseTest {
       SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, id);
       assertEquals(settingAttributes.get(i), savedAttribute);
       AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttributes.get(i).getValue();
-      assertNull(appDynamicsConfig.getPassword());
+      assertThat(appDynamicsConfig.getPassword()).isNull();
 
       encryptionService.decrypt(
           appDynamicsConfig, secretManager.getEncryptionDetails(appDynamicsConfig, workflowExecutionId, appId));
@@ -841,7 +841,7 @@ public class VaultTest extends WingsBaseTest {
     // test decryption
     savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     AppDynamicsConfig savedConfig = (AppDynamicsConfig) savedAttribute.getValue();
-    assertNull(savedConfig.getPassword());
+    assertThat(savedConfig.getPassword()).isNull();
     encryptionService.decrypt(savedConfig, secretManager.getEncryptionDetails(savedConfig, workflowExecutionId, appId));
     assertEquals(newPassWord, String.valueOf(savedConfig.getPassword()));
   }
@@ -941,7 +941,7 @@ public class VaultTest extends WingsBaseTest {
     String savedAttributeId = wingsPersistence.save(serviceVariable);
     ServiceVariable savedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
     assertEquals(serviceVariable, savedAttribute);
-    assertNull(savedAttribute.getValue());
+    assertThat(savedAttribute.getValue()).isNull();
     assertEquals(1, wingsPersistence.createQuery(ServiceVariable.class).count());
     assertEquals(numOfEncRecords + 1, wingsPersistence.createQuery(EncryptedData.class).count());
   }
@@ -1367,7 +1367,7 @@ public class VaultTest extends WingsBaseTest {
       SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, attributeId);
       AppDynamicsConfig savedConfig = (AppDynamicsConfig) savedAttribute.getValue();
       assertEquals(accountId, savedConfig.getAccountId());
-      assertNull(savedConfig.getPassword());
+      assertThat(savedConfig.getPassword()).isNull();
       assertFalse(isBlank(savedConfig.getEncryptedPassword()));
 
       encryptionService.decrypt(

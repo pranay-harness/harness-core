@@ -6,11 +6,11 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
@@ -738,7 +738,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals(envId, fetchedObject.getEnvId());
     assertEquals(serviceId, fetchedObject.getServiceId());
     assertEquals(ELK, fetchedObject.getStateType());
-    assertNull(fetchedObject.getAnalysisTolerance());
+    assertThat(fetchedObject.getAnalysisTolerance()).isNull();
     assertEquals("someServiceName", elkCVServiceConfiguration.getServiceName());
     assertEquals(91, fetchedObject.getBaselineStartMinute());
     assertEquals(195, fetchedObject.getBaselineEndMinute());
@@ -768,7 +768,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals(envId, obj.getEnvId());
     assertEquals(serviceId, obj.getServiceId());
     assertEquals(ELK, obj.getStateType());
-    assertNull(obj.getAnalysisTolerance());
+    assertThat(obj.getAnalysisTolerance()).isNull();
     assertEquals("Config 1", obj.getName());
 
     url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId
@@ -857,7 +857,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals(envId, obj.getEnvId());
     assertEquals(serviceId, obj.getServiceId());
     assertEquals(BUG_SNAG, obj.getStateType());
-    assertNull(obj.getAnalysisTolerance());
+    assertThat(obj.getAnalysisTolerance()).isNull();
     assertEquals("Config 1", obj.getName());
 
     url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId
@@ -935,7 +935,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals(envId, obj.getEnvId());
     assertEquals(serviceId, obj.getServiceId());
     assertEquals(STACK_DRIVER_LOG, obj.getStateType());
-    assertNull(obj.getAnalysisTolerance());
+    assertThat(obj.getAnalysisTolerance()).isNull();
     assertEquals("Config 1", obj.getName());
 
     url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId
@@ -999,7 +999,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals(envId, obj.getEnvId());
     assertEquals(serviceId, obj.getServiceId());
     assertEquals(SPLUNKV2, obj.getStateType());
-    assertNull(obj.getAnalysisTolerance());
+    assertThat(obj.getAnalysisTolerance()).isNull();
     assertEquals("Config 1", obj.getName());
     assertEquals("splunk_hostname", obj.getHostnameField());
     assertFalse(obj.isAdvancedQuery());
@@ -1048,7 +1048,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals(appId, cvConfiguration.getAppId());
     assertEquals(envId, cvConfiguration.getEnvId());
     assertEquals(serviceId, cvConfiguration.getServiceId());
-    assertNull(cvConfiguration.getAnalysisTolerance());
+    assertThat(cvConfiguration.getAnalysisTolerance()).isNull();
     assertEquals("someServiceName", cvConfiguration.getServiceName());
 
     assertEquals("*exception*", cvConfiguration.getQuery());
@@ -1081,7 +1081,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals(envId, fetchedObject.getEnvId());
     assertEquals(serviceId, fetchedObject.getServiceId());
     assertEquals(SUMO, fetchedObject.getStateType());
-    assertNull(fetchedObject.getAnalysisTolerance());
+    assertThat(fetchedObject.getAnalysisTolerance()).isNull();
     assertEquals("someSettingAttributeName", logsCVConfiguration.getConnectorName());
     assertEquals("someServiceName", logsCVConfiguration.getServiceName());
 
@@ -1106,7 +1106,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals(envId, obj.getEnvId());
     assertEquals(serviceId, obj.getServiceId());
     assertEquals(SUMO, obj.getStateType());
-    assertNull(obj.getAnalysisTolerance());
+    assertThat(obj.getAnalysisTolerance()).isNull();
     assertEquals("Config 1", obj.getName());
     assertEquals("query1", obj.getQuery());
     assertEquals(91, obj.getBaselineStartMinute());
@@ -1172,7 +1172,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals(envId, fetchedObject.getEnvId());
     assertEquals(serviceId, fetchedObject.getServiceId());
     assertEquals(SUMO, fetchedObject.getStateType());
-    assertNull(fetchedObject.getAnalysisTolerance());
+    assertThat(fetchedObject.getAnalysisTolerance()).isNull();
     assertEquals("someSettingAttributeName", responseConfig.getConnectorName());
     assertEquals("someServiceName", responseConfig.getServiceName());
 

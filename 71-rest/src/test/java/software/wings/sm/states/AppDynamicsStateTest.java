@@ -4,9 +4,9 @@ import static io.harness.beans.ExecutionStatus.ERROR;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
@@ -283,7 +283,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     assertEquals("Error Type should be", MetricType.RESP_TIME.name(), respTime);
 
     String dummy = AppDynamicsState.getMetricTypeForMetric("incorrectName");
-    assertNull(dummy);
+    assertThat(dummy).isNull();
   }
 
   @Test

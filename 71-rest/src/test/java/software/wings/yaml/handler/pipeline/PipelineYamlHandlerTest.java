@@ -1,9 +1,9 @@
 package software.wings.yaml.handler.pipeline;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -246,7 +246,7 @@ public class PipelineYamlHandlerTest extends BaseYamlHandlerTest {
     yamlHandler.delete(changeContext);
 
     Pipeline pipeline = yamlHandler.get(ACCOUNT_ID, validYamlFilePath);
-    assertNull(pipeline);
+    assertThat(pipeline).isNull();
   }
 
   @Test

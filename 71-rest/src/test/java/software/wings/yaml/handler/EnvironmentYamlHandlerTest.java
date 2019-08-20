@@ -107,7 +107,7 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
     //    yamlHandler.delete(changeContext);
     //
     //    Environment environment = yamlHandler.get(ACCOUNT_ID, validYamlFilePath);
-    //    assertNull(environment);
+    //    assertThat(environment).isNull();
   }
 
   @Test
