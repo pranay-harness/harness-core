@@ -255,7 +255,8 @@ public class SpotInstDeployState extends State {
       return true;
     }
 
-    if (PERCENTAGE != instanceUnitType && getMaxInstanceCountToBeUsed(spotInstSetupContextElement) <= instanceCount) {
+    if (PERCENTAGE != instanceUnitType
+        && getTargetInstanceCountToBeUsed(spotInstSetupContextElement) <= instanceCount) {
       return true;
     }
 
@@ -264,7 +265,7 @@ public class SpotInstDeployState extends State {
 
   protected SpotInstDeployStateExecutionData geDeployStateExecutionData(SpotInstSetupContextElement setupContextElement,
       Activity activity, Integer newGroupUpdateCount, Integer oldGroupUpdateCount) {
-    ElastiGroup newElastiGroup = setupContextElement.getSpotInstSetupTaskResponse().getNewElastiGroup();
+    ElastiGroup newElastiGroup = setupContextElement.getNewElastiGroupOriginalConfig();
     ElastiGroup emptyElastiGroup = ElastiGroup.builder().build();
     newElastiGroup = newElastiGroup == null ? emptyElastiGroup : newElastiGroup;
     ElastiGroup oldElastiGroup = setupContextElement.getOldElastiGroupOriginalConfig();
@@ -289,13 +290,14 @@ public class SpotInstDeployState extends State {
   }
 
   protected Integer getUpsizeUpdateCount(SpotInstSetupContextElement setupContextElement) {
-    Integer count = getMaxInstanceCountToBeUsed(setupContextElement);
+    Integer count = getTargetInstanceCountToBeUsed(setupContextElement);
     return getInstanceCountToUpdate(count, instanceCount, instanceUnitType, true);
   }
 
-  private Integer getMaxInstanceCountToBeUsed(SpotInstSetupContextElement setupContextElement) {
-    return setupContextElement.isUseCurrentRunningInstanceCount() ? setupContextElement.getCurrentRunningInstanceCount()
-                                                                  : setupContextElement.getMaxInstanceCount();
+  private Integer getTargetInstanceCountToBeUsed(SpotInstSetupContextElement setupContextElement) {
+    return setupContextElement.isUseCurrentRunningInstanceCount()
+        ? setupContextElement.getCurrentRunningInstanceCount()
+        : setupContextElement.getNewElastiGroupOriginalConfig().getCapacity().getTarget();
   }
 
   @VisibleForTesting
@@ -303,7 +305,7 @@ public class SpotInstDeployState extends State {
     // if downsizeInstanceCount is not set, use same updateCount as upsize
     Integer downsizeUpdationCount = updateCount;
 
-    Integer instanceCount = getMaxInstanceCountToBeUsed(setupContextElement);
+    Integer instanceCount = getTargetInstanceCountToBeUsed(setupContextElement);
     if (downsizeInstanceCount != null) {
       downsizeUpdationCount =
           getInstanceCountToUpdate(instanceCount, downsizeInstanceCount, downsizeInstanceUnitType, false);

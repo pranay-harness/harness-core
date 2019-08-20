@@ -166,7 +166,7 @@ public class SpotInstServiceSetup extends State {
             .appId(stateExecutionData.getAppId())
             .envId(stateExecutionData.getEnvId())
             .newElastiGroupOriginalConfig(stateExecutionData.getElastiGroupOriginalConfig())
-            .elstiGroupNamePrefix(elastiGroupNamePrefix)
+            .elstiGroupNamePrefix(context.renderExpression(elastiGroupNamePrefix))
             .build();
 
     // Add these details only if spotInstSetupTaskResponse is not NULL

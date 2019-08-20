@@ -191,10 +191,10 @@ public class WorkflowServiceHelper {
   public static final String INFRA_TEMP_ROUTE_PCF = "infra.pcf.tempRoute";
   public static final String SETUP = "Setup";
   public static final String PCF_SETUP = "App Setup";
-  public static final String SPOTINST_SETUP = "Elasti Group Setup";
-  public static final String SPOTINST_DEPLOY = "Elasti Group Deploy";
-  public static final String SPOTINST_ROLLBACK = "Elasti Group Rollback";
-  public static final String SPOTINST_LISTENER_UPDATE_ROLLBACK = "Elasti Listener Update Rollback";
+  public static final String SPOTINST_SETUP = "Elastigroup Setup";
+  public static final String SPOTINST_DEPLOY = "Elastigroup Deploy";
+  public static final String SPOTINST_ROLLBACK = "Elastigroup Rollback";
+  public static final String SPOTINST_LISTENER_UPDATE_ROLLBACK = "Elastigroup Listener Update Rollback";
   public static final String SPOTINST_LISTENER_UPDATE = "Listener Update";
   public static final String KUBERNETES_SERVICE_SETUP_BLUEGREEN = "Blue/Green Service Setup";
   public static final String INFRA_ROUTE_PCF = "infra.pcf.route";

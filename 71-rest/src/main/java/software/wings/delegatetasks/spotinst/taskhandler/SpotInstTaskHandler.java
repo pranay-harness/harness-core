@@ -110,7 +110,7 @@ public abstract class SpotInstTaskHandler {
               return true;
             }
           }
-          sleep(ofSeconds(10));
+          sleep(ofSeconds(20));
         }
       }, steadyStateTimeOut, MINUTES, true);
     } catch (UncheckedTimeoutException e) {

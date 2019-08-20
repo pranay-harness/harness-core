@@ -117,6 +117,10 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
               oldElastiGroup.getCapacity().getMaximum(), oldElastiGroup.getCapacity().getTarget()));
       updateElastiGroupAndWait(
           spotInstToken, spotInstAccountId, temp, logCallback, workflowExecutionId, steadyStateTimeOut);
+      logCallback.saveExecutionLog(
+          format("Renaming Elasti group with id: [%s] to name: [%s]", oldElastiGroupId, prodElastiGroupName));
+      spotInstHelperServiceDelegate.updateElastiGroup(spotInstToken, spotInstAccountId, oldElastiGroupId,
+          ElastiGroupRenameRequest.builder().name(prodElastiGroupName).build());
     }
 
     DescribeListenersResult result = awsElbHelperServiceDelegate.describeListenerResult(
@@ -148,7 +152,12 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
               newElastiGroupId, stageElastiGroupName, 0, 0, 0));
       updateElastiGroupAndWait(
           spotInstToken, spotInstAccountId, temp, logCallback, workflowExecutionId, steadyStateTimeOut);
+      logCallback.saveExecutionLog(
+          format("Renaming Elasti group with id: [%s] to name: [%s]", newElastiGroupId, stageElastiGroupName));
+      spotInstHelperServiceDelegate.updateElastiGroup(spotInstToken, spotInstAccountId, newElastiGroupId,
+          ElastiGroupRenameRequest.builder().name(stageElastiGroupName).build());
     }
+
     return SpotInstTaskExecutionResponse.builder().commandExecutionStatus(SUCCESS).build();
   }
 }
