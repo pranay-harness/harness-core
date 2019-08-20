@@ -1,8 +1,8 @@
 package software.wings.sm.states;
 
-import static io.harness.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.govern.Switch.noop;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;

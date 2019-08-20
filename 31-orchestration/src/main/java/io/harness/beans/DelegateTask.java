@@ -37,9 +37,6 @@ import javax.validation.constraints.NotNull;
 @Converters({ParametersConverter.class, ResponseDataConverter.class})
 @FieldNameConstants(innerTypeName = "DelegateTaskKeys")
 public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
-  public static final long DEFAULT_SYNC_CALL_TIMEOUT = 60 * 1000; // 1 minute
-  public static final long DEFAULT_ASYNC_CALL_TIMEOUT = 10 * 60 * 1000; // 10 minutes
-
   @NotNull private TaskData data;
   private List<ExecutionCapability> executionCapabilities;
 

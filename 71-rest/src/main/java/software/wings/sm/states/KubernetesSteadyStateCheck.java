@@ -1,7 +1,7 @@
 package software.wings.sm.states;
 
-import static io.harness.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
+import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;

@@ -1,7 +1,7 @@
 package software.wings.delegatetasks;
 
-import static io.harness.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
