@@ -1,18 +1,17 @@
 package software.wings.integration;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.VAIBHAV_TULSYAN;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
-import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule.Owner;
+import io.fabric8.utils.Lists;
+import io.harness.category.element.IntegrationTests;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
-import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
@@ -20,27 +19,37 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
+import software.wings.metrics.MetricType;
 import software.wings.service.impl.analysis.AnalysisTolerance;
+import software.wings.service.impl.analysis.ContinuousVerificationService;
+import software.wings.service.impl.analysis.TimeSeries;
+import software.wings.service.impl.analysis.TimeSeriesFilter;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLHostSummary;
 import software.wings.service.impl.analysis.TimeSeriesMLMetricSummary;
 import software.wings.service.impl.analysis.TimeSeriesMLTxnSummary;
+import software.wings.service.impl.cloudwatch.CloudWatchMetric;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.sm.StateType;
+import software.wings.sm.states.APMVerificationState;
 import software.wings.verification.CVConfiguration;
-import software.wings.verification.HeatMap;
-import software.wings.verification.TimeSeriesDataPoint;
-import software.wings.verification.dashboard.HeatMapUnit;
+import software.wings.verification.TransactionTimeSeries;
+import software.wings.verification.apm.APMCVServiceConfiguration;
+import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
+import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
+import software.wings.verification.datadog.DatadogCVServiceConfiguration;
+import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
+import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.GenericType;
 
 /**
  * @author Vaibhav Tulsyan
@@ -49,8 +58,16 @@ import javax.ws.rs.core.GenericType;
 @Slf4j
 public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
   @Inject WingsPersistence wingsPersistence;
+  @Inject private ContinuousVerificationService continuousVerificationService;
 
+  private PrometheusCVServiceConfiguration prometheusCVServiceConfiguration;
   private NewRelicCVServiceConfiguration newRelicCVServiceConfiguration;
+  private APMCVServiceConfiguration apmcvServiceConfiguration;
+  private AppDynamicsCVServiceConfiguration appDynamicsCVServiceConfiguration;
+  private DatadogCVServiceConfiguration datadogCVServiceConfiguration;
+  private DynaTraceCVServiceConfiguration dynaTraceCVServiceConfiguration;
+  private CloudWatchCVServiceConfiguration cloudWatchCVServiceConfiguration;
+
   private SettingAttribute settingAttribute;
   private String settingAttributeId;
   private Application savedApp;
@@ -59,9 +76,7 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
 
   private long endTime = System.currentTimeMillis();
   private long start12HoursAgo = endTime - TimeUnit.HOURS.toMillis(12);
-  private long start1DayAgo = endTime - TimeUnit.DAYS.toMillis(1);
-  private long start7DaysAgo = endTime - TimeUnit.DAYS.toMillis(7);
-  private long start30DaysAgo = endTime - TimeUnit.DAYS.toMillis(30);
+  private long start2HoursAgo = endTime - TimeUnit.HOURS.toMillis(2);
 
   @Before
   public void setUp() {
@@ -85,78 +100,214 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
                            .build();
     settingAttributeId = wingsPersistence.saveAndGet(SettingAttribute.class, settingAttribute).getUuid();
 
+    createPrometheusConfig();
     createNewRelicConfig();
-    generate30DaysRandomData();
+    createAPMConfig();
+    createAppDConfig();
+    createDataDogConfig();
+    createDynaTraceConfig();
+    createCloudWatchConfig();
+
+    Map<String, List<String>> prometheusMetricMap = new HashMap<>();
+    prometheusMetricMap.put("TRANSACTION1", Arrays.asList("METRIC1", "METRIC2"));
+    prometheusMetricMap.put("TRANSACTION2", Arrays.asList("METRIC3", "METRIC4"));
+    generate2HoursRandomData(StateType.PROMETHEUS, prometheusCVServiceConfiguration.getUuid(), prometheusMetricMap);
+
+    Map<String, List<String>> newRelicMetricMap = new HashMap<>();
+    newRelicMetricMap.put("/login", Arrays.asList("apdexScore", "averageResponseTime"));
+    newRelicMetricMap.put("/exception", Collections.singletonList("error"));
+    generate2HoursRandomData(StateType.NEW_RELIC, newRelicCVServiceConfiguration.getUuid(), newRelicMetricMap);
+
+    Map<String, List<String>> apmMetricMap = new HashMap<>();
+    apmMetricMap.put("METRIC1", Collections.singletonList("METRIC1"));
+    apmMetricMap.put("METRIC2", Collections.singletonList("METRIC2"));
+    generate2HoursRandomData(StateType.APM_VERIFICATION, apmcvServiceConfiguration.getUuid(), apmMetricMap);
+
+    generate2HoursRandomData(StateType.APP_DYNAMICS, appDynamicsCVServiceConfiguration.getUuid(), newRelicMetricMap);
+
+    Map<String, List<String>> datadogMetricMap = new HashMap<>();
+    datadogMetricMap.put("ECS Container CPU Usage", Collections.singletonList("ECS Container CPU Usage"));
+    datadogMetricMap.put("ECS Container RSS Memory", Collections.singletonList("ECS Container RSS Memory"));
+    generate2HoursRandomData(StateType.DATA_DOG, datadogCVServiceConfiguration.getUuid(), datadogMetricMap);
+
+    generate2HoursRandomData(StateType.DYNA_TRACE, dynaTraceCVServiceConfiguration.getUuid(), newRelicMetricMap);
+
+    Map<String, List<String>> cloudWatchMetricMap = new HashMap<>();
+    cloudWatchMetricMap.put("CPU Reservation", Collections.singletonList("CPU Reservation"));
+    cloudWatchMetricMap.put("CPU Utilization", Collections.singletonList("CPU Utilization"));
+    generate2HoursRandomData(StateType.CLOUD_WATCH, cloudWatchCVServiceConfiguration.getUuid(), cloudWatchMetricMap);
+  }
+
+  private void createCloudWatchConfig() {
+    List<CloudWatchMetric> ecsMetrics = new ArrayList<>();
+    ecsMetrics.add(CloudWatchMetric.builder().metricName("CPUReservation").metricType(MetricType.INFRA.name()).build());
+    ecsMetrics.add(CloudWatchMetric.builder().metricName("CPUUtilization").metricType(MetricType.INFRA.name()).build());
+    cloudWatchCVServiceConfiguration = CloudWatchCVServiceConfiguration.builder().ec2Metrics(ecsMetrics).build();
+    cloudWatchCVServiceConfiguration.setStateType(StateType.CLOUD_WATCH);
+    setCommonConfigDetails(cloudWatchCVServiceConfiguration);
+    wingsPersistence.save(cloudWatchCVServiceConfiguration);
+  }
+
+  private void createDynaTraceConfig() {
+    dynaTraceCVServiceConfiguration = DynaTraceCVServiceConfiguration.builder().serviceMethods("default").build();
+    dynaTraceCVServiceConfiguration.setStateType(StateType.DYNA_TRACE);
+    setCommonConfigDetails(dynaTraceCVServiceConfiguration);
+    wingsPersistence.save(dynaTraceCVServiceConfiguration);
+  }
+
+  private void createDataDogConfig() {
+    Map<String, String> ecsMetricMap = new HashMap<>();
+    ecsMetricMap.put(generateUuid(), "ecs.fargate.cpu.user");
+    ecsMetricMap.put(generateUuid(), "ecs.fargate.mem.rss");
+    datadogCVServiceConfiguration = DatadogCVServiceConfiguration.builder().ecsMetrics(ecsMetricMap).build();
+    datadogCVServiceConfiguration.setStateType(StateType.DATA_DOG);
+    setCommonConfigDetails(datadogCVServiceConfiguration);
+    wingsPersistence.save(datadogCVServiceConfiguration);
+  }
+
+  private void createAppDConfig() {
+    appDynamicsCVServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
+                                            .appDynamicsApplicationId(generateUuid())
+                                            .tierId(generateUuid())
+                                            .build();
+    appDynamicsCVServiceConfiguration.setStateType(StateType.APP_DYNAMICS);
+    setCommonConfigDetails(appDynamicsCVServiceConfiguration);
+    wingsPersistence.save(appDynamicsCVServiceConfiguration);
+  }
+
+  private void createAPMConfig() {
+    List<APMVerificationState.MetricCollectionInfo> timeSeries =
+        Lists.newArrayList(APMVerificationState.MetricCollectionInfo.builder()
+                               .collectionUrl("URL1")
+                               .metricName("METRIC1")
+                               .method(APMVerificationState.Method.GET)
+                               .responseType(APMVerificationState.ResponseType.JSON)
+                               .metricType(MetricType.THROUGHPUT)
+                               .build(),
+            APMVerificationState.MetricCollectionInfo.builder()
+                .collectionUrl("URL2")
+                .metricName("METRIC2")
+                .method(APMVerificationState.Method.GET)
+                .responseType(APMVerificationState.ResponseType.JSON)
+                .metricType(MetricType.ERROR)
+                .build());
+    apmcvServiceConfiguration = APMCVServiceConfiguration.builder().metricCollectionInfos(timeSeries).build();
+    apmcvServiceConfiguration.setStateType(StateType.APM_VERIFICATION);
+    setCommonConfigDetails(apmcvServiceConfiguration);
+    wingsPersistence.save(apmcvServiceConfiguration);
+  }
+
+  private void setCommonConfigDetails(CVConfiguration cvConfiguration) {
+    cvConfiguration.setName(generateUuid());
+    cvConfiguration.setAppId(savedApp.getUuid());
+    cvConfiguration.setEnvId(savedEnv.getUuid());
+    cvConfiguration.setEnvName(savedEnv.getName());
+    cvConfiguration.setServiceId(savedService.getUuid());
+    cvConfiguration.setServiceName(savedService.getName());
+    cvConfiguration.setEnabled24x7(true);
+    cvConfiguration.setConnectorName(settingAttribute.getName());
+    cvConfiguration.setConnectorId(settingAttributeId);
+    cvConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
+  }
+
+  private void createPrometheusConfig() {
+    List<TimeSeries> timeSeries = Lists.newArrayList(TimeSeries.builder()
+                                                         .url("URL1")
+                                                         .txnName("TRANSACTION1")
+                                                         .metricName("METRIC1")
+                                                         .metricType(MetricType.VALUE.name())
+                                                         .build(),
+        TimeSeries.builder()
+            .url("URL2")
+            .txnName("TRANSACTION1")
+            .metricName("METRIC2")
+            .metricType(MetricType.THROUGHPUT.name())
+            .build(),
+        TimeSeries.builder()
+            .url("URL3")
+            .txnName("TRANSACTION2")
+            .metricName("METRIC3")
+            .metricType(MetricType.INFRA.name())
+            .build(),
+        TimeSeries.builder()
+            .url("URL4")
+            .txnName("TRANSACTION2")
+            .metricName("METRIC4")
+            .metricType(MetricType.ERROR.name())
+            .build());
+    prometheusCVServiceConfiguration =
+        PrometheusCVServiceConfiguration.builder().timeSeriesToAnalyze(timeSeries).build();
+    prometheusCVServiceConfiguration.setStateType(StateType.PROMETHEUS);
+    setCommonConfigDetails(prometheusCVServiceConfiguration);
+
+    wingsPersistence.save(prometheusCVServiceConfiguration);
   }
 
   private void createNewRelicConfig() {
     newRelicCVServiceConfiguration = new NewRelicCVServiceConfiguration();
-    newRelicCVServiceConfiguration.setName(generateUuid());
-    newRelicCVServiceConfiguration.setAppId(savedApp.getUuid());
-    newRelicCVServiceConfiguration.setEnvId(savedEnv.getUuid());
-    newRelicCVServiceConfiguration.setEnvName(savedEnv.getName());
-    newRelicCVServiceConfiguration.setServiceId(savedService.getUuid());
-    newRelicCVServiceConfiguration.setServiceName(savedService.getName());
     newRelicCVServiceConfiguration.setStateType(StateType.NEW_RELIC);
-    newRelicCVServiceConfiguration.setEnabled24x7(true);
     newRelicCVServiceConfiguration.setApplicationId(generateUuid());
-    newRelicCVServiceConfiguration.setConnectorName(settingAttribute.getName());
-    newRelicCVServiceConfiguration.setConnectorId(settingAttributeId);
     newRelicCVServiceConfiguration.setMetrics(Collections.singletonList("apdexScore"));
-    newRelicCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
+
+    setCommonConfigDetails(newRelicCVServiceConfiguration);
 
     newRelicCVServiceConfiguration = (NewRelicCVServiceConfiguration) wingsPersistence.saveAndGet(
         CVConfiguration.class, newRelicCVServiceConfiguration);
   }
 
-  private void generate30DaysRandomData() {
+  private void generate2HoursRandomData(
+      StateType stateType, String configId, Map<String, List<String>> transactionMetricMap) {
     // Add time series analysis records for each minute in 30 days
-    int currentMinute = (int) TimeUnit.MILLISECONDS.toMinutes(start30DaysAgo);
-    int minutesIn30Days = (int) TimeUnit.DAYS.toMinutes(30);
-    logger.info("Creating {} units", minutesIn30Days);
+    int currentMinute = (int) TimeUnit.MILLISECONDS.toMinutes(start2HoursAgo);
+    int minutesIn2Hours = (int) TimeUnit.HOURS.toMinutes(2);
+    logger.info("Creating {} units", minutesIn2Hours);
 
     Random random = new Random();
-    for (int i = 0; i < minutesIn30Days; i++) {
+    for (int i = 0; i < minutesIn2Hours; i++) {
       TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord = TimeSeriesMLAnalysisRecord.builder().build();
       timeSeriesMLAnalysisRecord.setAppId(savedApp.getUuid());
       timeSeriesMLAnalysisRecord.setAnalysisMinute(currentMinute + i);
-      timeSeriesMLAnalysisRecord.setCvConfigId(newRelicCVServiceConfiguration.getUuid());
-      timeSeriesMLAnalysisRecord.setStateType(StateType.APP_DYNAMICS);
+      timeSeriesMLAnalysisRecord.setCvConfigId(configId);
+      timeSeriesMLAnalysisRecord.setStateType(stateType);
 
       Map<String, TimeSeriesMLTxnSummary> txnMap = new HashMap<>();
-      TimeSeriesMLTxnSummary txnSummary = new TimeSeriesMLTxnSummary();
 
-      // TODO: Add test for 1 more txn name
-      txnSummary.setTxn_name("/login");
-      txnSummary.setGroup_name("default");
-      txnSummary.setGroup_name(generateUuid());
+      int finalI = i;
+      transactionMetricMap.forEach((txnName, metricList) -> {
+        TimeSeriesMLTxnSummary txnSummary = new TimeSeriesMLTxnSummary();
+        txnSummary.setTxn_name(txnName);
+        txnSummary.setGroup_name("default");
 
-      Map<String, TimeSeriesMLMetricSummary> summary = new HashMap<>();
-      TimeSeriesMLMetricSummary metricSummary = new TimeSeriesMLMetricSummary();
-      metricSummary.setMetric_name("apdexScore");
+        Map<String, TimeSeriesMLMetricSummary> summary = new HashMap<>();
+        metricList.forEach(metric -> {
+          TimeSeriesMLMetricSummary metricSummary = new TimeSeriesMLMetricSummary();
+          metricSummary.setMetric_name(metric);
 
-      TimeSeriesMLHostSummary timeSeriesMLHostSummary;
-      int risk = -1; // NA by default
+          TimeSeriesMLHostSummary timeSeriesMLHostSummary;
+          int risk = -1; // NA by default
 
-      if (i >= minutesIn30Days - (VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES) * 32) {
-        risk = 2;
-      } else if (i >= minutesIn30Days - 2 * (VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES) * 32) {
-        risk = 0;
-      } else {
-        int randomNum = random.nextInt(2);
-        if (randomNum % 2 == 0) {
-          risk = random.nextInt(3);
-        }
-      }
+          if (finalI >= minutesIn2Hours - (VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES) * 32) {
+            risk = 2;
+          } else if (finalI >= minutesIn2Hours - 2 * (VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES) * 32) {
+            risk = 0;
+          } else {
+            int randomNum = random.nextInt(2);
+            if (randomNum % 2 == 0) {
+              risk = random.nextInt(3);
+            }
+          }
 
-      timeSeriesMLHostSummary = TimeSeriesMLHostSummary.builder().risk(risk).build();
-      Map<String, TimeSeriesMLHostSummary> results = new HashMap<>();
-      results.put(generateUuid(), timeSeriesMLHostSummary);
-      metricSummary.setResults(results);
+          timeSeriesMLHostSummary = TimeSeriesMLHostSummary.builder().risk(risk).build();
+          Map<String, TimeSeriesMLHostSummary> results = new HashMap<>();
+          results.put(generateUuid(), timeSeriesMLHostSummary);
+          metricSummary.setResults(results);
 
-      summary.put("0", metricSummary);
-      txnSummary.setMetrics(summary);
-      txnMap.put("0", txnSummary);
+          summary.put(metric, metricSummary);
+        });
+        txnSummary.setMetrics(summary);
+        txnMap.put(txnName, txnSummary);
+      });
+
       timeSeriesMLAnalysisRecord.setTransactions(txnMap);
 
       try {
@@ -166,72 +317,162 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
         // Hitting this point is expected in all tests after the first test.
       }
 
-      // Add new relic metric record for minute=currentMinute + i
-      NewRelicMetricDataRecord newRelicMetricDataRecord = NewRelicMetricDataRecord.builder()
-                                                              .appId(savedApp.getUuid())
-                                                              .groupName("default")
-                                                              .name("/login")
-                                                              .serviceId(savedService.getUuid())
-                                                              .stateType(StateType.APP_DYNAMICS)
-                                                              .dataCollectionMinute(currentMinute + i)
-                                                              .timeStamp(TimeUnit.MINUTES.toMillis(currentMinute + i))
-                                                              .host(generateUuid())
-                                                              .workflowExecutionId(generateUuid())
-                                                              .stateExecutionId(generateUuid())
-                                                              .cvConfigId(newRelicCVServiceConfiguration.getUuid())
-                                                              .build();
-
-      double val = 0.5 + random.nextDouble() * 10;
-      Map<String, Double> valueMap = new HashMap<>();
-      valueMap.put("apdexScore", val);
-
-      val = 0.5 + random.nextDouble() * 10;
-      valueMap.put("averageResponseTime", val);
-      newRelicMetricDataRecord.setValues(valueMap);
-      wingsPersistence.save(newRelicMetricDataRecord);
+      transactionMetricMap.forEach(
+          (txn, metric) -> saveNewRelicMetricRecord(txn, currentMinute + 1, configId, metric, stateType));
     }
   }
 
-  //  @Test @Category(IntegrationTests.class)
-  public void testHeatMapSummary() {
-    String url = API_BASE + "/cvdash" + VerificationConstants.HEATMAP_SUMMARY + "?accountId=" + accountId
-        + "&appId=" + savedApp.getUuid() + "&serviceId=" + savedService.getUuid() + "&startTime=" + start1DayAgo
-        + "&endTime=" + endTime;
-    logger.info("GET {}", url);
-    WebTarget target = client.target(url);
-    RestResponse<Map<String, List<HeatMap>>> response =
-        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<Map<String, List<HeatMap>>>>() {});
-    Map<String, List<HeatMap>> fetchedObject = response.getResource();
-    assertTrue(fetchedObject.containsKey(savedEnv.getName())); // key should be env name
+  private void saveNewRelicMetricRecord(
+      String transactionName, int minute, String configId, List<String> metrics, StateType stateType) {
+    Random random = new Random();
 
-    List<HeatMap> heatmaps = fetchedObject.get(savedEnv.getName());
-    HeatMap heatMap = heatmaps.get(0);
-    List<HeatMapUnit> heatMapUnits = heatMap.getRiskLevelSummary();
-    assertEquals(96, heatMapUnits.size());
-    assertEquals(1, heatMapUnits.get(heatMapUnits.size() - 1).getHighRisk());
-    assertEquals(0, heatMapUnits.get(heatMapUnits.size() - 1).getMediumRisk());
-    assertEquals(0, heatMapUnits.get(heatMapUnits.size() - 1).getLowRisk());
-    assertEquals(0, heatMapUnits.get(heatMapUnits.size() - 1).getNa());
+    // Add new relic metric record for minute=currentMinute + i
+    NewRelicMetricDataRecord newRelicMetricDataRecord = NewRelicMetricDataRecord.builder()
+                                                            .appId(savedApp.getUuid())
+                                                            .groupName("default")
+                                                            .name(transactionName)
+                                                            .serviceId(savedService.getUuid())
+                                                            .stateType(stateType)
+                                                            .dataCollectionMinute(minute)
+                                                            .timeStamp(TimeUnit.MINUTES.toMillis(minute))
+                                                            .host(generateUuid())
+                                                            .workflowExecutionId(generateUuid())
+                                                            .stateExecutionId(generateUuid())
+                                                            .cvConfigId(configId)
+                                                            .build();
+
+    final Double[] val = {0.5 + random.nextDouble() * 10};
+    Map<String, Double> valueMap = new HashMap<>();
+    metrics.forEach(metric -> {
+      valueMap.put(metric, val[0]);
+      val[0] = 0.5 + random.nextDouble() * 10;
+    });
+
+    newRelicMetricDataRecord.setValues(valueMap);
+    wingsPersistence.save(newRelicMetricDataRecord);
   }
 
-  //  @Test @Category(IntegrationTests.class)
-  // Test to be un-ignored as per https://harness.atlassian.net/browse/LE-1150
-  @Owner(emails = VAIBHAV_TULSYAN, intermittent = true)
-  @Ignore("TODO: please provide clear motivation why this test is ignored")
-  public void testTimeSeries() {
-    String url = API_BASE + "/cvdash" + VerificationConstants.TIMESERIES + "?accountId=" + accountId
-        + "&appId=" + savedApp.getUuid() + "&cvConfigId=" + newRelicCVServiceConfiguration.getUuid()
-        + "&startTime=" + start12HoursAgo + "&endTime=" + endTime;
+  @Test
+  @Category(IntegrationTests.class)
+  public void testTimeSeriesUnitPrometheus() {
+    TimeSeriesFilter filter = TimeSeriesFilter.builder()
+                                  .cvConfigId(prometheusCVServiceConfiguration.getUuid())
+                                  .startTime(start12HoursAgo)
+                                  .endTime(endTime)
+                                  .build();
+    List<TransactionTimeSeries> fetchedObject =
+        new ArrayList<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(filter));
+    assertEquals(2, fetchedObject.size());
+    assertEquals("TRANSACTION1", fetchedObject.get(0).getTransactionName());
+    assertEquals("METRIC1", fetchedObject.get(0).getMetricTimeSeries().first().getMetricName());
+    assertEquals("METRIC2", fetchedObject.get(0).getMetricTimeSeries().last().getMetricName());
+    assertEquals("TRANSACTION2", fetchedObject.get(1).getTransactionName());
+    assertEquals("METRIC3", fetchedObject.get(1).getMetricTimeSeries().first().getMetricName());
+    assertEquals("METRIC4", fetchedObject.get(1).getMetricTimeSeries().last().getMetricName());
+  }
 
-    WebTarget target = client.target(url);
-    RestResponse<Map<String, Map<String, List<TimeSeriesDataPoint>>>> response =
-        getRequestBuilderWithAuthHeader(target).get(
-            new GenericType<RestResponse<Map<String, Map<String, List<TimeSeriesDataPoint>>>>>() {});
-    Map<String, Map<String, List<TimeSeriesDataPoint>>> fetchedObject = response.getResource();
-    assertTrue(fetchedObject.containsKey("/login"));
+  @Test
+  @Category(IntegrationTests.class)
+  public void testTimeSeriesUnitNewRelic() {
+    TimeSeriesFilter filter = TimeSeriesFilter.builder()
+                                  .cvConfigId(newRelicCVServiceConfiguration.getUuid())
+                                  .startTime(start12HoursAgo)
+                                  .endTime(endTime)
+                                  .build();
+    List<TransactionTimeSeries> fetchedObject =
+        new ArrayList<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(filter));
+    assertEquals(2, fetchedObject.size());
+    assertEquals("/exception", fetchedObject.get(0).getTransactionName());
+    assertEquals("Error Percentage", fetchedObject.get(0).getMetricTimeSeries().first().getMetricName());
+    assertEquals("/login", fetchedObject.get(1).getTransactionName());
+    assertEquals("apdexScore", fetchedObject.get(1).getMetricTimeSeries().first().getMetricName());
+    assertEquals("averageResponseTime", fetchedObject.get(1).getMetricTimeSeries().last().getMetricName());
+  }
 
-    Map<String, List<TimeSeriesDataPoint>> allMetrics = fetchedObject.get("/login");
-    assertTrue(allMetrics.containsKey("apdexScore"));
-    assertEquals(720, allMetrics.get("apdexScore").size());
+  @Test
+  @Category(IntegrationTests.class)
+  public void testTimeSeriesUnitAPM() {
+    TimeSeriesFilter filter = TimeSeriesFilter.builder()
+                                  .cvConfigId(apmcvServiceConfiguration.getUuid())
+                                  .startTime(start12HoursAgo)
+                                  .endTime(endTime)
+                                  .build();
+    List<TransactionTimeSeries> fetchedObject =
+        new ArrayList<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(filter));
+    assertEquals(2, fetchedObject.size());
+    assertEquals("METRIC1", fetchedObject.get(0).getTransactionName());
+    assertEquals("METRIC1", fetchedObject.get(0).getMetricTimeSeries().first().getMetricName());
+    assertEquals("METRIC2", fetchedObject.get(1).getTransactionName());
+    assertEquals("METRIC2", fetchedObject.get(1).getMetricTimeSeries().first().getMetricName());
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
+  public void testTimeSeriesUnitAppD() {
+    TimeSeriesFilter filter = TimeSeriesFilter.builder()
+                                  .cvConfigId(appDynamicsCVServiceConfiguration.getUuid())
+                                  .startTime(start12HoursAgo)
+                                  .endTime(endTime)
+                                  .build();
+    List<TransactionTimeSeries> fetchedObject =
+        new ArrayList<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(filter));
+    assertEquals(2, fetchedObject.size());
+    assertEquals("/exception", fetchedObject.get(0).getTransactionName());
+    assertEquals("Error Percentage", fetchedObject.get(0).getMetricTimeSeries().first().getMetricName());
+    assertEquals("/login", fetchedObject.get(1).getTransactionName());
+    assertEquals("apdexScore", fetchedObject.get(1).getMetricTimeSeries().first().getMetricName());
+    assertEquals("averageResponseTime", fetchedObject.get(1).getMetricTimeSeries().last().getMetricName());
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
+  public void testTimeSeriesUnitDatadog() {
+    TimeSeriesFilter filter = TimeSeriesFilter.builder()
+                                  .cvConfigId(datadogCVServiceConfiguration.getUuid())
+                                  .startTime(start12HoursAgo)
+                                  .endTime(endTime)
+                                  .build();
+    List<TransactionTimeSeries> fetchedObject =
+        new ArrayList<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(filter));
+    assertEquals(2, fetchedObject.size());
+    assertEquals("ECS Container CPU Usage", fetchedObject.get(0).getTransactionName());
+    assertEquals("ECS Container CPU Usage", fetchedObject.get(0).getMetricTimeSeries().first().getMetricName());
+    assertEquals("ECS Container RSS Memory", fetchedObject.get(1).getTransactionName());
+    assertEquals("ECS Container RSS Memory", fetchedObject.get(1).getMetricTimeSeries().first().getMetricName());
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
+  public void testTimeSeriesUnitDynaTrace() {
+    TimeSeriesFilter filter = TimeSeriesFilter.builder()
+                                  .cvConfigId(dynaTraceCVServiceConfiguration.getUuid())
+                                  .startTime(start12HoursAgo)
+                                  .endTime(endTime)
+                                  .build();
+    List<TransactionTimeSeries> fetchedObject =
+        new ArrayList<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(filter));
+    assertEquals(2, fetchedObject.size());
+    assertEquals("/exception", fetchedObject.get(0).getTransactionName());
+    assertEquals("Error Percentage", fetchedObject.get(0).getMetricTimeSeries().first().getMetricName());
+    assertEquals("/login", fetchedObject.get(1).getTransactionName());
+    assertEquals("apdexScore", fetchedObject.get(1).getMetricTimeSeries().first().getMetricName());
+    assertEquals("averageResponseTime", fetchedObject.get(1).getMetricTimeSeries().last().getMetricName());
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
+  public void testTimeSeriesUnitCloudWatch() {
+    TimeSeriesFilter filter = TimeSeriesFilter.builder()
+                                  .cvConfigId(cloudWatchCVServiceConfiguration.getUuid())
+                                  .startTime(start12HoursAgo)
+                                  .endTime(endTime)
+                                  .build();
+    List<TransactionTimeSeries> fetchedObject =
+        new ArrayList<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(filter));
+    assertEquals(2, fetchedObject.size());
+    assertEquals("CPU Reservation", fetchedObject.get(0).getTransactionName());
+    assertEquals("CPU Reservation", fetchedObject.get(0).getMetricTimeSeries().first().getMetricName());
+    assertEquals("CPU Utilization", fetchedObject.get(1).getTransactionName());
+    assertEquals("CPU Utilization", fetchedObject.get(1).getMetricTimeSeries().first().getMetricName());
   }
 }
