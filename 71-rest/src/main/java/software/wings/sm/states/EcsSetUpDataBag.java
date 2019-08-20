@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.Application;
@@ -10,7 +11,6 @@ import software.wings.beans.Service;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.ImageDetails;
-import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 

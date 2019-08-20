@@ -10,6 +10,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import software.wings.beans.AwsConfig;
@@ -21,7 +22,6 @@ import software.wings.beans.container.EcsSteadyStateCheckResponse;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.UpdateServiceCountRequestData;
 import software.wings.cloudprovider.aws.EcsContainerService;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 
 import java.util.ArrayList;

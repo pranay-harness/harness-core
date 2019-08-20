@@ -1,10 +1,10 @@
 package software.wings.service.intfc.splunk;
 
 import com.splunk.Service;
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.LogElement;
 

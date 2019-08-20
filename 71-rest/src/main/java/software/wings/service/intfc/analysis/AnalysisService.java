@@ -1,8 +1,8 @@
 package software.wings.service.intfc.analysis;
 
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.api.InstanceElement;
 import software.wings.beans.SettingAttribute;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
 import software.wings.service.impl.analysis.CVCollaborationProviderParameters;

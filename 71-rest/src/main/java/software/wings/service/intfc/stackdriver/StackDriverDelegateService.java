@@ -2,10 +2,10 @@ package software.wings.service.intfc.stackdriver;
 
 import com.google.api.services.logging.v2.model.LogEntry;
 
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.stackdriver.StackDriverNameSpace;

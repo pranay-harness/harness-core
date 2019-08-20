@@ -40,6 +40,7 @@ import com.amazonaws.services.ecs.model.ServiceRegistry;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import io.harness.category.element.UnitTests;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
@@ -61,7 +62,6 @@ import software.wings.beans.container.EcsContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.ImageDetails;
 import software.wings.cloudprovider.aws.AwsClusterService;
-import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.ArrayList;
 import java.util.Collections;

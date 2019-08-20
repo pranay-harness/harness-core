@@ -17,13 +17,13 @@ import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapa
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.settings.SettingValue;
 
 import java.util.ArrayList;

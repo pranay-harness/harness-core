@@ -1,10 +1,10 @@
 package software.wings.service.intfc.newrelic;
 
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.NewRelicDeploymentMarkerPayload;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.newrelic.NewRelicApplication;

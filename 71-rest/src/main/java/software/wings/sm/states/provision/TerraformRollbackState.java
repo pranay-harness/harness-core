@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.persistence.HIterator;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +28,6 @@ import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCom
 import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommandUnit;
 import software.wings.beans.infrastructure.TerraformConfig;
 import software.wings.beans.infrastructure.TerraformConfig.TerraformConfigKeys;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;

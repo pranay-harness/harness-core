@@ -34,12 +34,12 @@ import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.KubernetesConfig.KubernetesConfigBuilder;
 import software.wings.beans.SettingAttribute;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.GcpHelperService;
 
 import java.io.IOException;

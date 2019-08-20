@@ -1,16 +1,10 @@
-package software.wings.security.encryption;
+package io.harness.security.encryption;
 
-import io.harness.security.encryption.EncryptedRecordData;
-import io.harness.security.encryption.EncryptionConfig;
-import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Created by rsingh on 10/17/17.
- */
 @Data
 @Builder
 @NoArgsConstructor

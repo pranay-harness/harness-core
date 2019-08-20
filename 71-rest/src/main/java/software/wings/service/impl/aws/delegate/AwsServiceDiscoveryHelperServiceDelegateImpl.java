@@ -15,8 +15,8 @@ import com.amazonaws.services.servicediscovery.model.GetServiceRequest;
 import com.amazonaws.services.servicediscovery.model.GetServiceResult;
 import com.amazonaws.services.servicediscovery.model.Namespace;
 import com.amazonaws.services.servicediscovery.model.Service;
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.AwsConfig;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.aws.delegate.AwsServiceDiscoveryHelperServiceDelegate;
 
 import java.util.List;

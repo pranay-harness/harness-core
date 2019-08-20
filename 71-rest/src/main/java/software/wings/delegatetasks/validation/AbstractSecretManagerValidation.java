@@ -7,10 +7,10 @@ import com.google.common.base.Preconditions;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.task.utils.KmsUtils;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 import java.util.function.Consumer;

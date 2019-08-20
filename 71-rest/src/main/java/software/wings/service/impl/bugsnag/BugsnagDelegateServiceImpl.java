@@ -9,6 +9,7 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -18,7 +19,6 @@ import software.wings.beans.BugsnagConfig;
 import software.wings.delegatetasks.CustomDataCollectionUtils;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.apm.APMRestClient;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;

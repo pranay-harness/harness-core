@@ -5,10 +5,10 @@ import static java.util.stream.Collectors.toList;
 import io.harness.delegate.beans.executioncapability.ConnectivityCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Getter;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.settings.SettingValue;
 
 import java.util.Collection;

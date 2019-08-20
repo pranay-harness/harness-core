@@ -2,11 +2,11 @@ package software.wings.service.impl.aws.model;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import software.wings.beans.AwsConfig;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
-import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;

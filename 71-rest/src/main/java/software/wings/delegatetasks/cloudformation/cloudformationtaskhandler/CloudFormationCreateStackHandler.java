@@ -21,6 +21,7 @@ import com.amazonaws.services.cloudformation.model.Stack;
 import com.amazonaws.services.cloudformation.model.UpdateStackRequest;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.NoArgsConstructor;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.GitOperationContext;
@@ -38,7 +39,6 @@ import software.wings.helpers.ext.cloudformation.response.CloudFormationRollback
 import software.wings.helpers.ext.cloudformation.response.CloudFormationRollbackInfo.CloudFormationRollbackInfoBuilder;
 import software.wings.helpers.ext.cloudformation.response.ExistingStackInfo;
 import software.wings.helpers.ext.cloudformation.response.ExistingStackInfo.ExistingStackInfoBuilder;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.GitUtilsDelegate;
 
 import java.util.List;

@@ -1,8 +1,8 @@
 package software.wings.helpers.ext.sftp;
 
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.SftpConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 

@@ -10,6 +10,7 @@ import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
+import io.harness.security.encryption.EncryptedDataDetail;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -18,7 +19,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 

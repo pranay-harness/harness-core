@@ -13,6 +13,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.FunctorException;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionType;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -23,7 +24,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.ServiceVariable;
 import software.wings.security.encryption.EncryptedData;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 

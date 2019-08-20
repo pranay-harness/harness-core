@@ -164,6 +164,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import software.wings.annotation.EncryptableSetting;
@@ -175,7 +176,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.LogCallback;
 import software.wings.common.InfrastructureConstants;
 import software.wings.expression.ManagerExpressionEvaluator;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 

@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.persistence.HIterator;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import software.wings.annotation.EncryptableSetting;
@@ -18,7 +19,6 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.EncryptionService;

@@ -11,6 +11,7 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.api.DeploymentType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionContext;
@@ -21,7 +22,6 @@ import software.wings.helpers.ext.ecs.request.EcsCommandRequest;
 import software.wings.helpers.ext.ecs.request.EcsServiceDeployRequest;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
-import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 

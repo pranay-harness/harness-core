@@ -6,6 +6,7 @@ import static org.mockito.Matchers.any;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
+import io.harness.security.encryption.EncryptedDataDetail;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -15,7 +16,6 @@ import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.beans.TaskType;
 import software.wings.core.local.executors.ShellExecutorFactory;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;

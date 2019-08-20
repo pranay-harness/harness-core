@@ -18,6 +18,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.waiter.ListNotifyResponseData;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Credentials;
@@ -36,7 +37,6 @@ import software.wings.helpers.ext.nexus.model.DockerImageTagResponse;
 import software.wings.helpers.ext.nexus.model.Nexus3AssetResponse;
 import software.wings.helpers.ext.nexus.model.Nexus3ComponentResponse;
 import software.wings.helpers.ext.nexus.model.Nexus3Repository;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.RepositoryFormat;
 

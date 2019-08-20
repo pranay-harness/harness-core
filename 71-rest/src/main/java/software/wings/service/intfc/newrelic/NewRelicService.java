@@ -1,11 +1,11 @@
 package software.wings.service.intfc.newrelic;
 
 import io.harness.rest.RestResponse;
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.APMFetchConfig;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.metrics.TimeSeriesMetricDefinition;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicApplicationInstance;

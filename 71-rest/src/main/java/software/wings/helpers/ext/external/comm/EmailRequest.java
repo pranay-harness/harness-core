@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.external.comm;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -8,7 +9,6 @@ import lombok.NoArgsConstructor;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.mail.SmtpConfig;
-import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.Arrays;
 import java.util.List;

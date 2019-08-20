@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.security.encryption.EncryptedDataDetail;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.InstanceDetail;
@@ -46,7 +47,6 @@ import software.wings.helpers.ext.pcf.response.PcfDeployCommandResponse;
 import software.wings.helpers.ext.pcf.response.PcfInfraMappingDataResponse;
 import software.wings.helpers.ext.pcf.response.PcfInstanceSyncResponse;
 import software.wings.helpers.ext.pcf.response.PcfSetupCommandResponse;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.File;

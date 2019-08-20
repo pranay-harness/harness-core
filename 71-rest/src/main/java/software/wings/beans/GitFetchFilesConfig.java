@@ -1,8 +1,8 @@
 package software.wings.beans;
 
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Data;
-import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 

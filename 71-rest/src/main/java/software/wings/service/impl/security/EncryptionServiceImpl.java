@@ -13,6 +13,7 @@ import io.harness.exception.DelegateRetryableException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.KmsOperationException;
 import io.harness.security.SimpleEncryption;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AwsSecretsManagerConfig;
@@ -20,7 +21,6 @@ import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.CyberArkConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 

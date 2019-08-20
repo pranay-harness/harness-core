@@ -1,9 +1,9 @@
 package software.wings.helpers.ext.azure;
 
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 

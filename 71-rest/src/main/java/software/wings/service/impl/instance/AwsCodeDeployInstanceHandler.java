@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.AwsCodeDeployDeploymentInfo;
@@ -31,7 +32,6 @@ import software.wings.beans.infrastructure.instance.info.Ec2InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsCodeDeployDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.aws.manager.AwsCodeDeployHelperServiceManager;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StepExecutionSummary;

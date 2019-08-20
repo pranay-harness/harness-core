@@ -8,6 +8,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import software.wings.beans.DelegateTaskResponse;
@@ -18,7 +19,6 @@ import software.wings.delegatetasks.cloudformation.cloudformationtaskhandler.Clo
 import software.wings.delegatetasks.cloudformation.cloudformationtaskhandler.CloudFormationListStacksHandler;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse;
-import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 import java.util.function.Consumer;

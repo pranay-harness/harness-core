@@ -9,6 +9,7 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.ExecutionCredential;
@@ -19,7 +20,6 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.core.winrm.executors.WinRmSession;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultBuilder;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.time.Clock;

@@ -14,9 +14,9 @@ import com.amazonaws.services.applicationautoscaling.model.RegisterScalableTarge
 import com.amazonaws.services.applicationautoscaling.model.ScalableTarget;
 import com.amazonaws.services.applicationautoscaling.model.ScalingPolicy;
 import com.amazonaws.services.cloudwatch.model.MetricAlarm;
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
 
 import java.util.List;

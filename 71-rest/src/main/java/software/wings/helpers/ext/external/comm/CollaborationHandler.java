@@ -1,7 +1,7 @@
 package software.wings.helpers.ext.external.comm;
 
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.helpers.ext.mail.SmtpConfig;
-import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 
