@@ -18,19 +18,23 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.ResponseType;
+import software.wings.audit.AuditRecord;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.audit.GitAuditDetails;
+import software.wings.beans.FeatureName;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.common.AuditHelper;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
+import software.wings.service.intfc.FeatureFlagService;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Singleton
 @Slf4j
@@ -38,6 +42,7 @@ public class YamlAuditRecordGenerationUtils {
   @Inject private AuditHelper auditHelper;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AuditYamlHelperForFailedChanges auditYamlHelper;
+  @Inject private FeatureFlagService featureFlagService;
 
   public AuditHeader processGitChangesForAudit(String accountId, GitDiffResult gitDiffResult) {
     AuditHeader.Builder builder = anAuditHeader();
@@ -116,7 +121,22 @@ public class YamlAuditRecordGenerationUtils {
             record.setFailure(true);
             record.setYamlError(changeWithErrorMsg.getErrorMsg());
           }
-          auditHeader.getEntityAuditRecords().add(record);
+
+          if (featureFlagService.isEnabled(FeatureName.ENTITY_AUDIT_RECORD, accountId)) {
+            long now = System.currentTimeMillis();
+            record.setCreatedAt(now);
+            AuditRecord auditRecord = AuditRecord.builder()
+                                          .auditHeaderId(auditHeader.getUuid())
+                                          .entityAuditRecord(record)
+                                          .createdAt(now)
+                                          .accountId(accountId)
+                                          .nextIteration(now + TimeUnit.MINUTES.toMillis(3))
+                                          .build();
+
+            wingsPersistence.save(auditRecord);
+          } else {
+            auditHeader.getEntityAuditRecords().add(record);
+          }
         }
       } catch (Exception e) {
         logger.warn("Failed to created EntityAuditRecord for error yaml path: " + change.getFilePath());
@@ -150,10 +170,11 @@ public class YamlAuditRecordGenerationUtils {
    */
   private void updateAuditHeader(String accountId, AuditHeader auditHeader, String msg, String failureStatusMsg) {
     UpdateOperations<AuditHeader> operations = wingsPersistence.createUpdateOperations(AuditHeader.class);
-    if (isNotEmpty(auditHeader.getEntityAuditRecords())) {
+    if (isNotEmpty(auditHeader.getEntityAuditRecords())
+        && !featureFlagService.isEnabled(FeatureName.ENTITY_AUDIT_RECORD, accountId)) {
       operations.addToSet("entityAuditRecords", auditHeader.getEntityAuditRecords());
-      operations.set("accountId", accountId);
     }
+    operations.set("accountId", accountId);
 
     if (isNotBlank(failureStatusMsg)) {
       operations.set("failureStatusMsg", failureStatusMsg);
