@@ -49,4 +49,14 @@ public class RequestSpecProvider {
     RestAssured.useRelaxedHTTPSValidation();
     return requestSpecBuilder.build();
   }
+
+  public RequestSpecification useGitSpec(String repoName) {
+    RequestSpecBuilder requestSpecBuilder = new RequestSpecBuilder();
+    requestSpecBuilder.setAccept(ContentType.JSON);
+    requestSpecBuilder.setContentType(ContentType.JSON);
+    requestSpecBuilder.setBaseUri("https://api.github.com/repos/wings-software");
+    requestSpecBuilder.setBasePath("/" + repoName + "/contents/Setup/Applications");
+    RestAssured.useRelaxedHTTPSValidation();
+    return requestSpecBuilder.build();
+  }
 }

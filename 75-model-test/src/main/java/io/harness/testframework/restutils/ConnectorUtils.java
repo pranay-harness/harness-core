@@ -15,6 +15,8 @@ import software.wings.beans.BugsnagConfig;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.ElkConfig;
+import software.wings.beans.GitConfig;
+import software.wings.beans.HostConnectionAttributes.AuthenticationScheme;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute;
@@ -24,6 +26,9 @@ import software.wings.beans.SumoConfig;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.settings.UsageRestrictions;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 public class ConnectorUtils {
@@ -303,5 +308,41 @@ public class ConnectorUtils {
     assertNotNull(setAttrResponse);
 
     return setAttrResponse.getString("resource.uuid").trim();
+  }
+  /**
+   * Connector util to create a Source Repo Provider: GitHub Connector
+   * Returns a List Consisting: UUID and Webhook URL
+   */
+  public static List<String> createGitConnector(String bearerToken, String connectorName, String accountId) {
+    String REPO_URL = "https://github.com/wings-software/automation-testing";
+    String BRANCH = "master";
+    List<String> details = new ArrayList<>();
+
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withCategory(SettingCategory.CONNECTOR)
+            .withName(connectorName)
+            .withAccountId(accountId)
+            .withValue(GitConfig.builder()
+                           .repoUrl(REPO_URL)
+                           .generateWebhookUrl(true)
+                           .branch(BRANCH)
+                           .authenticationScheme(AuthenticationScheme.HTTP_PASSWORD)
+                           .username(String.valueOf(
+                               new ScmSecret().decryptToCharArray(new SecretName("git_automation_username"))))
+                           .password(new ScmSecret().decryptToCharArray(new SecretName("git_automation_password")))
+                           .build())
+            .build();
+
+    JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
+    assertNotNull(setAttrResponse);
+
+    String uuid = setAttrResponse.getString("resource.uuid").trim();
+    String webhookToken = setAttrResponse.getString("resource.value.webhookToken").trim();
+
+    details.add(uuid);
+    details.add(webhookToken);
+
+    return details;
   }
 }
