@@ -11,4 +11,5 @@ public interface CV24x7DashboardService {
       String accountId, String appId, String serviceId, long startTime, long endTime, boolean detailed);
   LogMLAnalysisSummary getAnalysisSummary(String cvConfigId, Long startTime, Long endTime, String appId);
   Map<String, Double> getMetricTags(String accountId, String appId, String cvConfigId, long startTime, long endTIme);
+  long getCurrentAnalysisWindow(String cvConfigId);
 }

@@ -8,12 +8,16 @@ import static java.lang.Math.min;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.LOGS_HIGH_RISK_THRESHOLD;
 import static software.wings.common.VerificationConstants.LOGS_MEDIUM_RISK_THRESHOLD;
+import static software.wings.common.VerificationConstants.PREDECTIVE_HISTORY_MINUTES;
 import static software.wings.service.impl.analysis.ContinuousVerificationServiceImpl.computeHeatMapUnits;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
+import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
+import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -28,10 +32,13 @@ import software.wings.service.impl.analysis.LogMLAnalysisRecord.LogMLAnalysisRec
 import software.wings.service.impl.analysis.LogMLAnalysisStatus;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLClusterSummary;
+import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.analysis.MetricAnalysisRecord.MetricAnalysisRecordKeys;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates.TimeSeriesMetricTemplatesKeys;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskKeys;
 import software.wings.service.impl.splunk.LogMLClusterScores;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.intfc.FeatureFlagService;
@@ -454,5 +461,112 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
     });
 
     return scoreList.stream().mapToDouble(val -> val).average().orElse(0.0);
+  }
+
+  private long getCurrentAnalysisMinuteForTimeseries(CVConfiguration cvConfiguration) {
+    TimeSeriesMLAnalysisRecord analysisRecord =
+        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
+            .filter(MetricAnalysisRecordKeys.cvConfigId, cvConfiguration.getUuid())
+            .order(Sort.descending(MetricAnalysisRecordKeys.analysisMinute))
+            .project(MetricAnalysisRecordKeys.analysisMinute, true)
+            .project(MetricAnalysisRecordKeys.cvConfigId, true)
+            .get();
+    long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+    if (analysisRecord == null) {
+      logger.info("No analysis has been done for {}", cvConfiguration.getUuid());
+      return TimeUnit.MINUTES.toMillis(currentMinute);
+    } else {
+      if (analysisRecord.getAnalysisMinute() + PREDECTIVE_HISTORY_MINUTES < currentMinute) {
+        logger.info(
+            "For {} It has been more than 2 hours since the last one. We will be attempting the one 2 hours ago",
+            cvConfiguration.getUuid());
+        long currentWindowEnd =
+            TimeUnit.MINUTES.toMillis(currentMinute - PREDECTIVE_HISTORY_MINUTES + CRON_POLL_INTERVAL_IN_MINUTES);
+        logger.info("For {} Returning {} as the current window end time ", cvConfiguration.getUuid(), currentWindowEnd);
+        return currentWindowEnd;
+      } else {
+        logger.info(
+            "For {}, the last analysis minute was {}", cvConfiguration.getUuid(), analysisRecord.getAnalysisMinute());
+        return TimeUnit.MINUTES.toMillis(analysisRecord.getAnalysisMinute() + CRON_POLL_INTERVAL_IN_MINUTES);
+      }
+    }
+  }
+
+  private long getCurrentAnalysisMinuteForLogs(CVConfiguration cvConfiguration) {
+    LogsCVConfiguration logsCVConfiguration = (LogsCVConfiguration) cvConfiguration;
+    long baselineStart = logsCVConfiguration.getBaselineStartMinute(),
+         baselineEnd = logsCVConfiguration.getBaselineEndMinute();
+    LogMLAnalysisRecord lastAnalysis = wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+                                           .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfiguration.getUuid())
+                                           .order(Sort.descending(LogMLAnalysisRecordKeys.logCollectionMinute))
+                                           .project(LogMLAnalysisRecordKeys.logCollectionMinute, true)
+                                           .project(LogMLAnalysisRecordKeys.cvConfigId, true)
+                                           .get();
+
+    if (lastAnalysis == null) {
+      logger.info("There has been no analysis done for {}. So current window end time minute is {}",
+          cvConfiguration.getUuid(), baselineStart + CRON_POLL_INTERVAL_IN_MINUTES);
+      return TimeUnit.MINUTES.toMillis(baselineStart + CRON_POLL_INTERVAL_IN_MINUTES);
+    }
+
+    if (lastAnalysis.getLogCollectionMinute() > baselineStart && lastAnalysis.getLogCollectionMinute() < baselineEnd) {
+      logger.info("We are within the baseline window for {}", cvConfiguration.getUuid());
+      return TimeUnit.MINUTES.toMillis(lastAnalysis.getLogCollectionMinute() + CRON_POLL_INTERVAL_IN_MINUTES);
+    }
+
+    long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+
+    // if the last analysis is baselineEnd, then current window is now.
+    if (lastAnalysis.getLogCollectionMinute() == baselineEnd
+        || lastAnalysis.getLogCollectionMinute() + PREDECTIVE_HISTORY_MINUTES
+            >= TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary())) {
+      return TimeUnit.MINUTES.toMillis(lastAnalysis.getLogCollectionMinute() + CRON_POLL_INTERVAL_IN_MINUTES);
+    }
+
+    if (lastAnalysis.getLogCollectionMinute() + PREDECTIVE_HISTORY_MINUTES < currentMinute) {
+      logger.info("For {} Last analysis was more than 2 hours ago, we will restart analysis from 2hours ago.",
+          cvConfiguration.getUuid());
+      long expectedStart = currentMinute - PREDECTIVE_HISTORY_MINUTES;
+      if (Math.floorMod(expectedStart - 1, CRON_POLL_INTERVAL_IN_MINUTES) != 0) {
+        expectedStart -= Math.floorMod(expectedStart - 1, CRON_POLL_INTERVAL_IN_MINUTES);
+      }
+      return TimeUnit.MINUTES.toMillis(expectedStart + CRON_POLL_INTERVAL_IN_MINUTES);
+    }
+
+    return 0;
+  }
+
+  public long getCurrentAnalysisWindow(final String cvConfigId) {
+    CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
+
+    // First check to see if there are any LE tasks running for this configId.
+    LearningEngineAnalysisTask analysisTask =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+            .filter(LearningEngineAnalysisTaskKeys.cvConfigId, cvConfigId)
+            .field(LearningEngineAnalysisTaskKeys.executionStatus)
+            .in(Arrays.asList(ExecutionStatus.QUEUED, ExecutionStatus.RUNNING))
+            .field(LearningEngineAnalysisTaskKeys.ml_analysis_type)
+            .in(Arrays.asList(MLAnalysisType.LOG_ML, MLAnalysisType.FEEDBACK_ANALYSIS, MLAnalysisType.TIME_SERIES))
+            .order(LearningEngineAnalysisTaskKeys.analysis_minute)
+            .get();
+    if (analysisTask != null) {
+      logger.info("For {} found an analysis task in {} status. Returning analysisMinute {}", cvConfigId,
+          analysisTask.getExecutionStatus(), analysisTask.getAnalysis_minute());
+      return TimeUnit.MINUTES.toMillis(analysisTask.getAnalysis_minute());
+    }
+
+    if (VerificationConstants.getLogAnalysisStates().contains(cvConfiguration.getStateType())) {
+      logger.info("The configuration {} is a log config. Calling getCurrentAnalysisMinuteForLogs", cvConfigId);
+      return getCurrentAnalysisMinuteForLogs(cvConfiguration);
+    } else if (VerificationConstants.getMetricAnalysisStates().contains(cvConfiguration.getStateType())) {
+      logger.info(
+          "The configuration {} is a timeseries config. Calling getCurrentAnalysisMinuteForTimeseries", cvConfigId);
+      return getCurrentAnalysisMinuteForTimeseries(cvConfiguration);
+    } else {
+      final String errMsg = "The stateType for cvConfigId: " + cvConfigId
+          + "does not belong to timeseries or logs. Invalid State provided";
+      logger.error(errMsg);
+      throw new WingsException(errMsg);
+    }
   }
 }
