@@ -108,9 +108,7 @@ public class EmailStateTest extends WingsBaseTest {
     emailState.setSubject("subject");
 
     ExecutionResponse executionResponse = emailState.execute(context);
-    assertThat(executionResponse)
-        .extracting(ExecutionResponse::getExecutionStatus)
-        .containsExactly(ExecutionStatus.SUCCESS);
+    assertThat(executionResponse).extracting(ExecutionResponse::getExecutionStatus).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(executionResponse.getStateExecutionData())
         .isInstanceOf(EmailStateExecutionData.class)
         .isEqualTo(expected.but().build());
@@ -129,9 +127,7 @@ public class EmailStateTest extends WingsBaseTest {
     emailState.setSubject("Deployed ${host.hostName}");
 
     ExecutionResponse executionResponse = emailState.execute(context);
-    assertThat(executionResponse)
-        .extracting(ExecutionResponse::getExecutionStatus)
-        .containsExactly(ExecutionStatus.SUCCESS);
+    assertThat(executionResponse).extracting(ExecutionResponse::getExecutionStatus).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(executionResponse.getStateExecutionData())
         .isInstanceOf(EmailStateExecutionData.class)
         .isEqualTo(expected.but()
@@ -164,9 +160,7 @@ public class EmailStateTest extends WingsBaseTest {
     emailState.setSubject("subject");
 
     ExecutionResponse executionResponse = emailState.execute(context);
-    assertThat(executionResponse)
-        .extracting(ExecutionResponse::getExecutionStatus)
-        .containsExactly(ExecutionStatus.SUCCESS);
+    assertThat(executionResponse).extracting(ExecutionResponse::getExecutionStatus).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(executionResponse.getStateExecutionData())
         .isInstanceOf(EmailStateExecutionData.class)
         .isEqualTo(expected.but().build());
@@ -188,9 +182,7 @@ public class EmailStateTest extends WingsBaseTest {
     emailState.setIgnoreDeliveryFailure(false);
 
     ExecutionResponse executionResponse = emailState.execute(context);
-    assertThat(executionResponse)
-        .extracting(ExecutionResponse::getExecutionStatus)
-        .containsExactly(ExecutionStatus.ERROR);
+    assertThat(executionResponse).extracting(ExecutionResponse::getExecutionStatus).isEqualTo(ExecutionStatus.ERROR);
     assertThat(executionResponse.getStateExecutionData())
         .isInstanceOf(EmailStateExecutionData.class)
         .isEqualTo(expected.but().build());
@@ -209,9 +201,7 @@ public class EmailStateTest extends WingsBaseTest {
     emailState.setSubject("Deployment triggered by: ${deploymentTriggeredBy}");
 
     ExecutionResponse executionResponse = emailState.execute(context);
-    assertThat(executionResponse)
-        .extracting(ExecutionResponse::getExecutionStatus)
-        .containsExactly(ExecutionStatus.SUCCESS);
+    assertThat(executionResponse).extracting(ExecutionResponse::getExecutionStatus).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(executionResponse.getStateExecutionData())
         .isInstanceOf(EmailStateExecutionData.class)
         .isEqualTo(expected.but()

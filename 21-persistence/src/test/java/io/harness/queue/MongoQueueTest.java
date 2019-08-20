@@ -358,7 +358,7 @@ public class MongoQueueTest extends PersistenceTest {
     TestQueuableObject actual = getDatastore().find(TestQueuableObject.class).get();
 
     Date actualCreated = actual.getCreated();
-    assertThat(actualCreated).isAfterOrEqualsTo(timeBeforeSend).isBeforeOrEqualsTo(new Date());
+    assertThat(actualCreated).isAfterOrEqualTo(timeBeforeSend).isBeforeOrEqualTo(new Date());
 
     TestQueuableObject expected = new TestQueuableObject(1);
     expected.setVersion(versionInfoManager.getVersionInfo().getVersion());

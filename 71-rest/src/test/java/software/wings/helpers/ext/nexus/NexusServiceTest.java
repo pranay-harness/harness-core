@@ -588,7 +588,7 @@ public class NexusServiceTest extends WingsBaseTest {
     setPomModelWireMock();
     BuildDetails buildDetails =
         nexusService.getLatestVersion(nexusConfig, null, "releases", "software.wings.nexus", "rest-client");
-    assertThat(buildDetails).extracting(BuildDetails::getNumber).containsExactly("3.0");
+    assertThat(buildDetails).extracting(BuildDetails::getNumber).isEqualTo("3.0");
   }
 
   @Test

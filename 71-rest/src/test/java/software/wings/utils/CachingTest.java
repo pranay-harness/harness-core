@@ -26,9 +26,9 @@ public class CachingTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldCacheRepeatedCalls() {
-    assertThat(cacheableService.getCacheableObject(1, 1)).extracting(CacheableObject::getX).contains(1);
+    assertThat(cacheableService.getCacheableObject(1, 1)).extracting(CacheableObject::getX).isEqualTo(1);
     assertThat(cacheableService.getCallCount()).isEqualTo(1);
-    assertThat(cacheableService.getCacheableObject(1, 2)).extracting(CacheableObject::getX).contains(1);
+    assertThat(cacheableService.getCacheableObject(1, 2)).extracting(CacheableObject::getX).isEqualTo(1);
     assertThat(cacheableService.getCallCount()).isEqualTo(1);
   }
 
@@ -38,9 +38,9 @@ public class CachingTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldNotCacheWhenKeyIsDifferent() {
-    assertThat(cacheableService.getCacheableObject(1, 1)).extracting(CacheableObject::getX).contains(1);
+    assertThat(cacheableService.getCacheableObject(1, 1)).extracting(CacheableObject::getX).isEqualTo(1);
     assertThat(cacheableService.getCallCount()).isEqualTo(1);
-    assertThat(cacheableService.getCacheableObject(2, 1)).extracting(CacheableObject::getX).contains(2);
+    assertThat(cacheableService.getCacheableObject(2, 1)).extracting(CacheableObject::getX).isEqualTo(2);
     assertThat(cacheableService.getCallCount()).isEqualTo(2);
   }
 

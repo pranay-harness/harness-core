@@ -311,7 +311,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     assertThat(new File(expectedExecCommandUnitScript)).hasContent("ls");
     assertThat((ExecCommandUnit) command.getCommandUnits().get(1))
         .extracting(ExecCommandUnit::getPreparedCommand)
-        .contains(
+        .isEqualTo(
             "/tmp/ACTIVITY_ID/harnesslauncherACTIVITY_ID.sh -w '/tmp' harness" + DigestUtils.md5Hex("dolsACTIVITY_ID"));
   }
 
@@ -389,13 +389,13 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     assertThat(new File(expectedExecCommandUnitScript)).hasContent("ls");
     assertThat((ExecCommandUnit) command.getCommandUnits().get(1))
         .extracting(ExecCommandUnit::getPreparedCommand)
-        .contains(
+        .isEqualTo(
             "/tmp/ACTIVITY_ID/harnesslauncherACTIVITY_ID.sh -w '/tmp' harness" + DigestUtils.md5Hex("dolsACTIVITY_ID"));
 
     assertThat(new File(expectedSubExecCommandUnitScript)).hasContent("start.sh");
     assertThat((ExecCommandUnit) ((Command) command.getCommandUnits().get(2)).getCommandUnits().get(0))
         .extracting(ExecCommandUnit::getPreparedCommand)
-        .contains("/tmp/ACTIVITY_ID/harnesslauncherACTIVITY_ID.sh -w '/home/tomcat' harness"
+        .isEqualTo("/tmp/ACTIVITY_ID/harnesslauncherACTIVITY_ID.sh -w '/home/tomcat' harness"
             + DigestUtils.md5Hex("start1startscriptACTIVITY_ID"));
 
     verify(scriptSshExecutor).executeCommandString("chmod 0744 /tmp/ACTIVITY_ID/*", false);

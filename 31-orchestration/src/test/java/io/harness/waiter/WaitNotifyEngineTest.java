@@ -78,7 +78,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
       assertThat(persistence.get(NotifyResponse.class, id))
           .isNotNull()
           .extracting(NotifyResponse::getResponse)
-          .containsExactly(data);
+          .isEqualTo(data);
 
       Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> notifyEventQueue.count(Filter.ALL) == 0);
 
@@ -109,7 +109,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
       assertThat(persistence.get(NotifyResponse.class, id))
           .isNotNull()
           .extracting(NotifyResponse::getResponse)
-          .containsExactly(data);
+          .isEqualTo(data);
 
       Concurrent.test(10, i -> { notifyEventListener.execute(); });
 
@@ -147,7 +147,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
       assertThat(persistence.get(NotifyResponse.class, id))
           .isNotNull()
           .extracting(NotifyResponse::getResponse)
-          .containsExactly(data1);
+          .isEqualTo(data1);
 
       Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> notifyEventQueue.count(Filter.ALL) == 0);
 
@@ -159,7 +159,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
       assertThat(persistence.get(NotifyResponse.class, id))
           .isNotNull()
           .extracting(NotifyResponse::getResponse)
-          .containsExactly(data2);
+          .isEqualTo(data2);
 
       Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> notifyEventQueue.count(Filter.ALL) == 0);
 
@@ -171,7 +171,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
       assertThat(persistence.get(NotifyResponse.class, id))
           .isNotNull()
           .extracting(NotifyResponse::getResponse)
-          .containsExactly(data3);
+          .isEqualTo(data3);
 
       Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> notifyEventQueue.count(Filter.ALL) == 0);
 
@@ -209,7 +209,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
       assertThat(persistence.get(NotifyResponse.class, id))
           .isNotNull()
           .extracting(NotifyResponse::getResponse)
-          .containsExactly(data);
+          .isEqualTo(data);
 
       while (notifyEventQueue.count(Filter.ALL) != 0) {
         Thread.yield();

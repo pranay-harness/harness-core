@@ -274,7 +274,7 @@ public class JenkinsTest extends CategoryTest {
     assertThat(jobWithDetails).isNotNull();
     assertThat(jobWithDetails).isInstanceOf(JobWithExtendedDetails.class);
     JobWithExtendedDetails jobWithExtendedDetails = (JobWithExtendedDetails) jobWithDetails;
-    assertThat(jobWithExtendedDetails).extracting(JobWithExtendedDetails::getProperties).isNotEmpty();
+    assertThat(jobWithExtendedDetails).extracting(JobWithExtendedDetails::getProperties).isNotNull();
 
     List<ParametersDefinitionProperty> properties = jobWithExtendedDetails.getProperties()
                                                         .stream()

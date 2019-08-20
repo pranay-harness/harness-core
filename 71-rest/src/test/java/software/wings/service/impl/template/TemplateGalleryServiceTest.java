@@ -290,7 +290,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   private void assertTemplateGallery(TemplateGallery templateGallery) {
-    assertThat(templateGallery).isNotNull().extracting("uuid").isNotEmpty();
+    assertThat(templateGallery).isNotNull().extracting("uuid").isNotNull();
     assertThat(templateGallery.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
     assertThat(templateGallery.getKeywords()).contains("cd");
     assertThat(templateGallery.getKeywords()).contains(TEMPLATE_GALLERY.trim().toLowerCase());

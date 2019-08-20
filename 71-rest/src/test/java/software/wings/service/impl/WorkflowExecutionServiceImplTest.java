@@ -1827,7 +1827,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(orchestrationWorkflow1.getTemplatizedInfraMappingIds())
         .isNotNull()
         .contains(infrastructureMapping.getUuid());
-    assertThat(orchestrationWorkflow1).extracting("userVariables").isNotEmpty();
+    assertThat(orchestrationWorkflow1).extracting("userVariables").isNotNull();
     assertThat(
         orchestrationWorkflow1.getUserVariables().stream().anyMatch(variable -> variable.getName().equals("Service")))
         .isTrue();
