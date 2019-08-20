@@ -647,7 +647,7 @@ public class UserServiceImpl implements UserService {
     if (isNotEmpty(email)) {
       user = wingsPersistence.createQuery(User.class)
                  .filter(UserKeys.email, email.trim().toLowerCase())
-                 .field("accountId")
+                 .field("accounts")
                  .hasThisOne(accountId)
                  .get();
       loadSupportAccounts(user);
@@ -861,6 +861,7 @@ public class UserServiceImpl implements UserService {
                  .withRoles(userInvite.getRoles())
                  .withAppId(GLOBAL_APP_ID)
                  .withEmailVerified(emailVerified)
+                 .withImported(userInvite.getImportedByScim())
                  .build();
       user = save(user, accountId);
       // Invitation email should sent only in case of USER_PASSWORD authentication mechanism. Because only in that case
@@ -1699,7 +1700,7 @@ public class UserServiceImpl implements UserService {
     return BCrypt.checkpw(new String(password), hash);
   }
 
-  private User save(User user, String accountId) {
+  public User save(User user, String accountId) {
     user = wingsPersistence.saveAndGet(User.class, user);
     evictUserFromCache(user.getUuid());
     eventPublishHelper.publishSetupRbacEvent(accountId, user.getUuid(), EntityType.USER);

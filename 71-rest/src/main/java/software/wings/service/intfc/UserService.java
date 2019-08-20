@@ -485,4 +485,6 @@ public interface UserService extends OwnedByAccount {
   Account getAccountByIdIfExistsElseGetDefaultAccount(User user, Optional<String> accountId);
 
   boolean canEnableOrDisable(User user);
+
+  User save(User user, String accountId);
 }

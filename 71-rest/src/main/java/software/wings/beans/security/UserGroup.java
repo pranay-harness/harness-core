@@ -91,6 +91,7 @@ public class UserGroup extends Base implements NotificationReceiverInfo {
   private String linkedSsoDisplayName;
   private String ssoGroupId;
   private String ssoGroupName;
+  private boolean importedByScim;
 
   @Indexed private String accountId;
   private List<String> memberIds;
@@ -110,7 +111,7 @@ public class UserGroup extends Base implements NotificationReceiverInfo {
       Set<AppPermission> appPermissions, AccountPermissions accountPermissions, String uuid, String appId,
       EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath,
       boolean isSsoLinked, SSOType linkedSsoType, String linkedSsoId, String linkedSsoDisplayName, String ssoGroupId,
-      String ssoGroupName, NotificationSettings notificationSettings, boolean isDefault) {
+      String ssoGroupName, NotificationSettings notificationSettings, boolean isDefault, boolean importedByScim) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.description = description;
@@ -127,6 +128,7 @@ public class UserGroup extends Base implements NotificationReceiverInfo {
     this.ssoGroupName = ssoGroupName;
     this.notificationSettings = notificationSettings;
     this.isDefault = isDefault;
+    this.importedByScim = importedByScim;
   }
 
   public UserGroup cloneWithNewName(final String newName, final String newDescription) {
@@ -154,6 +156,7 @@ public class UserGroup extends Base implements NotificationReceiverInfo {
         .isDefault(isDefault)
         .ssoGroupId(ssoGroupId)
         .ssoGroupName(ssoGroupName)
+        .importedByScim(importedByScim)
         .build();
   }
 

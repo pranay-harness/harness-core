@@ -138,6 +138,10 @@ import software.wings.licensing.LicenseService;
 import software.wings.licensing.LicenseServiceImpl;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.scheduler.ServiceJobScheduler;
+import software.wings.scim.ScimGroupService;
+import software.wings.scim.ScimGroupServiceImpl;
+import software.wings.scim.ScimUserService;
+import software.wings.scim.ScimUserServiceImpl;
 import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountChecker;
 import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountCheckerImpl;
 import software.wings.security.saml.SamlUserGroupSync;
@@ -689,6 +693,8 @@ public class WingsModule extends DependencyModule {
 
     bind(SamlUserGroupSync.class);
     bind(AzureVaultService.class).to(AzureVaultServiceImpl.class);
+    bind(ScimUserService.class).to(ScimUserServiceImpl.class);
+    bind(ScimGroupService.class).to(ScimGroupServiceImpl.class);
     bind(AzureSecretsManagerService.class).to(AzureSecretsManagerServiceImpl.class);
     bind(SmbService.class).to(SmbServiceImpl.class);
     bind(SmbBuildService.class).to(SmbBuildServiceImpl.class);

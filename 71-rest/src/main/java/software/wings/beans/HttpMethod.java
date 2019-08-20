@@ -18,6 +18,11 @@ public enum HttpMethod {
    * Get http method.
    */
   GET,
+
+  /**
+   * Patch http method.
+   */
+  PATCH,
   /**
    * Post http method.
    */

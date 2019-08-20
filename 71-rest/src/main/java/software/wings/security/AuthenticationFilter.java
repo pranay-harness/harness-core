@@ -31,6 +31,7 @@ import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.IdentityServiceAuth;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.PublicApi;
+import software.wings.security.annotations.ScimAPI;
 import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
@@ -90,6 +91,11 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     }
 
     String authorization = containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
+
+    if (isScimAPI()) {
+      return;
+    }
+
     if (isExternalFacingApiRequest(containerRequestContext)) {
       String apiKey = containerRequestContext.getHeaderString(API_KEY_HEADER);
 
@@ -166,6 +172,13 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     }
 
     throw new WingsException(INVALID_CREDENTIAL, USER);
+  }
+
+  protected boolean isScimAPI() {
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    Method resourceMethod = resourceInfo.getResourceMethod();
+
+    return resourceMethod.getAnnotation(ScimAPI.class) != null || resourceClass.getAnnotation(ScimAPI.class) != null;
   }
 
   protected boolean isAuthenticatedByIdentitySvc(ContainerRequestContext containerRequestContext) {

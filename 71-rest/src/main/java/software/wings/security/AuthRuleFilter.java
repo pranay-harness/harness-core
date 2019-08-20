@@ -39,6 +39,7 @@ import software.wings.security.annotations.IdentityServiceAuth;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.ListAPI;
 import software.wings.security.annotations.PublicApi;
+import software.wings.security.annotations.ScimAPI;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
@@ -147,6 +148,11 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   public void filter(ContainerRequestContext requestContext) {
     if (authorizationExemptedRequest(requestContext)) {
       return; // do nothing
+    }
+
+    if (isScimAPI()) {
+      authHandler.authorizeScimApi(requestContext);
+      return;
     }
 
     if (isDelegateRequest(requestContext) || isLearningEngineServiceRequest(requestContext)
@@ -603,5 +609,12 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     } else {
       return methodPermissionAttributes;
     }
+  }
+
+  protected boolean isScimAPI() {
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    Method resourceMethod = resourceInfo.getResourceMethod();
+
+    return resourceMethod.getAnnotation(ScimAPI.class) != null || resourceClass.getAnnotation(ScimAPI.class) != null;
   }
 }
