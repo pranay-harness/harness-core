@@ -35,6 +35,7 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.spotinst.model.ElastiGroup;
@@ -152,11 +153,11 @@ public class SpotInstStateHelper {
             .elastiGroupJson(elastiGroupJson)
             .blueGreen(blueGreen)
             .elastiGroupNamePrefix(elastiGroupNamePrefix)
-            .loadBalancerName(serviceSetup.getLoadBalancerName())
+            .loadBalancerName(context.renderExpression(serviceSetup.getLoadBalancerName()))
             .classicLoadBalancer(serviceSetup.isClassicLoadBalancer())
-            .stageListenerPort(serviceSetup.getTargetListenerPort())
-            .targetListenerProtocol(serviceSetup.getTargetListenerProtocol())
-            .prodListenerPort(serviceSetup.getProdListenerPort())
+            .stageListenerPort(getPortNum(context.renderExpression(serviceSetup.getTargetListenerPort())))
+            .targetListenerProtocol(context.renderExpression(serviceSetup.getTargetListenerProtocol()))
+            .prodListenerPort(getPortNum(context.renderExpression(serviceSetup.getProdListenerPort())))
             .image(artifact.getRevision())
             .awsRegion(awsAmiInfrastructureMapping.getRegion())
             .build();
@@ -181,6 +182,15 @@ public class SpotInstStateHelper {
         .spotinstCommandRequest(commandRequest)
         .elastiGroupOriginalConfig(elastiGroupOriginalConfig)
         .build();
+  }
+
+  private int getPortNum(String port) {
+    try {
+      return Integer.parseInt(port);
+    } catch (NumberFormatException e) {
+      throw new WingsException(
+          ErrorCode.INVALID_ARGUMENT, "PORT Number is invalid, Cant be cast to Integer: " + port, USER);
+    }
   }
 
   private ElastiGroup generateOriginalConfigFromJson(

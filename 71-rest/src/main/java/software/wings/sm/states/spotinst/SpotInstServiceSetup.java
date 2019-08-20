@@ -55,9 +55,9 @@ public class SpotInstServiceSetup extends State {
   @Getter @Setter private boolean useLoadBalancer;
   @Getter @Setter private String loadBalancerName;
   @Getter @Setter private boolean classicLoadBalancer;
-  @Getter @Setter private Integer targetListenerPort;
+  @Getter @Setter private String targetListenerPort;
   @Getter @Setter private String targetListenerProtocol;
-  @Getter @Setter private Integer prodListenerPort;
+  @Getter @Setter private String prodListenerPort;
 
   @Inject private transient ActivityService activityService;
   @Inject private transient DelegateService delegateService;
