@@ -236,9 +236,10 @@ public class AuthenticationManager {
     // Null check just in case identity service might accidentally forwarded wrong user to this cluster.
     if (user == null) {
       logger.info("User {} doesn't exist in this manager cluster", email);
-    } else if (!user.isEmailVerified()) {
-      logger.info("User {} is not yet email verified in this manager cluster, login is not allowed.", email);
-      throw new WingsException(EMAIL_NOT_VERIFIED, USER);
+      //    PL-3163: LDAP/SAML users are not email-verified, but we need to allow them to login.
+      //    } else if (!user.isEmailVerified()) {
+      //      logger.info("User {} is not yet email verified in this manager cluster, login is not allowed.", email);
+      //      throw new WingsException(EMAIL_NOT_VERIFIED, USER);
     } else if (user.isDisabled()) {
       logger.info("User {} is disabled in this manager cluster, login is not allowed.", email);
       throw new WingsException(USER_DISABLED, USER);
