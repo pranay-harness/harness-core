@@ -125,7 +125,8 @@ public class CapabilityHelper {
 
         List<EncryptedDataDetail> nonLocalEncryptedDetails =
             encryptedDataDetails.stream()
-                .filter(encryptedDataDetail -> encryptedDataDetail.getEncryptionType() != EncryptionType.LOCAL)
+                .filter(encryptedDataDetail
+                    -> encryptedDataDetail.getEncryptedData().getEncryptionType() != EncryptionType.LOCAL)
                 .collect(Collectors.toList());
 
         // There can be more than 1 non-Local encryptedDataDetails.

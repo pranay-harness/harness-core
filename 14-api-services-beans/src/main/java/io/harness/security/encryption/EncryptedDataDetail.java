@@ -10,8 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EncryptedDataDetail {
-  // TODO: Why do we need EncryptionType separately? We have an encryptionType field in EncryptedData class. @swagat
-  private EncryptionType encryptionType;
   private EncryptedRecordData encryptedData;
   private EncryptionConfig encryptionConfig;
   private String fieldName;
