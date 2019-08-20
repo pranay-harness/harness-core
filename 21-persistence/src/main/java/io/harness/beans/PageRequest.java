@@ -401,8 +401,9 @@ public class PageRequest<T> {
    * @param fieldName  name of field to apply filter on.
    * @param op         Operator for filter.
    */
-  public void addFilter(String fieldName, Operator op, Object... fieldValues) {
-    filters.add(SearchFilter.builder().fieldName(fieldName).op(op).fieldValues(fieldValues).build());
+  public PageRequest<T> addFilter(String fieldName, Operator op, Object... fieldValues) {
+    this.filters.add(SearchFilter.builder().fieldName(fieldName).op(op).fieldValues(fieldValues).build());
+    return this;
   }
 
   public PageRequest<T> copy() {

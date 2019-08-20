@@ -53,6 +53,9 @@ public class VerificationConstants {
   public static final String ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL = "/save-analysis-records";
   public static final String ANALYSIS_STATE_GET_ANALYSIS_SUMMARY_URL = "/get-analysis-summary";
   public static final String ANALYSIS_STATE_GET_EXP_ANALYSIS_INFO_URL = "/get-exp-analysis-info";
+  public static final String GET_EXP_PERFORMANCE_URL = "/get-exp-performance";
+  public static final String MARK_EXP_STATUS = "/mark-exp-status";
+  public static final String UPDATE_MISMATCH = "/update-mismatch";
   public static final String ANALYSIS_STATE_RE_QUEUE_TASK = "/experimentalTask";
   public static final String LEARNING_EXP_URL = "learning-exp";
   public static final String LEARNING_METRIC_EXP_URL = "learning-exp-metric";

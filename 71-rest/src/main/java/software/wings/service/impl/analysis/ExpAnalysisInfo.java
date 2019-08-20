@@ -14,4 +14,5 @@ public class ExpAnalysisInfo {
   private String envId;
   private String workflowExecutionId;
   private long createdAt;
+  private boolean mismatch;
 }
