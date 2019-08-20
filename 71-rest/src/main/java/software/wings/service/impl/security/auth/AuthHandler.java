@@ -4,6 +4,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.USER_NOT_AUTHORIZED;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.noop;
 import static java.util.Arrays.asList;
@@ -47,6 +48,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Account;
+import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.Base;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
@@ -85,9 +87,11 @@ import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.WorkflowFilter;
 import software.wings.service.impl.UserGroupServiceImpl;
+import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.HarnessApiKeyService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -106,6 +110,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.core.MultivaluedMap;
 
 /**
  * @author rktummala on 3/7/18
@@ -136,6 +142,9 @@ public class AuthHandler {
   @Inject private AuthService authService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private DashboardAuthHandler dashboardAuthHandler;
+  @Inject private AuthHandler authHandler;
+  @Inject private ApiKeyService apiKeyService;
+  @Inject private HarnessApiKeyService harnessApiKeyService;
 
   public UserPermissionInfo evaluateUserPermissionInfo(String accountId, List<UserGroup> userGroups, User user) {
     UserPermissionInfoBuilder userPermissionInfoBuilder = UserPermissionInfo.builder().accountId(accountId);
@@ -1536,5 +1545,35 @@ public class AuthHandler {
   private boolean isAuthorized(List<PermissionAttribute> permissionAttributes, Set<PermissionType> accountPermissions) {
     return permissionAttributes.stream().anyMatch(
         permissionAttribute -> accountPermissions.contains(permissionAttribute.getPermissionType()));
+  }
+
+  public void authorizeScimApi(ContainerRequestContext containerRequestContext) {
+    String apiKey = getToken(containerRequestContext.getHeaderString("Authorization"), "Bearer");
+    String accountId = getRequestParamFromContext("accountId", containerRequestContext.getUriInfo().getPathParameters(),
+        containerRequestContext.getUriInfo().getQueryParameters());
+
+    ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(apiKey, accountId, true);
+    if (apiKeyEntry == null) {
+      throw new WingsException(USER_NOT_AUTHORIZED);
+    }
+    UserPermissionInfo userPermissionInfo =
+        authHandler.evaluateUserPermissionInfo(accountId, apiKeyEntry.getUserGroups(), null);
+
+    logger.info("SCIM permissions: {}", userPermissionInfo.getAccountPermissionSummary().getPermissions());
+    if (!userPermissionInfo.getAccountPermissionSummary().getPermissions().contains(USER_PERMISSION_MANAGEMENT)) {
+      throw new WingsException(USER_NOT_AUTHORIZED);
+    }
+  }
+
+  private String getToken(String authorizationHeader, String prefix) {
+    if (!authorizationHeader.contains(prefix)) {
+      throw new WingsException(USER_NOT_AUTHORIZED);
+    }
+    return authorizationHeader.substring(prefix.length()).trim();
+  }
+
+  private String getRequestParamFromContext(
+      String key, MultivaluedMap<String, String> pathParameters, MultivaluedMap<String, String> queryParameters) {
+    return queryParameters.getFirst(key) != null ? queryParameters.getFirst(key) : pathParameters.getFirst(key);
   }
 }

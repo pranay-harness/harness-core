@@ -54,6 +54,8 @@ public class UserInvite extends Base {
 
   private String marketPlaceToken;
 
+  private boolean importedByScim;
+
   @Override
   public boolean equals(Object o) {
     return super.equals(o) && true;
@@ -206,6 +208,14 @@ public class UserInvite extends Base {
     this.passwordHash = passwordHash;
   }
 
+  public boolean getImportedByScim() {
+    return importedByScim;
+  }
+
+  public void setImportedByScim(boolean importedByScim) {
+    this.importedByScim = importedByScim;
+  }
+
   public static final class UserInviteBuilder {
     private String accountId;
     private String email;
@@ -224,6 +234,7 @@ public class UserInvite extends Base {
     private String companyName;
     private String accountName;
     private String marketPlaceToken;
+    private boolean importedByScim;
     private UserInviteSource source = UserInviteSource.builder().build();
 
     private UserInviteBuilder() {}
@@ -322,6 +333,11 @@ public class UserInvite extends Base {
       return this;
     }
 
+    public UserInviteBuilder withImportedByScim(boolean importedByScim) {
+      this.importedByScim = importedByScim;
+      return this;
+    }
+
     public UserInvite build() {
       UserInvite userInvite = new UserInvite();
       userInvite.setAccountId(accountId);
@@ -342,6 +358,7 @@ public class UserInvite extends Base {
       userInvite.setAccountName(accountName);
       userInvite.setCompanyName(companyName);
       userInvite.setMarketPlaceToken(marketPlaceToken);
+      userInvite.setImportedByScim(importedByScim);
       return userInvite;
     }
   }

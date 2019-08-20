@@ -88,6 +88,8 @@ public class User extends Base implements Principal {
 
   private boolean disabled;
 
+  private boolean imported;
+
   private UserLockoutInfo userLockoutInfo = new UserLockoutInfo();
 
   @JsonIgnore private long passwordChangedAt;
@@ -124,6 +126,7 @@ public class User extends Base implements Principal {
     publicUser.setLastLogin(getLastLogin());
     publicUser.setPasswordExpired(isPasswordExpired());
     publicUser.setUserLocked(isUserLocked());
+    publicUser.setImported(isImported());
     // publicUser.setCompanyName(getCompanyName());
     return publicUser;
   }
@@ -180,6 +183,14 @@ public class User extends Base implements Principal {
    */
   public void setName(String name) {
     this.name = name;
+  }
+
+  public boolean isImported() {
+    return imported;
+  }
+
+  public void setImported(boolean imported) {
+    this.imported = imported;
   }
 
   /* (non-Javadoc)
@@ -637,6 +648,7 @@ public class User extends Base implements Principal {
     private String oauthProvider;
     private boolean passwordExpired;
     private boolean userLocked;
+    private boolean imported;
 
     private Builder() {}
 
@@ -790,6 +802,11 @@ public class User extends Base implements Principal {
       return this;
     }
 
+    public Builder withImported(boolean imported) {
+      this.imported = imported;
+      return this;
+    }
+
     public Builder but() {
       return anUser()
           .withName(name)
@@ -819,7 +836,8 @@ public class User extends Base implements Principal {
           .withTotpSecretKey(totpSecretKey)
           .withTwoFactorJwtToken(twoFactorJwtToken)
           .withPasswordExpired(passwordExpired)
-          .withOauthProvider(oauthProvider);
+          .withOauthProvider(oauthProvider)
+          .withImported(imported);
     }
 
     public User build() {
@@ -853,6 +871,7 @@ public class User extends Base implements Principal {
       user.setOauthProvider(oauthProvider);
       user.setPasswordExpired(passwordExpired);
       user.setUserLocked(userLocked);
+      user.setImported(imported);
       return user;
     }
   }
