@@ -19,6 +19,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.InvalidRequestException;
+import io.harness.expression.ExpressionEvaluator;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
@@ -68,10 +69,10 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
   @Inject private SftpHelperService sftpHelperService;
   private static Map<String, String> bucketRegions = new HashMap<>();
 
-  private String artifactVariableName = "artifact";
+  private String artifactVariableName = ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME;
 
   public String getArtifactVariableName() {
-    return artifactVariableName;
+    return artifactVariableName == null ? ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME : artifactVariableName;
   }
 
   public void setArtifactVariableName(String artifactVariableName) {
@@ -84,22 +85,13 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
   public DownloadArtifactCommandUnit() {
     setCommandUnitType(CommandUnitType.DOWNLOAD_ARTIFACT);
     initBucketRegions();
-  }
-
-  @Override
-  @SchemaIgnore
-  public boolean isArtifactNeeded() {
-    return true;
+    setArtifactNeeded(true);
   }
 
   @SchemaIgnore
   @Override
   public void updateServiceArtifactVariableNames(Set<String> serviceArtifactVariableNames) {
-    if (isEmpty(artifactVariableName)) {
-      serviceArtifactVariableNames.add("artifact");
-    } else {
-      serviceArtifactVariableNames.add(artifactVariableName);
-    }
+    serviceArtifactVariableNames.add(getArtifactVariableName());
   }
 
   @Override

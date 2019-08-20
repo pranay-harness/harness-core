@@ -3,6 +3,7 @@ package migrations.all;
 import com.google.inject.Inject;
 
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
@@ -31,7 +32,7 @@ import java.util.stream.Collectors;
 public class MigrateArtifactStreamBindingsToServiceVariable implements Migration {
   // NOTE: Pre-requisite: MigrateServiceLevelArtifactStreamsToConnectorLevel
   private static final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w"; // TODO: change this to reflect correct account
-  private static final String ARTIFACT_VARIABLE_NAME = "artifact";
+  private static final String ARTIFACT_VARIABLE_NAME = ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME;
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;

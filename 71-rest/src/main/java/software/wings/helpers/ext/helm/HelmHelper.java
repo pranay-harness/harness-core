@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.helm;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_DOCKER_IMAGE_NAME_PLACEHOLDER;
@@ -16,6 +17,7 @@ import org.apache.commons.io.LineIterator;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.HashSet;
 import java.util.Set;
 
 @Singleton
@@ -67,19 +69,18 @@ public class HelmHelper {
   }
 
   public static boolean isArtifactReferencedInValuesYaml(String helmValueYamlFile) {
-    return checkStringPresentInHelmValueYaml(helmValueYamlFile, HELM_DOCKER_IMAGE_NAME_PLACEHOLDER)
-        || checkStringPresentInHelmValueYaml(helmValueYamlFile, HELM_DOCKER_IMAGE_TAG_PLACEHOLDER)
-        || checkStringPresentInHelmValueYaml(helmValueYamlFile, "${artifact.");
+    Set<String> serviceArtifactVariableNames = new HashSet<>();
+    updateArtifactVariableNamesReferencedInValuesYaml(helmValueYamlFile, serviceArtifactVariableNames);
+    return isNotEmpty(serviceArtifactVariableNames);
   }
 
   public static void updateArtifactVariableNamesReferencedInValuesYaml(
-      String helmValueYamlFile, Set<String> serviceArtifactVariableNames, Set<String> workflowVariableNames) {
+      String helmValueYamlFile, Set<String> serviceArtifactVariableNames) {
     ExpressionEvaluator.updateServiceArtifactVariableNames(helmValueYamlFile, serviceArtifactVariableNames);
-    ExpressionEvaluator.updateWorkflowVariableNames(helmValueYamlFile, workflowVariableNames);
-    if (!serviceArtifactVariableNames.contains("artifact")
+    if (!serviceArtifactVariableNames.contains(ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME)
         && (checkStringPresentInHelmValueYaml(helmValueYamlFile, HELM_DOCKER_IMAGE_NAME_PLACEHOLDER)
                || checkStringPresentInHelmValueYaml(helmValueYamlFile, HELM_DOCKER_IMAGE_TAG_PLACEHOLDER))) {
-      serviceArtifactVariableNames.add("artifact");
+      serviceArtifactVariableNames.add(ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME);
     }
   }
 }

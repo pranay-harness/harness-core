@@ -1,5 +1,7 @@
 package io.harness.seeddata;
 
+import io.harness.expression.ExpressionEvaluator;
+
 public interface SampleDataProviderConstants {
   String K8S_DELEGATE_NAME = "harness-sample-k8s-delegate";
 
@@ -29,5 +31,5 @@ public interface SampleDataProviderConstants {
 
   String K8S_PIPELINE_NAME = "K8s Prod Pipeline";
 
-  String ARTIFACT_VARIABLE_NAME = "artifact";
+  String ARTIFACT_VARIABLE_NAME = ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME;
 }

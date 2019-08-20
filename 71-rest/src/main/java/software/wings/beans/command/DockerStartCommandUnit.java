@@ -18,7 +18,7 @@ public class DockerStartCommandUnit extends ExecCommandUnit {
    * Instantiates a new Docker run command unit.
    */
   public DockerStartCommandUnit() {
-    super.setArtifactNeeded(true);
+    setArtifactNeeded(true);
     setCommandUnitType(CommandUnitType.DOCKER_START);
   }
 

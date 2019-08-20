@@ -463,8 +463,8 @@ public interface ServiceResourceService extends OwnedByApplication {
 
   boolean checkArtifactNeededForHelm(String appId, String serviceTemplateId);
 
-  void updateArtifactVariableNamesForHelm(String appId, String serviceTemplateId,
-      Set<String> serviceArtifactVariableNames, Set<String> workflowVariableNames);
+  void updateArtifactVariableNamesForHelm(
+      String appId, String serviceTemplateId, Set<String> serviceArtifactVariableNames);
 
   void deleteByYamlGit(String appId, String serviceId, boolean syncFromGit);
 

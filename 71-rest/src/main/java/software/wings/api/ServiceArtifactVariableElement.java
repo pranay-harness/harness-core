@@ -3,6 +3,7 @@ package software.wings.api;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.context.ContextElementType;
+import io.harness.expression.ExpressionEvaluator;
 import software.wings.beans.EntityType;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
@@ -65,7 +66,7 @@ public class ServiceArtifactVariableElement implements ContextElement {
   }
 
   public String getArtifactVariableName() {
-    return isBlank(artifactVariableName) ? "artifact" : artifactVariableName;
+    return isBlank(artifactVariableName) ? ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME : artifactVariableName;
   }
 
   public void setArtifactVariableName(String artifactVariableName) {

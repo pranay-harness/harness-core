@@ -22,6 +22,7 @@ import io.harness.beans.SweepingOutput.Scope;
 import io.harness.beans.SweepingOutput.SweepingOutputBuilder;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.LateBindingMap;
 import io.harness.expression.LateBindingValue;
 import io.harness.expression.SecretString;
@@ -75,10 +76,9 @@ import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
 @Slf4j
 public class ExecutionContextImpl implements DeploymentExecutionContext {
-  private static final String ARTIFACT_FILE_NAME_VARIABLE = "ARTIFACT_FILE_NAME";
-  public static final String DEFAULT_ARTIFACT_VARIABLE = "artifact";
   public static final String PHASE_PARAM = "PHASE_PARAM";
 
   private static final Pattern wildCharPattern = Pattern.compile("[+*/\\\\ &$\"'.|]");
@@ -149,7 +149,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
         artifactFileName = artifact.getFileName();
       }
       if (isNotEmpty(artifactFileName)) {
-        map.put(ARTIFACT_FILE_NAME_VARIABLE, artifactFileName);
+        map.put(ExpressionEvaluator.ARTIFACT_FILE_NAME_VARIABLE, artifactFileName);
       }
     }
   }
@@ -294,7 +294,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   public Artifact getDefaultArtifactForService(String serviceId) {
     if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, getAccountId())) {
       Map<String, Artifact> map = getArtifactsForService(serviceId);
-      return map.getOrDefault(DEFAULT_ARTIFACT_VARIABLE, null);
+      return map.getOrDefault(ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME, null);
     } else {
       return getArtifactForService(serviceId);
     }
@@ -504,7 +504,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       Map<String, Object> variables, boolean adoptDelegateDecryption, int expressionFunctorToken) {
     final String variableName = renderExpression(serviceVariable.getName());
 
-    if (!variables.containsKey(variableName)) {
+    if (!variables.containsKey(variableName) && !Type.ARTIFACT.equals(serviceVariable.getType())) {
       if (serviceVariable.getType() == TEXT || encryptedFieldMode == MASKED) {
         variables.put(variableName, renderExpression(new String(serviceVariable.getValue())));
       } else {
@@ -718,7 +718,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       addArtifactToContext(artifactStreamService, getApp().getAccountId(), map, stateExecutionContext.getArtifact());
     }
     if (stateExecutionContext.getArtifactFileName() != null) {
-      map.put(ARTIFACT_FILE_NAME_VARIABLE, stateExecutionContext.getArtifactFileName());
+      map.put(ExpressionEvaluator.ARTIFACT_FILE_NAME_VARIABLE, stateExecutionContext.getArtifactFileName());
     }
     return map;
   }

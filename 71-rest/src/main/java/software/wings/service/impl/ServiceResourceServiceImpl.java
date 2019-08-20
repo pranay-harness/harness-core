@@ -2160,16 +2160,15 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
-  public void updateArtifactVariableNamesForHelm(String appId, String serviceTemplateId,
-      Set<String> serviceArtifactVariableNames, Set<String> workflowVariableNames) {
+  public void updateArtifactVariableNamesForHelm(
+      String appId, String serviceTemplateId, Set<String> serviceArtifactVariableNames) {
     List<String> valueOverridesYamlFiles = applicationManifestUtils.getHelmValuesYamlFiles(appId, serviceTemplateId);
     if (isEmpty(valueOverridesYamlFiles)) {
       return;
     }
 
     for (String valueYamlFile : valueOverridesYamlFiles) {
-      HelmHelper.updateArtifactVariableNamesReferencedInValuesYaml(
-          valueYamlFile, serviceArtifactVariableNames, workflowVariableNames);
+      HelmHelper.updateArtifactVariableNamesReferencedInValuesYaml(valueYamlFile, serviceArtifactVariableNames);
     }
   }
 

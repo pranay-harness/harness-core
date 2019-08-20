@@ -1,6 +1,5 @@
 package software.wings.beans.command;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static java.lang.String.format;
@@ -20,6 +19,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.expression.ExpressionEvaluator;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
@@ -55,7 +55,7 @@ public class ScpCommandUnit extends SshCommandUnit {
   private ScpFileCategory fileCategory;
 
   @Attributes(title = "Destination Path") @DefaultValue("$WINGS_RUNTIME_PATH") private String destinationDirectoryPath;
-  private String artifactVariableName = "artifact";
+  private String artifactVariableName = ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME;
 
   /**
    * Instantiates a new Scp command unit.
@@ -176,11 +176,7 @@ public class ScpCommandUnit extends SshCommandUnit {
   @Override
   public void updateServiceArtifactVariableNames(Set<String> serviceArtifactVariableNames) {
     if (isArtifactNeeded()) {
-      if (isEmpty(artifactVariableName)) {
-        serviceArtifactVariableNames.add("artifact");
-      } else {
-        serviceArtifactVariableNames.add(artifactVariableName);
-      }
+      serviceArtifactVariableNames.add(getArtifactVariableName());
     }
   }
 
@@ -222,7 +218,7 @@ public class ScpCommandUnit extends SshCommandUnit {
   }
 
   public String getArtifactVariableName() {
-    return artifactVariableName;
+    return artifactVariableName == null ? ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME : artifactVariableName;
   }
 
   public void setArtifactVariableName(String artifactVariableName) {
@@ -231,7 +227,7 @@ public class ScpCommandUnit extends SshCommandUnit {
 
   @Override
   public int hashCode() {
-    return Objects.hash(fileCategory, destinationDirectoryPath);
+    return Objects.hash(fileCategory, destinationDirectoryPath, getArtifactVariableName());
   }
 
   @Override
@@ -244,7 +240,8 @@ public class ScpCommandUnit extends SshCommandUnit {
     }
     final ScpCommandUnit other = (ScpCommandUnit) obj;
     return Objects.equals(this.fileCategory, other.fileCategory)
-        && Objects.equals(this.destinationDirectoryPath, other.destinationDirectoryPath);
+        && Objects.equals(this.destinationDirectoryPath, other.destinationDirectoryPath)
+        && Objects.equals(this.getArtifactVariableName(), other.getArtifactVariableName());
   }
 
   @Override
@@ -252,6 +249,7 @@ public class ScpCommandUnit extends SshCommandUnit {
     return MoreObjects.toStringHelper(this)
         .add("fileCategory", fileCategory)
         .add("destinationDirectoryPath", destinationDirectoryPath)
+        .add("artifactVariableName", this.getArtifactVariableName())
         .toString();
   }
 
@@ -373,8 +371,8 @@ public class ScpCommandUnit extends SshCommandUnit {
       return this;
     }
 
-    public Builder withArtifactVaraiableName(String artifactVaraiableName) {
-      this.artifactVariableName = artifactVaraiableName;
+    public Builder withArtifactVariableName(String artifactVariableName) {
+      this.artifactVariableName = artifactVariableName;
       return this;
     }
 
@@ -391,7 +389,7 @@ public class ScpCommandUnit extends SshCommandUnit {
           .withCommandUnitType(commandUnitType)
           .withExecutionResult(commandExecutionStatus)
           .withArtifactNeeded(artifactNeeded)
-          .withArtifactVaraiableName(artifactVariableName);
+          .withArtifactVariableName(artifactVariableName);
     }
 
     /**

@@ -18,6 +18,7 @@ import io.harness.beans.WorkflowType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.logging.ExceptionLogger;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -58,7 +59,6 @@ import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WebHookService;
 import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.service.intfc.trigger.TriggerExecutionService;
-import software.wings.sm.ExecutionContextImpl;
 
 import java.util.HashMap;
 import java.util.List;
@@ -418,7 +418,7 @@ public class WebHookServiceImpl implements WebHookService {
         String artifactStreamName = artifact.get("artifactSourceName");
         String serviceName =
             artifact.get("service"); // TODO Harsh it can be workflow or environment as it might have overridden
-        String artifactVariableName = ExecutionContextImpl.DEFAULT_ARTIFACT_VARIABLE;
+        String artifactVariableName = ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME;
 
         if (artifact.containsKey("artifactVariableName")) {
           artifactVariableName = artifact.get("artifactVariableName");

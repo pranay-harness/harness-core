@@ -13,6 +13,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.serializer.MapperUtils;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -33,13 +34,12 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.ContainerFamily;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Created by peeyushaggarwal on 5/31/16.
@@ -53,9 +53,6 @@ import java.util.regex.Pattern;
                , @Field("originEntityId"), @Field("version") }))
 @FieldNameConstants(innerTypeName = "CommandKeys")
 public class Command extends Base implements CommandUnit {
-  private static final Pattern serviceArtifactVariablePattern = Pattern.compile("\\$\\{artifacts\\.([^.{}]+)}");
-  private static final Pattern serviceArtifactVariablePropertyPattern =
-      Pattern.compile("\\$\\{artifacts\\.([^.{}]+)\\.");
   @NotEmpty @SchemaIgnore private String name;
   @SchemaIgnore private CommandUnitType commandUnitType;
   @SchemaIgnore private CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.QUEUED;
@@ -357,13 +354,12 @@ public class Command extends Base implements CommandUnit {
         && Objects.equals(this.commandUnits, other.commandUnits);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @SchemaIgnore
   @Override
   public boolean isArtifactNeeded() {
-    return commandUnits.stream().anyMatch(CommandUnit::isArtifactNeeded);
+    Set<String> serviceArtifactVariableNames = new HashSet<>();
+    updateServiceArtifactVariableNames(serviceArtifactVariableNames);
+    return isNotEmpty(serviceArtifactVariableNames);
   }
 
   @Override
@@ -376,28 +372,10 @@ public class Command extends Base implements CommandUnit {
   public void updateServiceArtifactVariableNames(Set<String> serviceArtifactVariableNames) {
     if (isNotEmpty(templateVariables)) { // when command linked to service
       for (Variable variable : templateVariables) {
-        if (variable.getValue().contains("${artifact.") || variable.getValue().equals("${artifact}")) {
-          serviceArtifactVariableNames.add("artifact");
-        }
-
-        Matcher matcher = serviceArtifactVariablePropertyPattern.matcher(variable.getValue());
-        if (matcher.find()) {
-          serviceArtifactVariableNames.add(matcher.group(1));
-        }
-
-        matcher = serviceArtifactVariablePattern.matcher(variable.getValue());
-        if (matcher.find()) {
-          serviceArtifactVariableNames.add(matcher.group(1));
-        }
+        ExpressionEvaluator.updateServiceArtifactVariableNames(variable.getValue(), serviceArtifactVariableNames);
       }
     }
     commandUnits.forEach(commandUnit -> commandUnit.updateServiceArtifactVariableNames(serviceArtifactVariableNames));
-  }
-
-  @SchemaIgnore
-  @Override
-  public void updateWorkflowVariableNames(Set<String> workflowVariableNames) {
-    commandUnits.forEach(commandUnit -> commandUnit.updateWorkflowVariableNames(workflowVariableNames));
   }
 
   @Override
