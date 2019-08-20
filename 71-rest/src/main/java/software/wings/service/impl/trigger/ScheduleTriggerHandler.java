@@ -27,7 +27,7 @@ import java.util.concurrent.Semaphore;
 @Slf4j
 public class ScheduleTriggerHandler implements Handler<DeploymentTrigger> {
   @Inject private DeploymentTriggerService deploymentTriggerService;
-  private static int POOL_SIZE = 10;
+  private static int POOL_SIZE = 3;
   private static final ScheduleTriggerHandler handler = new ScheduleTriggerHandler();
   private static ExecutorService executor = Executors.newSingleThreadExecutor();
   private static final ScheduledThreadPoolExecutor executorService = new ScheduledThreadPoolExecutor(

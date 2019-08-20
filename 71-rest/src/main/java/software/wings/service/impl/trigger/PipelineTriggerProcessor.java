@@ -9,6 +9,7 @@ import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.PipelineCondition;
 import software.wings.service.intfc.PipelineService;
@@ -55,7 +56,7 @@ public class PipelineTriggerProcessor implements TriggerProcessor {
   }
 
   @Override
-  public void executeTriggerOnEvent(String appId, TriggerExecutionParams triggerExecutionParams) {
+  public WorkflowExecution executeTriggerOnEvent(String appId, TriggerExecutionParams triggerExecutionParams) {
     PipelineTriggerExecutionParams pipelineTriggerExecutionParams =
         (PipelineTriggerExecutionParams) triggerExecutionParams;
 
@@ -69,6 +70,8 @@ public class PipelineTriggerProcessor implements TriggerProcessor {
                 triggerArtifactVariableHandler.fetchArtifactVariablesForExecution(trigger.getAppId(), trigger, null));
           });
     });
+
+    return null;
   }
 
   private void validatePipelineId(DeploymentTrigger deploymentTrigger, PipelineCondition pipelineCondition) {
