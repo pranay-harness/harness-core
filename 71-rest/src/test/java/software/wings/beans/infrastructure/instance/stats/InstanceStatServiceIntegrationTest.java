@@ -1,8 +1,8 @@
 package software.wings.beans.infrastructure.instance.stats;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.google.inject.Inject;
@@ -158,7 +158,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
     val stat = sampleSnapshot();
 
     Instant lastTs = statService.getLastSnapshotTime(stat.getAccountId());
-    assertNull("No stats saved, so last timestamp should be null", lastTs);
+    assertThat(lastTs).isNull();
 
     val saved = statService.save(stat);
     val after = Instant.now();

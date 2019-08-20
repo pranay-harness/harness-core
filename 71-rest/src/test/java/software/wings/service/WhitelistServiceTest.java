@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -391,7 +390,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
     assertTrue(delete);
 
     Whitelist whitelistAfterDelete = whitelistService.get(accountId, whitelistId);
-    assertNull(whitelistAfterDelete);
+    assertThat(whitelistAfterDelete).isNull();
   }
 
   private void compare(Whitelist lhs, Whitelist rhs) {

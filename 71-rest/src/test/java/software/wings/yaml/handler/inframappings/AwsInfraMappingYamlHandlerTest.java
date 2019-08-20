@@ -4,7 +4,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -97,7 +96,7 @@ public class AwsInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerT
     yamlHandler.delete(changeContext);
 
     AwsInfrastructureMapping afterDelete = yamlHandler.get(ACCOUNT_ID, validYamlFilePath);
-    assertNull(afterDelete);
+    assertThat(afterDelete).isNull();
   }
 
   @Test

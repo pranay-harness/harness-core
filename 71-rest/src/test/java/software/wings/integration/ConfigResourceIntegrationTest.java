@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.data.structure.EmptyPredicate;
@@ -99,7 +98,7 @@ public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
 
     // 7. Verify the config file is deleted
     savedConfigFile = wingsPersistence.getWithAppId(ConfigFile.class, appId, configId);
-    assertNull(savedConfigFile);
+    assertThat(savedConfigFile).isNull();
   }
 
   @Test
@@ -141,9 +140,9 @@ public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
 
     // 6. Verified all config files deleted
     savedConfigFile1 = wingsPersistence.getWithAppId(ConfigFile.class, appId, configId1);
-    assertNull(savedConfigFile1);
+    assertThat(savedConfigFile1).isNull();
     savedConfigFile2 = wingsPersistence.getWithAppId(ConfigFile.class, appId, configId1);
-    assertNull(savedConfigFile2);
+    assertThat(savedConfigFile2).isNull();
   }
 
   @Test
@@ -185,9 +184,9 @@ public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
 
     // 7. Verify the config file is deleted
     savedConfigFile = wingsPersistence.getWithAppId(ConfigFile.class, appId, configId);
-    assertNull(savedConfigFile);
+    assertThat(savedConfigFile).isNull();
     savedOverrideConfigFile = wingsPersistence.getWithAppId(ConfigFile.class, appId, configOverrideId);
-    assertNull(savedOverrideConfigFile);
+    assertThat(savedOverrideConfigFile).isNull();
   }
 
   private String createConfig(

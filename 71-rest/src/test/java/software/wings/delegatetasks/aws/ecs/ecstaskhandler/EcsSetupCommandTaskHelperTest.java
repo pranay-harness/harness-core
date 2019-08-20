@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -246,7 +245,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     assertNotNull(createServiceRequest);
 
     // Required for fargate using Load balancer, as ECS assumes role automatically
-    assertNull(createServiceRequest.getRole());
+    assertThat(createServiceRequest.getRole()).isNull();
 
     assertNotNull(createServiceRequest.getNetworkConfiguration());
     assertNotNull(createServiceRequest.getNetworkConfiguration().getAwsvpcConfiguration());
@@ -444,7 +443,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     // netWorkConfiguration should be ignored here, as its required only for fargate
     assertNotNull(createServiceRequest.getRole());
     assertEquals(ROLE_ARN, createServiceRequest.getRole());
-    assertNull(createServiceRequest.getNetworkConfiguration());
+    assertThat(createServiceRequest.getNetworkConfiguration()).isNull();
     assertEquals(CONTAINER_SERVICE_NAME, createServiceRequest.getServiceName());
     assertEquals(CLUSTER_NAME, createServiceRequest.getCluster());
     assertEquals(0, createServiceRequest.getDesiredCount().intValue());
@@ -619,7 +618,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     assertEquals(256, ecsContainerTask.getContainerDefinitions().get(0).getMemory().intValue());
     assertNotNull(ecsContainerTask.getContainerDefinitions().get(0).getPortMappings());
     assertThat(ecsContainerTask.getContainerDefinitions().get(0).getPortMappings()).isEmpty();
-    assertNull(ecsContainerTask.getContainerDefinitions().get(0).getLogConfiguration());
+    assertThat(ecsContainerTask.getContainerDefinitions().get(0).getLogConfiguration()).isNull();
   }
 
   @Test

@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
@@ -620,7 +619,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
     assertEquals(serviceId, workflowExecutionBaseline.getServiceId());
     assertEquals(workflowId, workflowExecutionBaseline.getWorkflowId());
     assertEquals(workflowExecutionId, workflowExecutionBaseline.getWorkflowExecutionId());
-    assertNull(workflowExecutionBaseline.getPipelineExecutionId());
+    assertThat(workflowExecutionBaseline.getPipelineExecutionId()).isNull();
 
     savedPipelineExecution = wingsPersistence.get(WorkflowExecution.class, pipelineExecutionId);
     pipelineExecution = savedPipelineExecution.getPipelineExecution();
@@ -699,7 +698,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
 
       WorkflowExecutionBaseline baselineDetails = workflowExecutionService.getBaselineDetails(
           appId, workflowExecutionIds.get(i), stateExecutionIds.get(i), workflowExecutionIds.get(i));
-      assertNull(baselineDetails);
+      assertThat(baselineDetails).isNull();
     }
 
     WorkflowExecution workflowExecution = WorkflowExecution.builder()

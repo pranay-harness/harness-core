@@ -3,9 +3,9 @@ package software.wings.integration.common;
 import static io.harness.eraro.mongo.MongoError.DUPLICATE_KEY;
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMillis;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static software.wings.beans.Idempotent.SUCCEEDED;
 import static software.wings.beans.Idempotent.TENTATIVE;
 
@@ -124,7 +124,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
     wingsPersistence.delete(Idempotent.class, id.getValue());
     wingsPersistence.findAndModify(idempotentRegistry.query(id), idempotentRegistry.unregisterUpdateOperation(),
         MongoIdempotentRegistry.unregisterOptions);
-    assertNull(wingsPersistence.get(Idempotent.class, id.getValue()));
+    assertThat(wingsPersistence.get(Idempotent.class, id.getValue())).isNull();
   }
 
   @Test
@@ -135,7 +135,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
 
     wingsPersistence.findAndModify(idempotentRegistry.query(id), idempotentRegistry.unregisterUpdateOperation(),
         MongoIdempotentRegistry.unregisterOptions);
-    assertNull(wingsPersistence.get(Idempotent.class, id.getValue()));
+    assertThat(wingsPersistence.get(Idempotent.class, id.getValue())).isNull();
   }
 
   @Test

@@ -3,10 +3,10 @@ package io.harness.apm;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rest.RestResponse.Builder.aRestResponse;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -261,7 +261,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
       });
     }
     assertFalse(isEmpty(timeSeriesMLAnalysisRecord.getTransactions()));
-    assertNull(timeSeriesMLAnalysisRecord.getTransactionsCompressedJson());
+    assertThat(timeSeriesMLAnalysisRecord.getTransactionsCompressedJson()).isNull();
     metricDataAnalysisService.saveAnalysisRecordsML(accountId, StateType.APP_DYNAMICS, appId, stateExecutionId,
         workflowExecutionId, generateUuid(), (int) analysisMinute, learningEngineAnalysisTask.getUuid(), generateUuid(),
         cvConfigId, timeSeriesMLAnalysisRecord, null);
@@ -270,12 +270,12 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
                                                        .filter("appId", appId)
                                                        .filter("stateExecutionId", stateExecutionId)
                                                        .get();
-    assertNull(savedRecord.getTransactions());
+    assertThat(savedRecord.getTransactions()).isNull();
     assertFalse(isEmpty(timeSeriesMLAnalysisRecord.getTransactionsCompressedJson()));
     TimeSeriesMLAnalysisRecord readRecord =
         metricDataAnalysisService.getPreviousAnalysis(appId, cvConfigId, analysisMinute, null);
     assertFalse(isEmpty(readRecord.getTransactions()));
-    assertNull(readRecord.getTransactionsCompressedJson());
+    assertThat(readRecord.getTransactionsCompressedJson()).isNull();
   }
 
   @Test

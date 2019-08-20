@@ -2,9 +2,9 @@ package software.wings.service.impl.analysis;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 import com.google.inject.Inject;
 
@@ -101,6 +101,6 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
     String lastId = metricDataAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(
         StateType.NEW_RELIC, appId, workflowId, serviceId, infraMappingId, envId);
 
-    assertNull(lastId);
+    assertThat(lastId).isNull();
   }
 }

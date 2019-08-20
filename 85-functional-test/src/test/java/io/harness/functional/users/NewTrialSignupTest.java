@@ -5,7 +5,6 @@ import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 import com.google.inject.Inject;
 
@@ -71,7 +70,7 @@ public class NewTrialSignupTest extends AbstractFunctionalTest {
     UserInvite invite = constructInvite("pass");
 
     Boolean isTrialInviteDone = urUtil.createNewTrialInvite(invite);
-    assertNull(isTrialInviteDone);
+    assertThat(isTrialInviteDone).isNull();
   }
 
   private UserInvite constructInvite(String password) {

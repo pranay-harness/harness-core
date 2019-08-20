@@ -1,8 +1,8 @@
 package software.wings.service.impl.marketplace.gcp;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import io.harness.CategoryTest;
@@ -36,6 +36,6 @@ public class GCPUsageReportTimeProviderTest extends CategoryTest {
     assertEquals(gcpUsageReportTimeProvider.next(), nextDayEndTime);
 
     assertFalse(gcpUsageReportTimeProvider.hasNext());
-    assertNull(gcpUsageReportTimeProvider.next());
+    assertThat(gcpUsageReportTimeProvider.next()).isNull();
   }
 }

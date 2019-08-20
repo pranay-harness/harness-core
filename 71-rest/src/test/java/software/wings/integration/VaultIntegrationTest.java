@@ -9,7 +9,6 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -839,7 +838,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     // Verify the vault config was deleted successfully
     assertThat(deleteRestResponse.getResponseMessages()).isEmpty();
     assertTrue(deleteRestResponse.getResource());
-    assertNull(wingsPersistence.get(VaultConfig.class, vaultConfigId));
+    assertThat(wingsPersistence.get(VaultConfig.class, vaultConfigId)).isNull();
   }
 
   private void deleteKmsConfig(String kmsConfigId) {
@@ -850,7 +849,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     // Verify the vault config was deleted successfully
     assertThat(deleteRestResponse.getResponseMessages()).isEmpty();
     assertTrue(deleteRestResponse.getResource());
-    assertNull(wingsPersistence.get(KmsConfig.class, kmsConfigId));
+    assertThat(wingsPersistence.get(KmsConfig.class, kmsConfigId)).isNull();
   }
 
   private void verifySecret(
@@ -913,7 +912,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   private void verifySecretTextExists(String secretName) {
     EncryptedData encryptedData = secretManager.getSecretMappedToAccountByName(accountId, secretName);
     assertNotNull(encryptedData);
-    assertNull(encryptedData.getPath());
+    assertThat(encryptedData.getPath()).isNull();
     assertEquals(SettingVariableTypes.SECRET_TEXT, encryptedData.getType());
   }
 

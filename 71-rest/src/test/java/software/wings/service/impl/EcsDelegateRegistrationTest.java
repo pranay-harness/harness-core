@@ -1,10 +1,10 @@
 package software.wings.service.impl;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.AdditionalAnswers.returnsSecondArg;
@@ -285,7 +285,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
     // existing delegate should be null for upsertDelegateOperation(null, newDelegate)
     ArgumentCaptor<Delegate> captor = ArgumentCaptor.forClass(Delegate.class);
     verify(delegateService).upsertDelegateOperation(captor.capture(), any(Delegate.class));
-    assertNull(captor.getValue());
+    assertThat(captor.getValue()).isNull();
 
     verify(delegateService, times(1)).handleECSRegistrationUsingSeqNumAndToken(any(Delegate.class));
     verify(delegateService, times(0)).handleECSRegistrationUsingID(any(Delegate.class));

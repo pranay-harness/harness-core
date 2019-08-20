@@ -9,7 +9,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
@@ -785,8 +784,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertEquals(numOfMinutes / 2, learningEngineAnalysisTasks.size());
     for (int i = 0; i < numOfMinutes / 2; i++) {
       LearningEngineAnalysisTask learningEngineAnalysisTask = learningEngineAnalysisTasks.get(i);
-      assertNull(learningEngineAnalysisTask.getWorkflow_id());
-      assertNull(learningEngineAnalysisTask.getWorkflow_execution_id());
+      assertThat(learningEngineAnalysisTask.getWorkflow_id()).isNull();
+      assertThat(learningEngineAnalysisTask.getWorkflow_execution_id()).isNull();
       assertEquals(
           "LOGS_CLUSTER_L1_" + cvConfigId + "_" + (100 + i * 2), learningEngineAnalysisTask.getState_execution_id());
       assertEquals(serviceId, learningEngineAnalysisTask.getService_id());
@@ -794,13 +793,13 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
       assertEquals(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_GET_24X7_LOG_URL + "?cvConfigId="
               + cvConfigId + "&appId=" + appId + "&clusterLevel=L0&logCollectionMinute=" + (100 + i * 2),
           learningEngineAnalysisTask.getControl_input_url());
-      assertNull(learningEngineAnalysisTask.getTest_input_url());
+      assertThat(learningEngineAnalysisTask.getTest_input_url()).isNull();
       assertEquals(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_STATE_SAVE_24X7_CLUSTERED_LOG_URL
               + "?cvConfigId=" + cvConfigId + "&appId=" + appId
               + "&clusterLevel=L1&logCollectionMinute=" + (100 + i * 2),
           learningEngineAnalysisTask.getAnalysis_save_url());
       assertEquals(hosts, learningEngineAnalysisTask.getControl_nodes());
-      assertNull(learningEngineAnalysisTask.getTest_nodes());
+      assertThat(learningEngineAnalysisTask.getTest_nodes()).isNull();
     }
   }
 
@@ -942,8 +941,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   private void validateL2Clustering(LearningEngineAnalysisTask learningEngineAnalysisTask, int clusterMinute) {
-    assertNull(learningEngineAnalysisTask.getWorkflow_id());
-    assertNull(learningEngineAnalysisTask.getWorkflow_execution_id());
+    assertThat(learningEngineAnalysisTask.getWorkflow_id()).isNull();
+    assertThat(learningEngineAnalysisTask.getWorkflow_execution_id()).isNull();
     assertEquals(
         "LOGS_CLUSTER_L2_" + cvConfigId + "_" + clusterMinute, learningEngineAnalysisTask.getState_execution_id());
     assertEquals(serviceId, learningEngineAnalysisTask.getService_id());
@@ -951,12 +950,12 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertEquals(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_GET_24X7_ALL_LOGS_URL + "?cvConfigId="
             + cvConfigId + "&appId=" + appId + "&clusterLevel=L1&startMinute=100&endMinute=" + clusterMinute,
         learningEngineAnalysisTask.getControl_input_url());
-    assertNull(learningEngineAnalysisTask.getTest_input_url());
+    assertThat(learningEngineAnalysisTask.getTest_input_url()).isNull();
     assertEquals(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_STATE_SAVE_24X7_CLUSTERED_LOG_URL
             + "?cvConfigId=" + cvConfigId + "&appId=" + appId + "&clusterLevel=L2&logCollectionMinute=" + clusterMinute,
         learningEngineAnalysisTask.getAnalysis_save_url());
-    assertNull(learningEngineAnalysisTask.getControl_nodes());
-    assertNull(learningEngineAnalysisTask.getTest_nodes());
+    assertThat(learningEngineAnalysisTask.getControl_nodes()).isNull();
+    assertThat(learningEngineAnalysisTask.getTest_nodes()).isNull();
   }
 
   private void createFailedLETask(String stateExecutionId, String workflowId, String workflowExecutionId,
@@ -1029,7 +1028,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertEquals(MLAnalysisType.TIME_SERIES, alertData.getMlAnalysisType());
     assertEquals(0.6, alertData.getRiskScore(), 0.0);
     assertEquals(configId, alertData.getCvConfiguration().getUuid());
-    assertNull(alertData.getLogAnomaly());
+    assertThat(alertData.getLogAnomaly()).isNull();
 
     // same minute should not throw another alert
     continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.6, 10);

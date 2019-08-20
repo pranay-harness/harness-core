@@ -3,7 +3,6 @@ package software.wings.verification;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
@@ -94,7 +93,7 @@ public class CVActivityLogServiceTest extends BaseIntegrationTest {
         .info("activity log from test");
     CVActivityLog cvActivityLog =
         wingsPersistence.createQuery(CVActivityLog.class).filter(CVActivityLogKeys.cvConfigId, cvConfigId).get();
-    assertNull(cvActivityLog);
+    assertThat(cvActivityLog).isNull();
   }
 
   @Test
@@ -119,7 +118,7 @@ public class CVActivityLogServiceTest extends BaseIntegrationTest {
     List<CVActivityLog> activityLogs = cvActivityLogService.findByCVConfigId(cvConfigId, nowMilli, nowMilli);
     assertEquals(1, activityLogs.size());
     assertEquals(cvConfigId, activityLogs.get(0).getCvConfigId());
-    assertNull(activityLogs.get(0).getStateExecutionId());
+    assertThat(activityLogs.get(0).getStateExecutionId()).isNull();
     assertEquals(nowMinute, activityLogs.get(0).getDataCollectionMinute());
     assertEquals(logLine, activityLogs.get(0).getLog());
   }
@@ -133,7 +132,7 @@ public class CVActivityLogServiceTest extends BaseIntegrationTest {
     List<CVActivityLog> activityLogs = cvActivityLogService.findByStateExecutionId(stateExecutionId);
     assertEquals(1, activityLogs.size());
     assertEquals(stateExecutionId, activityLogs.get(0).getStateExecutionId());
-    assertNull(activityLogs.get(0).getCvConfigId());
+    assertThat(activityLogs.get(0).getCvConfigId()).isNull();
     assertEquals(0, activityLogs.get(0).getDataCollectionMinute());
     assertEquals(logLine, activityLogs.get(0).getLog());
     assertEquals(LogLevel.INFO, activityLogs.get(0).getLogLevel());

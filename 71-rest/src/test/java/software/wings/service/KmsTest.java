@@ -13,7 +13,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -250,7 +249,7 @@ public class KmsTest extends WingsBaseTest {
 
     KmsConfig savedConfig =
         (KmsConfig) secretManagerConfigService.getDefaultSecretManager(UUID.randomUUID().toString());
-    assertNull(savedConfig);
+    assertThat(savedConfig).isNull();
 
     kmsResource.saveGlobalKmsConfig(accountId, KryoUtils.clone(kmsConfig));
 
@@ -380,11 +379,11 @@ public class KmsTest extends WingsBaseTest {
   public void localNullEncryption() {
     final char[] keyToEncrypt = null;
     final EncryptedData encryptedData = kmsService.encrypt(keyToEncrypt, null, null);
-    assertNull(encryptedData.getEncryptedValue());
+    assertThat(encryptedData.getEncryptedValue()).isNull();
     assertFalse(isBlank(encryptedData.getEncryptionKey()));
 
     final char[] decryptedValue = kmsService.decrypt(encryptedData, null, null);
-    assertNull(decryptedValue);
+    assertThat(decryptedValue).isNull();
   }
 
   @Test
@@ -404,11 +403,11 @@ public class KmsTest extends WingsBaseTest {
     final KmsConfig kmsConfig = getKmsConfig();
     final char[] keyToEncrypt = null;
     final EncryptedData encryptedData = kmsService.encrypt(keyToEncrypt, UUID.randomUUID().toString(), kmsConfig);
-    assertNull(encryptedData.getEncryptedValue());
+    assertThat(encryptedData.getEncryptedValue()).isNull();
     assertFalse(isBlank(encryptedData.getEncryptionKey()));
 
     final char[] decryptedValue = kmsService.decrypt(encryptedData, null, kmsConfig);
-    assertNull(decryptedValue);
+    assertThat(decryptedValue).isNull();
   }
 
   @Test
@@ -436,11 +435,11 @@ public class KmsTest extends WingsBaseTest {
     appDynamicsConfig.setEncryptedPassword(null);
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     assertNotNull(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword());
-    assertNull(((AppDynamicsConfig) savedAttribute.getValue()).getPassword());
+    assertThat(((AppDynamicsConfig) savedAttribute.getValue()).getPassword()).isNull();
     encryptionService.decrypt((EncryptableSetting) savedAttribute.getValue(),
         secretManager.getEncryptionDetails((EncryptableSetting) savedAttribute.getValue(), workflowExecutionId, appId));
     assertEquals(appDynamicsConfig, savedAttribute.getValue());
-    assertNull(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword());
+    assertThat(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword()).isNull();
     assertEquals(password, new String(((AppDynamicsConfig) savedAttribute.getValue()).getPassword()));
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class);
     assertEquals(1, query.count());
@@ -468,13 +467,13 @@ public class KmsTest extends WingsBaseTest {
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     assertNotNull(((ArtifactoryConfig) savedAttribute.getValue()).getEncryptedPassword());
-    assertNull(((ArtifactoryConfig) savedAttribute.getValue()).getPassword());
+    assertThat(((ArtifactoryConfig) savedAttribute.getValue()).getPassword()).isNull();
     encryptionService.decrypt((EncryptableSetting) savedAttribute.getValue(),
         secretManager.getEncryptionDetails((EncryptableSetting) savedAttribute.getValue(), workflowExecutionId, appId));
     artifactoryConfig.setEncryptedPassword(null);
     assertEquals(artifactoryConfig, savedAttribute.getValue());
-    assertNull(((ArtifactoryConfig) savedAttribute.getValue()).getEncryptedPassword());
-    assertNull(((ArtifactoryConfig) savedAttribute.getValue()).getPassword());
+    assertThat(((ArtifactoryConfig) savedAttribute.getValue()).getEncryptedPassword()).isNull();
+    assertThat(((ArtifactoryConfig) savedAttribute.getValue()).getPassword()).isNull();
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class);
     assertEquals(1, query.count());
   }
@@ -492,10 +491,10 @@ public class KmsTest extends WingsBaseTest {
     appDynamicsConfig.setEncryptedPassword(null);
     AppDynamicsConfig savedConfig = (AppDynamicsConfig) savedAttribute.getValue();
     assertNotNull(savedConfig.getEncryptedPassword());
-    assertNull(savedConfig.getPassword());
+    assertThat(savedConfig.getPassword()).isNull();
     encryptionService.decrypt(savedConfig, secretManager.getEncryptionDetails(savedConfig, workflowExecutionId, appId));
     assertEquals(appDynamicsConfig, savedConfig);
-    assertNull(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword());
+    assertThat(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword()).isNull();
     assertEquals(password, new String(savedConfig.getPassword()));
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class);
     assertEquals(1, query.count());
@@ -513,7 +512,7 @@ public class KmsTest extends WingsBaseTest {
 
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
-    assertNull(((AppDynamicsConfig) savedAttribute.getValue()).getPassword());
+    assertThat(((AppDynamicsConfig) savedAttribute.getValue()).getPassword()).isNull();
     assertEquals(appDynamicsConfig, savedAttribute.getValue());
     assertFalse(isBlank(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword()));
     encryptionService.decrypt((EncryptableSetting) savedAttribute.getValue(),
@@ -631,7 +630,7 @@ public class KmsTest extends WingsBaseTest {
       SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, id);
       assertEquals(settingAttributes.get(i), savedAttribute);
       AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttributes.get(i).getValue();
-      assertNull(appDynamicsConfig.getPassword());
+      assertThat(appDynamicsConfig.getPassword()).isNull();
 
       encryptionService.decrypt(
           appDynamicsConfig, secretManager.getEncryptionDetails(appDynamicsConfig, workflowExecutionId, appId));
@@ -826,7 +825,7 @@ public class KmsTest extends WingsBaseTest {
     ServiceVariable savedVariable = wingsPersistence.get(ServiceVariable.class, savedServiceVariableId);
     assertEquals(1, wingsPersistence.createQuery(ServiceVariable.class).count());
     assertEquals(1, wingsPersistence.createQuery(EncryptedData.class).count());
-    assertNull(savedVariable.getValue());
+    assertThat(savedVariable.getValue()).isNull();
     assertNotNull(savedVariable.getEncryptedValue());
 
     Query<EncryptedData> query =
@@ -1000,7 +999,7 @@ public class KmsTest extends WingsBaseTest {
     // test decryption
     savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     AppDynamicsConfig savedConfig = (AppDynamicsConfig) savedAttribute.getValue();
-    assertNull(savedConfig.getPassword());
+    assertThat(savedConfig.getPassword()).isNull();
     encryptionService.decrypt(savedConfig, secretManager.getEncryptionDetails(savedConfig, workflowExecutionId, appId));
     assertEquals(newPassWord, String.valueOf(savedConfig.getPassword()));
 
@@ -1112,7 +1111,7 @@ public class KmsTest extends WingsBaseTest {
     // test decryption
     savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     AppDynamicsConfig savedConfig = (AppDynamicsConfig) savedAttribute.getValue();
-    assertNull(savedConfig.getPassword());
+    assertThat(savedConfig.getPassword()).isNull();
     encryptionService.decrypt(savedConfig, secretManager.getEncryptionDetails(savedConfig, workflowExecutionId, appId));
     assertEquals(newPassWord, String.valueOf(savedConfig.getPassword()));
   }
@@ -1155,7 +1154,7 @@ public class KmsTest extends WingsBaseTest {
     savedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
 
     assertEquals(Type.ENCRYPTED_TEXT, savedAttribute.getType());
-    assertNull(savedAttribute.getValue());
+    assertThat(savedAttribute.getValue()).isNull();
     encryptionService.decrypt(
         savedAttribute, secretManager.getEncryptionDetails(savedAttribute, workflowExecutionId, appId));
     assertEquals(secretValue, String.valueOf(savedAttribute.getValue()));
@@ -1213,7 +1212,7 @@ public class KmsTest extends WingsBaseTest {
     savedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
 
     assertEquals(Type.ENCRYPTED_TEXT, savedAttribute.getType());
-    assertNull(savedAttribute.getValue());
+    assertThat(savedAttribute.getValue()).isNull();
     encryptionService.decrypt(
         savedAttribute, secretManager.getEncryptionDetails(savedAttribute, workflowExecutionId, appId));
     assertEquals(secretValue, String.valueOf(savedAttribute.getValue()));
@@ -1378,11 +1377,11 @@ public class KmsTest extends WingsBaseTest {
 
     // decrypt at manager side and test
     savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
-    assertNull(savedVariable.getValue());
+    assertThat(savedVariable.getValue()).isNull();
     managerDecryptionService.decrypt(
         savedVariable, secretManager.getEncryptionDetails(savedVariable, workflowExecutionId, appId));
     assertEquals(secretValue, String.valueOf(savedVariable.getValue()));
-    assertNull(savedVariable.getEncryptedValue());
+    assertThat(savedVariable.getEncryptedValue()).isNull();
 
     // update serviceVariable with invalid reference and fail
     serviceVariable.setValue(generateUuid().toCharArray());
@@ -1426,7 +1425,7 @@ public class KmsTest extends WingsBaseTest {
     String savedAttributeId = wingsPersistence.save(serviceVariable);
     ServiceVariable savedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
     assertEquals(serviceVariable, savedAttribute);
-    assertNull(savedAttribute.getValue());
+    assertThat(savedAttribute.getValue()).isNull();
     encryptionService.decrypt(
         savedAttribute, secretManager.getEncryptionDetails(savedAttribute, appId, workflowExecutionId));
     assertEquals(secretValue, String.valueOf(savedAttribute.getValue()));
@@ -1493,7 +1492,7 @@ public class KmsTest extends WingsBaseTest {
     updatedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
     assertEquals(updatedEnvId, updatedAttribute.getEnvId());
     assertEquals(updatedName, updatedAttribute.getName());
-    assertNull(updatedAttribute.getValue());
+    assertThat(updatedAttribute.getValue()).isNull();
     encryptionService.decrypt(
         updatedAttribute, secretManager.getEncryptionDetails(updatedAttribute, workflowExecutionId, appId));
     assertEquals(updatedSecretValue, String.valueOf(updatedAttribute.getValue()));
@@ -2675,7 +2674,7 @@ public class KmsTest extends WingsBaseTest {
       SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, attributeId);
       AppDynamicsConfig savedConfig = (AppDynamicsConfig) savedAttribute.getValue();
       assertEquals(accountId, savedConfig.getAccountId());
-      assertNull(savedConfig.getPassword());
+      assertThat(savedConfig.getPassword()).isNull();
       assertFalse(isBlank(savedConfig.getEncryptedPassword()));
 
       encryptionService.decrypt(
@@ -2752,7 +2751,7 @@ public class KmsTest extends WingsBaseTest {
       SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, attributeId);
       AppDynamicsConfig savedConfig = (AppDynamicsConfig) savedAttribute.getValue();
       assertEquals(accountId, savedConfig.getAccountId());
-      assertNull(savedConfig.getPassword());
+      assertThat(savedConfig.getPassword()).isNull();
       assertFalse(isBlank(savedConfig.getEncryptedPassword()));
 
       encryptionService.decrypt(

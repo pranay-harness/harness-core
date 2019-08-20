@@ -1,10 +1,10 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
@@ -99,7 +99,7 @@ public abstract class BaseSettingValueConfigYamlHandlerTest extends BaseYamlHand
     // 4. delete  record using yaml
     yamlHandler.delete(changeContext);
     SettingAttribute settingAttributeDeleted = (SettingAttribute) yamlHandler.get(ACCOUNT_ID, yamlFilePath);
-    assertNull(settingAttributeDeleted);
+    assertThat(settingAttributeDeleted).isNull();
   }
 
   protected void testFailureScenario(SettingValueYamlConfig settingValueYamlConfig)

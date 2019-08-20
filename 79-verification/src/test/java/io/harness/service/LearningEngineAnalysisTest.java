@@ -213,7 +213,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
 
     LearningEngineAnalysisTask task = learningEngineService.getNextLearningEngineAnalysisTask(ServiceApiVersion.V1,
         Optional.of(true), Optional.of(Lists.newArrayList(MLAnalysisType.TIME_SERIES, MLAnalysisType.LOG_ML)));
-    assertNull(task);
+    assertThat(task).isNull();
 
     task = learningEngineService.getNextLearningEngineAnalysisTask(ServiceApiVersion.V1, Optional.of(true),
         Optional.of(Lists.newArrayList(MLAnalysisType.TIME_SERIES, MLAnalysisType.LOG_CLUSTER, MLAnalysisType.LOG_ML)));
@@ -263,7 +263,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
     for (int i = 1; i <= numOfTasks; i++) {
       LearningEngineAnalysisTask analysisTask = learningEngineService.getNextLearningEngineAnalysisTask(
           ServiceApiVersion.V1, Optional.of(true), Optional.empty());
-      assertNull(analysisTask);
+      assertThat(analysisTask).isNull();
 
       assertEquals(numOfTasks,
           wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)

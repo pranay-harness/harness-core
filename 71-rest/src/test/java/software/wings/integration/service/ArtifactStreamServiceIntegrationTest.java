@@ -88,7 +88,7 @@ public class ArtifactStreamServiceIntegrationTest extends BaseIntegrationTest {
   //    ArtifactoryArtifactStream deleted =
   //        (ArtifactoryArtifactStream) artifactStreamService.get(application.getApplicationId(),
   //        artifactStream.getUuid());
-  //    assertNull(deleted);
+  //    assertThat(deleted).isNull();
   //  }
   //
   //  @Ignore

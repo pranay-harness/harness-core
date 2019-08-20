@@ -1,9 +1,9 @@
 package software.wings.yaml.handler.inframappings;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -166,7 +166,7 @@ public class PcfInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
     yamlHandler.delete(changeContext);
 
     InfrastructureMapping deletedInfraMapping = yamlHandler.get(ACCOUNT_ID, validYamlFilePath);
-    assertNull(deletedInfraMapping);
+    assertThat(deletedInfraMapping).isNull();
   }
 
   @Test

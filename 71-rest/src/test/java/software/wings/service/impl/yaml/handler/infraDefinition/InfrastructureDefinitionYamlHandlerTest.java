@@ -1,8 +1,8 @@
 package software.wings.service.impl.yaml.handler.infraDefinition;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -245,7 +245,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
     handler.delete(changeContext);
 
     InfrastructureDefinition afterDeleteDefinition = handler.get(ACCOUNT_ID, yamlFilePath);
-    assertNull(afterDeleteDefinition);
+    assertThat(afterDeleteDefinition).isNull();
   }
 
   private ChangeContext<Yaml> getChangeContext(String validYamlContent) {

@@ -8,7 +8,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.joor.Reflect.on;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableMap;
@@ -263,7 +262,7 @@ public class JenkinsTest extends CategoryTest {
   public void testJobNormalizedNames() throws Exception {
     JenkinsImpl jenkins = new JenkinsImpl("http://localhost:8080");
     assertEquals("TestJob", jenkins.getNormalizedName("TestJob"));
-    assertNull(jenkins.getNormalizedName(null));
+    assertThat(jenkins.getNormalizedName(null)).isNull();
     assertEquals("Test Job", jenkins.getNormalizedName("Test%20Job"));
   }
 
