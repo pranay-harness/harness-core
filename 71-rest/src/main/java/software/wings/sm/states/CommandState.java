@@ -1,8 +1,8 @@
 package software.wings.sm.states;
 
-import static io.harness.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.eraro.ErrorCode.COMMAND_DOES_NOT_EXIST;
 import static io.harness.exception.WingsException.USER;

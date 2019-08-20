@@ -1,8 +1,8 @@
 package software.wings.sm.states.provision;
 
-import static io.harness.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;

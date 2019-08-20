@@ -1,8 +1,8 @@
 package software.wings.service.impl.security;
 
-import static io.harness.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
+import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.eraro.ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.AZURE_KEY_VAULT_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;

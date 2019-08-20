@@ -1,12 +1,12 @@
 package software.wings.sm.states.provision;
 
-import static io.harness.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.context.ContextElementType.TERRAFORM_INHERIT_PLAN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;

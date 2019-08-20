@@ -1,6 +1,6 @@
 package software.wings.delegatetasks;
 
-import static io.harness.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static java.util.Collections.singletonList;
 import static org.joor.Reflect.on;
 import static org.junit.Assert.assertEquals;

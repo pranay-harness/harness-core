@@ -22,6 +22,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.beans.TaskData;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -115,7 +116,7 @@ public class BambooStateTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldGetTimeout() {
     Integer timeoutMillis = bambooState.getTimeoutMillis();
-    assertThat(timeoutMillis).isEqualTo(Math.toIntExact(DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT));
+    assertThat(timeoutMillis).isEqualTo(Math.toIntExact(TaskData.DEFAULT_ASYNC_CALL_TIMEOUT));
   }
 
   @Test

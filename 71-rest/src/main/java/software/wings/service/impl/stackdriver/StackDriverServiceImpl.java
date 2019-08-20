@@ -12,7 +12,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import io.harness.beans.DelegateTask;
+import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -78,7 +78,7 @@ public class StackDriverServiceImpl implements StackDriverService {
       SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                             .accountId(settingAttribute.getAccountId())
                                             .appId(GLOBAL_APP_ID)
-                                            .timeout(DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT * 3)
+                                            .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                             .build();
 
       if (setupTestNodeData.isLogConfiguration()) {
@@ -120,7 +120,7 @@ public class StackDriverServiceImpl implements StackDriverService {
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(settingAttribute.getAccountId())
                                           .appId(GLOBAL_APP_ID)
-                                          .timeout(DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT * 3)
+                                          .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                           .build();
     return delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)
         .listRegions((GcpConfig) settingAttribute.getValue(), encryptionDetails);
@@ -138,7 +138,7 @@ public class StackDriverServiceImpl implements StackDriverService {
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(settingAttribute.getAccountId())
                                           .appId(GLOBAL_APP_ID)
-                                          .timeout(DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT * 3)
+                                          .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                           .build();
     return delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)
         .listForwardingRules((GcpConfig) settingAttribute.getValue(), encryptionDetails, region);
@@ -157,7 +157,7 @@ public class StackDriverServiceImpl implements StackDriverService {
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(accountId)
                                           .appId(GLOBAL_APP_ID)
-                                          .timeout(DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT * 3)
+                                          .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                           .build();
     VerificationNodeDataSetupResponse nodeDataSetupResponse =
         delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)

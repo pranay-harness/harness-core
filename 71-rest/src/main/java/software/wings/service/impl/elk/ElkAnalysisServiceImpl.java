@@ -1,6 +1,6 @@
 package software.wings.service.impl.elk;
 
-import static io.harness.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
+import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.VerificationConstants.TIME_DURATION_FOR_LOGS_IN_MINUTES;
 import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;

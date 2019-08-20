@@ -1,7 +1,7 @@
 package software.wings.service.impl.security;
 
-import static io.harness.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.reflection.ReflectionUtils.getFieldByName;
 import static java.lang.String.format;

@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.validation;
 
-import static io.harness.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;

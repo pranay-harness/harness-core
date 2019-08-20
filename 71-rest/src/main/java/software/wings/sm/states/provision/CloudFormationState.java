@@ -20,6 +20,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidRequestException;
 import lombok.Getter;
@@ -110,7 +111,7 @@ public abstract class CloudFormationState extends State {
       CloudFormationCommandResponse commandResponse, ExecutionContext context);
 
   @Attributes(title = "Timeout (ms)")
-  @DefaultValue("" + DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT)
+  @DefaultValue("" + TaskData.DEFAULT_ASYNC_CALL_TIMEOUT)
   @Override
   public Integer getTimeoutMillis() {
     return super.getTimeoutMillis();
