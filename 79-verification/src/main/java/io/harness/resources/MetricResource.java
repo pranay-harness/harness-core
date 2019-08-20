@@ -45,11 +45,11 @@ public class MetricResource {
   public String get() throws IOException {
     final StringWriter writer = new StringWriter();
     Set<String> metrics = new HashSet<>();
-    final String env = System.getenv("ENV");
+    String env = System.getenv("ENV");
     VERIFICATION_SERVICE_METRICS.forEach(metricName -> {
       metrics.add(metricName);
       if (isNotEmpty(env)) {
-        metrics.add(env + "_" + metricName);
+        metrics.add(env.replaceAll("-", "_") + "_" + metricName);
       }
     });
     try {
