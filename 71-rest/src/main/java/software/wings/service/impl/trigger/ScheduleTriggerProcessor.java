@@ -15,6 +15,7 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.ArtifactVariable;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.trigger.Action.ActionType;
 import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.ScheduledCondition;
@@ -57,7 +58,7 @@ public class ScheduleTriggerProcessor implements TriggerProcessor {
   }
 
   @Override
-  public void executeTriggerOnEvent(String appId, TriggerExecutionParams triggerExecutionParams) {
+  public WorkflowExecution executeTriggerOnEvent(String appId, TriggerExecutionParams triggerExecutionParams) {
     executorService.execute(() -> {
       ScheduledTriggerExecutionParams scheduledTriggerExecutionParams =
           (ScheduledTriggerExecutionParams) triggerExecutionParams;
@@ -98,6 +99,7 @@ public class ScheduleTriggerProcessor implements TriggerProcessor {
       triggerDeploymentExecution.executeDeployment(trigger,
           triggerArtifactVariableHandler.fetchArtifactVariablesForExecution(trigger.getAppId(), trigger, null));
     });
+    return null;
   }
 
   private void validateAndHandleCronExpression(

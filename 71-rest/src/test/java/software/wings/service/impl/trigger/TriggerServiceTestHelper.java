@@ -9,6 +9,7 @@ import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.PipelineStage.PipelineStageElement;
 import static software.wings.beans.PipelineStage.builder;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -25,6 +26,7 @@ import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID_CHANGED;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
+import static software.wings.utils.WingsTestConstants.SETTING_NAME;
 import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
 import static software.wings.utils.WingsTestConstants.TRIGGER_NAME;
 import static software.wings.utils.WingsTestConstants.VARIABLE_NAME;
@@ -35,10 +37,12 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 import com.google.common.collect.ImmutableMap;
 
 import software.wings.beans.ArtifactVariable;
+import software.wings.beans.AzureConfig;
 import software.wings.beans.EntityType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
 import software.wings.beans.WebHookToken;
@@ -275,6 +279,14 @@ public class TriggerServiceTestHelper {
         .jobname("JOB")
         .serviceId(SERVICE_ID)
         .artifactPaths(asList("*WAR"))
+        .build();
+  }
+
+  public static SettingAttribute buildSettingAttribute() {
+    return aSettingAttribute()
+        .withName(SETTING_NAME)
+        .withUuid(SETTING_ID)
+        .withValue(AzureConfig.builder().clientId("ClientId").tenantId("tenantId").key("key".toCharArray()).build())
         .build();
   }
 

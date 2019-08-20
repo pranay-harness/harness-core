@@ -19,7 +19,19 @@ public enum WebhookSource {
     PING("Ping", "ping", WebhookEventType.PING),
     DELETE("Delete", "delete", WebhookEventType.DELETE),
     ANY("Any", "any", WebhookEventType.ANY),
-    OTHER("Other", "other", WebhookEventType.OTHER);
+    OTHER("Other", "other", WebhookEventType.OTHER),
+    PULL_REQUEST_CLOSED("Closed", "closed", WebhookEventType.PULL_REQUEST),
+    PULL_REQUEST_EDITED("Edited", "edited", WebhookEventType.PULL_REQUEST),
+    PULL_REQUEST_OPENED("Opened", "opened", WebhookEventType.PULL_REQUEST),
+    PULL_REQUEST_REOPENED("Reopened", "reopened", WebhookEventType.PULL_REQUEST),
+    PULL_REQUEST_ASSIGNED("Assigned", "assigned", WebhookEventType.PULL_REQUEST),
+    PULL_REQUEST_UNASSIGNED("Unassigned", "unassigned", WebhookEventType.PULL_REQUEST),
+    PULL_REQUEST_LABELED("Labeled", "labeled", WebhookEventType.PULL_REQUEST),
+    PULL_REQUEST_UNLABELED("Unlabeled", "unlabeled", WebhookEventType.PULL_REQUEST),
+    PULL_REQUEST_SYNCHRONIZED("Synchronized", "synchronize", WebhookEventType.PULL_REQUEST),
+    PULL_REQUEST_REVIEW_REQUESTED("Review Requested", "review_requested", WebhookEventType.PULL_REQUEST),
+    PULL_REQUEST_REVIEW_REQUESTED_REMOVED(
+        "Review Request Removed", "review_request_removed", WebhookEventType.PULL_REQUEST);
 
     @Getter private String displayName;
     @Getter private String value;

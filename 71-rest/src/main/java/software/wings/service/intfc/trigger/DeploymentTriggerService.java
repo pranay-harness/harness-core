@@ -6,10 +6,14 @@ import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.trigger.DeploymentTrigger;
+import software.wings.beans.trigger.TriggerArtifactVariable;
+import software.wings.beans.trigger.TriggerExecution;
 
 import java.util.List;
+import java.util.Map;
 import javax.validation.Valid;
 
 public interface DeploymentTriggerService {
@@ -22,6 +26,8 @@ public interface DeploymentTriggerService {
   DeploymentTrigger get(@NotEmpty String appId, @NotEmpty String triggerId);
 
   PageResponse<DeploymentTrigger> list(PageRequest<DeploymentTrigger> pageRequest);
+
+  DeploymentTrigger getTriggerByWebhookToken(String token);
 
   void triggerExecutionPostArtifactCollectionAsync(
       String accountId, String appId, String artifactStreamId, List<Artifact> artifacts);
@@ -37,4 +43,7 @@ public interface DeploymentTriggerService {
   void triggerScheduledExecutionAsync(DeploymentTrigger trigger);
 
   void triggerExecutionPostPipelineCompletionAsync(String appId, String pipelineId);
+
+  WorkflowExecution triggerExecutionByWebHook(DeploymentTrigger deploymentTrigger, Map<String, String> parameters,
+      List<TriggerArtifactVariable> artifactVariables, TriggerExecution triggerExecution);
 }

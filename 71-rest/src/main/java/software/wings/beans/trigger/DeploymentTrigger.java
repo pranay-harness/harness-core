@@ -46,6 +46,8 @@ import javax.validation.constraints.NotNull;
       options = @IndexOptions(name = "uniqueTriggerIdx", unique = true), fields = { @Field("appId")
                                                                                     , @Field("name") })
   ,
+      @Index(options = @IndexOptions(name = "tokenIdx"), fields = { @Field("accountId")
+                                                                    , @Field("token") }),
       @Index(options = @IndexOptions(name = "uniqueTypeIdx"), fields = {
         @Field("accountId"), @Field("appId"), @Field("type")
       }), @Index(options = @IndexOptions(name = "iterations"), fields = { @Field("type")
@@ -72,6 +74,7 @@ public class DeploymentTrigger implements PersistentEntity, UuidAware, CreatedAt
   private Action action;
   @NotNull private Condition condition;
   private Type type;
+  private String webHookToken;
 
   @Override
   public boolean skipMissed() {

@@ -20,6 +20,7 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.trigger.PayloadSource.Type;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
 import software.wings.beans.trigger.WebhookSource.GitHubEventType;
@@ -53,6 +54,26 @@ public class WebhookEventUtils {
       return WebhookSource.GITLAB;
     } else if (httpHeaders.getHeaderString(X_BIT_BUCKET_EVENT) != null) {
       return WebhookSource.BITBUCKET;
+    }
+    throw new InvalidRequestException("Unable to resolve the Webhook Source. "
+            + "One of the [" + eventHeaders + "] must be present in Headers",
+        USER);
+  }
+
+  public String findExpression(Map<String, Object> payLoadMap, String storedExpression) {
+    return expressionEvaluator.substitute(storedExpression, payLoadMap);
+  }
+
+  public Type obtainEventType(HttpHeaders httpHeaders) {
+    if (httpHeaders == null) {
+      throw new InvalidRequestException("Failed to resolve Webhook Source. Reason: HttpHeaders are empty.");
+    }
+    if (httpHeaders.getHeaderString(X_GIT_HUB_EVENT) != null) {
+      return Type.GITHUB;
+    } else if (httpHeaders.getHeaderString(X_GIT_LAB_EVENT) != null) {
+      return Type.GITLABS;
+    } else if (httpHeaders.getHeaderString(X_BIT_BUCKET_EVENT) != null) {
+      return Type.BITBUCKET;
     }
     throw new InvalidRequestException("Unable to resolve the Webhook Source. "
             + "One of the " + eventHeaders + " must be present in Headers",

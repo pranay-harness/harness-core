@@ -17,9 +17,13 @@ import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Event;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.trigger.Condition;
 import software.wings.beans.trigger.DeploymentTrigger;
+import software.wings.beans.trigger.DeploymentTrigger.DeploymentTriggerKeys;
+import software.wings.beans.trigger.TriggerArtifactVariable;
+import software.wings.beans.trigger.TriggerExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.trigger.PipelineTriggerProcessor.PipelineTriggerExecutionParams;
 import software.wings.service.impl.trigger.ScheduleTriggerProcessor.ScheduledTriggerExecutionParams;
@@ -57,6 +61,14 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
     String uuid = Validator.duplicateCheck(() -> wingsPersistence.save(trigger), "name", trigger.getName());
     return get(trigger.getAppId(), uuid);
     // Todo Uncomment once YAML support is added  actionsAfterTriggerSave(deploymentTrigger);
+  }
+
+  @Override
+  public DeploymentTrigger getTriggerByWebhookToken(String token) {
+    // Todo Harsh Add accountId as filter
+    return wingsPersistence.createQuery(DeploymentTrigger.class)
+        .filter(DeploymentTriggerKeys.webHookToken, token)
+        .get();
   }
 
   @Override
@@ -141,6 +153,20 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
 
     triggerProcessor.executeTriggerOnEvent(
         appId, PipelineTriggerExecutionParams.builder().pipelineId(pipelineId).build());
+  }
+
+  @Override
+  public WorkflowExecution triggerExecutionByWebHook(DeploymentTrigger deploymentTrigger,
+      Map<String, String> parameters, List<TriggerArtifactVariable> artifactVariables,
+      TriggerExecution triggerExecution) {
+    WebhookConditionTriggerProcessor webhookTriggerProcessor =
+        (WebhookConditionTriggerProcessor) triggerProcessorMapBinder.get(WEBHOOK.name());
+
+    return webhookTriggerProcessor.executeTriggerOnEvent(deploymentTrigger.getAppId(),
+        WebhookConditionTriggerProcessor.WebhookTriggerExecutionParams.builder()
+            .trigger(deploymentTrigger)
+            .parameters(parameters)
+            .build());
   }
 
   private void validateTrigger(DeploymentTrigger trigger, DeploymentTrigger existingTrigger) {

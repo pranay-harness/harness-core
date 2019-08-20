@@ -109,12 +109,14 @@ public class ArtifactTriggerProcessor implements TriggerProcessor {
   }
 
   @Override
-  public void executeTriggerOnEvent(String appId, TriggerExecutionParams triggerExecutionParams) {
+  public WorkflowExecution executeTriggerOnEvent(String appId, TriggerExecutionParams triggerExecutionParams) {
     ArtifactTriggerExecutionParams artifactTriggerExecutionParams =
         (ArtifactTriggerExecutionParams) triggerExecutionParams;
 
     triggerExecutionPostArtifactCollection(
         appId, artifactTriggerExecutionParams.artifactStreamId, artifactTriggerExecutionParams.collectedArtifacts);
+
+    return null;
   }
 
   private void validateArtifactFilter(String artifactFilter) {
@@ -258,7 +260,7 @@ public class ArtifactTriggerProcessor implements TriggerProcessor {
       }
       try {
         WorkflowExecution WorkflowExecution =
-            triggerDeploymentExecution.triggerDeployment(artifactVariables, trigger, null);
+            triggerDeploymentExecution.triggerDeployment(artifactVariables, null, trigger, null);
       } catch (WingsException exception) {
         exception.addContext(Application.class, trigger.getAppId());
         exception.addContext(ArtifactStream.class, artifactStreamId);

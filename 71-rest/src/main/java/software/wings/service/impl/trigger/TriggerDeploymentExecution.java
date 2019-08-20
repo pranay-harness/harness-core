@@ -12,7 +12,6 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
-import static software.wings.beans.trigger.Condition.Type.WEBHOOK;
 import static software.wings.service.impl.workflow.WorkflowServiceTemplateHelper.getServiceWorkflowVariables;
 import static software.wings.service.impl.workflow.WorkflowServiceTemplateHelper.getTemplatizedEnvVariableName;
 import static software.wings.utils.Validator.notNullCheck;
@@ -42,10 +41,12 @@ import software.wings.beans.deployment.DeploymentMetadata.Include;
 import software.wings.beans.trigger.Action.ActionType;
 import software.wings.beans.trigger.Condition;
 import software.wings.beans.trigger.DeploymentTrigger;
+import software.wings.beans.trigger.GitHubPayloadSource;
+import software.wings.beans.trigger.PayloadSource.Type;
 import software.wings.beans.trigger.PipelineAction;
 import software.wings.beans.trigger.TriggerExecution;
 import software.wings.beans.trigger.TriggerExecution.Status;
-import software.wings.beans.trigger.WebHookTriggerCondition;
+import software.wings.beans.trigger.WebhookCondition;
 import software.wings.beans.trigger.WorkflowAction;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
@@ -90,10 +91,14 @@ public class TriggerDeploymentExecution {
   @Inject private transient ArtifactService artifactService;
 
   public WorkflowExecution triggerDeployment(List<ArtifactVariable> artifactVariables,
-      DeploymentTrigger deploymentTrigger, TriggerExecution triggerExecution) {
+      Map<String, String> webhookParameters, DeploymentTrigger deploymentTrigger, TriggerExecution triggerExecution) {
     ExecutionArgs executionArgs = new ExecutionArgs();
     if (isNotEmpty(artifactVariables)) {
       executionArgs.setArtifactVariables(artifactVariables);
+    }
+
+    if (isNotEmpty(webhookParameters)) {
+      executionArgs.setWorkflowVariables(webhookParameters);
     }
     executionArgs.setExecutionCredential(aSSHExecutionCredential().withExecutionType(SSH).build());
     executionArgs.setTriggerExecutionArgs(DeploymentTriggerExecutionArgs.builder()
@@ -125,14 +130,14 @@ public class TriggerDeploymentExecution {
     return null;
   }
 
-  public void executeDeployment(DeploymentTrigger trigger, List<ArtifactVariable> artifactVariables) {
+  public WorkflowExecution executeDeployment(DeploymentTrigger trigger, List<ArtifactVariable> artifactVariables) {
     if (trigger.getAction() != null) {
-      if (!artifactVariables.isEmpty()) {
+      if (isNotEmpty(artifactVariables)) {
         logger.info("The artifact variables set for the trigger {} are {}", trigger.getUuid(),
             artifactVariables.stream().map(ArtifactVariable::getName).collect(toList()));
       }
       try {
-        WorkflowExecution WorkflowExecution = triggerDeployment(artifactVariables, trigger, null);
+        return triggerDeployment(artifactVariables, null, trigger, null);
       } catch (WingsException exception) {
         exception.addContext(Application.class, trigger.getAppId());
         exception.addContext(DeploymentTrigger.class, trigger.getUuid());
@@ -140,12 +145,25 @@ public class TriggerDeploymentExecution {
       }
     } else {
       logger.info("No action exist. Hence Skipping the deployment");
-      return;
+      return null;
     }
+
+    return null;
   }
 
   private void matchTriggerAndDeploymentArtifactVariables(String trigerId, String appId,
       List<ArtifactVariable> triggerArtifactVariables, List<ArtifactVariable> deploymentArtifactVariables) {
+    if (isEmpty(triggerArtifactVariables) && isNotEmpty(deploymentArtifactVariables)) {
+      logger.info(
+          "Some artifact variables {} do not exist in trigger {} but they exist in pipeline/Workflow for app {}",
+          deploymentArtifactVariables, trigerId, appId);
+      throw new WingsException("Some artifact variables do not exist in trigger but they exist in pipeline/Workflow");
+    }
+
+    if (isEmpty(triggerArtifactVariables)) {
+      return;
+    }
+
     Set<String> triggerArtifactVariableNames =
         triggerArtifactVariables.stream().map(ArtifactVariable::getName).collect(toSet());
 
@@ -203,15 +221,20 @@ public class TriggerDeploymentExecution {
     }
   }
 
-  private boolean checkFileContentOptionSelected(DeploymentTrigger trigger) {
-    Condition.Type condition = trigger.getCondition().getType();
-    if (condition.equals(WEBHOOK)) {
-      // Harsh  TODO add webhook condition
-      WebHookTriggerCondition webHookTriggerCondition = null; // (WebHookTriggerCondition) condition;
-      return webHookTriggerCondition.isCheckFileContentChanged();
+  public boolean checkFileContentOptionSelected(DeploymentTrigger trigger) {
+    Condition condition = trigger.getCondition();
+    if (condition instanceof WebhookCondition) {
+      WebhookCondition webHookTriggerCondition = (WebhookCondition) condition;
+      if (webHookTriggerCondition.getPayloadSource().getType().equals(Type.GITHUB)) {
+        GitHubPayloadSource gitHubPayloadSource = (GitHubPayloadSource) webHookTriggerCondition.getPayloadSource();
+        return gitHubPayloadSource.getWebhookGitParam() != null;
+      } else {
+        return false;
+      }
     }
     return false;
   }
+
   private void resolveTriggerPipelineVariables(DeploymentTrigger deploymentTrigger, ExecutionArgs executionArgs) {
     PipelineAction pipelineAction = (PipelineAction) deploymentTrigger.getAction();
     Pipeline pipeline =
