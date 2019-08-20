@@ -7,6 +7,7 @@ import static org.junit.Assert.assertNotNull;
 import io.harness.rest.RestResponse;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
+import io.harness.testframework.framework.matchers.LoginMatcher;
 import io.restassured.specification.RequestSpecification;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.User;
@@ -68,6 +69,12 @@ public class Setup {
         .header("Authorization", "Bearer " + bearerToken)
         .post("/users/" + userId + "/logout")
         .getStatusCode();
+  }
+
+  public static User retryLogin(String userName, String password) {
+    Retry retry = new Retry(5, 5000);
+    User user = (User) retry.executeWithRetry(() -> loginUser(userName, password), new LoginMatcher(), null);
+    return user;
   }
 
   // TODO: Need to update and use this method

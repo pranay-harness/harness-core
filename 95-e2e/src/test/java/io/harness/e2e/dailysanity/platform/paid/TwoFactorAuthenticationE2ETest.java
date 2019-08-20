@@ -33,7 +33,7 @@ public class TwoFactorAuthenticationE2ETest extends AbstractE2ETest {
   @Category(E2ETests.class)
   public void twoFactorAuthTest() {
     logger.info("Login to harness account");
-    User user = Setup.loginUser(defaultUser, defaultPassword);
+    User user = Setup.retryLogin(defaultUser, defaultPassword);
     TwoFactorAuthenticationSettings otpSettings =
         TwoFactorAuthRestUtils.getOtpSettings(getAccount().getUuid(), user.getToken());
     user = TwoFactorAuthRestUtils.enableTwoFactorAuthentication(getAccount().getUuid(), user.getToken(), otpSettings);
