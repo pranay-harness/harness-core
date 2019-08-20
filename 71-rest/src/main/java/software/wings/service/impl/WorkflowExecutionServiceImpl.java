@@ -3223,4 +3223,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       return false;
     }
   }
+
+  @Override
+  public boolean isTriggerBasedDeployment(ExecutionContext context) {
+    WorkflowExecution workflowExecution = getWorkflowExecution(context.getAppId(), context.getWorkflowExecutionId());
+    if (workflowExecution != null && workflowExecution.getTriggeredBy() != null
+        && workflowExecution.getTriggeredBy().getName().contains("Deployment Trigger")) {
+      return true;
+    }
+    return false;
+  }
 }

@@ -34,6 +34,7 @@ import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
+import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
@@ -164,6 +165,17 @@ public class NewRelicState extends AbstractMetricAnalysisState {
           templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "applicationId");
       if (appIdExpression != null) {
         finalNewRelicApplicationId = templateExpressionProcessor.resolveTemplateExpression(context, appIdExpression);
+        final boolean triggerBasedDeployment = workflowExecutionService.isTriggerBasedDeployment(context);
+        if (triggerBasedDeployment) {
+          try {
+            newRelicService.resolveApplicationId(finalServerConfigId, finalNewRelicApplicationId);
+          } catch (WingsException e) {
+            // see if we can resolve the application by name
+            final NewRelicApplication newRelicApplication =
+                newRelicService.resolveApplicationName(finalServerConfigId, finalNewRelicApplicationId);
+            finalNewRelicApplicationId = String.valueOf(newRelicApplication.getId());
+          }
+        }
       }
     }
     if (settingAttribute == null) {

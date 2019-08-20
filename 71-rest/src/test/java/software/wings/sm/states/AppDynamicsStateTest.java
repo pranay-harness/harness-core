@@ -21,8 +21,8 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
-import com.google.inject.Inject;
 
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
@@ -41,8 +41,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
-import software.wings.common.Constants;
-import software.wings.common.TemplateExpressionProcessor;
+import software.wings.beans.WorkflowExecution;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.appdynamics.AppdynamicsConstants;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
@@ -67,11 +66,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+// import software.wings.common.Constants;
+
 /**
  * author Srinivas
  */
 public class AppDynamicsStateTest extends APMStateVerificationTestBase {
-  @Inject private TemplateExpressionProcessor templateExpressionProcessor;
   @Mock private MetricDataAnalysisService metricAnalysisService;
   @Mock private InfrastructureMappingService infraMappingService;
   @Mock private ServiceResourceService serviceResourceService;
@@ -126,7 +126,8 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     FieldUtils.writeField(appDynamicsState, "cvActivityLogService", cvActivityLogService, true);
     when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(mock(Logger.class));
 
-    when(executionContext.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM)).thenReturn(phaseElement);
+    when(executionContext.getContextElement(ContextElementType.PARAM, AbstractAnalysisStateTest.PHASE_PARAM))
+        .thenReturn(phaseElement);
     when(phaseElement.getInfraMappingId()).thenReturn(infraMappingId);
     when(executionContext.getAppId()).thenReturn(appId);
     when(infraMappingService.get(anyString(), anyString()))
@@ -336,9 +337,13 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
                                             .build();
     wingsPersistence.save(settingAttribute);
     appDynamicsState.setAnalysisServerConfigId(settingAttribute.getUuid());
+    wingsPersistence.save(WorkflowExecution.builder()
+                              .appId(appId)
+                              .uuid(workflowExecutionId)
+                              .triggeredBy(EmbeddedUser.builder().name("Deployment Trigger workflow").build())
+                              .build());
 
     AppDynamicsState spyAppDynamicsState = spy(appDynamicsState);
-    doReturn(true).when(spyAppDynamicsState).isTriggerBasedDeployment(executionContext);
     when(appdynamicsService.getAppDynamicsApplication(anyString(), anyString())).thenReturn(null);
     doThrow(new WingsException("Can not find application by name"))
         .when(appdynamicsService)
