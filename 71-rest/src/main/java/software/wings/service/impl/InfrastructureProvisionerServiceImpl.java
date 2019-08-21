@@ -300,26 +300,14 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   private void ensureSafeToDelete(String appId, InfrastructureProvisioner infrastructureProvisioner) {
     final String accountId = appService.getAccountIdByAppId(appId);
     final String infrastructureProvisionerId = infrastructureProvisioner.getUuid();
-    List<Key<InfrastructureMapping>> keys =
-        wingsPersistence.createQuery(InfrastructureMapping.class)
-            .filter(InfrastructureMapping.APP_ID_KEY, appId)
-            .filter(InfrastructureMapping.PROVISIONER_ID_KEY, infrastructureProvisionerId)
-            .asKeyList();
-    try {
-      for (Key<InfrastructureMapping> key : keys) {
-        infrastructureMappingService.ensureSafeToDelete(appId, (String) key.getId());
-      }
-    } catch (Exception exception) {
-      throw new InvalidRequestException(
-          format("Infrastructure provisioner %s is not safe to delete", infrastructureProvisionerId), exception, USER);
-    }
+
     if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)) {
       List<String> infraDefinitionNames =
           infrastructureDefinitionService.listNamesByProvisionerId(appId, infrastructureProvisionerId);
       if (isNotEmpty(infraDefinitionNames)) {
         throw new InvalidRequestException(format("Infrastructure provisioner [%s] is not safe to "
                 + "delete."
-                + "referenced "
+                + "Referenced "
                 + "by "
                 + "%d %s [%s].",
             infrastructureProvisioner.getName(), infraDefinitionNames.size(),
@@ -327,6 +315,21 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
                     + "Definition",
                 infraDefinitionNames.size()),
             Joiner.on(", ").join(infraDefinitionNames)));
+      }
+    } else {
+      List<Key<InfrastructureMapping>> keys =
+          wingsPersistence.createQuery(InfrastructureMapping.class)
+              .filter(InfrastructureMapping.APP_ID_KEY, appId)
+              .filter(InfrastructureMapping.PROVISIONER_ID_KEY, infrastructureProvisionerId)
+              .asKeyList();
+      try {
+        for (Key<InfrastructureMapping> key : keys) {
+          infrastructureMappingService.ensureSafeToDelete(appId, (String) key.getId());
+        }
+      } catch (Exception exception) {
+        throw new InvalidRequestException(
+            format("Infrastructure provisioner %s is not safe to delete", infrastructureProvisionerId), exception,
+            USER);
       }
     }
   }
