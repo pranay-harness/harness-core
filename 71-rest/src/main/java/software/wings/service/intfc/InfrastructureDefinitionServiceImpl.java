@@ -50,6 +50,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
+import io.harness.beans.WorkflowType;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.aws.AwsElbListener;
@@ -718,6 +719,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
               .addFilter(WorkflowExecutionKeys.infraMappingIds, Operator.CONTAINS, infraMappingID)
               .addFilter(WorkflowExecutionKeys.appId, EQ, appID)
               .addFilter(WorkflowExecutionKeys.status, EQ, ExecutionStatus.SUCCESS)
+              .addFilter(WorkflowExecutionKeys.workflowType, EQ, WorkflowType.ORCHESTRATION)
               .addOrder(WorkflowExecutionKeys.createdAt, OrderType.DESC)
               .withLimit(String.valueOf(limit))
               .build();
