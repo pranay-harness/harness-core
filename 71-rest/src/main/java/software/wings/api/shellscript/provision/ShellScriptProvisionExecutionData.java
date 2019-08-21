@@ -1,7 +1,7 @@
 package software.wings.api.shellscript.provision;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.api.ExecutionDataValue;
@@ -11,7 +11,7 @@ import java.util.Map;
 
 @Data
 @Builder
-public class ShellScriptProvisionExecutionData extends StateExecutionData implements ResponseData {
+public class ShellScriptProvisionExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   private ExecutionStatus executionStatus;
   private String errorMsg;
   private String output;

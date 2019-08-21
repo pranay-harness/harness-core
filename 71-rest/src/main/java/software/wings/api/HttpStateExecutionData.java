@@ -1,7 +1,7 @@
 package software.wings.api;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.serializer.JsonUtils;
 import io.harness.serializer.XmlUtils;
 import lombok.AllArgsConstructor;
@@ -28,7 +28,7 @@ import javax.xml.parsers.ParserConfigurationException;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class HttpStateExecutionData extends StateExecutionData implements ResponseData {
+public class HttpStateExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   private String httpUrl;
   private String httpMethod;
   private int httpResponseCode;

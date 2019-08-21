@@ -1,7 +1,7 @@
 package software.wings.api;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.PhaseStepType;
@@ -16,7 +16,7 @@ import java.util.Map;
 /**
  * Created by rishi on 1/19/17.
  */
-public class PhaseStepExecutionData extends ElementStateExecutionData implements ResponseData {
+public class PhaseStepExecutionData extends ElementStateExecutionData implements DelegateTaskNotifyResponseData {
   private PhaseStepType phaseStepType;
   private boolean stepsInParallel;
   private boolean defaultFailureStrategy;

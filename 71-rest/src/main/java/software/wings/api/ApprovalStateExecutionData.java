@@ -8,7 +8,7 @@ import com.google.inject.Inject;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -27,7 +27,7 @@ import java.util.Map;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
-public class ApprovalStateExecutionData extends StateExecutionData implements ResponseData {
+public class ApprovalStateExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   public static final String USER_GROUP_NAMES = "userGroupNames";
   public static final String USER_GROUPS_DISPLAY_NAME = "Approval User Groups";
   public static final String AUTHORIZATION_STATUS = "authorizationStatus";

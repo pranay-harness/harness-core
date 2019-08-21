@@ -1,6 +1,6 @@
 package software.wings.api;
 
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import software.wings.sm.StateExecutionData;
 
 import java.util.Map;
@@ -8,7 +8,7 @@ import java.util.Map;
 /**
  * Created by brett on 4/13/17
  */
-public class AwsClusterExecutionData extends StateExecutionData implements ResponseData {
+public class AwsClusterExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   private String clusterName;
   private String region;
   private int nodeCount;

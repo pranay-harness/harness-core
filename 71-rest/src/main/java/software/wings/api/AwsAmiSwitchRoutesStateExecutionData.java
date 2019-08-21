@@ -3,7 +3,7 @@ package software.wings.api;
 import static com.google.common.base.Joiner.on;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,7 +19,7 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class AwsAmiSwitchRoutesStateExecutionData extends StateExecutionData implements ResponseData {
+public class AwsAmiSwitchRoutesStateExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   private String activityId;
   private List<String> targetArns;
   private List<String> classicLbs;

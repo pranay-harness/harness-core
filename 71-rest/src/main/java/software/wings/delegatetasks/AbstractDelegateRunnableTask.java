@@ -23,7 +23,6 @@ import io.harness.waiter.ErrorNotifyResponseData.ErrorNotifyResponseDataBuilder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.service.impl.ThirdPartyApiCallLog;
-import software.wings.sm.StateExecutionData;
 
 import java.io.IOException;
 import java.util.List;
@@ -94,8 +93,8 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
       if (result != null) {
         if (result instanceof DelegateTaskNotifyResponseData) {
           ((DelegateTaskNotifyResponseData) result).setDelegateMetaInfo(delegateMetaInfo);
-        } else if (result instanceof StateExecutionData) {
-          ((StateExecutionData) result).setDelegateMetaInfo(delegateMetaInfo);
+        } else {
+          logger.error("{} does not implement DelegateTaskNotifyResponseData", result.getClass().getName());
         }
         taskResponse.response(result);
         if (result instanceof RemoteMethodReturnValueData) {

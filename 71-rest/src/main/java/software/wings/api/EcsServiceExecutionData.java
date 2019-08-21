@@ -8,7 +8,7 @@ import static org.apache.commons.lang3.StringUtils.substringAfterLast;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.ExecutionStatus;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.sm.StateExecutionData;
@@ -22,7 +22,7 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class EcsServiceExecutionData extends StateExecutionData implements ResponseData {
+public class EcsServiceExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   private String ecsClusterName;
   private String ecsServiceName;
   private String dockerImageName;

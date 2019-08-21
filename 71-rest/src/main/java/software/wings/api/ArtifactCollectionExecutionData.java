@@ -2,7 +2,7 @@ package software.wings.api;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -17,7 +17,7 @@ import java.util.Map;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
-public class ArtifactCollectionExecutionData extends StateExecutionData implements ResponseData {
+public class ArtifactCollectionExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   private String artifactSource;
   private String artifactStatus;
   private String jobName;

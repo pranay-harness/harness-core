@@ -2,7 +2,7 @@ package software.wings.api.ecs;
 
 import com.google.common.collect.Maps;
 
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,7 +20,7 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class EcsListenerUpdateStateExecutionData extends StateExecutionData implements ResponseData {
+public class EcsListenerUpdateStateExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   private String activityId;
   private String accountId;
   private String appId;
