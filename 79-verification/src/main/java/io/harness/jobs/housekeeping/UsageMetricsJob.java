@@ -4,9 +4,12 @@ import static io.harness.beans.ExecutionStatus.QUEUED;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.common.VerificationConstants.DEFAULT_LE_AUTOSCALE_DATA_COLLECTION_INTERVAL_IN_SECONDS;
+import static software.wings.common.VerificationConstants.LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_COUNT;
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_TIME_IN_SECONDS;
+import static software.wings.common.VerificationConstants.LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_COUNT;
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS;
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_EXP_TASK_QUEUED_TIME_IN_SECONDS;
+import static software.wings.common.VerificationConstants.LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_COUNT;
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_TIME_IN_SECONDS;
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_TASK_QUEUED_TIME_IN_SECONDS;
 
@@ -94,6 +97,16 @@ public class UsageMetricsJob implements Job {
           env + "_" + LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS, null, taskQueuedTimeInSeconds);
     }
 
+    long clusterTaskCount = wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
+                                .filter(LearningEngineAnalysisTaskKeys.executionStatus, QUEUED)
+                                .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, MLAnalysisType.LOG_CLUSTER)
+                                .count();
+    logger.info("Cluster task queued count is {}", clusterTaskCount);
+    metricRegistry.recordGaugeValue(LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_COUNT, null, clusterTaskCount);
+    if (isNotEmpty(env)) {
+      metricRegistry.recordGaugeValue(env + "_" + LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_COUNT, null, clusterTaskCount);
+    }
+
     lastQueuedAnalysisTask = wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
                                  .filter(LearningEngineAnalysisTaskKeys.executionStatus, QUEUED)
                                  .field(LearningEngineAnalysisTaskKeys.ml_analysis_type)
@@ -112,6 +125,17 @@ public class UsageMetricsJob implements Job {
           env + "_" + LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_TIME_IN_SECONDS, null, taskQueuedTimeInSeconds);
     }
 
+    long analysisTaskCount = wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
+                                 .filter(LearningEngineAnalysisTaskKeys.executionStatus, QUEUED)
+                                 .field(LearningEngineAnalysisTaskKeys.ml_analysis_type)
+                                 .in(Lists.newArrayList(MLAnalysisType.LOG_ML, MLAnalysisType.TIME_SERIES))
+                                 .count();
+    logger.info("Analysis task queued count is {}", analysisTaskCount);
+    metricRegistry.recordGaugeValue(LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_COUNT, null, analysisTaskCount);
+    if (isNotEmpty(env)) {
+      metricRegistry.recordGaugeValue(env + "_" + LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_COUNT, null, analysisTaskCount);
+    }
+
     lastQueuedAnalysisTask =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
             .filter(LearningEngineAnalysisTaskKeys.executionStatus, QUEUED)
@@ -128,6 +152,17 @@ public class UsageMetricsJob implements Job {
     if (isNotEmpty(env)) {
       metricRegistry.recordGaugeValue(
           env + "_" + LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_TIME_IN_SECONDS, null, taskQueuedTimeInSeconds);
+    }
+
+    long feedbackTaskCount =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
+            .filter(LearningEngineAnalysisTaskKeys.executionStatus, QUEUED)
+            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, MLAnalysisType.FEEDBACK_ANALYSIS)
+            .count();
+    logger.info("Feedback task queued count is {}", analysisTaskCount);
+    metricRegistry.recordGaugeValue(LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_COUNT, null, feedbackTaskCount);
+    if (isNotEmpty(env)) {
+      metricRegistry.recordGaugeValue(env + "_" + LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_COUNT, null, feedbackTaskCount);
     }
 
     // Do the same for experimental
