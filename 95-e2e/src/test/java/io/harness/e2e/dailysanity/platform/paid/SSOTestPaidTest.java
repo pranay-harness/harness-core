@@ -2,7 +2,6 @@ package io.harness.e2e.dailysanity.platform.paid;
 
 import static io.harness.rule.OwnerRule.SWAMY;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import com.google.gson.JsonObject;
@@ -127,7 +126,7 @@ public class SSOTestPaidTest extends AbstractE2ETest {
         ()
             -> UserGroupUtils.hasUsersInUserGroup(getAccount(), bearerToken, ldapUnlinkedGroup.getName()),
         new BooleanMatcher<>(), false);
-    assertFalse(linkAndSyncSuccessful);
+    assertThat(linkAndSyncSuccessful).isFalse();
     logger.info("Unlink successful");
     assertThat(
         SSORestUtils.assignAuthMechanism(getAccount().getUuid(), bearerToken, "USER_PASSWORD") == HttpStatus.SC_OK)

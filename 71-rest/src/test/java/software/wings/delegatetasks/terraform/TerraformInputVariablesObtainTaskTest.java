@@ -1,8 +1,8 @@
 package software.wings.delegatetasks.terraform;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.when;
@@ -87,7 +87,7 @@ public class TerraformInputVariablesObtainTaskTest extends WingsBaseTest {
         .thenReturn(GitFetchFilesResult.builder().files(gitFiles).build());
 
     TerraformInputVariablesTaskResponse inputVariables = delegateRunnableTask.run(new Object[] {parameters});
-    assertFalse(inputVariables.getVariablesList().isEmpty());
+    assertThat(inputVariables.getVariablesList().isEmpty()).isFalse();
   }
 
   @Test

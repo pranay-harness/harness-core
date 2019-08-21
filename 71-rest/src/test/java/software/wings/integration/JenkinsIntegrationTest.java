@@ -37,6 +37,6 @@ public class JenkinsIntegrationTest extends BaseIntegrationTest {
   //    jenkinsConfig.setPassword(scmSecret.decryptToCharArray(new SecretName("harness_jenkins")));
   //
   //    List<JobDetails> jobs = jenkinsBuildService.getJobs(jenkinsConfig, null, Optional.empty());
-  //    assertFalse(jobs.isEmpty());
+  //    assertThat(jobs.isEmpty()).isFalse();
   //  }
 }

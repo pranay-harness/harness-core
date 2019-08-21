@@ -7,7 +7,6 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -229,12 +228,12 @@ public class VaultTest extends WingsBaseTest {
     List<SecretManagerConfig> encryptionConfigs = secretManager.listSecretManagers(accountId);
     assertEquals(1, encryptionConfigs.size());
     VaultConfig next = (VaultConfig) encryptionConfigs.get(0);
-    assertFalse(next.isDefault());
+    assertThat(next.isDefault()).isFalse();
     assertEquals(accountId, next.getAccountId());
     assertEquals(SECRET_MASK, String.valueOf(next.getAuthToken()));
     assertEquals(vaultConfig.getName(), next.getName());
     assertEquals(vaultConfig.getVaultUrl(), next.getVaultUrl());
-    assertFalse(next.isDefault());
+    assertThat(next.isDefault()).isFalse();
 
     KmsConfig kmsConfig = getKmsConfig();
     kmsConfig.setDefault(true);
@@ -253,7 +252,7 @@ public class VaultTest extends WingsBaseTest {
       }
 
       if (encryptionConfig.getEncryptionType() == EncryptionType.VAULT) {
-        assertFalse(encryptionConfig.isDefault());
+        assertThat(encryptionConfig.isDefault()).isFalse();
         assertEquals(vaultConfigId, encryptionConfig.getUuid());
         numOfVaultDefaults++;
       }
@@ -274,7 +273,7 @@ public class VaultTest extends WingsBaseTest {
 
     for (EncryptionConfig encryptionConfig : encryptionConfigs) {
       if (encryptionConfig.getEncryptionType() == EncryptionType.KMS) {
-        assertFalse(encryptionConfig.isDefault());
+        assertThat(encryptionConfig.isDefault()).isFalse();
         assertEquals(kmsId, encryptionConfig.getUuid());
         numOfKmsDefaults++;
       }
@@ -284,7 +283,7 @@ public class VaultTest extends WingsBaseTest {
           assertThat(encryptionConfig.isDefault()).isTrue();
           numOfVaultDefaults++;
         } else {
-          assertFalse(encryptionConfig.isDefault());
+          assertThat(encryptionConfig.isDefault()).isFalse();
         }
       }
     }
@@ -308,12 +307,12 @@ public class VaultTest extends WingsBaseTest {
           assertThat(encryptionConfig.isDefault()).isTrue();
           numOfKmsDefaults++;
         } else {
-          assertFalse(encryptionConfig.isDefault());
+          assertThat(encryptionConfig.isDefault()).isFalse();
         }
       }
 
       if (encryptionConfig.getEncryptionType() == EncryptionType.VAULT) {
-        assertFalse(encryptionConfig.isDefault());
+        assertThat(encryptionConfig.isDefault()).isFalse();
         numOfVaultDefaults++;
       }
     }
@@ -397,7 +396,7 @@ public class VaultTest extends WingsBaseTest {
     assertEquals(accountId, savedVaultConfig.getAccountId());
 
     savedKmsConfig = (KmsConfig) encryptionConfigs.get(1);
-    assertFalse(savedKmsConfig.isDefault());
+    assertThat(savedKmsConfig.isDefault()).isFalse();
     assertEquals(GLOBAL_ACCOUNT_ID, savedKmsConfig.getAccountId());
   }
 
@@ -426,7 +425,7 @@ public class VaultTest extends WingsBaseTest {
 
     for (SecretManagerConfig config : vaultConfigs) {
       if (config.getName().equals(getVaultConfig(VAULT_TOKEN).getName())) {
-        assertFalse(config.isDefault());
+        assertThat(config.isDefault()).isFalse();
         numOfNonDefault++;
       }
 
@@ -449,7 +448,7 @@ public class VaultTest extends WingsBaseTest {
 
     for (SecretManagerConfig config : vaultConfigs) {
       if (config.getName().equals(getVaultConfig(VAULT_TOKEN).getName()) || config.getName().equals("config1")) {
-        assertFalse(config.isDefault());
+        assertThat(config.isDefault()).isFalse();
         numOfNonDefault++;
       }
 
@@ -527,7 +526,7 @@ public class VaultTest extends WingsBaseTest {
         vaultService.encrypt(name, keyToEncrypt, accountId, SettingVariableTypes.APP_DYNAMICS, vaultConfig, null);
     assertThat(encryptedData.getEncryptedValue()).isNull();
     assertNotNull(encryptedData.getEncryptionKey());
-    assertFalse(isBlank(encryptedData.getEncryptionKey()));
+    assertThat(isBlank(encryptedData.getEncryptionKey())).isFalse();
 
     char[] decryptedValue = vaultService.decrypt(encryptedData, accountId, vaultConfig);
     assertThat(decryptedValue).isNull();
@@ -546,7 +545,7 @@ public class VaultTest extends WingsBaseTest {
         name, password, accountId, SettingVariableTypes.APP_DYNAMICS, vaultConfig, savedEncryptedData);
     assertNotNull(encryptedData.getEncryptedValue());
     assertNotNull(encryptedData.getEncryptionKey());
-    assertFalse(isBlank(encryptedData.getEncryptionKey()));
+    assertThat(isBlank(encryptedData.getEncryptionKey())).isFalse();
 
     decryptedValue = vaultService.decrypt(encryptedData, accountId, vaultConfig);
     assertEquals(password, String.valueOf(decryptedValue));
@@ -566,7 +565,7 @@ public class VaultTest extends WingsBaseTest {
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     assertEquals(appDynamicsConfig, savedAttribute.getValue());
     assertThat(((AppDynamicsConfig) savedAttribute.getValue()).getPassword()).isNull();
-    assertFalse(isBlank(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword()));
+    assertThat(isBlank(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword())).isFalse();
 
     Query<EncryptedData> query =
         wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(settingAttribute.getUuid());
@@ -1281,7 +1280,7 @@ public class VaultTest extends WingsBaseTest {
                                                 .filter(EncryptedDataKeys.accountId, accountId)
                                                 .asList();
     assertEquals(1, encryptedFileData.size());
-    assertFalse(encryptedFileData.get(0).getParentIds().isEmpty());
+    assertThat(encryptedFileData.get(0).getParentIds().isEmpty()).isFalse();
     // test update
     String newSecretName = UUID.randomUUID().toString();
     File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
@@ -1299,7 +1298,7 @@ public class VaultTest extends WingsBaseTest {
                             .filter(EncryptedDataKeys.type, CONFIG_FILE)
                             .asList();
     assertEquals(1, encryptedFileData.size());
-    assertFalse(encryptedFileData.get(0).getParentIds().isEmpty());
+    assertThat(encryptedFileData.get(0).getParentIds().isEmpty()).isFalse();
 
     int numOfAccess = 7;
     for (int i = 0; i < numOfAccess; i++) {
@@ -1368,7 +1367,7 @@ public class VaultTest extends WingsBaseTest {
       AppDynamicsConfig savedConfig = (AppDynamicsConfig) savedAttribute.getValue();
       assertEquals(accountId, savedConfig.getAccountId());
       assertThat(savedConfig.getPassword()).isNull();
-      assertFalse(isBlank(savedConfig.getEncryptedPassword()));
+      assertThat(isBlank(savedConfig.getEncryptedPassword())).isFalse();
 
       encryptionService.decrypt(
           savedConfig, secretManager.getEncryptionDetails(savedConfig, workflowExecutionId, appId));
@@ -1397,7 +1396,7 @@ public class VaultTest extends WingsBaseTest {
         assertEquals(SettingVariableTypes.APP_DYNAMICS, encryptedData.getType());
         assertEquals(numOfSettingAttributes - (i + 1), encryptedData.getParentIds().size());
 
-        assertFalse(encryptedData.getParentIds().contains(attributeId));
+        assertThat(encryptedData.getParentIds().contains(attributeId)).isFalse();
         assertEquals(remainingAttrs, encryptedData.getParentIds());
       }
       i++;

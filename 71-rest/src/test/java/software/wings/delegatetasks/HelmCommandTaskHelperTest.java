@@ -2,7 +2,6 @@ package software.wings.delegatetasks;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 import com.google.inject.Inject;
 
@@ -58,7 +57,7 @@ public class HelmCommandTaskHelperTest extends WingsBaseTest {
       Optional<HarnessHelmDeployConfig> optional = helmCommandHelper.generateHelmDeployChartSpecFromYaml("harness:\n"
           + "    helm:\n"
           + "       chart:\n");
-      assertFalse(true);
+      assertThat(true).isFalse();
     } catch (Exception e) {
       assertThat(e instanceof WingsException).isTrue();
       assertEquals("Invalid Yaml, Failed while parsing yamlString", e.getMessage());

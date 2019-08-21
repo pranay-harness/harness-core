@@ -7,7 +7,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -100,11 +99,11 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicApplication>>>() {});
 
     assertThat(restResponse.getResponseMessages()).isEmpty();
-    assertFalse(restResponse.getResource().isEmpty());
+    assertThat(restResponse.getResource().isEmpty()).isFalse();
 
     for (NewRelicApplication app : restResponse.getResource()) {
       assertThat(app.getId() > 0).isTrue();
-      assertFalse(isBlank(app.getName()));
+      assertThat(isBlank(app.getName())).isFalse();
     }
   }
 
@@ -123,14 +122,14 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
           + "&accountId=" + accountId + "&appdynamicsAppId=" + application.getId());
       RestResponse<List<AppdynamicsTier>> tierRestResponse =
           getRequestBuilderWithAuthHeader(btTarget).get(new GenericType<RestResponse<List<AppdynamicsTier>>>() {});
-      assertFalse(tierRestResponse.getResource().isEmpty());
+      assertThat(tierRestResponse.getResource().isEmpty()).isFalse();
 
       for (AppdynamicsTier tier : tierRestResponse.getResource()) {
         assertThat(tier.getId() > 0).isTrue();
-        assertFalse(isBlank(tier.getName()));
-        assertFalse(isBlank(tier.getType()));
-        assertFalse(isBlank(tier.getAgentType()));
-        assertFalse(tier.getName().isEmpty());
+        assertThat(isBlank(tier.getName())).isFalse();
+        assertThat(isBlank(tier.getType())).isFalse();
+        assertThat(isBlank(tier.getAgentType())).isFalse();
+        assertThat(tier.getName().isEmpty()).isFalse();
       }
     }
   }
@@ -155,21 +154,21 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
           + "&accountId=" + accountId + "&appdynamicsAppId=" + application.getId());
       RestResponse<List<AppdynamicsTier>> tierRestResponse =
           getRequestBuilderWithAuthHeader(btTarget).get(new GenericType<RestResponse<List<AppdynamicsTier>>>() {});
-      assertFalse(tierRestResponse.getResource().isEmpty());
+      assertThat(tierRestResponse.getResource().isEmpty()).isFalse();
 
       for (AppdynamicsTier tier : tierRestResponse.getResource()) {
         List<AppdynamicsMetric> btMetrics = appdynamicsDelegateService.getTierBTMetrics(appDynamicsConfig,
             application.getId(), tier.getId(), secretManager.getEncryptionDetails(appDynamicsConfig, null, null),
             createApiCallLog(appDynamicsConfig.getAccountId(), null));
 
-        assertFalse(btMetrics.isEmpty());
+        assertThat(btMetrics.isEmpty()).isFalse();
 
         for (AppdynamicsMetric btMetric : btMetrics) {
-          assertFalse(isBlank(btMetric.getName()));
-          assertFalse("failed for " + btMetric.getName(), btMetric.getChildMetrices().isEmpty());
+          assertThat(isBlank(btMetric.getName())).isFalse();
+          assertThat(btMetric.getChildMetrices().isEmpty()).isFalse();
 
           for (AppdynamicsMetric leafMetric : btMetric.getChildMetrices()) {
-            assertFalse(isBlank(leafMetric.getName()));
+            assertThat(isBlank(leafMetric.getName())).isFalse();
             assertEquals("failed for " + btMetric.getName() + "|" + leafMetric.getName(), 0,
                 leafMetric.getChildMetrices().size());
           }
@@ -192,14 +191,14 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
           + "&accountId=" + accountId + "&appdynamicsAppId=" + application.getId());
       RestResponse<List<AppdynamicsTier>> tierRestResponse =
           getRequestBuilderWithAuthHeader(btTarget).get(new GenericType<RestResponse<List<AppdynamicsTier>>>() {});
-      assertFalse(tierRestResponse.getResource().isEmpty());
+      assertThat(tierRestResponse.getResource().isEmpty()).isFalse();
 
       for (AppdynamicsTier tier : tierRestResponse.getResource()) {
         assertThat(tier.getId() > 0).isTrue();
-        assertFalse(isBlank(tier.getName()));
-        assertFalse(isBlank(tier.getType()));
-        assertFalse(isBlank(tier.getAgentType()));
-        assertFalse(tier.getName().isEmpty());
+        assertThat(isBlank(tier.getName())).isFalse();
+        assertThat(isBlank(tier.getType())).isFalse();
+        assertThat(isBlank(tier.getAgentType())).isFalse();
+        assertThat(tier.getName().isEmpty()).isFalse();
 
         WebTarget dependentTarget =
             client.target(API_BASE + "/appdynamics/dependent-tiers?settingId=" + appdynamicsSettingId
@@ -244,7 +243,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
           + "&accountId=" + accountId + "&appdynamicsAppId=" + application.getId());
       RestResponse<List<AppdynamicsTier>> tierRestResponse =
           getRequestBuilderWithAuthHeader(btTarget).get(new GenericType<RestResponse<List<AppdynamicsTier>>>() {});
-      assertFalse(tierRestResponse.getResource().isEmpty());
+      assertThat(tierRestResponse.getResource().isEmpty()).isFalse();
 
       for (AppdynamicsTier tier : tierRestResponse.getResource()) {
         if (!tier.getName().equals("docker-tier")) {
@@ -285,7 +284,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
 
           final List<AppdynamicsMetric> tierMetrics =
               (List<AppdynamicsMetric>) metricResponse.getResource().getLoadResponse().getLoadResponse();
-          assertFalse(tierMetrics.isEmpty());
+          assertThat(tierMetrics.isEmpty()).isFalse();
 
           List<AppdynamicsMetricData> metricsDatas =
               JsonUtils.asObject(JsonUtils.asJson(metricResponse.getResource().getDataForNode()),

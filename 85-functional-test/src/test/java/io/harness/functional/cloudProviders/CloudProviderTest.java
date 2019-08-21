@@ -4,7 +4,6 @@ import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.SUNIL;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import io.harness.category.element.FunctionalTests;
@@ -287,7 +286,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
     // Verify cloudprovider is deleted i.e cloudprovider with specific name doesn't exist
     boolean connectorFound = SettingsUtils.checkCloudproviderConnectorExist(
         bearerToken, getAccount().getUuid(), CATEGORY, AWS_CONNECTOR_NAME);
-    assertFalse(connectorFound);
+    assertThat(connectorFound).isFalse();
   }
 
   private void deleteGCPCloudProvider() {
@@ -297,7 +296,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
     // Verify cloudprovider is deleted i.e cloudprovider with specific name doesn't exist
     boolean connectorFound = SettingsUtils.checkCloudproviderConnectorExist(
         bearerToken, getAccount().getUuid(), CATEGORY, GCP_CONNECTOR_NAME);
-    assertFalse(connectorFound);
+    assertThat(connectorFound).isFalse();
   }
 
   private void deleteAzureCloudProvider() {
@@ -307,7 +306,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
     // Verify cloudprovider is deleted i.e cloudprovider with specific name doesn't exist
     boolean connectorFound = SettingsUtils.checkCloudproviderConnectorExist(
         bearerToken, getAccount().getUuid(), CATEGORY, AZURE_CONNECTOR_NAME);
-    assertFalse(connectorFound);
+    assertThat(connectorFound).isFalse();
   }
 
   private void deletePhysicalDataCenterCloudProvider() {
@@ -318,6 +317,6 @@ public class CloudProviderTest extends AbstractFunctionalTest {
     // Verify cloudprovider is deleted i.e cloudprovider with specific name doesn't exist
     boolean connectorFound = SettingsUtils.checkCloudproviderConnectorExist(
         bearerToken, getAccount().getUuid(), CATEGORY, PHYSICAL_DATACENTER_CONNECTOR_NAME);
-    assertFalse(connectorFound);
+    assertThat(connectorFound).isFalse();
   }
 }

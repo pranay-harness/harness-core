@@ -3,7 +3,6 @@ package software.wings.service.impl.instance;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -707,9 +706,9 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testIsSupported() throws Exception {
-    assertFalse(instanceHelper.isSupported(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH));
-    assertFalse(instanceHelper.isSupported(InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM));
-    assertFalse(instanceHelper.isSupported(InfrastructureMappingType.AWS_AWS_LAMBDA));
+    assertThat(instanceHelper.isSupported(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH)).isFalse();
+    assertThat(instanceHelper.isSupported(InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM)).isFalse();
+    assertThat(instanceHelper.isSupported(InfrastructureMappingType.AWS_AWS_LAMBDA)).isFalse();
     assertThat(instanceHelper.isSupported(InfrastructureMappingType.AWS_ECS)).isTrue();
     assertThat(instanceHelper.isSupported(InfrastructureMappingType.AWS_AMI)).isTrue();
     assertThat(instanceHelper.isSupported(InfrastructureMappingType.AWS_AWS_CODEDEPLOY)).isTrue();

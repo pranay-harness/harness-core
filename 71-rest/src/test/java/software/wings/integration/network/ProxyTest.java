@@ -166,7 +166,7 @@ public class ProxyTest extends CategoryTest {
   //      Response response = builder.build().newCall(request).execute();
   //      assertEquals(200, response.code());
   //    } catch (Exception e) {
-  //      assertFalse(true);
+  //      assertThat(true).isFalse();
   //    }
   //
   //    builder = new OkHttpClient.Builder().proxy(proxy);
@@ -182,7 +182,7 @@ public class ProxyTest extends CategoryTest {
   //      Response response = builder.build().newCall(request).execute();
   //      assertEquals(200, response.code());
   //    } catch (Exception e) {
-  //      assertFalse(true);
+  //      assertThat(true).isFalse();
   //    }
   //  }
 

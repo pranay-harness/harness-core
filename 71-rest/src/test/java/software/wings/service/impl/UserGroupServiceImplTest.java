@@ -5,7 +5,6 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
@@ -312,11 +311,12 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
 
       verify(emailNotificationService, atLeastOnce()).send(emailDataArgumentCaptor.capture());
       List<EmailData> emailsData = emailDataArgumentCaptor.getAllValues();
-      assertFalse(emailsData.stream()
-                      .filter(emailData -> emailData.getTemplateName().equals(INVITE_EMAIL_TEMPLATE_NAME))
-                      .collect(toList())
-                      .size()
-          == 1);
+      assertThat(emailsData.stream()
+                     .filter(emailData -> emailData.getTemplateName().equals(INVITE_EMAIL_TEMPLATE_NAME))
+                     .collect(toList())
+                     .size()
+          == 1)
+          .isFalse();
 
       userGroup1 = userGroupService.get(ACCOUNT_ID, userGroup1.getUuid());
       userGroup2 = userGroupService.get(ACCOUNT_ID, userGroup2.getUuid());
@@ -340,11 +340,12 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
       assertThat(userGroup3.getMemberIds()).containsExactly(user.getUuid());
       verify(emailNotificationService, atLeastOnce()).send(emailDataArgumentCaptor.capture());
       emailsData = emailDataArgumentCaptor.getAllValues();
-      assertFalse(emailsData.stream()
-                      .filter(emailData -> emailData.getTemplateName().equals(ADD_GROUP_EMAIL_TEMPLATE_NAME))
-                      .collect(toList())
-                      .size()
-          == 1);
+      assertThat(emailsData.stream()
+                     .filter(emailData -> emailData.getTemplateName().equals(ADD_GROUP_EMAIL_TEMPLATE_NAME))
+                     .collect(toList())
+                     .size()
+          == 1)
+          .isFalse();
     }
   }
 
@@ -475,7 +476,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     wingsPersistence.save(defaultUserGroup);
 
     boolean deleted = userGroupService.delete(ACCOUNT_ID, defaultUserGroup.getUuid(), false);
-    assertFalse(deleted);
+    assertThat(deleted).isFalse();
   }
 
   @Test

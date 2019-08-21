@@ -3,7 +3,6 @@ package software.wings.integration;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
@@ -168,7 +167,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
         hasApplications = true;
       }
     }
-    assertFalse(hasUsers);
+    assertThat(hasUsers).isFalse();
     assertThat(hasApplications).isTrue();
   }
 

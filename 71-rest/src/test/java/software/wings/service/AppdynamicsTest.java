@@ -2,7 +2,6 @@ package software.wings.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.when;
@@ -117,7 +116,7 @@ public class AppdynamicsTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void getAllApplications() throws IOException {
     List<NewRelicApplication> applications = appdynamicsService.getApplications(settingAttribute.getUuid());
-    assertFalse(applications.isEmpty());
+    assertThat(applications.isEmpty()).isFalse();
   }
 
   @Test
@@ -125,10 +124,10 @@ public class AppdynamicsTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void getTiers() throws IOException {
     List<NewRelicApplication> applications = appdynamicsService.getApplications(settingAttribute.getUuid());
-    assertFalse(applications.isEmpty());
+    assertThat(applications.isEmpty()).isFalse();
     Set<AppdynamicsTier> tiers =
         appdynamicsService.getTiers(settingAttribute.getUuid(), applications.iterator().next().getId());
-    assertFalse(tiers.isEmpty());
+    assertThat(tiers.isEmpty()).isFalse();
   }
 
   @Test
@@ -136,10 +135,10 @@ public class AppdynamicsTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void getDependentTiers() throws IOException {
     List<NewRelicApplication> applications = appdynamicsService.getApplications(settingAttribute.getUuid());
-    assertFalse(applications.isEmpty());
+    assertThat(applications.isEmpty()).isFalse();
     NewRelicApplication app = applications.iterator().next();
     Set<AppdynamicsTier> tiers = appdynamicsService.getTiers(settingAttribute.getUuid(), app.getId());
-    assertFalse(tiers.isEmpty());
+    assertThat(tiers.isEmpty()).isFalse();
 
     AppdynamicsTier tier = tiers.iterator().next();
     if (tier.getName().equals("docker-tier")) {

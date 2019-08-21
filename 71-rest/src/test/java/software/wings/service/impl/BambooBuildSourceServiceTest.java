@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -83,7 +82,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   @Ignore("Unit tests should not access external resources")
   public void getJobs() {
     Set<JobDetails> jobs = buildSourceService.getJobs(appId, settingAttribute.getUuid(), null);
-    assertFalse(jobs.isEmpty());
+    assertThat(jobs.isEmpty()).isFalse();
   }
 
   @Test
@@ -92,7 +91,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   @Ignore("Unit tests should not access external resources")
   public void getPlans() {
     Map<String, String> plans = buildSourceService.getPlans(appId, settingAttribute.getUuid(), streamType.name());
-    assertFalse(plans.isEmpty());
+    assertThat(plans.isEmpty()).isFalse();
   }
 
   @Test
@@ -104,7 +103,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
     wingsPersistence.save(service);
     Map<String, String> plans =
         buildSourceService.getPlans(appId, settingAttribute.getUuid(), service.getUuid(), streamType.name(), "");
-    assertFalse(plans.isEmpty());
+    assertThat(plans.isEmpty()).isFalse();
   }
 
   @Test
@@ -114,7 +113,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   public void getArtifactPaths() {
     Set<String> artifactPaths =
         buildSourceService.getArtifactPaths(appId, "TOD-TOD", settingAttribute.getUuid(), null, streamType.name());
-    assertFalse(artifactPaths.isEmpty());
+    assertThat(artifactPaths.isEmpty()).isFalse();
     assertThat(artifactPaths.contains("artifacts/todolist.war")).isTrue();
   }
 
@@ -134,7 +133,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
 
     List<BuildDetails> builds =
         buildSourceService.getBuilds(appId, artifactStream.getUuid(), settingAttribute.getUuid());
-    assertFalse(builds.isEmpty());
+    assertThat(builds.isEmpty()).isFalse();
   }
 
   @Test

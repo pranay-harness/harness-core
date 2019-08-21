@@ -1,7 +1,7 @@
 package software.wings.beans;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
@@ -81,7 +81,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
         .thenReturn(Optional.of(EncryptedDataDetail.builder().fieldName("api_key").build()));
     List<EncryptedDataDetail> encryptedDataDetails = apmVerificationConfig.encryptedDataDetails(secretManager);
     assertEquals(1, encryptedDataDetails.size());
-    assertFalse(encryptedDataDetails.isEmpty());
+    assertThat(encryptedDataDetails.isEmpty()).isFalse();
     assertEquals("api_key", encryptedDataDetails.get(0).getFieldName());
   }
 
@@ -120,7 +120,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
         .thenReturn(Optional.of(EncryptedDataDetail.builder().fieldName("api_key").build()));
     List<EncryptedDataDetail> encryptedDataDetails = apmVerificationConfig.encryptedDataDetails(secretManager);
     assertEquals(1, encryptedDataDetails.size());
-    assertFalse(encryptedDataDetails.isEmpty());
+    assertThat(encryptedDataDetails.isEmpty()).isFalse();
     assertEquals("api_key", encryptedDataDetails.get(0).getFieldName());
   }
 

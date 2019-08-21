@@ -2,7 +2,6 @@ package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -149,7 +148,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
     assertThat(valid).isTrue();
 
     valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_4);
-    assertFalse(valid);
+    assertThat(valid).isFalse();
 
     valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_5);
     assertThat(valid).isTrue();
@@ -158,10 +157,10 @@ public class WhitelistServiceTest extends WingsBaseTest {
     assertThat(valid).isTrue();
 
     valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_7);
-    assertFalse(valid);
+    assertThat(valid).isFalse();
 
     valid = whitelistService.isValidIPAddress(accountId, INVALID_IP_ADDRESS);
-    assertFalse(valid);
+    assertThat(valid).isFalse();
   }
 
   @Test
@@ -234,7 +233,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
                               .build();
     try {
       whitelistService.save(whitelist);
-      assertFalse(true);
+      assertThat(true).isFalse();
     } catch (WingsException ex) {
       assertNotNull(ex.getMessage());
     }
@@ -247,7 +246,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
                     .build();
     try {
       whitelistService.save(whitelist);
-      assertFalse(true);
+      assertThat(true).isFalse();
     } catch (WingsException ex) {
       assertNotNull(ex.getMessage());
     }
@@ -256,7 +255,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
         Whitelist.builder().accountId(accountId).uuid(whitelistId).description(description).filter(null).build();
     try {
       whitelistService.save(whitelist);
-      assertFalse(true);
+      assertThat(true).isFalse();
     } catch (WingsException ex) {
       assertNotNull(ex.getMessage());
     }
@@ -269,7 +268,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
                     .build();
     try {
       whitelistService.save(whitelist);
-      assertFalse(true);
+      assertThat(true).isFalse();
     } catch (WingsException ex) {
       assertNotNull(ex.getMessage());
     }
@@ -282,7 +281,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
                     .build();
     try {
       whitelistService.save(whitelist);
-      assertFalse(true);
+      assertThat(true).isFalse();
     } catch (WingsException ex) {
       assertNotNull(ex.getMessage());
     }
@@ -295,7 +294,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
                     .build();
     try {
       whitelistService.save(whitelist);
-      assertFalse(true);
+      assertThat(true).isFalse();
     } catch (WingsException ex) {
       assertNotNull(ex.getMessage());
     }
@@ -332,7 +331,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
     whitelistFromGet.setFilter(invalidCidrFilter1);
     try {
       whitelistService.update(whitelistFromGet);
-      assertFalse(true);
+      assertThat(true).isFalse();
     } catch (WingsException ex) {
       assertNotNull(ex.getMessage());
     }
@@ -340,7 +339,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
     whitelistFromGet.setFilter(invalidCidrFilter2);
     try {
       whitelistService.update(whitelistFromGet);
-      assertFalse(true);
+      assertThat(true).isFalse();
     } catch (WingsException ex) {
       assertNotNull(ex.getMessage());
     }
@@ -348,7 +347,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
     whitelistFromGet.setFilter(null);
     try {
       whitelistService.update(whitelistFromGet);
-      assertFalse(true);
+      assertThat(true).isFalse();
     } catch (WingsException ex) {
       assertNotNull(ex.getMessage());
     }
@@ -356,7 +355,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
     whitelistFromGet.setFilter(invalidIpFilter1);
     try {
       whitelistService.update(whitelistFromGet);
-      assertFalse(true);
+      assertThat(true).isFalse();
     } catch (WingsException ex) {
       assertNotNull(ex.getMessage());
     }
@@ -364,7 +363,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
     whitelistFromGet.setFilter(invalidIpFilter2);
     try {
       whitelistService.update(whitelistFromGet);
-      assertFalse(true);
+      assertThat(true).isFalse();
     } catch (WingsException ex) {
       assertNotNull(ex.getMessage());
     }
@@ -372,7 +371,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
     whitelistFromGet.setFilter(invalidIpFilter3);
     try {
       whitelistService.update(whitelistFromGet);
-      assertFalse(true);
+      assertThat(true).isFalse();
     } catch (WingsException ex) {
       assertNotNull(ex.getMessage());
     }

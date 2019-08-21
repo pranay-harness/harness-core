@@ -2,7 +2,6 @@ package io.harness.functional.users;
 
 import static io.harness.rule.OwnerRule.SWAMY;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import com.google.inject.Inject;
@@ -109,8 +108,8 @@ public class UserTest extends AbstractFunctionalTest {
     UserInvite incomplete = userInvitationList.get(0);
     UserInvite completed = UserRestUtils.completeUserRegistration(account, bearerToken, incomplete);
     assertNotNull(completed);
-    assertFalse("Error : Agreement is true before signup", incomplete.isAgreement());
-    assertFalse("Error : Completion is true before signup", incomplete.isCompleted());
+    assertThat(incomplete.isAgreement()).isFalse();
+    assertThat(incomplete.isCompleted()).isFalse();
     assertThat(completed.isCompleted()).isTrue();
     // Assert.assertThat("Error : Agreement is false after signup",completed.isAgreement()).isTrue();
     logger.info(incomplete.getAccountId() + ":" + incomplete.getEmail());

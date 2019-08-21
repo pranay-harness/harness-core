@@ -1,7 +1,6 @@
 package io.harness.notifications.conditions;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
 
 import io.harness.category.element.UnitTests;
 import io.harness.notifications.beans.Conditions;
@@ -24,14 +23,14 @@ public class ManualInterventionFilterMatcherTest extends WingsBaseTest {
     AlertFilter filter = new AlertFilter(AlertType.ApprovalNeeded, new Conditions(Operator.MATCHING, null, null));
     Alert manualInterventionAlert = manualInterventionAlert();
     ManualInterventionFilterMatcher matcher = new ManualInterventionFilterMatcher(filter, manualInterventionAlert);
-    assertFalse("should not match because alert types are different", matcher.matchesCondition());
+    assertThat(matcher.matchesCondition()).isFalse();
 
     ManualInterventionAlertFilters manualInterventionAlertFilters =
         new ManualInterventionAlertFilters(Arrays.asList("wrong-id"), Arrays.asList("some-env"));
     filter = new AlertFilter(
         AlertType.ManualInterventionNeeded, new Conditions(Operator.MATCHING, manualInterventionAlertFilters, null));
     matcher = new ManualInterventionFilterMatcher(filter, manualInterventionAlert);
-    assertFalse("should not match because appIds don't match", matcher.matchesCondition());
+    assertThat(matcher.matchesCondition()).isFalse();
 
     manualInterventionAlertFilters =
         new ManualInterventionAlertFilters(Arrays.asList("some-app"), Arrays.asList("some-env"));

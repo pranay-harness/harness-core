@@ -5,7 +5,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rest.RestResponse.Builder.aRestResponse;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -260,7 +259,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
         }
       });
     }
-    assertFalse(isEmpty(timeSeriesMLAnalysisRecord.getTransactions()));
+    assertThat(isEmpty(timeSeriesMLAnalysisRecord.getTransactions())).isFalse();
     assertThat(timeSeriesMLAnalysisRecord.getTransactionsCompressedJson()).isNull();
     metricDataAnalysisService.saveAnalysisRecordsML(accountId, StateType.APP_DYNAMICS, appId, stateExecutionId,
         workflowExecutionId, generateUuid(), (int) analysisMinute, learningEngineAnalysisTask.getUuid(), generateUuid(),
@@ -271,10 +270,10 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
                                                        .filter("stateExecutionId", stateExecutionId)
                                                        .get();
     assertThat(savedRecord.getTransactions()).isNull();
-    assertFalse(isEmpty(timeSeriesMLAnalysisRecord.getTransactionsCompressedJson()));
+    assertThat(isEmpty(timeSeriesMLAnalysisRecord.getTransactionsCompressedJson())).isFalse();
     TimeSeriesMLAnalysisRecord readRecord =
         metricDataAnalysisService.getPreviousAnalysis(appId, cvConfigId, analysisMinute, null);
-    assertFalse(isEmpty(readRecord.getTransactions()));
+    assertThat(isEmpty(readRecord.getTransactions())).isFalse();
     assertThat(readRecord.getTransactionsCompressedJson()).isNull();
   }
 

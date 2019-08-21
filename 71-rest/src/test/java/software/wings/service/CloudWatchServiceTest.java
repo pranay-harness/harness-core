@@ -4,7 +4,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -117,8 +116,8 @@ public class CloudWatchServiceTest extends WingsBaseTest {
     Map<AwsNameSpace, List<CloudWatchMetric>> cloudwatchMetrics =
         CloudWatchServiceImpl.fetchMetrics(cvServiceConfiguration);
     assertEquals("There are 2 different types of metrics", 2, cloudwatchMetrics.keySet().size());
-    assertFalse("There are no lambda metrics", cloudwatchMetrics.containsKey(AwsNameSpace.LAMBDA));
-    assertFalse("There are no EC2 metrics", cloudwatchMetrics.containsKey(AwsNameSpace.EC2));
+    assertThat(cloudwatchMetrics.containsKey(AwsNameSpace.LAMBDA)).isFalse();
+    assertThat(cloudwatchMetrics.containsKey(AwsNameSpace.EC2)).isFalse();
     assertEquals("There is 1 ECS metric in the list", 1, cloudwatchMetrics.get(AwsNameSpace.ECS).size());
     assertEquals("The ECS metric is CPUUtillization", "CPUUtilization",
         cloudwatchMetrics.get(AwsNameSpace.ECS).get(0).getMetricName());
@@ -135,10 +134,10 @@ public class CloudWatchServiceTest extends WingsBaseTest {
     Map<AwsNameSpace, List<CloudWatchMetric>> cloudwatchMetrics =
         CloudWatchServiceImpl.fetchMetrics(cvServiceConfiguration);
     assertEquals("There are 0 different types of metrics", 0, cloudwatchMetrics.keySet().size());
-    assertFalse("There are no lambda metrics", cloudwatchMetrics.containsKey(AwsNameSpace.LAMBDA));
-    assertFalse("There are no EC2 metrics", cloudwatchMetrics.containsKey(AwsNameSpace.EC2));
-    assertFalse("There are no ECS metrics", cloudwatchMetrics.containsKey(AwsNameSpace.ECS));
-    assertFalse("There are no ELB metrics", cloudwatchMetrics.containsKey(AwsNameSpace.ELB));
+    assertThat(cloudwatchMetrics.containsKey(AwsNameSpace.LAMBDA)).isFalse();
+    assertThat(cloudwatchMetrics.containsKey(AwsNameSpace.EC2)).isFalse();
+    assertThat(cloudwatchMetrics.containsKey(AwsNameSpace.ECS)).isFalse();
+    assertThat(cloudwatchMetrics.containsKey(AwsNameSpace.ELB)).isFalse();
   }
 
   @Test

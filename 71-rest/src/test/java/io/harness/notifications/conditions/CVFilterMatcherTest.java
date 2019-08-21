@@ -1,7 +1,6 @@
 package io.harness.notifications.conditions;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
 
 import com.google.common.collect.Lists;
 
@@ -53,7 +52,7 @@ public class CVFilterMatcherTest extends WingsBaseTest {
 
     // should not alert for diff env
     cvConfiguration.setEnvId("env4");
-    assertFalse(cvFilterMatcher.matchesCondition());
+    assertThat(cvFilterMatcher.matchesCondition()).isFalse();
 
     // reset
     cvConfiguration.setEnvId("env2");
@@ -61,7 +60,7 @@ public class CVFilterMatcherTest extends WingsBaseTest {
 
     // should not alert for diff app
     cvAlert.setAppId("app3");
-    assertFalse(cvFilterMatcher.matchesCondition());
+    assertThat(cvFilterMatcher.matchesCondition()).isFalse();
 
     // reset
     cvAlert.setAppId("app1");
@@ -69,7 +68,7 @@ public class CVFilterMatcherTest extends WingsBaseTest {
 
     // should not alert for diff cvConfig
     cvConfiguration.setUuid("cvConfig5");
-    assertFalse(cvFilterMatcher.matchesCondition());
+    assertThat(cvFilterMatcher.matchesCondition()).isFalse();
 
     // reset
     cvConfiguration.setUuid("cvConfig3");
@@ -78,7 +77,7 @@ public class CVFilterMatcherTest extends WingsBaseTest {
     // should not alert for less threshold
     cvAlert.setAlertData(
         ContinuousVerificationAlertData.builder().cvConfiguration(cvConfiguration).riskScore(0.2).build());
-    assertFalse(cvFilterMatcher.matchesCondition());
+    assertThat(cvFilterMatcher.matchesCondition()).isFalse();
 
     // put things back, should alert again
     cvAlert.setAlertData(

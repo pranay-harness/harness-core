@@ -5,7 +5,6 @@ import static io.harness.lock.PersistentLocker.LOCKS_STORE;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.threading.Morpheus.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import com.google.inject.Inject;
@@ -60,7 +59,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
       // Do nothing. This is just to suppress the exception
     }
 
-    assertFalse(damage);
+    assertThat(damage).isFalse();
 
     dbLock = getDbLock(uuid);
     assertThat(dbLock).isNull();

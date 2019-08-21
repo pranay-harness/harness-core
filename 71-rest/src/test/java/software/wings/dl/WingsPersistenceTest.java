@@ -6,7 +6,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -628,7 +627,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
     wingsPersistence.updateField(SettingAttribute.class, settingId, "value", jenkinsConfig);
     SettingAttribute result = wingsPersistence.get(SettingAttribute.class, settingId);
     char[] password = ((JenkinsConfig) result.getValue()).getPassword();
-    assertFalse(Arrays.equals(newPassword, password));
+    assertThat(Arrays.equals(newPassword, password)).isFalse();
     SettingAttribute undecryptedResult = wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
     assertThat(undecryptedResult).isNotNull();
     assertThat(Arrays.equals(newPassword, ((JenkinsConfig) undecryptedResult.getValue()).getPassword())).isFalse();

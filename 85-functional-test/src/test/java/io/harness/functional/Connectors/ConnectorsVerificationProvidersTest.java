@@ -2,7 +2,6 @@ package io.harness.functional.Connectors;
 
 import static io.harness.rule.OwnerRule.SHASWAT;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -53,7 +52,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
     // Verify connector is deleted i.e connector with specific name doesn't exist
     connectorFound =
         SettingsUtils.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, connectorName);
-    assertFalse(connectorFound);
+    assertThat(connectorFound).isFalse();
   }
 
   @Test
@@ -74,7 +73,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
     // Verify connector is deleted i.e connector with specific name doesn't exist
     connectorFound =
         SettingsUtils.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, connectorName);
-    assertFalse(connectorFound);
+    assertThat(connectorFound).isFalse();
   }
 
   @Test
@@ -95,7 +94,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
     // Verify connector is deleted i.e connector with specific name doesn't exist
     connectorFound =
         SettingsUtils.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, connectorName);
-    assertFalse(connectorFound);
+    assertThat(connectorFound).isFalse();
   }
 
   @Test
@@ -116,7 +115,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
     // Verify connector is deleted i.e connector with specific name doesn't exist
     connectorFound =
         SettingsUtils.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, connectorName);
-    assertFalse(connectorFound);
+    assertThat(connectorFound).isFalse();
   }
 
   @Test
@@ -137,7 +136,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
     // Verify connector is deleted i.e connector with specific name doesn't exist
     connectorFound =
         SettingsUtils.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, connectorName);
-    assertFalse(connectorFound);
+    assertThat(connectorFound).isFalse();
   }
 
   @Test
@@ -158,7 +157,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
     // Verify connector is deleted i.e connector with specific name doesn't exist
     connectorFound =
         SettingsUtils.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, connectorName);
-    assertFalse(connectorFound);
+    assertThat(connectorFound).isFalse();
   }
 
   @Test
@@ -179,7 +178,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
     // Verify connector is deleted i.e connector with specific name doesn't exist
     connectorFound =
         SettingsUtils.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, connectorName);
-    assertFalse(connectorFound);
+    assertThat(connectorFound).isFalse();
   }
 
   @Test
@@ -200,6 +199,6 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
     // Verify connector is deleted i.e connector with specific name doesn't exist
     connectorFound =
         SettingsUtils.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, connectorName);
-    assertFalse(connectorFound);
+    assertThat(connectorFound).isFalse();
   }
 }

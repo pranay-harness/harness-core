@@ -8,7 +8,6 @@ import static io.harness.rule.OwnerRule.PARNIAN;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
@@ -318,7 +317,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
             .executionStatus(ExecutionStatus.QUEUED)
             .analysis_minute((int) (TimeUnit.MILLISECONDS.toMinutes(TIME_SERIES_ANALYSIS_TASK_TIME_OUT)))
             .build();
-    assertFalse(learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask));
+    assertThat(learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask)).isFalse();
   }
 
   @Test
@@ -434,14 +433,15 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
                                                                             .build()))
         .isTrue();
 
-    assertFalse(
+    assertThat(
         learningEngineService.addLearningEngineExperimentalAnalysisTask(LearningEngineExperimentalAnalysisTask.builder()
                                                                             .state_execution_id(stateExecutionId)
                                                                             .workflow_execution_id(workflowExecutionId)
                                                                             .stateType(StateType.ELK)
                                                                             .executionStatus(ExecutionStatus.QUEUED)
                                                                             .analysis_minute(14)
-                                                                            .build()));
+                                                                            .build()))
+        .isFalse();
   }
 
   @Test

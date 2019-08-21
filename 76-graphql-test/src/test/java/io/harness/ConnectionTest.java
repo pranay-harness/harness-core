@@ -3,7 +3,6 @@ package io.harness;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.graphql.datafetcher.DataFetcherUtils.NEGATIVE_LIMIT_ARG_MSG;
 import static software.wings.graphql.datafetcher.DataFetcherUtils.NEGATIVE_OFFSET_ARG_MSG;
@@ -97,7 +96,7 @@ public class ConnectionTest extends GraphQLTest {
 
       assertThat(pipelineConnection.getPageInfo().getLimit()).isEqualTo(2);
       assertThat(pipelineConnection.getPageInfo().getOffset()).isEqualTo(1);
-      assertFalse(pipelineConnection.getPageInfo().getHasMore());
+      assertThat(pipelineConnection.getPageInfo().getHasMore()).isFalse();
       assertThat(pipelineConnection.getPageInfo().getTotal()).isEqualTo(3);
     }
     {
@@ -108,7 +107,7 @@ public class ConnectionTest extends GraphQLTest {
 
       assertThat(pipelineConnection.getPageInfo().getLimit()).isEqualTo(5);
       assertThat(pipelineConnection.getPageInfo().getOffset()).isEqualTo(0);
-      assertFalse(pipelineConnection.getPageInfo().getHasMore());
+      assertThat(pipelineConnection.getPageInfo().getHasMore()).isFalse();
       assertThat(pipelineConnection.getPageInfo().getTotal()).isEqualTo(3);
     }
     {
@@ -119,7 +118,7 @@ public class ConnectionTest extends GraphQLTest {
 
       assertThat(pipelineConnection.getPageInfo().getLimit()).isEqualTo(5);
       assertThat(pipelineConnection.getPageInfo().getOffset()).isEqualTo(4);
-      assertFalse(pipelineConnection.getPageInfo().getHasMore());
+      assertThat(pipelineConnection.getPageInfo().getHasMore()).isFalse();
       assertThat(pipelineConnection.getPageInfo().getTotal()).isEqualTo(3);
     }
     {

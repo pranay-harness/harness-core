@@ -2,7 +2,6 @@ package io.harness.limits.checker.rate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 import com.google.inject.Inject;
 
@@ -91,7 +90,7 @@ public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseInteg
       assertThat(limitChecker.checkAndConsume()).isTrue();
     }
 
-    assertFalse("request should be blocked since limit reached", limitChecker.checkAndConsume());
+    assertThat(limitChecker.checkAndConsume()).isFalse();
 
     Thread.sleep(durationInMillis + 5);
     assertThat(limitChecker.checkAndConsume()).isTrue();
@@ -112,8 +111,7 @@ public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseInteg
     }
 
     assertThat(limitChecker.crossed(70)).isTrue();
-    assertFalse("requests should NOT have crossed 90% limit since we are using 0.8 as multiple above",
-        limitChecker.crossed(90));
+    assertThat(limitChecker.crossed(90)).isFalse();
   }
 
   @Test
@@ -149,7 +147,7 @@ public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseInteg
     assertEquals(allowedCount, maxAllowedReq, totalRequests / 100.0);
     assertEquals(disallowedCount, totalRequests - maxAllowedReq, totalRequests / 100.0);
 
-    assertFalse("request should be blocked since limit reached", limitChecker.checkAndConsume());
+    assertThat(limitChecker.checkAndConsume()).isFalse();
 
     Thread.sleep(durationInMillis + 10);
     boolean allowed = limitChecker.checkAndConsume();

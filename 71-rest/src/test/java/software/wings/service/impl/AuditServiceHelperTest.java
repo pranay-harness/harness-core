@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import com.google.inject.Inject;
@@ -49,21 +48,23 @@ public class AuditServiceHelperTest extends WingsBaseTest {
                                                                                 .build()))
           .isTrue();
 
-      assertFalse(
+      assertThat(
           auditGlobalContextData.getEntityOperationIdentifierSet().contains(EntityOperationIdentifier.builder()
                                                                                 .entityId("abcd") // id changed
                                                                                 .entityName("Service1")
                                                                                 .entityType(EntityType.SERVICE.name())
                                                                                 .operation(entityOperation.CREATE)
-                                                                                .build()));
+                                                                                .build()))
+          .isFalse();
 
-      assertFalse(
+      assertThat(
           auditGlobalContextData.getEntityOperationIdentifierSet().contains(EntityOperationIdentifier.builder()
                                                                                 .entityId("abcd")
                                                                                 .entityName("Service10") // name changed
                                                                                 .entityType(EntityType.SERVICE.name())
                                                                                 .operation(entityOperation.CREATE)
-                                                                                .build()));
+                                                                                .build()))
+          .isFalse();
     }
   }
 
@@ -95,21 +96,23 @@ public class AuditServiceHelperTest extends WingsBaseTest {
                          .build()))
           .isTrue();
 
-      assertFalse(auditGlobalContextData.getEntityOperationIdentifierSet().contains(
-          EntityOperationIdentifier.builder()
-              .entityId("abcd") // id changed
-              .entityName("Env1")
-              .entityType(EntityType.ENVIRONMENT.name())
-              .operation(entityOperation.CREATE)
-              .build()));
+      assertThat(auditGlobalContextData.getEntityOperationIdentifierSet().contains(
+                     EntityOperationIdentifier.builder()
+                         .entityId("abcd") // id changed
+                         .entityName("Env1")
+                         .entityType(EntityType.ENVIRONMENT.name())
+                         .operation(entityOperation.CREATE)
+                         .build()))
+          .isFalse();
 
-      assertFalse(auditGlobalContextData.getEntityOperationIdentifierSet().contains(
-          EntityOperationIdentifier.builder()
-              .entityId("abcd")
-              .entityName("Env10") // name changed
-              .entityType(EntityType.ENVIRONMENT.name())
-              .operation(entityOperation.CREATE)
-              .build()));
+      assertThat(auditGlobalContextData.getEntityOperationIdentifierSet().contains(
+                     EntityOperationIdentifier.builder()
+                         .entityId("abcd")
+                         .entityName("Env10") // name changed
+                         .entityType(EntityType.ENVIRONMENT.name())
+                         .operation(entityOperation.CREATE)
+                         .build()))
+          .isFalse();
     }
   }
 }

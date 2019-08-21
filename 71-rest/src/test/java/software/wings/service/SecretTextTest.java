@@ -7,7 +7,6 @@ import static io.harness.expression.SecretString.SECRET_MASK;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -898,7 +897,7 @@ public class SecretTextTest extends WingsBaseTest {
                        .getResource();
     secrets = pageResponse.getResponse();
 
-    assertFalse(isEmpty(secrets));
+    assertThat(isEmpty(secrets)).isFalse();
     for (EncryptedData secret : secrets) {
       assertEquals(numOfVariable, secret.getSetupUsage());
       assertEquals(numOfAccess * numOfVariable, secret.getRunTimeUsage());
@@ -980,7 +979,7 @@ public class SecretTextTest extends WingsBaseTest {
                        .getResource();
     secrets = pageResponse.getResponse();
 
-    assertFalse(isEmpty(secrets));
+    assertThat(isEmpty(secrets)).isFalse();
     for (EncryptedData secret : secrets) {
       assertEquals(0, secret.getSetupUsage());
       assertEquals(0, secret.getRunTimeUsage());

@@ -2,7 +2,6 @@ package io.harness.e2e.dailysanity.cdworkflow.deployments;
 
 import static io.harness.rule.OwnerRule.SUNIL;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
@@ -214,7 +213,7 @@ public class BasicSSHDeployment extends AbstractE2ETest {
       // Verify connector is deleted i.e connector with specific name doesn't exist
       boolean connectorFound = SettingsUtils.checkCloudproviderConnectorExist(
           bearerToken, getAccount().getUuid(), "CLOUD_PROVIDER", CLOUD_PROVIDER_NAME);
-      assertFalse(connectorFound);
+      assertThat(connectorFound).isFalse();
     }
 
     if (artifactoryId != null) {
@@ -222,7 +221,7 @@ public class BasicSSHDeployment extends AbstractE2ETest {
       // Verify connector is deleted i.e connector with specific name doesn't exist
       boolean connectorFound = SettingsUtils.checkCloudproviderConnectorExist(
           bearerToken, getAccount().getUuid(), "CONNECTOR", ARTIFACTORY_NAME);
-      assertFalse(connectorFound);
+      assertThat(connectorFound).isFalse();
     }
 
     if (sshKeyId != null) {

@@ -100,8 +100,9 @@ public class AccessManagementUtils {
     ApiKeyEntry postedEntry = ApiKeysRestUtils.createApiKey(account.getUuid(), bearerToken, apiKeyEntry);
     //    LdapSettings ldapSettings = SSOUtils.createDefaultLdapSettings(account.getUuid());
     //    logger.info("LDAP setting addition in progress");
-    //    assertFalse(
-    //        SSORestUtils.addLdapSettings(account.getUuid(), bearerToken, ldapSettings) == HttpStatus.SC_BAD_REQUEST);
+    //    assertThat(
+    //        SSORestUtils.addLdapSettings(account.getUuid(), bearerToken, ldapSettings) ==
+    //        HttpStatus.SC_BAD_REQUEST).isFalse();
     //    logger.info("LDAP added successfully");
     //    Object ssoConfig = SSORestUtils.getAccessManagementSettings(account.getUuid(), bearerToken);
     //    assertNotNull(ssoConfig);

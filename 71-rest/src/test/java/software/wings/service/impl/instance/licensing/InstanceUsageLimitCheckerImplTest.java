@@ -1,7 +1,6 @@
 package software.wings.service.impl.instance.licensing;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -15,7 +14,7 @@ public class InstanceUsageLimitCheckerImplTest extends CategoryTest {
     double actualUsage = 90;
     double allowed = 100;
     boolean withinLimit = InstanceUsageLimitCheckerImpl.isWithinLimit(actualUsage, 85, allowed);
-    assertFalse(withinLimit);
+    assertThat(withinLimit).isFalse();
     withinLimit = InstanceUsageLimitCheckerImpl.isWithinLimit(actualUsage, 95, allowed);
     assertThat(withinLimit).isTrue();
   }

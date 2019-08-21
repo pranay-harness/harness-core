@@ -2,7 +2,6 @@ package io.harness.e2e.dailysanity.cdworkflow;
 
 import static io.harness.rule.OwnerRule.SUNIL;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import io.harness.category.element.E2ETests;
@@ -80,6 +79,6 @@ public class ConnectorTest extends AbstractE2ETest {
     // Verify connector is deleted i.e connector with specific name doesn't exist
     boolean connectorFound =
         SettingsUtils.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, CONNECTOR_NAME);
-    assertFalse(connectorFound);
+    assertThat(connectorFound).isFalse();
   }
 }

@@ -4,7 +4,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Optional.of;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -350,7 +349,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     try {
       ecsSetupCommandTaskHelper.validateServiceRegistries(
           service.getServiceRegistries(), taskDefinition, executionLogCallback);
-      assertFalse(false);
+      assertThat(false).isFalse();
     } catch (Exception e) {
       assertThat(true).isTrue();
     }
@@ -360,7 +359,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     try {
       ecsSetupCommandTaskHelper.validateServiceRegistries(
           service.getServiceRegistries(), getTaskDefinition(), executionLogCallback);
-      assertFalse(false);
+      assertThat(false).isFalse();
     } catch (Exception e) {
       assertThat(true).isTrue();
     }
@@ -405,8 +404,9 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   public void testIsServiceWithSamePrefix() {
     assertThat(ecsSetupCommandTaskHelper.isServiceWithSamePrefix("Beacons__Conversions__177", "Beacons__Conversions__"))
         .isTrue();
-    assertFalse(ecsSetupCommandTaskHelper.isServiceWithSamePrefix(
-        "Beacons__Conversions__177__Fargate__4", "Beacons__Conversions__"));
+    assertThat(ecsSetupCommandTaskHelper.isServiceWithSamePrefix(
+                   "Beacons__Conversions__177__Fargate__4", "Beacons__Conversions__"))
+        .isFalse();
   }
 
   private TaskDefinition getTaskDefinition() {
@@ -628,7 +628,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     assertThat(ecsSetupCommandTaskHelper.isFargateTaskLauchType(setupParams)).isTrue();
 
     setupParams.setLaunchType(LaunchType.EC2.name());
-    assertFalse(ecsSetupCommandTaskHelper.isFargateTaskLauchType(setupParams));
+    assertThat(ecsSetupCommandTaskHelper.isFargateTaskLauchType(setupParams)).isFalse();
   }
 
   @Test

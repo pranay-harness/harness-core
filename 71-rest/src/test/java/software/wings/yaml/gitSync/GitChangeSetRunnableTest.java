@@ -2,7 +2,6 @@ package software.wings.yaml.gitSync;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -45,7 +44,7 @@ public class GitChangeSetRunnableTest extends WingsBaseTest {
 
     FieldUtils.writeField(
         gitChangeSetRunnable, "lastTimestampForStuckJobCheck", new AtomicLong(System.currentTimeMillis()), true);
-    assertFalse(gitChangeSetRunnable.shouldPerformStuckJobCheck());
+    assertThat(gitChangeSetRunnable.shouldPerformStuckJobCheck()).isFalse();
   }
 
   @Test

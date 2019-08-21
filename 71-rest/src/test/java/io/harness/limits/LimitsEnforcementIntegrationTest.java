@@ -3,7 +3,6 @@ package io.harness.limits;
 import static io.harness.limits.ActionType.CREATE_APPLICATION;
 import static io.harness.limits.ActionType.DEPLOY;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
 
 import com.google.inject.Inject;
 
@@ -88,7 +87,7 @@ public class LimitsEnforcementIntegrationTest extends BaseIntegrationTest {
     // check limits
     LimitChecker checker = limitCheckerFactory.getInstance(DEPLOY_ACTION);
     assertThat(checker.checkAndConsume()).isTrue();
-    assertFalse("1 request allowed every 4 seconds. Second request should fail.", checker.checkAndConsume());
+    assertThat(checker.checkAndConsume()).isFalse();
 
     // wait ~4s
     Thread.sleep(4005);

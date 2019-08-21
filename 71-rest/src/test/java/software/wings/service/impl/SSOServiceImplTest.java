@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static software.wings.security.authentication.AuthenticationMechanism.LDAP;
 import static software.wings.security.authentication.AuthenticationMechanism.OAUTH;
 import static software.wings.security.authentication.AuthenticationMechanism.SAML;
@@ -73,7 +72,7 @@ public class SSOServiceImplTest extends WingsBaseTest {
     ssoService.setAuthenticationMechanism(account.getUuid(), USER_PASSWORD);
     account = accountService.get(account.getUuid());
     assertEquals(USER_PASSWORD, account.getAuthenticationMechanism());
-    assertFalse(account.isOauthEnabled());
+    assertThat(account.isOauthEnabled()).isFalse();
 
     accountService.delete(account.getUuid());
   }
@@ -94,7 +93,7 @@ public class SSOServiceImplTest extends WingsBaseTest {
     ssoService.setAuthenticationMechanism(account.getUuid(), SAML);
     account = accountService.get(account.getUuid());
     assertEquals(SAML, account.getAuthenticationMechanism());
-    assertFalse(account.isOauthEnabled());
+    assertThat(account.isOauthEnabled()).isFalse();
     accountService.delete(account.getUuid());
   }
 
@@ -114,7 +113,7 @@ public class SSOServiceImplTest extends WingsBaseTest {
     ssoService.setAuthenticationMechanism(account.getUuid(), LDAP);
     account = accountService.get(account.getUuid());
     assertEquals(LDAP, account.getAuthenticationMechanism());
-    assertFalse(account.isOauthEnabled());
+    assertThat(account.isOauthEnabled()).isFalse();
     accountService.delete(account.getUuid());
   }
 
@@ -139,7 +138,7 @@ public class SSOServiceImplTest extends WingsBaseTest {
                                                 .build());
     account = accountService.get(account.getUuid());
     assertEquals(USER_PASSWORD, account.getAuthenticationMechanism());
-    assertFalse(account.isOauthEnabled());
+    assertThat(account.isOauthEnabled()).isFalse();
 
     ssoService.setAuthenticationMechanism(account.getUuid(), OAUTH);
     account = accountService.get(account.getUuid());

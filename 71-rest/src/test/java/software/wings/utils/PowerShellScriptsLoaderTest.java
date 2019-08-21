@@ -1,6 +1,6 @@
 package software.wings.utils;
 
-import static org.junit.Assert.assertFalse;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -16,7 +16,7 @@ public class PowerShellScriptsLoaderTest extends CategoryTest {
   @Category(UnitTests.class)
   public void smokeTest() {
     for (Map.Entry<PsScript, String> entry : PowerShellScriptsLoader.psScriptMap.entrySet()) {
-      assertFalse(EmptyPredicate.isEmpty(entry.getValue()));
+      assertThat(EmptyPredicate.isEmpty(entry.getValue())).isFalse();
     }
   }
 }

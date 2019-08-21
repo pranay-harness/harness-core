@@ -3,7 +3,6 @@ package io.harness.functional.secrets;
 import static io.harness.rule.OwnerRule.SWAMY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 import com.google.inject.Inject;
 
@@ -82,7 +81,7 @@ public class SecretsFunctionalTest extends AbstractFunctionalTest {
     SecretText secretText = SecretsUtils.createSecretTextObject(secretsName, secretValue);
     List<EncryptedData> encryptedDataList = SecretsRestUtils.listSecrets(getAccount().getUuid(), bearerToken);
     boolean isSecretPresent = SecretsUtils.isSecretAvailable(encryptedDataList, secretsName);
-    assertFalse(isSecretPresent);
+    assertThat(isSecretPresent).isFalse();
 
     String secretsId = SecretsRestUtils.addSecret(getAccount().getUuid(), bearerToken, secretText);
     assertThat(StringUtils.isNotBlank(secretsId)).isTrue();
