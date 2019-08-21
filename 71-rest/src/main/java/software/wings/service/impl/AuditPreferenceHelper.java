@@ -27,6 +27,7 @@ import software.wings.beans.Application;
 import software.wings.beans.ApplicationAuditFilter;
 import software.wings.beans.AuditPreference;
 import software.wings.beans.Preference;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 
 import java.io.IOException;
@@ -39,6 +40,7 @@ import java.util.concurrent.TimeUnit;
 public class AuditPreferenceHelper {
   public static final String ENTITY_AUDIT_RECORDS = "entityAuditRecords";
   @Inject AppService appService;
+  @Inject AccountService accountService;
 
   public Preference parseJsonIntoPreference(String preferenceJson) {
     ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -262,18 +264,63 @@ public class AuditPreferenceHelper {
   }
 
   private void setCreatedAtFilter(PageRequest<AuditHeader> auditHeaderPageRequest, AuditPreference auditPreference) {
-    Integer lastNDays = auditPreference.getLastNDays();
-    if (lastNDays != null && lastNDays.intValue() > 0) {
-      long startTime = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(lastNDays.longValue());
-      auditHeaderPageRequest.addFilter(AuditHeaderKeys.createdAt, Operator.GE, startTime);
-
-    } else if (isNotBlank(auditPreference.getStartTime()) && isNotBlank(auditPreference.getEndTime())) {
-      long startTime = Long.parseLong(auditPreference.getStartTime());
-      long endTime = Long.parseLong(auditPreference.getEndTime());
-
-      auditHeaderPageRequest.addFilter(AuditHeaderKeys.createdAt, Operator.GE, startTime);
-      auditHeaderPageRequest.addFilter(AuditHeaderKeys.createdAt, Operator.LT, endTime);
+    boolean isCommunityAccount = accountService.isCommunityAccount(auditPreference.getAccountId());
+    if (isCommunityAccount) {
+      // Community account can fetch data for last 7 days maximum.
+      // If filter has range > last 7 days, adjust it to last 7 days.
+      adjustForCommunityAccount(auditPreference);
     }
+
+    Integer lastNDays = auditPreference.getLastNDays();
+    if (isValidLastNDaysValue(lastNDays)) {
+      setStartTimeFilterUsingLastNDays(auditHeaderPageRequest, lastNDays);
+      return;
+    }
+
+    if (isNotBlank(auditPreference.getStartTime())) {
+      long startTime = Long.parseLong(auditPreference.getStartTime());
+      setStartTimeFilter(auditHeaderPageRequest, startTime);
+    }
+
+    if (isNotBlank(auditPreference.getEndTime())) {
+      long endTime = Long.parseLong(auditPreference.getEndTime());
+      setEndTimeFilter(auditHeaderPageRequest, endTime);
+    }
+  }
+
+  private void adjustForCommunityAccount(AuditPreference auditPreference) {
+    Integer lastNDays = auditPreference.getLastNDays();
+    if (isValidLastNDaysValue(lastNDays)) {
+      if (lastNDays.intValue() > 7) {
+        auditPreference.setLastNDays(Integer.valueOf(7));
+      }
+      return;
+    }
+
+    long oneWeekAgo = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(7);
+    if (isNotBlank(auditPreference.getStartTime())) {
+      long startTime = Long.parseLong(auditPreference.getStartTime());
+      if (startTime < oneWeekAgo) {
+        auditPreference.setStartTime(Long.toString(oneWeekAgo));
+      }
+    }
+  }
+
+  private void setStartTimeFilterUsingLastNDays(PageRequest<AuditHeader> auditHeaderPageRequest, Integer lastNDays) {
+    long startTime = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(lastNDays.longValue());
+    auditHeaderPageRequest.addFilter(AuditHeaderKeys.createdAt, Operator.GE, startTime);
+  }
+
+  private void setStartTimeFilter(PageRequest<AuditHeader> auditHeaderPageRequest, long startTime) {
+    auditHeaderPageRequest.addFilter(AuditHeaderKeys.createdAt, Operator.GE, startTime);
+  }
+
+  private void setEndTimeFilter(PageRequest<AuditHeader> auditHeaderPageRequest, long endTime) {
+    auditHeaderPageRequest.addFilter(AuditHeaderKeys.createdAt, Operator.LT, endTime);
+  }
+
+  private boolean isValidLastNDaysValue(Integer lastNDays) {
+    return lastNDays != null && lastNDays.intValue() > 0;
   }
 
   private boolean hasOnlyAccountLevelResourceCriteria(AuditPreference auditPreference) {
