@@ -609,8 +609,9 @@ public class WorkflowServiceHelper {
     if (serviceSetupRequired) {
       boolean isAwsAmiInfrastructure;
       if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(appId))) {
-        isAwsAmiInfrastructure =
-            infrastructureDefinitionService.isDynamicInfrastructure(appId, workflowPhase.getInfraDefinitionId());
+        InfrastructureDefinition infraDefinition =
+            infrastructureDefinitionService.get(appId, workflowPhase.getInfraDefinitionId());
+        isAwsAmiInfrastructure = infraDefinition.getInfrastructure() instanceof AwsAmiInfrastructure;
       } else {
         InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
         isAwsAmiInfrastructure = infraMapping instanceof AwsAmiInfrastructureMapping;
@@ -1920,7 +1921,7 @@ public class WorkflowServiceHelper {
           if (infraRefactor && !WorkflowServiceTemplateHelper.isInfraDefinitionTemplatized(phaseTemplateExpressions)) {
             Service service = serviceResourceService.get(appId, phase.getServiceId(), false);
             notNullCheck("Service", service, USER);
-            WorkflowServiceTemplateHelper.templatizenfraDefinition(
+            WorkflowServiceTemplateHelper.templatizeInfraDefinition(
                 orchestrationWorkflow, phase, phaseTemplateExpressions, service);
           } else if (!infraRefactor && !WorkflowServiceTemplateHelper.isInfraTemplatized(phaseTemplateExpressions)) {
             Service service = serviceResourceService.get(appId, phase.getServiceId(), false);

@@ -120,6 +120,8 @@ public enum ContextElementType {
 
   TERRAFORM_PROVISION,
 
+  SHELL_SCRIPT_PROVISION,
+
   K8S,
 
   TERRAFORM_INHERIT_PLAN

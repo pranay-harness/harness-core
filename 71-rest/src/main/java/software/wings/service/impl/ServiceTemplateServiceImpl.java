@@ -34,6 +34,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
@@ -49,6 +50,7 @@ import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceInstanceService;
@@ -86,6 +88,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private HostService hostService;
   @Inject private AppService appService;
+  @Inject private FeatureFlagService featureFlagService;
   @Inject private ApplicationManifestService applicationManifestService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Transient @Inject private transient SecretManager secretManager;
@@ -191,6 +194,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     String appId = serviceTemplates.get(0).getAppId();
     String envId = serviceTemplates.get(0).getEnvId();
 
+    boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, appId);
+
     ImmutableMap<String, ServiceTemplate> serviceTemplateMap =
         Maps.uniqueIndex(serviceTemplates, ServiceTemplate::getUuid);
 
@@ -228,20 +233,25 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       Service tempService = serviceMap.get(serviceTemplate.getServiceId());
       serviceTemplate.setServiceArtifactType(tempService != null ? tempService.getArtifactType() : ArtifactType.OTHER);
     });
-
-    PageRequest<InfrastructureMapping> infraPageRequest =
-        aPageRequest()
-            .addFilter("appId", EQ, appId)
-            .addFilter("envId", EQ, envId)
-            .addFilter("serviceTemplateId", IN, serviceTemplateMap.keySet().toArray())
-            .build();
-    List<InfrastructureMapping> infrastructureMappings =
-        infrastructureMappingService.list(infraPageRequest).getResponse();
-    Map<String, List<InfrastructureMapping>> infraMappingListByTemplateId =
-        infrastructureMappings.stream().collect(Collectors.groupingBy(InfrastructureMapping::getServiceTemplateId));
-    infraMappingListByTemplateId.forEach(
-        (templateId, infrastructureMappingList)
-            -> serviceTemplateMap.get(templateId).setInfrastructureMappings(infrastructureMappingList));
+    if (infraRefactor) {
+      serviceTemplateMap.forEach((templateId, serviceTemplate)
+                                     -> serviceTemplate.setInfrastructureMappings(getInfraMappingsFromServiceTemplate(
+                                         serviceTemplate.getAppId(), serviceTemplate.getUuid())));
+    } else {
+      PageRequest<InfrastructureMapping> infraPageRequest =
+          aPageRequest()
+              .addFilter("appId", EQ, appId)
+              .addFilter("envId", EQ, envId)
+              .addFilter("serviceTemplateId", IN, serviceTemplateMap.keySet().toArray())
+              .build();
+      List<InfrastructureMapping> infrastructureMappings =
+          infrastructureMappingService.list(infraPageRequest).getResponse();
+      Map<String, List<InfrastructureMapping>> infraMappingListByTemplateId =
+          infrastructureMappings.stream().collect(Collectors.groupingBy(InfrastructureMapping::getServiceTemplateId));
+      infraMappingListByTemplateId.forEach(
+          (templateId, infrastructureMappingList)
+              -> serviceTemplateMap.get(templateId).setInfrastructureMappings(infrastructureMappingList));
+    }
   }
 
   /* (non-Javadoc)
@@ -269,6 +279,27 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public ServiceTemplate get(String appId, String envId, String serviceTemplateId, boolean withDetails,
       EncryptedFieldMode encryptedFieldMode) {
+    ServiceTemplate serviceTemplate = get(appId, serviceTemplateId);
+    if (serviceTemplate != null) {
+      setArtifactTypeAndInfraMappings(asList(serviceTemplate));
+      if (withDetails) {
+        populateServiceAndOverrideConfigFiles(serviceTemplate);
+        populateServiceAndOverrideServiceVariables(serviceTemplate, encryptedFieldMode);
+        populateServiceAndOverrideConfigMapYamls(serviceTemplate);
+        populateServiceAndOverrideHelmValueYamls(serviceTemplate);
+        populateServiceAndOverrideValuesAppManifest(serviceTemplate);
+        populateServiceAndOverrideValuesManifestFile(serviceTemplate);
+      }
+    }
+    return serviceTemplate;
+  }
+
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ServiceTemplateService#get(java.lang.String, java.lang.String, java.lang.String)
+   */
+  @Override
+  public ServiceTemplate get(
+      String appId, String serviceTemplateId, boolean withDetails, EncryptedFieldMode encryptedFieldMode) {
     ServiceTemplate serviceTemplate = get(appId, serviceTemplateId);
     if (serviceTemplate != null) {
       setArtifactTypeAndInfraMappings(asList(serviceTemplate));
@@ -637,6 +668,22 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
                                 allServiceConfigFile != null ? asList(allServiceConfigFile) : asList()),
             templateConfigFile != null ? asList(templateConfigFile) : asList());
     return configFiles.isEmpty() ? null : configFiles.get(0);
+  }
+
+  @Override
+  public List<InfrastructureMapping> getInfraMappingsFromServiceTemplate(String appId, String serviceTemplateId) {
+    ServiceTemplate serviceTemplate = get(appId, serviceTemplateId);
+    if (serviceTemplate == null) {
+      return null;
+    }
+
+    PageRequest<InfrastructureMapping> infraPageRequest =
+        aPageRequest()
+            .addFilter("appId", EQ, appId)
+            .addFilter("envId", EQ, serviceTemplate.getEnvId())
+            .addFilter("serviceId", EQ, serviceTemplate.getServiceId())
+            .build();
+    return infrastructureMappingService.list(infraPageRequest).getResponse();
   }
 
   private String getValuesFileContent(ApplicationManifest applicationManifest) {

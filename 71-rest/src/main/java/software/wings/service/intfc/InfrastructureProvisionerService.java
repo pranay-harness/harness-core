@@ -8,6 +8,7 @@ import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentType;
+import software.wings.beans.BlueprintProperty;
 import software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisionerDetails;
@@ -47,6 +48,10 @@ public interface InfrastructureProvisionerService extends OwnedByApplication {
   void delete(String appId, String infrastructureProvisionerId);
 
   void pruneDescendingEntities(String appId, String infrastructureProvisionerId);
+
+  Map<String, Object> resolveProperties(Map<String, Object> contextMap, List<BlueprintProperty> properties,
+      Optional<ManagerExecutionLogCallback> executionLogCallbackOptional, Optional<String> region,
+      boolean infraRefactor);
 
   void regenerateInfrastructureMappings(String provisionerId, ExecutionContext context, Map<String, Object> outputs);
 

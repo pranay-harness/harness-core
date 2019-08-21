@@ -74,7 +74,7 @@ public class InfrastructureDefinitionResource {
       @QueryParam("envId") String envId, InfrastructureDefinition infrastructureDefinition) {
     infrastructureDefinition.setAppId(appId);
     infrastructureDefinition.setEnvId(envId);
-    return new RestResponse<>(infrastructureDefinitionService.save(infrastructureDefinition));
+    return new RestResponse<>(infrastructureDefinitionService.save(infrastructureDefinition, false));
   }
 
   @GET
@@ -213,5 +213,17 @@ public class InfrastructureDefinitionResource {
   public RestResponse<List<AwsRoute53HostedZoneData>> getHostedZones(
       @QueryParam("appId") String appId, @PathParam("infraDefinitionId") String infraDefinitionId) {
     return new RestResponse<>(infrastructureDefinitionService.listHostedZones(appId, infraDefinitionId));
+  }
+
+  @GET
+  @Path("{infraDefinitionId}/pcf/runningcount")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<Integer> getRunningCountForPcfApp(@QueryParam("appId") String appId,
+      @QueryParam("appNameExpr") String appNameExpr, @PathParam("infraDefinitionId") String infraDefinitionId,
+      @QueryParam("serviceId") String serviceId) {
+    return new RestResponse<>(
+        infrastructureDefinitionService.getPcfRunningInstances(appId, infraDefinitionId, appNameExpr, serviceId));
   }
 }

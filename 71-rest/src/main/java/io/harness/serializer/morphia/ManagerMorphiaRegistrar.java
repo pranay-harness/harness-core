@@ -76,6 +76,7 @@ import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.api.ServiceNowExecutionData;
 import software.wings.api.ServiceTemplateElement;
+import software.wings.api.ShellScriptProvisionerOutputElement;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformOutputInfoElement;
@@ -992,6 +993,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("api.TerraformExecutionData", TerraformExecutionData.class);
     w.put("api.TerraformOutputInfoElement", TerraformOutputInfoElement.class);
     w.put("audit.EntityAuditRecord", EntityAuditRecord.class);
+    w.put("api.ShellScriptProvisionerOutputElement", ShellScriptProvisionerOutputElement.class);
     w.put("beans.alert.ApprovalNeededAlert", ApprovalNeededAlert.class);
     w.put("beans.alert.ArtifactCollectionFailedAlert", ArtifactCollectionFailedAlert.class);
     w.put("beans.alert.cv.ContinuousVerificationAlertData", ContinuousVerificationAlertData.class);

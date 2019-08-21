@@ -19,7 +19,7 @@ import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInf
 @Data
 @Builder
 public class DirectKubernetesInfrastructure
-    implements InfraMappingInfrastructureProvider, ContainerInfrastructure, FieldKeyValMapProvider {
+    implements InfraMappingInfrastructureProvider, KubernetesInfrastructure, FieldKeyValMapProvider {
   @ExcludeFieldMap private String cloudProviderId;
 
   private String clusterName;

@@ -2,7 +2,6 @@ package software.wings.infra;
 
 import lombok.Builder;
 import lombok.Data;
-import software.wings.beans.InfrastructureMapping;
 
 import java.util.List;
 
@@ -10,6 +9,6 @@ import java.util.List;
 @Builder
 public class InfraDefinitionDetail {
   private InfrastructureDefinition infrastructureDefinition;
-  private List<InfrastructureMapping> derivedInfraMappings;
+  private List<InfraMappingDetail> derivedInfraMappingDetailList;
   private int countDerivedInfraMappings;
 }

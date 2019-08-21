@@ -100,7 +100,7 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
       current.setUuid(previous.getUuid());
       return infrastructureDefinitionService.update(current);
     } else {
-      return infrastructureDefinitionService.save(current);
+      return infrastructureDefinitionService.save(current, false);
     }
   }
 

@@ -21,12 +21,12 @@ public class Validator {
   /**
    * Checks that value is not null.
    *
-   * @param name  name of parameter.
+   * @param message  message  of parameter.
    * @param value input value of parameter.
    */
-  public static void notNullCheck(String name, Object value) {
+  public static void notNullCheck(String message, Object value) {
     if (value == null) {
-      throw new WingsException(GENERAL_ERROR).addParam("message", name);
+      throw new WingsException(GENERAL_ERROR).addParam("message", message);
     }
   }
 
@@ -97,6 +97,12 @@ public class Validator {
         throw new WingsException(GENERAL_ERROR, USER, e).addParam("message", "Duplicate " + field + " " + value);
       }
       throw new WingsException(GENERAL_ERROR, USER, e).addParam("message", ExceptionUtils.getMessage(e));
+    }
+  }
+
+  public static void ensureType(Class clazz, Object object, String errorMsg) {
+    if (!(clazz.isInstance(object))) {
+      throw new InvalidRequestException(errorMsg);
     }
   }
 }

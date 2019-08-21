@@ -16,6 +16,7 @@ import java.lang.reflect.Type;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -173,5 +174,9 @@ public class Utils {
       // Should not happen and ignore.
     }
     return decoded;
+  }
+
+  public static <T> List<T> safe(List<T> list) {
+    return list == null ? Collections.emptyList() : list;
   }
 }

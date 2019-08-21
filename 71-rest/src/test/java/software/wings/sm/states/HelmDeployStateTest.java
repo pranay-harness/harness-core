@@ -38,6 +38,7 @@ import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+import static software.wings.utils.WingsTestConstants.SERVICE_TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
@@ -89,6 +90,7 @@ import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandRespons
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
+import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -140,6 +142,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Mock private ApplicationManifestService applicationManifestService;
   @Mock private ApplicationManifestUtils applicationManifestUtils;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private ServiceTemplateHelper serviceTemplateHelper;
 
   @InjectMocks HelmDeployState helmDeployState = new HelmDeployState("helmDeployState");
   @InjectMocks HelmRollbackState helmRollbackState = new HelmRollbackState("helmRollbackState");
@@ -249,7 +252,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
                         .chartUrl(CHART_URL)
                         .chartVersion(CHART_VERSION)
                         .build());
-
+    when(serviceTemplateHelper.fetchServiceTemplateId(any())).thenReturn(SERVICE_TEMPLATE_ID);
     ExecutionResponse executionResponse = helmDeployState.execute(context);
     assertThat(executionResponse.isAsync()).isEqualTo(true);
     assertThat(executionResponse.getCorrelationIds()).contains(ACTIVITY_ID);
@@ -322,7 +325,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testEmptyHelmChartSpecWithGit() {
     when(settingsService.fetchGitConfigFromConnectorId(GIT_CONNECTOR_ID)).thenReturn(GitConfig.builder().build());
-
+    when(serviceTemplateHelper.fetchServiceTemplateId(any())).thenReturn(SERVICE_TEMPLATE_ID);
     doNothing().when(gitConfigHelperService).setSshKeySettingAttributeIfNeeded(any());
     helmDeployState.setGitFileConfig(GitFileConfig.builder().connectorId(GIT_CONNECTOR_ID).build());
     ExecutionResponse executionResponse = helmDeployState.execute(context);
@@ -344,7 +347,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
                         .chartUrl(CHART_URL)
                         .chartVersion(CHART_VERSION)
                         .build());
-
+    when(serviceTemplateHelper.fetchServiceTemplateId(any())).thenReturn(SERVICE_TEMPLATE_ID);
     ExecutionResponse executionResponse = helmDeployState.execute(context);
     HelmDeployStateExecutionData helmDeployStateExecutionData =
         (HelmDeployStateExecutionData) executionResponse.getStateExecutionData();

@@ -65,6 +65,7 @@ import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.beans.Event.Type;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
@@ -84,6 +85,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -106,6 +108,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -142,8 +145,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private ApplicationManifestService applicationManifestService;
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
+  @Inject private FeatureFlagService featureFlagService;
   @Inject private EventPublishHelper eventPublishHelper;
-
   @Inject private Queue<PruneEvent> pruneQueue;
   @Inject private HarnessTagService harnessTagService;
   @Inject private ResourceLookupService resourceLookupService;
@@ -162,6 +165,10 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     }
     if (withSummary) {
       pageResponse.getResponse().forEach(environment -> {
+        if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, environment.getAccountId())) {
+          environment.setInfrastructureDefinitions(infrastructureDefinitionService.getNameAndIdForEnvironments(
+              environment.getAppId(), Collections.singletonList(environment.getUuid())));
+        }
         try {
           addServiceTemplates(environment);
         } catch (Exception e) {
@@ -169,6 +176,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         }
       });
     }
+
     return pageResponse;
   }
 
@@ -563,8 +571,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     notNullCheck("environment", cloneMetadata.getEnvironment(), USER);
     if (cloneMetadata.getTargetAppId() == null) {
       envId = (envId == null) ? cloneMetadata.getEnvironment().getUuid() : envId;
-      Environment sourceEnvironment = get(appId, envId, true);
-      Environment clonedEnvironment = sourceEnvironment.cloneInternal();
+      final Environment sourceEnvironment = get(appId, envId, true);
+      final Environment clonedEnvironment = sourceEnvironment.cloneInternal();
       String description = cloneMetadata.getEnvironment().getDescription();
       if (isEmpty(description)) {
         description = "Cloned from environment " + sourceEnvironment.getName();
@@ -572,7 +580,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       clonedEnvironment.setName(cloneMetadata.getEnvironment().getName());
       clonedEnvironment.setDescription(description);
       // Create environment
-      clonedEnvironment = save(clonedEnvironment);
+      final Environment savedClonedEnv = save(clonedEnvironment);
 
       // Copy templates
       List<ServiceTemplate> serviceTemplates = sourceEnvironment.getServiceTemplates();
@@ -583,7 +591,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
               aPageRequest()
                   .withLimit(PageRequest.UNLIMITED)
                   .addFilter("appId", EQ, appId)
-                  .addFilter("envId", EQ, clonedEnvironment.getUuid())
+                  .addFilter("envId", EQ, savedClonedEnv.getUuid())
                   .addFilter("serviceId", EQ, serviceTemplate.getServiceId())
                   .build();
 
@@ -595,7 +603,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
           }
           if (clonedServiceTemplate == null) {
             clonedServiceTemplate = serviceTemplate.cloneInternal();
-            clonedServiceTemplate.setEnvId(clonedEnvironment.getUuid());
+            clonedServiceTemplate.setEnvId(savedClonedEnv.getUuid());
             clonedServiceTemplate = serviceTemplateService.save(clonedServiceTemplate);
           }
           serviceTemplate =
@@ -607,7 +615,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
               for (InfrastructureMapping infrastructureMapping : infrastructureMappings) {
                 try {
                   infrastructureMapping.setUuid(null);
-                  infrastructureMapping.setEnvId(clonedEnvironment.getUuid());
+                  infrastructureMapping.setEnvId(savedClonedEnv.getUuid());
                   infrastructureMapping.setServiceTemplateId(clonedServiceTemplate.getUuid());
                   infrastructureMappingService.save(infrastructureMapping);
                 } catch (Exception e) {
@@ -620,11 +628,11 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
           }
           if (serviceTemplate != null) {
             // Clone Service Config Files
-            cloneServiceVariables(clonedEnvironment, serviceTemplate.getServiceVariablesOverrides(),
+            cloneServiceVariables(savedClonedEnv, serviceTemplate.getServiceVariablesOverrides(),
                 clonedServiceTemplate.getUuid(), null, null);
             // Clone Service Config File overrides
             cloneConfigFiles(
-                clonedEnvironment, clonedServiceTemplate, serviceTemplate.getConfigFilesOverrides(), null, null);
+                savedClonedEnv, clonedServiceTemplate, serviceTemplate.getConfigFilesOverrides(), null, null);
           }
         }
       }
@@ -635,9 +643,12 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                                                                     .addFilter("entityId", EQ, envId)
                                                                     .build();
       List<ServiceVariable> serviceVariables = serviceVariableService.list(serviceVariablePageRequest, OBTAIN_VALUE);
-      cloneServiceVariables(clonedEnvironment, serviceVariables, null, null, null);
-      cloneAppManifests(clonedEnvironment.getAppId(), clonedEnvironment.getUuid(), envId);
-      return clonedEnvironment;
+      cloneServiceVariables(savedClonedEnv, serviceVariables, null, null, null);
+      cloneAppManifests(savedClonedEnv.getAppId(), savedClonedEnv.getUuid(), envId);
+
+      cloneInfrastructureDefinitions(sourceEnvironment, savedClonedEnv);
+
+      return savedClonedEnv;
     } else {
       String targetAppId = cloneMetadata.getTargetAppId();
       notNullCheck("targetAppId", targetAppId, USER);
@@ -728,6 +739,14 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         logger.info("Cloning environment from appId {} to appId {}", appId, targetAppId);
       }
       return clonedEnvironment;
+    }
+  }
+
+  private void cloneInfrastructureDefinitions(
+      final Environment sourceEnvironment, final Environment targetEnvironment) {
+    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, sourceEnvironment.getAccountId())) {
+      infrastructureDefinitionService.cloneInfrastructureDefinitions(sourceEnvironment.getAppId(),
+          sourceEnvironment.getUuid(), targetEnvironment.getAppId(), targetEnvironment.getUuid());
     }
   }
 

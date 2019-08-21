@@ -401,7 +401,7 @@ public class WorkflowServiceTemplateHelper {
   /***
    * Templatizes the service infra if environment templatized for Phase
    */
-  public static void templatizenfraDefinition(OrchestrationWorkflow orchestrationWorkflow, WorkflowPhase workflowPhase,
+  public static void templatizeInfraDefinition(OrchestrationWorkflow orchestrationWorkflow, WorkflowPhase workflowPhase,
       List<TemplateExpression> phaseTemplateExpressions, Service service) {
     if (isEmpty(orchestrationWorkflow.getUserVariables())) {
       return;
@@ -431,6 +431,22 @@ public class WorkflowServiceTemplateHelper {
         TemplateExpression.builder().fieldName("infraDefinitionId").metadata(metaData).expression(expression).build());
     orchestrationWorkflow.addToUserVariables(
         phaseTemplateExpressions, StateType.PHASE.name(), workflowPhase.getName(), null);
+  }
+
+  public static String getInfraDefExpressionFromInfraMappingExpression(String infraMappingExpression) {
+    String infraDefExpression;
+    if (infraMappingExpression.startsWith("${ServiceInfra")) {
+      return infraMappingExpression.replace("ServiceInfra", "InfraDefinition");
+    }
+    return infraMappingExpression;
+  }
+
+  public static String getInfraDefVariableNameFromInfraMappingVariableName(String variableName) {
+    String infraDefExpression;
+    if (variableName.startsWith("ServiceInfra")) {
+      return variableName.replace("ServiceInfra", "InfraDefinition");
+    }
+    return variableName;
   }
 
   public static List<String> getServiceInfrastructureWorkflowVariables(List<Variable> variables) {

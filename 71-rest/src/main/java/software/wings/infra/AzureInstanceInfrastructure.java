@@ -18,7 +18,7 @@ import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInf
 import java.util.ArrayList;
 import java.util.List;
 
-@JsonTypeName("AZURE_SSH")
+@JsonTypeName("AZURE_INFRA")
 @Data
 @Builder
 public class AzureInstanceInfrastructure implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider,

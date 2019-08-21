@@ -55,6 +55,7 @@ import migrations.all.GitSyncToAllAccounts;
 import migrations.all.HelmReleaseNamePrefixMigration;
 import migrations.all.HelmReleaseNameSuffixMigration;
 import migrations.all.HelmValuesYamlToManifestFileMigration;
+import migrations.all.InfraMappingToDefinitionMigration;
 import migrations.all.InfraProvisionerFilteringTypeMigration;
 import migrations.all.InitInfraProvisionerCounters;
 import migrations.all.InitPipelineCounters;
@@ -97,6 +98,9 @@ import migrations.all.SecretTextNameKeyWordsMigration;
 import migrations.all.ServiceAddArtifactStreamIdsMigration;
 import migrations.all.ServiceHelmValuesToManifestFileMigration;
 import migrations.all.ServiceNameMigrationIfEmpty;
+import migrations.all.SetInfraDefinitionPipelines;
+import migrations.all.SetInfraDefinitionTriggers;
+import migrations.all.SetInfraDefinitionWorkflows;
 import migrations.all.SetIsDeletedFlagForInstances;
 import migrations.all.SetNamespaceInContainerInstanceInfo;
 import migrations.all.SetNamespaceToKubernetesInstanceInfo;
@@ -279,6 +283,11 @@ public class MigrationList {
         .add(Pair.of(276, BaseMigration.class))
         .add(Pair.of(277, SweepingStateMigration.class))
         .add(Pair.of(278, DatadogCustomMetricMigration.class))
+        .add(Pair.of(279, InfraMappingToDefinitionMigration.class))
+        .add(Pair.of(280, SetInfraDefinitionTriggers.class))
+        .add(Pair.of(281, SetInfraDefinitionPipelines.class))
+        .add(Pair.of(282, SetInfraDefinitionWorkflows.class))
+        .add(Pair.of(283, BaseMigration.class))
         .build();
   }
 }

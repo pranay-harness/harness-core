@@ -1,15 +1,21 @@
 package software.wings.infra;
 
+import static java.lang.String.format;
+import static java.util.Collections.emptyList;
+import static software.wings.beans.AmiDeploymentType.AWS_ASG;
 import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping;
 import static software.wings.beans.InfrastructureType.AWS_AMI;
 
 import com.google.common.collect.ImmutableSet;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidRequestException;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.annotation.ExcludeFieldMap;
 import software.wings.api.CloudProviderType;
 import software.wings.beans.AmiDeploymentType;
@@ -20,6 +26,7 @@ import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInf
 
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 @JsonTypeName("AWS_AMI")
@@ -89,7 +96,58 @@ public class AwsAmiInfrastructure
   }
 
   @Override
-  public void applyExpressions(Map<String, Object> resolvedExpressions) {}
+  public void applyExpressions(
+      Map<String, Object> resolvedExpressions, String appId, String envId, String infraDefinitionId) {
+    if (!AWS_ASG.equals(getAmiDeploymentType())) {
+      // Should never happen
+      throw new InvalidRequestException("Provisioning ONLY supported for AWS_ASG type AMI deployments");
+    }
+    // Clear the existing values
+    setRegion(StringUtils.EMPTY);
+    setAutoScalingGroupName(StringUtils.EMPTY);
+    setClassicLoadBalancers(emptyList());
+    setTargetGroupArns(emptyList());
+    setStageClassicLoadBalancers(emptyList());
+    setStageTargetGroupArns(emptyList());
+
+    for (Entry<String, Object> entry : resolvedExpressions.entrySet()) {
+      String key = entry.getKey();
+      Object value = entry.getValue();
+      switch (key) {
+        case "region": {
+          setRegion((String) value);
+          break;
+        }
+        case "autoScalingGroupName": {
+          setAutoScalingGroupName((String) value);
+          break;
+        }
+        case "classicLoadBalancers": {
+          setClassicLoadBalancers(getList(value));
+          break;
+        }
+        case "targetGroupArns": {
+          setTargetGroupArns(getList(value));
+          break;
+        }
+        case "stageClassicLoadBalancers": {
+          setStageClassicLoadBalancers(getList(value));
+          break;
+        }
+        case "stageTargetGroupArns": {
+          setStageTargetGroupArns(getList(value));
+          break;
+        }
+        default: { throw new InvalidRequestException(format("Unknown expression : [%s]", entry.getKey())); }
+      }
+    }
+    if (EmptyPredicate.isEmpty(getRegion())) {
+      throw new InvalidRequestException("Region is required");
+    }
+    if (EmptyPredicate.isEmpty(getAutoScalingGroupName())) {
+      throw new InvalidRequestException("Base Asg is required");
+    }
+  }
 
   @Data
   @EqualsAndHashCode(callSuper = true)

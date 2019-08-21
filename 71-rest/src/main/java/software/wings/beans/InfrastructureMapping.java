@@ -59,7 +59,7 @@ public abstract class InfrastructureMapping
 
   @NotEmpty private String computeProviderSettingId;
   @NotEmpty private String envId;
-  @NotEmpty private String serviceTemplateId;
+  private String serviceTemplateId;
 
   @NotEmpty(groups = {Update.class}) private String serviceId;
 

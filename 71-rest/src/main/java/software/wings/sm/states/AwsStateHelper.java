@@ -17,6 +17,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.infrastructure.Host;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.AwsUtils;
+import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.sm.ExecutionContext;
@@ -31,6 +32,7 @@ public class AwsStateHelper {
   @Inject private HostService hostService;
   @Inject private AwsHelperService awsHelperService;
   @Inject private ServiceTemplateService templateService;
+  @Inject private ServiceTemplateHelper serviceTemplateHelper;
 
   public List<InstanceElement> generateInstanceElements(
       List<Instance> ec2InstancesAded, InfrastructureMapping infraMapping, ExecutionContext context) {
@@ -48,7 +50,7 @@ public class AwsStateHelper {
                                 .withHostConnAttr(infraMapping.getHostConnectionAttrs())
                                 .withInfraMappingId(infraMapping.getUuid())
                                 .withInfraDefinitionId(infraMapping.getInfrastructureDefinitionId())
-                                .withServiceTemplateId(infraMapping.getServiceTemplateId())
+                                .withServiceTemplateId(serviceTemplateHelper.fetchServiceTemplateId(infraMapping))
                                 .build();
                 Host savedHost = hostService.saveHost(host);
                 HostElement hostElement = aHostElement()

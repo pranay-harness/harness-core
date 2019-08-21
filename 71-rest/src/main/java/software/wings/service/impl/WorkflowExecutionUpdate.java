@@ -286,6 +286,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
                                      .appId(appId)
                                      .workflowId(workflowExecution.getWorkflowId())
                                      .infraMappingIds(workflowExecution.getInfraMappingIds())
+                                     .infraDefinitionIds(workflowExecution.getInfraDefinitionIds())
                                      .build());
       }
     } catch (Exception e) {

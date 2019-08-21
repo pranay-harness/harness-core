@@ -74,8 +74,6 @@ import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructurePro
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
-import software.wings.infra.InfrastructureDefinition;
-import software.wings.infra.InfrastructureDefinition.InfrastructureDefinitionKeys;
 import software.wings.prune.PruneEvent;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.aws.model.AwsCFTemplateParamsData;
@@ -382,7 +380,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       List<BlueprintProperty> properties, Optional<ManagerExecutionLogCallback> executionLogCallbackOptional,
       Optional<String> region, NodeFilteringType nodeFilteringType) {
     Map<String, Object> propertyNameEvaluatedMap =
-        generateMapToUpdateInfraMapping(contextMap, properties, executionLogCallbackOptional, region);
+        resolveProperties(contextMap, properties, executionLogCallbackOptional, region, false);
 
     try {
       infrastructureMapping.applyProvisionerVariables(propertyNameEvaluatedMap, nodeFilteringType, false);
@@ -393,14 +391,15 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     }
   }
 
-  private Map<String, Object> generateMapToUpdateInfraMapping(Map<String, Object> contextMap,
-      List<BlueprintProperty> properties, Optional<ManagerExecutionLogCallback> executionLogCallbackOptional,
-      Optional<String> region) {
+  @Override
+  public Map<String, Object> resolveProperties(Map<String, Object> contextMap, List<BlueprintProperty> properties,
+      Optional<ManagerExecutionLogCallback> executionLogCallbackOptional, Optional<String> region,
+      boolean infraRefactor) {
     Map<String, Object> propertyNameEvaluatedMap = getPropertyNameEvaluatedMap(
         properties.stream()
             .map(property -> new NameValuePair(property.getName(), property.getValue(), property.getValueType()))
             .collect(toList()),
-        contextMap, executionLogCallbackOptional);
+        contextMap, executionLogCallbackOptional, infraRefactor);
 
     for (BlueprintProperty property : properties) {
       if (isNotEmpty(property.getFields())) {
@@ -414,12 +413,13 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
           List<Map<String, Object>> fieldsEvaluatedList = new ArrayList<>();
           for (Object evaluatedEntry : (List) evaluatedValue) {
             fieldsEvaluatedList.add(getPropertyNameEvaluatedMap(
-                fields, (Map<String, Object>) evaluatedEntry, executionLogCallbackOptional));
+                fields, (Map<String, Object>) evaluatedEntry, executionLogCallbackOptional, infraRefactor));
           }
           propertyNameEvaluatedMap.put(propertyName, fieldsEvaluatedList);
 
         } else {
-          getPropertyNameEvaluatedMap(fields, (Map<String, Object>) evaluatedValue, executionLogCallbackOptional);
+          getPropertyNameEvaluatedMap(
+              fields, (Map<String, Object>) evaluatedValue, executionLogCallbackOptional, infraRefactor);
         }
       }
     }
@@ -430,10 +430,15 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
   @NotNull
   private Map<String, Object> getPropertyNameEvaluatedMap(List<NameValuePair> properties,
-      Map<String, Object> contextMap, Optional<ManagerExecutionLogCallback> executionLogCallbackOptional) {
+      Map<String, Object> contextMap, Optional<ManagerExecutionLogCallback> executionLogCallbackOptional,
+      boolean infraRefactor) {
     Map<String, Object> propertyNameEvaluatedMap = new HashMap<>();
     for (NameValuePair property : properties) {
       if (property.getValue() == null) {
+        continue;
+      }
+      if (infraRefactor && !property.getValue().contains("$")) {
+        propertyNameEvaluatedMap.put(property.getName(), property.getValue());
         continue;
       }
       Object evaluated;
@@ -483,20 +488,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     boolean featureFlagEnabled =
         featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infrastructureProvisioner.getAccountId());
 
-    if (featureFlagEnabled) {
-      HIterator<InfrastructureDefinition> infrastructureDefinitions =
-          new HIterator<>(wingsPersistence.createQuery(InfrastructureDefinition.class)
-                              .filter(InfrastructureDefinitionKeys.appId, infrastructureProvisioner.getAppId())
-                              .filter(InfrastructureDefinitionKeys.provisionerId, infrastructureProvisioner.getUuid())
-                              .fetch());
-      while (infrastructureDefinitions.hasNext()) {
-        InfrastructureDefinition infrastructureDefinition = infrastructureDefinitions.next();
-        infrastructureDefinitionService.applyProvisionerOutputs(infrastructureDefinition, contextMap);
-        // TODO @PP: set definition in workflow execution context for further use in the workflow
-        addToExecutionLog(executionLogCallbackOptional,
-            format("Updated infra definition : [%s]", infrastructureDefinition.getName()));
-      }
-    } else {
+    if (!featureFlagEnabled) {
       try (HIterator<InfrastructureMapping> infrastructureMappings = new HIterator<>(
                wingsPersistence.createQuery(InfrastructureMapping.class)
                    .filter(InfrastructureMapping.APP_ID_KEY, infrastructureProvisioner.getAppId())

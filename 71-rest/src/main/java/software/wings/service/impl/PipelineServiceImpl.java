@@ -451,6 +451,7 @@ public class PipelineServiceImpl implements PipelineService {
     List<String> envIds = new ArrayList<>();
     List<String> workflowIds = new ArrayList<>();
     List<String> infraMappingIds = new ArrayList<>();
+    List<String> infraDefinitionIds = new ArrayList<>();
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
       for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
         if (ENV_STATE.name().equals(pipelineStageElement.getType())) {
@@ -460,9 +461,11 @@ public class PipelineServiceImpl implements PipelineService {
           Map<String, String> resolvedWorkflowStepVariables =
               WorkflowServiceHelper.overrideWorkflowVariables(workflow.getOrchestrationWorkflow().getUserVariables(),
                   pipelineStageElement.getWorkflowVariables(), pipelineVariables);
+          pipelineStageElement.setWorkflowVariables(resolvedWorkflowStepVariables);
           if (!BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
             resolveServices(services, serviceIds, resolvedWorkflowStepVariables, workflow);
             resolveInfraMappings(infraMappingIds, resolvedWorkflowStepVariables, workflow);
+            resolveInfraDefinitions(infraDefinitionIds, resolvedWorkflowStepVariables, workflow);
             resolveEnvIds(envIds, resolvedWorkflowStepVariables, workflow);
           }
           if (!workflowIds.contains(workflowId)) {
@@ -474,6 +477,7 @@ public class PipelineServiceImpl implements PipelineService {
     pipeline.setServices(services);
     pipeline.setEnvIds(envIds);
     pipeline.setInfraMappingIds(infraMappingIds);
+    pipeline.setInfraDefinitionIds(infraDefinitionIds);
     pipeline.setWorkflowIds(workflowIds);
     return pipeline;
   }
@@ -498,6 +502,17 @@ public class PipelineServiceImpl implements PipelineService {
       resolvedInfraMappingIds.stream()
           .filter(resolvedInfraId -> !infraMappingIds.contains(resolvedInfraId))
           .forEach(infraMappingIds::add);
+    }
+  }
+
+  private void resolveInfraDefinitions(
+      List<String> infraDefinitionIds, Map<String, String> pseWorkflowVariables, Workflow workflow) {
+    List<String> resolvedInfraDefinitionIds =
+        workflowService.getResolvedInfraDefinitionIds(workflow, pseWorkflowVariables);
+    if (resolvedInfraDefinitionIds != null) {
+      resolvedInfraDefinitionIds.stream()
+          .filter(resolvedInfraId -> !infraDefinitionIds.contains(resolvedInfraId))
+          .forEach(infraDefinitionIds::add);
     }
   }
 

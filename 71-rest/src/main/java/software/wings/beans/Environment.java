@@ -26,6 +26,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;
@@ -63,6 +64,7 @@ public class Environment extends Base implements KeywordsAware, NameAccess, TagA
   @Transient private List<ServiceTemplate> serviceTemplates;
   @Transient private List<ConfigFile> configFiles;
   @Transient private Setup setup;
+  @Transient private List<InfrastructureDefinition> infrastructureDefinitions;
   @SchemaIgnore private Set<String> keywords;
   @Indexed private String accountId;
   private boolean sample;

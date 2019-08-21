@@ -1,11 +1,17 @@
 package software.wings.infra;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.InfrastructureType.AWS_INSTANCE;
+import static software.wings.utils.Validator.ensureType;
 
 import com.google.common.collect.ImmutableSet;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,10 +22,13 @@ import software.wings.api.CloudProviderType;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInstanceFilter;
 import software.wings.beans.AwsInstanceFilter.AwsInstanceFilterKeys;
+import software.wings.beans.AwsInstanceFilter.Tag;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -46,20 +55,24 @@ public class AwsInstanceInfrastructure
 
   @Override
   public InfrastructureMapping getInfraMapping() {
-    return anAwsInfrastructureMapping()
-        .withComputeProviderSettingId(cloudProviderId)
-        .withRegion(region)
-        .withHostConnectionAttrs(hostConnectionAttrs)
-        .withLoadBalancerId(loadBalancerId)
-        .withUsePublicDns(usePublicDns)
-        .withAwsInstanceFilter(awsInstanceFilter)
-        .withAutoScalingGroupName(autoScalingGroupName)
-        .withSetDesiredCapacity(setDesiredCapacity)
-        .withDesiredCapacity(desiredCapacity)
-        .withHostNameConvention(hostNameConvention)
-        .withProvisionInstances(provisionInstances)
-        .withInfraMappingType(InfrastructureMappingType.AWS_SSH.name())
-        .build();
+    AwsInfrastructureMapping infrastructureMapping = anAwsInfrastructureMapping()
+                                                         .withComputeProviderSettingId(cloudProviderId)
+                                                         .withRegion(region)
+                                                         .withHostConnectionAttrs(hostConnectionAttrs)
+                                                         .withLoadBalancerId(loadBalancerId)
+                                                         .withUsePublicDns(usePublicDns)
+                                                         .withAutoScalingGroupName(autoScalingGroupName)
+                                                         .withSetDesiredCapacity(setDesiredCapacity)
+                                                         .withDesiredCapacity(desiredCapacity)
+                                                         .withHostNameConvention(hostNameConvention)
+                                                         .withProvisionInstances(provisionInstances)
+                                                         .withAwsInstanceFilter(awsInstanceFilter)
+                                                         .withInfraMappingType(InfrastructureMappingType.AWS_SSH.name())
+                                                         .build();
+    if (!provisionInstances && awsInstanceFilter == null) {
+      infrastructureMapping.setAwsInstanceFilter(AwsInstanceFilter.builder().build());
+    }
+    return infrastructureMapping;
   }
 
   @Override
@@ -83,7 +96,67 @@ public class AwsInstanceInfrastructure
   }
 
   @Override
-  public void applyExpressions(Map<String, Object> resolvedExpressions) {}
+  public void applyExpressions(
+      Map<String, Object> resolvedExpressions, String appId, String envId, String infraDefinitionId) {
+    if (isNotEmpty(resolvedExpressions)) {
+      for (Map.Entry<String, Object> entry : resolvedExpressions.entrySet()) {
+        switch (entry.getKey()) {
+          case "autoScalingGroupName":
+            ensureType(String.class, entry.getValue(), "Auto-Scaling Group should be String type");
+            setAutoScalingGroupName((String) entry.getValue());
+            break;
+          case "region":
+            ensureType(String.class, entry.getValue(), "Region should be String type");
+            setRegion((String) entry.getValue());
+            break;
+          case "vpcIds":
+            AwsInstanceFilter awsInstanceFilter =
+                getAwsInstanceFilter() != null ? getAwsInstanceFilter() : AwsInstanceFilter.builder().build();
+            awsInstanceFilter.setVpcIds(getList(entry.getValue()));
+            setAwsInstanceFilter(awsInstanceFilter);
+            break;
+          case "tags":
+            awsInstanceFilter =
+                getAwsInstanceFilter() != null ? getAwsInstanceFilter() : AwsInstanceFilter.builder().build();
+            awsInstanceFilter.setTags(getTags(entry.getValue()));
+            setAwsInstanceFilter(awsInstanceFilter);
+            break;
+          case "loadBalancerId":
+            ensureType(String.class, entry.getValue(), "Load balancer name should be String type");
+            setLoadBalancerId((String) entry.getValue());
+            break;
+          default:
+            throw new InvalidRequestException(format("Unknown expression : [%s]", entry.getKey()));
+        }
+      }
+    }
+  }
+
+  private List<Tag> getTags(Object input) {
+    if (input instanceof Map) {
+      Map<?, ?> map = (Map) input;
+      return map.entrySet()
+          .stream()
+          .map(item -> Tag.builder().key((String) item.getKey()).value((String) item.getValue()).build())
+          .collect(toList());
+    } else if (input instanceof String) {
+      List<Tag> tags = new ArrayList<>();
+      String[] tokens = ((String) input).split(";");
+      for (String token : tokens) {
+        String[] subTokens = token.split(":");
+        if (subTokens.length == 2) {
+          tags.add(Tag.builder().key(subTokens[0]).value(subTokens[1]).build());
+        }
+      }
+      return tags;
+    } else {
+      throw new InvalidRequestException(
+          format(
+              "Map<String,String> or Comma-separated string with Semi-colon separated key-value expected. Found [%s]",
+              input.getClass()),
+          WingsException.USER);
+    }
+  }
 
   @Data
   @EqualsAndHashCode(callSuper = true)
