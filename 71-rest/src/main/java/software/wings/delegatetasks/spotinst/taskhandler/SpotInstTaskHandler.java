@@ -2,13 +2,16 @@ package software.wings.delegatetasks.spotinst.taskhandler;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.eraro.ErrorCode.INIT_TIMEOUT;
+import static io.harness.spotinst.model.SpotInstConstants.DEPLOYMENT_ERROR;
 import static io.harness.spotinst.model.SpotInstConstants.defaultSteadyStateTimeout;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static software.wings.beans.Log.LogLevel.ERROR;
+import static software.wings.beans.Log.LogLevel.INFO;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
@@ -42,14 +45,12 @@ public abstract class SpotInstTaskHandler {
 
   public SpotInstTaskExecutionResponse executeTask(
       SpotInstTaskParameters spotInstTaskParameters, SpotInstConfig spotInstConfig, AwsConfig awsConfig) {
-    ExecutionLogCallback logCallback = new ExecutionLogCallback(delegateLogService,
-        spotInstTaskParameters.getAccountId(), spotInstTaskParameters.getAppId(),
-        spotInstTaskParameters.getActivityId(), spotInstTaskParameters.getCommandName());
     try {
-      return executeTaskInternal(spotInstTaskParameters, logCallback, spotInstConfig, awsConfig);
+      return executeTaskInternal(spotInstTaskParameters, spotInstConfig, awsConfig);
     } catch (Exception ex) {
       String message = ex.getMessage();
-      logCallback.saveExecutionLog(message);
+      ExecutionLogCallback logCallback = getLogCallBack(spotInstTaskParameters, DEPLOYMENT_ERROR);
+      logCallback.saveExecutionLog(message, ERROR, FAILURE);
       logger.error(format("Exception: [%s] while processing spotinst task: [%s]. Workflow execution id: [%s]", message,
                        spotInstTaskParameters.getCommandType().name(), spotInstTaskParameters.getWorkflowExecutionId()),
           ex);
@@ -57,8 +58,15 @@ public abstract class SpotInstTaskHandler {
     }
   }
 
+  protected ExecutionLogCallback getLogCallBack(SpotInstTaskParameters parameters, String commandUnit) {
+    return new ExecutionLogCallback(
+        delegateLogService, parameters.getAccountId(), parameters.getAppId(), parameters.getActivityId(), commandUnit);
+  }
+
   protected void updateElastiGroupAndWait(String spotInstToken, String spotInstAccountId, ElastiGroup elastiGroup,
-      ExecutionLogCallback logCallback, String workflowExecutionId, int steadyStateTimeOut) throws Exception {
+      String workflowExecutionId, int steadyStateTimeOut, SpotInstTaskParameters parameters,
+      String scaleCommandUnitName, String waitCommandUnitName) throws Exception {
+    ExecutionLogCallback logCallback = getLogCallBack(parameters, scaleCommandUnitName);
     Optional<ElastiGroup> elastiGroupIntialOptional =
         spotInstHelperServiceDelegate.getElastiGroupById(spotInstToken, spotInstAccountId, elastiGroup.getId());
     if (!elastiGroupIntialOptional.isPresent()) {
@@ -82,7 +90,10 @@ public abstract class SpotInstTaskHandler {
             elastiGroupId, minInstances, maxInstances, targetInstances));
     spotInstHelperServiceDelegate.updateElastiGroupCapacity(
         spotInstToken, spotInstAccountId, elastiGroupId, elastiGroup);
-    logCallback.saveExecutionLog(format("Waiting for elasti group: [%s] to reach steady state", elastiGroupId));
+    logCallback.saveExecutionLog("Request Sent to update Elastigroup", INFO, SUCCESS);
+
+    ExecutionLogCallback waitLogCallback = getLogCallBack(parameters, waitCommandUnitName);
+    waitLogCallback.saveExecutionLog(format("Waiting for elasti group: [%s] to reach steady state", elastiGroupId));
     try {
       timeLimiter.callWithTimeout(() -> {
         while (true) {
@@ -95,18 +106,21 @@ public abstract class SpotInstTaskHandler {
               : (int) instanceHealths.stream().filter(health -> "HEALTHY".equals(health.getHealthStatus())).count();
           if (targetInstances == 0) {
             if (currentTotalCount == 0) {
-              logCallback.saveExecutionLog(format("Elasti group: [%s] does not have any instances.", elastiGroupId));
+              waitLogCallback.saveExecutionLog(
+                  format("Elasti group: [%s] does not have any instances.", elastiGroupId), INFO, SUCCESS);
               return true;
             } else {
-              logCallback.saveExecutionLog(format("Elasti group: [%s] still has [%d] total and [%d] healthy instances",
-                  elastiGroupId, currentTotalCount, currentHealthyCount));
+              waitLogCallback.saveExecutionLog(
+                  format("Elasti group: [%s] still has [%d] total and [%d] healthy instances", elastiGroupId,
+                      currentTotalCount, currentHealthyCount));
             }
           } else {
-            logCallback.saveExecutionLog(
+            waitLogCallback.saveExecutionLog(
                 format("Desired instances: [%d], Total instances: [%d], Healthy instances: [%d] for Elasti Group: [%s]",
                     targetInstances, currentTotalCount, currentHealthyCount, elastiGroupId));
             if (targetInstances == currentHealthyCount && targetInstances == currentTotalCount) {
-              logCallback.saveExecutionLog(format("Elasti group: [%s] reached steady state", elastiGroupId));
+              waitLogCallback.saveExecutionLog(
+                  format("Elasti group: [%s] reached steady state", elastiGroupId), INFO, SUCCESS);
               return true;
             }
           }
@@ -117,7 +131,7 @@ public abstract class SpotInstTaskHandler {
       String errorMessage =
           format("Timed out while waiting for steady state for elasti group: [%s]. Workflow execution: [%s]",
               elastiGroupId, workflowExecutionId);
-      logCallback.saveExecutionLog(errorMessage, ERROR);
+      waitLogCallback.saveExecutionLog(errorMessage, ERROR);
       throw new WingsException(INIT_TIMEOUT).addParam("message", errorMessage);
     } catch (WingsException e) {
       throw e;
@@ -134,5 +148,5 @@ public abstract class SpotInstTaskHandler {
   }
 
   protected abstract SpotInstTaskExecutionResponse executeTaskInternal(SpotInstTaskParameters spotInstTaskParameters,
-      ExecutionLogCallback logCallback, SpotInstConfig spotInstConfig, AwsConfig awsConfig) throws Exception;
+      SpotInstConfig spotInstConfig, AwsConfig awsConfig) throws Exception;
 }

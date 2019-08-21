@@ -3,6 +3,10 @@ package software.wings.delegatetasks.spotinst.taskhandler;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -20,7 +24,6 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SpotInstConfig;
-import software.wings.beans.command.ExecutionLogCallback;
 
 import java.util.List;
 
@@ -29,7 +32,7 @@ import java.util.List;
 @NoArgsConstructor
 public class SpotInstDeployTaskHandler extends SpotInstTaskHandler {
   protected SpotInstTaskExecutionResponse executeTaskInternal(SpotInstTaskParameters spotInstTaskParameters,
-      ExecutionLogCallback logCallback, SpotInstConfig spotInstConfig, AwsConfig awsConfig) throws Exception {
+      SpotInstConfig spotInstConfig, AwsConfig awsConfig) throws Exception {
     if (!(spotInstTaskParameters instanceof SpotInstDeployTaskParameters)) {
       String message =
           format("Parameters of unrecognized class: [%s] found while executing setup step. Workflow execution: [%s]",
@@ -48,27 +51,31 @@ public class SpotInstDeployTaskHandler extends SpotInstTaskHandler {
 
     if (resizeNewFirst && !deployTaskParameters.isRollback()) {
       if (newElastiGroup != null) {
-        updateElastiGroupAndWait(spotInstToken, spotInstAccountId, newElastiGroup, logCallback,
-            deployTaskParameters.getWorkflowExecutionId(), steadyStateTimeOut);
+        updateElastiGroupAndWait(spotInstToken, spotInstAccountId, newElastiGroup,
+            deployTaskParameters.getWorkflowExecutionId(), steadyStateTimeOut, deployTaskParameters,
+            UP_SCALE_COMMAND_UNIT, UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
       }
       if (oldElastiGroup != null) {
-        updateElastiGroupAndWait(spotInstToken, spotInstAccountId, oldElastiGroup, logCallback,
-            deployTaskParameters.getWorkflowExecutionId(), steadyStateTimeOut);
+        updateElastiGroupAndWait(spotInstToken, spotInstAccountId, oldElastiGroup,
+            deployTaskParameters.getWorkflowExecutionId(), steadyStateTimeOut, deployTaskParameters,
+            DOWN_SCALE_COMMAND_UNIT, DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
       }
     } else {
       if (oldElastiGroup != null) {
-        updateElastiGroupAndWait(spotInstToken, spotInstAccountId, oldElastiGroup, logCallback,
-            deployTaskParameters.getWorkflowExecutionId(), steadyStateTimeOut);
+        updateElastiGroupAndWait(spotInstToken, spotInstAccountId, oldElastiGroup,
+            deployTaskParameters.getWorkflowExecutionId(), steadyStateTimeOut, deployTaskParameters,
+            DOWN_SCALE_COMMAND_UNIT, DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
       }
       if (newElastiGroup != null) {
-        updateElastiGroupAndWait(spotInstToken, spotInstAccountId, newElastiGroup, logCallback,
-            deployTaskParameters.getWorkflowExecutionId(), steadyStateTimeOut);
+        updateElastiGroupAndWait(spotInstToken, spotInstAccountId, newElastiGroup,
+            deployTaskParameters.getWorkflowExecutionId(), steadyStateTimeOut, deployTaskParameters,
+            UP_SCALE_COMMAND_UNIT, UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
       }
     }
 
     List<Instance> newElastiGroupInstances = newElastiGroup != null
-        ? getAllEc2InstancesOfElastiGroup(awsConfig, deployTaskParameters.getAwsRegion(), spotInstToken,
-              spotInstAccountId, newElastiGroup.getId(), logCallback)
+        ? getAllEc2InstancesOfElastiGroup(
+              awsConfig, deployTaskParameters.getAwsRegion(), spotInstToken, spotInstAccountId, newElastiGroup.getId())
         : emptyList();
 
     return SpotInstTaskExecutionResponse.builder()
@@ -78,8 +85,7 @@ public class SpotInstDeployTaskHandler extends SpotInstTaskHandler {
   }
 
   private List<Instance> getAllEc2InstancesOfElastiGroup(AwsConfig awsConfig, String awsRegion, String spotInstToken,
-      String spotInstAccountId, String elastiGroupId, ExecutionLogCallback logCallback) throws Exception {
-    logCallback.saveExecutionLog(format("Querying to get all the instances for elasti group: [%s]", elastiGroupId));
+      String spotInstAccountId, String elastiGroupId) throws Exception {
     List<ElastiGroupInstanceHealth> instanceHealths =
         spotInstHelperServiceDelegate.listElastiGroupInstancesHealth(spotInstToken, spotInstAccountId, elastiGroupId);
     if (isEmpty(instanceHealths)) {

@@ -7,6 +7,7 @@ import static io.harness.delegate.command.CommandExecutionResult.CommandExecutio
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_NAME_PLACEHOLDER;
 import static io.harness.spotinst.model.SpotInstConstants.PROD_ELASTI_GROUP_NAME_SUFFIX;
+import static io.harness.spotinst.model.SpotInstConstants.SETUP_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.STAGE_ELASTI_GROUP_NAME_SUFFIX;
 import static io.harness.spotinst.model.SpotInstConstants.TG_ARN_PLACEHOLDER;
 import static io.harness.spotinst.model.SpotInstConstants.TG_NAME_PLACEHOLDER;
@@ -14,6 +15,7 @@ import static io.harness.spotinst.model.SpotInstConstants.elastiGroupsToKeep;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static software.wings.beans.Log.LogLevel.INFO;
 
 import com.google.inject.Singleton;
 
@@ -43,7 +45,7 @@ import java.util.Optional;
 @NoArgsConstructor
 public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
   protected SpotInstTaskExecutionResponse executeTaskInternal(SpotInstTaskParameters spotInstTaskParameters,
-      ExecutionLogCallback logCallback, SpotInstConfig spotInstConfig, AwsConfig awsConfig) throws Exception {
+      SpotInstConfig spotInstConfig, AwsConfig awsConfig) throws Exception {
     if (!(spotInstTaskParameters instanceof SpotInstSetupTaskParameters)) {
       String message =
           format("Parameters of unrecognized class: [%s] found while executing setup step. Workflow execution: [%s]",
@@ -55,6 +57,7 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
     String spotInstAccountId = spotInstConfig.getSpotInstAccountId();
     String spotInstToken = String.valueOf(spotInstConfig.getSpotInstToken());
     SpotInstSetupTaskParameters setupTaskParameters = (SpotInstSetupTaskParameters) spotInstTaskParameters;
+    ExecutionLogCallback logCallback = getLogCallBack(spotInstTaskParameters, SETUP_COMMAND_UNIT);
 
     if (setupTaskParameters.isBlueGreen()) {
       // Handle Blue Green
@@ -183,7 +186,7 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
       prodElastiGroupList = emptyList();
     }
     builder.groupToBeDownsized(prodElastiGroupList);
-
+    logCallback.saveExecutionLog("Completed Blue green setup for Spotinst", INFO, SUCCESS);
     return SpotInstTaskExecutionResponse.builder()
         .commandExecutionStatus(SUCCESS)
         .spotInstTaskResponse(builder.build())

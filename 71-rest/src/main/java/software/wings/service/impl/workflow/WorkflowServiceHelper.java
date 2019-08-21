@@ -194,8 +194,10 @@ public class WorkflowServiceHelper {
   public static final String SPOTINST_SETUP = "Elastigroup Setup";
   public static final String SPOTINST_DEPLOY = "Elastigroup Deploy";
   public static final String SPOTINST_ROLLBACK = "Elastigroup Rollback";
-  public static final String SPOTINST_LISTENER_UPDATE_ROLLBACK = "Elastigroup Listener Update Rollback";
-  public static final String SPOTINST_LISTENER_UPDATE = "Listener Update";
+  public static final String SPOTINST_LISTENER_UPDATE_ROLLBACK = "Route Update Rollback";
+  public static final String SPOTINST_SWAP_ROLLBACK = "Swap Production with Stage";
+  public static final String SPOTINST_LISTENER_UPDATE = "Route Update";
+  public static final String SPOTINST_SWAP = "Swap Production with Stage";
   public static final String KUBERNETES_SERVICE_SETUP_BLUEGREEN = "Blue/Green Service Setup";
   public static final String INFRA_ROUTE_PCF = "infra.pcf.route";
   public static final String VERIFY_STAGE_SERVICE = "Verify Stage Service";
@@ -525,7 +527,7 @@ public class WorkflowServiceHelper {
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .type(StateType.SPOTINST_LISTENER_UPDATE.name())
-                                    .name(SPOTINST_LISTENER_UPDATE)
+                                    .name(SPOTINST_SWAP)
                                     .properties(defaultDataSwitchRoutes)
                                     .build())
                        .build());
@@ -1373,7 +1375,7 @@ public class WorkflowServiceHelper {
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .type(StateType.SPOTINST_LISTENER_UPDATE_ROLLBACK.name())
-                                    .name(SPOTINST_LISTENER_UPDATE_ROLLBACK)
+                                    .name(SPOTINST_SWAP_ROLLBACK)
                                     .rollback(true)
                                     .build())
                        .withPhaseStepNameForRollback(DEPLOY_SERVICE)

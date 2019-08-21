@@ -1,7 +1,15 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.spotinst.model.SpotInstConstants.DEPLOYMENT_ERROR;
+import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.RENAME_NEW_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.SWAP_ROUTES_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -25,6 +33,7 @@ import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
+import software.wings.beans.command.SpotinstDummyCommandUnit;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest.SpotInstCommandRequestBuilder;
 import software.wings.service.intfc.ActivityService;
@@ -97,8 +106,14 @@ public class SpotInstListenerUpdateState extends State {
             .orElse(SpotInstSetupContextElement.builder().build());
 
     // create activity with details
-    Activity activity = spotInstStateHelper.createActivity(
-        context, null, getStateType(), SPOTINST_LISTENER_UPDATE_COMMAND, CommandUnitType.SPOTINST_UPDATE_LISTENER);
+    Activity activity = spotInstStateHelper.createActivity(context, null, getStateType(),
+        SPOTINST_LISTENER_UPDATE_COMMAND, CommandUnitType.SPOTINST_UPDATE_LISTENER,
+        ImmutableList.of(new SpotinstDummyCommandUnit(UP_SCALE_COMMAND_UNIT),
+            new SpotinstDummyCommandUnit(UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
+            new SpotinstDummyCommandUnit(DOWN_SCALE_COMMAND_UNIT),
+            new SpotinstDummyCommandUnit(DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
+            new SpotinstDummyCommandUnit(SWAP_ROUTES_COMMAND_UNIT),
+            new SpotinstDummyCommandUnit(RENAME_NEW_COMMAND_UNIT), new SpotinstDummyCommandUnit(DEPLOYMENT_ERROR)));
 
     // Generate SpotInstListenerUpdateStateExecutionData
     SpotInstListenerUpdateStateExecutionData stateExecutionData =

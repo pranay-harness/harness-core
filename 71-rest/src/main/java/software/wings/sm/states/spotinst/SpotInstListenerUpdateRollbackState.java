@@ -1,5 +1,14 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.spotinst.model.SpotInstConstants.DEPLOYMENT_ERROR;
+import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.RENAME_OLD_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.SWAP_ROUTES_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
+
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -7,6 +16,8 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.task.spotinst.request.SpotInstSwapRoutesTaskParameters;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
+import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.SpotinstDummyCommandUnit;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 
@@ -39,5 +50,14 @@ public class SpotInstListenerUpdateRollbackState extends SpotInstListenerUpdateS
   @SchemaIgnore
   public boolean isDownsizeOldElastiGroup() {
     return super.isDownsizeOldElastiGroup();
+  }
+
+  protected ImmutableList<CommandUnit> getCommandUnitList() {
+    return ImmutableList.of(new SpotinstDummyCommandUnit(UP_SCALE_COMMAND_UNIT),
+        new SpotinstDummyCommandUnit(UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
+        new SpotinstDummyCommandUnit(RENAME_OLD_COMMAND_UNIT), new SpotinstDummyCommandUnit(SWAP_ROUTES_COMMAND_UNIT),
+        new SpotinstDummyCommandUnit(DOWN_SCALE_COMMAND_UNIT),
+        new SpotinstDummyCommandUnit(DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
+        new SpotinstDummyCommandUnit(DEPLOYMENT_ERROR));
   }
 }

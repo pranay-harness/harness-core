@@ -25,4 +25,16 @@ public interface SpotInstConstants {
   String STAGE_ELASTI_GROUP_NAME_SUFFIX = "STAGE";
   String ELASTI_GROUP_IMAGE_CONFIG = "imageId";
   String GROUP_CONFIG_ELEMENT = "group";
+
+  // Command unit Names
+  String SETUP_COMMAND_UNIT = "Setup Elastigroup";
+  String UP_SCALE_COMMAND_UNIT = "Upscale Elastigroup";
+  String UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT = "Upscale wait for steady state";
+  String DOWN_SCALE_COMMAND_UNIT = "Downscale Elastigroup";
+  String DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT = "Downscale wait for steady state";
+  String SWAP_ROUTES_COMMAND_UNIT = "Swap Routes";
+  String RENAME_COMMAND_UNIT = "Rename Elastigroup";
+  String RENAME_OLD_COMMAND_UNIT = "Rename old Elastigroup";
+  String RENAME_NEW_COMMAND_UNIT = "Rename new Elastigroup";
+  String DEPLOYMENT_ERROR = "Deployment error";
 }
