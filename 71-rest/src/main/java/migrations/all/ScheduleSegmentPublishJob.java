@@ -3,6 +3,7 @@ package migrations.all;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import software.wings.beans.Account;
@@ -20,8 +21,6 @@ public class ScheduleSegmentPublishJob implements Migration {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
 
-  static final int ACCOUNT_BATCH_SIZE = 10;
-
   @Override
   public void migrate() {
     try {
@@ -29,7 +28,7 @@ public class ScheduleSegmentPublishJob implements Migration {
       wingsPersistence.delete(wingsPersistence.createQuery(SegmentGroupEventJobContext.class));
 
       List<Account> accounts = accountService.listAllAccounts();
-      List<List<Account>> accountLists = Lists.partition(accounts, ACCOUNT_BATCH_SIZE);
+      List<List<Account>> accountLists = Lists.partition(accounts, SegmentGroupEventJobService.ACCOUNT_BATCH_SIZE);
 
       Instant nextIteration = Instant.now();
 

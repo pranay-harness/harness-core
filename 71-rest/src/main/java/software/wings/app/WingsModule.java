@@ -13,6 +13,8 @@ import com.google.inject.name.Names;
 import io.harness.OrchestrationModule;
 import io.harness.dashboard.DashboardSettingsService;
 import io.harness.dashboard.DashboardSettingsServiceImpl;
+import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
+import io.harness.event.handler.impl.segment.SegmentGroupEventJobServiceImpl;
 import io.harness.exception.WingsException;
 import io.harness.govern.DependencyModule;
 import io.harness.limits.LimitCheckerFactory;
@@ -805,6 +807,8 @@ public class WingsModule extends DependencyModule {
     } else {
       bind(SegmentClientBuilder.class).toInstance(new SegmentClientBuilderImpl("dummy-key"));
     }
+
+    bind(SegmentGroupEventJobService.class).to(SegmentGroupEventJobServiceImpl.class);
 
     MapBinder<String, TriggerProcessor> triggerProcessorMapBinder =
         MapBinder.newMapBinder(binder(), String.class, TriggerProcessor.class);
