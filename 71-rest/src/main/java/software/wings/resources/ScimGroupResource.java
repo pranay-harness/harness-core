@@ -43,7 +43,7 @@ public class ScimGroupResource extends ScimResource {
   @Path("Groups")
   @ApiOperation(value = "Create a new group and return uuid in response")
   public Response createGroup(GroupResource groupQuery, @PathParam("accountId") String accountId) {
-    if (featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
+    if (!featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
       throw new WingsException(String.format("Feature not allowed for account: %s ", accountId));
     }
     try {
@@ -58,7 +58,7 @@ public class ScimGroupResource extends ScimResource {
   @Path("Groups/{groupId}")
   @ApiOperation(value = "Fetch an existing user by uuid")
   public Response getGroup(@PathParam("accountId") String accountId, @PathParam("groupId") String groupId) {
-    if (featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
+    if (!featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
       throw new WingsException(String.format("Feature not allowed for account: %s ", accountId));
     }
     // there could be fields related to exclude fields.
@@ -74,7 +74,7 @@ public class ScimGroupResource extends ScimResource {
   @Path("Groups/{groupId}")
   @ApiOperation(value = "Delete an existing user by uuid")
   public Response deleteGroup(@PathParam("accountId") String accountId, @PathParam("groupId") String groupId) {
-    if (featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
+    if (!featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
       throw new WingsException(String.format("Feature not allowed for account: %s ", accountId));
     }
     scimGroupService.deleteGroup(groupId, accountId);
@@ -105,7 +105,7 @@ public class ScimGroupResource extends ScimResource {
   @ApiOperation(value = "Update some fields of a groups by uuid. Can update members/name")
   public Response updateGroup(
       @PathParam("accountId") String accountId, @PathParam("groupId") String groupId, PatchRequest patchRequest) {
-    if (featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
+    if (!featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
       throw new WingsException(String.format("Feature not allowed for account: %s ", accountId));
     }
     // there could be fields related to exclude fields.
@@ -117,7 +117,7 @@ public class ScimGroupResource extends ScimResource {
   @ApiOperation(value = "Update a group")
   public Response updateGroup(
       @PathParam("accountId") String accountId, @PathParam("groupId") String groupId, GroupResource groupQuery) {
-    if (featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
+    if (!featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
       throw new WingsException(String.format("Feature not allowed for account: %s ", accountId));
     }
     // there could be fields related to exclude fields.
