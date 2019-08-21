@@ -46,6 +46,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
+import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
 import io.harness.event.model.Event;
 import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
@@ -215,6 +216,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject private UsageMetricsEventPublisher usageMetricsEventPublisher;
   @Inject private HarnessUserGroupServiceImpl harnessUserGroupService;
   @Inject private EventPublisher eventPublisher;
+  @Inject private SegmentGroupEventJobService segmentGroupEventJobService;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   private Map<String, UrlInfo> techStackDocLinks;
@@ -1020,6 +1022,7 @@ public class AccountServiceImpl implements AccountService {
     AlertCheckJob.add(jobScheduler, accountId);
     InstanceStatsCollectorJob.add(jobScheduler, accountId);
     LimitVicinityCheckerJob.add(jobScheduler, accountId);
+    segmentGroupEventJobService.scheduleJob(accountId);
   }
 
   private void scheduleQuartzJobs(String accountId) {

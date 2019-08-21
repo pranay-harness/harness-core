@@ -97,6 +97,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(46, ScheduleSegmentPublishJob.class))
         .add(Pair.of(47, UpdateWorkflowExecutionAccountId.class))
         .add(Pair.of(48, UpdateAccountEncryptionClassNames.class))
+        .add(Pair.of(49, ScheduleSegmentPublishJob.class))
         .build();
   }
 }
