@@ -2,7 +2,7 @@ package software.wings.api;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -15,7 +15,7 @@ import java.util.Map;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
-public class ServiceNowExecutionData extends StateExecutionData implements ResponseData {
+public class ServiceNowExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   private String activityId;
   private ExecutionStatus executionStatus;
   private String issueUrl;

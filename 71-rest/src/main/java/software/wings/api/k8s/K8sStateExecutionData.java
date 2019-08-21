@@ -1,6 +1,6 @@
 package software.wings.api.k8s;
 
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,7 +24,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class K8sStateExecutionData extends StateExecutionData implements ResponseData {
+public class K8sStateExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   private String activityId;
   private String releaseName;
   private String namespace;
