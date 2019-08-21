@@ -7,6 +7,7 @@ import com.google.common.base.Splitter;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +29,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
-import software.wings.beans.DelegateTaskResponse;
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 
 import java.io.IOException;

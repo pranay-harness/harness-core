@@ -2,6 +2,7 @@ package io.harness.managerclient;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateScripts;
+import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.rest.RestResponse;
 import okhttp3.MultipartBody;
 import okhttp3.ResponseBody;
@@ -21,7 +22,6 @@ import software.wings.beans.DelegateConnectionHeartbeat;
 import software.wings.beans.DelegatePackage;
 import software.wings.beans.DelegateProfileParams;
 import software.wings.beans.DelegateTaskEvent;
-import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.Log;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
