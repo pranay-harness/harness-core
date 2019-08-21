@@ -43,7 +43,7 @@ public class ScimUserResource extends ScimResource {
   @Path("Users")
   @ApiOperation(value = "Create a new user")
   public Response createUser(UserResource userQuery, @PathParam("accountId") String accountId) {
-    if (featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
+    if (!featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
       throw new WingsException(String.format("Feature not allowed for account: %s ", accountId));
     }
     try {
@@ -59,7 +59,7 @@ public class ScimUserResource extends ScimResource {
   @ApiOperation(value = "Update an existing user by uuid")
   public Response updateUser(
       @PathParam("userId") String userId, @PathParam("accountId") String accountId, UserResource userQuery) {
-    if (featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
+    if (!featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
       throw new WingsException(String.format("Feature not allowed for account: %s ", accountId));
     }
     try {
@@ -74,7 +74,7 @@ public class ScimUserResource extends ScimResource {
   @Path("Users/{userId}")
   @ApiOperation(value = "Get an existing user by uuid")
   public Response getUser(@PathParam("userId") String userId, @PathParam("accountId") String accountId) {
-    if (featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
+    if (!featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
       throw new WingsException(String.format("Feature not allowed for account: %s ", accountId));
     }
     try {
@@ -93,7 +93,7 @@ public class ScimUserResource extends ScimResource {
   public Response
   searchUser(@PathParam("accountId") String accountId, @QueryParam("filter") String filter,
       @QueryParam("count") Integer count, @QueryParam("startIndex") Integer startIndex) {
-    if (featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
+    if (!featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
       throw new WingsException(String.format("Feature not allowed for account: %s ", accountId));
     }
     try {
@@ -110,7 +110,7 @@ public class ScimUserResource extends ScimResource {
   @Path("Users/{userId}")
   @ApiOperation(value = "Delete an user by uuid")
   public Response deleteUser(@PathParam("userId") String userId, @PathParam("accountId") String accountId) {
-    if (featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
+    if (!featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
       throw new WingsException(String.format("Feature not allowed for account: %s ", accountId));
     }
     scimUserServiceImpl.deleteUser(userId, accountId);
@@ -120,12 +120,11 @@ public class ScimUserResource extends ScimResource {
   @PATCH
   @Path("Users/{userId}")
   @ApiOperation(value = "Update some fields of a user by uuid")
-  public Response updateUser(
+  public UserResource updateUser(
       @PathParam("accountId") String accountId, @PathParam("userId") String userId, PatchRequest patchRequest) {
-    if (featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
+    if (!featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
       throw new WingsException(String.format("Feature not allowed for account: %s ", accountId));
     }
-    scimUserServiceImpl.updateUser(accountId, userId, patchRequest);
-    return javax.ws.rs.core.Response.status(Status.NO_CONTENT).build();
+    return scimUserServiceImpl.updateUser(accountId, userId, patchRequest);
   }
 }

@@ -32,7 +32,7 @@ public class ScimGroupServiceImpl implements ScimGroupService {
 
   @Override
   public ListResponse<GroupResource> searchGroup(String filter, String accountId, Integer count, Integer startIndex) {
-    startIndex = startIndex == null ? 1 : startIndex;
+    startIndex = startIndex == null ? 0 : startIndex;
     count = count == null ? MAX_RESULT_COUNT : count;
     ListResponseBuilder<GroupResource> groupResourceListResponseBuilder = new ListResponseBuilder<>();
     logger.info("Searching groups in account {} with filter: {}", accountId, filter);
