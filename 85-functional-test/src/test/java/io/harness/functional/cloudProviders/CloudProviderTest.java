@@ -5,7 +5,6 @@ import static io.harness.rule.OwnerRule.SUNIL;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import io.harness.category.element.FunctionalTests;
@@ -215,7 +214,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
     // Verify cloudprovider is updated i.e cloudprovider with specific name exist
     boolean connectorFound = SettingsUtils.checkCloudproviderConnectorExist(
         bearerToken, getAccount().getUuid(), CATEGORY, AWS_CONNECTOR_NAME);
-    assertTrue(connectorFound);
+    assertThat(connectorFound).isTrue();
   }
 
   private void updateAzureCloudProvider() {
@@ -240,7 +239,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
     // Verify cloudprovider is created i.e cloudprovider with specific name exist
     boolean connectorFound = SettingsUtils.checkCloudproviderConnectorExist(
         bearerToken, getAccount().getUuid(), CATEGORY, AZURE_CONNECTOR_NAME);
-    assertTrue(connectorFound);
+    assertThat(connectorFound).isTrue();
   }
 
   private void updatePhyscialDataCenterCloudProvider() {
@@ -263,7 +262,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
     // Verify cloudprovider is created i.e cloudprovider with specific name exist
     boolean connectorFound = SettingsUtils.checkCloudproviderConnectorExist(
         bearerToken, getAccount().getUuid(), CATEGORY, PHYSICAL_DATACENTER_CONNECTOR_NAME);
-    assertTrue(connectorFound);
+    assertThat(connectorFound).isTrue();
   }
 
   private void updateGCPCloudProvider() {
@@ -278,7 +277,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
     // Verify cloudprovider is created i.e cloudprovider with specific name exist
     boolean connectorFound = SettingsUtils.checkCloudproviderConnectorExist(
         bearerToken, getAccount().getUuid(), CATEGORY, GCP_CONNECTOR_NAME);
-    assertTrue(connectorFound);
+    assertThat(connectorFound).isTrue();
   }
 
   private void deleteAWSCloudProvider() {

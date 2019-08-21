@@ -8,7 +8,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -488,7 +487,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
 
     boolean deleted = userGroupService.delete(ACCOUNT_ID, nonDefaultUserGroup.getUuid(), false);
 
-    assertTrue(deleted);
+    assertThat(deleted).isTrue();
   }
 
   @Test

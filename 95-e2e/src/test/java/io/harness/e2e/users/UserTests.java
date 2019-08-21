@@ -1,7 +1,7 @@
 package io.harness.e2e.users;
 
 import static io.harness.rule.OwnerRule.SWAMY;
-import static junit.framework.TestCase.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
 
 import io.harness.category.element.E2ETests;
@@ -27,6 +27,6 @@ public class UserTests extends AbstractE2ETest {
     UserRestUtils urUtil = new UserRestUtils();
     List<User> userList = urUtil.getUserList(bearerToken, account.getUuid());
     assertNotNull(userList);
-    assertTrue(userList.size() > 0);
+    assertThat(userList.size() > 0).isTrue();
   }
 }

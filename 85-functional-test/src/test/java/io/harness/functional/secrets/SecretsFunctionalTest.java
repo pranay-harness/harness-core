@@ -1,7 +1,7 @@
 package io.harness.functional.secrets;
 
 import static io.harness.rule.OwnerRule.SWAMY;
-import static junit.framework.TestCase.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -56,7 +56,7 @@ public class SecretsFunctionalTest extends AbstractFunctionalTest {
     }
 
     vaultId = VaultRestUtils.addVault(bearerToken, vaultConfig);
-    assertTrue(StringUtils.isNotBlank(vaultId));
+    assertThat(StringUtils.isNotBlank(vaultId)).isTrue();
     logger.info("Vault created : " + vaultId);
     List<VaultConfig> afterVault = SecretsRestUtils.getListConfigs(getAccount().getUuid(), bearerToken);
     if (SecretsUtils.isVaultAvailable(afterVault, VAULT_NAME)) {
@@ -85,18 +85,18 @@ public class SecretsFunctionalTest extends AbstractFunctionalTest {
     assertFalse(isSecretPresent);
 
     String secretsId = SecretsRestUtils.addSecret(getAccount().getUuid(), bearerToken, secretText);
-    assertTrue(StringUtils.isNotBlank(secretsId));
+    assertThat(StringUtils.isNotBlank(secretsId)).isTrue();
 
     encryptedDataList = SecretsRestUtils.listSecrets(getAccount().getUuid(), bearerToken);
     isSecretPresent = SecretsUtils.isSecretAvailable(encryptedDataList, secretsName);
-    assertTrue(isSecretPresent);
+    assertThat(isSecretPresent).isTrue();
     secretText.setName(secretsNewName);
 
     boolean isUpdationDone = SecretsRestUtils.updateSecret(getAccount().getUuid(), bearerToken, secretsId, secretText);
-    assertTrue(isUpdationDone);
+    assertThat(isUpdationDone).isTrue();
     encryptedDataList = SecretsRestUtils.listSecrets(getAccount().getUuid(), bearerToken);
     isSecretPresent = SecretsUtils.isSecretAvailable(encryptedDataList, secretsNewName);
-    assertTrue(isSecretPresent);
+    assertThat(isSecretPresent).isTrue();
 
     // Verifying the secret decryption
     EncryptedData data = encryptedDataList.get(0);
@@ -105,14 +105,14 @@ public class SecretsFunctionalTest extends AbstractFunctionalTest {
     assertEquals(secretValue, decrypted);
 
     boolean isDeletionDone = SecretsRestUtils.deleteSecret(getAccount().getUuid(), bearerToken, secretsId);
-    assertTrue(isDeletionDone);
+    assertThat(isDeletionDone).isTrue();
     encryptedDataList = SecretsRestUtils.listSecrets(getAccount().getUuid(), bearerToken);
-    assertTrue(encryptedDataList.size() == 0);
+    assertThat(encryptedDataList.size() == 0).isTrue();
   }
 
   @After
   public void vaultCleanup() {
-    assertTrue(VaultRestUtils.deleteVault(getAccount().getUuid(), bearerToken, vaultId));
+    assertThat(VaultRestUtils.deleteVault(getAccount().getUuid(), bearerToken, vaultId)).isTrue();
     logger.info("Vault Deleted. Test Clean up completed");
   }
 }

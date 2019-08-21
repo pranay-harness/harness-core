@@ -2,9 +2,9 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.contains;
@@ -112,9 +112,9 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     assertEquals(RiskLevel.NA, analysisSummary.getRiskLevel());
     assertEquals(splunkState.getQuery(), analysisSummary.getQuery());
     assertEquals(response.getErrorMessage(), analysisSummary.getAnalysisSummaryMessage());
-    assertTrue(analysisSummary.getControlClusters().isEmpty());
-    assertTrue(analysisSummary.getTestClusters().isEmpty());
-    assertTrue(analysisSummary.getUnknownClusters().isEmpty());
+    assertThat(analysisSummary.getControlClusters().isEmpty()).isTrue();
+    assertThat(analysisSummary.getTestClusters().isEmpty()).isTrue();
+    assertThat(analysisSummary.getUnknownClusters().isEmpty()).isTrue();
   }
 
   @Test
@@ -139,9 +139,9 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     assertEquals(RiskLevel.NA, analysisSummary.getRiskLevel());
     assertEquals(splunkState.getQuery(), analysisSummary.getQuery());
     assertEquals(response.getErrorMessage(), analysisSummary.getAnalysisSummaryMessage());
-    assertTrue(analysisSummary.getControlClusters().isEmpty());
-    assertTrue(analysisSummary.getTestClusters().isEmpty());
-    assertTrue(analysisSummary.getUnknownClusters().isEmpty());
+    assertThat(analysisSummary.getControlClusters().isEmpty()).isTrue();
+    assertThat(analysisSummary.getTestClusters().isEmpty()).isTrue();
+    assertThat(analysisSummary.getUnknownClusters().isEmpty()).isTrue();
   }
 
   @Test
@@ -168,9 +168,9 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     assertEquals(RiskLevel.NA, analysisSummary.getRiskLevel());
     assertEquals(splunkState.getQuery(), analysisSummary.getQuery());
     assertEquals(response.getErrorMessage(), analysisSummary.getAnalysisSummaryMessage());
-    assertTrue(analysisSummary.getControlClusters().isEmpty());
-    assertTrue(analysisSummary.getTestClusters().isEmpty());
-    assertTrue(analysisSummary.getUnknownClusters().isEmpty());
+    assertThat(analysisSummary.getControlClusters().isEmpty()).isTrue();
+    assertThat(analysisSummary.getTestClusters().isEmpty()).isTrue();
+    assertThat(analysisSummary.getUnknownClusters().isEmpty()).isTrue();
   }
 
   @Test
@@ -356,9 +356,9 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     assertEquals(RiskLevel.NA, analysisSummary.getRiskLevel());
     assertEquals(splunkState.getQuery(), analysisSummary.getQuery());
     assertEquals(executionResponse.getErrorMessage(), analysisSummary.getAnalysisSummaryMessage());
-    assertTrue(analysisSummary.getControlClusters().isEmpty());
-    assertTrue(analysisSummary.getTestClusters().isEmpty());
-    assertTrue(analysisSummary.getUnknownClusters().isEmpty());
+    assertThat(analysisSummary.getControlClusters().isEmpty()).isTrue();
+    assertThat(analysisSummary.getTestClusters().isEmpty()).isTrue();
+    assertThat(analysisSummary.getUnknownClusters().isEmpty()).isTrue();
   }
 
   @Test

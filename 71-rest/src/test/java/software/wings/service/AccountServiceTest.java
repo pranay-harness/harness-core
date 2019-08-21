@@ -3,7 +3,6 @@ package software.wings.service;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
@@ -387,9 +386,8 @@ public class AccountServiceTest extends WingsBaseTest {
     List<Service> cvConfigs = accountService.getServicesBreadCrumb(accountId, user);
 
     // verify results
-    assertTrue("Service list should size 2", cvConfigs.size() == 2);
-    assertTrue("Service id should be same",
-        serviceId.equals(cvConfigs.get(0).getUuid()) || serviceId.equals(cvConfigs.get(1).getUuid()));
+    assertThat(cvConfigs.size() == 2).isTrue();
+    assertThat(serviceId.equals(cvConfigs.get(0).getUuid()) || serviceId.equals(cvConfigs.get(1).getUuid())).isTrue();
     assertEquals("Service name should be same", "serviceTest", cvConfigs.get(0).getName());
   }
 
@@ -404,7 +402,7 @@ public class AccountServiceTest extends WingsBaseTest {
     PageResponse<CVEnabledService> cvConfigs = accountService.getServices(accountId, user, request, null);
 
     // verify results
-    assertTrue("Service list should not be empty", cvConfigs.getResponse().size() > 0);
+    assertThat(cvConfigs.getResponse().size() > 0).isTrue();
     assertEquals("Service id should be same", serviceId, cvConfigs.getResponse().get(0).getService().getUuid());
     assertEquals("Offset correct in the page response", cvConfigs.getOffset(), "1");
     assertEquals("Service name should be same", "serviceTest", cvConfigs.getResponse().get(0).getService().getName());
@@ -435,8 +433,8 @@ public class AccountServiceTest extends WingsBaseTest {
     PageResponse<CVEnabledService> cvConfigs = accountService.getServices(accountId, user, request, null);
 
     // verify results
-    assertTrue("Service list should not be empty", cvConfigs.getResponse().size() == 1);
-    assertTrue("Config list should be size 1", cvConfigs.getResponse().get(0).getCvConfig().size() == 1);
+    assertThat(cvConfigs.getResponse().size() == 1).isTrue();
+    assertThat(cvConfigs.getResponse().get(0).getCvConfig().size() == 1).isTrue();
     assertEquals("Service id should be same", serviceId, cvConfigs.getResponse().get(0).getService().getUuid());
     assertEquals("Offset correct in the page response", cvConfigs.getOffset(), "1");
     assertEquals("Service name should be same", "serviceTest", cvConfigs.getResponse().get(0).getService().getName());
@@ -456,7 +454,7 @@ public class AccountServiceTest extends WingsBaseTest {
     PageResponse<CVEnabledService> cvConfigs = accountService.getServices(accountId, user, request, serviceId);
 
     // verify results
-    assertTrue("Service list should size 1", cvConfigs.getResponse().size() == 1);
+    assertThat(cvConfigs.getResponse().size() == 1).isTrue();
     assertEquals("Service id should be same", serviceId, cvConfigs.getResponse().get(0).getService().getUuid());
     assertEquals("Offset correct in the page response", cvConfigs.getOffset(), "1");
     assertEquals("Service name should be same", "serviceTest", cvConfigs.getResponse().get(0).getService().getName());
@@ -475,7 +473,7 @@ public class AccountServiceTest extends WingsBaseTest {
     PageResponse<CVEnabledService> services = accountService.getServices(accountId, user, request, null);
 
     // verify results
-    assertTrue("Service list should be empty", services.getResponse().size() == 0);
+    assertThat(services.getResponse().size() == 0).isTrue();
   }
 
   private void setupCvServicesTests(

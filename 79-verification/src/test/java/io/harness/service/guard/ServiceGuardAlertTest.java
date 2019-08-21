@@ -5,8 +5,8 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL;
 import static software.wings.sm.StateType.SUMO;
@@ -75,7 +75,7 @@ public class ServiceGuardAlertTest extends VerificationBaseIntegrationTest {
         new GenericType<RestResponse<String>>() {});
 
     List<Alert> alerts = wingsPersistence.createQuery(Alert.class).filter(AlertKeys.appId, appId).asList();
-    assertTrue(alerts.isEmpty());
+    assertThat(alerts.isEmpty()).isTrue();
 
     url = VERIFICATION_API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS
         + LogAnalysisResource.ANALYSIS_SAVE_24X7_ANALYSIS_RECORDS_URL + "?cvConfigId=" + savedObjectUuid

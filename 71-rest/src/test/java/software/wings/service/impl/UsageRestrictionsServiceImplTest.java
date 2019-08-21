@@ -7,7 +7,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
@@ -240,8 +239,9 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
     usageRestrictions.setAppEnvRestrictions(Collections.singleton(appEnvRestriction));
     assertFalse(
         UsageRestrictionsServiceImpl.hasAllEnvAccessOfType(usageRestrictions, APP_ID, EnvFilter.FilterType.PROD));
-    assertTrue(
-        UsageRestrictionsServiceImpl.hasAllEnvAccessOfType(usageRestrictions, APP_ID, EnvFilter.FilterType.NON_PROD));
+    assertThat(
+        UsageRestrictionsServiceImpl.hasAllEnvAccessOfType(usageRestrictions, APP_ID, EnvFilter.FilterType.NON_PROD))
+        .isTrue();
 
     appFilter =
         GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(Collections.singleton(APP_ID)).build();
@@ -255,8 +255,9 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
         UsageRestrictionsServiceImpl.hasAllEnvAccessOfType(usageRestrictions, APP_ID_1, EnvFilter.FilterType.SELECTED));
     assertFalse(
         UsageRestrictionsServiceImpl.hasAllEnvAccessOfType(usageRestrictions, APP_ID, EnvFilter.FilterType.PROD));
-    assertTrue(
-        UsageRestrictionsServiceImpl.hasAllEnvAccessOfType(usageRestrictions, APP_ID, EnvFilter.FilterType.SELECTED));
+    assertThat(
+        UsageRestrictionsServiceImpl.hasAllEnvAccessOfType(usageRestrictions, APP_ID, EnvFilter.FilterType.SELECTED))
+        .isTrue();
 
     // No NPE is expected if envFilter filter types are null;
     appFilter =
@@ -374,10 +375,10 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       boolean hasAccess =
           usageRestrictionsService.hasAccess(ACCOUNT_ID, isAccountAdmin, APP_ID_1, ENV_ID_1, usageRestrictions,
               restrictionsFromPermissionsForUpdateAction, appEnvMapFromPermissionsForUpdateAction, appIdEnvMap);
-      assertTrue(hasAccess);
+      assertThat(hasAccess).isTrue();
       hasAccess = usageRestrictionsService.hasAccess(ACCOUNT_ID, isAccountAdmin, APP_ID_1, null, usageRestrictions,
           restrictionsFromPermissionsForUpdateAction, appEnvMapFromPermissionsForUpdateAction, appIdEnvMap);
-      assertTrue(hasAccess);
+      assertThat(hasAccess).isTrue();
       hasAccess = usageRestrictionsService.hasAccess(ACCOUNT_ID, isAccountAdmin, APP_ID, ENV_ID_1, usageRestrictions,
           restrictionsFromPermissionsForUpdateAction, appEnvMapFromPermissionsForUpdateAction, appIdEnvMap);
       assertFalse(hasAccess);
@@ -392,7 +393,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
 
       hasAccess = usageRestrictionsService.hasAccess(ACCOUNT_ID, isAccountAdmin, null, null, usageRestrictions,
           restrictionsFromPermissionsForReadAction, appEnvMapFromPermissionsForReadAction, appIdEnvMap);
-      assertTrue(hasAccess);
+      assertThat(hasAccess).isTrue();
 
     } finally {
       UserThreadLocal.unset();
@@ -488,7 +489,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
 
       hasAccess = usageRestrictionsService.hasAccess(ACCOUNT_ID, true, null, null, null,
           restrictionsFromPermissionsForReadAction, appEnvMapFromPermissionsForReadAction, appIdEnvMap);
-      assertTrue(hasAccess);
+      assertThat(hasAccess).isTrue();
 
     } finally {
       UserThreadLocal.unset();
@@ -786,7 +787,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
 
     hasAccess = usageRestrictionsService.hasAccess(ACCOUNT_ID, isAccountAdmin, null, null, usageRestrictions,
         restrictionsFromPermissionsForReadAction, appEnvMapFromPermissionsForReadAction, appIdEnvMap);
-    assertTrue(hasAccess);
+    assertThat(hasAccess).isTrue();
   }
 
   public static UsageRestrictions getUsageRestrictionsForAppIdAndEnvId(String appId, String envId) {

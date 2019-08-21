@@ -1,8 +1,8 @@
 package software.wings.sm.states;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -102,7 +102,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
     APMVerificationState apmVerificationState = new APMVerificationState("dummy");
     apmVerificationState.setMetricCollectionInfos(null);
     Map<String, String> invalidFields = apmVerificationState.validateFields();
-    assertTrue("Size should be 1", invalidFields.size() == 1);
+    assertThat(invalidFields.size() == 1).isTrue();
     assertEquals(
         "Metric Collection Info should be missing", "Metric Collection Info", invalidFields.keySet().iterator().next());
   }
@@ -115,7 +115,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
         MetricCollectionInfo.builder().collectionUrl("This is a sample URL").metricName("name").build();
     apmVerificationState.setMetricCollectionInfos(Arrays.asList(info));
     Map<String, String> invalidFields = apmVerificationState.validateFields();
-    assertTrue("Size should be 1", invalidFields.size() == 1);
+    assertThat(invalidFields.size() == 1).isTrue();
     assertEquals("ResponseMapping should be missing", "responseMapping", invalidFields.keySet().iterator().next());
   }
 
@@ -130,7 +130,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
     info.setResponseMapping(mapping);
     apmVerificationState.setMetricCollectionInfos(Arrays.asList(info));
     Map<String, String> invalidFields = apmVerificationState.validateFields();
-    assertTrue("Size should be 1", invalidFields.size() == 1);
+    assertThat(invalidFields.size() == 1).isTrue();
     assertEquals("transactionName should be missing", "transactionName", invalidFields.keySet().iterator().next());
   }
 
@@ -148,6 +148,6 @@ public class APMVerificationStateTest extends WingsBaseTest {
     info.setResponseMapping(mapping);
     apmVerificationState.setMetricCollectionInfos(Arrays.asList(info));
     Map<String, String> invalidFields = apmVerificationState.validateFields();
-    assertTrue("Size should be 0", invalidFields.size() == 0);
+    assertThat(invalidFields.size() == 0).isTrue();
   }
 }

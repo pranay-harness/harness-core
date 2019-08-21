@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -84,16 +84,16 @@ public class EntityNameCacheTest extends WingsBaseTest {
 
     try {
       entityNameCache.getEntityName(EntityType.APPLICATION, null);
-      assertTrue(false);
+      assertThat(false).isTrue();
     } catch (Exception e) {
-      assertTrue(true);
+      assertThat(true).isTrue();
     }
 
     try {
       entityNameCache.getEntityName(null, "12345");
-      assertTrue(false);
+      assertThat(false).isTrue();
     } catch (Exception e) {
-      assertTrue(true);
+      assertThat(true).isTrue();
     }
   }
 }

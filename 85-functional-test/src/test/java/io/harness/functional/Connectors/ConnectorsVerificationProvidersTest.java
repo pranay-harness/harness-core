@@ -3,7 +3,6 @@ package io.harness.functional.Connectors;
 import static io.harness.rule.OwnerRule.SHASWAT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -46,7 +45,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
     // Verify connector is created i.e connector with specific name exist
     boolean connectorFound =
         SettingsUtils.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, connectorName);
-    assertTrue(connectorFound);
+    assertThat(connectorFound).isTrue();
 
     // Delete the created connector
     SettingsUtils.delete(bearerToken, getAccount().getUuid(), connectorId);
@@ -67,7 +66,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
     // Verify connector is created i.e connector with specific name exist
     boolean connectorFound =
         SettingsUtils.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, connectorName);
-    assertTrue(connectorFound);
+    assertThat(connectorFound).isTrue();
 
     // Delete the created connector
     SettingsUtils.delete(bearerToken, getAccount().getUuid(), connectorId);
@@ -88,7 +87,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
     // Verify connector is created i.e connector with specific name exist
     boolean connectorFound =
         SettingsUtils.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, connectorName);
-    assertTrue(connectorFound);
+    assertThat(connectorFound).isTrue();
 
     // Delete the created connector
     SettingsUtils.delete(bearerToken, getAccount().getUuid(), connectorId);
@@ -109,7 +108,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
     // Verify connector is created i.e connector with specific name exist
     boolean connectorFound =
         SettingsUtils.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, connectorName);
-    assertTrue(connectorFound);
+    assertThat(connectorFound).isTrue();
 
     // Delete the created connector
     SettingsUtils.delete(bearerToken, getAccount().getUuid(), connectorId);
@@ -130,7 +129,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
     // Verify connector is created i.e connector with specific name exist
     boolean connectorFound =
         SettingsUtils.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, connectorName);
-    assertTrue(connectorFound);
+    assertThat(connectorFound).isTrue();
 
     // Delete the created connector
     SettingsUtils.delete(bearerToken, getAccount().getUuid(), connectorId);
@@ -151,7 +150,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
     // Verify connector is created i.e connector with specific name exist
     boolean connectorFound =
         SettingsUtils.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, connectorName);
-    assertTrue(connectorFound);
+    assertThat(connectorFound).isTrue();
 
     // Delete the created connector
     SettingsUtils.delete(bearerToken, getAccount().getUuid(), connectorId);
@@ -172,7 +171,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
     // Verify connector is created i.e connector with specific name exist
     boolean connectorFound =
         SettingsUtils.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, connectorName);
-    assertTrue(connectorFound);
+    assertThat(connectorFound).isTrue();
 
     // Delete the created connector
     SettingsUtils.delete(bearerToken, getAccount().getUuid(), connectorId);
@@ -193,7 +192,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
     // Verify connector is created i.e connector with specific name exist
     boolean connectorFound =
         SettingsUtils.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, connectorName);
-    assertTrue(connectorFound);
+    assertThat(connectorFound).isTrue();
 
     // Delete the created connector
     SettingsUtils.delete(bearerToken, getAccount().getUuid(), connectorId);

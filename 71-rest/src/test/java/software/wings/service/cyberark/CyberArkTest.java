@@ -5,7 +5,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
@@ -161,7 +160,7 @@ public class CyberArkTest extends WingsBaseTest {
       cyberArkResource.saveCyberArkConfig(cyberArkConfig.getAccountId(), cyberArkConfig);
       fail("Saved invalid CyberArk config");
     } catch (WingsException e) {
-      assertTrue(true);
+      assertThat(true).isTrue();
     }
 
     cyberArkConfig = getCyberArkConfig();
@@ -172,7 +171,7 @@ public class CyberArkTest extends WingsBaseTest {
       cyberArkResource.saveCyberArkConfig(cyberArkConfig.getAccountId(), cyberArkConfig);
       fail("Saved invalid CyberArk config");
     } catch (WingsException e) {
-      assertTrue(true);
+      assertThat(true).isTrue();
     }
   }
 

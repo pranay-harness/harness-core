@@ -1,9 +1,9 @@
 package software.wings.yaml.gitSync;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -37,11 +37,11 @@ public class GitChangeSetRunnableTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testShouldPerformStuckJobCheck() throws IllegalAccessException {
-    assertTrue(gitChangeSetRunnable.shouldPerformStuckJobCheck());
+    assertThat(gitChangeSetRunnable.shouldPerformStuckJobCheck()).isTrue();
 
     setInternalState(gitChangeSetRunnable, "lastTimestampForStuckJobCheck",
         new AtomicLong(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(120)));
-    assertTrue(gitChangeSetRunnable.shouldPerformStuckJobCheck());
+    assertThat(gitChangeSetRunnable.shouldPerformStuckJobCheck()).isTrue();
 
     FieldUtils.writeField(
         gitChangeSetRunnable, "lastTimestampForStuckJobCheck", new AtomicLong(System.currentTimeMillis()), true);

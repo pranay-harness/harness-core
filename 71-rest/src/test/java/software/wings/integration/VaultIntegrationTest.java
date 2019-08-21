@@ -9,7 +9,6 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.common.base.Preconditions;
@@ -316,7 +315,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
 
       savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
       assertNotNull(savedVaultConfig);
-      assertTrue(savedVaultConfig.isDefault());
+      assertThat(savedVaultConfig.isDefault()).isTrue();
     } finally {
       // 3. Delete the vault config
       deleteVaultConfig(vaultConfigId);
@@ -391,7 +390,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
 
     try {
       assertFalse(savedVaultConfig.isDefault());
-      assertTrue(savedVaultConfig2.isDefault());
+      assertThat(savedVaultConfig2.isDefault()).isTrue();
 
       // Update 1st vault config to be default again. 2nd vault config will be set to be non-default.
       savedVaultConfig.setDefault(true);
@@ -399,7 +398,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
       updateVaultConfig(savedVaultConfig);
 
       savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
-      assertTrue(savedVaultConfig.isDefault());
+      assertThat(savedVaultConfig.isDefault()).isTrue();
 
       savedVaultConfig2 = wingsPersistence.get(VaultConfig.class, vaultConfig2Id);
       assertFalse(savedVaultConfig2.isDefault());
@@ -708,7 +707,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     // Verify vault config was successfully created.
     assertThat(restResponse.getResponseMessages()).isEmpty();
     String encryptedDataId = restResponse.getResource();
-    assertTrue(isNotEmpty(encryptedDataId));
+    assertThat(isNotEmpty(encryptedDataId)).isTrue();
 
     return encryptedDataId;
   }
@@ -726,7 +725,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     // Verify vault config was successfully created.
     assertThat(restResponse.getResponseMessages()).isEmpty();
     String encryptedDataId = restResponse.getResource();
-    assertTrue(isNotEmpty(encryptedDataId));
+    assertThat(isNotEmpty(encryptedDataId)).isTrue();
 
     return encryptedDataId;
   }
@@ -739,7 +738,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     // Verify vault config was successfully created.
     assertThat(restResponse.getResponseMessages()).isEmpty();
     String encryptedDataId = restResponse.getResource();
-    assertTrue(isNotEmpty(encryptedDataId));
+    assertThat(isNotEmpty(encryptedDataId)).isTrue();
 
     return encryptedDataId;
   }
@@ -752,7 +751,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     // Verify vault config was successfully created.
     assertThat(restResponse.getResponseMessages()).isEmpty();
     Boolean updated = restResponse.getResource();
-    assertTrue(updated);
+    assertThat(updated).isTrue();
   }
 
   private void importSecretTextsFromCsv(String secretCsvFilePath) {
@@ -777,7 +776,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     // Verify vault config was successfully created.
     assertThat(restResponse.getResponseMessages()).isEmpty();
     Boolean deleted = restResponse.getResource();
-    assertTrue(deleted);
+    assertThat(deleted).isTrue();
   }
 
   private void deleteSecretText(String uuid) {
@@ -787,7 +786,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     // Verify vault config was successfully created.
     assertThat(restResponse.getResponseMessages()).isEmpty();
     Boolean deleted = restResponse.getResource();
-    assertTrue(deleted);
+    assertThat(deleted).isTrue();
   }
 
   private void verifyVaultChangeLog(String uuid) {
@@ -797,7 +796,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<SecretChangeLog>>>() {});
     // Verify vault config was successfully created.
     assertThat(restResponse.getResponseMessages()).isEmpty();
-    assertTrue(restResponse.getResource().size() > 0);
+    assertThat(restResponse.getResource().size() > 0).isTrue();
   }
 
   private String createVaultConfig(VaultConfig vaultConfig) {
@@ -807,7 +806,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     // Verify vault config was successfully created.
     assertThat(restResponse.getResponseMessages()).isEmpty();
     String vaultConfigId = restResponse.getResource();
-    assertTrue(isNotEmpty(vaultConfigId));
+    assertThat(isNotEmpty(vaultConfigId)).isTrue();
 
     return vaultConfigId;
   }
@@ -819,7 +818,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     // Verify vault config was successfully created.
     assertThat(restResponse.getResponseMessages()).isEmpty();
     String kmsConfigId = restResponse.getResource();
-    assertTrue(isNotEmpty(kmsConfigId));
+    assertThat(isNotEmpty(kmsConfigId)).isTrue();
 
     return kmsConfigId;
   }
@@ -837,7 +836,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse<Boolean>>() {});
     // Verify the vault config was deleted successfully
     assertThat(deleteRestResponse.getResponseMessages()).isEmpty();
-    assertTrue(deleteRestResponse.getResource());
+    assertThat(deleteRestResponse.getResource()).isTrue();
     assertThat(wingsPersistence.get(VaultConfig.class, vaultConfigId)).isNull();
   }
 
@@ -848,7 +847,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<Boolean>>() {});
     // Verify the vault config was deleted successfully
     assertThat(deleteRestResponse.getResponseMessages()).isEmpty();
-    assertTrue(deleteRestResponse.getResource());
+    assertThat(deleteRestResponse.getResource()).isTrue();
     assertThat(wingsPersistence.get(KmsConfig.class, kmsConfigId)).isNull();
   }
 
@@ -869,21 +868,21 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
           (KmsConfig) secretManagerConfigService.getSecretManager(accountId, secretManagerConfig.getUuid());
       decrypted = secretManagementDelegateService.decrypt(encryptedData, kmsConfig);
     }
-    assertTrue(isNotEmpty(decrypted));
+    assertThat(isNotEmpty(decrypted)).isTrue();
     assertEquals(expectedValue, new String(decrypted));
   }
 
   private void verifyEncryptedFileValue(String encryptedFileUuid, String expectedValue, VaultConfig savedVaultConfig) {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, encryptedFileUuid);
     assertNotNull(encryptedData);
-    assertTrue(encryptedData.getFileSize() > 0);
+    assertThat(encryptedData.getFileSize() > 0).isTrue();
 
     savedVaultConfig.setAuthToken(vaultConfig.getAuthToken());
     char[] decrypted = secretManagementDelegateService.decrypt(encryptedData, savedVaultConfig);
     String retrievedFileValue = encryptedData.isBase64Encoded()
         ? new String(Base64.getDecoder().decode(new String(decrypted)))
         : new String(decrypted);
-    assertTrue(isNotEmpty(decrypted));
+    assertThat(isNotEmpty(decrypted)).isTrue();
     assertEquals(expectedValue, retrievedFileValue);
   }
 
@@ -891,7 +890,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
       throws IOException {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, encryptedFileUuid);
     assertNotNull(encryptedData);
-    assertTrue(encryptedData.getFileSize() > 0);
+    assertThat(encryptedData.getFileSize() > 0).isTrue();
 
     String fileId = new String(encryptedData.getEncryptedValue());
     InputStream inputStream = fileService.openDownloadStream(fileId, FileBucket.CONFIGS);
@@ -905,7 +904,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     String retrievedFileValue = encryptedData.isBase64Encoded()
         ? new String(Base64.getDecoder().decode(new String(decrypted)))
         : new String(decrypted);
-    assertTrue(isNotEmpty(decrypted));
+    assertThat(isNotEmpty(decrypted)).isTrue();
     assertEquals(expectedValue, retrievedFileValue);
   }
 
@@ -922,7 +921,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<SettingAttribute>>>() {});
     // Verify the vault config was deleted successfully
     assertThat(response.getResponseMessages()).isEmpty();
-    assertTrue(response.getResource().size() > 0);
+    assertThat(response.getResource().size() > 0).isTrue();
     return response.getResource();
   }
 }

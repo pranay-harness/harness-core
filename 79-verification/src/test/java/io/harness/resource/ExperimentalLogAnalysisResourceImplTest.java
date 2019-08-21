@@ -1,7 +1,7 @@
 package io.harness.resource;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -81,7 +81,7 @@ public class ExperimentalLogAnalysisResourceImplTest extends VerificationBaseTes
     RestResponse<Boolean> response = logAnalysisResource.saveLogAnalysisMLRecords(mockAccountId, mockApplicationId,
         mockStateExecutionId, logCollectionMinute, false, taskId, StateType.ELK, getMLAnalysisRecord());
 
-    assertTrue(response.getResource());
+    assertThat(response.getResource()).isTrue();
   }
 
   @Test
@@ -100,7 +100,7 @@ public class ExperimentalLogAnalysisResourceImplTest extends VerificationBaseTes
     RestResponse<Boolean> response =
         logAnalysisResource.experimentalTask(mockAccountId, mockApplicationId, mockStateExecutionId);
 
-    assertTrue(response.getResource());
+    assertThat(response.getResource()).isTrue();
   }
 
   private ExperimentalLogMLAnalysisRecord getMLAnalysisRecord() {

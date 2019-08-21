@@ -1,7 +1,7 @@
 package software.wings.service.impl.security;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import com.google.inject.Inject;
 
@@ -23,7 +23,8 @@ public class AuthRuleFilterTest extends WingsBaseTest {
   public void testIsAccountLevelPermission() {
     PermissionAttribute permissionAttribute = new PermissionAttribute(PermissionType.AUDIT_VIEWER, Action.READ);
     PermissionAttribute permissionAttribute1 = new PermissionAttribute(PermissionType.APP, Action.ALL);
-    assertTrue(authRuleFilter.isAccountLevelPermissions(Arrays.asList(permissionAttribute, permissionAttribute1)));
+    assertThat(authRuleFilter.isAccountLevelPermissions(Arrays.asList(permissionAttribute, permissionAttribute1)))
+        .isTrue();
 
     permissionAttribute = new PermissionAttribute(PermissionType.APP, Action.READ);
     assertFalse(authRuleFilter.isAccountLevelPermissions(Arrays.asList(permissionAttribute)));

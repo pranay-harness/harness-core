@@ -2,9 +2,9 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
@@ -27,9 +27,9 @@ public class CloudWatchStateTest extends WingsBaseTest {
     CloudWatchState cloudWatchState = new CloudWatchState("dummy");
     // not adding any metrics for verification
     Map<String, String> invalidFields = cloudWatchState.validateFields();
-    assertTrue(isEmpty(cloudWatchState.fetchEcsMetrics()));
-    assertTrue(isEmpty(cloudWatchState.fetchLoadBalancerMetrics()));
-    assertTrue("Size should be 1", invalidFields.size() == 1);
+    assertThat(isEmpty(cloudWatchState.fetchEcsMetrics())).isTrue();
+    assertThat(isEmpty(cloudWatchState.fetchLoadBalancerMetrics())).isTrue();
+    assertThat(invalidFields.size() == 1).isTrue();
     assertEquals("Metrics Missing", "No metrics provided", invalidFields.keySet().iterator().next());
   }
 
@@ -39,13 +39,13 @@ public class CloudWatchStateTest extends WingsBaseTest {
     CloudWatchState cloudWatchState = new CloudWatchState("dummy");
     cloudWatchState.setShouldDoLambdaVerification(true);
     Map<String, String> invalidFields = cloudWatchState.validateFields();
-    assertTrue(isEmpty(cloudWatchState.fetchEcsMetrics()));
-    assertTrue(isEmpty(cloudWatchState.fetchLoadBalancerMetrics()));
-    assertTrue(isEmpty(cloudWatchState.fetchEc2Metrics()));
-    assertTrue(cloudWatchState.isShouldDoLambdaVerification());
+    assertThat(isEmpty(cloudWatchState.fetchEcsMetrics())).isTrue();
+    assertThat(isEmpty(cloudWatchState.fetchLoadBalancerMetrics())).isTrue();
+    assertThat(isEmpty(cloudWatchState.fetchEc2Metrics())).isTrue();
+    assertThat(cloudWatchState.isShouldDoLambdaVerification()).isTrue();
     assertFalse(cloudWatchState.isShouldDoECSClusterVerification());
 
-    assertTrue("Size should be 0", invalidFields.size() == 0);
+    assertThat(invalidFields.size() == 0).isTrue();
   }
 
   @Test
@@ -54,13 +54,13 @@ public class CloudWatchStateTest extends WingsBaseTest {
     CloudWatchState cloudWatchState = new CloudWatchState("dummy");
     cloudWatchState.setShouldDoECSClusterVerification(true);
     Map<String, String> invalidFields = cloudWatchState.validateFields();
-    assertTrue(isEmpty(cloudWatchState.fetchEcsMetrics()));
-    assertTrue(isEmpty(cloudWatchState.fetchLoadBalancerMetrics()));
-    assertTrue(isEmpty(cloudWatchState.fetchEc2Metrics()));
-    assertTrue(cloudWatchState.isShouldDoECSClusterVerification());
+    assertThat(isEmpty(cloudWatchState.fetchEcsMetrics())).isTrue();
+    assertThat(isEmpty(cloudWatchState.fetchLoadBalancerMetrics())).isTrue();
+    assertThat(isEmpty(cloudWatchState.fetchEc2Metrics())).isTrue();
+    assertThat(cloudWatchState.isShouldDoECSClusterVerification()).isTrue();
     assertFalse(cloudWatchState.isShouldDoLambdaVerification());
 
-    assertTrue("Size should be 0", invalidFields.size() == 0);
+    assertThat(invalidFields.size() == 0).isTrue();
   }
 
   @Test
@@ -74,13 +74,13 @@ public class CloudWatchStateTest extends WingsBaseTest {
 
     cloudWatchState.setLoadBalancerMetrics(metrics);
     Map<String, String> invalidFields = cloudWatchState.validateFields();
-    assertTrue(isEmpty(cloudWatchState.fetchEcsMetrics()));
-    assertTrue(isNotEmpty(cloudWatchState.fetchLoadBalancerMetrics()));
-    assertTrue(isEmpty(cloudWatchState.fetchEc2Metrics()));
+    assertThat(isEmpty(cloudWatchState.fetchEcsMetrics())).isTrue();
+    assertThat(isNotEmpty(cloudWatchState.fetchLoadBalancerMetrics())).isTrue();
+    assertThat(isEmpty(cloudWatchState.fetchEc2Metrics())).isTrue();
     assertFalse(cloudWatchState.isShouldDoLambdaVerification());
     assertFalse(cloudWatchState.isShouldDoECSClusterVerification());
 
-    assertTrue("Size should be 0", invalidFields.size() == 0);
+    assertThat(invalidFields.size() == 0).isTrue();
   }
 
   @Test
@@ -92,12 +92,12 @@ public class CloudWatchStateTest extends WingsBaseTest {
 
     cloudWatchState.setEc2Metrics(metricList);
     Map<String, String> invalidFields = cloudWatchState.validateFields();
-    assertTrue(isEmpty(cloudWatchState.fetchEcsMetrics()));
-    assertTrue(isEmpty(cloudWatchState.fetchLoadBalancerMetrics()));
-    assertTrue(isNotEmpty(cloudWatchState.fetchEc2Metrics()));
+    assertThat(isEmpty(cloudWatchState.fetchEcsMetrics())).isTrue();
+    assertThat(isEmpty(cloudWatchState.fetchLoadBalancerMetrics())).isTrue();
+    assertThat(isNotEmpty(cloudWatchState.fetchEc2Metrics())).isTrue();
     assertFalse(cloudWatchState.isShouldDoLambdaVerification());
     assertFalse(cloudWatchState.isShouldDoECSClusterVerification());
 
-    assertTrue("Size should be 0", invalidFields.size() == 0);
+    assertThat(invalidFields.size() == 0).isTrue();
   }
 }

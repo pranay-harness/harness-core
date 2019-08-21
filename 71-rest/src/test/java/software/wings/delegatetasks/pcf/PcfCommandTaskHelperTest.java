@@ -1,8 +1,8 @@
 package software.wings.delegatetasks.pcf;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 
@@ -64,10 +64,10 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetRevisionFromReleaseName() throws Exception {
     Integer revision = pcfCommandTaskHelper.getRevisionFromReleaseName("app_serv_env__1");
-    assertTrue(1 == revision);
+    assertThat(1 == revision).isTrue();
 
     revision = pcfCommandTaskHelper.getRevisionFromReleaseName("app_serv_env__2");
-    assertTrue(2 == revision);
+    assertThat(2 == revision).isTrue();
   }
 
   @Test
@@ -83,7 +83,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
                                                                   .build(),
         ".", RELEASE_NAME);
 
-    assertTrue(file.exists());
+    assertThat(file.exists()).isTrue();
 
     BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
     String line;
@@ -103,12 +103,12 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
     Set<String> names = new HashSet<>();
     names.add("App__Account__dev__");
 
-    assertTrue(names.contains(pcfCommandTaskHelper.getAppPrefix("App__Account__dev__1")));
+    assertThat(names.contains(pcfCommandTaskHelper.getAppPrefix("App__Account__dev__1"))).isTrue();
     assertFalse(names.contains(pcfCommandTaskHelper.getAppPrefix("App__Login__dev__1")));
 
     names.clear();
     names.add("App__Login__dev__");
     assertFalse(names.contains(pcfCommandTaskHelper.getAppPrefix("App__Account__dev__1")));
-    assertTrue(names.contains(pcfCommandTaskHelper.getAppPrefix("App__Login__dev__1")));
+    assertThat(names.contains(pcfCommandTaskHelper.getAppPrefix("App__Login__dev__1"))).isTrue();
   }
 }

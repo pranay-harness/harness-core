@@ -1,7 +1,7 @@
 package software.wings.service.impl.logs;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
@@ -90,6 +90,6 @@ public class LogResponseParserTest extends CategoryTest {
 
     List<LogElement> logs = parser.extractLogs(data);
     assertNotNull(logs);
-    assertTrue("Log list should be 5 elements long", 5 == logs.size());
+    assertThat(5 == logs.size()).isTrue();
   }
 }

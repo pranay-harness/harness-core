@@ -9,7 +9,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -467,7 +466,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
           }
         }
 
-        assertTrue("failed for " + host + " for minute " + logCollectionMinute, succeess);
+        assertThat(succeess).isTrue();
       }
     }
   }
@@ -774,8 +773,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
         analysisService.getLogAnalysisRecords(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId, 0, false);
     assertFalse(logAnalysisRecord.isBaseLineCreated());
     assertEquals(1, logAnalysisRecord.getControl_clusters().size());
-    assertTrue(isEmpty(logAnalysisRecord.getTest_clusters()));
-    assertTrue(isEmpty(logAnalysisRecord.getTest_events()));
+    assertThat(isEmpty(logAnalysisRecord.getTest_clusters())).isTrue();
+    assertThat(isEmpty(logAnalysisRecord.getTest_events())).isTrue();
 
     LogMLFeedback mlFeedback = LogMLFeedback.builder()
                                    .stateExecutionId(stateExecutionId)
@@ -796,7 +795,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     assertEquals(AnalysisServiceImpl.LogMLFeedbackType.IGNORE_ALWAYS,
         analysisSummary.getTestClusters().get(0).getLogMLFeedbackType());
 
-    assertTrue(restResponse.getResource());
+    assertThat(restResponse.getResource()).isTrue();
   }
 
   @Test
@@ -855,9 +854,9 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     //    logMLAnalysisSummary.getAnalysisSummaryMessage());
     LogMLAnalysisRecord logAnalysisRecord =
         analysisService.getLogAnalysisRecords(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId, 0, false);
-    assertTrue(logAnalysisRecord.isBaseLineCreated());
-    assertTrue(isEmpty(logAnalysisRecord.getControl_clusters()));
-    assertTrue(isEmpty(logAnalysisRecord.getTest_clusters()));
+    assertThat(logAnalysisRecord.isBaseLineCreated()).isTrue();
+    assertThat(isEmpty(logAnalysisRecord.getControl_clusters())).isTrue();
+    assertThat(isEmpty(logAnalysisRecord.getTest_clusters())).isTrue();
     assertEquals(1, logAnalysisRecord.getUnknown_clusters().size());
     assertFalse(isEmpty(logAnalysisRecord.getTest_events()));
   }
@@ -1544,6 +1543,6 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
         analysisService.getLogAnalysisRecords(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId, 0, false);
     assertEquals(1, logAnalysisRecord.getControl_events().size());
     assertEquals("ignore", logAnalysisRecord.getControl_events().get("20000").get(0).getText());
-    assertTrue(isEmpty(logAnalysisRecord.getTest_events()));
+    assertThat(isEmpty(logAnalysisRecord.getTest_events())).isTrue();
   }
 }

@@ -1,8 +1,8 @@
 package io.harness.k8s.kubectl;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -61,7 +61,7 @@ public class ApplyCommandTest extends CategoryTest {
 
     ApplyCommand applyCommand = client.apply().filename("manifests.yaml").dryrun(true).output("yaml");
 
-    assertTrue(applyCommand.command().contains("--dry-run"));
+    assertThat(applyCommand.command().contains("--dry-run")).isTrue();
 
     applyCommand.dryrun(false);
     assertFalse(applyCommand.command().contains("--dry-run"));
@@ -74,7 +74,7 @@ public class ApplyCommandTest extends CategoryTest {
 
     ApplyCommand applyCommand = client.apply().filename("manifests.yaml").record(true).output("yaml");
 
-    assertTrue(applyCommand.command().contains("--record"));
+    assertThat(applyCommand.command().contains("--record")).isTrue();
 
     applyCommand.record(false);
     assertFalse(applyCommand.command().contains("--record"));

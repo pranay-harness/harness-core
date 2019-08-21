@@ -7,7 +7,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -199,26 +198,26 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
      */
     List<String> metricNames = new ArrayList<>();
     Map<String, Metric> metrics = newRelicService.getMetricsCorrespondingToMetricNames(metricNames);
-    assertTrue(metrics.containsKey("requestsPerMinute"));
-    assertTrue(metrics.containsKey("averageResponseTime"));
-    assertTrue(metrics.containsKey("error"));
-    assertTrue(metrics.containsKey("apdexScore"));
+    assertThat(metrics.containsKey("requestsPerMinute")).isTrue();
+    assertThat(metrics.containsKey("averageResponseTime")).isTrue();
+    assertThat(metrics.containsKey("error")).isTrue();
+    assertThat(metrics.containsKey("apdexScore")).isTrue();
 
     /*
     Case 2: metricNames contains a non-empty subset of metrics
      */
     metricNames = Arrays.asList("apdexScore");
     metrics = newRelicService.getMetricsCorrespondingToMetricNames(metricNames);
-    assertTrue(metrics.containsKey("apdexScore"));
+    assertThat(metrics.containsKey("apdexScore")).isTrue();
     assertEquals(1, metrics.size());
-    assertTrue(metrics.get("apdexScore").getTags().size() >= 1);
+    assertThat(metrics.get("apdexScore").getTags().size() >= 1).isTrue();
     assertEquals(Sets.newHashSet("WebTransactions"), metrics.get("apdexScore").getTags());
 
     metricNames = Arrays.asList("apdexScore", "averageResponseTime", "requestsPerMinute");
     metrics = newRelicService.getMetricsCorrespondingToMetricNames(metricNames);
-    assertTrue(metrics.containsKey("apdexScore"));
-    assertTrue(metrics.containsKey("averageResponseTime"));
-    assertTrue(metrics.containsKey("requestsPerMinute"));
+    assertThat(metrics.containsKey("apdexScore")).isTrue();
+    assertThat(metrics.containsKey("averageResponseTime")).isTrue();
+    assertThat(metrics.containsKey("requestsPerMinute")).isTrue();
     assertEquals(3, metrics.size());
 
     /*
@@ -235,10 +234,10 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
      */
     metricNames = null;
     metrics = newRelicService.getMetricsCorrespondingToMetricNames(metricNames);
-    assertTrue(metrics.containsKey("requestsPerMinute"));
-    assertTrue(metrics.containsKey("averageResponseTime"));
-    assertTrue(metrics.containsKey("error"));
-    assertTrue(metrics.containsKey("apdexScore"));
+    assertThat(metrics.containsKey("requestsPerMinute")).isTrue();
+    assertThat(metrics.containsKey("averageResponseTime")).isTrue();
+    assertThat(metrics.containsKey("error")).isTrue();
+    assertThat(metrics.containsKey("apdexScore")).isTrue();
   }
 
   @Test

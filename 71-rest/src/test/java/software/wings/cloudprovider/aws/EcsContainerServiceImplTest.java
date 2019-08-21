@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -212,7 +211,7 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
             .withDeployments(new Deployment().withUpdatedAt(new Date(10)))
             .withEvents(new ServiceEvent().withMessage("Foo has reached a steady state.").withCreatedAt(new Date(15)));
     ret = ecsContainerServiceImpl.hasServiceReachedSteadyState(service);
-    assertTrue(ret);
+    assertThat(ret).isTrue();
   }
 
   @Test

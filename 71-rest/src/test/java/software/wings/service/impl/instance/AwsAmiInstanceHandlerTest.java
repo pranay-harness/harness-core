@@ -2,9 +2,9 @@ package software.wings.service.impl.instance;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
@@ -211,7 +211,7 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
     verify(instanceService).delete(captor.capture());
     Set idTobeDeleted = captor.getValue();
     assertEquals(1, idTobeDeleted.size());
-    assertTrue(idTobeDeleted.contains(instance3.getInstanceId()));
+    assertThat(idTobeDeleted.contains(instance3.getInstanceId())).isTrue();
   }
 
   private void setPageResponse(PageResponse<Instance> pageResponse) {
@@ -356,7 +356,7 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
     verify(instanceService).delete(captor.capture());
     Set idTobeDeleted = captor.getValue();
     assertEquals(1, idTobeDeleted.size());
-    assertTrue(idTobeDeleted.contains(instance3.getInstanceId()));
+    assertThat(idTobeDeleted.contains(instance3.getInstanceId())).isTrue();
 
     ArgumentCaptor<Instance> captorInstance = ArgumentCaptor.forClass(Instance.class);
     verify(instanceService, times(2)).save(captorInstance.capture());

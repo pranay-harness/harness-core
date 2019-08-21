@@ -1,8 +1,8 @@
 package software.wings.service.impl.instance;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anySet;
@@ -207,7 +207,7 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
     verify(instanceService).delete(captor.capture());
     Set idTobeDeleted = captor.getValue();
     assertEquals(1, idTobeDeleted.size());
-    assertTrue(idTobeDeleted.contains(INSTANCE_2_ID));
+    assertThat(idTobeDeleted.contains(INSTANCE_2_ID)).isTrue();
   }
 
   /**
@@ -272,17 +272,17 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
     expectedKeys.addAll(Arrays.asList(PCF_APP_GUID_2 + ":" + PCF_INSTANCE_INDEX_0,
         PCF_APP_GUID_2 + ":" + PCF_INSTANCE_INDEX_1, PCF_APP_GUID_2 + ":" + PCF_INSTANCE_INDEX_2));
 
-    assertTrue(expectedKeys.contains(capturedInstances.get(0).getPcfInstanceKey().getId()));
+    assertThat(expectedKeys.contains(capturedInstances.get(0).getPcfInstanceKey().getId())).isTrue();
     assertEquals(InstanceType.PCF_INSTANCE, capturedInstances.get(0).getInstanceType());
     assertEquals("1", capturedInstances.get(0).getLastArtifactBuildNum());
     assertEquals("new", capturedInstances.get(0).getLastArtifactName());
 
-    assertTrue(expectedKeys.contains(capturedInstances.get(1).getPcfInstanceKey().getId()));
+    assertThat(expectedKeys.contains(capturedInstances.get(1).getPcfInstanceKey().getId())).isTrue();
     assertEquals(InstanceType.PCF_INSTANCE, capturedInstances.get(1).getInstanceType());
     assertEquals("1", capturedInstances.get(1).getLastArtifactBuildNum());
     assertEquals("new", capturedInstances.get(0).getLastArtifactName());
 
-    assertTrue(expectedKeys.contains(capturedInstances.get(2).getPcfInstanceKey().getId()));
+    assertThat(expectedKeys.contains(capturedInstances.get(2).getPcfInstanceKey().getId())).isTrue();
     assertEquals(InstanceType.PCF_INSTANCE, capturedInstances.get(2).getInstanceType());
     assertEquals("1", capturedInstances.get(2).getLastArtifactBuildNum());
     assertEquals("new", capturedInstances.get(0).getLastArtifactName());
@@ -360,17 +360,17 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
     expectedKeys.addAll(Arrays.asList(PCF_APP_GUID_2 + ":" + PCF_INSTANCE_INDEX_0,
         PCF_APP_GUID_2 + ":" + PCF_INSTANCE_INDEX_1, PCF_APP_GUID_2 + ":" + PCF_INSTANCE_INDEX_2));
 
-    assertTrue(expectedKeys.contains(capturedInstances.get(0).getPcfInstanceKey().getId()));
+    assertThat(expectedKeys.contains(capturedInstances.get(0).getPcfInstanceKey().getId())).isTrue();
     assertEquals(InstanceType.PCF_INSTANCE, capturedInstances.get(0).getInstanceType());
     assertEquals("1", capturedInstances.get(0).getLastArtifactBuildNum());
     assertEquals("old", capturedInstances.get(0).getLastArtifactName());
 
-    assertTrue(expectedKeys.contains(capturedInstances.get(1).getPcfInstanceKey().getId()));
+    assertThat(expectedKeys.contains(capturedInstances.get(1).getPcfInstanceKey().getId())).isTrue();
     assertEquals(InstanceType.PCF_INSTANCE, capturedInstances.get(1).getInstanceType());
     assertEquals("1", capturedInstances.get(1).getLastArtifactBuildNum());
     assertEquals("old", capturedInstances.get(1).getLastArtifactName());
 
-    assertTrue(expectedKeys.contains(capturedInstances.get(2).getPcfInstanceKey().getId()));
+    assertThat(expectedKeys.contains(capturedInstances.get(2).getPcfInstanceKey().getId())).isTrue();
     assertEquals(InstanceType.PCF_INSTANCE, capturedInstances.get(2).getInstanceType());
     assertEquals("1", capturedInstances.get(2).getLastArtifactBuildNum());
     assertEquals("old", capturedInstances.get(2).getLastArtifactName());

@@ -1,6 +1,6 @@
 package io.harness.data.algorithm;
 
-import static junit.framework.TestCase.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -12,6 +12,6 @@ public class IdentifierNameTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testRandom() {
     String identifier = IdentifierName.random();
-    assertTrue(Character.isLetter(identifier.charAt(0)));
+    assertThat(Character.isLetter(identifier.charAt(0))).isTrue();
   }
 }

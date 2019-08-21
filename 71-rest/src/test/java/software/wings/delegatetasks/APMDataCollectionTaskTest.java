@@ -1,7 +1,7 @@
 package software.wings.delegatetasks;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.ImmutableMap;
@@ -112,10 +112,10 @@ public class APMDataCollectionTaskTest extends CategoryTest {
     int occuranceCount2 = StringUtils.countMatches(batchedHosts.get(1), "test.host.node");
     int occuranceCount3 = StringUtils.countMatches(batchedHosts.get(2), "test.host.node");
     int occuranceCount4 = StringUtils.countMatches(batchedHosts.get(3), "test.host.node");
-    assertTrue("Firstbatch has 15 hosts", occuranceCount1 == 15);
-    assertTrue("Second batch has 15 hosts", occuranceCount2 == 15);
-    assertTrue("Third batch has 15 hosts", occuranceCount3 == 15);
-    assertTrue("Fourth batch has 15 hosts", occuranceCount4 == 7);
+    assertThat(occuranceCount1 == 15).isTrue();
+    assertThat(occuranceCount2 == 15).isTrue();
+    assertThat(occuranceCount3 == 15).isTrue();
+    assertThat(occuranceCount4 == 7).isTrue();
   }
 
   @Test

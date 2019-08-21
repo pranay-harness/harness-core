@@ -3,7 +3,6 @@ package io.harness.e2e.audittrail;
 import static io.harness.testframework.restutils.AuditTrailUtils.getAuditTrailInfo;
 import static io.harness.testframework.restutils.AuditTrailUtils.getYamlResponse;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertTrue;
 import static software.wings.beans.Application.Builder.anApplication;
 
 import io.harness.beans.PageResponse;
@@ -140,8 +139,8 @@ public class AuditTrailE2ETest extends AbstractE2ETest {
 
     /* The previous yaml entry must contain the previous name and the new
        one must contain the updated app name */
-    assertTrue(oldYaml.equals(newYaml));
-    assertTrue(oldYamlPath.contains(APP_NAME));
-    assertTrue(newYamlPath.contains(APP_NAME_UPDATED));
+    assertThat(oldYaml.equals(newYaml)).isTrue();
+    assertThat(oldYamlPath.contains(APP_NAME)).isTrue();
+    assertThat(newYamlPath.contains(APP_NAME_UPDATED)).isTrue();
   }
 }

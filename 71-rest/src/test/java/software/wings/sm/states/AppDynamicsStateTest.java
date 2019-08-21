@@ -7,7 +7,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -292,7 +291,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");
     // not adding any metrics for verification
     Map<String, String> invalidFields = appDynamicsState.validateFields();
-    assertTrue("Size should be 1", invalidFields.size() == 1);
+    assertThat(invalidFields.size() == 1).isTrue();
     assertEquals("Fields Missing", "Required Fields missing", invalidFields.keySet().iterator().next());
   }
 
@@ -304,7 +303,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     appDynamicsState.setTierId("test12");
     // not adding any metrics for verification
     Map<String, String> invalidFields = appDynamicsState.validateFields();
-    assertTrue("Size should be 1", invalidFields.size() == 1);
+    assertThat(invalidFields.size() == 1).isTrue();
     assertEquals("Fields Missing", "Required Fields missing", invalidFields.keySet().iterator().next());
   }
 
@@ -317,7 +316,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     appDynamicsState.setAnalysisServerConfigId("test1234");
     // not adding any metrics for verification
     Map<String, String> invalidFields = appDynamicsState.validateFields();
-    assertTrue("Size should be 1", invalidFields.size() == 1);
+    assertThat(invalidFields.size() == 1).isTrue();
     assertEquals("Fields Missing", "Invalid Required Fields", invalidFields.keySet().iterator().next());
   }
 

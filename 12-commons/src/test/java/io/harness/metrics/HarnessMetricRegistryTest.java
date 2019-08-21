@@ -1,8 +1,8 @@
 package io.harness.metrics;
 
 import static io.harness.metrics.HarnessMetricRegistry.getAbsoluteMetricName;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import com.codahale.metrics.MetricRegistry;
 import io.harness.CategoryTest;
@@ -31,7 +31,7 @@ public class HarnessMetricRegistryTest extends CategoryTest {
     String metricName = "data_collection_test_metric";
     harnessMetricRegistry.registerGaugeMetric(metricName, null, null);
 
-    assertTrue(harnessMetricRegistry.getNamesToCollectors().containsKey(getAbsoluteMetricName(metricName)));
+    assertThat(harnessMetricRegistry.getNamesToCollectors().containsKey(getAbsoluteMetricName(metricName))).isTrue();
   }
 
   @Test
@@ -41,7 +41,7 @@ public class HarnessMetricRegistryTest extends CategoryTest {
     double value = 100.0;
     harnessMetricRegistry.registerGaugeMetric(metricName, null, null);
 
-    assertTrue(harnessMetricRegistry.getNamesToCollectors().containsKey(getAbsoluteMetricName(metricName)));
+    assertThat(harnessMetricRegistry.getNamesToCollectors().containsKey(getAbsoluteMetricName(metricName))).isTrue();
 
     harnessMetricRegistry.updateMetricValue(metricName, value);
 

@@ -4,7 +4,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.utils.UuidUtils.base64StrToUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import io.harness.category.element.UnitTests;
 import io.harness.utils.UuidUtils;
@@ -59,9 +58,9 @@ public class UuidValidatorTest {
         .isEmpty();
 
     String uuidType1 = "efee4cba-9d5f-11e9-a2a3-2a2ae2dbcce4";
-    assertTrue(UuidUtils.isValidUuidStr(uuidType1));
+    assertThat(UuidUtils.isValidUuidStr(uuidType1)).isTrue();
 
     String uuidType4 = "3bcd1e59-1dab-4f6f-a374-17b8e2339f64";
-    assertTrue(UuidUtils.isValidUuidStr(uuidType4));
+    assertThat(UuidUtils.isValidUuidStr(uuidType4)).isTrue();
   }
 }

@@ -1,8 +1,8 @@
 package io.harness.network;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -15,19 +15,19 @@ public class HttpTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testValidUrl() {
-    assertTrue(Http.validUrl("http://localhost"));
-    assertTrue(Http.validUrl("https://localhost"));
-    assertTrue(Http.validUrl("http://localhost/"));
-    assertTrue(Http.validUrl("https://localhost/"));
-    assertTrue(Http.validUrl("http://localhost.com"));
-    assertTrue(Http.validUrl("https://localhost.com"));
-    assertTrue(Http.validUrl("http://127.0.0.1"));
-    assertTrue(Http.validUrl("https://127.0.0.1"));
-    assertTrue(Http.validUrl("http://google.com"));
-    assertTrue(Http.validUrl("https://google.com"));
-    assertTrue(Http.validUrl("http://shortenedUrl"));
-    assertTrue(Http.validUrl("https://shortenedUrl/"));
-    assertTrue(Http.validUrl("http://toli:123"));
+    assertThat(Http.validUrl("http://localhost")).isTrue();
+    assertThat(Http.validUrl("https://localhost")).isTrue();
+    assertThat(Http.validUrl("http://localhost/")).isTrue();
+    assertThat(Http.validUrl("https://localhost/")).isTrue();
+    assertThat(Http.validUrl("http://localhost.com")).isTrue();
+    assertThat(Http.validUrl("https://localhost.com")).isTrue();
+    assertThat(Http.validUrl("http://127.0.0.1")).isTrue();
+    assertThat(Http.validUrl("https://127.0.0.1")).isTrue();
+    assertThat(Http.validUrl("http://google.com")).isTrue();
+    assertThat(Http.validUrl("https://google.com")).isTrue();
+    assertThat(Http.validUrl("http://shortenedUrl")).isTrue();
+    assertThat(Http.validUrl("https://shortenedUrl/")).isTrue();
+    assertThat(Http.validUrl("http://toli:123")).isTrue();
 
     assertFalse(Http.validUrl("invalidUrl"));
     assertFalse(Http.validUrl("invalidUrl"));
@@ -38,10 +38,13 @@ public class HttpTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testShouldUseNonProxy() {
-    assertTrue(Http.shouldUseNonProxy("http://wings.jenkins.com", "*.jenkins.com|*.localhost|*.sumologic.com"));
-    assertTrue(
-        Http.shouldUseNonProxy("http://wings.jenkins.com", "*wings.jenkins.com|*.localhost|*wings.sumologic.com"));
-    assertTrue(Http.shouldUseNonProxy("http://wings.jenkins.com:80", "*.jenkins.com|*localhost.com|*.sumologic.com"));
+    assertThat(Http.shouldUseNonProxy("http://wings.jenkins.com", "*.jenkins.com|*.localhost|*.sumologic.com"))
+        .isTrue();
+    assertThat(
+        Http.shouldUseNonProxy("http://wings.jenkins.com", "*wings.jenkins.com|*.localhost|*wings.sumologic.com"))
+        .isTrue();
+    assertThat(Http.shouldUseNonProxy("http://wings.jenkins.com:80", "*.jenkins.com|*localhost.com|*.sumologic.com"))
+        .isTrue();
     assertFalse(Http.shouldUseNonProxy("http://wings.jenkins.com", "*localhost.com|*.sumologic.com"));
   }
 

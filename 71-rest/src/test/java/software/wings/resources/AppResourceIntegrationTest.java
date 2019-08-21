@@ -3,8 +3,8 @@ package software.wings.resources;
 import static io.harness.rule.OwnerRule.JATIN;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static software.wings.beans.Application.Builder.anApplication;
 
 import com.google.common.collect.ImmutableMap;
@@ -81,7 +81,7 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
     int maxApps = 10;
     val configured = limitConfigurationService.configure(WingsIntegrationTestConstants.INTEGRATION_TEST_ACCOUNT_ID,
         ActionType.CREATE_APPLICATION, new StaticLimit(maxApps));
-    assertTrue("limit should be configured", configured);
+    assertThat(configured).isTrue();
 
     val url = IntegrationTestUtils.buildAbsoluteUrl(
         "/api/apps", ImmutableMap.of("accountId", WingsIntegrationTestConstants.INTEGRATION_TEST_ACCOUNT_ID));
@@ -127,7 +127,7 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
     int maxApps = 10;
     val configured = limitConfigurationService.configure(WingsIntegrationTestConstants.INTEGRATION_TEST_ACCOUNT_ID,
         ActionType.CREATE_APPLICATION, new StaticLimit(maxApps));
-    assertTrue("limit should be configured", configured);
+    assertThat(configured).isTrue();
 
     val url = IntegrationTestUtils.buildAbsoluteUrl(
         "/api/apps", ImmutableMap.of("accountId", WingsIntegrationTestConstants.INTEGRATION_TEST_ACCOUNT_ID));

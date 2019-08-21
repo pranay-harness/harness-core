@@ -1,10 +1,10 @@
 package software.wings.service.impl.analysis;
 
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyLong;
@@ -118,7 +118,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
 
     // verify
     assertNotNull(response);
-    assertTrue(response.getLoadResponse().isLoadPresent());
+    assertThat(response.getLoadResponse().isLoadPresent()).isTrue();
   }
 
   @Test
@@ -245,7 +245,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     boolean response = service.collect247Data("cvConfigId", StateType.DATA_DOG, 1540419553000l, 1540420454000l);
 
     // verify
-    assertTrue(response);
+    assertThat(response).isTrue();
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
 
     verify(mockWaitNotifyEngine).waitForAll(anyObject(), anyString());
@@ -285,7 +285,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     boolean response = service.collect247Data("cvConfigId", StateType.APP_DYNAMICS, 1540419553000l, 1540420454000l);
 
     // verify
-    assertTrue(response);
+    assertThat(response).isTrue();
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
 
     verify(mockWaitNotifyEngine).waitForAll(anyObject(), anyString());
@@ -323,7 +323,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     boolean response = service.collect247Data("cvConfigId", StateType.NEW_RELIC, 1540419553000l, 1540420454000l);
 
     // verify
-    assertTrue(response);
+    assertThat(response).isTrue();
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
 
     verify(mockWaitNotifyEngine).waitForAll(anyObject(), anyString());
@@ -373,7 +373,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     boolean response = service.collect247Data("cvConfigId", StateType.PROMETHEUS, 1540419553000l, 1540420454000l);
 
     // verify
-    assertTrue(response);
+    assertThat(response).isTrue();
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
 
     verify(mockWaitNotifyEngine).waitForAll(anyObject(), anyString());
@@ -407,7 +407,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     // execute behavior
     boolean response = service.collect247Data("cvConfigId", StateType.CLOUD_WATCH, 1540419553000l, 1540420454000l);
     // verify
-    assertTrue(response);
+    assertThat(response).isTrue();
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(mockWaitNotifyEngine).waitForAll(anyObject(), anyString());
     verify(mockDelegateService).queueTask(taskCaptor.capture());

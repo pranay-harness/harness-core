@@ -7,7 +7,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
@@ -923,7 +922,7 @@ public class AuthHandlerTest extends WingsBaseTest {
 
     AccountPermissions accountPermissions = userGroup.getAccountPermissions();
     assertEquals(1, accountPermissions.getPermissions().size());
-    assertTrue(accountPermissions.getPermissions().contains(AUDIT_VIEWER));
+    assertThat(accountPermissions.getPermissions().contains(AUDIT_VIEWER)).isTrue();
   }
 
   @Test
@@ -936,7 +935,7 @@ public class AuthHandlerTest extends WingsBaseTest {
 
     AccountPermissions accountPermissions = userGroup.getAccountPermissions();
     assertEquals(1, accountPermissions.getPermissions().size());
-    assertTrue(accountPermissions.getPermissions().contains(AUDIT_VIEWER));
+    assertThat(accountPermissions.getPermissions().contains(AUDIT_VIEWER)).isTrue();
   }
 
   private List<Environment> createEnvs(String prefix, int start, int end) {

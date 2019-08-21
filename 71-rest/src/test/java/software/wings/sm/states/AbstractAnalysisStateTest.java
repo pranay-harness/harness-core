@@ -4,7 +4,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
@@ -165,8 +164,9 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     Map<String, String> nodes = splunkV2State.getLastExecutionNodes(context);
     assertEquals(5, nodes.size());
     for (int i = 0; i < 5; ++i) {
-      assertTrue(nodes.keySet().contains("serviceA"
-          + "-" + i + ".harness.com"));
+      assertThat(nodes.keySet().contains("serviceA"
+                     + "-" + i + ".harness.com"))
+          .isTrue();
       assertEquals(DEFAULT_GROUP_NAME,
           nodes.get("serviceA"
               + "-" + i + ".harness.com"));
@@ -270,8 +270,9 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     assertFalse(nodes.keySet().contains("serviceA-0.harness.com"));
     assertFalse(nodes.keySet().contains("serviceA-1.harness.com"));
     for (int i = 2; i < 5; ++i) {
-      assertTrue(nodes.keySet().contains("serviceA"
-          + "-" + i + ".harness.com"));
+      assertThat(nodes.keySet().contains("serviceA"
+                     + "-" + i + ".harness.com"))
+          .isTrue();
       assertEquals(DEFAULT_GROUP_NAME,
           nodes.get("serviceA"
               + "-" + i + ".harness.com"));
@@ -311,8 +312,9 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     Map<String, String> nodes = splunkV2State.getCanaryNewHostNames(context);
     assertEquals(5, nodes.size());
     for (int i = 0; i < 5; ++i) {
-      assertTrue(nodes.keySet().contains("serviceA"
-          + "-" + i + ".harness.com"));
+      assertThat(nodes.keySet().contains("serviceA"
+                     + "-" + i + ".harness.com"))
+          .isTrue();
       assertEquals(DEFAULT_GROUP_NAME,
           nodes.get("serviceA"
               + "-" + i + ".harness.com"));
@@ -354,8 +356,9 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     Map<String, String> nodes = splunkV2State.getCanaryNewHostNames(context);
     assertEquals(5, nodes.size());
     for (int i = 0; i < 5; ++i) {
-      assertTrue(nodes.keySet().contains("serviceA"
-          + "-" + i + ".harness.com"));
+      assertThat(nodes.keySet().contains("serviceA"
+                     + "-" + i + ".harness.com"))
+          .isTrue();
       assertEquals("workload-" + i,
           nodes.get("serviceA"
               + "-" + i + ".harness.com"));

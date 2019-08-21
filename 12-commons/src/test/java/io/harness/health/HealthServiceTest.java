@@ -1,7 +1,7 @@
 package io.harness.health;
 
 import static java.time.Duration.ofMillis;
-import static junit.framework.TestCase.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -27,7 +27,7 @@ public class HealthServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testEmpty() throws Exception {
     final HealthService healthService = new HealthService(executorService);
-    assertTrue(healthService.check().isHealthy());
+    assertThat(healthService.check().isHealthy()).isTrue();
   }
 
   @Test
@@ -40,7 +40,7 @@ public class HealthServiceTest extends CategoryTest {
     when(mock.healthValidFor()).thenReturn(DEFAULT_VALID_FOR);
     when(mock.healthExpectedResponseTimeout()).thenReturn(DEFAULT_EXPECTED_RESPONSE_TIMEOUT);
 
-    assertTrue(healthService.check().isHealthy());
+    assertThat(healthService.check().isHealthy()).isTrue();
 
     verify(mock).isHealthy();
   }
@@ -55,9 +55,9 @@ public class HealthServiceTest extends CategoryTest {
     when(mock.healthValidFor()).thenReturn(ofMillis(200));
     when(mock.healthExpectedResponseTimeout()).thenReturn(ofMillis(100));
 
-    assertTrue(healthService.check().isHealthy());
-    assertTrue(healthService.check().isHealthy());
-    assertTrue(healthService.check().isHealthy());
+    assertThat(healthService.check().isHealthy()).isTrue();
+    assertThat(healthService.check().isHealthy()).isTrue();
+    assertThat(healthService.check().isHealthy()).isTrue();
 
     verify(mock, times(1)).isHealthy();
   }
@@ -72,9 +72,9 @@ public class HealthServiceTest extends CategoryTest {
     when(mock.healthValidFor()).thenReturn(DEFAULT_VALID_FOR);
     when(mock.healthExpectedResponseTimeout()).thenReturn(DEFAULT_EXPECTED_RESPONSE_TIMEOUT);
 
-    assertTrue(healthService.check().isHealthy());
+    assertThat(healthService.check().isHealthy()).isTrue();
     Morpheus.sleep(ofMillis(DEFAULT_VALID_FOR.toMillis() + 1));
-    assertTrue(healthService.check().isHealthy());
+    assertThat(healthService.check().isHealthy()).isTrue();
 
     verify(mock, times(2)).isHealthy();
   }

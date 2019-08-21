@@ -2,7 +2,7 @@ package io.harness.functional.secrets;
 
 import static io.harness.rule.OwnerRule.MARK;
 import static junit.framework.TestCase.assertNotNull;
-import static junit.framework.TestCase.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.google.inject.Inject;
@@ -62,7 +62,7 @@ public class VaultServiceFunctionalTest extends AbstractFunctionalTest {
     assertNotNull(appRoleVaultId);
     logger.info("AppRole based Vault secret manager created.");
     List<VaultConfig> vaultConfigs = SecretsRestUtils.getListConfigs(getAccount().getUuid(), bearerToken);
-    assertTrue(SecretsUtils.isVaultAvailable(vaultConfigs, APPROLE_VAULT_NAME));
+    assertThat(SecretsUtils.isVaultAvailable(vaultConfigs, APPROLE_VAULT_NAME)).isTrue();
 
     try {
       String secretName = "MySecret";
@@ -70,7 +70,7 @@ public class VaultServiceFunctionalTest extends AbstractFunctionalTest {
       SecretText secretText = SecretsUtils.createSecretTextObject(secretName, secretValue);
 
       String secretsId = SecretsRestUtils.addSecret(getAccount().getUuid(), bearerToken, secretText);
-      assertTrue(StringUtils.isNotBlank(secretsId));
+      assertThat(StringUtils.isNotBlank(secretsId)).isTrue();
 
       secretName = "MySecret-Updated";
       secretValue = "MyValue-Updated";
@@ -78,7 +78,7 @@ public class VaultServiceFunctionalTest extends AbstractFunctionalTest {
       secretText.setValue(secretValue);
       boolean isUpdationDone =
           SecretsRestUtils.updateSecret(getAccount().getUuid(), bearerToken, secretsId, secretText);
-      assertTrue(isUpdationDone);
+      assertThat(isUpdationDone).isTrue();
 
       // Verifying the secret decryption
       List<EncryptedData> encryptedDataList = SecretsRestUtils.listSecrets(getAccount().getUuid(), bearerToken);
@@ -92,7 +92,7 @@ public class VaultServiceFunctionalTest extends AbstractFunctionalTest {
       assertEquals(secretText.getValue(), decrypted);
 
       boolean isDeletionDone = SecretsRestUtils.deleteSecret(getAccount().getUuid(), bearerToken, secretsId);
-      assertTrue(isDeletionDone);
+      assertThat(isDeletionDone).isTrue();
     } finally {
       VaultRestUtils.deleteVault(getAccount().getUuid(), bearerToken, appRoleVaultId);
       logger.info("AppRole based Vault secret manager deleted.");

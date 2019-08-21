@@ -45,7 +45,7 @@ public class PivotalClientTest extends WingsBaseTest {
       ApplicationDetail applicationDetail = pcfClient.getApplicationByName(pcfRequestConfig);
       assertNotNull(applicationDetail);
       assertEquals("harness-pcf-app-deploy-version", applicationDetail.getName());
-      assertTrue(applicationDetail.getUrls().contains("wings-apps-sf.cfapps.io"));
+      assertThat(applicationDetail.getUrls().contains("wings-apps-sf.cfapps.io")).isTrue();
 
       // scale app to 2 instances
       pcfRequestConfig.setDesiredCount(2);
@@ -84,7 +84,7 @@ public class PivotalClientTest extends WingsBaseTest {
       pcfClient.stopApplication(pcfRequestConfig);
       applicationDetail = pcfClient.getApplicationByName(pcfRequestConfig);
       assertEquals(0, applicationDetail.getRunningInstances().intValue());
-      assertTrue(applicationDetail.getUrls().contains("wings-apps-sf.cfapps.io"));
+      assertThat(applicationDetail.getUrls().contains("wings-apps-sf.cfapps.io")).isTrue();
 
       // unmap routeMap for application
       Optional<Route> route = pcfClient.getRouteMap("wings-apps-sf.cfapps.io", pcfRequestConfig);

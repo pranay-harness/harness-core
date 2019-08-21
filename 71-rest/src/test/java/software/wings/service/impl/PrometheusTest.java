@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
 
@@ -56,7 +56,7 @@ public class PrometheusTest extends WingsBaseTest {
     timeSeries1.setUrl("jvm_memory_max_bytes{pod_name=\"$hostName\"}");
     timeSeries2.setUrl("jvm_memory_max_bytes{pod_name=\"$hostName\"}");
     invalidFields = PrometheusResource.validateTransactions(Lists.newArrayList(timeSeries1, timeSeries2), false);
-    assertTrue(invalidFields.isEmpty());
+    assertThat(invalidFields.isEmpty()).isTrue();
   }
 
   @Test
@@ -93,7 +93,7 @@ public class PrometheusTest extends WingsBaseTest {
     // fix and validate
     timeSeries1.setMetricType(MetricType.INFRA.name());
     invalidFields = PrometheusResource.validateTransactions(Lists.newArrayList(timeSeries1, timeSeries2), false);
-    assertTrue(invalidFields.isEmpty());
+    assertThat(invalidFields.isEmpty()).isTrue();
   }
 
   @Test
@@ -207,7 +207,7 @@ public class PrometheusTest extends WingsBaseTest {
                                        .build();
     Map<String, String> invalidFields =
         PrometheusResource.validateTransactions(Lists.newArrayList(timeSeries1, timeSeries2, timeSeries3), false);
-    assertTrue(invalidFields.isEmpty());
+    assertThat(invalidFields.isEmpty()).isTrue();
   }
 
   @Test
@@ -233,7 +233,7 @@ public class PrometheusTest extends WingsBaseTest {
                                        .build();
     Map<String, String> invalidFields =
         PrometheusResource.validateTransactions(Lists.newArrayList(timeSeries1, timeSeries2, timeSeries3), false);
-    assertTrue(invalidFields.isEmpty());
+    assertThat(invalidFields.isEmpty()).isTrue();
   }
 
   @Test
@@ -259,6 +259,6 @@ public class PrometheusTest extends WingsBaseTest {
                                        .build();
     Map<String, String> invalidFields =
         PrometheusResource.validateTransactions(Lists.newArrayList(timeSeries1, timeSeries2, timeSeries3), false);
-    assertTrue(invalidFields.isEmpty());
+    assertThat(invalidFields.isEmpty()).isTrue();
   }
 }

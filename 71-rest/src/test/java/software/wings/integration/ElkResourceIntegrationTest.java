@@ -3,9 +3,9 @@ package software.wings.integration;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static javax.ws.rs.client.Entity.entity;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
@@ -103,7 +103,7 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
 
     JSONObject response = jsonResponseObject.getJSONObject("resource");
     assertEquals("Request failed", restResponse.getStatus(), HttpStatus.SC_OK);
-    assertTrue("provider is not reachable", Boolean.valueOf(response.get("providerReachable").toString()));
+    assertThat(Boolean.valueOf(response.get("providerReachable").toString())).isTrue();
   }
 
   @Test
@@ -122,7 +122,7 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
 
     JSONObject response = jsonResponseObject.getJSONObject("resource");
     assertEquals("Request failed", restResponse.getStatus(), HttpStatus.SC_OK);
-    assertTrue("provider is not reachable", Boolean.valueOf(response.get("providerReachable").toString()));
+    assertThat(Boolean.valueOf(response.get("providerReachable").toString())).isTrue();
   }
 
   @Test

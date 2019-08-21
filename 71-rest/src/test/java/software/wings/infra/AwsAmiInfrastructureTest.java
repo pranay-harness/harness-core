@@ -1,9 +1,9 @@
 package software.wings.infra;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static software.wings.infra.InfraDefinitionTestConstants.CLASSIC_LOAD_BALANCERS;
 import static software.wings.infra.InfraDefinitionTestConstants.HOSTNAME_CONVENTION;
 import static software.wings.infra.InfraDefinitionTestConstants.REGION;
@@ -70,28 +70,28 @@ public class AwsAmiInfrastructureTest {
 
     assertFalse(fieldMap.containsKey("cloudProviderId"));
 
-    assertTrue(fieldMap.containsKey("region"));
+    assertThat(fieldMap.containsKey("region")).isTrue();
     assertEquals(fieldMap.get("region"), REGION);
 
-    assertTrue(fieldMap.containsKey("hostNameConvention"));
+    assertThat(fieldMap.containsKey("hostNameConvention")).isTrue();
     assertEquals(fieldMap.get("hostNameConvention"), HOSTNAME_CONVENTION);
 
-    assertTrue(fieldMap.containsKey("autoScalingGroupName"));
+    assertThat(fieldMap.containsKey("autoScalingGroupName")).isTrue();
     assertEquals(fieldMap.get("autoScalingGroupName"), WingsTestConstants.AUTO_SCALING_GROUP_NAME);
 
-    assertTrue(fieldMap.containsKey("region"));
+    assertThat(fieldMap.containsKey("region")).isTrue();
     assertEquals(fieldMap.get("region"), REGION);
 
-    assertTrue(fieldMap.containsKey("classicLoadBalancers"));
+    assertThat(fieldMap.containsKey("classicLoadBalancers")).isTrue();
     assertEquals(fieldMap.get("classicLoadBalancers"), CLASSIC_LOAD_BALANCERS);
 
-    assertTrue(fieldMap.containsKey("stageClassicLoadBalancers"));
+    assertThat(fieldMap.containsKey("stageClassicLoadBalancers")).isTrue();
     assertEquals(fieldMap.get("stageClassicLoadBalancers"), STAGE_CLASSIC_LOAD_BALANCERS);
 
-    assertTrue(fieldMap.containsKey("targetGroupArns"));
+    assertThat(fieldMap.containsKey("targetGroupArns")).isTrue();
     assertEquals(fieldMap.get("targetGroupArns"), TARGET_GROUP_ARNS);
 
-    assertTrue(fieldMap.containsKey("stageTargetGroupArns"));
+    assertThat(fieldMap.containsKey("stageTargetGroupArns")).isTrue();
     assertEquals(fieldMap.get("stageTargetGroupArns"), STAGE_TARGET_GROUP_ARNS);
   }
 }

@@ -4,7 +4,6 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.rest.RestResponse;
@@ -50,7 +49,7 @@ public class SecretManagerIntegrationTest extends BaseIntegrationTest {
         entity(generateSecretText("MySecret2"), APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
     // Verify vault config was successfully created.
     assertThat(updateResponse.getResponseMessages()).isEmpty();
-    assertTrue(updateResponse.getResource());
+    assertThat(updateResponse.getResource()).isTrue();
 
     // 2. Delete the secret text.
     target = client.target(API_BASE + "/secrets/delete-secret?accountId=" + accountId + "&uuid=" + secretUuid);
@@ -58,7 +57,7 @@ public class SecretManagerIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse<Boolean>>() {});
     // Verify vault config was successfully created.
     assertThat(deleteResponse.getResponseMessages()).isEmpty();
-    assertTrue(deleteResponse.getResource());
+    assertThat(deleteResponse.getResource()).isTrue();
   }
 
   @Test
@@ -79,7 +78,7 @@ public class SecretManagerIntegrationTest extends BaseIntegrationTest {
         generateSecretFileForm("TestSecretFile", secretUuid), new GenericType<RestResponse<Boolean>>() {});
     // Verify vault config was successfully created.
     assertThat(updateResponse.getResponseMessages()).isEmpty();
-    assertTrue(updateResponse.getResource());
+    assertThat(updateResponse.getResource()).isTrue();
 
     // 2. Delete the encrypted file.
     target = client.target(API_BASE + "/secrets/delete-file?accountId=" + accountId + "&uuid=" + secretUuid);
@@ -87,7 +86,7 @@ public class SecretManagerIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse<Boolean>>() {});
     // Verify vault config was successfully created.
     assertThat(deleteResponse.getResponseMessages()).isEmpty();
-    assertTrue(deleteResponse.getResource());
+    assertThat(deleteResponse.getResource()).isTrue();
   }
 
   private Entity<MultiPart> generateSecretFileForm(String fileName, String uuid) throws Exception {

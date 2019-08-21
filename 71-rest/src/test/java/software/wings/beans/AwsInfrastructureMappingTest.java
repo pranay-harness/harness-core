@@ -1,7 +1,6 @@
 package software.wings.beans;
 
 import static java.util.Arrays.asList;
-import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
@@ -113,7 +112,7 @@ public class AwsInfrastructureMappingTest extends WingsBaseTest {
       infrastructureMapping.applyProvisionerVariables(resolvedBlueprints);
       fail("Should have thrown exception");
     } catch (WingsException ex) {
-      assertTrue(ExceptionUtils.getMessage(ex).contains("Region"));
+      assertThat(ExceptionUtils.getMessage(ex).contains("Region")).isTrue();
     }
 
     resolvedBlueprints.put("randomKey", "val");
@@ -121,7 +120,7 @@ public class AwsInfrastructureMappingTest extends WingsBaseTest {
       infrastructureMapping.applyProvisionerVariables(resolvedBlueprints);
       fail("Should have thrown exception");
     } catch (WingsException ex) {
-      assertTrue(ExceptionUtils.getMessage(ex).contains("Unknown blueprint field "));
+      assertThat(ExceptionUtils.getMessage(ex).contains("Unknown blueprint field ")).isTrue();
     }
 
     resolvedBlueprints.remove("randomKey");
@@ -131,12 +130,12 @@ public class AwsInfrastructureMappingTest extends WingsBaseTest {
       infrastructureMapping.applyProvisionerVariables(resolvedBlueprints);
       fail("Should have thrown exception");
     } catch (WingsException ex) {
-      assertTrue(ExceptionUtils.getMessage(ex).contains("Auto scaling group "));
+      assertThat(ExceptionUtils.getMessage(ex).contains("Auto scaling group ")).isTrue();
     }
 
     resolvedBlueprints.put(AwsInfrastructureMappingKeys.autoScalingGroupName, "asg");
     infrastructureMapping.applyProvisionerVariables(resolvedBlueprints);
-    assertTrue(infrastructureMapping.getAutoScalingGroupName().equals("asg"));
+    assertThat(infrastructureMapping.getAutoScalingGroupName().equals("asg")).isTrue();
 
     infrastructureMapping.setProvisionInstances(false);
     resolvedBlueprints.put(AwsInfrastructureMappingKeys.awsInstanceFilter, new HashMap<String, Object>() {
@@ -148,8 +147,9 @@ public class AwsInfrastructureMappingTest extends WingsBaseTest {
       }
     });
     infrastructureMapping.applyProvisionerVariables(resolvedBlueprints);
-    assertTrue(infrastructureMapping.getAwsInstanceFilter() != null
+    assertThat(infrastructureMapping.getAwsInstanceFilter() != null
         && infrastructureMapping.getAwsInstanceFilter().getTags() != null
-        && infrastructureMapping.getAwsInstanceFilter().getVpcIds() != null);
+        && infrastructureMapping.getAwsInstanceFilter().getVpcIds() != null)
+        .isTrue();
   }
 }

@@ -3,8 +3,8 @@ package software.wings.integration.yaml;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static net.sf.ezmorph.test.ArrayAssertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 
 import com.google.inject.Inject;
@@ -184,7 +184,7 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
       getGitFetchFilesResult(yamlPath, true, 0);
       throw new RuntimeException();
     } catch (Exception e) {
-      assertTrue(true);
+      assertThat(true).isTrue();
     }
   }
 

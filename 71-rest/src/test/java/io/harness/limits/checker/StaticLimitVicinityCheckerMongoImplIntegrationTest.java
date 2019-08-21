@@ -1,7 +1,7 @@
 package io.harness.limits.checker;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import com.google.inject.Inject;
 
@@ -36,7 +36,7 @@ public class StaticLimitVicinityCheckerMongoImplIntegrationTest extends BaseInte
     StaticLimitVicinityChecker checker = new StaticLimitVicinityCheckerMongoImpl(new StaticLimit(12), key, persistence);
 
     // 10/12 => 0.83
-    assertTrue(checker.hasCrossedPercentLimit(80));
+    assertThat(checker.hasCrossedPercentLimit(80)).isTrue();
     assertFalse(checker.hasCrossedPercentLimit(85));
   }
 }

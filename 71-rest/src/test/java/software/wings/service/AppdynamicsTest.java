@@ -1,8 +1,8 @@
 package software.wings.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.when;
@@ -145,7 +145,7 @@ public class AppdynamicsTest extends WingsBaseTest {
     if (tier.getName().equals("docker-tier")) {
       Set<AppdynamicsTier> dependentTiers =
           appdynamicsService.getDependentTiers(settingAttribute.getUuid(), app.getId(), tier);
-      assertTrue(isEmpty(dependentTiers));
+      assertThat(isEmpty(dependentTiers)).isTrue();
     }
   }
 }

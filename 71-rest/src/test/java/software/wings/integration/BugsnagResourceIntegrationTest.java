@@ -6,7 +6,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
@@ -124,7 +123,7 @@ public class BugsnagResourceIntegrationTest extends BaseIntegrationTest {
 
     JSONObject response = jsonResponseObject.getJSONObject("resource");
     assertEquals("Request failed", restResponse.getStatus(), HttpStatus.SC_OK);
-    assertTrue("provider is not reachable", Boolean.valueOf(response.get("providerReachable").toString()));
+    assertThat(Boolean.valueOf(response.get("providerReachable").toString())).isTrue();
   }
 
   private BugsnagSetupTestData getBugsnagSampledata() {

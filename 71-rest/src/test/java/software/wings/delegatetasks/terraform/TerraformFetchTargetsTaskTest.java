@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.terraform;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.bertramlabs.plugins.hcl4j.HCLParser;
 import io.harness.beans.DelegateTask;
@@ -72,21 +72,23 @@ public class TerraformFetchTargetsTaskTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void getTargetModulesTest() {
     List<String> targetModules = terraformFetchTargetsTask.getTargetModules(parsedContentWithModulesAndResources);
-    assertTrue(
-        targetModules.containsAll(Arrays.asList("module.module1", "module.module2")) && targetModules.size() == 2);
+    assertThat(
+        targetModules.containsAll(Arrays.asList("module.module1", "module.module2")) && targetModules.size() == 2)
+        .isTrue();
 
     targetModules = terraformFetchTargetsTask.getTargetModules(getParsedContentWithoutModulesAndResources);
-    assertTrue(targetModules.isEmpty());
+    assertThat(targetModules.isEmpty()).isTrue();
   }
 
   @Test
   @Category(UnitTests.class)
   public void getTargetResourcesTest() {
     List<String> targetResources = terraformFetchTargetsTask.getTargetResources(parsedContentWithModulesAndResources);
-    assertTrue(targetResources.containsAll(Arrays.asList("aws_s3_bucket.example", "aws_s3_bucket.example1"))
-        && targetResources.size() == 2);
+    assertThat(targetResources.containsAll(Arrays.asList("aws_s3_bucket.example", "aws_s3_bucket.example1"))
+        && targetResources.size() == 2)
+        .isTrue();
 
     targetResources = terraformFetchTargetsTask.getTargetResources(getParsedContentWithoutModulesAndResources);
-    assertTrue(targetResources.isEmpty());
+    assertThat(targetResources.isEmpty()).isTrue();
   }
 }

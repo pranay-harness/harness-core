@@ -7,7 +7,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -636,7 +635,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
 
     encryptionService.decrypt((EncryptableSetting) result.getValue(),
         secretManager.getEncryptionDetails((EncryptableSetting) result.getValue(), null, null));
-    assertTrue(Arrays.equals(newPassword, ((JenkinsConfig) result.getValue()).getPassword()));
+    assertThat(Arrays.equals(newPassword, ((JenkinsConfig) result.getValue()).getPassword())).isTrue();
   }
 
   @Test

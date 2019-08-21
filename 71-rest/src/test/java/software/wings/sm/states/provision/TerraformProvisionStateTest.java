@@ -1,7 +1,6 @@
 package software.wings.sm.states.provision;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
@@ -46,20 +45,20 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     when(infrastructureProvisionerService.update(any())).thenReturn(null);
     TerraformInfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder().build();
     state.updateProvisionerWorkspaces(provisioner, "w1");
-    assertTrue(provisioner.getWorkspaces().size() == 1 && provisioner.getWorkspaces().contains("w1"));
+    assertThat(provisioner.getWorkspaces().size() == 1 && provisioner.getWorkspaces().contains("w1")).isTrue();
     state.updateProvisionerWorkspaces(provisioner, "w2");
-    assertTrue(
-        provisioner.getWorkspaces().size() == 2 && provisioner.getWorkspaces().equals(Arrays.asList("w1", "w2")));
+    assertThat(provisioner.getWorkspaces().size() == 2 && provisioner.getWorkspaces().equals(Arrays.asList("w1", "w2")))
+        .isTrue();
     state.updateProvisionerWorkspaces(provisioner, "w2");
-    assertTrue(
-        provisioner.getWorkspaces().size() == 2 && provisioner.getWorkspaces().equals(Arrays.asList("w1", "w2")));
+    assertThat(provisioner.getWorkspaces().size() == 2 && provisioner.getWorkspaces().equals(Arrays.asList("w1", "w2")))
+        .isTrue();
   }
 
   @Test
   @Category(UnitTests.class)
   public void shouldHandleDefaultWorkspace() {
-    assertTrue(state.handleDefaultWorkspace(null) == null);
-    assertTrue(state.handleDefaultWorkspace("default") == null);
-    assertTrue(state.handleDefaultWorkspace("abc").equals("abc"));
+    assertThat(state.handleDefaultWorkspace(null) == null).isTrue();
+    assertThat(state.handleDefaultWorkspace("default") == null).isTrue();
+    assertThat(state.handleDefaultWorkspace("abc").equals("abc")).isTrue();
   }
 }

@@ -1,6 +1,6 @@
 package io.harness.testframework.framework.matchers;
 
-import static junit.framework.TestCase.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
 
 import io.harness.testframework.framework.email.EmailMetaData;
@@ -17,7 +17,7 @@ public class EmailMatcher<T> implements Matcher {
       GuerillaEmailDetails gmailDetails = (GuerillaEmailDetails) actual;
       assertNotNull(gmailDetails);
       List<EmailMetaData> metaDataList = new ArrayList<>();
-      assertTrue(metaDataList != null && metaDataList.size() > 0);
+      assertThat(metaDataList != null && metaDataList.size() > 0).isTrue();
       for (EmailMetaData metaData : metaDataList) {
         if (metaData.getMailSubject().equals(subject)) {
           return true;

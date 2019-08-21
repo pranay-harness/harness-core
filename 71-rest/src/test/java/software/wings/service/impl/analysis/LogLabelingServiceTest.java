@@ -1,9 +1,9 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
@@ -122,9 +122,9 @@ public class LogLabelingServiceTest extends WingsBaseTest {
 
     // verify
     assertNotNull(labelRecordSamples);
-    assertTrue(labelRecordSamples.containsKey("labelA"));
-    assertTrue(labelRecordSamples.containsKey("labelB"));
-    assertTrue(labelRecordSamples.containsKey("labelC"));
+    assertThat(labelRecordSamples.containsKey("labelA")).isTrue();
+    assertThat(labelRecordSamples.containsKey("labelB")).isTrue();
+    assertThat(labelRecordSamples.containsKey("labelC")).isTrue();
     assertEquals(record1.getLogMessage(), labelRecordSamples.get("labelA").get(0).getLogMessage());
     assertEquals(record2.getLogMessage(), labelRecordSamples.get("labelB").get(0).getLogMessage());
     assertEquals(record3.getLogMessage(), labelRecordSamples.get("labelC").get(0).getLogMessage());

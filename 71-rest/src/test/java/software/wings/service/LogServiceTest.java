@@ -3,8 +3,8 @@ package software.wings.service;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.service.impl.LogServiceImpl.MAX_LOG_ROWS_PER_ACTIVITY;
@@ -82,7 +82,7 @@ public class LogServiceTest extends WingsBaseTest {
     List<String> logLines = FileUtils.readLines(file, "UTF-8");
     assertEquals(100, logLines.size());
     for (int i = 0; i < 100; i++) {
-      assertTrue(logLines.get(i).endsWith("log-" + i));
+      assertThat(logLines.get(i).endsWith("log-" + i)).isTrue();
     }
   }
 

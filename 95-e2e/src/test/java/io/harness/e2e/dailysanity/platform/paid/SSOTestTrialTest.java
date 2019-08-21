@@ -1,7 +1,7 @@
 package io.harness.e2e.dailysanity.platform.paid;
 
 import static io.harness.rule.OwnerRule.SWAMY;
-import static junit.framework.TestCase.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
@@ -57,10 +57,12 @@ public class SSOTestTrialTest extends AbstractE2ETest {
     OauthSettings oauthSettings =
         OauthSettings.builder().allowedProviders(oauthProviderTypeSet).displayName("Google").filter("").build();
     oauthSettings.setDisplayName("GOOGLE");
-    assertTrue(SSORestUtils.addOauthSettings(getTrialAccount().getUuid(), trialBearerToken, oauthSettings)
-        == HttpStatus.SC_OK);
+    assertThat(
+        SSORestUtils.addOauthSettings(getTrialAccount().getUuid(), trialBearerToken, oauthSettings) == HttpStatus.SC_OK)
+        .isTrue();
     Object ssoConfig = SSORestUtils.getAccessManagementSettings(getTrialAccount().getUuid(), trialBearerToken);
-    assertTrue(SSORestUtils.deleteOAUTHSettings(getTrialAccount().getUuid(), trialBearerToken) == HttpStatus.SC_OK);
+    assertThat(SSORestUtils.deleteOAUTHSettings(getTrialAccount().getUuid(), trialBearerToken) == HttpStatus.SC_OK)
+        .isTrue();
     logger.info("Done");
   }
 
@@ -74,8 +76,9 @@ public class SSOTestTrialTest extends AbstractE2ETest {
     logger.info("Starting the LDAP test");
     logger.info("Creating LDAP SSO Setting");
     LdapSettings ldapSettings = SSOUtils.createDefaultLdapSettings(getTrialAccount().getUuid());
-    assertTrue(
-        SSORestUtils.addLdapSettings(getTrialAccount().getUuid(), trialBearerToken, ldapSettings) == HttpStatus.SC_OK);
+    assertThat(
+        SSORestUtils.addLdapSettings(getTrialAccount().getUuid(), trialBearerToken, ldapSettings) == HttpStatus.SC_OK)
+        .isTrue();
     Object ssoConfig = SSORestUtils.getAccessManagementSettings(getTrialAccount().getUuid(), trialBearerToken);
     logger.info("Creating a userGroup");
     logger.info("Creating a new user group");
@@ -89,7 +92,7 @@ public class SSOTestTrialTest extends AbstractE2ETest {
     logger.info("Doing an LDAP group search");
     Collection<LdapGroupResponse> ldapGroupResponses =
         SSORestUtils.searchLdapWithQuery(getTrialAccount().getUuid(), trialBearerToken, QUERY, ldapId);
-    assertTrue(ldapGroupResponses.size() > 0);
+    assertThat(ldapGroupResponses.size() > 0).isTrue();
     LdapGroupResponse choosenGroup = SSOUtils.chooseLDAPGroup(ldapGroupResponses, GROUP_NAME);
     assertNotNull(choosenGroup);
     logger.info("Performing LDAP linking and syncing");
@@ -102,26 +105,27 @@ public class SSOTestTrialTest extends AbstractE2ETest {
         ()
             -> UserGroupUtils.hasUsersInUserGroup(getTrialAccount(), trialBearerToken, finalLdapLinkedGroup.getName()),
         new BooleanMatcher<>(), true);
-    assertTrue(linkAndSyncSuccessful);
+    assertThat(linkAndSyncSuccessful).isTrue();
     logger.info("Testing the LDAP login");
     String ldapLoginPassword = new ScmSecret().decryptToString(new SecretName("ldap_cschmith_password"));
     LdapResponse ldapResponse =
         SSORestUtils.testAuthenticate(getTrialAccount().getUuid(), trialBearerToken, LDAP_LOGIN_ID, ldapLoginPassword);
     assertNotNull(ldapResponse);
-    assertTrue(ldapResponse.getStatus().name().equals("SUCCESS"));
+    assertThat(ldapResponse.getStatus().name().equals("SUCCESS")).isTrue();
     logger.info("Testing the LDAP login - Succeeded");
     logger.info("Logging in using LDAP credentials");
     User user = UserUtils.getUser(trialBearerToken, getTrialAccount().getUuid(), LDAP_LOGIN_ID);
     User user2 = UserUtils.getUser(trialBearerToken, getTrialAccount().getUuid(), "ldaptest1@harness.io");
 
-    assertTrue(
-        SSORestUtils.assignAuthMechanism(getTrialAccount().getUuid(), trialBearerToken, "LDAP") == HttpStatus.SC_OK);
+    assertThat(
+        SSORestUtils.assignAuthMechanism(getTrialAccount().getUuid(), trialBearerToken, "LDAP") == HttpStatus.SC_OK)
+        .isTrue();
     TestUtils.sleep(30);
     String authToken = (String) retry.executeWithRetry(
         ()
             -> Setup.getAuthTokenForAccount(trialQAAccount, LDAP_LOGIN_ID, ldapLoginPassword),
         new NotNullMatcher(), true);
-    assertTrue(StringUtils.isNotBlank(authToken));
+    assertThat(StringUtils.isNotBlank(authToken)).isTrue();
     logger.info("Logging out in as LDAP user");
     Setup.signOut(user.getUuid(), authToken);
     logger.info("Unlink LDAP user");
@@ -133,18 +137,23 @@ public class SSOTestTrialTest extends AbstractE2ETest {
         new BooleanMatcher<>(), false);
     assertFalse(linkAndSyncSuccessful);
     logger.info("Unlink successful");
-    assertTrue(SSORestUtils.assignAuthMechanism(getTrialAccount().getUuid(), trialBearerToken, "USER_PASSWORD")
-        == HttpStatus.SC_OK);
+    assertThat(SSORestUtils.assignAuthMechanism(getTrialAccount().getUuid(), trialBearerToken, "USER_PASSWORD")
+        == HttpStatus.SC_OK)
+        .isTrue();
     logger.info("Disabled LDAP");
-    assertTrue(SSORestUtils.deleteLDAPSettings(getTrialAccount().getUuid(), trialBearerToken) == HttpStatus.SC_OK);
+    assertThat(SSORestUtils.deleteLDAPSettings(getTrialAccount().getUuid(), trialBearerToken) == HttpStatus.SC_OK)
+        .isTrue();
     logger.info("Deleted LDAP");
-    assertTrue(UserGroupRestUtils.deleteUserGroup(getTrialAccount(), trialBearerToken, ldapUnlinkedGroup.getUuid()));
+    assertThat(UserGroupRestUtils.deleteUserGroup(getTrialAccount(), trialBearerToken, ldapUnlinkedGroup.getUuid()))
+        .isTrue();
     logger.info("Deleted Usergroup");
     logger.info("Deleting user : " + user.getEmail() + " and " + user2.getEmail());
-    assertTrue(
-        UserRestUtils.deleteUser(getTrialAccount().getUuid(), trialBearerToken, user.getUuid()) == HttpStatus.SC_OK);
-    assertTrue(
-        UserRestUtils.deleteUser(getTrialAccount().getUuid(), trialBearerToken, user2.getUuid()) == HttpStatus.SC_OK);
+    assertThat(
+        UserRestUtils.deleteUser(getTrialAccount().getUuid(), trialBearerToken, user.getUuid()) == HttpStatus.SC_OK)
+        .isTrue();
+    assertThat(
+        UserRestUtils.deleteUser(getTrialAccount().getUuid(), trialBearerToken, user2.getUuid()) == HttpStatus.SC_OK)
+        .isTrue();
     logger.info("Done");
   }
 
@@ -157,10 +166,12 @@ public class SSOTestTrialTest extends AbstractE2ETest {
     filePath = filePath + "/"
         + "src/test/resources/secrets/"
         + "onelogin.xml";
-    assertTrue(SSORestUtils.addSAMLSettings(getTrialAccount().getUuid(), trialBearerToken, "SAML", filePath)
-        == HttpStatus.SC_OK);
+    assertThat(SSORestUtils.addSAMLSettings(getTrialAccount().getUuid(), trialBearerToken, "SAML", filePath)
+        == HttpStatus.SC_OK)
+        .isTrue();
     Object ssoConfig = SSORestUtils.getAccessManagementSettings(getTrialAccount().getUuid(), trialBearerToken);
-    assertTrue(SSORestUtils.deleSAMLSettings(getTrialAccount().getUuid(), trialBearerToken) == HttpStatus.SC_OK);
+    assertThat(SSORestUtils.deleSAMLSettings(getTrialAccount().getUuid(), trialBearerToken) == HttpStatus.SC_OK)
+        .isTrue();
     logger.info("Done");
   }
 }

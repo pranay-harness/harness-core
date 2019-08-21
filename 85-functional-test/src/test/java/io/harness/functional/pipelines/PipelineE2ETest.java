@@ -4,7 +4,6 @@ import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.rule.OwnerRule.SUNIL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
@@ -157,7 +156,7 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
     Pipeline verifyCreatedPipeline =
         PipelineRestUtils.getPipeline(application.getAppId(), createdPipeline.getUuid(), bearerToken);
     assertNotNull(verifyCreatedPipeline);
-    assertTrue(createdPipeline.getName().equals(verifyCreatedPipeline.getName()));
+    assertThat(createdPipeline.getName().equals(verifyCreatedPipeline.getName())).isTrue();
     logger.info("Create and Get pipeline verification completed");
 
     logger.info("Creating pipeline stages now");
@@ -172,7 +171,7 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
     verifyCreatedPipeline =
         PipelineRestUtils.getPipeline(application.getAppId(), createdPipeline.getUuid(), bearerToken);
     assertNotNull(verifyCreatedPipeline);
-    assertTrue(verifyCreatedPipeline.getPipelineStages().size() == pipelineStages.size());
+    assertThat(verifyCreatedPipeline.getPipelineStages().size() == pipelineStages.size()).isTrue();
 
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setWorkflowType(WorkflowType.PIPELINE);
@@ -194,11 +193,11 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
   }
 
   private void verifyTheExecutionValues(Map<String, Object> pipelineExecution, Pipeline pipeline) {
-    assertTrue(pipelineExecution.size() > 0);
-    assertTrue(pipelineExecution.containsKey("appId"));
-    assertTrue(pipelineExecution.containsKey("appName"));
-    assertTrue(pipelineExecution.containsKey("name"));
-    assertTrue(pipelineExecution.containsKey("uuid"));
+    assertThat(pipelineExecution.size() > 0).isTrue();
+    assertThat(pipelineExecution.containsKey("appId")).isTrue();
+    assertThat(pipelineExecution.containsKey("appName")).isTrue();
+    assertThat(pipelineExecution.containsKey("name")).isTrue();
+    assertThat(pipelineExecution.containsKey("uuid")).isTrue();
 
     String actualAppId = pipelineExecution.get("appId").toString();
 
@@ -208,9 +207,9 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
 
     String pipelineExecutionId = pipelineExecution.get("uuid").toString();
 
-    assertTrue(actualAppId.equals(application.getUuid()));
-    assertTrue(actualAppName.equals(application.getName()));
-    assertTrue(actualName.equals(pipeline.getName()));
+    assertThat(actualAppId.equals(application.getUuid())).isTrue();
+    assertThat(actualAppName.equals(application.getName())).isTrue();
+    assertThat(actualName.equals(pipeline.getName())).isTrue();
 
     logger.info("Waiting for 2 mins until the execution is complete");
 
@@ -237,27 +236,30 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
 
     logger.info("Validation starts");
 
-    assertTrue(completedExecution.getPipelineExecution().getStatus().name().equals("SUCCESS"));
-    assertTrue(completedExecution.getName().equals(pipelineName));
-    assertTrue(completedExecution.getPipelineExecution().getPipelineStageExecutions().size() == 1);
-    assertTrue(
+    assertThat(completedExecution.getPipelineExecution().getStatus().name().equals("SUCCESS")).isTrue();
+    assertThat(completedExecution.getName().equals(pipelineName)).isTrue();
+    assertThat(completedExecution.getPipelineExecution().getPipelineStageExecutions().size() == 1).isTrue();
+    assertThat(
         completedExecution.getPipelineExecution().getPipelineStageExecutions().get(0).getWorkflowExecutions().size()
-        == 1);
-    assertTrue(completedExecution.getPipelineExecution()
+        == 1)
+        .isTrue();
+    assertThat(completedExecution.getPipelineExecution()
                    .getPipelineStageExecutions()
                    .get(0)
                    .getWorkflowExecutions()
                    .get(0)
                    .getName()
-                   .equals(dummyWorkflow));
-    assertTrue(completedExecution.getPipelineExecution()
+                   .equals(dummyWorkflow))
+        .isTrue();
+    assertThat(completedExecution.getPipelineExecution()
                    .getPipelineStageExecutions()
                    .get(0)
                    .getWorkflowExecutions()
                    .get(0)
                    .getStatus()
                    .name()
-                   .equals("SUCCESS"));
-    assertTrue(completedExecution.getPipelineExecution().getPipelineStageExecutions().size() == 1);
+                   .equals("SUCCESS"))
+        .isTrue();
+    assertThat(completedExecution.getPipelineExecution().getPipelineStageExecutions().size() == 1).isTrue();
   }
 }

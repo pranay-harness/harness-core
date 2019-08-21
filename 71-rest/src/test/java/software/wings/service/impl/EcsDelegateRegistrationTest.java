@@ -5,7 +5,6 @@ import static org.joor.Reflect.on;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.AdditionalAnswers.returnsSecondArg;
 import static org.mockito.Matchers.any;
@@ -180,7 +179,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
     Delegate delegate = Delegate.builder().delegateType("ECS").build();
     try {
       delegateService.handleEcsDelegateRegistration(delegate);
-      assertTrue(false);
+      assertThat(false).isTrue();
     } catch (Exception e) {
       assertEquals("Received invalid token from ECS delegate", e.getMessage());
     }
@@ -189,7 +188,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
       delegate.setUuid("12345");
       delegate.setSequenceNum("1");
       delegateService.handleEcsDelegateRegistration(delegate);
-      assertTrue(false);
+      assertThat(false).isTrue();
     } catch (Exception e) {
       assertEquals("Received invalid token from ECS delegate", e.getMessage());
     }
@@ -355,8 +354,8 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
 
     assertNotNull(delegate.getTags());
     assertEquals(2, delegate.getTags().size());
-    assertTrue(delegate.getTags().contains("tag1"));
-    assertTrue(delegate.getTags().contains("tag2"));
+    assertThat(delegate.getTags().contains("tag1")).isTrue();
+    assertThat(delegate.getTags().contains("tag2")).isTrue();
     assertEquals("hostname_1", delegate.getHostName());
 
     // existing delegate assocaited to stale sequenceConfig is deleted
@@ -382,7 +381,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
                                         .withAccountId(ACCOUNT_ID)
                                         .withHostName("hostName")
                                         .build();
-    assertTrue(delegateService.seqNumAndTokenMatchesConfig(delegate, config));
+    assertThat(delegateService.seqNumAndTokenMatchesConfig(delegate, config)).isTrue();
 
     config.setDelegateToken("abc");
     assertFalse(delegateService.seqNumAndTokenMatchesConfig(delegate, config));

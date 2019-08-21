@@ -1,8 +1,8 @@
 package io.harness.limits.checker;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import com.google.inject.Inject;
 
@@ -54,7 +54,7 @@ public class MongoStaticLimitCheckerIntegrationTest extends BaseIntegrationTest 
 
     for (int i = 0; i < maxLimit; i++) {
       boolean allowed = checker.checkAndConsume();
-      assertTrue(allowed);
+      assertThat(allowed).isTrue();
     }
 
     boolean allowed = checker.checkAndConsume();
@@ -63,12 +63,12 @@ public class MongoStaticLimitCheckerIntegrationTest extends BaseIntegrationTest 
     int decrementTimes = ThreadLocalRandom.current().nextInt(0, maxLimit);
     for (int i = 0; i < decrementTimes; i++) {
       boolean decrement = checker.decrement();
-      assertTrue(decrement);
+      assertThat(decrement).isTrue();
     }
 
     for (int i = 0; i < decrementTimes; i++) {
       allowed = checker.checkAndConsume();
-      assertTrue(allowed);
+      assertThat(allowed).isTrue();
     }
   }
 
@@ -92,7 +92,7 @@ public class MongoStaticLimitCheckerIntegrationTest extends BaseIntegrationTest 
     for (int i = 0; i < decrementTimes; i++) {
       Future f = executorService.submit(() -> {
         boolean decrement = checker.decrement();
-        assertTrue(decrement);
+        assertThat(decrement).isTrue();
       });
 
       deleteFutures.add(f);
@@ -112,7 +112,7 @@ public class MongoStaticLimitCheckerIntegrationTest extends BaseIntegrationTest 
     for (int i = 0; i < times; i++) {
       Future f = executorService.submit(() -> {
         boolean allowed = checker.checkAndConsume();
-        assertTrue(allowed);
+        assertThat(allowed).isTrue();
       });
 
       futures.add(f);

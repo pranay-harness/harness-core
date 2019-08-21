@@ -11,7 +11,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
@@ -277,12 +276,12 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     Set<LogDataRecord> logDataRecords = analysisService.getLogData(
         logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2, accountId);
-    assertTrue(logDataRecords.isEmpty());
+    assertThat(logDataRecords.isEmpty()).isTrue();
 
     boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, stateExecutionId,
         workflowId, workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
 
-    assertTrue(status);
+    assertThat(status).isTrue();
 
     logDataRecords = analysisService.getLogData(
         logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2, accountId);
@@ -406,7 +405,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, stateExecutionId,
         workflowId, workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
 
-    assertTrue(status);
+    assertThat(status).isTrue();
 
     Set<LogDataRecord> logDataRecords = analysisService.getLogData(
         logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2, accountId);
@@ -451,7 +450,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, stateExecutionId,
         workflowId, workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
 
-    assertTrue(status);
+    assertThat(status).isTrue();
 
     final LogRequest logRequest = new LogRequest(
         query, appId, stateExecutionId, workflowId, serviceId, Collections.singleton(host), logCollectionMinute, false);
@@ -470,7 +469,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     logDataRecords = analysisService.getLogData(
         logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2, accountId);
-    assertTrue(logDataRecords.isEmpty());
+    assertThat(logDataRecords.isEmpty()).isTrue();
 
     logDataRecords = analysisService.getLogData(
         logRequest, true, workflowExecutionId, ClusterLevel.L2, StateType.SPLUNKV2, accountId);
@@ -519,8 +518,9 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, stateExecutionId, workflowId,
         workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
 
-    assertTrue(
-        analysisService.isLogDataCollected(appId, stateExecutionId, query, logCollectionMinute, StateType.SPLUNKV2));
+    assertThat(
+        analysisService.isLogDataCollected(appId, stateExecutionId, query, logCollectionMinute, StateType.SPLUNKV2))
+        .isTrue();
   }
 
   @Test
@@ -620,8 +620,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertNotNull(analysisSummary);
     assertEquals(RiskLevel.HIGH, analysisSummary.getRiskLevel());
     assertEquals(numOfUnknownClusters, analysisSummary.getUnknownClusters().size());
-    assertTrue(analysisSummary.getTestClusters().isEmpty());
-    assertTrue(analysisSummary.getControlClusters().isEmpty());
+    assertThat(analysisSummary.getTestClusters().isEmpty()).isTrue();
+    assertThat(analysisSummary.getControlClusters().isEmpty()).isTrue();
     assertEquals(numOfUnknownClusters + " anomalous clusters found", analysisSummary.getAnalysisSummaryMessage());
     for (LogMLClusterSummary logMLClusterSummary : analysisSummary.getUnknownClusters()) {
       for (String hostname : logMLClusterSummary.getHostSummary().keySet()) {
@@ -657,7 +657,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     record.setTest_clusters(testClusters);
     record.setIgnore_clusters(ignoreClusters);
 
-    assertTrue(analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2, Optional.empty(), Optional.empty()));
+    assertThat(analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2, Optional.empty(), Optional.empty()))
+        .isTrue();
 
     LogMLAnalysisRecord logMLAnalysisRecord = wingsPersistence.createQuery(LogMLAnalysisRecord.class)
                                                   .filter("appId", appId)
@@ -671,7 +672,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertThat(logMLAnalysisRecord.getUnknown_clusters()).isNull();
     assertThat(logMLAnalysisRecord.getTest_clusters()).isNull();
     assertThat(logMLAnalysisRecord.getIgnore_clusters()).isNull();
-    assertTrue(isNotEmpty(logMLAnalysisRecord.getProtoSerializedAnalyisDetails()));
+    assertThat(isNotEmpty(logMLAnalysisRecord.getProtoSerializedAnalyisDetails())).isTrue();
     assertThat(logMLAnalysisRecord.getAnalysisDetailsCompressedJson()).isNull();
 
     LogMLAnalysisRecord logAnalysisRecord = analysisService.getLogAnalysisRecords(
@@ -726,8 +727,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertNotNull(analysisSummary);
     assertEquals(numOfUnexpectedFreq > 0 ? RiskLevel.HIGH : RiskLevel.NA, analysisSummary.getRiskLevel());
     assertEquals(numOfTestClusters, analysisSummary.getTestClusters().size());
-    assertTrue(analysisSummary.getUnknownClusters().isEmpty());
-    assertTrue(analysisSummary.getControlClusters().isEmpty());
+    assertThat(analysisSummary.getUnknownClusters().isEmpty()).isTrue();
+    assertThat(analysisSummary.getControlClusters().isEmpty()).isTrue();
     String message;
     if (numOfUnexpectedFreq == 0) {
       message = "No baseline data for the given query was found.";
@@ -793,8 +794,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertNotNull(analysisSummary);
     assertEquals(RiskLevel.NA, analysisSummary.getRiskLevel());
     assertEquals(numOfControlClusters, analysisSummary.getControlClusters().size());
-    assertTrue(analysisSummary.getUnknownClusters().isEmpty());
-    assertTrue(analysisSummary.getTestClusters().isEmpty());
+    assertThat(analysisSummary.getUnknownClusters().isEmpty()).isTrue();
+    assertThat(analysisSummary.getTestClusters().isEmpty()).isTrue();
     String message = "No new data for the given queries. Showing baseline data if any.";
 
     assertEquals(message, analysisSummary.getAnalysisSummaryMessage());
@@ -916,8 +917,9 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     }
 
     wingsPersistence.save(Lists.newArrayList(logDataRecords));
-    assertTrue(analysisService.hasDataRecords(
-        query, appId, stateExecutionId, StateType.SPLUNKV2, hosts, ClusterLevel.L1, logCollectionMinute));
+    assertThat(analysisService.hasDataRecords(
+                   query, appId, stateExecutionId, StateType.SPLUNKV2, hosts, ClusterLevel.L1, logCollectionMinute))
+        .isTrue();
   }
 
   @Test
@@ -948,9 +950,10 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     }
 
     wingsPersistence.save(Lists.newArrayList(logDataRecords));
-    assertTrue(
+    assertThat(
         analysisService.getHearbeatRecordForL0(appId, stateExecutionId, StateType.SPLUNKV2, hosts.iterator().next())
-            .isPresent());
+            .isPresent())
+        .isTrue();
   }
 
   @Test
@@ -1500,7 +1503,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     // test behavior
     boolean isEligible =
         learningEngineService.isEligibleToCreateTask(stateExecutionId, "", analysisMinute, MLAnalysisType.LOG_ML);
-    assertTrue(isEligible);
+    assertThat(isEligible).isTrue();
     int nextCount = learningEngineService.getNextServiceGuardBackoffCount(
         stateExecutionId, "", analysisMinute, MLAnalysisType.LOG_ML);
     assertEquals(1, nextCount);
@@ -1540,7 +1543,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     // test behavior
     boolean isEligibleForTask =
         learningEngineService.isEligibleToCreateTask(stateExecutionId, "", analysisMinute, MLAnalysisType.LOG_ML);
-    assertTrue(isEligibleForTask);
+    assertThat(isEligibleForTask).isTrue();
     int nextCount = learningEngineService.getNextServiceGuardBackoffCount(
         stateExecutionId, "", analysisMinute, MLAnalysisType.LOG_ML);
 
@@ -1572,7 +1575,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
                                             .filter(LogMLAnalysisRecordKeys.logCollectionMinute, 10)
                                             .asList();
 
-    assertTrue(created);
+    assertThat(created).isTrue();
     assertNotNull(feedbackRecord);
     assertNotNull(records);
     assertEquals(2, records.size());
@@ -1601,7 +1604,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     assertFalse(created);
     assertThat(feedbackRecord).isNull();
-    assertTrue(isEmpty(records));
+    assertThat(isEmpty(records)).isTrue();
   }
 
   private void createLETaskForBackoffTest(int analysisMinute, int backoffCount) {

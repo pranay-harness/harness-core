@@ -3,10 +3,10 @@ package software.wings.service.impl;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -76,8 +76,9 @@ public class InfrastructureDefinitionServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testGetDeploymentTypeCloudProviderOptions() {
-    assertTrue(infrastructureDefinitionService.getDeploymentTypeCloudProviderOptions().size()
-        == DeploymentType.values().length);
+    assertThat(infrastructureDefinitionService.getDeploymentTypeCloudProviderOptions().size()
+        == DeploymentType.values().length)
+        .isTrue();
   }
 
   @Test

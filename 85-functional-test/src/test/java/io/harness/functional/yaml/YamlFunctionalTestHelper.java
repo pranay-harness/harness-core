@@ -4,7 +4,6 @@ import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.generator.AccountGenerator.ACCOUNT_ID;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertTrue;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
@@ -163,7 +162,7 @@ public class YamlFunctionalTestHelper {
       assertThat(processResult.getExitValue()).isEqualTo(0);
     } catch (InterruptedException | TimeoutException | IOException ex) {
       logger.error(ExceptionUtils.getMessage(ex));
-      assertTrue(false);
+      assertThat(false).isTrue();
     }
   }
 
@@ -184,7 +183,7 @@ public class YamlFunctionalTestHelper {
           .forEach(path -> addFilesToMap(path, clonedRepoPath + "/" + repoName, map));
     } catch (IOException ex) {
       logger.error(ExceptionUtils.getMessage(ex));
-      assertTrue(false);
+      assertThat(false).isTrue();
     } catch (Exception e) {
       logger.error(ExceptionUtils.getMessage(e));
     }
@@ -260,7 +259,7 @@ public class YamlFunctionalTestHelper {
       file = ResourceUtils.getFile("classpath:io/harness/yaml/" + oldAppName + ".zip");
     } catch (FileNotFoundException ex) {
       logger.error(ExceptionUtils.getMessage(ex));
-      assertTrue(false);
+      assertThat(false).isTrue();
     }
 
     Setup.portal()

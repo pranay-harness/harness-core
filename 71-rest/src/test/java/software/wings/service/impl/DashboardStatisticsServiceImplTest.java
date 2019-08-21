@@ -4,9 +4,9 @@ import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static java.util.Arrays.asList;
 import static java.util.Objects.deepEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -98,7 +98,6 @@ import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.rule.RealMongo;
-import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -340,16 +339,16 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
     while (mapIterator.hasNext()) {
       Map.Entry entry = mapIterator.next();
       if (entry.getKey().equals(ACCOUNT_1_ID)) {
-        Assertions.assertThat(entry.getValue()).isEqualTo(6);
+        assertThat(entry.getValue()).isEqualTo(6);
         account1Validation = true;
       }
       if (entry.getKey().equals(ACCOUNT_2_ID)) {
-        Assertions.assertThat(entry.getValue()).isEqualTo(2);
+        assertThat(entry.getValue()).isEqualTo(2);
         account2Validation = true;
       }
     }
-    Assertions.assertThat(account1Validation).isTrue();
-    Assertions.assertThat(account2Validation).isTrue();
+    assertThat(account1Validation).isTrue();
+    assertThat(account2Validation).isTrue();
   }
 
   @Test
@@ -588,10 +587,10 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
       assertEquals(1, serviceInstanceDashboard.getCurrentActiveInstancesList().get(0).getInstanceCount());
       assertEquals(1, serviceInstanceDashboard.getDeploymentHistoryList().size());
       DeploymentHistory deploymentHistory = serviceInstanceDashboard.getDeploymentHistoryList().get(0);
-      assertTrue(deepEquals(expectedDeployment.getEnvs(), deploymentHistory.getEnvs()));
-      assertTrue(deepEquals(expectedDeployment.getInframappings(), deploymentHistory.getInframappings()));
-      assertTrue(deepEquals(expectedDeployment.getStatus(), deploymentHistory.getStatus()));
-      assertTrue(deepEquals(expectedDeployment.getWorkflow(), deploymentHistory.getWorkflow()));
+      assertThat(deepEquals(expectedDeployment.getEnvs(), deploymentHistory.getEnvs())).isTrue();
+      assertThat(deepEquals(expectedDeployment.getInframappings(), deploymentHistory.getInframappings())).isTrue();
+      assertThat(deepEquals(expectedDeployment.getStatus(), deploymentHistory.getStatus())).isTrue();
+      assertThat(deepEquals(expectedDeployment.getWorkflow(), deploymentHistory.getWorkflow())).isTrue();
     } finally {
       UserThreadLocal.unset();
     }

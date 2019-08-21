@@ -1,7 +1,7 @@
 package io.harness.testframework.framework.utils;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import com.google.gson.internal.LinkedTreeMap;
 
@@ -67,7 +67,7 @@ public class SSOUtils {
     LinkedTreeMap<String, Object> maps = (LinkedTreeMap) SSOConfig;
     LinkedTreeMap<String, Object> ssoSettings = (LinkedTreeMap) ((ArrayList) maps.get("ssoSettings")).get(0);
     String ldapId = ssoSettings.get("uuid").toString();
-    assertTrue(StringUtils.isNotBlank(ldapId));
+    assertThat(StringUtils.isNotBlank(ldapId)).isTrue();
     return ldapId;
   }
 

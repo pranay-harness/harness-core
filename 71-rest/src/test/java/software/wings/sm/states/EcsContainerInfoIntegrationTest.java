@@ -1,7 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.rule.OwnerRule.RAGHU;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -160,7 +160,7 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
     FieldUtils.writeField(splunkV2State, "delegateProxyFactory", delegateProxyFactory, true);
     Reflect.on(splunkV2State).set("workflowExecutionService", workflowExecutionService);
     Map<String, String> nodes = splunkV2State.getLastExecutionNodes(context);
-    assertTrue(nodes.size() >= 1);
+    assertThat(nodes.size() >= 1).isTrue();
     logger.info("do_not_delete__ecs__container__integration__test__Prod: " + nodes);
   }
 }

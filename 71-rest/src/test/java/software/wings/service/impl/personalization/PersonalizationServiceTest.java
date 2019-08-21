@@ -2,7 +2,6 @@ package software.wings.service.impl.personalization;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -65,11 +64,11 @@ public class PersonalizationServiceTest extends WingsBaseTest {
     assertThat(remove.getSteps().getFavorites()).containsExactly(StateType.HTTP.name());
 
     final Personalization removeLast = PersonalizationService.removeFavoriteStep(StateType.HTTP, accountId, userId);
-    assertTrue(isEmpty(removeLast.getSteps().getFavorites()));
+    assertThat(isEmpty(removeLast.getSteps().getFavorites())).isTrue();
 
     final Personalization removeFromEmpty =
         PersonalizationService.removeFavoriteStep(StateType.HTTP, accountId, userId);
-    assertTrue(isEmpty(removeLast.getSteps().getFavorites()));
+    assertThat(isEmpty(removeLast.getSteps().getFavorites())).isTrue();
   }
 
   @Test
@@ -77,11 +76,11 @@ public class PersonalizationServiceTest extends WingsBaseTest {
   public void testNormalizeRecent() {
     LinkedList<String> recent = null;
     PersonalizationServiceImpl.normalizeRecent(recent);
-    assertTrue(isEmpty(recent));
+    assertThat(isEmpty(recent)).isTrue();
 
     recent = new LinkedList<>();
     PersonalizationServiceImpl.normalizeRecent(recent);
-    assertTrue(isEmpty(recent));
+    assertThat(isEmpty(recent)).isTrue();
 
     recent = new LinkedList<>();
     recent.add(FOO);

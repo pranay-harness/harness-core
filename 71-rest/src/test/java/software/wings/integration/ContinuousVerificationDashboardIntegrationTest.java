@@ -1,9 +1,9 @@
 package software.wings.integration;
 
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
@@ -218,7 +218,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
         accountId, before, after, userService.getUserByEmail(WingsIntegrationTestConstants.adminUserEmail), serviceId);
 
     // Verify
-    assertTrue("There's atleast one cv deployment execution", workflowExecutionList.size() > 0);
+    assertThat(workflowExecutionList.size() > 0).isTrue();
     assertEquals("ExecutionId matches", workflowExecutionId, workflowExecutionList.get(0).getWorkflowExecutionId());
     assertEquals("Status is success", ExecutionStatus.SUCCESS, workflowExecutionList.get(0).getStatus());
   }
@@ -251,7 +251,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
 
     // Verify
     boolean executionFound = false;
-    assertTrue("There's atleast one deployment execution", workflowExecutionList.size() > 0);
+    assertThat(workflowExecutionList.size() > 0).isTrue();
     for (WorkflowExecution execution : workflowExecutionList) {
       if (execution.getUuid().equals(workflowExecutionId)) {
         executionFound = true;
@@ -261,7 +261,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
         assertEquals("EnvID should match", envId, execution.getEnvId());
       }
     }
-    assertTrue("Workflow execution should be in the returned list", executionFound);
+    assertThat(executionFound).isTrue();
   }
 
   @Test
@@ -302,7 +302,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
         accountId, before, after, userService.getUserByEmail(WingsIntegrationTestConstants.adminUserEmail), serviceId);
 
     // Verify
-    assertTrue("There's atleast one deployment execution", workflowExecutionList.size() > 0);
+    assertThat(workflowExecutionList.size() > 0).isTrue();
     assertEquals("ExecutionId matches", workflowExecutionId, workflowExecutionList.get(0).getUuid());
     assertEquals("Status is success", ExecutionStatus.SUCCESS, workflowExecutionList.get(0).getStatus());
     assertEquals(
@@ -324,7 +324,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
     PageResponse<ContinuousVerificationExecutionMetaData> cvList =
         continuousVerificationService.getAllCVExecutionsForTime(
             accountId, before, after, true, PageRequestBuilder.aPageRequest().build());
-    assertTrue("There's atleast one cv metrics execution", cvList.size() >= 2);
+    assertThat(cvList.size() >= 2).isTrue();
     // verify if both the accounts we put in are present
     boolean account1Present = false, account2Present = false;
     for (ContinuousVerificationExecutionMetaData cvData : cvList) {
@@ -335,11 +335,11 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
         account2Present = true;
       }
     }
-    assertTrue("We should get executions from both accounts", account1Present && account2Present);
+    assertThat(account1Present && account2Present).isTrue();
     PageResponse<ContinuousVerificationExecutionMetaData> cvLogsList =
         continuousVerificationService.getAllCVExecutionsForTime(
             accountId, before, after, true, PageRequestBuilder.aPageRequest().build());
-    assertTrue("There's atleast one cv logs execution", cvLogsList.size() > 0);
+    assertThat(cvLogsList.size() > 0).isTrue();
   }
 
   @Test
@@ -354,11 +354,11 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
     PageResponse<ContinuousVerificationExecutionMetaData> cvList =
         continuousVerificationService.getAllCVExecutionsForTime(
             "badAccount", before, after, true, PageRequestBuilder.aPageRequest().build());
-    assertTrue("There's no cv metrics execution", cvList.size() == 0);
+    assertThat(cvList.size() == 0).isTrue();
 
     PageResponse<ContinuousVerificationExecutionMetaData> cvLogsList =
         continuousVerificationService.getAllCVExecutionsForTime(
             "badAccount", before, after, true, PageRequestBuilder.aPageRequest().build());
-    assertTrue("There's  no cv logs execution", cvLogsList.size() == 0);
+    assertThat(cvLogsList.size() == 0).isTrue();
   }
 }

@@ -5,7 +5,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.joor.Reflect.on;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
@@ -290,7 +289,7 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
   }
 
   private void deleteTemplate(Template installCommand) {
-    assertTrue(templateService.delete(GLOBAL_ACCOUNT_ID, installCommand.getUuid()));
+    assertThat(templateService.delete(GLOBAL_ACCOUNT_ID, installCommand.getUuid())).isTrue();
   }
 
   private void deleteTemplates(Template myStop, Template myStart, Template myAnotherCommand) {

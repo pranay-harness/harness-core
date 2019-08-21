@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static software.wings.audit.AuditHeader.Builder.anAuditHeader;
@@ -364,7 +363,7 @@ public class AuditPreferenceHelperTest extends WingsBaseTest {
     AuditPreference auditPreference =
         (AuditPreference) auditPreferenceHelper.parseJsonIntoPreference(accFilterCriteriaJson);
     assertTopLevelCriteria(auditPreference);
-    assertTrue(auditPreference.isIncludeAccountLevelResources());
+    assertThat(auditPreference.isIncludeAccountLevelResources()).isTrue();
     assertAccountLevelFilter(auditPreference);
 
     // 1, Account filter is included but empty. (fetch all AccountLevel Entities)
@@ -425,7 +424,7 @@ public class AuditPreferenceHelperTest extends WingsBaseTest {
     AuditPreference auditPreference =
         (AuditPreference) auditPreferenceHelper.parseJsonIntoPreference(appFilterCriteriaJson);
     assertTopLevelCriteria(auditPreference);
-    assertTrue(auditPreference.isIncludeAppLevelResources());
+    assertThat(auditPreference.isIncludeAppLevelResources()).isTrue();
     assertApplicationFilter(auditPreference);
 
     // 1. App filter is included but empty. (fetch all AppLevel Entities)
@@ -500,7 +499,7 @@ public class AuditPreferenceHelperTest extends WingsBaseTest {
     AuditPreference auditPreference =
         (AuditPreference) auditPreferenceHelper.parseJsonIntoPreference(appAndAccountFilterCriteriaJson);
     assertTopLevelCriteria(auditPreference);
-    assertTrue(auditPreference.isIncludeAppLevelResources());
+    assertThat(auditPreference.isIncludeAppLevelResources()).isTrue();
     assertApplicationFilter(auditPreference);
     assertAccountLevelFilter(auditPreference);
 
@@ -595,10 +594,12 @@ public class AuditPreferenceHelperTest extends WingsBaseTest {
     assertEquals(2, auditPreference.getAccountAuditFilter().getResourceIds().size());
     assertEquals(2, auditPreference.getAccountAuditFilter().getResourceTypes().size());
 
-    assertTrue(auditPreference.getAccountAuditFilter().getResourceIds().containsAll(
-        Arrays.asList("AccresourceId1", "AccresourceId2")));
-    assertTrue(auditPreference.getAccountAuditFilter().getResourceTypes().containsAll(
-        Arrays.asList("AccresourceType1", "AccresourceType2")));
+    assertThat(auditPreference.getAccountAuditFilter().getResourceIds().containsAll(
+                   Arrays.asList("AccresourceId1", "AccresourceId2")))
+        .isTrue();
+    assertThat(auditPreference.getAccountAuditFilter().getResourceTypes().containsAll(
+                   Arrays.asList("AccresourceType1", "AccresourceType2")))
+        .isTrue();
   }
 
   private void assertApplicationFilter(AuditPreference auditPreference) {
@@ -611,11 +612,14 @@ public class AuditPreferenceHelperTest extends WingsBaseTest {
     assertEquals(2, auditPreference.getApplicationAuditFilter().getResourceIds().size());
     assertEquals(2, auditPreference.getApplicationAuditFilter().getResourceTypes().size());
 
-    assertTrue(auditPreference.getApplicationAuditFilter().getAppIds().containsAll(Arrays.asList("AppId1", "AppId2")));
-    assertTrue(auditPreference.getApplicationAuditFilter().getResourceIds().containsAll(
-        Arrays.asList("AppresourceId1", "AppresourceId2")));
-    assertTrue(auditPreference.getApplicationAuditFilter().getResourceTypes().containsAll(
-        Arrays.asList("AppresourceType1", "AppresourceType2")));
+    assertThat(auditPreference.getApplicationAuditFilter().getAppIds().containsAll(Arrays.asList("AppId1", "AppId2")))
+        .isTrue();
+    assertThat(auditPreference.getApplicationAuditFilter().getResourceIds().containsAll(
+                   Arrays.asList("AppresourceId1", "AppresourceId2")))
+        .isTrue();
+    assertThat(auditPreference.getApplicationAuditFilter().getResourceTypes().containsAll(
+                   Arrays.asList("AppresourceType1", "AppresourceType2")))
+        .isTrue();
   }
 
   private void assertTopLevelCriteria(AuditPreference auditPreference) {
@@ -626,7 +630,7 @@ public class AuditPreferenceHelperTest extends WingsBaseTest {
     assertEquals("1560195705972", auditPreference.getEndTime());
     assertNotNull(auditPreference.getOperationTypes());
     assertEquals(2, auditPreference.getOperationTypes().size());
-    assertTrue(auditPreference.getOperationTypes().containsAll(Arrays.asList("CREATE", "UPDATE")));
+    assertThat(auditPreference.getOperationTypes().containsAll(Arrays.asList("CREATE", "UPDATE"))).isTrue();
   }
 
   private PageRequest<AuditHeader> getAuditHeaderPageRequest(AuditPreference auditPreference) {

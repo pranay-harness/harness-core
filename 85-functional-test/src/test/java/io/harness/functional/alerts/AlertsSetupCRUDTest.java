@@ -1,7 +1,7 @@
 package io.harness.functional.alerts;
 
-import static graphql.Assert.assertTrue;
 import static io.harness.rule.OwnerRule.SWAMY;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
@@ -44,7 +44,7 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
 
     logger.info("Verifying the updated alerts notification rule");
     assertNotNull(updatedAlert);
-    assertTrue(updatedAlert.getAlertCategory().name().equals(createdAlert.getAlertCategory().name()));
+    assertThat(updatedAlert.getAlertCategory().name().equals(createdAlert.getAlertCategory().name())).isTrue();
     assertFalse(updatedAlert.getAlertFilter().getAlertType().name().equals(
         createdAlert.getAlertFilter().getAlertType().name()));
 
@@ -102,10 +102,12 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
 
     logger.info("Verifying the updated alerts notification rule");
     assertNotNull(updatedAlert);
-    assertTrue(updatedAlert.getAlertCategory().name().equals(createdAlert.getAlertCategory().name()));
-    assertTrue(updatedAlert.getAlertFilter().getAlertType().name().equals(
-        createdAlert.getAlertFilter().getAlertType().name()));
-    assertTrue(updatedAlert.getAlertFilter().getConditions().getOperator().name().equals(Operator.NOT_MATCHING.name()));
+    assertThat(updatedAlert.getAlertCategory().name().equals(createdAlert.getAlertCategory().name())).isTrue();
+    assertThat(
+        updatedAlert.getAlertFilter().getAlertType().name().equals(createdAlert.getAlertFilter().getAlertType().name()))
+        .isTrue();
+    assertThat(updatedAlert.getAlertFilter().getConditions().getOperator().name().equals(Operator.NOT_MATCHING.name()))
+        .isTrue();
 
     deleteAlertNotificationRules(createdAlert, updatedAlert);
   }
@@ -129,11 +131,12 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
     logger.info("Verifying the updated alerts notification rule");
     assertNotNull(updatedAlert);
     assertFalse(updatedAlert.getAlertCategory().name().equals(createdAlert.getAlertCategory().name()));
-    assertTrue(updatedAlert.getAlertCategory().name().equals(AlertCategory.ContinuousVerification.name()));
+    assertThat(updatedAlert.getAlertCategory().name().equals(AlertCategory.ContinuousVerification.name())).isTrue();
     assertFalse(updatedAlert.getAlertFilter().getAlertType().name().equals(
         createdAlert.getAlertFilter().getAlertType().name()));
-    assertTrue(
-        updatedAlert.getAlertFilter().getAlertType().name().equals(AlertType.CONTINUOUS_VERIFICATION_ALERT.name()));
+    assertThat(
+        updatedAlert.getAlertFilter().getAlertType().name().equals(AlertType.CONTINUOUS_VERIFICATION_ALERT.name()))
+        .isTrue();
 
     deleteAlertNotificationRules(createdAlert, updatedAlert);
   }
@@ -148,8 +151,8 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
         AlertsRestUtils.createAlert(getAccount().getUuid(), bearerToken, alertNotificationRule);
     logger.info("Verify if the created alert exists");
     List<AlertNotificationRule> alertsList = AlertsRestUtils.listAlerts(getAccount().getUuid(), bearerToken);
-    assertTrue(alertsList.size() > 0);
-    assertTrue(AlertsUtils.isAlertAvailable(alertsList, createdAlert));
+    assertThat(alertsList.size() > 0).isTrue();
+    assertThat(AlertsUtils.isAlertAvailable(alertsList, createdAlert)).isTrue();
     return createdAlert;
   }
 
@@ -174,10 +177,10 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
 
       logger.info("Verifying the updated alerts notification rule");
       assertNotNull(updatedAlert);
-      assertTrue(updatedAlert.getAlertCategory().name().equals(createdAlert.getAlertCategory().name()));
+      assertThat(updatedAlert.getAlertCategory().name().equals(createdAlert.getAlertCategory().name())).isTrue();
       assertFalse(updatedAlert.getAlertFilter().getAlertType().name().equals(
           createdAlert.getAlertFilter().getAlertType().name()));
-      assertTrue(updatedAlert.getAlertFilter().getAlertType().name().equals(alertType.name()));
+      assertThat(updatedAlert.getAlertFilter().getAlertType().name().equals(alertType.name())).isTrue();
       previous = alertType.name();
     }
     return updatedAlert;

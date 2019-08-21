@@ -1,8 +1,8 @@
 package io.harness.functional.rbac;
 
 import static io.harness.rule.OwnerRule.SWAMY;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static software.wings.beans.Application.Builder.anApplication;
 
 import io.harness.category.element.FunctionalTests;
@@ -156,7 +156,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
     String roBearerToken = Setup.getAuthToken(RBAC_USER, "rbac1");
     final String appName = "TestApp" + System.currentTimeMillis();
     Application application = anApplication().name(appName).build();
-    assertTrue(Setup.portal()
+    assertThat(Setup.portal()
                    .auth()
                    .oauth2(roBearerToken)
                    .queryParam("accountId", getAccount().getUuid())
@@ -164,7 +164,8 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
                    .contentType(ContentType.JSON)
                    .post("/apps")
                    .getStatusCode()
-        == HttpStatus.SC_BAD_REQUEST);
+        == HttpStatus.SC_BAD_REQUEST)
+        .isTrue();
     Setup.signOut(readOnlyUserid, roBearerToken);
   }
 
@@ -178,10 +179,12 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
     Application application = anApplication().name(appName).build();
     Application createdApp = ApplicationRestUtils.createApplication(bearerToken, getAccount(), application);
     assertNotNull(createdApp);
-    assertTrue(ApplicationRestUtils.deleteApplication(roBearerToken, createdApp.getUuid(), getAccount().getUuid())
-        == HttpStatus.SC_BAD_REQUEST);
-    assertTrue(ApplicationRestUtils.deleteApplication(bearerToken, createdApp.getUuid(), getAccount().getUuid())
-        == HttpStatus.SC_OK);
+    assertThat(ApplicationRestUtils.deleteApplication(roBearerToken, createdApp.getUuid(), getAccount().getUuid())
+        == HttpStatus.SC_BAD_REQUEST)
+        .isTrue();
+    assertThat(ApplicationRestUtils.deleteApplication(bearerToken, createdApp.getUuid(), getAccount().getUuid())
+        == HttpStatus.SC_OK)
+        .isTrue();
     Setup.signOut(readOnlyUserid, roBearerToken);
   }
 

@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
@@ -155,7 +154,7 @@ public abstract class BaseSettingValueConfigYamlHandlerTest extends BaseYamlHand
       method =
           settingValueYamlConfig.getConfigclazz().getMethod(settingValueYamlConfig.getUpdateMethodName(), String.class);
     } catch (Exception e) {
-      assertTrue(false);
+      assertThat(false).isTrue();
     }
 
     try {

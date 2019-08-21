@@ -2,8 +2,8 @@ package software.wings.resources.limits;
 
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -47,7 +47,7 @@ public class LimitConfigurationResourceIntegrationTest extends BaseIntegrationTe
     RestResponse<Boolean> response = getRequestBuilderWithAuthHeader(target).post(
         entity(limit, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
 
-    assertTrue(response.getResource());
+    assertThat(response.getResource()).isTrue();
     Limit fetched = limits.get(accountId, ActionType.CREATE_APPLICATION).getLimit();
     assertEquals("fetched limit from db should be same as POST argument", limit, fetched);
   }
@@ -64,7 +64,7 @@ public class LimitConfigurationResourceIntegrationTest extends BaseIntegrationTe
     RestResponse<Boolean> response = getRequestBuilderWithAuthHeader(target).post(
         entity(limit, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
 
-    assertTrue(response.getResource());
+    assertThat(response.getResource()).isTrue();
     Limit fetched = limits.get(accountId, ActionType.DEPLOY).getLimit();
     assertEquals("fetched rate-limit from db should be same as POST argument", limit, fetched);
   }

@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml;
 
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -72,12 +72,12 @@ public class GitCommandCallbackTest extends CategoryTest {
 
     try {
       commandCallback.notify(map);
-      assertTrue(false);
+      assertThat(false).isTrue();
     } catch (RuntimeException e) {
       // the way we are testing here is, for GitCommandStatus.SUCCESS, closeAlertForGitFailureIfOpen() should get
       // called. in mock, we are throwing exception on this method call as this is what we want to test. rest of code
       // flow is not required for this unit test
-      assertTrue(true);
+      assertThat(true).isTrue();
     }
   }
 }

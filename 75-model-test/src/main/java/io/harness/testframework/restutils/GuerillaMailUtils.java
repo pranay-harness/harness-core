@@ -1,7 +1,7 @@
 package io.harness.testframework.restutils;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.framework.email.GuerillaEmailDetails;
@@ -18,7 +18,7 @@ public class GuerillaMailUtils {
                                       .as(GuerillaEmailInfo.class);
     assertNotNull(emailInfo);
     boolean isEmailForgotten = forgetEmailId(emailInfo.getSidToken());
-    assertTrue("Created email may be an existing one. Deletion failed : " + emailInfo.getEmailAddr(), isEmailForgotten);
+    assertThat(isEmailForgotten).isTrue();
     emailInfo = Setup.email()
                     .queryParam("f", "get_email_address")
                     .queryParam("ip", "127.0.0.1")

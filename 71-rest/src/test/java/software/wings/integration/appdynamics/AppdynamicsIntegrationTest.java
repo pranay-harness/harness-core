@@ -9,7 +9,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -104,7 +103,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     assertFalse(restResponse.getResource().isEmpty());
 
     for (NewRelicApplication app : restResponse.getResource()) {
-      assertTrue(app.getId() > 0);
+      assertThat(app.getId() > 0).isTrue();
       assertFalse(isBlank(app.getName()));
     }
   }
@@ -127,7 +126,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
       assertFalse(tierRestResponse.getResource().isEmpty());
 
       for (AppdynamicsTier tier : tierRestResponse.getResource()) {
-        assertTrue(tier.getId() > 0);
+        assertThat(tier.getId() > 0).isTrue();
         assertFalse(isBlank(tier.getName()));
         assertFalse(isBlank(tier.getType()));
         assertFalse(isBlank(tier.getAgentType()));
@@ -196,7 +195,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
       assertFalse(tierRestResponse.getResource().isEmpty());
 
       for (AppdynamicsTier tier : tierRestResponse.getResource()) {
-        assertTrue(tier.getId() > 0);
+        assertThat(tier.getId() > 0).isTrue();
         assertFalse(isBlank(tier.getName()));
         assertFalse(isBlank(tier.getType()));
         assertFalse(isBlank(tier.getAgentType()));
@@ -251,8 +250,8 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
         if (!tier.getName().equals("docker-tier")) {
           continue;
         }
-        assertTrue(tier.getId() > 0);
-        assertTrue(application.getId() > 0);
+        assertThat(tier.getId() > 0).isTrue();
+        assertThat(application.getId() > 0).isTrue();
         logger.info(application.toString());
         Set<AppdynamicsNode> nodes = appdynamicsDelegateService.getNodes(appDynamicsConfig, application.getId(),
             tier.getId(), secretManager.getEncryptionDetails(appDynamicsConfig, null, null),
@@ -280,8 +279,8 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
                   new GenericType<RestResponse<VerificationNodeDataSetupResponse>>() {});
 
           assertThat(metricResponse.getResponseMessages()).isEmpty();
-          assertTrue(metricResponse.getResource().isProviderReachable());
-          assertTrue(metricResponse.getResource().getLoadResponse().isLoadPresent());
+          assertThat(metricResponse.getResource().isProviderReachable()).isTrue();
+          assertThat(metricResponse.getResource().getLoadResponse().isLoadPresent()).isTrue();
           assertNotNull(metricResponse.getResource().getLoadResponse().getLoadResponse());
 
           final List<AppdynamicsMetric> tierMetrics =

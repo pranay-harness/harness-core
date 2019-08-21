@@ -2,7 +2,6 @@ package software.wings.sm.states;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static software.wings.api.DeploymentType.KUBERNETES;
 
 import com.google.common.collect.Lists;
@@ -36,7 +35,7 @@ public class DatadogStateTest extends WingsBaseTest {
     Map<String, DatadogState.Metric> metrics =
         DatadogState.metrics(Optional.of(Lists.newArrayList("trace.servlet.request.duration")), Optional.empty(),
             Optional.empty(), Optional.empty(), Optional.empty());
-    assertTrue(metrics.containsKey("trace.servlet.request.duration"));
+    assertThat(metrics.containsKey("trace.servlet.request.duration")).isTrue();
     assertEquals("Servlet", metrics.get("trace.servlet.request.duration").getDatadogMetricType());
     assertEquals(Sets.newHashSet("Servlet"), metrics.get("trace.servlet.request.duration").getTags());
     assertEquals("trace.servlet.request.duration", metrics.get("trace.servlet.request.duration").getMetricName());
@@ -56,8 +55,8 @@ public class DatadogStateTest extends WingsBaseTest {
     metricList.add(metrics.get("system.cpu.iowait"));
     Map<String, TimeSeriesMetricDefinition> metricDefinitionMap = DatadogState.metricDefinitions(metricList);
 
-    assertTrue(metricDefinitionMap.containsKey("Request Duration"));
-    assertTrue(metricDefinitionMap.containsKey("IO Wait"));
+    assertThat(metricDefinitionMap.containsKey("Request Duration")).isTrue();
+    assertThat(metricDefinitionMap.containsKey("IO Wait")).isTrue();
   }
 
   @Test
@@ -140,7 +139,7 @@ public class DatadogStateTest extends WingsBaseTest {
     Map<String, List<APMMetricInfo>> metricEndpointsInfo = DatadogState.metricEndpointsInfo(Optional.empty(),
         Optional.of(Lists.newArrayList("trace.servlet.request.duration", "system.cpu.iowait")), Optional.empty(),
         Optional.empty(), Optional.of(KUBERNETES));
-    assertTrue(metricEndpointsInfo.size() == 2);
+    assertThat(metricEndpointsInfo.size() == 2).isTrue();
   }
 
   @Test
@@ -151,8 +150,8 @@ public class DatadogStateTest extends WingsBaseTest {
     assertEquals(3, metricEndpointsInfo.size());
     Set<String> traceMetrics = new HashSet<>(Arrays.asList("Request Duration", "Errors", "Hits"));
     metricEndpointsInfo.forEach((k, v) -> {
-      assertTrue(v.size() == 1);
-      assertTrue(traceMetrics.contains(v.get(0).getMetricName()));
+      assertThat(v.size() == 1).isTrue();
+      assertThat(traceMetrics.contains(v.get(0).getMetricName())).isTrue();
     });
   }
 
@@ -182,8 +181,8 @@ public class DatadogStateTest extends WingsBaseTest {
     Set<String> traceMetrics = new HashSet<>(Arrays.asList("Request Duration", "Errors", "Hits"));
     metricEndpointsInfo.forEach((k, v) -> {
       v.forEach(metricInfo -> {
-        assertTrue(metricInfo.getResponseMappers().containsKey("txnName"));
-        assertTrue(metricInfo.getResponseMappers().get("txnName").getFieldValue().equals("transaction1"));
+        assertThat(metricInfo.getResponseMappers().containsKey("txnName")).isTrue();
+        assertThat(metricInfo.getResponseMappers().get("txnName").getFieldValue().equals("transaction1")).isTrue();
       });
     });
   }
@@ -272,6 +271,6 @@ public class DatadogStateTest extends WingsBaseTest {
     state.setMetrics(metrics);
     Map<String, String> validateFields = state.validateFields();
     assertEquals(1, validateFields.size());
-    assertTrue(validateFields.containsKey("trace.servlet.request.errors"));
+    assertThat(validateFields.containsKey("trace.servlet.request.errors")).isTrue();
   }
 }

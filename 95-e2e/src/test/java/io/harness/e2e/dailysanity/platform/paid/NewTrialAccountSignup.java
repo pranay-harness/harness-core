@@ -1,7 +1,7 @@
 package io.harness.e2e.dailysanity.platform.paid;
 
 import static io.harness.rule.OwnerRule.NATARAJA;
-import static junit.framework.TestCase.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -41,7 +41,7 @@ public class NewTrialAccountSignup extends AbstractE2ETest {
     logger.info("Generating the email id for trial user : " + fullEmailId);
     UserInvite userInvite = UserUtils.getTrialSignUpInvite(fullEmailId, testPassword);
     Boolean isTrialInviteDone = UserRestUtils.createNewTrialInvite(userInvite);
-    assertTrue(isTrialInviteDone);
+    assertThat(isTrialInviteDone).isTrue();
     MailinatorMetaMessage message =
         MailinatorRestUtils.retrieveMessageFromInbox(emailId, "Verify Your Email for Harness Trial");
     logger.info("Verify email mail retrieved");
@@ -52,7 +52,7 @@ public class NewTrialAccountSignup extends AbstractE2ETest {
     String inviteUrl =
         HTMLUtils.retrieveInviteUrlFromEmail(messageDetails.getData().getParts().get(0).getBody(), "VERIFY EMAIL");
     assertNotNull(inviteUrl);
-    assertTrue(StringUtils.isNotBlank(inviteUrl));
+    assertThat(StringUtils.isNotBlank(inviteUrl)).isTrue();
     logger.info("Email read and Signup URL is available for user signup: " + inviteUrl);
 
     messageDetails = null;
@@ -60,7 +60,7 @@ public class NewTrialAccountSignup extends AbstractE2ETest {
     logger.info("Email deleted for the inbox : " + emailId);
     assertNotNull(messageDetails.getAdditionalProperties());
     assertNotNull(messageDetails.getAdditionalProperties().containsKey("status"));
-    assertTrue(messageDetails.getAdditionalProperties().get("status").toString().equals("ok"));
+    assertThat(messageDetails.getAdditionalProperties().get("status").toString().equals("ok")).isTrue();
 
     String inviteIdFromUrl = TestUtils.validateAndGetTrialUserInviteFromUrl(inviteUrl);
     User user = UserRestUtils.completeNewTrialUserSignup(bearerToken, inviteIdFromUrl);

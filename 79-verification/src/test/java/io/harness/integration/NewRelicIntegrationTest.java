@@ -13,7 +13,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -169,7 +168,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     assertFalse(restResponse.getResource().isEmpty());
 
     for (NewRelicApplication app : restResponse.getResource()) {
-      assertTrue(app.getId() > 0);
+      assertThat(app.getId() > 0).isTrue();
       assertFalse(isBlank(app.getName()));
     }
   }
@@ -212,7 +211,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicMetric>>>() {});
 
     assertThat(restResponse.getResponseMessages()).isEmpty();
-    assertTrue(restResponse.getResource().size() >= 0);
+    assertThat(restResponse.getResource().size() >= 0).isTrue();
   }
 
   @Test
@@ -258,8 +257,8 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     RestResponse<VerificationNodeDataSetupResponse> metricResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(testNodeData, APPLICATION_JSON), new GenericType<RestResponse<VerificationNodeDataSetupResponse>>() {});
     assertThat(metricResponse.getResponseMessages()).isEmpty();
-    assertTrue(metricResponse.getResource().isProviderReachable());
-    assertTrue(metricResponse.getResource().getLoadResponse().isLoadPresent());
+    assertThat(metricResponse.getResource().isProviderReachable()).isTrue();
+    assertThat(metricResponse.getResource().getLoadResponse().isLoadPresent()).isTrue();
     assertNotNull(metricResponse.getResource().getLoadResponse().getLoadResponse());
     List<NewRelicMetric> txnsWithData =
         (List<NewRelicMetric>) metricResponse.getResource().getLoadResponse().getLoadResponse();
@@ -268,10 +267,10 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
         JsonUtils.asObject(JsonUtils.asJson(metricResponse.getResource().getDataForNode()), NewRelicMetricData.class);
     // found at least a node with data
     if (!newRelicMetricData.getMetrics_found().isEmpty()) {
-      assertTrue(newRelicMetricData.getMetrics().size() > 0);
+      assertThat(newRelicMetricData.getMetrics().size() > 0).isTrue();
       newRelicMetricData.getMetrics().forEach(newRelicMetricSlice -> {
-        assertTrue(!isEmpty(newRelicMetricSlice.getName()));
-        assertTrue(newRelicMetricSlice.getTimeslices().size() > 0);
+        assertThat(!isEmpty(newRelicMetricSlice.getName())).isTrue();
+        assertThat(newRelicMetricSlice.getTimeslices().size() > 0).isTrue();
       });
 
       return;
@@ -333,14 +332,14 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
               + applicationId + "&stateExecutionId=" + stateExecutionId + "&delegateTaskId=" + delegateTaskId);
       RestResponse<Boolean> restResponse = getRequestBuilderWithLearningAuthHeader(target).post(
           entity(metricDataRecords, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
-      assertTrue(restResponse.getResource());
+      assertThat(restResponse.getResource()).isTrue();
 
       target =
           client.target(VERIFICATION_API_BASE + "/timeseries/save-metrics?accountId=" + accountId + "&applicationId="
               + applicationId + "&stateExecutionId=" + stateExecutionId + "&delegateTaskId=" + delegateTaskId);
       restResponse = getRequestBuilderWithLearningAuthHeader(target).post(
           entity(metricDataRecords, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
-      assertTrue(restResponse.getResource());
+      assertThat(restResponse.getResource()).isTrue();
 
       target = client.target(VERIFICATION_API_BASE + "/timeseries/get-metrics?accountId=" + accountId
           + "&appId=" + applicationId + "&compareCurrent=" + true + "&groupName=" + DEFAULT_GROUP_NAME);
@@ -1102,7 +1101,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisRecords.iterator().next();
 
     assertEquals(RiskLevel.LOW, metricsAnalysis.getRiskLevel());
-    assertTrue(metricsAnalysis.isShowTimeSeries());
+    assertThat(metricsAnalysis.isShowTimeSeries()).isTrue();
     assertEquals("No problems found", metricsAnalysis.getMessage());
     assertEquals(1, metricsAnalysis.getMetricAnalyses().size());
   }

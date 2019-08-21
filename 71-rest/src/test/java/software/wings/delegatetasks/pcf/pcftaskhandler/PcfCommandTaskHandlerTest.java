@@ -1,9 +1,9 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
 import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -192,8 +192,8 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     assertEquals(2, pcfSetupCommandResponse.getDownsizeDetails().size());
     Set<String> appsToBeDownsized = new HashSet<>(
         pcfSetupCommandResponse.getDownsizeDetails().stream().map(app -> app.getApplicationName()).collect(toList()));
-    assertTrue(appsToBeDownsized.contains("a_s_e__3"));
-    assertTrue(appsToBeDownsized.contains("a_s_e__4"));
+    assertThat(appsToBeDownsized.contains("a_s_e__3")).isTrue();
+    assertThat(appsToBeDownsized.contains("a_s_e__4")).isTrue();
   }
 
   private PcfConfig getPcfConfig() {
@@ -445,8 +445,8 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
         .forEach(pcfInstanceElement
             -> pcfInstanceElements.add(
                 pcfInstanceElement.getApplicationId() + ":" + pcfInstanceElement.getInstanceIndex()));
-    assertTrue(pcfInstanceElements.contains("Guid:a_s_e__3:2"));
-    assertTrue(pcfInstanceElements.contains("Guid:a_s_e__4:1"));
+    assertThat(pcfInstanceElements.contains("Guid:a_s_e__3:2")).isTrue();
+    assertThat(pcfInstanceElements.contains("Guid:a_s_e__4:1")).isTrue();
   }
 
   @Test
@@ -498,8 +498,8 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     pcfInfraMappingDataResponse = (PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
     assertNotNull(pcfInfraMappingDataResponse.getRouteMaps());
     assertEquals(2, pcfInfraMappingDataResponse.getRouteMaps().size());
-    assertTrue(pcfInfraMappingDataResponse.getRouteMaps().contains("R1"));
-    assertTrue(pcfInfraMappingDataResponse.getRouteMaps().contains("R2"));
+    assertThat(pcfInfraMappingDataResponse.getRouteMaps().contains("R1")).isTrue();
+    assertThat(pcfInfraMappingDataResponse.getRouteMaps().contains("R2")).isTrue();
   }
 
   @Test
