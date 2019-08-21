@@ -141,8 +141,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   }
 
   private long getDataCollectionStartMinForAPM(CVConfiguration cvConfiguration, long endMinute) {
-    long maxCVCollectionMinute =
-        timeSeriesAnalysisService.getMaxCVCollectionMinute(cvConfiguration.getAppId(), cvConfiguration.getUuid());
+    long maxCVCollectionMinute = timeSeriesAnalysisService.getMaxCVCollectionMinute(
+        cvConfiguration.getAppId(), cvConfiguration.getUuid(), cvConfiguration.getAccountId());
     long startTime;
     if (maxCVCollectionMinute <= 0) {
       // no collection has been done so far
@@ -212,7 +212,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             logger.info("Executing APM data analysis Job for accountId {} and configId {}", accountId,
                 cvConfiguration.getUuid());
             long lastCVDataCollectionMinute = timeSeriesAnalysisService.getMaxCVCollectionMinute(
-                cvConfiguration.getAppId(), cvConfiguration.getUuid());
+                cvConfiguration.getAppId(), cvConfiguration.getUuid(), cvConfiguration.getAccountId());
             if (lastCVDataCollectionMinute <= 0) {
               logger.info(
                   "For account {} and CV config {} name {} type {} no data has been collected yet. Skipping analysis",

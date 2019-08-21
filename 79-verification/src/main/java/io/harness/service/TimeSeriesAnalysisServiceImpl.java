@@ -38,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
+import software.wings.beans.FeatureName;
 import software.wings.common.VerificationConstants;
 import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.dl.WingsPersistence;
@@ -46,6 +47,7 @@ import software.wings.metrics.RiskLevel;
 import software.wings.metrics.Threshold;
 import software.wings.metrics.ThresholdCategory;
 import software.wings.metrics.TimeSeriesDataRecord;
+import software.wings.metrics.TimeSeriesDataRecord.TimeSeriesMetricRecordKeys;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.ExperimentStatus;
 import software.wings.service.impl.analysis.ExperimentalMetricAnalysisRecord;
@@ -301,7 +303,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       return true;
     } else {
       saveTimeSeriesMLScores(timeSeriesMLScores);
-      bumpCollectionMinuteToProcess(appId, stateExecutionId, workflowExecutionId, groupName, analysisMinute);
+      bumpCollectionMinuteToProcess(appId, stateExecutionId, workflowExecutionId, groupName, analysisMinute, accountId);
       learningEngineService.markCompleted(taskId);
     }
 
@@ -681,29 +683,51 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   @Override
-  public void bumpCollectionMinuteToProcess(
-      String appId, String stateExecutionId, String workflowExecutionId, String groupName, int analysisMinute) {
+  public void bumpCollectionMinuteToProcess(String appId, String stateExecutionId, String workflowExecutionId,
+      String groupName, int analysisMinute, String accountId) {
     logger.info(
         "bumpCollectionMinuteToProcess. Going to update the record for stateExecutionId {} and dataCollectionMinute {}",
         stateExecutionId, analysisMinute);
     if (isEmpty(stateExecutionId)) {
       return;
     }
-    PageRequest<NewRelicMetricDataRecord> pageRequest =
-        aPageRequest()
-            .withLimit(UNLIMITED)
-            .addFilter(NewRelicMetricDataRecordKeys.stateExecutionId, Operator.EQ, stateExecutionId)
-            .addFilter(NewRelicMetricDataRecordKeys.groupName, Operator.EQ, groupName)
-            .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.LT_EQ, analysisMinute)
-            .addOrder(NewRelicMetricDataRecordKeys.dataCollectionMinute, OrderType.DESC)
-            .build();
-    final PageResponse<NewRelicMetricDataRecord> dataRecords =
-        dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
 
-    dataRecords.stream()
-        .filter(dataRecord -> ClusterLevel.H0.equals(dataRecord.getLevel()))
-        .forEach(dataRecord -> dataRecord.setLevel(ClusterLevel.HF));
-    dataStoreService.save(NewRelicMetricDataRecord.class, dataRecords, false);
+    if (managerClientHelper
+            .callManagerWithRetry(
+                managerClient.isFeatureEnabled(FeatureName.GDS_TIME_SERIES_SAVE_PER_MINUTE, accountId))
+            .getResource()) {
+      PageRequest<TimeSeriesDataRecord> pageRequest =
+          aPageRequest()
+              .withLimit(UNLIMITED)
+              .addFilter(TimeSeriesMetricRecordKeys.stateExecutionId, Operator.EQ, stateExecutionId)
+              .addFilter(TimeSeriesMetricRecordKeys.groupName, Operator.EQ, groupName)
+              .addFilter(TimeSeriesMetricRecordKeys.dataCollectionMinute, Operator.LT_EQ, analysisMinute)
+              .addOrder(TimeSeriesMetricRecordKeys.dataCollectionMinute, OrderType.DESC)
+              .build();
+      final PageResponse<TimeSeriesDataRecord> dataRecords =
+          dataStoreService.list(TimeSeriesDataRecord.class, pageRequest);
+
+      dataRecords.stream()
+          .filter(dataRecord -> ClusterLevel.H0.equals(dataRecord.getLevel()))
+          .forEach(dataRecord -> dataRecord.setLevel(ClusterLevel.HF));
+      dataStoreService.save(TimeSeriesDataRecord.class, dataRecords, false);
+    } else {
+      PageRequest<NewRelicMetricDataRecord> pageRequest =
+          aPageRequest()
+              .withLimit(UNLIMITED)
+              .addFilter(NewRelicMetricDataRecordKeys.stateExecutionId, Operator.EQ, stateExecutionId)
+              .addFilter(NewRelicMetricDataRecordKeys.groupName, Operator.EQ, groupName)
+              .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.LT_EQ, analysisMinute)
+              .addOrder(NewRelicMetricDataRecordKeys.dataCollectionMinute, OrderType.DESC)
+              .build();
+      final PageResponse<NewRelicMetricDataRecord> dataRecords =
+          dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
+
+      dataRecords.stream()
+          .filter(dataRecord -> ClusterLevel.H0.equals(dataRecord.getLevel()))
+          .forEach(dataRecord -> dataRecord.setLevel(ClusterLevel.HF));
+      dataStoreService.save(NewRelicMetricDataRecord.class, dataRecords, false);
+    }
   }
 
   @Override
@@ -876,20 +900,38 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   @Override
-  public long getMaxCVCollectionMinute(String appId, String cvConfigId) {
-    PageRequest<NewRelicMetricDataRecord> pageRequest =
-        aPageRequest()
-            .withLimit("1")
-            .addFilter(NewRelicMetricDataRecordKeys.cvConfigId, Operator.EQ, cvConfigId)
-            .addOrder(NewRelicMetricDataRecordKeys.dataCollectionMinute, OrderType.DESC)
-            .build();
+  public long getMaxCVCollectionMinute(String appId, String cvConfigId, String accountId) {
+    if (managerClientHelper
+            .callManagerWithRetry(
+                managerClient.isFeatureEnabled(FeatureName.GDS_TIME_SERIES_SAVE_PER_MINUTE, accountId))
+            .getResource()) {
+      PageRequest<TimeSeriesDataRecord> pageRequest =
+          aPageRequest()
+              .withLimit("1")
+              .addFilter(TimeSeriesMetricRecordKeys.cvConfigId, Operator.EQ, cvConfigId)
+              .addOrder(TimeSeriesMetricRecordKeys.dataCollectionMinute, OrderType.DESC)
+              .build();
 
-    final PageResponse<NewRelicMetricDataRecord> results =
-        dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
-    if (isEmpty(results)) {
-      return -1;
+      final PageResponse<TimeSeriesDataRecord> results = dataStoreService.list(TimeSeriesDataRecord.class, pageRequest);
+      if (isEmpty(results)) {
+        return -1;
+      }
+      return results.get(0).getDataCollectionMinute();
+    } else {
+      PageRequest<NewRelicMetricDataRecord> pageRequest =
+          aPageRequest()
+              .withLimit("1")
+              .addFilter(NewRelicMetricDataRecordKeys.cvConfigId, Operator.EQ, cvConfigId)
+              .addOrder(NewRelicMetricDataRecordKeys.dataCollectionMinute, OrderType.DESC)
+              .build();
+
+      final PageResponse<NewRelicMetricDataRecord> results =
+          dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
+      if (isEmpty(results)) {
+        return -1;
+      }
+      return results.get(0).getDataCollectionMinute();
     }
-    return results.get(0).getDataCollectionMinute();
   }
 
   @Override
@@ -905,7 +947,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
   @Override
   public Set<NewRelicMetricDataRecord> getMetricRecords(
-      String cvConfigId, int analysisStartMinute, int analysisEndMinute, String tag) {
+      String cvConfigId, int analysisStartMinute, int analysisEndMinute, String tag, String accountId) {
     ConcurrentMap<NewRelicMetricDataRecord, Boolean> rv = new ConcurrentHashMap<>();
     List<Callable<Void>> callables = new ArrayList<>();
     for (int startMin = analysisStartMinute; startMin <= analysisEndMinute;
@@ -915,20 +957,43 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
           : analysisEndMinute;
       final int dataStartMin = startMin;
       callables.add(() -> {
-        PageRequest<NewRelicMetricDataRecord> pageRequest =
-            aPageRequest()
-                .withLimit(UNLIMITED)
-                .addFilter(NewRelicMetricDataRecordKeys.cvConfigId, Operator.EQ, cvConfigId)
-                .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.GE, dataStartMin)
-                .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.LT_EQ, endMin)
-                .build();
+        List<NewRelicMetricDataRecord> results;
 
-        if (isNotEmpty(tag)) {
-          pageRequest.addFilter(NewRelicMetricDataRecordKeys.tag, Operator.EQ, tag);
+        if (managerClientHelper
+                .callManagerWithRetry(
+                    managerClient.isFeatureEnabled(FeatureName.GDS_TIME_SERIES_SAVE_PER_MINUTE, accountId))
+                .getResource()) {
+          PageRequest<TimeSeriesDataRecord> pageRequest =
+              aPageRequest()
+                  .withLimit(UNLIMITED)
+                  .addFilter(TimeSeriesMetricRecordKeys.cvConfigId, Operator.EQ, cvConfigId)
+                  .addFilter(TimeSeriesMetricRecordKeys.dataCollectionMinute, Operator.GE, dataStartMin)
+                  .addFilter(TimeSeriesMetricRecordKeys.dataCollectionMinute, Operator.LT_EQ, endMin)
+                  .build();
+
+          if (isNotEmpty(tag)) {
+            pageRequest.addFilter(TimeSeriesMetricRecordKeys.tag, Operator.EQ, tag);
+          }
+
+          final PageResponse<TimeSeriesDataRecord> dataRecordKeys =
+              dataStoreService.list(TimeSeriesDataRecord.class, pageRequest);
+
+          results = TimeSeriesDataRecord.getNewRelicDataRecordsFromTimeSeriesDataRecords(dataRecordKeys.getResponse());
+        } else {
+          PageRequest<NewRelicMetricDataRecord> pageRequest =
+              aPageRequest()
+                  .withLimit(UNLIMITED)
+                  .addFilter(NewRelicMetricDataRecordKeys.cvConfigId, Operator.EQ, cvConfigId)
+                  .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.GE, dataStartMin)
+                  .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.LT_EQ, endMin)
+                  .build();
+
+          if (isNotEmpty(tag)) {
+            pageRequest.addFilter(NewRelicMetricDataRecordKeys.tag, Operator.EQ, tag);
+          }
+
+          results = dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
         }
-
-        final PageResponse<NewRelicMetricDataRecord> results =
-            dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
         results.stream()
             .filter(dataRecord -> !dataRecord.getName().equals(HARNESS_HEARTBEAT_METRIC_NAME))
             .forEach(dataRecord -> rv.put(dataRecord, Boolean.TRUE));

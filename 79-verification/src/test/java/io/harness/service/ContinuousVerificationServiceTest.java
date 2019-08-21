@@ -48,6 +48,7 @@ import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.rest.RestResponse;
 import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LogAnalysisService;
+import io.harness.service.intfc.TimeSeriesAnalysisService;
 import io.harness.time.Timestamp;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
@@ -143,6 +144,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ContinuousVerificationService continuousVerificationService;
   @Inject private Injector injector;
+  @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
 
   @Mock private CVConfigurationService cvConfigurationService;
   @Mock private CVTaskService cvTaskService;
@@ -223,6 +225,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     writeField(continuousVerificationService, "metricRegistry", metricRegistry, true);
     writeField(continuousVerificationService, "cvTaskService", cvTaskService, true);
     writeField(continuousVerificationService, "cvActivityLogService", cvActivityLogService, true);
+    writeField(timeSeriesAnalysisService, "managerClient", verificationManagerClient, true);
+    writeField(continuousVerificationService, "timeSeriesAnalysisService", timeSeriesAnalysisService, true);
     when(delegateService.queueTask(anyObject()))
         .then(invocation -> wingsPersistence.save((DelegateTask) invocation.getArguments()[0]));
     when(settingsService.get(connectorId)).thenReturn(aSettingAttribute().withValue(sumoConfig).build());
@@ -1505,6 +1509,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
     when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
         .thenReturn(managerFeatureFlagCall);
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.GDS_TIME_SERIES_SAVE_PER_MINUTE, accountId))
+        .thenReturn(managerFeatureFlagCall);
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     continuousVerificationService.triggerAPMDataCollection(accountId);
     verify(delegateService).queueTask(taskCaptor.capture());
@@ -1535,6 +1541,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
     when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
         .thenReturn(managerFeatureFlagCall);
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.GDS_TIME_SERIES_SAVE_PER_MINUTE, accountId))
+        .thenReturn(managerFeatureFlagCall);
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     continuousVerificationService.triggerAPMDataCollection(accountId);
     verify(delegateService).queueTask(taskCaptor.capture());
@@ -1555,6 +1563,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
     when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
     when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
+        .thenReturn(managerFeatureFlagCall);
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.GDS_TIME_SERIES_SAVE_PER_MINUTE, accountId))
         .thenReturn(managerFeatureFlagCall);
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     continuousVerificationService.triggerAPMDataCollection(accountId);

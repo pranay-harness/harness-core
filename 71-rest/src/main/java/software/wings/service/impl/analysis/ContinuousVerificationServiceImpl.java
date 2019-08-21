@@ -87,6 +87,8 @@ import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.metrics.TimeSeriesDataRecord;
+import software.wings.metrics.TimeSeriesDataRecord.TimeSeriesMetricRecordKeys;
 import software.wings.metrics.appdynamics.AppdynamicsConstants;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
@@ -1207,37 +1209,71 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
     List<Callable<Void>> callables = new ArrayList<>();
     startEndMap.forEach((start, end) -> callables.add(() -> {
-      PageRequest<NewRelicMetricDataRecord> dataRecordPageRequest =
-          PageRequestBuilder.aPageRequest()
-              .addFilter(NewRelicMetricDataRecordKeys.cvConfigId, Operator.EQ, cvConfiguration.getUuid())
-              .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.GE, start)
-              .build();
-
-      if (end == endMinute) {
-        dataRecordPageRequest.addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.LT_EQ, end);
-      } else {
-        dataRecordPageRequest.addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.LT, end);
-      }
-
-      if (isNotEmpty(filter.getTags()) && filter.getTags().size() == 1) {
-        dataRecordPageRequest.addFilter(
-            NewRelicMetricDataRecordKeys.tag, Operator.EQ, filter.getTags().iterator().next());
-      }
-
-      dataRecordPageRequest.setLimit(UNLIMITED);
       final List<NewRelicMetricDataRecord> records = new ArrayList<>();
-      dataStoreService.list(NewRelicMetricDataRecord.class, dataRecordPageRequest)
-          .getResponse()
-          .stream()
-          .filter(dataRecord -> !HEARTBEAT_METRIC_NAME.equals(dataRecord.getName()))
-          .forEach(dataRecord -> {
-            // filter for txnName
-            if (isEmpty(filter.getTxnNames())) {
-              records.add(dataRecord);
-            } else if (filter.getTxnNames().contains(dataRecord.getName())) {
-              records.add(dataRecord);
-            }
-          });
+      if (featureFlagService.isEnabled(FeatureName.GDS_TIME_SERIES_SAVE_PER_MINUTE, cvConfiguration.getAccountId())) {
+        PageRequest<TimeSeriesDataRecord> dataRecordPageRequest =
+            PageRequestBuilder.aPageRequest()
+                .addFilter(TimeSeriesMetricRecordKeys.cvConfigId, Operator.EQ, cvConfiguration.getUuid())
+                .addFilter(TimeSeriesMetricRecordKeys.dataCollectionMinute, Operator.GE, start)
+                .build();
+
+        if (end == endMinute) {
+          dataRecordPageRequest.addFilter(TimeSeriesMetricRecordKeys.dataCollectionMinute, Operator.LT_EQ, end);
+        } else {
+          dataRecordPageRequest.addFilter(TimeSeriesMetricRecordKeys.dataCollectionMinute, Operator.LT, end);
+        }
+
+        if (isNotEmpty(filter.getTags()) && filter.getTags().size() == 1) {
+          dataRecordPageRequest.addFilter(
+              NewRelicMetricDataRecordKeys.tag, Operator.EQ, filter.getTags().iterator().next());
+        }
+
+        dataRecordPageRequest.setLimit(UNLIMITED);
+        PageResponse<TimeSeriesDataRecord> dataRecords =
+            dataStoreService.list(TimeSeriesDataRecord.class, dataRecordPageRequest);
+        TimeSeriesDataRecord.getNewRelicDataRecordsFromTimeSeriesDataRecords(dataRecords.getResponse())
+            .stream()
+            .filter(dataRecord -> !HEARTBEAT_METRIC_NAME.equals(dataRecord.getName()))
+            .forEach(dataRecord -> {
+              // filter for txnName
+              if (isEmpty(filter.getTxnNames())) {
+                records.add(dataRecord);
+              } else if (filter.getTxnNames().contains(dataRecord.getName())) {
+                records.add(dataRecord);
+              }
+            });
+      } else {
+        PageRequest<NewRelicMetricDataRecord> dataRecordPageRequest =
+            PageRequestBuilder.aPageRequest()
+                .addFilter(NewRelicMetricDataRecordKeys.cvConfigId, Operator.EQ, cvConfiguration.getUuid())
+                .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.GE, start)
+                .build();
+
+        if (end == endMinute) {
+          dataRecordPageRequest.addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.LT_EQ, end);
+        } else {
+          dataRecordPageRequest.addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.LT, end);
+        }
+
+        if (isNotEmpty(filter.getTags()) && filter.getTags().size() == 1) {
+          dataRecordPageRequest.addFilter(
+              NewRelicMetricDataRecordKeys.tag, Operator.EQ, filter.getTags().iterator().next());
+        }
+
+        dataRecordPageRequest.setLimit(UNLIMITED);
+        dataStoreService.list(NewRelicMetricDataRecord.class, dataRecordPageRequest)
+            .getResponse()
+            .stream()
+            .filter(dataRecord -> !HEARTBEAT_METRIC_NAME.equals(dataRecord.getName()))
+            .forEach(dataRecord -> {
+              // filter for txnName
+              if (isEmpty(filter.getTxnNames())) {
+                records.add(dataRecord);
+              } else if (filter.getTxnNames().contains(dataRecord.getName())) {
+                records.add(dataRecord);
+              }
+            });
+      }
       filterMetrics(filter, records);
       setDeeplinkUrlInRecords(cvConfiguration, connectorConfig, startTime, endTime, records);
       metricRecords.addAll(records);

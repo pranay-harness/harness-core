@@ -54,8 +54,8 @@ public interface TimeSeriesAnalysisService {
   NewRelicMetricDataRecord getLastHeartBeat(StateType stateType, String appId, String stateExecutionId,
       String workflowExecutionId, String serviceId, String metricGroup);
 
-  void bumpCollectionMinuteToProcess(
-      String appId, String stateExecutionId, String workflowExecutionId, String groupName, int analysisMinute);
+  void bumpCollectionMinuteToProcess(String appId, String stateExecutionId, String workflowExecutionId,
+      String groupName, int analysisMinute, String accountId);
 
   int getMaxControlMinuteWithData(StateType stateType, String appId, String serviceId, String workflowId,
       String workflowExecutionId, String groupName);
@@ -83,12 +83,12 @@ public interface TimeSeriesAnalysisService {
   void saveMetricTemplates(String appId, StateType stateType, String stateExecutionId,
       Map<String, TimeSeriesMetricDefinition> metricTemplates);
 
-  long getMaxCVCollectionMinute(String appId, String cvConfigId);
+  long getMaxCVCollectionMinute(String appId, String cvConfigId, String accountId);
 
   long getLastCVAnalysisMinute(String appId, String cvConfigId);
 
   Set<NewRelicMetricDataRecord> getMetricRecords(
-      String cvConfigId, int analysisStartMinute, int analysisEndMinute, String tag);
+      String cvConfigId, int analysisStartMinute, int analysisEndMinute, String tag, String accountId);
 
   TimeSeriesMLAnalysisRecord getPreviousAnalysis(String appId, String cvConfigId, long dataCollectionMin, String tag);
 
