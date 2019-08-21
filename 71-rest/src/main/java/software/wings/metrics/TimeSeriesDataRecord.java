@@ -40,6 +40,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.utils.IndexType;
+import software.wings.common.VerificationConstants;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.verification.generated.TimeSeriesMetricRecordProto.MetricDeeplinks;
 import software.wings.service.impl.verification.generated.TimeSeriesMetricRecordProto.MetricValues;
@@ -54,6 +55,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by rsingh on 08/30/17.
@@ -283,5 +285,56 @@ public class TimeSeriesDataRecord implements GoogleDataStoreAware, UuidAware, Cr
       }
     });
     return new ArrayList<>(timeSeriesDataRecords.values());
+  }
+
+  public static List<NewRelicMetricDataRecord> getNewRelicDataRecordsFromTimeSeriesDataRecords(
+      List<TimeSeriesDataRecord> metricData) {
+    metricData.forEach(TimeSeriesDataRecord::decompress);
+    List<NewRelicMetricDataRecord> newRelicRecords = new ArrayList<>();
+    metricData.forEach(metric -> {
+      TreeBasedTable<String, String, Double> values = metric.getValues();
+      TreeBasedTable<String, String, String> deeplinkMetadata = metric.getDeeplinkMetadata();
+
+      if (metric.getLevel() != null) {
+        NewRelicMetricDataRecord newRelicMetricDataRecord = NewRelicMetricDataRecord.builder()
+                                                                .name(VerificationConstants.HEARTBEAT_METRIC_NAME)
+                                                                .stateType(metric.getStateType())
+                                                                .workflowId(metric.getWorkflowId())
+                                                                .workflowExecutionId(metric.getWorkflowExecutionId())
+                                                                .serviceId(metric.getServiceId())
+                                                                .cvConfigId(metric.getCvConfigId())
+                                                                .stateExecutionId(metric.getStateExecutionId())
+                                                                .timeStamp(metric.getTimeStamp())
+                                                                .dataCollectionMinute(metric.getDataCollectionMinute())
+                                                                .host(metric.getHost())
+                                                                .level(metric.getLevel())
+                                                                .tag(metric.getTag())
+                                                                .build();
+        newRelicRecords.add(newRelicMetricDataRecord);
+      } else {
+        Set<String> names = values.rowKeySet();
+        names.forEach(name -> {
+          NewRelicMetricDataRecord newRelicMetricDataRecord =
+              NewRelicMetricDataRecord.builder()
+                  .name(name)
+                  .stateType(metric.getStateType())
+                  .workflowId(metric.getWorkflowId())
+                  .workflowExecutionId(metric.getWorkflowExecutionId())
+                  .serviceId(metric.getServiceId())
+                  .cvConfigId(metric.getCvConfigId())
+                  .stateExecutionId(metric.getStateExecutionId())
+                  .timeStamp(metric.getTimeStamp())
+                  .dataCollectionMinute(metric.getDataCollectionMinute())
+                  .host(metric.getHost())
+                  .level(metric.getLevel())
+                  .tag(metric.getTag())
+                  .values(values.row(name))
+                  .deeplinkMetadata(deeplinkMetadata.row(name))
+                  .build();
+          newRelicRecords.add(newRelicMetricDataRecord);
+        });
+      }
+    });
+    return newRelicRecords;
   }
 }

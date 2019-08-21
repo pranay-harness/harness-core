@@ -178,7 +178,7 @@ public class TimeSeriesResource {
       @QueryParam("analysisStartMin") int analysisStartMin, @QueryParam("analysisEndMin") int analysisEndMin,
       @QueryParam("tag") String tag, TSRequest request) {
     return new RestResponse<>(
-        timeSeriesAnalysisService.getMetricRecords(cvConfigId, analysisStartMin, analysisEndMin, tag));
+        timeSeriesAnalysisService.getMetricRecords(cvConfigId, analysisStartMin, analysisEndMin, tag, accountId));
   }
 
   @Produces({"application/json", "application/v1+json"})

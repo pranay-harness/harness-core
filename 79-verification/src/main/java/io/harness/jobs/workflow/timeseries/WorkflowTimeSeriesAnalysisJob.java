@@ -393,7 +393,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Job {
                   // Do nothing. Don't run any analysis.
                   taskQueued = true;
                   analysisService.bumpCollectionMinuteToProcess(context.getAppId(), context.getStateExecutionId(),
-                      context.getWorkflowExecutionId(), groupName, analysisMinute);
+                      context.getWorkflowExecutionId(), groupName, analysisMinute, context.getAccountId());
                   break;
                 }
                 taskQueued = timeSeriesML(analysisMinute, groupName, timeSeriesMlAnalysisType);
@@ -415,7 +415,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Job {
             NewRelicMetricAnalysisRecord analysisRecord = analyzeLocal(analysisMinute, groupName);
             analysisService.saveAnalysisRecords(analysisRecord);
             analysisService.bumpCollectionMinuteToProcess(context.getAppId(), context.getStateExecutionId(),
-                context.getWorkflowExecutionId(), groupName, analysisMinute);
+                context.getWorkflowExecutionId(), groupName, analysisMinute, context.getAccountId());
           } else if (!taskQueued) {
             continue;
           }

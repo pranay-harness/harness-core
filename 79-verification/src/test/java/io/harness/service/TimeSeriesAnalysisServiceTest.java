@@ -2,20 +2,27 @@ package io.harness.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rest.RestResponse.Builder.aRestResponse;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
 import io.harness.VerificationBaseTest;
 import io.harness.category.element.UnitTests;
+import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.TimeSeriesDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
@@ -31,17 +38,26 @@ import java.util.Set;
 public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   private String cvConfigId;
   private String serviceId;
+  private String accountId;
   private Random randomizer;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
 
+  @Mock private VerificationManagerClientHelper managerClientHelper;
+
   @Before
-  public void setup() {
+  public void setup() throws IllegalAccessException {
     long seed = System.currentTimeMillis();
     logger.info("seed: {}", seed);
     randomizer = new Random(seed);
     cvConfigId = generateUuid();
     serviceId = generateUuid();
+    accountId = generateUuid();
+
+    MockitoAnnotations.initMocks(this);
+    when(managerClientHelper.callManagerWithRetry(any())).thenReturn(aRestResponse().withResource(false).build());
+
+    FieldUtils.writeField(timeSeriesAnalysisService, "managerClientHelper", managerClientHelper, true);
   }
 
   @Test
@@ -82,7 +98,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
     int analysisEndMinute = analysisStartMinute + randomizer.nextInt(102);
     logger.info("start {} end {}", analysisStartMinute, analysisEndMinute);
     final Set<NewRelicMetricDataRecord> metricRecords =
-        timeSeriesAnalysisService.getMetricRecords(cvConfigId, analysisStartMinute, analysisEndMinute, null);
+        timeSeriesAnalysisService.getMetricRecords(cvConfigId, analysisStartMinute, analysisEndMinute, null, accountId);
     int numOfMinutesAsked = analysisEndMinute - analysisStartMinute + 1;
     assertEquals("failed for start " + analysisStartMinute + " end " + analysisEndMinute,
         numOfMinutesAsked * numOfTxns * numOfHosts, metricRecords.size());

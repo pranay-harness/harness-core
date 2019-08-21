@@ -480,6 +480,8 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
         (int) (currentMinute - CRON_POLL_INTERVAL_IN_MINUTES * numOfUnitsToBeAnalyized));
     wingsPersistence.save(timeSeriesMLAnalysisRecord);
 
+    when(managerClientHelper.callManagerWithRetry(any())).thenReturn(aRestResponse().withResource(false).build());
+
     continuousVerificationService.triggerServiceGuardTimeSeriesAnalysis(accountId);
 
     List<LearningEngineAnalysisTask> analysisTasks = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)

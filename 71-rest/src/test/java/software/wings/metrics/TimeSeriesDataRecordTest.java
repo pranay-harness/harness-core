@@ -110,4 +110,56 @@ public class TimeSeriesDataRecordTest {
             .thenComparing(TimeSeriesDataRecord::getHost, Comparator.nullsFirst(Comparator.naturalOrder())));
     assertEquals(expectedOutput, dataRecords);
   }
+
+  @Test
+  @Category(UnitTests.class)
+  public void getNewRelicDataRecordsFromTimeSeriesDataRecords() {
+    DateTime now = DateTime.now();
+    String host1 = "host";
+    String host2 = "host_new";
+    String transaction1 = "/get-metrics";
+    String transaction2 = "/get-transactions";
+    String metric1 = "response-time";
+    String metric2 = "throughput";
+    List<String> metrics = Lists.newArrayList(metric1, metric2);
+
+    Map<String, List<String>> transactionMap = new HashMap<>();
+    transactionMap.put(transaction1, metrics);
+    transactionMap.put(transaction2, metrics);
+
+    List<TimeSeriesDataRecord> inputRecords =
+        Lists.newArrayList(getTimeSeriesInputForTest(now.getMillis(), 0, host1, null, transactionMap),
+            getTimeSeriesInputForTest(now.getMillis(), 0, host2, null, transactionMap),
+            getTimeSeriesInputForTest(now.getMillis(), 0, null, ClusterLevel.H0, new HashMap<>()),
+            getTimeSeriesInputForTest(now.getMillis(), 1, host1, null, transactionMap),
+            getTimeSeriesInputForTest(now.getMillis(), 1, host2, null, transactionMap),
+            getTimeSeriesInputForTest(now.getMillis(), 1, null, ClusterLevel.H0, new HashMap<>()));
+
+    List<NewRelicMetricDataRecord> dataRecords =
+        TimeSeriesDataRecord.getNewRelicDataRecordsFromTimeSeriesDataRecords(inputRecords);
+
+    List<NewRelicMetricDataRecord> expectedOutput = Lists.newArrayList(
+        getNewRelicInputForTest(now.getMillis(), 0, host1, null, transaction1, metrics),
+        getNewRelicInputForTest(now.getMillis(), 0, host1, null, transaction2, metrics),
+        getNewRelicInputForTest(now.getMillis(), 0, host2, null, transaction1, metrics),
+        getNewRelicInputForTest(now.getMillis(), 0, host2, null, transaction2, metrics),
+        getNewRelicInputForTest(now.getMillis(), 0, null, ClusterLevel.H0, HEARTBEAT_METRIC_NAME, new ArrayList<>()),
+        getNewRelicInputForTest(now.getMillis(), 1, host1, null, transaction1, metrics),
+        getNewRelicInputForTest(now.getMillis(), 1, host1, null, transaction2, metrics),
+        getNewRelicInputForTest(now.getMillis(), 1, host2, null, transaction1, metrics),
+        getNewRelicInputForTest(now.getMillis(), 1, host2, null, transaction2, metrics),
+        getNewRelicInputForTest(now.getMillis(), 1, null, ClusterLevel.H0, HEARTBEAT_METRIC_NAME, new ArrayList<>()));
+
+    assertEquals(10, dataRecords.size());
+
+    expectedOutput.sort(
+        Comparator.comparing(NewRelicMetricDataRecord::getDataCollectionMinute)
+            .thenComparing(NewRelicMetricDataRecord::getName)
+            .thenComparing(NewRelicMetricDataRecord::getHost, Comparator.nullsFirst(Comparator.naturalOrder())));
+    dataRecords.sort(
+        Comparator.comparing(NewRelicMetricDataRecord::getDataCollectionMinute)
+            .thenComparing(NewRelicMetricDataRecord::getName)
+            .thenComparing(NewRelicMetricDataRecord::getHost, Comparator.nullsFirst(Comparator.naturalOrder())));
+    assertEquals(expectedOutput, dataRecords);
+  }
 }
