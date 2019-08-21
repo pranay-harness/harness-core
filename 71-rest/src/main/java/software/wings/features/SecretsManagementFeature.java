@@ -45,7 +45,7 @@ public class SecretsManagementFeature extends AbstractPremiumFeature implements 
       secretManager.transitionAllSecretsToHarnessSecretManager(accountId);
     }
 
-    return isUsageCompliantWithRestrictions(accountId, targetAccountType);
+    return true;
   }
 
   @Override
