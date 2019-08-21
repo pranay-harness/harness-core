@@ -294,7 +294,7 @@ public abstract class SettingValue implements ExecutionCapabilityDemander {
 
     GCS_HELM_REPO("GCS Helm Repository"),
 
-    SPOT_INST("SpotInst"),
+    SPOT_INST("Spotinst"),
 
     CUSTOM("Custom Artifact Source");
 

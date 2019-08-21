@@ -119,6 +119,9 @@ public class ActivityServiceImpl implements ActivityService {
         case KUBERNETES:
         case COMMAND:
         case HELM:
+        case SPOTINST_SETUP:
+        case SPOTINST_DEPLOY:
+        case SPOTINST_UPDATE_LISTENER:
           List<CommandUnit> commandUnits = activity.getCommandUnits();
           for (CommandUnit commandUnit : commandUnits) {
             rv.add(CommandUnitDetails.builder()
@@ -142,9 +145,6 @@ public class ActivityServiceImpl implements ActivityService {
         case AWS_ECS_SERVICE_SETUP_DAEMON:
         case AWS_ECS_SERVICE_ROLLBACK_DAEMON:
         case AWS_ECS_SERVICE_DEPLOY:
-        case SPOTINST_SETUP:
-        case SPOTINST_DEPLOY:
-        case SPOTINST_UPDATE_LISTENER:
           rv.add(CommandUnitDetails.builder()
                      .commandExecutionStatus(ExecutionStatus.translateExecutionStatus(activity.getStatus()))
                      .name(activity.getCommandUnitType().getName())

@@ -3,11 +3,18 @@ package software.wings.delegatetasks.spotinst.taskhandler;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.PROD_ELASTI_GROUP_NAME_SUFFIX;
+import static io.harness.spotinst.model.SpotInstConstants.RENAME_NEW_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.STAGE_ELASTI_GROUP_NAME_SUFFIX;
+import static io.harness.spotinst.model.SpotInstConstants.SWAP_ROUTES_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static software.wings.beans.Log.LogLevel.INFO;
 
 import com.google.inject.Singleton;
 
@@ -32,7 +39,7 @@ import java.util.Optional;
 @NoArgsConstructor
 public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
   protected SpotInstTaskExecutionResponse executeTaskInternal(SpotInstTaskParameters spotInstTaskParameters,
-      ExecutionLogCallback logCallback, SpotInstConfig spotInstConfig, AwsConfig awsConfig) throws Exception {
+      SpotInstConfig spotInstConfig, AwsConfig awsConfig) throws Exception {
     if (!(spotInstTaskParameters instanceof SpotInstSwapRoutesTaskParameters)) {
       String message =
           format("Parameters of unrecognized class: [%s] found while executing setup step. Workflow execution: [%s]",
@@ -45,16 +52,17 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
     SpotInstSwapRoutesTaskParameters swapRoutesParameters = (SpotInstSwapRoutesTaskParameters) spotInstTaskParameters;
     if (swapRoutesParameters.isRollback()) {
       return executeRollback(spotInstAccountId, spotInstToken, awsConfig, swapRoutesParameters,
-          swapRoutesParameters.getWorkflowExecutionId(), logCallback);
+          swapRoutesParameters.getWorkflowExecutionId());
     } else {
       return executeDeploy(spotInstAccountId, spotInstToken, awsConfig, swapRoutesParameters,
-          swapRoutesParameters.getWorkflowExecutionId(), logCallback);
+          swapRoutesParameters.getWorkflowExecutionId());
     }
   }
 
   private SpotInstTaskExecutionResponse executeDeploy(String spotInstAccountId, String spotInstToken,
-      AwsConfig awsConfig, SpotInstSwapRoutesTaskParameters swapRoutesParameters, String workflowExecutionId,
-      ExecutionLogCallback logCallback) throws Exception {
+      AwsConfig awsConfig, SpotInstSwapRoutesTaskParameters swapRoutesParameters, String workflowExecutionId)
+      throws Exception {
+    ExecutionLogCallback logCallback = getLogCallBack(swapRoutesParameters, SWAP_ROUTES_COMMAND_UNIT);
     String prodElastiGroupName =
         format("%s__%s", swapRoutesParameters.getElastiGroupNamePrefix(), PROD_ELASTI_GROUP_NAME_SUFFIX);
     String stageElastiGroupName =
@@ -79,6 +87,7 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
     awsElbHelperServiceDelegate.updateListenersForEcsBG(awsConfig, emptyList(),
         swapRoutesParameters.getProdListenerArn(), swapRoutesParameters.getStageListenerArn(),
         swapRoutesParameters.getAwsRegion());
+    logCallback.saveExecutionLog("Completed swap routes", INFO, SUCCESS);
     if (swapRoutesParameters.isDownsizeOldElastiGroup() && isNotEmpty(oldElastiGroupId)) {
       ElastiGroup temp = ElastiGroup.builder()
                              .id(oldElastiGroupId)
@@ -86,15 +95,16 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
                              .capacity(ElastiGroupCapacity.builder().minimum(0).maximum(0).target(0).build())
                              .build();
       int steadyStateTimeOut = getTimeOut(swapRoutesParameters.getSteadyStateTimeOut());
-      updateElastiGroupAndWait(
-          spotInstToken, spotInstAccountId, temp, logCallback, workflowExecutionId, steadyStateTimeOut);
+      updateElastiGroupAndWait(spotInstToken, spotInstAccountId, temp, workflowExecutionId, steadyStateTimeOut,
+          swapRoutesParameters, DOWN_SCALE_COMMAND_UNIT, DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
     }
     return SpotInstTaskExecutionResponse.builder().commandExecutionStatus(SUCCESS).build();
   }
 
   private SpotInstTaskExecutionResponse executeRollback(String spotInstAccountId, String spotInstToken,
-      AwsConfig awsConfig, SpotInstSwapRoutesTaskParameters swapRoutesParameters, String workflowExecutionId,
-      ExecutionLogCallback logCallback) throws Exception {
+      AwsConfig awsConfig, SpotInstSwapRoutesTaskParameters swapRoutesParameters, String workflowExecutionId)
+      throws Exception {
+    ExecutionLogCallback logCallback = getLogCallBack(swapRoutesParameters, SWAP_ROUTES_COMMAND_UNIT);
     String prodElastiGroupName =
         format("%s__%s", swapRoutesParameters.getElastiGroupNamePrefix(), PROD_ELASTI_GROUP_NAME_SUFFIX);
     String stageElastiGroupName =
@@ -111,14 +121,10 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
                              .name(prodElastiGroupName)
                              .capacity(oldElastiGroup.getCapacity())
                              .build();
+      updateElastiGroupAndWait(spotInstToken, spotInstAccountId, temp, workflowExecutionId, steadyStateTimeOut,
+          swapRoutesParameters, UP_SCALE_COMMAND_UNIT, UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
       logCallback.saveExecutionLog(
-          format("Updating Elasti group with id: [%s] to name: [%s] and capacity: [min: %d, max: %d, target: [%d]]",
-              oldElastiGroupId, prodElastiGroupName, oldElastiGroup.getCapacity().getMinimum(),
-              oldElastiGroup.getCapacity().getMaximum(), oldElastiGroup.getCapacity().getTarget()));
-      updateElastiGroupAndWait(
-          spotInstToken, spotInstAccountId, temp, logCallback, workflowExecutionId, steadyStateTimeOut);
-      logCallback.saveExecutionLog(
-          format("Renaming Elasti group with id: [%s] to name: [%s]", oldElastiGroupId, prodElastiGroupName));
+          format("Renaming old Elastigroup with id: [%s] to name: [%s]", oldElastiGroupId, prodElastiGroupName));
       spotInstHelperServiceDelegate.updateElastiGroup(spotInstToken, spotInstAccountId, oldElastiGroupId,
           ElastiGroupRenameRequest.builder().name(prodElastiGroupName).build());
     }
@@ -140,6 +146,7 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
           swapRoutesParameters.getProdListenerArn(), swapRoutesParameters.getStageListenerArn(),
           swapRoutesParameters.getAwsRegion());
     }
+    logCallback.saveExecutionLog("Prod Elastigroup is UP with correct traffic", INFO, SUCCESS);
 
     if (isNotEmpty(newElastiGroupId)) {
       ElastiGroup temp = ElastiGroup.builder()
@@ -147,15 +154,14 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
                              .name(stageElastiGroupName)
                              .capacity(ElastiGroupCapacity.builder().minimum(0).maximum(0).target(0).build())
                              .build();
-      logCallback.saveExecutionLog(
-          format("Updating Elasti group with id: [%s] to name: [%s] and capacity: [min: %d, max: %d, target: [%d]]",
-              newElastiGroupId, stageElastiGroupName, 0, 0, 0));
-      updateElastiGroupAndWait(
-          spotInstToken, spotInstAccountId, temp, logCallback, workflowExecutionId, steadyStateTimeOut);
+      updateElastiGroupAndWait(spotInstToken, spotInstAccountId, temp, workflowExecutionId, steadyStateTimeOut,
+          swapRoutesParameters, DOWN_SCALE_COMMAND_UNIT, DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
+      logCallback = getLogCallBack(swapRoutesParameters, RENAME_NEW_COMMAND_UNIT);
       logCallback.saveExecutionLog(
           format("Renaming Elasti group with id: [%s] to name: [%s]", newElastiGroupId, stageElastiGroupName));
       spotInstHelperServiceDelegate.updateElastiGroup(spotInstToken, spotInstAccountId, newElastiGroupId,
           ElastiGroupRenameRequest.builder().name(stageElastiGroupName).build());
+      logCallback.saveExecutionLog("Completed Rename", INFO, SUCCESS);
     }
 
     return SpotInstTaskExecutionResponse.builder().commandExecutionStatus(SUCCESS).build();

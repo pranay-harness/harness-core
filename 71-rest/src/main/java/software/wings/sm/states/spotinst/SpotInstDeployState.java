@@ -1,9 +1,15 @@
 package software.wings.sm.states.spotinst;
 
 import static com.google.common.collect.Maps.newHashMap;
+import static io.harness.spotinst.model.SpotInstConstants.DEPLOYMENT_ERROR;
+import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -34,6 +40,7 @@ import software.wings.beans.InstanceUnitType;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
+import software.wings.beans.command.SpotinstDummyCommandUnit;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest.SpotInstCommandRequestBuilder;
 import software.wings.service.intfc.ActivityService;
@@ -112,8 +119,13 @@ public class SpotInstDeployState extends State {
             .orElse(SpotInstSetupContextElement.builder().build());
 
     // create activity
-    Activity activity = spotInstStateHelper.createActivity(
-        context, null, getStateType(), SPOTINST_DEPLOY_COMMAND, CommandUnitType.SPOTINST_DEPLOY);
+    Activity activity = spotInstStateHelper.createActivity(context, null, getStateType(), SPOTINST_DEPLOY_COMMAND,
+        CommandUnitType.SPOTINST_DEPLOY,
+        ImmutableList.of(new SpotinstDummyCommandUnit(UP_SCALE_COMMAND_UNIT),
+            new SpotinstDummyCommandUnit(UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
+            new SpotinstDummyCommandUnit(DOWN_SCALE_COMMAND_UNIT),
+            new SpotinstDummyCommandUnit(DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
+            new SpotinstDummyCommandUnit(DEPLOYMENT_ERROR)));
 
     // Generate DeployStateExeuctionData, contains commandRequest object.
     SpotInstDeployStateExecutionData stateExecutionData =

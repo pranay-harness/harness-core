@@ -15,6 +15,7 @@ import static io.harness.spotinst.model.SpotInstConstants.LB_TYPE_TG;
 import static io.harness.spotinst.model.SpotInstConstants.LOAD_BALANCERS_CONFIG;
 import static io.harness.spotinst.model.SpotInstConstants.NAME_CONFIG_ELEMENT;
 import static io.harness.spotinst.model.SpotInstConstants.PHASE_PARAM;
+import static io.harness.spotinst.model.SpotInstConstants.SETUP_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.TG_ARN_PLACEHOLDER;
 import static io.harness.spotinst.model.SpotInstConstants.TG_NAME_PLACEHOLDER;
 import static io.harness.spotinst.model.SpotInstConstants.UNIT_INSTANCE;
@@ -57,7 +58,9 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SpotInstConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
+import software.wings.beans.command.SpotinstDummyCommandUnit;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest.SpotInstCommandRequestBuilder;
 import software.wings.service.intfc.ActivityService;
@@ -113,8 +116,8 @@ public class SpotInstStateHelper {
     AwsAmiInfrastructureMapping awsAmiInfrastructureMapping =
         (AwsAmiInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
 
-    Activity activity = createActivity(
-        context, artifact, serviceSetup.getStateType(), SPOTINST_SERVICE_SETUP_COMMAND, CommandUnitType.SPOTINST_SETUP);
+    Activity activity = createActivity(context, artifact, serviceSetup.getStateType(), SPOTINST_SERVICE_SETUP_COMMAND,
+        CommandUnitType.SPOTINST_SETUP, Collections.singletonList(new SpotinstDummyCommandUnit(SETUP_COMMAND_UNIT)));
 
     SettingAttribute settingAttribute = settingsService.get(awsAmiInfrastructureMapping.getComputeProviderSettingId());
     AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
@@ -215,7 +218,8 @@ public class SpotInstStateHelper {
   }
 
   public ActivityBuilder generateActivityBuilder(String appName, String appId, String commandName, Type type,
-      ExecutionContext executionContext, String commandType, CommandUnitType commandUnitType, Environment environment) {
+      ExecutionContext executionContext, String commandType, CommandUnitType commandUnitType, Environment environment,
+      List<CommandUnit> commandUnits) {
     WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
     notNullCheck("currentUser", workflowStandardParams.getCurrentUser(), USER);
     notNullCheck("workflowStandardParams", workflowStandardParams, USER);
@@ -226,7 +230,7 @@ public class SpotInstStateHelper {
         .commandName(commandName)
         .type(type)
         .commandType(commandType)
-        .commandUnits(Collections.emptyList())
+        .commandUnits(commandUnits)
         .commandUnitType(commandUnitType)
         .status(ExecutionStatus.RUNNING)
         .environmentId(environment.getUuid())
@@ -326,11 +330,11 @@ public class SpotInstStateHelper {
   }
 
   public Activity createActivity(ExecutionContext executionContext, Artifact artifact, String stateType, String command,
-      CommandUnitType commandUnitType) {
+      CommandUnitType commandUnitType, List<CommandUnit> commandUnits) {
     Application app = ((ExecutionContextImpl) executionContext).getApp();
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
-    ActivityBuilder activityBuilder = generateActivityBuilder(
-        app.getName(), app.getUuid(), command, Type.Command, executionContext, stateType, commandUnitType, env);
+    ActivityBuilder activityBuilder = generateActivityBuilder(app.getName(), app.getUuid(), command, Type.Command,
+        executionContext, stateType, commandUnitType, env, commandUnits);
 
     if (artifact != null) {
       activityBuilder.artifactName(artifact.getDisplayName()).artifactId(artifact.getUuid());
