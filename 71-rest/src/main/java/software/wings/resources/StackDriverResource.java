@@ -13,6 +13,7 @@ import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.stackdriver.StackDriverMetric;
 import software.wings.service.impl.stackdriver.StackDriverSetupTestNodeData;
+import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.service.intfc.stackdriver.StackDriverService;
 
 import java.io.IOException;
@@ -76,5 +77,15 @@ public class StackDriverResource {
   public RestResponse<Map<String, String>> getLoadBalancers(@QueryParam("accountId") final String accountId,
       @QueryParam("settingId") final String settingId, @QueryParam("region") final String region) throws IOException {
     return new RestResponse<>(stackDriverService.listForwardingRules(settingId, region));
+  }
+
+  @POST
+  @Path(LogAnalysisResource.ANALYSIS_STATE_GET_SAMPLE_RECORD_URL)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Object> getSampleLogRecord(
+      @QueryParam("accountId") String accountId, @Valid StackDriverSetupTestNodeData stackDriverSetupTestNodeData) {
+    return new RestResponse<>(stackDriverService.getLogSample(accountId, stackDriverSetupTestNodeData.getSettingId(),
+        stackDriverSetupTestNodeData.getQuery(), stackDriverSetupTestNodeData.getGuid()));
   }
 }

@@ -1,5 +1,11 @@
 package io.harness.serializer.kryo;
 
+import com.google.api.services.logging.v2.model.LogEntry;
+import com.google.api.services.logging.v2.model.LogEntryOperation;
+import com.google.api.services.logging.v2.model.LogEntrySourceLocation;
+import com.google.api.services.logging.v2.model.MonitoredResource;
+import com.google.api.services.logging.v2.model.MonitoredResourceMetadata;
+
 import com.amazonaws.services.cloudwatch.model.StandardUnit;
 import com.amazonaws.services.ecs.model.Deployment;
 import com.amazonaws.services.ecs.model.DeploymentConfiguration;
@@ -1328,5 +1334,10 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SpotInstListenerUpdateStateExecutionData.class, 7227);
     kryo.register(CyberArkConfig.class, 7228);
     kryo.register(ShellScriptProvisionerOutputElement.class, 7229);
+    kryo.register(LogEntry.class, 7230);
+    kryo.register(MonitoredResourceMetadata.class, 7231);
+    kryo.register(LogEntryOperation.class, 7232);
+    kryo.register(MonitoredResource.class, 7233);
+    kryo.register(LogEntrySourceLocation.class, 7234);
   }
 }

@@ -50,4 +50,8 @@ public interface StackDriverDelegateService {
       List<EncryptedDataDetail> encryptionDetails, String query, long startTime, long endTime,
       ThirdPartyApiCallLog apiCallLog, Set<String> hosts, String hostnameField, long logCollectionMinute,
       boolean is24X7Task, String logMessageField);
+
+  @DelegateTaskType(TaskType.STACKDRIVER_GET_LOG_SAMPLE)
+  Object getLogSample(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String query,
+      ThirdPartyApiCallLog apiCallLog, long startTime, long endTime);
 }
