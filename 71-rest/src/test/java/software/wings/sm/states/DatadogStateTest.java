@@ -253,4 +253,25 @@ public class DatadogStateTest extends WingsBaseTest {
     Map<String, String> invalidFields = DatadogState.validateDatadogCustomMetrics(customMetricMap);
     assertThat(invalidFields).isEmpty();
   }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateTraceMetricInWorkflowHappyCase() {
+    String metrics = "docker.mem.rss,kubernetes.cpu.usage.total";
+    DatadogState state = new DatadogState("testName");
+    state.setMetrics(metrics);
+    Map<String, String> validateFields = state.validateFields();
+    assertEquals(0, validateFields.size());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateTraceMetricInWorkflowTraceMetrics() {
+    String metrics = "docker.mem.rss,kubernetes.cpu.usage.total,trace.servlet.request.errors";
+    DatadogState state = new DatadogState("testName");
+    state.setMetrics(metrics);
+    Map<String, String> validateFields = state.validateFields();
+    assertEquals(1, validateFields.size());
+    assertTrue(validateFields.containsKey("trace.servlet.request.errors"));
+  }
 }

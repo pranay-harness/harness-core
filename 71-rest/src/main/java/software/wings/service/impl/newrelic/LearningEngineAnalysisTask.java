@@ -88,6 +88,7 @@ public class LearningEngineAnalysisTask extends Base {
   private MLAnalysisType ml_analysis_type;
   private String feedback_url;
   @JsonProperty("log_ml_result_url") private String logMLResultUrl;
+  @JsonProperty("use_supervised_model") private boolean shouldUseSupervisedModel;
   private String feature_name;
   @Indexed private ExecutionStatus executionStatus;
   private String cvConfigId;

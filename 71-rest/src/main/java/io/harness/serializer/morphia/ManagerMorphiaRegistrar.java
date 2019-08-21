@@ -453,6 +453,7 @@ import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.MetricAnalysisRecord;
 import software.wings.service.impl.analysis.SupervisedTSThreshold;
+import software.wings.service.impl.analysis.SupervisedTrainingStatus;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLScores;
 import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
@@ -889,6 +890,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(YamlVersion.class);
     set.add(PerpetualTaskRecord.class);
     set.add(CyberArkConfig.class);
+    set.add(SupervisedTrainingStatus.class);
   }
 
   @Override

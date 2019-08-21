@@ -53,4 +53,6 @@ public interface LearningEngineService {
       String stateExecutionId, String cvConfig, long analysisMinute, MLAnalysisType analysisType);
   boolean isEligibleToCreateTask(
       String stateExecutionId, String cvConfig, long analysisMinute, MLAnalysisType analysisType);
+  boolean shouldUseSupervisedModel(String fieldName, String fieldValue);
+  String getServiceIdFromStateExecutionId(String stateExecutionId);
 }
