@@ -4,7 +4,6 @@ import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.testframework.restutils.UserRestUtils.loginUserOrNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import com.google.inject.Inject;
 
@@ -88,7 +87,7 @@ public class UserLockoutPolicyFunctionalTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void TC2_checkUserLockout() {
     user = loginUserOrNull(TEST_EMAIL, CORRECT_PASSWORD);
-    assertNotNull(user);
+    assertThat(user).isNotNull();
     Setup.signOut(user.getUuid(), user.getToken());
     loginUserOrNull(TEST_EMAIL, WRONG_PASSWORD);
     loginUserOrNull(TEST_EMAIL, WRONG_PASSWORD);

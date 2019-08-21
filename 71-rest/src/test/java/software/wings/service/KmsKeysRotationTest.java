@@ -5,7 +5,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -90,7 +89,7 @@ public class KmsKeysRotationTest extends WingsBaseTest {
         secretManagerConfigService.listSecretManagersByType(GLOBAL_ACCOUNT_ID, EncryptionType.KMS, true);
     assertEquals(1, kmsConfigs.size());
     KmsConfig kmsConfig = (KmsConfig) kmsConfigs.iterator().next();
-    assertNotNull(kmsConfig);
+    assertThat(kmsConfig).isNotNull();
     String newAccessKey = System.getenv(AWS_ACCESS_KEY);
     if (isEmpty(newAccessKey)) {
       newAccessKey = System.getProperty(AWS_ACCESS_KEY);
@@ -124,7 +123,7 @@ public class KmsKeysRotationTest extends WingsBaseTest {
     assertEquals(1, kmsConfigs.size());
     KmsConfig oldKmsConfig = (KmsConfig) kmsConfigs.iterator().next();
     String kmsName = oldKmsConfig.getName();
-    assertNotNull(oldKmsConfig);
+    assertThat(oldKmsConfig).isNotNull();
     String newAccessKey = System.getenv(AWS_ACCESS_KEY);
     if (isEmpty(newAccessKey)) {
       newAccessKey = System.getProperty(AWS_ACCESS_KEY);

@@ -3,7 +3,6 @@ package software.wings.integration.SSO.LDAP;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
 import static software.wings.integration.SSO.LDAP.LdapIntegrationTestConstants.ACCOUNT_ID;
 import static software.wings.integration.SSO.LDAP.LdapIntegrationTestConstants.ADMIN_HARNESS_ID;
 import static software.wings.integration.SSO.LDAP.LdapIntegrationTestConstants.INVALID_TOKEN;
@@ -144,7 +143,7 @@ public class LdapIntegrationTest extends BaseIntegrationTest implements WingsInt
         Entity.json(JsonUtils.asJson(ldapSettings)), new GenericType<RestResponse<LdapSettings>>() {});
     LdapSettings resource = ldapSettingsRestResponse.getResource();
     assertEquals(resource.getAccountId(), ACCOUNT_ID);
-    assertNotNull(resource.getConnectionSettings());
+    assertThat(resource.getConnectionSettings()).isNotNull();
     assertEquals(resource.getUserSettingsList().size(), 1);
     assertEquals(resource.getGroupSettingsList().size(), 2);
   }

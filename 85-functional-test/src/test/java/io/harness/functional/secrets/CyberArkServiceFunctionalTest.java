@@ -2,7 +2,6 @@ package io.harness.functional.secrets;
 
 import static io.harness.rule.OwnerRule.MARK;
 import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertNotNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -65,7 +64,7 @@ public class CyberArkServiceFunctionalTest extends AbstractFunctionalTest {
     String secretId = null;
     try {
       secretsManagerId = addSecretsManager(cyberArkConfig);
-      assertNotNull(secretsManagerId);
+      assertThat(secretsManagerId).isNotNull();
       logger.info("CyberArk Secret Manager config created.");
 
       cyberArkConfig = wingsPersistence.get(CyberArkConfig.class, secretsManagerId);
@@ -87,7 +86,7 @@ public class CyberArkServiceFunctionalTest extends AbstractFunctionalTest {
       assertThat(encryptedDataList.size() > 0).isTrue();
 
       EncryptedData data = wingsPersistence.get(EncryptedData.class, secretId);
-      assertNotNull(data);
+      assertThat(data).isNotNull();
 
       // Verifying the secret decryption
       cyberArkConfig.setClientCertificate(clientCertificate);

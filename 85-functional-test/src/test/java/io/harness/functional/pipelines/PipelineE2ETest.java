@@ -3,7 +3,6 @@ package io.harness.functional.pipelines;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.rule.OwnerRule.SUNIL;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
@@ -151,11 +150,11 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
     logger.info("Creating the pipeline");
     Pipeline createdPipeline =
         PipelineRestUtils.createPipeline(application.getAppId(), pipeline, getAccount().getUuid(), bearerToken);
-    assertNotNull(createdPipeline);
+    assertThat(createdPipeline).isNotNull();
     logger.info("Making a get call and verifying if the pipeline created is accessible");
     Pipeline verifyCreatedPipeline =
         PipelineRestUtils.getPipeline(application.getAppId(), createdPipeline.getUuid(), bearerToken);
-    assertNotNull(verifyCreatedPipeline);
+    assertThat(verifyCreatedPipeline).isNotNull();
     assertThat(createdPipeline.getName().equals(verifyCreatedPipeline.getName())).isTrue();
     logger.info("Create and Get pipeline verification completed");
 
@@ -167,10 +166,10 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
     verifyCreatedPipeline.setPipelineStages(pipelineStages);
 
     createdPipeline = PipelineRestUtils.updatePipeline(application.getAppId(), verifyCreatedPipeline, bearerToken);
-    assertNotNull(createdPipeline);
+    assertThat(createdPipeline).isNotNull();
     verifyCreatedPipeline =
         PipelineRestUtils.getPipeline(application.getAppId(), createdPipeline.getUuid(), bearerToken);
-    assertNotNull(verifyCreatedPipeline);
+    assertThat(verifyCreatedPipeline).isNotNull();
     assertThat(verifyCreatedPipeline.getPipelineStages().size() == pipelineStages.size()).isTrue();
 
     ExecutionArgs executionArgs = new ExecutionArgs();

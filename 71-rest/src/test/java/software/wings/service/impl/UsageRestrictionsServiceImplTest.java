@@ -5,7 +5,6 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
@@ -729,13 +728,13 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
 
     UsageRestrictionsReferenceSummary summary =
         usageRestrictionsService.getReferenceSummaryForApp(ACCOUNT_ID, APP_ID_1);
-    assertNotNull(summary);
+    assertThat(summary).isNotNull();
     assertEquals(1, summary.getTotal());
     assertEquals(1, summary.getNumOfSettings());
     assertEquals(1, summary.getSettings().size());
 
     summary = usageRestrictionsService.getReferenceSummaryForEnv(ACCOUNT_ID, ENV_ID_1);
-    assertNotNull(summary);
+    assertThat(summary).isNotNull();
     assertEquals(1, summary.getTotal());
     assertEquals(1, summary.getNumOfSettings());
     assertEquals(1, summary.getSettings().size());

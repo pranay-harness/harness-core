@@ -9,7 +9,6 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -996,10 +995,10 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     assertEquals(keyValuePairs.get("executionRole"), StringUtils.EMPTY);
     assertEquals(keyValuePairs.get("vpcId"), StringUtils.EMPTY);
 
-    assertNotNull(keyValuePairs.get("subnetIds"));
+    assertThat(keyValuePairs.get("subnetIds")).isNotNull();
     assertThat((List) keyValuePairs.get("subnetIds")).isEmpty();
 
-    assertNotNull(keyValuePairs.get("securityGroupIds"));
+    assertThat(keyValuePairs.get("securityGroupIds")).isNotNull();
     assertThat((List) keyValuePairs.get("securityGroupIds")).isEmpty();
   }
 
@@ -1021,7 +1020,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     assertEquals(4, keyValuePairs.size());
     assertEquals(keyValuePairs.get("organization"), ORGANIZATION);
     assertEquals(keyValuePairs.get("space"), SPACE);
-    assertNotNull(keyValuePairs.get("tempRouteMap"));
+    assertThat(keyValuePairs.get("tempRouteMap")).isNotNull();
     assertEquals(1, ((List) keyValuePairs.get("tempRouteMap")).size());
     assertEquals(1, ((List) keyValuePairs.get("routeMaps")).size());
     assertEquals(ROUTE, ((List) keyValuePairs.get("tempRouteMap")).get(0));

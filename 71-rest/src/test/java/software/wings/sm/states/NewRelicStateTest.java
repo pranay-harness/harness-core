@@ -6,7 +6,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -282,13 +281,13 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   @Category(UnitTests.class)
   public void testGetMetricType() {
     String errType = NewRelicState.getMetricTypeForMetric(NewRelicMetricValueDefinition.ERROR);
-    assertNotNull(errType);
+    assertThat(errType).isNotNull();
     assertEquals("Error Type should be", MetricType.ERROR.name(), errType);
     String throughput = NewRelicState.getMetricTypeForMetric(NewRelicMetricValueDefinition.REQUSET_PER_MINUTE);
-    assertNotNull(throughput);
+    assertThat(throughput).isNotNull();
     assertEquals("Error Type should be", MetricType.THROUGHPUT.name(), throughput);
     String respTime = NewRelicState.getMetricTypeForMetric(NewRelicMetricValueDefinition.AVERAGE_RESPONSE_TIME);
-    assertNotNull(respTime);
+    assertThat(respTime).isNotNull();
     assertEquals("Error Type should be", MetricType.RESP_TIME.name(), respTime);
 
     String dummy = NewRelicState.getMetricTypeForMetric("incorrectName");

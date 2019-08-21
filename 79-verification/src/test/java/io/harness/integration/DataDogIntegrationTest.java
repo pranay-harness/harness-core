@@ -5,7 +5,6 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -127,7 +126,7 @@ public class DataDogIntegrationTest extends VerificationBaseIntegrationTest {
                    .build(),
             APPLICATION_JSON),
         new GenericType<RestResponse<String>>() {});
-    assertNotNull(restResponse.getResource());
+    assertThat(restResponse.getResource()).isNotNull();
   }
 
   @Test

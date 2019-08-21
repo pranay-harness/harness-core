@@ -1,8 +1,8 @@
 package software.wings.yaml.handler.services;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -193,11 +193,11 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
 
   private void validateYamlContent(String yamlFileContent, ApplicationManifest applicationManifest) {
     ApplicationManifest.Yaml yaml = yamlHandler.toYaml(applicationManifest, APP_ID);
-    assertNotNull(yaml);
-    assertNotNull(yaml.getType());
+    assertThat(yaml).isNotNull();
+    assertThat(yaml.getType()).isNotNull();
 
     String yamlContent = getYamlContent(yaml);
-    assertNotNull(yamlContent);
+    assertThat(yamlContent).isNotNull();
     yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
     assertEquals(yamlFileContent, yamlContent);
   }

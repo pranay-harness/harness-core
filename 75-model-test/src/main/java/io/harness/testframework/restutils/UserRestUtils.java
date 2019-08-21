@@ -1,7 +1,7 @@
 package io.harness.testframework.restutils;
 
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
-import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
@@ -52,7 +52,7 @@ public class UserRestUtils {
             .post("/users/invites")
             .as(new GenericType<RestResponse<List<UserInvite>>>() {}.getType());
     List<UserInvite> inviteList = inviteListResponse.getResource();
-    assertNotNull(inviteList);
+    assertThat(inviteList).isNotNull();
     return inviteList;
   }
 
@@ -62,7 +62,7 @@ public class UserRestUtils {
     GenericType<RestResponse<User>> genericType = new GenericType<RestResponse<User>>() {};
     RestResponse<User> userRestResponse =
         Setup.portal().header("Authorization", basicAuthValue).get("/users/login").as(genericType.getType());
-    assertNotNull(userRestResponse);
+    assertThat(userRestResponse).isNotNull();
     User user = userRestResponse.getResource();
     return user;
   }

@@ -5,7 +5,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
@@ -122,12 +121,12 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
                               .build());
     SettingAttribute settingAttribute =
         settingsService.getByName(accountId, Application.GLOBAL_APP_ID, AWS_PLAY_GROUND);
-    assertNotNull(settingAttribute);
+    assertThat(settingAttribute).isNotNull();
     awsConfigId = settingAttribute.getUuid();
 
     SettingAttribute settingAttribute1 =
         settingsService.getByName(accountId, Application.GLOBAL_APP_ID, AWS_PLAY_GROUND_NO_LAMBDA);
-    assertNotNull(settingAttribute1);
+    assertThat(settingAttribute1).isNotNull();
     awsConfigNoLambdaId = settingAttribute1.getUuid();
 
     assertThat(isNotEmpty(awsConfigId)).isTrue();

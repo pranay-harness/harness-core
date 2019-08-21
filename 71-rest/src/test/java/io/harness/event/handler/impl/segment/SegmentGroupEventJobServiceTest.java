@@ -1,7 +1,7 @@
 package io.harness.event.handler.impl.segment;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import com.google.inject.Inject;
 
@@ -45,7 +45,7 @@ public class SegmentGroupEventJobServiceTest extends BaseIntegrationTest {
 
     SegmentGroupEventJobContext ctxFromDb = segmentGroupEventJobService.get(ctx.getUuid());
 
-    assertNotNull(ctxFromDb);
+    assertThat(ctxFromDb).isNotNull();
     assertEquals(1, ctxFromDb.getAccountIds().size());
 
     accountId = "some-other-account-" + SegmentGroupEventJobServiceTest.class.getSimpleName();
@@ -54,7 +54,7 @@ public class SegmentGroupEventJobServiceTest extends BaseIntegrationTest {
     int count = persistence.createQuery(SegmentGroupEventJobContext.class).asList().size();
     assertEquals(1, count);
     ctxFromDb = segmentGroupEventJobService.get(ctx.getUuid());
-    assertNotNull(ctxFromDb);
+    assertThat(ctxFromDb).isNotNull();
     assertEquals(2, ctxFromDb.getAccountIds().size());
   }
 
@@ -68,7 +68,7 @@ public class SegmentGroupEventJobServiceTest extends BaseIntegrationTest {
 
     SegmentGroupEventJobContext ctxFromDb = segmentGroupEventJobService.get(ctx.getUuid());
 
-    assertNotNull(ctxFromDb);
+    assertThat(ctxFromDb).isNotNull();
     assertEquals(1, ctxFromDb.getAccountIds().size());
 
     int count = persistence.createQuery(SegmentGroupEventJobContext.class).asList().size();

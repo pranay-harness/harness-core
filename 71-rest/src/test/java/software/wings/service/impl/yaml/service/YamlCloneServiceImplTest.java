@@ -2,7 +2,6 @@ package software.wings.service.impl.yaml.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -203,7 +202,7 @@ public class YamlCloneServiceImplTest extends WingsBaseTest {
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
     verify(yamlService).processChangeSet(captor.capture(), anyBoolean());
     List changes = captor.getValue();
-    assertNotNull(changes);
+    assertThat(changes).isNotNull();
     assertEquals(1, changes.size());
     assertThat(changes.get(0) instanceof Change).isTrue();
     Change change = (Change) changes.get(0);

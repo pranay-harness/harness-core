@@ -1,6 +1,6 @@
 package io.harness.testframework.framework.utils;
 
-import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import software.wings.beans.Account;
 import software.wings.beans.PipelineStage;
@@ -27,7 +27,7 @@ public class PipelineUtils {
     Map<String, Object> properties = new HashMap<>();
     properties.put("approvalStateType", ApprovalStateType.USER_GROUP.name());
     UserGroup userGroup = UserGroupUtils.getUserGroup(account, bearerToken, userGroupName);
-    assertNotNull(userGroup);
+    assertThat(userGroup).isNotNull();
     properties.put("timeoutInMills", 1000 * 60 * 60);
     properties.put("groupName", userGroupName);
     List<String> userGroups = new ArrayList<>();

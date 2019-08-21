@@ -3,7 +3,6 @@ package software.wings.service.impl.analysis;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyLong;
@@ -116,7 +115,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
         service.getDataForNode("accountId", "serverConfigId", fetchConfig, StateType.APM_VERIFICATION);
 
     // verify
-    assertNotNull(response);
+    assertThat(response).isNotNull();
     assertThat(response.getLoadResponse().isLoadPresent()).isTrue();
   }
 
@@ -144,7 +143,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
         service.getDataForNode("accountId", "serverConfigId", fetchConfig, StateType.APM_VERIFICATION);
 
     // verify
-    assertNotNull(response);
+    assertThat(response).isNotNull();
     assertThat(response.getLoadResponse().isLoadPresent()).isFalse();
   }
 

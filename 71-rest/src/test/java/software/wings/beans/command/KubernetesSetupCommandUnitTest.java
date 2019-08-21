@@ -4,7 +4,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -247,18 +246,18 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
         "autoScalerName", "Deployment", "extensions/v1beta1", "default", labels, setupParams, executionLogCallback);
 
     assertEquals("autoscaling/v2beta1", horizontalPodAutoscaler.getApiVersion());
-    assertNotNull(horizontalPodAutoscaler.getSpec());
+    assertThat(horizontalPodAutoscaler.getSpec()).isNotNull();
     assertEquals("autoScalerName", horizontalPodAutoscaler.getSpec().getScaleTargetRef().getName());
     assertEquals("Deployment", horizontalPodAutoscaler.getSpec().getScaleTargetRef().getKind());
-    assertNotNull(horizontalPodAutoscaler.getMetadata());
+    assertThat(horizontalPodAutoscaler.getMetadata()).isNotNull();
     assertEquals("autoScalerName", horizontalPodAutoscaler.getMetadata().getName());
     assertEquals("default", horizontalPodAutoscaler.getMetadata().getNamespace());
-    assertNotNull(horizontalPodAutoscaler.getMetadata().getLabels());
+    assertThat(horizontalPodAutoscaler.getMetadata().getLabels()).isNotNull();
     assertThat(horizontalPodAutoscaler.getMetadata().getLabels().containsKey("app")).isTrue();
     assertThat(horizontalPodAutoscaler.getMetadata().getLabels().containsKey("version")).isTrue();
     assertEquals("appName", horizontalPodAutoscaler.getMetadata().getLabels().get("app"));
     assertEquals("9", horizontalPodAutoscaler.getMetadata().getLabels().get("version"));
-    assertNotNull(horizontalPodAutoscaler.getSpec().getAdditionalProperties());
+    assertThat(horizontalPodAutoscaler.getSpec().getAdditionalProperties()).isNotNull();
     assertEquals(1, horizontalPodAutoscaler.getSpec().getAdditionalProperties().size());
     assertEquals("metrics", horizontalPodAutoscaler.getSpec().getAdditionalProperties().keySet().iterator().next());
     assertEquals(Integer.valueOf(3), horizontalPodAutoscaler.getSpec().getMinReplicas());
@@ -289,13 +288,13 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
             "default", labels, setupParams, executionLogCallback);
 
     assertEquals("autoscaling/v1", horizontalPodAutoscaler.getApiVersion());
-    assertNotNull(horizontalPodAutoscaler.getSpec());
+    assertThat(horizontalPodAutoscaler.getSpec()).isNotNull();
     assertEquals("abaris.hpanormal.prod.0", horizontalPodAutoscaler.getSpec().getScaleTargetRef().getName());
     assertEquals("Deployment", horizontalPodAutoscaler.getSpec().getScaleTargetRef().getKind());
-    assertNotNull(horizontalPodAutoscaler.getMetadata());
+    assertThat(horizontalPodAutoscaler.getMetadata()).isNotNull();
     assertEquals("abaris.hpanormal.prod.0", horizontalPodAutoscaler.getMetadata().getName());
     assertEquals("default", horizontalPodAutoscaler.getMetadata().getNamespace());
-    assertNotNull(horizontalPodAutoscaler.getMetadata().getLabels());
+    assertThat(horizontalPodAutoscaler.getMetadata().getLabels()).isNotNull();
     assertThat(horizontalPodAutoscaler.getMetadata().getLabels().containsKey("app")).isTrue();
     assertThat(horizontalPodAutoscaler.getMetadata().getLabels().containsKey("version")).isTrue();
     assertEquals("appName", horizontalPodAutoscaler.getMetadata().getLabels().get("app"));
@@ -317,13 +316,13 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
         "extensions/v1beta1", "default", labels, setupParams, executionLogCallback);
 
     assertEquals("autoscaling/v1", horizontalPodAutoscaler.getApiVersion());
-    assertNotNull(horizontalPodAutoscaler.getSpec());
+    assertThat(horizontalPodAutoscaler.getSpec()).isNotNull();
     assertEquals("abaris.hpanormal.prod-0", horizontalPodAutoscaler.getSpec().getScaleTargetRef().getName());
     assertEquals("Deployment", horizontalPodAutoscaler.getSpec().getScaleTargetRef().getKind());
-    assertNotNull(horizontalPodAutoscaler.getMetadata());
+    assertThat(horizontalPodAutoscaler.getMetadata()).isNotNull();
     assertEquals("abaris.hpanormal.prod-0", horizontalPodAutoscaler.getMetadata().getName());
     assertEquals("default", horizontalPodAutoscaler.getMetadata().getNamespace());
-    assertNotNull(horizontalPodAutoscaler.getMetadata().getLabels());
+    assertThat(horizontalPodAutoscaler.getMetadata().getLabels()).isNotNull();
     assertThat(horizontalPodAutoscaler.getMetadata().getLabels().containsKey("app")).isTrue();
     assertThat(horizontalPodAutoscaler.getMetadata().getLabels().containsKey("version")).isTrue();
     assertEquals("appName", horizontalPodAutoscaler.getMetadata().getLabels().get("app"));

@@ -4,7 +4,6 @@ import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -229,12 +228,12 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
             .findFirst()
             .get();
 
-    assertNotNull(task);
-    assertNotNull(task.getContainers());
-    assertNotNull(task.getContainers().get(0).getNetworks());
+    assertThat(task).isNotNull();
+    assertThat(task.getContainers()).isNotNull();
+    assertThat(task.getContainers().get(0).getNetworks()).isNotNull();
 
     Network network = task.getContainers().get(0).getNetworks().get(0);
-    assertNotNull(network.getIPv4Addresses());
+    assertThat(network.getIPv4Addresses()).isNotNull();
     assertEquals("172.31.21.197", network.getIPv4Addresses().get(0));
 
     EcsContainerServiceImpl serviceImpl = new EcsContainerServiceImpl();

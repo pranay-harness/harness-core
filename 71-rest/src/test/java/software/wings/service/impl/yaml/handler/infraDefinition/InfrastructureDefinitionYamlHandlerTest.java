@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.infraDefinition;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -242,7 +242,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
     } catch (URISyntaxException e) {
       fail("Unable to find yaml file " + yamlFileName);
     }
-    assertNotNull(yamlFile);
+    assertThat(yamlFile).isNotNull();
     String yamlString = FileUtils.readFileToString(yamlFile, "UTF-8");
     ChangeContext<Yaml> changeContext = getChangeContext(yamlString);
     Yaml yaml = (Yaml) getYaml(yamlString, Yaml.class);
@@ -253,16 +253,16 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
     verify(infrastructureDefinitionService).save(captor.capture(), any(boolean.class));
     InfrastructureDefinition savedDefinition = captor.getValue();
 
-    assertNotNull(savedDefinition);
+    assertThat(savedDefinition).isNotNull();
     assertEquals(savedDefinition.getCloudProviderType(), cloudProviderType);
     assertEquals(savedDefinition.getDeploymentType(), deploymentType);
     assertEquals(savedDefinition.getInfrastructure().getInfrastructureType(), cloudProviderInfrastructureType);
 
     yaml = handler.toYaml(savedDefinition, APP_ID);
 
-    assertNotNull(yaml);
+    assertThat(yaml).isNotNull();
     String yamlContent = getYamlContent(yaml);
-    assertNotNull(yamlContent);
+    assertThat(yamlContent).isNotNull();
     yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
     assertEquals(yamlString, yamlContent);
 
@@ -272,7 +272,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
 
     InfrastructureDefinition retrievedDefinition = handler.get(ACCOUNT_ID, yamlFilePath);
 
-    assertNotNull(retrievedDefinition);
+    assertThat(retrievedDefinition).isNotNull();
     assertEquals(savedDefinition.getUuid(), retrievedDefinition.getUuid());
 
     doReturn(savedDefinition)

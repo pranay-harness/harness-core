@@ -2,7 +2,6 @@ package io.harness.e2e.dailysanity.platform.paid;
 
 import static io.harness.rule.OwnerRule.SWAMY;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 
 import com.google.gson.JsonObject;
 
@@ -86,18 +85,18 @@ public class SSOTestTrialTest extends AbstractE2ETest {
     groupInfoAsJson.addProperty("name", name);
     groupInfoAsJson.addProperty("description", "Test Description - " + System.currentTimeMillis());
     UserGroup userGroup = UserGroupUtils.createUserGroup(getTrialAccount(), trialBearerToken, groupInfoAsJson);
-    assertNotNull(userGroup);
+    assertThat(userGroup).isNotNull();
     String ldapId = SSOUtils.getLdapId(ssoConfig);
     logger.info("Doing an LDAP group search");
     Collection<LdapGroupResponse> ldapGroupResponses =
         SSORestUtils.searchLdapWithQuery(getTrialAccount().getUuid(), trialBearerToken, QUERY, ldapId);
     assertThat(ldapGroupResponses.size() > 0).isTrue();
     LdapGroupResponse choosenGroup = SSOUtils.chooseLDAPGroup(ldapGroupResponses, GROUP_NAME);
-    assertNotNull(choosenGroup);
+    assertThat(choosenGroup).isNotNull();
     logger.info("Performing LDAP linking and syncing");
     UserGroup ldapLinkedGroup = UserGroupRestUtils.linkLDAPSettings(
         getTrialAccount(), trialBearerToken, userGroup.getUuid(), ldapId, choosenGroup);
-    assertNotNull(ldapLinkedGroup);
+    assertThat(ldapLinkedGroup).isNotNull();
     UserGroup finalLdapLinkedGroup = ldapLinkedGroup;
     logger.info("Verifying the linking");
     boolean linkAndSyncSuccessful = (Boolean) retry.executeWithRetry(
@@ -109,7 +108,7 @@ public class SSOTestTrialTest extends AbstractE2ETest {
     String ldapLoginPassword = new ScmSecret().decryptToString(new SecretName("ldap_cschmith_password"));
     LdapResponse ldapResponse =
         SSORestUtils.testAuthenticate(getTrialAccount().getUuid(), trialBearerToken, LDAP_LOGIN_ID, ldapLoginPassword);
-    assertNotNull(ldapResponse);
+    assertThat(ldapResponse).isNotNull();
     assertThat(ldapResponse.getStatus().name().equals("SUCCESS")).isTrue();
     logger.info("Testing the LDAP login - Succeeded");
     logger.info("Logging in using LDAP credentials");

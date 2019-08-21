@@ -4,7 +4,6 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -113,7 +112,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
   public void testGet() {
     ApiKeyEntry apiKeyEntry = generateKey();
     ApiKeyEntry apiKeyEntryFromGet = apiKeyService.get(apiKeyEntry.getUuid(), ACCOUNT_ID);
-    assertNotNull(apiKeyEntryFromGet);
+    assertThat(apiKeyEntryFromGet).isNotNull();
     String key = apiKeyEntryFromGet.getDecryptedKey();
     assertThat(key).isEqualTo(apiKeyEntry.getDecryptedKey());
   }

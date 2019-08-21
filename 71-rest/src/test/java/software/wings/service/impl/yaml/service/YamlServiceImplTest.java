@@ -3,7 +3,6 @@ package software.wings.service.impl.yaml.service;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static software.wings.beans.yaml.GitFileChange.Builder.aGitFileChange;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
@@ -62,7 +61,7 @@ public class YamlServiceImplTest extends WingsBaseTest {
     gitFileChange.add(aGitFileChange().withAccountId(ACCOUNT_ID).withFilePath("temp.yaml").build());
 
     List<GitFileChange> filteredGitFileChange = yamlService.filterInvalidFilePaths(gitFileChange);
-    assertNotNull(filteredGitFileChange);
+    assertThat(filteredGitFileChange).isNotNull();
     assertThat(filteredGitFileChange).isEmpty();
 
     String validFilePath = "Setup/Applications/app1/Index.yaml";
@@ -70,14 +69,14 @@ public class YamlServiceImplTest extends WingsBaseTest {
     assertEquals(2, gitFileChange.size());
 
     filteredGitFileChange = yamlService.filterInvalidFilePaths(gitFileChange);
-    assertNotNull(filteredGitFileChange);
+    assertThat(filteredGitFileChange).isNotNull();
     assertEquals(1, filteredGitFileChange.size());
     assertEquals(validFilePath, filteredGitFileChange.get(0).getFilePath());
 
     gitFileChange.clear();
     gitFileChange.add(aGitFileChange().withAccountId(ACCOUNT_ID).withFilePath(validFilePath).build());
     filteredGitFileChange = yamlService.filterInvalidFilePaths(gitFileChange);
-    assertNotNull(filteredGitFileChange);
+    assertThat(filteredGitFileChange).isNotNull();
     assertEquals(1, filteredGitFileChange.size());
     assertEquals(validFilePath, filteredGitFileChange.get(0).getFilePath());
   }

@@ -1,7 +1,6 @@
 package io.harness.testframework.restutils;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.utils.UsageRestrictionsUtils.getAllAppAllEnvUsageRestrictions;
@@ -50,7 +49,7 @@ public class ConnectorUtils {
             .build();
 
     JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
-    assertNotNull(setAttrResponse);
+    assertThat(setAttrResponse).isNotNull();
     assertThat(setAttrResponse.getString("resource.uuid")).withFailMessage(setAttrResponse.prettify()).isNotNull();
     return setAttrResponse.getString("resource.uuid").trim();
   }
@@ -74,7 +73,7 @@ public class ConnectorUtils {
             .build();
 
     JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
-    assertNotNull(setAttrResponse);
+    assertThat(setAttrResponse).isNotNull();
     return setAttrResponse.getString("resource.uuid").trim();
   }
 
@@ -97,7 +96,7 @@ public class ConnectorUtils {
             .build();
 
     JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
-    assertNotNull(setAttrResponse);
+    assertThat(setAttrResponse).isNotNull();
     return setAttrResponse.getString("resource.uuid").trim();
   }
 
@@ -121,7 +120,7 @@ public class ConnectorUtils {
             .build();
 
     JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
-    assertNotNull(setAttrResponse);
+    assertThat(setAttrResponse).isNotNull();
     return setAttrResponse.getString("resource.uuid").trim();
   }
 
@@ -147,7 +146,7 @@ public class ConnectorUtils {
             .build();
 
     JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
-    assertNotNull(setAttrResponse);
+    assertThat(setAttrResponse).isNotNull();
 
     return setAttrResponse.getString("resource.uuid").trim();
   }
@@ -170,7 +169,7 @@ public class ConnectorUtils {
             .build();
 
     JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
-    assertNotNull(setAttrResponse);
+    assertThat(setAttrResponse).isNotNull();
 
     return setAttrResponse.getString("resource.uuid").trim();
   }
@@ -189,7 +188,7 @@ public class ConnectorUtils {
                                             .build();
 
     JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
-    assertNotNull(setAttrResponse);
+    assertThat(setAttrResponse).isNotNull();
 
     return setAttrResponse.getString("resource.uuid").trim();
   }
@@ -214,7 +213,7 @@ public class ConnectorUtils {
             .build();
 
     JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
-    assertNotNull(setAttrResponse);
+    assertThat(setAttrResponse).isNotNull();
 
     return setAttrResponse.getString("resource.uuid").trim();
   }
@@ -237,7 +236,7 @@ public class ConnectorUtils {
             .build();
 
     JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
-    assertNotNull(setAttrResponse);
+    assertThat(setAttrResponse).isNotNull();
 
     return setAttrResponse.getString("resource.uuid").trim();
   }
@@ -262,7 +261,7 @@ public class ConnectorUtils {
             .build();
 
     JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
-    assertNotNull(setAttrResponse);
+    assertThat(setAttrResponse).isNotNull();
 
     return setAttrResponse.getString("resource.uuid").trim();
   }
@@ -286,7 +285,7 @@ public class ConnectorUtils {
             .build();
 
     JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
-    assertNotNull(setAttrResponse);
+    assertThat(setAttrResponse).isNotNull();
 
     return setAttrResponse.getString("resource.uuid").trim();
   }
@@ -305,7 +304,7 @@ public class ConnectorUtils {
                                             .build();
 
     JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
-    assertNotNull(setAttrResponse);
+    assertThat(setAttrResponse).isNotNull();
 
     return setAttrResponse.getString("resource.uuid").trim();
   }
@@ -335,7 +334,7 @@ public class ConnectorUtils {
             .build();
 
     JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
-    assertNotNull(setAttrResponse);
+    assertThat(setAttrResponse).isNotNull();
 
     String uuid = setAttrResponse.getString("resource.uuid").trim();
     String webhookToken = setAttrResponse.getString("resource.value.webhookToken").trim();

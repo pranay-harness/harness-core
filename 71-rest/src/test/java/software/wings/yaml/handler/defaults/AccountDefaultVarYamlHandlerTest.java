@@ -3,7 +3,6 @@ package software.wings.yaml.handler.defaults;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -122,11 +121,11 @@ public class AccountDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
     compareSettingAttributes(v1_settingAttributeList, createdSettingAttributes);
 
     Yaml yaml = yamlHandler.toYaml(this.v1_settingAttributeList, GLOBAL_APP_ID);
-    assertNotNull(yaml);
-    assertNotNull(yaml.getType());
+    assertThat(yaml).isNotNull();
+    assertThat(yaml.getType()).isNotNull();
 
     String yamlContent = getYamlContent(yaml);
-    assertNotNull(yamlContent);
+    assertThat(yamlContent).isNotNull();
     yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
     assertEquals(v1_validYamlContent, yamlContent);
 

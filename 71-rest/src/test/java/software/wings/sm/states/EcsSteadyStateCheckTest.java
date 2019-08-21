@@ -5,7 +5,6 @@ import static io.harness.context.ContextElementType.STANDARD;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -116,8 +115,8 @@ public class EcsSteadyStateCheckTest extends WingsBaseTest {
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(mockDelegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
-    assertNotNull(delegateTask);
-    assertNotNull(delegateTask.getData().getParameters());
+    assertThat(delegateTask).isNotNull();
+    assertThat(delegateTask.getData().getParameters()).isNotNull();
     assertEquals(delegateTask.getData().getParameters().length, 1);
     assertThat(delegateTask.getData().getParameters()[0] instanceof EcsSteadyStateCheckParams).isTrue();
     EcsSteadyStateCheckParams params = (EcsSteadyStateCheckParams) delegateTask.getData().getParameters()[0];

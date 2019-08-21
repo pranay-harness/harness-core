@@ -1,7 +1,6 @@
 package io.harness.data.structure;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -17,7 +16,7 @@ public class MapUtilTest extends CategoryTest {
   public void shouldPutIfNotEmpty() {
     Map<String, String> input = new HashMap<>();
     MapUtils.putIfNotEmpty("key", "value", input);
-    assertNotNull(input.get("key"));
+    assertThat(input.get("key")).isNotNull();
   }
 
   @Test

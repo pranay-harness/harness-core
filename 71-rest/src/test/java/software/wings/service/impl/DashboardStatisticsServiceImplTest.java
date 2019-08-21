@@ -6,7 +6,6 @@ import static java.util.Arrays.asList;
 import static java.util.Objects.deepEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -582,7 +581,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
 
       ServiceInstanceDashboard serviceInstanceDashboard =
           dashboardService.getServiceInstanceDashboard(ACCOUNT_1_ID, APP_1_ID, SERVICE_1_ID);
-      assertNotNull(serviceInstanceDashboard);
+      assertThat(serviceInstanceDashboard).isNotNull();
       assertEquals(1, serviceInstanceDashboard.getCurrentActiveInstancesList().size());
       assertEquals(1, serviceInstanceDashboard.getCurrentActiveInstancesList().get(0).getInstanceCount());
       assertEquals(1, serviceInstanceDashboard.getDeploymentHistoryList().size());

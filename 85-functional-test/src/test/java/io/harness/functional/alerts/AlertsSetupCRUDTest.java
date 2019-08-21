@@ -2,7 +2,6 @@ package io.harness.functional.alerts;
 
 import static io.harness.rule.OwnerRule.SWAMY;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -42,7 +41,7 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
         AlertsRestUtils.updateAlert(getAccount().getUuid(), bearerToken, createdAlert.getUuid(), updatedRule);
 
     logger.info("Verifying the updated alerts notification rule");
-    assertNotNull(updatedAlert);
+    assertThat(updatedAlert).isNotNull();
     assertThat(updatedAlert.getAlertCategory().name().equals(createdAlert.getAlertCategory().name())).isTrue();
     assertThat(
         updatedAlert.getAlertFilter().getAlertType().name().equals(createdAlert.getAlertFilter().getAlertType().name()))
@@ -101,7 +100,7 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
         AlertsRestUtils.updateAlert(getAccount().getUuid(), bearerToken, createdAlert.getUuid(), updatedRule);
 
     logger.info("Verifying the updated alerts notification rule");
-    assertNotNull(updatedAlert);
+    assertThat(updatedAlert).isNotNull();
     assertThat(updatedAlert.getAlertCategory().name().equals(createdAlert.getAlertCategory().name())).isTrue();
     assertThat(
         updatedAlert.getAlertFilter().getAlertType().name().equals(createdAlert.getAlertFilter().getAlertType().name()))
@@ -129,7 +128,7 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
         AlertsRestUtils.updateAlert(getAccount().getUuid(), bearerToken, createdAlert.getUuid(), updatedRule);
 
     logger.info("Verifying the updated alerts notification rule");
-    assertNotNull(updatedAlert);
+    assertThat(updatedAlert).isNotNull();
     assertThat(updatedAlert.getAlertCategory().name().equals(createdAlert.getAlertCategory().name())).isFalse();
     assertThat(updatedAlert.getAlertCategory().name().equals(AlertCategory.ContinuousVerification.name())).isTrue();
     assertThat(
@@ -177,7 +176,7 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
           AlertsRestUtils.updateAlert(getAccount().getUuid(), bearerToken, createdAlert.getUuid(), updatedRule);
 
       logger.info("Verifying the updated alerts notification rule");
-      assertNotNull(updatedAlert);
+      assertThat(updatedAlert).isNotNull();
       assertThat(updatedAlert.getAlertCategory().name().equals(createdAlert.getAlertCategory().name())).isTrue();
       assertThat(updatedAlert.getAlertFilter().getAlertType().name().equals(
                      createdAlert.getAlertFilter().getAlertType().name()))

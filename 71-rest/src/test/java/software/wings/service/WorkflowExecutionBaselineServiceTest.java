@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
@@ -724,7 +723,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       assertThat(workflowExecution1.isBaseline()).isTrue();
       WorkflowExecutionBaseline baselineDetails = workflowExecutionService.getBaselineDetails(
           appId, workflowExecutionIds.get(i), stateExecutionIds.get(i), workflowExecutionIds.get(i));
-      assertNotNull(baselineDetails);
+      assertThat(baselineDetails).isNotNull();
       assertEquals(userEmail, baselineDetails.getCreatedBy().getEmail());
       assertEquals(userName, baselineDetails.getCreatedBy().getName());
       assertEquals(userEmail, baselineDetails.getLastUpdatedBy().getEmail());

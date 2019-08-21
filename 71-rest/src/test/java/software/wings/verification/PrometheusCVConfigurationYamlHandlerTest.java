@@ -1,8 +1,8 @@
 package software.wings.verification;
 
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -169,7 +169,7 @@ public class PrometheusCVConfigurationYamlHandlerTest extends WingsBaseTest {
     assertEquals("envId should match", envId, bean.getEnvId());
     assertEquals("serviceId should match", serviceId, bean.getServiceId());
     assertEquals("metrics should match", timeSeriesList, bean.getTimeSeriesToAnalyze());
-    assertNotNull(bean.getUuid());
+    assertThat(bean.getUuid()).isNotNull();
   }
 
   @Test(expected = WingsException.class)

@@ -4,7 +4,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Optional.of;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -240,13 +239,13 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
         encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME, executionLogCallback, logger,
         ContainerSetupCommandUnitExecutionData.builder());
 
-    assertNotNull(createServiceRequest);
+    assertThat(createServiceRequest).isNotNull();
 
     // Required for fargate using Load balancer, as ECS assumes role automatically
     assertThat(createServiceRequest.getRole()).isNull();
 
-    assertNotNull(createServiceRequest.getNetworkConfiguration());
-    assertNotNull(createServiceRequest.getNetworkConfiguration().getAwsvpcConfiguration());
+    assertThat(createServiceRequest.getNetworkConfiguration()).isNotNull();
+    assertThat(createServiceRequest.getNetworkConfiguration().getAwsvpcConfiguration()).isNotNull();
     assertEquals(LaunchType.FARGATE.name(), createServiceRequest.getLaunchType());
 
     AwsVpcConfiguration awsvpcConfiguration = createServiceRequest.getNetworkConfiguration().getAwsvpcConfiguration();
@@ -260,14 +259,14 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     assertEquals(CLUSTER_NAME, createServiceRequest.getCluster());
     assertEquals(0, createServiceRequest.getDesiredCount().intValue());
 
-    assertNotNull(createServiceRequest.getDeploymentConfiguration());
+    assertThat(createServiceRequest.getDeploymentConfiguration()).isNotNull();
     assertEquals(100, createServiceRequest.getDeploymentConfiguration().getMinimumHealthyPercent().intValue());
     assertEquals(200, createServiceRequest.getDeploymentConfiguration().getMaximumPercent().intValue());
 
     assertEquals(
         taskDefinition.getFamily() + ":" + taskDefinition.getRevision(), createServiceRequest.getTaskDefinition());
 
-    assertNotNull(createServiceRequest.getLoadBalancers());
+    assertThat(createServiceRequest.getLoadBalancers()).isNotNull();
     assertEquals(1, createServiceRequest.getLoadBalancers().size());
     LoadBalancer loadBalancer = createServiceRequest.getLoadBalancers().iterator().next();
     assertEquals(CONTAINER_NAME, loadBalancer.getContainerName());
@@ -318,10 +317,10 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
         ContainerSetupCommandUnitExecutionData.builder());
 
     List<ServiceRegistry> serviceRegistries = createServiceRequest.getServiceRegistries();
-    assertNotNull(createServiceRequest.getServiceRegistries());
+    assertThat(createServiceRequest.getServiceRegistries()).isNotNull();
     assertEquals(1, serviceRegistries.size());
     ServiceRegistry serviceRegistry = createServiceRequest.getServiceRegistries().get(0);
-    assertNotNull(serviceRegistry);
+    assertThat(serviceRegistry).isNotNull();
     assertEquals("arn:aws:servicediscovery:us-east-1:448640225317:service/srv-v43my342legaqd3r",
         serviceRegistry.getRegistryArn());
     assertEquals(CONTAINER_NAME, serviceRegistry.getContainerName());
@@ -335,8 +334,8 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
 
     Service service = ecsSetupCommandTaskHelper.getAwsServiceFromJson(ecsSErviceSpecJsonString, logger);
-    assertNotNull(service);
-    assertNotNull(service.getServiceRegistries());
+    assertThat(service).isNotNull();
+    assertThat(service.getServiceRegistries()).isNotNull();
     assertEquals(1, service.getServiceRegistries().size());
 
     // Valid case
@@ -389,8 +388,8 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
         encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME, executionLogCallback, logger,
         ContainerSetupCommandUnitExecutionData.builder());
 
-    assertNotNull(createServiceRequest.getNetworkConfiguration());
-    assertNotNull(createServiceRequest.getNetworkConfiguration().getAwsvpcConfiguration());
+    assertThat(createServiceRequest.getNetworkConfiguration()).isNotNull();
+    assertThat(createServiceRequest.getNetworkConfiguration().getAwsvpcConfiguration()).isNotNull();
     AwsVpcConfiguration awsVpcConfiguration = createServiceRequest.getNetworkConfiguration().getAwsvpcConfiguration();
     assertEquals(1, awsVpcConfiguration.getSecurityGroups().size());
     assertEquals("sg1", awsVpcConfiguration.getSecurityGroups().get(0));
@@ -437,21 +436,21 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
 
   private void assertCreateServiceRequestObject(
       TaskDefinition taskDefinition, CreateServiceRequest createServiceRequest) {
-    assertNotNull(createServiceRequest);
+    assertThat(createServiceRequest).isNotNull();
 
     // netWorkConfiguration should be ignored here, as its required only for fargate
-    assertNotNull(createServiceRequest.getRole());
+    assertThat(createServiceRequest.getRole()).isNotNull();
     assertEquals(ROLE_ARN, createServiceRequest.getRole());
     assertThat(createServiceRequest.getNetworkConfiguration()).isNull();
     assertEquals(CONTAINER_SERVICE_NAME, createServiceRequest.getServiceName());
     assertEquals(CLUSTER_NAME, createServiceRequest.getCluster());
     assertEquals(0, createServiceRequest.getDesiredCount().intValue());
-    assertNotNull(createServiceRequest.getDeploymentConfiguration());
+    assertThat(createServiceRequest.getDeploymentConfiguration()).isNotNull();
     assertEquals(100, createServiceRequest.getDeploymentConfiguration().getMinimumHealthyPercent().intValue());
     assertEquals(200, createServiceRequest.getDeploymentConfiguration().getMaximumPercent().intValue());
     assertEquals(
         taskDefinition.getFamily() + ":" + taskDefinition.getRevision(), createServiceRequest.getTaskDefinition());
-    assertNotNull(createServiceRequest.getLoadBalancers());
+    assertThat(createServiceRequest.getLoadBalancers()).isNotNull();
     assertEquals(1, createServiceRequest.getLoadBalancers().size());
 
     LoadBalancer loadBalancer = createServiceRequest.getLoadBalancers().iterator().next();
@@ -476,28 +475,28 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     ArgumentCaptor<RegisterTaskDefinitionRequest> captor = ArgumentCaptor.forClass(RegisterTaskDefinitionRequest.class);
     verify(awsClusterService).createTask(anyString(), any(), anyList(), captor.capture());
     RegisterTaskDefinitionRequest registerTaskDefinitionRequest = captor.getValue();
-    assertNotNull(registerTaskDefinitionRequest);
+    assertThat(registerTaskDefinitionRequest).isNotNull();
     assertEquals(TASK_FAMILY, registerTaskDefinitionRequest.getFamily());
     assertEquals(NetworkMode.Awsvpc.name().toLowerCase(), registerTaskDefinitionRequest.getNetworkMode().toLowerCase());
 
     assertEquals("abc", registerTaskDefinitionRequest.getExecutionRoleArn());
-    assertNotNull(registerTaskDefinitionRequest.getContainerDefinitions());
+    assertThat(registerTaskDefinitionRequest.getContainerDefinitions()).isNotNull();
     assertEquals(1, registerTaskDefinitionRequest.getContainerDefinitions().size());
 
     ContainerDefinition containerDefinition = registerTaskDefinitionRequest.getContainerDefinitions().get(0);
-    assertNotNull(containerDefinition);
+    assertThat(containerDefinition).isNotNull();
     assertEquals("ContainerName", containerDefinition.getName());
     assertEquals(512, containerDefinition.getMemory().intValue());
     assertEquals(1, containerDefinition.getCpu().intValue());
     assertEquals(DOCKER_DOMAIN_NAME + "/" + DOCKER_IMG_NAME, containerDefinition.getImage());
-    assertNotNull(containerDefinition.getPortMappings());
+    assertThat(containerDefinition.getPortMappings()).isNotNull();
     assertEquals(1, containerDefinition.getPortMappings().size());
 
     PortMapping portMapping = containerDefinition.getPortMappings().iterator().next();
     assertEquals(80, portMapping.getContainerPort().intValue());
     assertEquals("tcp", portMapping.getProtocol());
 
-    assertNotNull(containerDefinition.getSecrets());
+    assertThat(containerDefinition.getSecrets()).isNotNull();
     assertEquals(1, containerDefinition.getSecrets().size());
     assertEquals("environment_variable_name", containerDefinition.getSecrets().get(0).getName());
     assertEquals("arn:aws:ssm:region:aws_account_id:parameter/parameter_name",
@@ -528,7 +527,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     verify(awsClusterService).createTask(anyString(), any(), anyList(), captor.capture());
     RegisterTaskDefinitionRequest registerTaskDefinitionRequest = captor.getValue();
 
-    assertNotNull(registerTaskDefinitionRequest);
+    assertThat(registerTaskDefinitionRequest).isNotNull();
     assertEquals("256", registerTaskDefinitionRequest.getCpu());
     assertEquals("1024", registerTaskDefinitionRequest.getMemory());
     assertEquals("abc", registerTaskDefinitionRequest.getExecutionRoleArn());
@@ -538,7 +537,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     assertEquals(1, registerTaskDefinitionRequest.getContainerDefinitions().size());
     com.amazonaws.services.ecs.model.ContainerDefinition taskDefinition1 =
         registerTaskDefinitionRequest.getContainerDefinitions().iterator().next();
-    assertNotNull(taskDefinition1.getPortMappings());
+    assertThat(taskDefinition1.getPortMappings()).isNotNull();
     assertEquals(1, taskDefinition1.getPortMappings().size());
 
     PortMapping portMapping = taskDefinition1.getPortMappings().iterator().next();
@@ -610,12 +609,12 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testCreateEcsContainerTaskIfNull() throws Exception {
     EcsContainerTask ecsContainerTask = ecsSetupCommandTaskHelper.createEcsContainerTaskIfNull(null);
-    assertNotNull(ecsContainerTask);
-    assertNotNull(ecsContainerTask.getContainerDefinitions());
+    assertThat(ecsContainerTask).isNotNull();
+    assertThat(ecsContainerTask.getContainerDefinitions()).isNotNull();
     assertEquals(1, ecsContainerTask.getContainerDefinitions().size());
     assertEquals(1, ecsContainerTask.getContainerDefinitions().get(0).getCpu().intValue());
     assertEquals(256, ecsContainerTask.getContainerDefinitions().get(0).getMemory().intValue());
-    assertNotNull(ecsContainerTask.getContainerDefinitions().get(0).getPortMappings());
+    assertThat(ecsContainerTask.getContainerDefinitions().get(0).getPortMappings()).isNotNull();
     assertThat(ecsContainerTask.getContainerDefinitions().get(0).getPortMappings()).isEmpty();
     assertThat(ecsContainerTask.getContainerDefinitions().get(0).getLogConfiguration()).isNull();
   }

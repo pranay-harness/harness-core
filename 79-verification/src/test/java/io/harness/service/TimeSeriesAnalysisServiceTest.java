@@ -5,7 +5,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rest.RestResponse.Builder.aRestResponse;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
@@ -157,12 +156,12 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
 
     assertThat(savedRecord.getValues()).isNull();
     assertThat(savedRecord.getDeeplinkMetadata()).isNull();
-    assertNotNull(savedRecord.getValuesBytes());
+    assertThat(savedRecord.getValuesBytes()).isNotNull();
 
     savedRecord.decompress();
 
-    assertNotNull(savedRecord.getValues());
-    assertNotNull(savedRecord.getDeeplinkMetadata());
+    assertThat(savedRecord.getValues()).isNotNull();
+    assertThat(savedRecord.getDeeplinkMetadata()).isNotNull();
     assertThat(savedRecord.getValuesBytes()).isNull();
 
     assertEquals(values, savedRecord.getValues());

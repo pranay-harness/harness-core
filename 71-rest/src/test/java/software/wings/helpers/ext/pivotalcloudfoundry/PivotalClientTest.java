@@ -22,7 +22,7 @@ public class PivotalClientTest extends WingsBaseTest {
 
       // Get Organization list
       List<OrganizationSummary> organizationList = pcfClient.getOrganizations(pcfRequestConfig);
-      assertNotNull(organizationList);
+      assertThat(organizationList).isNotNull();
       assertEquals(1, organizationList.size());
 
       String organization = organizationList.get(0).getName();
@@ -32,7 +32,7 @@ public class PivotalClientTest extends WingsBaseTest {
       pcfRequestConfig.setOrgName(organization);
       List<String> spaces = pcfClient.getSpacesForOrganization(pcfRequestConfig);
       System.out.println(spaces);
-      assertNotNull(spaces);
+      assertThat(spaces).isNotNull();
       assertEquals(1, spaces.size());
       assertEquals("development", spaces.get(0).toLowerCase());
 
@@ -43,7 +43,7 @@ public class PivotalClientTest extends WingsBaseTest {
 
       pcfRequestConfig.setApplicationName("harness-pcf-app-deploy-version");
       ApplicationDetail applicationDetail = pcfClient.getApplicationByName(pcfRequestConfig);
-      assertNotNull(applicationDetail);
+      assertThat(applicationDetail).isNotNull();
       assertEquals("harness-pcf-app-deploy-version", applicationDetail.getName());
       assertThat(applicationDetail.getUrls().contains("wings-apps-sf.cfapps.io")).isTrue();
 

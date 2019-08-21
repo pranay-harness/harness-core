@@ -3,7 +3,6 @@ package software.wings.beans.container;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import io.harness.CategoryTest;
@@ -36,7 +35,7 @@ public class EcsContainerTaskTest extends CategoryTest {
     TaskDefinition taskDefinition =
         ecsContainerTask.createTaskDefinition(CONTAINER_NAME, IMAGE_NAME, EXEC_ROLE, DOMAIN_NAME);
 
-    assertNotNull(taskDefinition);
+    assertThat(taskDefinition).isNotNull();
     assertEquals(1, taskDefinition.getContainerDefinitions().size());
     assertEquals("256", taskDefinition.getCpu());
     assertEquals("1024", taskDefinition.getMemory());
@@ -44,30 +43,30 @@ public class EcsContainerTaskTest extends CategoryTest {
 
     com.amazonaws.services.ecs.model.ContainerDefinition containerDefinitionAws =
         taskDefinition.getContainerDefinitions().get(0);
-    assertNotNull(containerDefinitionAws);
+    assertThat(containerDefinitionAws).isNotNull();
     assertEquals(CONTAINER_NAME, containerDefinitionAws.getName());
     assertEquals(DOMAIN_NAME + "/" + IMAGE_NAME, containerDefinitionAws.getImage());
     assertEquals(256, containerDefinitionAws.getCpu().intValue());
     assertEquals(1024, containerDefinitionAws.getMemory().intValue());
-    assertNotNull(containerDefinitionAws.getPortMappings());
+    assertThat(containerDefinitionAws.getPortMappings()).isNotNull();
     assertEquals(1, containerDefinitionAws.getPortMappings().size());
     assertEquals(80, containerDefinitionAws.getPortMappings().iterator().next().getContainerPort().intValue());
 
     taskDefinition = ecsContainerTask.createTaskDefinition(CONTAINER_NAME, IMAGE_NAME, null, DOMAIN_NAME);
 
-    assertNotNull(taskDefinition);
+    assertThat(taskDefinition).isNotNull();
     assertEquals(1, taskDefinition.getContainerDefinitions().size());
     assertEquals("256", taskDefinition.getCpu());
     assertEquals("1024", taskDefinition.getMemory());
     assertEquals("", taskDefinition.getExecutionRoleArn());
 
     containerDefinitionAws = taskDefinition.getContainerDefinitions().get(0);
-    assertNotNull(containerDefinitionAws);
+    assertThat(containerDefinitionAws).isNotNull();
     assertEquals(CONTAINER_NAME, containerDefinitionAws.getName());
     assertEquals(DOMAIN_NAME + "/" + IMAGE_NAME, containerDefinitionAws.getImage());
     assertEquals(256, containerDefinitionAws.getCpu().intValue());
     assertEquals(1024, containerDefinitionAws.getMemory().intValue());
-    assertNotNull(containerDefinitionAws.getPortMappings());
+    assertThat(containerDefinitionAws.getPortMappings()).isNotNull();
     assertEquals(1, containerDefinitionAws.getPortMappings().size());
     assertEquals(80, containerDefinitionAws.getPortMappings().iterator().next().getContainerPort().intValue());
 
@@ -78,7 +77,7 @@ public class EcsContainerTaskTest extends CategoryTest {
 
     ecsContainerTask.setContainerDefinitions(asList(containerDefinition));
     taskDefinition = ecsContainerTask.createTaskDefinition(CONTAINER_NAME, IMAGE_NAME, EXEC_ROLE, DOMAIN_NAME);
-    assertNotNull(taskDefinition);
+    assertThat(taskDefinition).isNotNull();
   }
 
   @Test
@@ -99,36 +98,36 @@ public class EcsContainerTaskTest extends CategoryTest {
     TaskDefinition taskDefinition =
         ecsContainerTask.createTaskDefinition(CONTAINER_NAME, IMAGE_NAME, EXEC_ROLE, DOMAIN_NAME);
 
-    assertNotNull(taskDefinition);
+    assertThat(taskDefinition).isNotNull();
     assertEquals(1, taskDefinition.getContainerDefinitions().size());
     assertEquals("256", taskDefinition.getCpu());
     assertEquals(EXEC_ROLE, taskDefinition.getExecutionRoleArn());
 
     com.amazonaws.services.ecs.model.ContainerDefinition containerDefinitionAws =
         taskDefinition.getContainerDefinitions().get(0);
-    assertNotNull(containerDefinitionAws);
+    assertThat(containerDefinitionAws).isNotNull();
     assertEquals(CONTAINER_NAME, containerDefinitionAws.getName());
     assertEquals(DOMAIN_NAME + "/" + IMAGE_NAME, containerDefinitionAws.getImage());
     assertEquals(256, containerDefinitionAws.getCpu().intValue());
     assertEquals(1024, containerDefinitionAws.getMemory().intValue());
-    assertNotNull(containerDefinitionAws.getPortMappings());
+    assertThat(containerDefinitionAws.getPortMappings()).isNotNull();
     assertEquals(1, containerDefinitionAws.getPortMappings().size());
     assertEquals(80, containerDefinitionAws.getPortMappings().iterator().next().getContainerPort().intValue());
 
     taskDefinition = ecsContainerTask.createTaskDefinition(CONTAINER_NAME, IMAGE_NAME, null, DOMAIN_NAME);
 
-    assertNotNull(taskDefinition);
+    assertThat(taskDefinition).isNotNull();
     assertEquals(1, taskDefinition.getContainerDefinitions().size());
     assertEquals("256", taskDefinition.getCpu());
     assertEquals("", taskDefinition.getExecutionRoleArn());
 
     containerDefinitionAws = taskDefinition.getContainerDefinitions().get(0);
-    assertNotNull(containerDefinitionAws);
+    assertThat(containerDefinitionAws).isNotNull();
     assertEquals(CONTAINER_NAME, containerDefinitionAws.getName());
     assertEquals(DOMAIN_NAME + "/" + IMAGE_NAME, containerDefinitionAws.getImage());
     assertEquals(256, containerDefinitionAws.getCpu().intValue());
     assertEquals(1024, containerDefinitionAws.getMemory().intValue());
-    assertNotNull(containerDefinitionAws.getPortMappings());
+    assertThat(containerDefinitionAws.getPortMappings()).isNotNull();
     assertEquals(1, containerDefinitionAws.getPortMappings().size());
     assertEquals(80, containerDefinitionAws.getPortMappings().iterator().next().getContainerPort().intValue());
 
@@ -139,7 +138,7 @@ public class EcsContainerTaskTest extends CategoryTest {
 
     ecsContainerTask.setContainerDefinitions(asList(containerDefinition));
     taskDefinition = ecsContainerTask.createTaskDefinition(CONTAINER_NAME, IMAGE_NAME, EXEC_ROLE, DOMAIN_NAME);
-    assertNotNull(taskDefinition);
+    assertThat(taskDefinition).isNotNull();
   }
 
   @Test

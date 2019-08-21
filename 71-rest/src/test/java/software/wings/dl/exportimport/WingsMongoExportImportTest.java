@@ -1,8 +1,8 @@
 package software.wings.dl.exportimport;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import com.google.inject.Inject;
 
@@ -51,7 +51,7 @@ public class WingsMongoExportImportTest extends WingsBaseTest {
     String collectionName = Application.class.getAnnotation(Entity.class).value();
 
     List<String> records = mongoExportImport.exportRecords(new BasicDBObject("accountId", accountId), collectionName);
-    assertNotNull(records);
+    assertThat(records).isNotNull();
     assertEquals(1, records.size());
 
     String appJson = records.get(0);
@@ -63,7 +63,7 @@ public class WingsMongoExportImportTest extends WingsBaseTest {
     mongoExportImport.importRecords(collectionName, records, ImportMode.UPSERT);
 
     Application application = wingsPersistence.get(Application.class, appId);
-    assertNotNull(application);
+    assertThat(application).isNotNull();
     assertEquals(appName, application.getName());
   }
 }

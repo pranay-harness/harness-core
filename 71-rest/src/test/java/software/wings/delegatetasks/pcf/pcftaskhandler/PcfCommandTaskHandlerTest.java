@@ -3,7 +3,6 @@ package software.wings.delegatetasks.pcf.pcftaskhandler;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -184,11 +183,11 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
         (PcfSetupCommandResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
 
     assertEquals(pcfCommandExecutionResponse.getCommandExecutionStatus(), CommandExecutionStatus.SUCCESS);
-    assertNotNull(pcfSetupCommandResponse.getNewApplicationDetails());
+    assertThat(pcfSetupCommandResponse.getNewApplicationDetails()).isNotNull();
     assertEquals(pcfSetupCommandResponse.getNewApplicationDetails().getApplicationName(), "a_s_e__6");
     assertEquals(pcfSetupCommandResponse.getNewApplicationDetails().getApplicationGuid(), "10");
 
-    assertNotNull(pcfSetupCommandResponse.getDownsizeDetails());
+    assertThat(pcfSetupCommandResponse.getDownsizeDetails()).isNotNull();
     assertEquals(2, pcfSetupCommandResponse.getDownsizeDetails().size());
     Set<String> appsToBeDownsized = new HashSet<>(
         pcfSetupCommandResponse.getDownsizeDetails().stream().map(app -> app.getApplicationName()).collect(toList()));
@@ -436,7 +435,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
         (PcfDeployCommandResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
 
     assertEquals(CommandExecutionStatus.SUCCESS, pcfDeployCommandResponse.getCommandExecutionStatus());
-    assertNotNull(pcfDeployCommandResponse.getPcfInstanceElements());
+    assertThat(pcfDeployCommandResponse.getPcfInstanceElements()).isNotNull();
     assertEquals(2, pcfDeployCommandResponse.getPcfInstanceElements().size());
 
     Set<String> pcfInstanceElements = new HashSet<>();
@@ -473,7 +472,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
         (PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
 
     assertEquals(CommandExecutionStatus.SUCCESS, pcfInfraMappingDataResponse.getCommandExecutionStatus());
-    assertNotNull(pcfInfraMappingDataResponse.getOrganizations());
+    assertThat(pcfInfraMappingDataResponse.getOrganizations()).isNotNull();
     assertEquals(1, pcfInfraMappingDataResponse.getOrganizations().size());
     assertEquals(ORG, pcfInfraMappingDataResponse.getOrganizations().get(0));
 
@@ -486,7 +485,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     assertEquals(CommandExecutionStatus.SUCCESS, pcfCommandExecutionResponse.getCommandExecutionStatus());
     pcfInfraMappingDataResponse = (PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
 
-    assertNotNull(pcfInfraMappingDataResponse.getSpaces());
+    assertThat(pcfInfraMappingDataResponse.getSpaces()).isNotNull();
     assertEquals(1, pcfInfraMappingDataResponse.getSpaces().size());
     assertEquals(SPACE, pcfInfraMappingDataResponse.getSpaces().get(0));
 
@@ -496,7 +495,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     pcfCommandExecutionResponse =
         pcfDataFetchCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
     pcfInfraMappingDataResponse = (PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
-    assertNotNull(pcfInfraMappingDataResponse.getRouteMaps());
+    assertThat(pcfInfraMappingDataResponse.getRouteMaps()).isNotNull();
     assertEquals(2, pcfInfraMappingDataResponse.getRouteMaps().size());
     assertThat(pcfInfraMappingDataResponse.getRouteMaps().contains("R1")).isTrue();
     assertThat(pcfInfraMappingDataResponse.getRouteMaps().contains("R2")).isTrue();
@@ -551,7 +550,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
         (PcfInstanceSyncResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
 
     assertEquals(CommandExecutionStatus.SUCCESS, pcfInstanceSyncResponse.getCommandExecutionStatus());
-    assertNotNull(pcfInstanceSyncResponse.getInstanceIndices());
+    assertThat(pcfInstanceSyncResponse.getInstanceIndices()).isNotNull();
     assertEquals(1, pcfInstanceSyncResponse.getInstanceIndices().size());
     assertEquals("2", pcfInstanceSyncResponse.getInstanceIndices().get(0));
   }

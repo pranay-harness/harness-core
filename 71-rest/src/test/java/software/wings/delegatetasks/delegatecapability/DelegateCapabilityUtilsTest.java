@@ -1,8 +1,8 @@
 package software.wings.delegatetasks.delegatecapability;
 
 import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -28,7 +28,7 @@ public class DelegateCapabilityUtilsTest extends CategoryTest {
             .filter(taskType -> isTaskGroupMovedToCapabilityFramework(taskType.getTaskGroup().name()))
             .collect(toList());
 
-    assertNotNull(taskTypeList);
+    assertThat(taskTypeList).isNotNull();
 
     List<TaskType> taskTypesVerified =
         taskTypeList.stream()

@@ -7,7 +7,6 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -257,11 +256,11 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     RestResponse<LogMLAnalysisSummary> analysisResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<LogMLAnalysisSummary>>() {});
 
-    assertNotNull(analysisResponse.getResource());
-    assertNotNull(analysisResponse.getResource().getControlClusters());
-    assertNotNull(analysisResponse.getResource().getTestClusters());
-    assertNotNull(analysisResponse.getResource().getIgnoreClusters());
-    assertNotNull(analysisResponse.getResource().getIgnoreClusters());
+    assertThat(analysisResponse.getResource()).isNotNull();
+    assertThat(analysisResponse.getResource().getControlClusters()).isNotNull();
+    assertThat(analysisResponse.getResource().getTestClusters()).isNotNull();
+    assertThat(analysisResponse.getResource().getIgnoreClusters()).isNotNull();
+    assertThat(analysisResponse.getResource().getIgnoreClusters()).isNotNull();
   }
 
   @Test
@@ -320,7 +319,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
     restResponse =
         getRequestBuilderWithAuthHeader(getTarget).get(new GenericType<RestResponse<LogMLAnalysisSummary>>() {});
-    assertNotNull(restResponse.getResource());
+    assertThat(restResponse.getResource()).isNotNull();
 
     LogMLAnalysisSummary summary = restResponse.getResource();
     assertEquals("cv-demo-query", summary.getQuery());
@@ -382,7 +381,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
     restResponse =
         getRequestBuilderWithAuthHeader(getTarget).get(new GenericType<RestResponse<LogMLAnalysisSummary>>() {});
-    assertNotNull(restResponse.getResource());
+    assertThat(restResponse.getResource()).isNotNull();
 
     LogMLAnalysisSummary summary = restResponse.getResource();
     assertEquals("cv-demo-query", summary.getQuery());
@@ -966,7 +965,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     assertEquals("No data found for the given queries.", logMLAnalysisSummary.getAnalysisSummaryMessage());
     LogMLAnalysisRecord logAnalysisRecord = analysisService.getLogAnalysisRecords(
         LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId, logCollectionMinute, false);
-    assertNotNull(logAnalysisRecord);
+    assertThat(logAnalysisRecord).isNotNull();
   }
 
   @Test

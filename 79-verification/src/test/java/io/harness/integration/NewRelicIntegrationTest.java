@@ -11,7 +11,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -258,7 +257,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     assertThat(metricResponse.getResponseMessages()).isEmpty();
     assertThat(metricResponse.getResource().isProviderReachable()).isTrue();
     assertThat(metricResponse.getResource().getLoadResponse().isLoadPresent()).isTrue();
-    assertNotNull(metricResponse.getResource().getLoadResponse().getLoadResponse());
+    assertThat(metricResponse.getResource().getLoadResponse().getLoadResponse()).isNotNull();
     List<NewRelicMetric> txnsWithData =
         (List<NewRelicMetric>) metricResponse.getResource().getLoadResponse().getLoadResponse();
     assertThat(txnsWithData.isEmpty()).isFalse();
@@ -528,7 +527,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     List<NewRelicMetricAnalysisRecord> savedRecords = restResponse.getResource();
     assertEquals(1, savedRecords.size());
     NewRelicMetricAnalysisRecord savedRecord = savedRecords.get(0);
-    assertNotNull(savedRecord);
+    assertThat(savedRecord).isNotNull();
 
     final List<NewRelicMetricAnalysis> analyses = savedRecord.getMetricAnalyses();
     assertEquals(record.getMetricAnalyses().size(), analyses.size());

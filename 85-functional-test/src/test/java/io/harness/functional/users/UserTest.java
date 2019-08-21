@@ -2,7 +2,6 @@ package io.harness.functional.users;
 
 import static io.harness.rule.OwnerRule.SWAMY;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 
 import com.google.inject.Inject;
 
@@ -67,7 +66,7 @@ public class UserTest extends AbstractFunctionalTest {
     Account account = this.getAccount();
     UserRestUtils urUtil = new UserRestUtils();
     List<User> userList = urUtil.getUserList(bearerToken, account.getUuid());
-    assertNotNull(userList);
+    assertThat(userList).isNotNull();
     assertThat(userList.size() > 0).isTrue();
   }
 
@@ -79,7 +78,7 @@ public class UserTest extends AbstractFunctionalTest {
     String domainName = "@harness.mailinator.com";
     String emailId = TestUtils.generateUniqueInboxId();
     List<UserInvite> userInvitationList = UserRestUtils.inviteUser(account, bearerToken, emailId + domainName);
-    assertNotNull(userInvitationList);
+    assertThat(userInvitationList).isNotNull();
     assertThat(userInvitationList.size() == 1).isTrue();
     // Verify if email is sent, received and has signup link
     // Email check will run every 6 seconds upto 2 mins to see if email is delivered.
@@ -89,25 +88,25 @@ public class UserTest extends AbstractFunctionalTest {
     logger.info("Reading the retrieved email");
     String emailFetchId = message.getId();
     MailinatorMessageDetails messageDetails = MailinatorRestUtils.readEmail(emailId, emailFetchId);
-    assertNotNull(messageDetails);
+    assertThat(messageDetails).isNotNull();
     String inviteUrl =
         HTMLUtils.retrieveInviteUrlFromEmail(messageDetails.getData().getParts().get(0).getBody(), "SIGN UP");
-    assertNotNull(inviteUrl);
+    assertThat(inviteUrl).isNotNull();
     assertThat(StringUtils.isNotBlank(inviteUrl)).isTrue();
     logger.info("Email read and Signup URL is available for user signup");
 
     messageDetails = null;
     messageDetails = MailinatorRestUtils.deleteEmail(emailId, emailFetchId);
     logger.info("Email deleted for the inbox : " + emailId);
-    assertNotNull(messageDetails.getAdditionalProperties());
-    assertNotNull(messageDetails.getAdditionalProperties().containsKey("status"));
+    assertThat(messageDetails.getAdditionalProperties()).isNotNull();
+    assertThat(messageDetails.getAdditionalProperties().containsKey("status")).isNotNull();
     assertThat(messageDetails.getAdditionalProperties().get("status").toString().equals("ok")).isTrue();
 
     // Complete registration using the API
     logger.info("Entering user invite validation");
     UserInvite incomplete = userInvitationList.get(0);
     UserInvite completed = UserRestUtils.completeUserRegistration(account, bearerToken, incomplete);
-    assertNotNull(completed);
+    assertThat(completed).isNotNull();
     assertThat(incomplete.isAgreement()).isFalse();
     assertThat(incomplete.isCompleted()).isFalse();
     assertThat(completed.isCompleted()).isTrue();
@@ -118,7 +117,7 @@ public class UserTest extends AbstractFunctionalTest {
     assertThat(incomplete.getAccountId().equals(completed.getAccountId())).isTrue();
     // Verify if the signed-up user can login
     String bearerToken = Setup.getAuthToken(completed.getEmail(), UserConstants.DEFAULT_PASSWORD);
-    assertNotNull("Bearer Token not successfully provided", bearerToken);
+    assertThat(bearerToken).isNotNull();
     int statusCode = Setup.signOut(completed.getUuid(), bearerToken);
     assertThat(statusCode == HttpStatus.SC_OK).isTrue();
 
@@ -131,7 +130,7 @@ public class UserTest extends AbstractFunctionalTest {
     logger.info("Reading the retrieved email");
     emailFetchId = message.getId();
     messageDetails = MailinatorRestUtils.readEmail(emailId, emailFetchId);
-    assertNotNull(messageDetails);
+    assertThat(messageDetails).isNotNull();
     String resetUrl =
         HTMLUtils.retrieveResetUrlFromEmail(messageDetails.getData().getParts().get(0).getBody(), "RESET PASSWORD");
     assertThat(StringUtils.isNotBlank(resetUrl)).isTrue();
@@ -140,15 +139,15 @@ public class UserTest extends AbstractFunctionalTest {
     UserRestUtils.resetPasswordWith(TestUtils.getResetTokenFromUrl(resetUrl), UserConstants.RESET_PASSWORD);
     // Verify if the user can login through the reset password
     bearerToken = Setup.getAuthToken(completed.getEmail(), UserConstants.RESET_PASSWORD);
-    assertNotNull("Bearer Token not successfully provided", bearerToken);
+    assertThat(bearerToken).isNotNull();
     statusCode = Setup.signOut(completed.getUuid(), bearerToken);
     assertThat(statusCode == HttpStatus.SC_OK).isTrue();
     // Delete Email
     messageDetails = null;
     messageDetails = MailinatorRestUtils.deleteEmail(emailId, emailFetchId);
     logger.info("Email deleted for the inbox : " + emailId);
-    assertNotNull(messageDetails.getAdditionalProperties());
-    assertNotNull(messageDetails.getAdditionalProperties().containsKey("status"));
+    assertThat(messageDetails.getAdditionalProperties()).isNotNull();
+    assertThat(messageDetails.getAdditionalProperties().containsKey("status")).isNotNull();
     assertThat(messageDetails.getAdditionalProperties().get("status").toString().equals("ok")).isTrue();
 
     logger.info("All validation completed");

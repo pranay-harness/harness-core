@@ -3,7 +3,6 @@ package software.wings.yaml.handler.pipeline;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -232,11 +231,11 @@ public class PipelineYamlHandlerTest extends BaseYamlHandlerTest {
     comparePipeline(pipeline, savedPipeline);
 
     Yaml yaml = yamlHandler.toYaml(savedPipeline, APP_ID);
-    assertNotNull(yaml);
-    assertNotNull(yaml.getType());
+    assertThat(yaml).isNotNull();
+    assertThat(yaml.getType()).isNotNull();
 
     String yamlContent = getYamlContent(yaml);
-    assertNotNull(yamlContent);
+    assertThat(yamlContent).isNotNull();
     yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
     //    assertEquals(validYamlContent, yamlContent);
 

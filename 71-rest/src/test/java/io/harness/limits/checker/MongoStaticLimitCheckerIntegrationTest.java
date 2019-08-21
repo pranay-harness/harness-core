@@ -1,7 +1,6 @@
 package io.harness.limits.checker;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 
 import com.google.inject.Inject;
 
@@ -46,7 +45,7 @@ public class MongoStaticLimitCheckerIntegrationTest extends BaseIntegrationTest 
   public void testCheckAndConsume() {
     String key = NAMESPACE + "-" + RandomStringUtils.randomAlphanumeric(5) + ":" + ActionType.DEPLOY;
     String id = persistence.save(new Counter(key, 0));
-    assertNotNull(id);
+    assertThat(id).isNotNull();
 
     int maxLimit = 10;
     MongoStaticLimitChecker checker = new MongoStaticLimitChecker(new StaticLimit(maxLimit), persistence, key);
@@ -76,7 +75,7 @@ public class MongoStaticLimitCheckerIntegrationTest extends BaseIntegrationTest 
   public void testCheckAndConsumeConcurrent() throws ExecutionException, InterruptedException {
     String key = NAMESPACE + "-" + RandomStringUtils.randomAlphanumeric(5) + ":" + ActionType.DEPLOY;
     String id = persistence.save(new Counter(key, 0));
-    assertNotNull(id);
+    assertThat(id).isNotNull();
 
     int maxLimit = 10;
     MongoStaticLimitChecker checker = new MongoStaticLimitChecker(new StaticLimit(maxLimit), persistence, key);

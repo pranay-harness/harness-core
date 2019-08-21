@@ -8,7 +8,6 @@ import static io.harness.rule.OwnerRule.VAIBHAV_TULSYAN;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -511,7 +510,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
                                                                      .historyStartTime(historyStartTime)
                                                                      .build());
 
-    assertNotNull(timeSeries);
+    assertThat(timeSeries).isNotNull();
   }
 
   @Test
@@ -773,7 +772,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
                                                                      .historyStartTime(historyStart + 1)
                                                                      .build());
     assertEquals(5, timeseries.size());
-    assertNotNull("Metric timeseries shouldn't be null", timeseries.first().getMetricTimeSeries());
+    assertThat(timeseries.first().getMetricTimeSeries()).isNotNull();
     assertEquals(9, timeseries.first().getMetricTimeSeries().first().getRisksForTimeSeries().size());
     TimeSeriesRisk timeSeriesRisk =
         timeseries.first().getMetricTimeSeries().first().getRisksForTimeSeries().iterator().next();

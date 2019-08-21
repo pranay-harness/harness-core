@@ -7,7 +7,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import com.google.common.base.Preconditions;
@@ -187,7 +186,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   public void testUpdateKmsSecretText_shouldSucceed() {
     String kmsConfigId = createKmsConfig(kmsConfig);
     KmsConfig savedKmsConfig = wingsPersistence.get(KmsConfig.class, kmsConfigId);
-    assertNotNull(savedKmsConfig);
+    assertThat(savedKmsConfig).isNotNull();
 
     try {
       testUpdateSecretText(savedKmsConfig);
@@ -201,7 +200,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   public void testUpdateKmsSecretTextName_shouldNotAlterSecretValue() {
     String kmsConfigId = createKmsConfig(kmsConfig);
     KmsConfig savedKmsConfig = wingsPersistence.get(KmsConfig.class, kmsConfigId);
-    assertNotNull(savedKmsConfig);
+    assertThat(savedKmsConfig).isNotNull();
 
     try {
       testUpdateSecretTextNameOnly(savedKmsConfig);
@@ -215,7 +214,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   public void testUpdateKmsEncryptedSecretFile_withNoContent_shouldNot_UpdateFileContent() throws IOException {
     String kmsConfigId = createKmsConfig(kmsConfig);
     KmsConfig savedKmsConfig = wingsPersistence.get(KmsConfig.class, kmsConfigId);
-    assertNotNull(savedKmsConfig);
+    assertThat(savedKmsConfig).isNotNull();
 
     try {
       testUpdateEncryptedFile(savedKmsConfig);
@@ -230,7 +229,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     // Start with KMS as default secret manager
     String kmsConfigId = createKmsConfig(kmsConfig);
     KmsConfig savedKmsConfig = wingsPersistence.get(KmsConfig.class, kmsConfigId);
-    assertNotNull(savedKmsConfig);
+    assertThat(savedKmsConfig).isNotNull();
 
     try {
       // Created a secret in KMS.
@@ -239,7 +238,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
       // No change to use Vault as DEFAULT secret manager!
       String vaultConfigId = createVaultConfig(vaultConfig);
       VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
-      assertNotNull(savedVaultConfig);
+      assertThat(savedVaultConfig).isNotNull();
 
       try {
         // Update will save the secret in VAULT as vault is the default now.
@@ -260,7 +259,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     // Start with VAULT as default secret manager
     String vaultConfigId = createVaultConfig(vaultConfig);
     VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
-    assertNotNull(savedVaultConfig);
+    assertThat(savedVaultConfig).isNotNull();
 
     try {
       // Created a secret in Vault.
@@ -269,7 +268,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
       // No change to use KMS as DEFAULT secret manager!
       String kmsConfigId = createKmsConfig(kmsConfig);
       KmsConfig savedKmsConfig = wingsPersistence.get(KmsConfig.class, kmsConfigId);
-      assertNotNull(savedKmsConfig);
+      assertThat(savedKmsConfig).isNotNull();
 
       try {
         // Update will save the secret in KMS as KMS is the default now.
@@ -289,7 +288,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   public void testUpdateVaultEncryptedSeretFile_withNoContent_shouldNot_UpdateFileContent() throws IOException {
     String vaultConfigId = createVaultConfig(vaultConfig);
     VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
-    assertNotNull(savedVaultConfig);
+    assertThat(savedVaultConfig).isNotNull();
 
     try {
       testUpdateEncryptedFile(savedVaultConfig);
@@ -306,14 +305,14 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
 
     try {
       VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
-      assertNotNull(savedVaultConfig);
+      assertThat(savedVaultConfig).isNotNull();
 
       // 2. Update the existing vault config to make it default
       savedVaultConfig.setAuthToken(vaultToken);
       updateVaultConfig(savedVaultConfig);
 
       savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
-      assertNotNull(savedVaultConfig);
+      assertThat(savedVaultConfig).isNotNull();
       assertThat(savedVaultConfig.isDefault()).isTrue();
     } finally {
       // 3. Delete the vault config
@@ -346,7 +345,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     String vaultConfigId = createVaultConfig(vaultConfig);
 
     VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
-    assertNotNull(savedVaultConfig);
+    assertThat(savedVaultConfig).isNotNull();
 
     // Update the vault base path
     savedVaultConfig.setBasePath(VAULT_BASE_PATH);
@@ -364,7 +363,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   public void testUpdateVaultSecretTextName_shouldNotAlterSecretValue() {
     String vaultConfigId = createVaultConfig(vaultConfig);
     VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
-    assertNotNull(savedVaultConfig);
+    assertThat(savedVaultConfig).isNotNull();
 
     try {
       testUpdateSecretTextNameOnly(savedVaultConfig);
@@ -382,10 +381,10 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     String vaultConfig2Id = createVaultConfig(vaultConfig2);
 
     VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
-    assertNotNull(savedVaultConfig);
+    assertThat(savedVaultConfig).isNotNull();
 
     VaultConfig savedVaultConfig2 = wingsPersistence.get(VaultConfig.class, vaultConfig2Id);
-    assertNotNull(savedVaultConfig2);
+    assertThat(savedVaultConfig2).isNotNull();
 
     try {
       assertThat(savedVaultConfig.isDefault()).isFalse();
@@ -414,7 +413,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     // Create the first default vault config
     String vaultConfigId = createVaultConfig(vaultConfigWithBasePath);
     VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
-    assertNotNull(savedVaultConfig);
+    assertThat(savedVaultConfig).isNotNull();
 
     testUpdateSecretText(savedVaultConfig);
   }
@@ -425,7 +424,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     // Create the first default vault config
     String vaultConfigId = createVaultConfig(vaultConfigWithBasePath2);
     VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
-    assertNotNull(savedVaultConfig);
+    assertThat(savedVaultConfig).isNotNull();
 
     testUpdateSecretText(savedVaultConfig);
   }
@@ -436,7 +435,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     // Create the first default vault config
     String vaultConfigId = createVaultConfig(vaultConfig);
     VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
-    assertNotNull(savedVaultConfig);
+    assertThat(savedVaultConfig).isNotNull();
 
     testUpdateSecretText(savedVaultConfig);
   }
@@ -537,7 +536,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     // Create the first default vault config
     String vaultConfigId = createVaultConfig(vaultConfig);
     VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
-    assertNotNull(savedVaultConfig);
+    assertThat(savedVaultConfig).isNotNull();
 
     try {
       createSecretText("FooBarSecret", null, "foo/bar/InvalidSecretPath");
@@ -555,7 +554,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   public void test_UpdateSecretText_WithInvalidPath_shouldFail() {
     String vaultConfigId = createVaultConfig(vaultConfig);
     VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
-    assertNotNull(savedVaultConfig);
+    assertThat(savedVaultConfig).isNotNull();
 
     String secretValue = "MySecretValue";
     String secretUuid1 = null;
@@ -586,7 +585,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   public void test_CreateSecretText_withInvalidPathReference_shouldFail() {
     String vaultConfigId = createVaultConfig(vaultConfig);
     VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
-    assertNotNull(savedVaultConfig);
+    assertThat(savedVaultConfig).isNotNull();
 
     String secretName = "MySecret";
     String secretName2 = "AbsolutePathSecret";
@@ -655,7 +654,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   private void testCreateSecretText(VaultConfig vaultconfig) {
     String vaultConfigId = createVaultConfig(vaultconfig);
     VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
-    assertNotNull(savedVaultConfig);
+    assertThat(savedVaultConfig).isNotNull();
 
     String secretName = "FooSecret";
     String secretName2 = "AbsolutePathSecret";
@@ -765,7 +764,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
         entity(multiPart, MediaType.MULTIPART_FORM_DATA_TYPE), new GenericType<RestResponse<List<String>>>() {});
     // Verify vault config was successfully created.
     assertThat(restResponse.getResponseMessages()).isEmpty();
-    assertNotNull(restResponse.getResource());
+    assertThat(restResponse.getResource()).isNotNull();
   }
 
   private void deleteEncryptedFile(String uuid) {
@@ -853,7 +852,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   private void verifySecret(
       String secretUuid, String expectedName, String expectedValue, SecretManagerConfig secretManagerConfig) {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, secretUuid);
-    assertNotNull(encryptedData);
+    assertThat(encryptedData).isNotNull();
 
     assertEquals(expectedName, encryptedData.getName());
 
@@ -873,7 +872,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
 
   private void verifyEncryptedFileValue(String encryptedFileUuid, String expectedValue, VaultConfig savedVaultConfig) {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, encryptedFileUuid);
-    assertNotNull(encryptedData);
+    assertThat(encryptedData).isNotNull();
     assertThat(encryptedData.getFileSize() > 0).isTrue();
 
     savedVaultConfig.setAuthToken(vaultConfig.getAuthToken());
@@ -888,7 +887,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   private void verifyEncryptedFileValue(String encryptedFileUuid, String expectedValue, KmsConfig savedKmsConfig)
       throws IOException {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, encryptedFileUuid);
-    assertNotNull(encryptedData);
+    assertThat(encryptedData).isNotNull();
     assertThat(encryptedData.getFileSize() > 0).isTrue();
 
     String fileId = new String(encryptedData.getEncryptedValue());
@@ -909,7 +908,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
 
   private void verifySecretTextExists(String secretName) {
     EncryptedData encryptedData = secretManager.getSecretMappedToAccountByName(accountId, secretName);
-    assertNotNull(encryptedData);
+    assertThat(encryptedData).isNotNull();
     assertThat(encryptedData.getPath()).isNull();
     assertEquals(SettingVariableTypes.SECRET_TEXT, encryptedData.getType());
   }

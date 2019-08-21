@@ -2,8 +2,8 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -190,7 +190,7 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
                 LinkedHashMap<String, LinkedHashMap<String, List<ContinuousVerificationExecutionMetaData>>>>>>
         cvExecutionMetaData =
             continuousVerificationService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L, user);
-    assertNotNull(cvExecutionMetaData);
+    assertThat(cvExecutionMetaData).isNotNull();
     ContinuousVerificationExecutionMetaData continuousVerificationExecutionMetaData1 =
         cvExecutionMetaData.get(1519171200000L)
             .get("dummy artifact")

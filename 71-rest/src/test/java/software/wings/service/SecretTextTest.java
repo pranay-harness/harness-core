@@ -7,7 +7,6 @@ import static io.harness.expression.SecretString.SECRET_MASK;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -369,8 +368,8 @@ public class SecretTextTest extends WingsBaseTest {
     assertEquals(1, encryptedDataList.size());
     EncryptedData encryptedData = encryptedDataList.get(0);
     assertEquals(secretName, encryptedData.getName());
-    assertNotNull(encryptedData.getEncryptionKey());
-    assertNotNull(encryptedData.getEncryptedValue());
+    assertThat(encryptedData.getEncryptionKey()).isNotNull();
+    assertThat(encryptedData.getEncryptedValue()).isNotNull();
     assertThat(isEmpty(encryptedData.getParentIds())).isTrue();
     assertEquals(accountId, encryptedData.getAccountId());
     assertThat(encryptedData.isEnabled()).isTrue();
@@ -400,8 +399,8 @@ public class SecretTextTest extends WingsBaseTest {
     assertEquals(1, query.count());
     encryptedData = query.get();
     assertEquals(secretName, encryptedData.getName());
-    assertNotNull(encryptedData.getEncryptionKey());
-    assertNotNull(encryptedData.getEncryptedValue());
+    assertThat(encryptedData.getEncryptionKey()).isNotNull();
+    assertThat(encryptedData.getEncryptedValue()).isNotNull();
     assertEquals(accountId, encryptedData.getAccountId());
     assertThat(encryptedData.isEnabled()).isTrue();
     assertEquals(kmsId, encryptedData.getKmsId());
@@ -457,8 +456,8 @@ public class SecretTextTest extends WingsBaseTest {
     assertEquals(1, encryptedDataList.size());
     encryptedData = encryptedDataList.get(0);
     assertEquals(newSecretName, encryptedData.getName());
-    assertNotNull(encryptedData.getEncryptionKey());
-    assertNotNull(encryptedData.getEncryptedValue());
+    assertThat(encryptedData.getEncryptionKey()).isNotNull();
+    assertThat(encryptedData.getEncryptedValue()).isNotNull();
     assertEquals(accountId, encryptedData.getAccountId());
     assertThat(encryptedData.isEnabled()).isTrue();
     assertEquals(kmsId, encryptedData.getKmsId());
@@ -644,8 +643,8 @@ public class SecretTextTest extends WingsBaseTest {
     assertEquals(1, encryptedDataList.size());
     EncryptedData encryptedData = encryptedDataList.get(0);
     assertEquals(secretName, encryptedData.getName());
-    assertNotNull(encryptedData.getEncryptionKey());
-    assertNotNull(encryptedData.getEncryptedValue());
+    assertThat(encryptedData.getEncryptionKey()).isNotNull();
+    assertThat(encryptedData.getEncryptedValue()).isNotNull();
     assertThat(isEmpty(encryptedData.getParentIds())).isTrue();
     assertEquals(accountId, encryptedData.getAccountId());
     assertThat(encryptedData.isEnabled()).isTrue();
@@ -680,8 +679,8 @@ public class SecretTextTest extends WingsBaseTest {
       assertEquals(1, query.count());
       encryptedData = query.get();
       assertEquals(secretName, encryptedData.getName());
-      assertNotNull(encryptedData.getEncryptionKey());
-      assertNotNull(encryptedData.getEncryptedValue());
+      assertThat(encryptedData.getEncryptionKey()).isNotNull();
+      assertThat(encryptedData.getEncryptedValue()).isNotNull();
       assertEquals(accountId, encryptedData.getAccountId());
       assertThat(encryptedData.isEnabled()).isTrue();
       assertEquals(kmsId, encryptedData.getKmsId());
@@ -703,8 +702,8 @@ public class SecretTextTest extends WingsBaseTest {
       assertEquals(1, query.count());
       encryptedData = query.get();
       assertEquals(secretName, encryptedData.getName());
-      assertNotNull(encryptedData.getEncryptionKey());
-      assertNotNull(encryptedData.getEncryptedValue());
+      assertThat(encryptedData.getEncryptionKey()).isNotNull();
+      assertThat(encryptedData.getEncryptedValue()).isNotNull();
       assertEquals(accountId, encryptedData.getAccountId());
       assertThat(encryptedData.isEnabled()).isTrue();
       assertEquals(kmsId, encryptedData.getKmsId());
@@ -726,8 +725,8 @@ public class SecretTextTest extends WingsBaseTest {
     assertEquals(1, query.count());
     encryptedData = query.get();
     assertEquals(secretName, encryptedData.getName());
-    assertNotNull(encryptedData.getEncryptionKey());
-    assertNotNull(encryptedData.getEncryptedValue());
+    assertThat(encryptedData.getEncryptionKey()).isNotNull();
+    assertThat(encryptedData.getEncryptedValue()).isNotNull();
     assertEquals(accountId, encryptedData.getAccountId());
     assertThat(encryptedData.isEnabled()).isTrue();
     assertEquals(kmsId, encryptedData.getKmsId());
@@ -751,8 +750,8 @@ public class SecretTextTest extends WingsBaseTest {
     assertEquals(1, encryptedDataList.size());
     EncryptedData encryptedData = encryptedDataList.get(0);
     assertEquals(secretName, encryptedData.getName());
-    assertNotNull(encryptedData.getEncryptionKey());
-    assertNotNull(encryptedData.getEncryptedValue());
+    assertThat(encryptedData.getEncryptionKey()).isNotNull();
+    assertThat(encryptedData.getEncryptedValue()).isNotNull();
     assertThat(isEmpty(encryptedData.getParentIds())).isTrue();
     assertEquals(accountId, encryptedData.getAccountId());
     assertThat(encryptedData.isEnabled()).isTrue();
@@ -787,8 +786,8 @@ public class SecretTextTest extends WingsBaseTest {
       assertEquals(1, query.count());
       encryptedData = query.get();
       assertEquals(secretName, encryptedData.getName());
-      assertNotNull(encryptedData.getEncryptionKey());
-      assertNotNull(encryptedData.getEncryptedValue());
+      assertThat(encryptedData.getEncryptionKey()).isNotNull();
+      assertThat(encryptedData.getEncryptedValue()).isNotNull();
       assertEquals(accountId, encryptedData.getAccountId());
       assertThat(encryptedData.isEnabled()).isTrue();
       assertEquals(kmsId, encryptedData.getKmsId());
@@ -1038,8 +1037,8 @@ public class SecretTextTest extends WingsBaseTest {
     assertEquals(1, query.count());
     EncryptedData encryptedData = query.get();
     assertEquals(secretName, encryptedData.getName());
-    assertNotNull(encryptedData.getEncryptionKey());
-    assertNotNull(encryptedData.getEncryptedValue());
+    assertThat(encryptedData.getEncryptionKey()).isNotNull();
+    assertThat(encryptedData.getEncryptedValue()).isNotNull();
     assertEquals(accountId, encryptedData.getAccountId());
     assertThat(encryptedData.isEnabled()).isTrue();
     assertEquals(kmsId, encryptedData.getKmsId());
@@ -1069,8 +1068,8 @@ public class SecretTextTest extends WingsBaseTest {
     assertEquals(1, encryptedDataList.size());
     EncryptedData encryptedData = encryptedDataList.get(0);
     assertEquals(secretName, encryptedData.getName());
-    assertNotNull(encryptedData.getEncryptionKey());
-    assertNotNull(encryptedData.getEncryptedValue());
+    assertThat(encryptedData.getEncryptionKey()).isNotNull();
+    assertThat(encryptedData.getEncryptedValue()).isNotNull();
     assertThat(isEmpty(encryptedData.getParentIds())).isTrue();
     assertEquals(accountId, encryptedData.getAccountId());
     assertThat(encryptedData.isEnabled()).isTrue();
@@ -1331,8 +1330,8 @@ public class SecretTextTest extends WingsBaseTest {
     assertEquals(1, encryptedDataList.size());
     EncryptedData encryptedData = encryptedDataList.get(0);
     assertEquals(secretName, encryptedData.getName());
-    assertNotNull(encryptedData.getEncryptionKey());
-    assertNotNull(encryptedData.getEncryptedValue());
+    assertThat(encryptedData.getEncryptionKey()).isNotNull();
+    assertThat(encryptedData.getEncryptedValue()).isNotNull();
     assertThat(isEmpty(encryptedData.getParentIds())).isTrue();
     assertEquals(accountId, encryptedData.getAccountId());
     assertThat(encryptedData.isEnabled()).isTrue();
@@ -1395,8 +1394,8 @@ public class SecretTextTest extends WingsBaseTest {
 
   private void assertSecretData(String secretName, EncryptedData encryptedData) {
     assertEquals(secretName, encryptedData.getName());
-    assertNotNull(encryptedData.getEncryptionKey());
-    assertNotNull(encryptedData.getEncryptedValue());
+    assertThat(encryptedData.getEncryptionKey()).isNotNull();
+    assertThat(encryptedData.getEncryptedValue()).isNotNull();
     assertEquals(accountId, encryptedData.getAccountId());
     assertThat(encryptedData.isEnabled()).isTrue();
     assertEquals(kmsId, encryptedData.getKmsId());
@@ -1424,8 +1423,8 @@ public class SecretTextTest extends WingsBaseTest {
     assertEquals(1, encryptedDataList.size());
     EncryptedData encryptedData = encryptedDataList.get(0);
     assertEquals(secretName, encryptedData.getName());
-    assertNotNull(encryptedData.getEncryptionKey());
-    assertNotNull(encryptedData.getEncryptedValue());
+    assertThat(encryptedData.getEncryptionKey()).isNotNull();
+    assertThat(encryptedData.getEncryptedValue()).isNotNull();
     assertThat(isEmpty(encryptedData.getParentIds())).isTrue();
     assertEquals(accountId, encryptedData.getAccountId());
     assertThat(encryptedData.isEnabled()).isTrue();
@@ -1477,15 +1476,15 @@ public class SecretTextTest extends WingsBaseTest {
     assertEquals(1, encryptedDataList.size());
     encryptedData = encryptedDataList.get(0);
     assertEquals(newSecretName, encryptedData.getName());
-    assertNotNull(encryptedData.getEncryptionKey());
-    assertNotNull(encryptedData.getEncryptedValue());
-    assertNotNull(encryptedData.getParentIds());
+    assertThat(encryptedData.getEncryptionKey()).isNotNull();
+    assertThat(encryptedData.getEncryptedValue()).isNotNull();
+    assertThat(encryptedData.getParentIds()).isNotNull();
     assertEquals(1, encryptedData.getParentIds().size());
     assertEquals(savedAttributeId, encryptedData.getParentIds().iterator().next());
     assertEquals(accountId, encryptedData.getAccountId());
     assertThat(encryptedData.isEnabled()).isTrue();
     assertEquals(kmsId, encryptedData.getKmsId());
-    assertNotNull(encryptedData.getKmsId());
+    assertThat(encryptedData.getKmsId()).isNotNull();
     assertEquals(EncryptionType.KMS, encryptedData.getEncryptionType());
     assertEquals(SECRET_TEXT, encryptedData.getType());
 

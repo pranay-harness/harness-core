@@ -2,7 +2,6 @@ package software.wings.yaml.gitSync;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -62,7 +61,7 @@ public class GitChangeSetRunnableTest extends WingsBaseTest {
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
     verify(yamlChangeSetService).updateStatusForGivenYamlChangeSets(anyString(), any(), anyList(), captor.capture());
     List stuckChangeSetIds = captor.getValue();
-    assertNotNull(stuckChangeSetIds);
+    assertThat(stuckChangeSetIds).isNotNull();
     assertEquals(1, stuckChangeSetIds.size());
     assertEquals("12345", stuckChangeSetIds.get(0));
   }

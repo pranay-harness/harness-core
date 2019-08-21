@@ -1,7 +1,6 @@
 package io.harness.testframework.framework.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 
 import com.google.gson.JsonObject;
 
@@ -10,7 +9,6 @@ import io.harness.testframework.restutils.ApiKeysRestUtils;
 import io.harness.testframework.restutils.IPWhitelistingRestUtils;
 import io.harness.testframework.restutils.SSORestUtils;
 import io.restassured.mapper.ObjectMapperType;
-import junit.framework.TestCase;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import software.wings.beans.Account;
@@ -105,7 +103,7 @@ public class AccessManagementUtils {
     //        HttpStatus.SC_BAD_REQUEST).isFalse();
     //    logger.info("LDAP added successfully");
     //    Object ssoConfig = SSORestUtils.getAccessManagementSettings(account.getUuid(), bearerToken);
-    //    assertNotNull(ssoConfig);
+    //    assertThat(ssoConfig).isNotNull();
     //    logger.info("LDAP added successfully");
     Whitelist ipToWhiteList = new Whitelist();
     ipToWhiteList.setAccountId(account.getUuid());
@@ -115,12 +113,12 @@ public class AccessManagementUtils {
 
     logger.info("Adding the IP to be whitelisted");
     Whitelist ipAdded = IPWhitelistingRestUtils.addWhiteListing(account.getUuid(), bearerToken, ipToWhiteList);
-    assertNotNull(ipAdded);
+    assertThat(ipAdded).isNotNull();
     logger.info("IPWhitelisting verification suucessful");
 
     logger.info("Logging in as a ReadOnly user");
     String roBearerToken = Setup.getAuthToken(READ_ONLY_USER, password);
-    assertNotNull(readOnlyUser);
+    assertThat(readOnlyUser).isNotNull();
     logger.info("Designated user's Bearer Token issued");
 
     logger.info("Get the user groups using ReadOnly permission");
@@ -281,7 +279,7 @@ public class AccessManagementUtils {
     ipToWhiteList.setStatus(WhitelistStatus.DISABLED);
     logger.info("Adding the IP to be whitelisted");
     Whitelist ipAdded = IPWhitelistingRestUtils.addWhiteListing(account.getUuid(), bearerToken, ipToWhiteList);
-    TestCase.assertNotNull(ipAdded);
+    assertThat(ipAdded).isNotNull();
     logger.info("Updating and verifying the whitelisted IP");
     ipToWhiteList.setUuid(ipAdded.getUuid());
     ipToWhiteList.setFilter("127.0.0.1");
@@ -326,7 +324,7 @@ public class AccessManagementUtils {
     logger.info("Creating APIKeys");
     ApiKeyEntry postCreationEntry = ApiKeysRestUtils.createApiKey(apiKeyEntry.getAccountId(), bearerToken, apiKeyEntry);
     logger.info("Validating created APIKeys");
-    assertNotNull(postCreationEntry);
+    assertThat(postCreationEntry).isNotNull();
 
     User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), READ_ONLY_USER);
     logger.info("Logging in as a ReadOnly user");
@@ -374,7 +372,7 @@ public class AccessManagementUtils {
     ipToWhiteList.setStatus(WhitelistStatus.DISABLED);
     logger.info("Adding the IP to be whitelisted");
     Whitelist ipAdded = IPWhitelistingRestUtils.addWhiteListing(account.getUuid(), bearerToken, ipToWhiteList);
-    TestCase.assertNotNull(ipAdded);
+    assertThat(ipAdded).isNotNull();
     User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), READ_ONLY_USER);
     logger.info("Logging in as a ReadOnly user");
     String roBearerToken = Setup.getAuthToken(READ_ONLY_USER, password);

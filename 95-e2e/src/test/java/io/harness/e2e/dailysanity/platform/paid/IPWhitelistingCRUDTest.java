@@ -2,7 +2,6 @@ package io.harness.e2e.dailysanity.platform.paid;
 
 import static io.harness.rule.OwnerRule.SWAMY;
 import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertNotNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.E2ETests;
@@ -33,7 +32,7 @@ public class IPWhitelistingCRUDTest extends AbstractE2ETest {
 
     logger.info("Adding the IP to be whitelisted");
     Whitelist ipAdded = IPWhitelistingRestUtils.addWhiteListing(getAccount().getUuid(), bearerToken, ipToWhiteList);
-    assertNotNull(ipAdded);
+    assertThat(ipAdded).isNotNull();
     logger.info("Verifying the added values");
     assertEquals(ipAdded.getAccountId(), ipToWhiteList.getAccountId());
     assertEquals(ipAdded.getFilter(), ipToWhiteList.getFilter());

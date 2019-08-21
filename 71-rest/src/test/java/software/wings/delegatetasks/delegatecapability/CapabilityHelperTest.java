@@ -2,7 +2,6 @@ package software.wings.delegatetasks.delegatecapability;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
@@ -47,7 +46,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
     encryptionConfigs.add(encryptionConfig);
 
     CapabilityHelper.embedCapabilitiesInDelegateTask(task, encryptionConfigs);
-    assertNotNull(task.getExecutionCapabilities());
+    assertThat(task.getExecutionCapabilities()).isNotNull();
     assertEquals(2, task.getExecutionCapabilities().size());
 
     Set<String> criterias = new HashSet<>();
@@ -70,7 +69,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
     encryptionConfigs.add(encryptionConfig);
 
     CapabilityHelper.embedCapabilitiesInDelegateTask(task, encryptionConfigs);
-    assertNotNull(task.getExecutionCapabilities());
+    assertThat(task.getExecutionCapabilities()).isNotNull();
     assertEquals(2, task.getExecutionCapabilities().size());
 
     Set<String> criterias = new HashSet<>();
@@ -94,7 +93,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
         TaskData.builder().parameters(new Object[] {JenkinsConfig.builder().build(), encryptedDataDetails}).build();
 
     Map encryptionMap = CapabilityHelper.fetchEncryptionDetailsListFromParameters(taskData);
-    assertNotNull(encryptionMap);
+    assertThat(encryptionMap).isNotNull();
     assertThat(encryptionMap).isEmpty();
   }
 
@@ -112,7 +111,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
         TaskData.builder().parameters(new Object[] {JenkinsConfig.builder().build(), encryptedDataDetails}).build();
 
     Map encryptionMap = CapabilityHelper.fetchEncryptionDetailsListFromParameters(taskData);
-    assertNotNull(encryptionMap);
+    assertThat(encryptionMap).isNotNull();
     assertEquals(1, encryptionMap.size());
     EncryptionConfig encryptionConfig = (EncryptionConfig) encryptionMap.values().iterator().next();
 
@@ -135,7 +134,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
         TaskData.builder().parameters(new Object[] {JenkinsConfig.builder().build(), encryptedDataDetails}).build();
 
     Map encryptionMap = CapabilityHelper.fetchEncryptionDetailsListFromParameters(taskData);
-    assertNotNull(encryptionMap);
+    assertThat(encryptionMap).isNotNull();
     assertEquals(1, encryptionMap.size());
     EncryptionConfig encryptionConfig = (EncryptionConfig) encryptionMap.values().iterator().next();
     assertEquals(EncryptionType.KMS, encryptionConfig.getEncryptionType());

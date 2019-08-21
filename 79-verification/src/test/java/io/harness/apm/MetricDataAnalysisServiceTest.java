@@ -5,7 +5,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rest.RestResponse.Builder.aRestResponse;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -134,7 +133,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     Set<NewRelicMetricAnalysisRecord> resultList =
         managerAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId);
 
-    assertNotNull(resultList);
+    assertThat(resultList).isNotNull();
     assertEquals(numOfGroups, resultList.size());
     resultList.forEach(record -> assertEquals(numOfMinutes, record.getAnalysisMinute()));
   }
@@ -174,7 +173,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
         metricDataAnalysisService.getHistoricalAnalysis(accountId, appId, serviceId, cvConfigId, 1000000, null);
 
     // verify
-    assertNotNull(historicalRecords);
+    assertThat(historicalRecords).isNotNull();
     assertEquals("Historical list should be of size 4", 4, historicalRecords.size());
   }
 
@@ -203,7 +202,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
         metricDataAnalysisService.getHistoricalAnalysis(accountId, appId, serviceId, cvConfigId, 1000, null);
 
     // verify
-    assertNotNull(historicalRecords);
+    assertThat(historicalRecords).isNotNull();
     assertEquals("Historical list should be of size 0", 0, historicalRecords.size());
   }
 
@@ -231,7 +230,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
         accountId, appId, serviceId, cvConfigId + "-bad", 1000000, null);
 
     // verify
-    assertNotNull(historicalRecordsBadCvConfigId);
+    assertThat(historicalRecordsBadCvConfigId).isNotNull();
     assertEquals("Historical list should be of size 0", 0, historicalRecordsBadCvConfigId.size());
   }
 

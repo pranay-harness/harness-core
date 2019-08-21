@@ -4,7 +4,6 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static net.sf.ezmorph.test.ArrayAssertions.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 
 import com.google.inject.Inject;
@@ -174,8 +173,8 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
       }
     }
 
-    assertNotNull(gitFetchFilesResult);
-    assertNotNull(gitFetchFilesResult.getFiles());
+    assertThat(gitFetchFilesResult).isNotNull();
+    assertThat(gitFetchFilesResult.getFiles()).isNotNull();
     return gitFetchFilesResult;
   }
 

@@ -3,7 +3,6 @@ package software.wings.service.impl.analysis;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
@@ -63,7 +62,7 @@ public class LogLabelingServiceTest extends WingsBaseTest {
     List<CVFeedbackRecord> labelRecord = labelingService.getCVFeedbackToClassify(accountId, serviceId);
 
     // verify
-    assertNotNull(labelRecord);
+    assertThat(labelRecord).isNotNull();
     assertEquals(record.getLogMessage(), labelRecord.get(0).getLogMessage());
   }
 
@@ -83,7 +82,7 @@ public class LogLabelingServiceTest extends WingsBaseTest {
     List<CVFeedbackRecord> labelRecord = labelingService.getCVFeedbackToClassify(accountId, serviceId);
 
     // verify
-    assertNotNull(labelRecord);
+    assertThat(labelRecord).isNotNull();
     assertEquals(record2.getLogMessage(), labelRecord.get(0).getLogMessage());
   }
 
@@ -121,7 +120,7 @@ public class LogLabelingServiceTest extends WingsBaseTest {
         labelingService.getLabeledSamplesForIgnoreFeedback(accountId, serviceId, envId);
 
     // verify
-    assertNotNull(labelRecordSamples);
+    assertThat(labelRecordSamples).isNotNull();
     assertThat(labelRecordSamples.containsKey("labelA")).isTrue();
     assertThat(labelRecordSamples.containsKey("labelB")).isTrue();
     assertThat(labelRecordSamples.containsKey("labelC")).isTrue();

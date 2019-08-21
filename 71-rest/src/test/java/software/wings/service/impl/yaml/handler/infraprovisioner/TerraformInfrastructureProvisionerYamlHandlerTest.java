@@ -1,8 +1,8 @@
 package software.wings.service.impl.yaml.handler.infraprovisioner;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -92,7 +92,7 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
         ArgumentCaptor.forClass(TerraformInfrastructureProvisioner.class);
     verify(mockInfrastructureProvisionerService).save(captor.capture());
     TerraformInfrastructureProvisioner provisionerSaved = captor.getValue();
-    assertNotNull(provisionerSaved);
+    assertThat(provisionerSaved).isNotNull();
     assertEquals(provisionerSaved.getInfrastructureProvisionerType(), "TERRAFORM");
     assertEquals(provisionerSaved.getAppId(), APP_ID);
     assertEquals(provisionerSaved.getSourceRepoSettingId(), SETTING_ID);
@@ -115,7 +115,7 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
                     .build()))
             .build();
     TerraformInfrastructureProvisioner.Yaml yaml1 = handler.toYaml(provisioner, APP_ID);
-    assertNotNull(yaml1);
+    assertThat(yaml1).isNotNull();
     assertEquals(yaml1.getType(), "TERRAFORM");
     assertEquals(yaml1.getHarnessApiVersion(), "1.0");
     assertEquals(yaml1.getName(), "Name1");

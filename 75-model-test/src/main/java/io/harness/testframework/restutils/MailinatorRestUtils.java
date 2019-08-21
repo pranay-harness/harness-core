@@ -1,6 +1,6 @@
 package io.harness.testframework.restutils;
 
-import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.testframework.framework.Retry;
 import io.harness.testframework.framework.Setup;
@@ -41,7 +41,7 @@ public class MailinatorRestUtils {
   public static MailinatorMetaMessage retrieveMessageFromInbox(String inboxName, final String EXPECTED_SUBJECT) {
     MailinatorInbox inbox = (MailinatorInbox) retry.executeWithRetry(
         () -> retrieveInbox(inboxName), new MailinatorEmailMatcher<>(), EXPECTED_SUBJECT);
-    assertNotNull("All retries failed: Unable to retrieve message for : " + inboxName, inbox.getMessages());
+    assertThat(inbox.getMessages()).isNotNull();
     List<MailinatorMetaMessage> messages = inbox.getMessages();
     MailinatorMetaMessage messageToReturn[] = new MailinatorMetaMessage[1];
     messages.forEach(message -> {

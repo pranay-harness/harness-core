@@ -1,7 +1,6 @@
 package io.harness.jobs;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -119,6 +118,6 @@ public class LogAnalysisGeneratorTest extends CategoryTest {
     ArgumentCaptor<LearningEngineAnalysisTask> taskCaptor = ArgumentCaptor.forClass(LearningEngineAnalysisTask.class);
 
     verify(learningEngineService).addLearningEngineAnalysisTask(taskCaptor.capture());
-    assertNotNull("Feature name should not be null", taskCaptor.getValue().getFeature_name());
+    assertThat(taskCaptor.getValue().getFeature_name()).isNotNull();
   }
 }

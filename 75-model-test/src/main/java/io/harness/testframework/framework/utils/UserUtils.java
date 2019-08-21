@@ -1,7 +1,6 @@
 package io.harness.testframework.framework.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.testframework.framework.Setup;
@@ -42,7 +41,7 @@ public class UserUtils {
   public static List<UserInvite> inviteUserAndValidateInviteMail(Account account, String bearerToken, String emailId,
       String domainName, String EXPECTED_SUBJECT) throws IOException, MessagingException {
     List<UserInvite> userInvitationList = UserRestUtils.inviteUser(account, bearerToken, emailId + domainName);
-    assertNotNull(userInvitationList);
+    assertThat(userInvitationList).isNotNull();
     assertThat(userInvitationList.size() == 1).isTrue();
     // Verify if email is sent, received and has signup link
     // Email check will run every 6 seconds upto 2 mins to see if email is delivered.
@@ -52,18 +51,18 @@ public class UserUtils {
     logger.info("Reading the retrieved email");
     String emailFetchId = message.getId();
     MailinatorMessageDetails messageDetails = MailinatorRestUtils.readEmail(emailId, emailFetchId);
-    assertNotNull(messageDetails);
+    assertThat(messageDetails).isNotNull();
     String inviteUrl =
         HTMLUtils.retrieveInviteUrlFromEmail(messageDetails.getData().getParts().get(0).getBody(), "SIGN UP");
-    assertNotNull(inviteUrl);
+    assertThat(inviteUrl).isNotNull();
     assertThat(StringUtils.isNotBlank(inviteUrl)).isTrue();
     logger.info("Email read and Signup URL is available for user signup");
 
     messageDetails = null;
     messageDetails = MailinatorRestUtils.deleteEmail(emailId, emailFetchId);
     logger.info("Email deleted for the inbox : " + emailId);
-    assertNotNull(messageDetails.getAdditionalProperties());
-    assertNotNull(messageDetails.getAdditionalProperties().containsKey("status"));
+    assertThat(messageDetails.getAdditionalProperties()).isNotNull();
+    assertThat(messageDetails.getAdditionalProperties().containsKey("status")).isNotNull();
     assertThat(messageDetails.getAdditionalProperties().get("status").toString().equals("ok")).isTrue();
     return userInvitationList;
   }
@@ -75,7 +74,7 @@ public class UserUtils {
     UserInvite incomplete = userInvitationList.get(0);
     UserInvite completed = UserRestUtils.completeUserRegistration(account, bearerToken, incomplete);
     UserRestUtils.completePaidUserSignupAndSignin(bearerToken, account.getUuid(), "dummy", incomplete);
-    assertNotNull(completed);
+    assertThat(completed).isNotNull();
     assertThat(incomplete.isAgreement()).isFalse();
     assertThat(incomplete.isCompleted()).isFalse();
     assertThat(completed.isCompleted()).isTrue();
@@ -86,7 +85,7 @@ public class UserUtils {
     assertThat(incomplete.getAccountId().equals(completed.getAccountId())).isTrue();
     // Verify if the signed-up user can login
     String newBearerToken = Setup.getAuthToken(completed.getEmail(), UserConstants.DEFAULT_PASSWORD);
-    assertNotNull("Bearer Token not successfully provided", newBearerToken);
+    assertThat(newBearerToken).isNotNull();
     int statusCode = Setup.signOut(completed.getUuid(), newBearerToken);
     assertThat(statusCode == HttpStatus.SC_OK).isTrue();
     return completed;
@@ -101,7 +100,7 @@ public class UserUtils {
     logger.info("Reading the retrieved email");
     String emailFetchId = message.getId();
     MailinatorMessageDetails messageDetails = MailinatorRestUtils.readEmail(emailId, emailFetchId);
-    assertNotNull(messageDetails);
+    assertThat(messageDetails).isNotNull();
     String resetUrl =
         HTMLUtils.retrieveResetUrlFromEmail(messageDetails.getData().getParts().get(0).getBody(), "RESET PASSWORD");
     assertThat(StringUtils.isNotBlank(resetUrl)).isTrue();
@@ -110,15 +109,15 @@ public class UserUtils {
     UserRestUtils.resetPasswordWith(TestUtils.getResetTokenFromUrl(resetUrl), UserConstants.RESET_PASSWORD);
     // Verify if the user can login through the reset password
     String bearerToken = Setup.getAuthToken(completed.getEmail(), UserConstants.RESET_PASSWORD);
-    assertNotNull("Bearer Token not successfully provided", bearerToken);
+    assertThat(bearerToken).isNotNull();
     int statusCode = Setup.signOut(completed.getUuid(), bearerToken);
     assertThat(statusCode == HttpStatus.SC_OK).isTrue();
     // Delete Email
     messageDetails = null;
     messageDetails = MailinatorRestUtils.deleteEmail(emailId, emailFetchId);
     logger.info("Email deleted for the inbox : " + emailId);
-    assertNotNull(messageDetails.getAdditionalProperties());
-    assertNotNull(messageDetails.getAdditionalProperties().containsKey("status"));
+    assertThat(messageDetails.getAdditionalProperties()).isNotNull();
+    assertThat(messageDetails.getAdditionalProperties().containsKey("status")).isNotNull();
     assertThat(messageDetails.getAdditionalProperties().get("status").toString().equals("ok")).isTrue();
     logger.info("All validation completed");
     logger.info("All validation for reset also done");

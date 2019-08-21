@@ -1,7 +1,7 @@
 package software.wings.beans.infrastructure.instance.stats;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import com.google.inject.Inject;
 
@@ -52,7 +52,7 @@ public class InstanceStatsSnapshotIntegrationTest extends BaseIntegrationTest {
     assertEquals(sum, snapshot.getTotal());
 
     val id = persistence.save(snapshot);
-    assertNotNull(id);
+    assertThat(id).isNotNull();
     val fetchedSnapshot = persistence.get(InstanceStatsSnapshot.class, id);
 
     assertEquals(fetchedSnapshot, snapshot);

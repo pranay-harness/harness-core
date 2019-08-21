@@ -5,7 +5,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.SettingGenerator.Settings.AWS_TEST_CLOUD_PROVIDER;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
@@ -140,7 +139,7 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
     Workflow workflow = getBasicEcsEc2TypeWorkflow();
     Workflow savedWorkflow =
         WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), application.getUuid(), workflow);
-    assertNotNull(savedWorkflow);
+    assertThat(savedWorkflow).isNotNull();
     // Test running the workflow
     assertExecution(savedWorkflow);
   }
