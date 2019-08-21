@@ -2,8 +2,8 @@ package software.wings.service.impl.instance;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anySet;
@@ -245,8 +245,8 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
     verify(instanceService).delete(captor.capture());
     Set idTobeDeleted = captor.getValue();
     assertEquals(2, idTobeDeleted.size());
-    assertTrue(idTobeDeleted.contains(instance1.getInstanceId()));
-    assertTrue(idTobeDeleted.contains(instance2.getInstanceId()));
+    assertThat(idTobeDeleted.contains(instance1.getInstanceId())).isTrue();
+    assertThat(idTobeDeleted.contains(instance2.getInstanceId())).isTrue();
 
     verify(instanceService, never()).saveOrUpdate(any(Instance.class));
   }
@@ -291,7 +291,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
     verify(instanceService).delete(captor.capture());
     Set idTobeDeleted = captor.getValue();
     assertEquals(1, idTobeDeleted.size());
-    assertTrue(idTobeDeleted.contains(instance2.getInstanceId()));
+    assertThat(idTobeDeleted.contains(instance2.getInstanceId())).isTrue();
 
     ArgumentCaptor<Instance> captorInstance = ArgumentCaptor.forClass(Instance.class);
     verify(instanceService, times(1)).save(captorInstance.capture());
@@ -299,7 +299,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
     List<Instance> capturedInstances = captorInstance.getAllValues();
     assertEquals(1, capturedInstances.size());
     Set<String> hostNames = new HashSet<>(asList(HOST_NAME_IP3));
-    assertTrue(hostNames.contains(capturedInstances.get(0).getHostInstanceKey().getHostName()));
+    assertThat(hostNames.contains(capturedInstances.get(0).getHostInstanceKey().getHostName())).isTrue();
   }
 
   private void setPageResponse(PageResponse<Instance> pageResponse) {
@@ -392,7 +392,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
     verify(instanceService).delete(captor.capture());
     Set idTobeDeleted = captor.getValue();
     assertEquals(1, idTobeDeleted.size());
-    assertTrue(idTobeDeleted.contains(instance2.getInstanceId()));
+    assertThat(idTobeDeleted.contains(instance2.getInstanceId())).isTrue();
 
     ArgumentCaptor<Instance> captorInstance = ArgumentCaptor.forClass(Instance.class);
     verify(instanceService, times(1)).save(captorInstance.capture());
@@ -402,6 +402,6 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
     Set<String> hostNames = new HashSet<>(asList(HOST_NAME_IP3));
     assertEquals("1", capturedInstances.get(0).getLastArtifactBuildNum());
     assertEquals("old", capturedInstances.get(0).getLastArtifactName());
-    assertTrue(hostNames.contains(capturedInstances.get(0).getHostInstanceKey().getHostName()));
+    assertThat(hostNames.contains(capturedInstances.get(0).getHostInstanceKey().getHostName())).isTrue();
   }
 }

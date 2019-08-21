@@ -1,10 +1,10 @@
 package software.wings.integration.SSO.LDAP;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static software.wings.integration.SSO.LDAP.LdapIntegrationTestConstants.ACCOUNT_ID;
 import static software.wings.integration.SSO.LDAP.LdapIntegrationTestConstants.ADMIN_HARNESS_ID;
 import static software.wings.integration.SSO.LDAP.LdapIntegrationTestConstants.INVALID_TOKEN;
@@ -199,8 +199,9 @@ public class LdapIntegrationTest extends BaseIntegrationTest implements WingsInt
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<Collection<LdapGroupResponse>>>() {});
     Collection<LdapGroupResponse> resource = collectionRestResponse.getResource();
 
-    resource.forEach(groupResponse -> { assertTrue(groupResponse.getName().toLowerCase().contains("admin")); });
-    assertTrue(resource.size() > 0);
+    resource.forEach(
+        groupResponse -> { assertThat(groupResponse.getName().toLowerCase().contains("admin")).isTrue(); });
+    assertThat(resource.size() > 0).isTrue();
   }
 
   public void linkLdapGroupToHarnessUserGroupTest() {
@@ -215,7 +216,7 @@ public class LdapIntegrationTest extends BaseIntegrationTest implements WingsInt
     RestResponse<UserGroup> userGroupRestResponse = getRequestBuilderWithAuthHeader(target).put(
         Entity.json(JsonUtils.asJson(ldapLinkGroupRequest)), new GenericType<RestResponse<UserGroup>>() {});
     UserGroup userGroup = userGroupRestResponse.getResource();
-    assertTrue(userGroup.isSsoLinked());
+    assertThat(userGroup.isSsoLinked()).isTrue();
     assertEquals(userGroup.getSsoGroupId(), LDAP_GROUP_DN_TO_LINK_TO_HARNESS_GROUP);
   }
 

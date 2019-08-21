@@ -6,7 +6,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertTrue;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.CommandCategory.Type.COMMANDS;
@@ -811,7 +810,7 @@ public class TemplateServiceTest extends TemplateBaseTest {
     assertThat(savedTemplate.getAppId()).isEqualTo(APP_ID);
     assertThat(savedTemplate.getName()).isEqualTo("Ping Response");
 
-    assertTrue(templateService.deleteByFolder(appLevelFolder));
+    assertThat(templateService.deleteByFolder(appLevelFolder)).isTrue();
   }
 
   @Test

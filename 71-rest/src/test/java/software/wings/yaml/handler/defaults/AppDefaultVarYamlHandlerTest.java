@@ -4,7 +4,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
@@ -158,7 +157,7 @@ public class AppDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
 
     yamlHandler.delete(changeContext);
     List<SettingAttribute> settingAttributeList = yamlHandler.get(ACCOUNT_ID, validYamlFilePath);
-    assertTrue(settingAttributeList.isEmpty());
+    assertThat(settingAttributeList.isEmpty()).isTrue();
   }
 
   @Test

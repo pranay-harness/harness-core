@@ -1,11 +1,11 @@
 package software.wings.delegatetasks;
 
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
@@ -86,7 +86,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
         .getAllStacks(anyString(), any(), any());
     Optional<Stack> stack =
         createStackHandler.getIfStackExists(customStackName, "foo", AwsConfig.builder().build(), "us-east-1");
-    assertTrue(stack.isPresent());
+    assertThat(stack.isPresent()).isTrue();
     assertEquals(stack.get().getStackId(), stackId);
   }
 
@@ -134,7 +134,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
     assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
     CloudFormationCommandResponse formationCommandResponse = response.getCommandResponse();
     assertNotNull(formationCommandResponse);
-    assertTrue(formationCommandResponse instanceof CloudFormationCreateStackResponse);
+    assertThat(formationCommandResponse instanceof CloudFormationCreateStackResponse).isTrue();
     CloudFormationCreateStackResponse createStackResponse =
         (CloudFormationCreateStackResponse) formationCommandResponse;
     Map<String, Object> outputMap = createStackResponse.getCloudFormationOutputMap();
@@ -198,7 +198,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
     assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
     CloudFormationCommandResponse formationCommandResponse = response.getCommandResponse();
     assertNotNull(formationCommandResponse);
-    assertTrue(formationCommandResponse instanceof CloudFormationCreateStackResponse);
+    assertThat(formationCommandResponse instanceof CloudFormationCreateStackResponse).isTrue();
     CloudFormationCreateStackResponse createStackResponse =
         (CloudFormationCreateStackResponse) formationCommandResponse;
     Map<String, Object> outputMap = createStackResponse.getCloudFormationOutputMap();
@@ -212,7 +212,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   private void validateMapContents(Map<String, Object> map, String key, String value) {
-    assertTrue(map.containsKey(key));
+    assertThat(map.containsKey(key)).isTrue();
     assertEquals((String) map.get(key), value);
   }
 
@@ -253,12 +253,12 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
     assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
     CloudFormationCommandResponse formationCommandResponse = response.getCommandResponse();
     assertNotNull(formationCommandResponse);
-    assertTrue(formationCommandResponse instanceof CloudFormationCreateStackResponse);
+    assertThat(formationCommandResponse instanceof CloudFormationCreateStackResponse).isTrue();
     CloudFormationCreateStackResponse createStackResponse =
         (CloudFormationCreateStackResponse) formationCommandResponse;
     ExistingStackInfo existingStackInfo = createStackResponse.getExistingStackInfo();
     assertNotNull(existingStackInfo);
-    assertTrue(existingStackInfo.isStackExisted());
+    assertThat(existingStackInfo.isStackExisted()).isTrue();
     assertEquals(existingStackInfo.getOldStackBody(), "Body");
   }
 
@@ -331,7 +331,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
     assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
     CloudFormationCommandResponse formationCommandResponse = response.getCommandResponse();
     assertNotNull(formationCommandResponse);
-    assertTrue(formationCommandResponse instanceof CloudFormationListStacksResponse);
+    assertThat(formationCommandResponse instanceof CloudFormationListStacksResponse).isTrue();
     CloudFormationListStacksResponse listStacksResponse = (CloudFormationListStacksResponse) formationCommandResponse;
     List<StackSummaryInfo> summaryInfos = listStacksResponse.getStackSummaryInfos();
     assertNotNull(summaryInfos);

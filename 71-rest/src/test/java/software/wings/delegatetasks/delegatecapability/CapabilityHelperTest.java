@@ -3,7 +3,6 @@ package software.wings.delegatetasks.delegatecapability;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
@@ -56,7 +55,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
     criterias.add(GOOGLE_COM + ":" + HTTP_PORT);
 
     task.getExecutionCapabilities().forEach(
-        executionCapability -> assertTrue(criterias.contains(executionCapability.fetchCapabilityBasis())));
+        executionCapability -> assertThat(criterias.contains(executionCapability.fetchCapabilityBasis())).isTrue());
   }
 
   @Test
@@ -79,7 +78,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
     criterias.add(GOOGLE_COM + ":" + HTTP_PORT);
 
     task.getExecutionCapabilities().forEach(
-        executionCapability -> assertTrue(criterias.contains(executionCapability.fetchCapabilityBasis())));
+        executionCapability -> assertThat(criterias.contains(executionCapability.fetchCapabilityBasis())).isTrue());
   }
 
   @Test
@@ -118,7 +117,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
     EncryptionConfig encryptionConfig = (EncryptionConfig) encryptionMap.values().iterator().next();
 
     assertEquals(EncryptionType.VAULT, encryptionConfig.getEncryptionType());
-    assertTrue(encryptionConfig instanceof VaultConfig);
+    assertThat(encryptionConfig instanceof VaultConfig).isTrue();
     assertEquals(HTTP_VAUTL_URL, ((VaultConfig) encryptionConfig).getVaultUrl());
   }
 
@@ -140,7 +139,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
     assertEquals(1, encryptionMap.size());
     EncryptionConfig encryptionConfig = (EncryptionConfig) encryptionMap.values().iterator().next();
     assertEquals(EncryptionType.KMS, encryptionConfig.getEncryptionType());
-    assertTrue(encryptionConfig instanceof KmsConfig);
+    assertThat(encryptionConfig instanceof KmsConfig).isTrue();
     assertEquals(US_EAST_2, ((KmsConfig) encryptionConfig).getRegion());
   }
 

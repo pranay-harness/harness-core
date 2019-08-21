@@ -6,8 +6,8 @@ import static io.harness.jobs.sg247.collection.ServiceGuardDataCollectionJob.SER
 import static io.harness.jobs.sg247.timeseries.ServiceGuardTimeSeriesAnalysisJob.SERVICE_GUARD_TIME_SERIES_ANALYSIS_CRON;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
-import static junit.framework.TestCase.assertTrue;
 import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -79,9 +79,9 @@ public class ServiceGuardPollerTest extends VerificationBaseTest {
     serviceGuardAccountPoller.scheduleAccountPolling();
     sleep(ofMillis(10000));
     accounts.forEach(account -> {
-      assertTrue(jobScheduler.checkExists(account.getUuid(), SERVICE_GUARD_DATA_COLLECTION_CRON));
-      assertTrue(jobScheduler.checkExists(account.getUuid(), SERVICE_GUARD_TIME_SERIES_ANALYSIS_CRON));
-      assertTrue(jobScheduler.checkExists(account.getUuid(), SERVICE_GUARD_TIME_SERIES_ANALYSIS_CRON));
+      assertThat(jobScheduler.checkExists(account.getUuid(), SERVICE_GUARD_DATA_COLLECTION_CRON)).isTrue();
+      assertThat(jobScheduler.checkExists(account.getUuid(), SERVICE_GUARD_TIME_SERIES_ANALYSIS_CRON)).isTrue();
+      assertThat(jobScheduler.checkExists(account.getUuid(), SERVICE_GUARD_TIME_SERIES_ANALYSIS_CRON)).isTrue();
     });
 
     when(accountCall.execute())

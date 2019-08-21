@@ -1,8 +1,8 @@
 package io.harness.limits.checker.rate;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import com.google.inject.Inject;
 
@@ -88,13 +88,13 @@ public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseInteg
         new MongoSlidingWindowRateLimitChecker(limit, persistence, ACTION);
 
     for (int i = 0; i < maxReq; i++) {
-      assertTrue("request should be allowed. Iteration: " + i, limitChecker.checkAndConsume());
+      assertThat(limitChecker.checkAndConsume()).isTrue();
     }
 
     assertFalse("request should be blocked since limit reached", limitChecker.checkAndConsume());
 
     Thread.sleep(durationInMillis + 5);
-    assertTrue("request should be allowed after specified time", limitChecker.checkAndConsume());
+    assertThat(limitChecker.checkAndConsume()).isTrue();
   }
 
   @Test
@@ -108,11 +108,10 @@ public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseInteg
 
     double count = 0.8 * maxReq;
     for (int i = 0; i < count; i++) {
-      assertTrue("request should be allowed. Iteration: " + i, limitChecker.checkAndConsume());
+      assertThat(limitChecker.checkAndConsume()).isTrue();
     }
 
-    assertTrue(
-        "requests should have crossed 70% limit since we are using 0.8 as multiple above", limitChecker.crossed(70));
+    assertThat(limitChecker.crossed(70)).isTrue();
     assertFalse("requests should NOT have crossed 90% limit since we are using 0.8 as multiple above",
         limitChecker.crossed(90));
   }
@@ -154,6 +153,6 @@ public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseInteg
 
     Thread.sleep(durationInMillis + 10);
     boolean allowed = limitChecker.checkAndConsume();
-    assertTrue("request should be allowed after specified time", allowed);
+    assertThat(allowed).isTrue();
   }
 }

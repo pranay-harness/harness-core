@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -353,7 +352,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
           service.getServiceRegistries(), taskDefinition, executionLogCallback);
       assertFalse(false);
     } catch (Exception e) {
-      assertTrue(true);
+      assertThat(true).isTrue();
     }
 
     service.getServiceRegistries().get(0).setContainerName(CONTAINER_NAME);
@@ -363,7 +362,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
           service.getServiceRegistries(), getTaskDefinition(), executionLogCallback);
       assertFalse(false);
     } catch (Exception e) {
-      assertTrue(true);
+      assertThat(true).isTrue();
     }
   }
 
@@ -404,8 +403,8 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testIsServiceWithSamePrefix() {
-    assertTrue(
-        ecsSetupCommandTaskHelper.isServiceWithSamePrefix("Beacons__Conversions__177", "Beacons__Conversions__"));
+    assertThat(ecsSetupCommandTaskHelper.isServiceWithSamePrefix("Beacons__Conversions__177", "Beacons__Conversions__"))
+        .isTrue();
     assertFalse(ecsSetupCommandTaskHelper.isServiceWithSamePrefix(
         "Beacons__Conversions__177__Fargate__4", "Beacons__Conversions__"));
   }
@@ -534,7 +533,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     assertEquals("1024", registerTaskDefinitionRequest.getMemory());
     assertEquals("abc", registerTaskDefinitionRequest.getExecutionRoleArn());
     assertEquals(setupParams.getTaskFamily(), registerTaskDefinitionRequest.getFamily());
-    assertTrue(registerTaskDefinitionRequest.getRequiresCompatibilities().contains(LaunchType.FARGATE.name()));
+    assertThat(registerTaskDefinitionRequest.getRequiresCompatibilities().contains(LaunchType.FARGATE.name())).isTrue();
     assertEquals(NetworkMode.Awsvpc.name().toLowerCase(), registerTaskDefinitionRequest.getNetworkMode().toLowerCase());
     assertEquals(1, registerTaskDefinitionRequest.getContainerDefinitions().size());
     com.amazonaws.services.ecs.model.ContainerDefinition taskDefinition1 =
@@ -626,7 +625,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   public void testIsFargateTaskLauchType() throws Exception {
     EcsSetupParams setupParams = getEcsSetupParams();
     setupParams.setLaunchType(LaunchType.FARGATE.name());
-    assertTrue(ecsSetupCommandTaskHelper.isFargateTaskLauchType(setupParams));
+    assertThat(ecsSetupCommandTaskHelper.isFargateTaskLauchType(setupParams)).isTrue();
 
     setupParams.setLaunchType(LaunchType.EC2.name());
     assertFalse(ecsSetupCommandTaskHelper.isFargateTaskLauchType(setupParams));
@@ -654,9 +653,9 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testMatchWithRegex() throws Exception {
-    assertTrue(ecsSetupCommandTaskHelper.matchWithRegex("App_Service_Env__2", "App_Service_Env__1"));
-    assertTrue(ecsSetupCommandTaskHelper.matchWithRegex("App_Service_Env__2", "App_Service_Env__21"));
-    assertTrue(ecsSetupCommandTaskHelper.matchWithRegex("App1_Service1_Env1__2", "App1_Service1_Env1__121"));
+    assertThat(ecsSetupCommandTaskHelper.matchWithRegex("App_Service_Env__2", "App_Service_Env__1")).isTrue();
+    assertThat(ecsSetupCommandTaskHelper.matchWithRegex("App_Service_Env__2", "App_Service_Env__21")).isTrue();
+    assertThat(ecsSetupCommandTaskHelper.matchWithRegex("App1_Service1_Env1__2", "App1_Service1_Env1__121")).isTrue();
   }
 
   @Test

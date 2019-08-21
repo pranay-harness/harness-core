@@ -3,9 +3,9 @@ package software.wings.integration;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static javax.ws.rs.client.Entity.entity;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
@@ -130,7 +130,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
     assertNotNull(settingAttribute1);
     awsConfigNoLambdaId = settingAttribute1.getUuid();
 
-    assertTrue(isNotEmpty(awsConfigId));
+    assertThat(isNotEmpty(awsConfigId)).isTrue();
   }
 
   @Test
@@ -141,7 +141,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
         API_BASE + "/cloudwatch/get-metric-names?accountId=" + accountId + "&awsNameSpace=" + AwsNameSpace.EC2);
     RestResponse<List<CloudWatchMetric>> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<CloudWatchMetric>>>() {});
-    assertTrue(restResponse.getResource().size() > 0);
+    assertThat(restResponse.getResource().size() > 0).isTrue();
   }
 
   @Test
@@ -152,7 +152,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
         + "&settingId=" + awsConfigId + "&region=" + Regions.US_EAST_1.getName());
     RestResponse<Set<String>> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<Set<String>>>() {});
-    assertTrue(restResponse.getResource().size() > 0);
+    assertThat(restResponse.getResource().size() > 0).isTrue();
   }
 
   @Test
@@ -169,7 +169,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
 
     JSONObject response = jsonResponseObject.getJSONObject("resource");
     assertEquals("Request failed", restResponse.getStatus(), HttpStatus.SC_OK);
-    assertTrue("provider is not reachable", Boolean.valueOf(response.get("providerReachable").toString()));
+    assertThat(Boolean.valueOf(response.get("providerReachable").toString())).isTrue();
   }
 
   @Test
@@ -192,7 +192,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
 
     List<String> ecsClusterNames = restResponse.getResource();
 
-    assertTrue("No ECS Cluster found", ecsClusterNames.size() > 1);
+    assertThat(ecsClusterNames.size() > 1).isTrue();
   }
 
   @Test
@@ -206,7 +206,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
 
     Map<String, String> ec2InstanceIdByDnsName = restResponse.getResource();
 
-    assertTrue("No EC2 Instances found", ec2InstanceIdByDnsName.size() > 1);
+    assertThat(ec2InstanceIdByDnsName.size() > 1).isTrue();
   }
 
   private CloudWatchSetupTestNodeData getCloudWatchSetupTestNodedata() {

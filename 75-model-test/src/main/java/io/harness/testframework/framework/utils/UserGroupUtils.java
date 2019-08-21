@@ -1,7 +1,7 @@
 package io.harness.testframework.framework.utils;
 
 import static junit.framework.TestCase.assertNotNull;
-import static junit.framework.TestCase.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.gson.JsonObject;
 
@@ -27,7 +27,7 @@ import java.util.Set;
 public class UserGroupUtils {
   public static UserGroup getUserGroup(Account account, String bearerToken, String groupName) {
     List<UserGroup> userGroupList = UserGroupRestUtils.getUserGroups(account, bearerToken);
-    assertTrue(userGroupList != null && userGroupList.size() > 0);
+    assertThat(userGroupList != null && userGroupList.size() > 0).isTrue();
 
     for (UserGroup elemUserGroup : userGroupList) {
       if (elemUserGroup.getName().equals(groupName)) {
@@ -44,7 +44,7 @@ public class UserGroupUtils {
 
   public static UserGroup createUserGroup(Account account, String bearerToken, JsonObject jsonObject) {
     UserGroup userGroup = UserGroupRestUtils.createUserGroup(account, bearerToken, jsonObject);
-    assertTrue(userGroup != null);
+    assertThat(userGroup != null).isTrue();
     return userGroup;
   }
 
@@ -64,12 +64,13 @@ public class UserGroupUtils {
     groupInfoAsJson.addProperty("description", "Test Description - " + System.currentTimeMillis());
     UserGroup userGroup = UserGroupUtils.createUserGroup(account, bearerToken, groupInfoAsJson);
     userGroup.setMemberIds(memberIds);
-    assertTrue(UserGroupRestUtils.updateMembers(account, bearerToken, userGroup) == HttpStatus.SC_OK);
+    assertThat(UserGroupRestUtils.updateMembers(account, bearerToken, userGroup) == HttpStatus.SC_OK).isTrue();
     userGroup = getUserGroup(account, bearerToken, userGroup.getName());
     assertNotNull(userGroup);
     assertNotNull(userGroup.getMemberIds());
     userGroup.setAccountPermissions(accountPermissions);
-    assertTrue(UserGroupRestUtils.updateAccountPermissions(account, bearerToken, userGroup) == HttpStatus.SC_OK);
+    assertThat(UserGroupRestUtils.updateAccountPermissions(account, bearerToken, userGroup) == HttpStatus.SC_OK)
+        .isTrue();
     userGroup = getUserGroup(account, bearerToken, userGroup.getName());
     assertNotNull(userGroup);
     assertNotNull(userGroup.getAccountPermissions());
@@ -123,9 +124,9 @@ public class UserGroupUtils {
   public static void deleteMembers(Account account, String bearerToken, UserGroup userGroup) {
     List<String> emptyList = new ArrayList<>();
     userGroup.setMemberIds(emptyList);
-    assertTrue(UserGroupRestUtils.updateMembers(account, bearerToken, userGroup) == HttpStatus.SC_OK);
+    assertThat(UserGroupRestUtils.updateMembers(account, bearerToken, userGroup) == HttpStatus.SC_OK).isTrue();
     userGroup = UserGroupUtils.getUserGroup(account, bearerToken, userGroup.getName());
-    assertTrue(userGroup.getMemberIds() == null || userGroup.getMemberIds().size() == 0);
+    assertThat(userGroup.getMemberIds() == null || userGroup.getMemberIds().size() == 0).isTrue();
   }
 
   public static UserGroup createUserGroup(

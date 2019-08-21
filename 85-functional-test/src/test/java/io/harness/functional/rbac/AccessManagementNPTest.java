@@ -1,8 +1,8 @@
 package io.harness.functional.rbac;
 
 import static io.harness.rule.OwnerRule.SWAMY;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import com.google.gson.JsonObject;
 
@@ -14,7 +14,6 @@ import io.harness.testframework.framework.utils.AccessManagementUtils;
 import io.harness.testframework.framework.utils.UserGroupUtils;
 import io.harness.testframework.framework.utils.UserUtils;
 import io.harness.testframework.restutils.UserGroupRestUtils;
-import junit.framework.TestCase;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.junit.Test;
@@ -36,22 +35,24 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
     String roBearerToken = Setup.getAuthToken(READ_ONLY_USER, "readonlyuser");
     assertNotNull(readOnlyUser);
     logger.info("List the users using ReadOnly permission");
-    assertTrue(Setup.portal()
+    assertThat(Setup.portal()
                    .auth()
                    .oauth2(roBearerToken)
                    .queryParam("accountId", getAccount().getUuid())
                    .get("/users")
                    .getStatusCode()
-        == HttpStatus.SC_BAD_REQUEST);
+        == HttpStatus.SC_BAD_REQUEST)
+        .isTrue();
     logger.info("List users failed with Bad request as expected");
     logger.info("List the user groups using ReadOnly permission");
-    assertTrue(Setup.portal()
+    assertThat(Setup.portal()
                    .auth()
                    .oauth2(roBearerToken)
                    .queryParam("accountId", getAccount().getUuid())
                    .get("/userGroups")
                    .getStatusCode()
-        == HttpStatus.SC_BAD_REQUEST);
+        == HttpStatus.SC_BAD_REQUEST)
+        .isTrue();
     AccessManagementUtils.runNoAccessTest(getAccount(), roBearerToken, readOnlyUser.getUuid());
     logger.info("Tests completed");
   }
@@ -104,7 +105,7 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
     UserGroup userGroup = createUserGroup();
     AccessManagementUtils.runAPIKeyPostTest(
         getAccount(), bearerToken, READ_ONLY_USER, "readonlyuser", HttpStatus.SC_BAD_REQUEST, userGroup);
-    TestCase.assertTrue(UserGroupRestUtils.deleteUserGroup(getAccount(), bearerToken, userGroup.getUuid()));
+    assertThat(UserGroupRestUtils.deleteUserGroup(getAccount(), bearerToken, userGroup.getUuid())).isTrue();
     logger.info("Test completed successfully");
   }
 
@@ -152,7 +153,7 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
     UserGroup userGroup = createUserGroup();
     AccessManagementUtils.updateAndDeleteAPIKeys(
         getAccount(), bearerToken, READ_ONLY_USER, "readonlyuser", userGroup, HttpStatus.SC_BAD_REQUEST);
-    TestCase.assertTrue(UserGroupRestUtils.deleteUserGroup(getAccount(), bearerToken, userGroup.getUuid()));
+    assertThat(UserGroupRestUtils.deleteUserGroup(getAccount(), bearerToken, userGroup.getUuid())).isTrue();
     logger.info("Test completed successfully");
   }
 

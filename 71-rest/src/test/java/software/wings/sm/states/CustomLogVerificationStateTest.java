@@ -1,8 +1,8 @@
 package software.wings.sm.states;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -76,7 +76,7 @@ public class CustomLogVerificationStateTest extends WingsBaseTest {
 
     Map<String, Map<String, ResponseMapper>> logDefinitions = state.constructLogDefinitions(context);
     assertNotNull(logDefinitions);
-    assertTrue("Correct query exists", logDefinitions.containsKey("customLogVerificationQuery"));
+    assertThat(logDefinitions.containsKey("customLogVerificationQuery")).isTrue();
     Map<String, ResponseMapper> mapping = logDefinitions.get("customLogVerificationQuery");
     assertEquals("Host json path is correct", "hits.hits[*]._source.kubernetes.pod.name",
         mapping.get("host").getJsonPath().get(0));

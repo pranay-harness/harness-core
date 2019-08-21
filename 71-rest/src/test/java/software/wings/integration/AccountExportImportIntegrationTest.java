@@ -5,7 +5,6 @@ import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import io.harness.category.element.IntegrationTests;
@@ -72,8 +71,8 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
         hasApplications = true;
       }
     }
-    assertTrue(hasAccounts);
-    assertTrue(hasApplications);
+    assertThat(hasAccounts).isTrue();
+    assertThat(hasApplications).isTrue();
 
     importAccountData(accountId, exportedAccountData);
   }
@@ -170,7 +169,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
       }
     }
     assertFalse(hasUsers);
-    assertTrue(hasApplications);
+    assertThat(hasApplications).isTrue();
   }
 
   @Test
@@ -189,7 +188,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
   private byte[] exportAccountData(String accountId) {
     WebTarget target = client.target(API_BASE + "/account/export?accountId=" + accountId);
     byte[] responseZip = getRequestBuilderWithAuthHeader(target).get(new GenericType<byte[]>() {});
-    assertTrue(isNotEmpty(responseZip));
+    assertThat(isNotEmpty(responseZip)).isTrue();
 
     return responseZip;
   }
@@ -198,7 +197,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
     WebTarget target = client.target(API_BASE + "/account/export?accountId=" + accountId
         + "&mode=" + ExportMode.SPECIFIC + "&entityTypes=" + entityType);
     byte[] responseZip = getRequestBuilderWithAuthHeader(target).get(new GenericType<byte[]>() {});
-    assertTrue(isNotEmpty(responseZip));
+    assertThat(isNotEmpty(responseZip)).isTrue();
 
     return responseZip;
   }
@@ -230,7 +229,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
     // Verify vault config was successfully created.
     assertThat(restResponse.getResponseMessages()).isEmpty();
     assertNotNull(restResponse.getResource());
-    assertTrue(restResponse.getResource().getStatuses().size() > 0);
+    assertThat(restResponse.getResource().getStatuses().size() > 0).isTrue();
   }
 
   private void createAccount(String accountId, String accountName) {
@@ -250,7 +249,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
     RestResponse<Account> response = getRequestBuilderWithAuthHeader(target).post(
         entity(account, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Account>>() {});
     assertNotNull(response.getResource());
-    assertTrue(accountService.exists(account.getAccountName()));
+    assertThat(accountService.exists(account.getAccountName())).isTrue();
     assertNotNull(accountService.getByName(account.getCompanyName()));
   }
 
@@ -259,6 +258,6 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
     RestResponse<Boolean> response =
         getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse<Boolean>>() {});
     assertNotNull(response.getResource());
-    assertTrue(response.getResource());
+    assertThat(response.getResource()).isTrue();
   }
 }

@@ -1,9 +1,9 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.RAGHU;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
@@ -115,7 +115,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
     Set<String> artifactPaths =
         buildSourceService.getArtifactPaths(appId, "TOD-TOD", settingAttribute.getUuid(), null, streamType.name());
     assertFalse(artifactPaths.isEmpty());
-    assertTrue(artifactPaths.contains("artifacts/todolist.war"));
+    assertThat(artifactPaths.contains("artifacts/todolist.war")).isTrue();
   }
 
   @Test

@@ -3,9 +3,9 @@ package io.harness.integration;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -293,7 +293,7 @@ public class DataDogIntegrationTest extends VerificationBaseIntegrationTest {
     NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisRecords.iterator().next();
 
     assertEquals(RiskLevel.LOW, metricsAnalysis.getRiskLevel());
-    assertTrue(metricsAnalysis.isShowTimeSeries());
+    assertThat(metricsAnalysis.isShowTimeSeries()).isTrue();
     assertEquals("No problems found", metricsAnalysis.getMessage());
     assertEquals(1, metricsAnalysis.getMetricAnalyses().size());
     assertEquals("Dummy txn1", metricsAnalysis.getMetricAnalyses().get(0).getMetricName());

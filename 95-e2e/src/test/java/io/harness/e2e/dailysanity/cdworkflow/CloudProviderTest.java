@@ -3,7 +3,6 @@ package io.harness.e2e.dailysanity.cdworkflow;
 import static io.harness.rule.OwnerRule.SUNIL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import io.harness.category.element.E2ETests;
@@ -65,7 +64,7 @@ public class CloudProviderTest extends AbstractE2ETest {
     // Verify cloudprovider is created i.e cloudprovider with specific name exist
     boolean connectorFound =
         SettingsUtils.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, CONNECTOR_NAME);
-    assertTrue(connectorFound);
+    assertThat(connectorFound).isTrue();
   }
 
   @Test

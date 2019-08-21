@@ -6,7 +6,6 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyObject;
@@ -200,15 +199,15 @@ public class PcfDeployStateTest extends WingsBaseTest {
     DelegateTask delegateTask = captor.getValue();
 
     PcfCommandDeployRequest pcfCommandRequest = (PcfCommandDeployRequest) delegateTask.getData().getParameters()[0];
-    assertTrue(5 == pcfCommandRequest.getUpdateCount());
+    assertThat(5 == pcfCommandRequest.getUpdateCount()).isTrue();
     assertEquals("APP_NAME_SERVICE_NAME_ENV_NAME__1", pcfCommandRequest.getNewReleaseName());
     assertEquals(URL, pcfCommandRequest.getPcfConfig().getEndpointUrl());
     assertEquals(USER_NAME, pcfCommandRequest.getPcfConfig().getUsername());
     assertEquals(ORG, pcfCommandRequest.getOrganization());
     assertEquals(SPACE, pcfCommandRequest.getSpace());
     assertEquals(2, pcfCommandRequest.getRouteMaps().size());
-    assertTrue(pcfCommandRequest.getRouteMaps().contains("R1"));
-    assertTrue(pcfCommandRequest.getRouteMaps().contains("R2"));
+    assertThat(pcfCommandRequest.getRouteMaps().contains("R1")).isTrue();
+    assertThat(pcfCommandRequest.getRouteMaps().contains("R2")).isTrue();
   }
 
   @Test

@@ -3,7 +3,6 @@ package software.wings.service;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -154,7 +153,7 @@ public class KmsAlertTest extends WingsBaseTest {
     Thread.sleep(2000);
     assertThat(alertService.list(pageRequest)).isEmpty();
     savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
-    assertTrue(savedVaultConfig.getRenewedAt() > 0);
+    assertThat(savedVaultConfig.getRenewedAt() > 0).isTrue();
 
     pageRequest = aPageRequest()
                       .addFilter("status", Operator.EQ, AlertStatus.Closed)

@@ -1,6 +1,6 @@
 package io.harness.integration;
 
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.VerificationBaseIntegrationTest;
 import io.harness.category.element.IntegrationTests;
@@ -36,6 +36,6 @@ public class ExperimentalLogAnalysisResourceIntegrationTest extends Verification
     RestResponse<List<ExpAnalysisInfo>> restResponse = getRequestBuilderWithLearningAuthHeader(getTarget).get(
         new GenericType<RestResponse<List<ExpAnalysisInfo>>>() {});
 
-    assertTrue(restResponse.getResource().size() <= 1000);
+    assertThat(restResponse.getResource().size() <= 1000).isTrue();
   }
 }

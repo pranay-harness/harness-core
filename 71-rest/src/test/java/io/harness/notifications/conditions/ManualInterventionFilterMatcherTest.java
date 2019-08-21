@@ -1,7 +1,7 @@
 package io.harness.notifications.conditions;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import io.harness.category.element.UnitTests;
 import io.harness.notifications.beans.Conditions;
@@ -38,7 +38,7 @@ public class ManualInterventionFilterMatcherTest extends WingsBaseTest {
     filter = new AlertFilter(
         AlertType.ManualInterventionNeeded, new Conditions(Operator.MATCHING, manualInterventionAlertFilters, null));
     matcher = new ManualInterventionFilterMatcher(filter, manualInterventionAlert);
-    assertTrue(matcher.matchesCondition());
+    assertThat(matcher.matchesCondition()).isTrue();
   }
 
   private Alert manualInterventionAlert() {

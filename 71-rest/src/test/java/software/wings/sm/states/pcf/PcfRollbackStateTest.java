@@ -1,10 +1,10 @@
 package software.wings.sm.states.pcf;
 
 import static java.util.Collections.emptyMap;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
@@ -118,18 +118,18 @@ public class PcfRollbackStateTest extends WingsBaseTest {
     assertNotNull(commandRollbackRequest);
     for (PcfServiceData pcfServiceData : commandRollbackRequest.getInstanceData()) {
       if (pcfServiceData.getName().equals("APP_SERVICE_ENV__1")) {
-        assertTrue(1 == pcfServiceData.getDesiredCount());
-        assertTrue(0 == pcfServiceData.getPreviousCount());
+        assertThat(1 == pcfServiceData.getDesiredCount()).isTrue();
+        assertThat(0 == pcfServiceData.getPreviousCount()).isTrue();
       } else if (pcfServiceData.getName().equals("APP_SERVICE_ENV__2")) {
-        assertTrue(1 == pcfServiceData.getDesiredCount());
-        assertTrue(0 == pcfServiceData.getPreviousCount());
+        assertThat(1 == pcfServiceData.getDesiredCount()).isTrue();
+        assertThat(0 == pcfServiceData.getPreviousCount()).isTrue();
       } else if (pcfServiceData.getName().equals("APP_SERVICE_ENV__3")) {
-        assertTrue(0 == pcfServiceData.getDesiredCount());
-        assertTrue(2 == pcfServiceData.getPreviousCount());
+        assertThat(0 == pcfServiceData.getDesiredCount()).isTrue();
+        assertThat(2 == pcfServiceData.getPreviousCount()).isTrue();
       }
     }
     assertEquals(2, commandRollbackRequest.getRouteMaps().size());
-    assertTrue(commandRollbackRequest.getRouteMaps().contains("R1"));
-    assertTrue(commandRollbackRequest.getRouteMaps().contains("R2"));
+    assertThat(commandRollbackRequest.getRouteMaps().contains("R1")).isTrue();
+    assertThat(commandRollbackRequest.getRouteMaps().contains("R2")).isTrue();
   }
 }

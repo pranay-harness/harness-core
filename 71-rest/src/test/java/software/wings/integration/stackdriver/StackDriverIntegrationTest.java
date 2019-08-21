@@ -3,9 +3,9 @@ package software.wings.integration.stackdriver;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static javax.ws.rs.client.Entity.entity;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
@@ -69,7 +69,7 @@ public class StackDriverIntegrationTest extends BaseIntegrationTest {
     SettingAttribute settingAttribute = settingsService.getByName(accountId, Application.GLOBAL_APP_ID, GOOGLE_ACCOUNT);
     assertNotNull(settingAttribute);
     gcpConfigId = settingAttribute.getUuid();
-    assertTrue(isNotEmpty(gcpConfigId));
+    assertThat(isNotEmpty(gcpConfigId)).isTrue();
   }
 
   @Test
@@ -86,7 +86,7 @@ public class StackDriverIntegrationTest extends BaseIntegrationTest {
 
     JSONObject response = jsonResponseObject.getJSONObject("resource");
     assertEquals("Request failed", restResponse.getStatus(), HttpStatus.SC_OK);
-    assertTrue("provider is not reachable", Boolean.valueOf(response.get("providerReachable").toString()));
+    assertThat(Boolean.valueOf(response.get("providerReachable").toString())).isTrue();
   }
 
   @Test
@@ -98,7 +98,7 @@ public class StackDriverIntegrationTest extends BaseIntegrationTest {
     RestResponse<List<String>> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<String>>>() {});
 
-    assertTrue(restResponse.getResource().size() > 0);
+    assertThat(restResponse.getResource().size() > 0).isTrue();
   }
 
   @Test
@@ -111,7 +111,7 @@ public class StackDriverIntegrationTest extends BaseIntegrationTest {
     RestResponse<Map<String, String>> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<Map<String, String>>>() {});
 
-    assertTrue(restResponse.getResource().size() > 0);
+    assertThat(restResponse.getResource().size() > 0).isTrue();
   }
 
   private StackDriverSetupTestNodeData getStackDriverSetupTestNodedata() {

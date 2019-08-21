@@ -1,7 +1,6 @@
 package io.harness.functional.users;
 
 import static io.harness.rule.OwnerRule.RAMA;
-import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -56,7 +55,7 @@ public class NewTrialSignupTest extends AbstractFunctionalTest {
   public void verifyTrialUserSignup() {
     UserInvite invite = constructInvite("password");
     Boolean isTrialInviteDone = urUtil.createNewTrialInvite(invite);
-    assertTrue(isTrialInviteDone);
+    assertThat(isTrialInviteDone).isTrue();
 
     User user = urUtil.completeNewTrialUserSignup(bearerToken, invite.getUuid());
     assertNotNull(user);

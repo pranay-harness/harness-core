@@ -3,7 +3,6 @@ package software.wings.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -695,12 +694,12 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     String fileContent = null;
     manifestFile.setFileContent(fileContent);
     applicationManifestServiceImpl.removeNamespace(manifestFile);
-    assertTrue(manifestFile.getFileContent() == null);
+    assertThat(manifestFile.getFileContent() == null).isTrue();
 
     fileContent = "";
     manifestFile.setFileContent(fileContent);
     applicationManifestServiceImpl.removeNamespace(manifestFile);
-    assertTrue(manifestFile.getFileContent().equals(""));
+    assertThat(manifestFile.getFileContent().equals("")).isTrue();
 
     fileContent = "{{- if .Values.env.config}}\n"
         + "apiVersion: v1\n"
@@ -769,7 +768,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
         + "        {{- end}}";
     manifestFile.setFileContent(fileContent);
     applicationManifestServiceImpl.removeNamespace(manifestFile);
-    assertTrue(manifestFile.getFileContent().equals(fileContent));
+    assertThat(manifestFile.getFileContent().equals(fileContent)).isTrue();
 
     fileContent = "{{- if .Values.env.config}}\n"
         + "apiVersion: v1\n"
@@ -896,7 +895,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
 
     manifestFile.setFileContent(fileContent);
     applicationManifestServiceImpl.removeNamespace(manifestFile);
-    assertTrue(manifestFile.getFileContent().equals(expectedFileContent));
+    assertThat(manifestFile.getFileContent().equals(expectedFileContent)).isTrue();
   }
 
   @Test

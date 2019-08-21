@@ -3,10 +3,10 @@ package io.harness.distribution.idempotent;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -87,8 +87,8 @@ public class IdempotentTest extends CategoryTest {
 
     try (IdempotentLock<BooleanIdempotentResult> idempotent = IdempotentLock.create(id, mockIdempotentRegistry)) {
       assertNotNull(idempotent);
-      assertTrue(idempotent.alreadyExecuted());
-      assertTrue(idempotent.getResult().getValue());
+      assertThat(idempotent.alreadyExecuted()).isTrue();
+      assertThat(idempotent.getResult().getValue()).isTrue();
     }
   }
 
@@ -106,7 +106,7 @@ public class IdempotentTest extends CategoryTest {
     }
     try (IdempotentLock<BooleanIdempotentResult> idempotent = idempotentRegistry.create(id)) {
       assertNotNull(idempotent);
-      assertTrue(idempotent.alreadyExecuted());
+      assertThat(idempotent.alreadyExecuted()).isTrue();
     }
     sleep(ofMillis(510));
     try (IdempotentLock<BooleanIdempotentResult> idempotent = idempotentRegistry.create(id)) {

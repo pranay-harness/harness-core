@@ -4,7 +4,6 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertTrue;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 
@@ -69,7 +68,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
     String name1 = "name1" + System.currentTimeMillis();
     NotificationGroup notificationGroup1 = createAndAssertNotificationGroup(accountId, name1, false);
     List<NotificationGroup> notificationGroups = notificationSetupService.listDefaultNotificationGroup(accountId);
-    assertTrue(CollectionUtils.isEmpty(notificationGroups));
+    assertThat(CollectionUtils.isEmpty(notificationGroups)).isTrue();
 
     String name2 = "name2" + System.currentTimeMillis();
     NotificationGroup notificationGroup2 = createAndAssertNotificationGroup(accountId, name2, true);

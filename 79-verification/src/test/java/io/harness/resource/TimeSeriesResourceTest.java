@@ -1,8 +1,8 @@
 package io.harness.resource;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -106,7 +106,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
     FieldUtils.writeField(delegateDataCollectionResource, "timeSeriesAnalysisService", timeSeriesAnalysisService, true);
     RestResponse<Boolean> resp = delegateDataCollectionResource.saveMetricData(
         accountId, applicationId, stateExecutionId, delegateTaskId, new ArrayList<>());
-    assertTrue(resp.getResource());
+    assertThat(resp.getResource()).isTrue();
   }
 
   @Test
@@ -143,7 +143,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
     RestResponse<Boolean> resp = timeSeriesResource.saveMLAnalysisRecords(accountId, applicationId, stateType,
         stateExecutionId, workflowExecutionId, groupName, 0, delegateTaskId, baseLineExecutionId, cvConfigId, null,
         timeSeriesMLAnalysisRecord);
-    assertTrue(resp.getResource());
+    assertThat(resp.getResource()).isTrue();
   }
 
   @Test

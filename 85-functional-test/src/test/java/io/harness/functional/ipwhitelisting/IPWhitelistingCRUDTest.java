@@ -3,7 +3,7 @@ package io.harness.functional.ipwhitelisting;
 import static io.harness.rule.OwnerRule.SWAMY;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
-import static junit.framework.TestCase.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -60,8 +60,9 @@ public class IPWhitelistingCRUDTest extends AbstractFunctionalTest {
     assertEquals(updatedWhitelist.getUuid(), ipToWhiteList.getUuid());
     logger.info("IPWhitelisting test completed");
     logger.info("Deleting the test created through entries");
-    assertTrue(
-        IPWhitelistingRestUtils.deleteWhitelistedIP(getAccount().getUuid(), bearerToken, updatedWhitelist.getUuid()));
+    assertThat(
+        IPWhitelistingRestUtils.deleteWhitelistedIP(getAccount().getUuid(), bearerToken, updatedWhitelist.getUuid()))
+        .isTrue();
     logger.info("Deletion successful");
   }
 }

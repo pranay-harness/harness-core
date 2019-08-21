@@ -6,9 +6,9 @@ import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.VAIBHAV_TULSYAN;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -341,7 +341,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
     timeSeries = continuousVerificationService.fetchObservedTimeSeries(
         startEpoch20MinutesAgo + 1, endEpoch10MinutesAgo, cvConfiguration, historyStartTime + 1);
-    assertTrue(timeSeries.containsKey("/login"));
+    assertThat(timeSeries.containsKey("/login")).isTrue();
     metricMap = timeSeries.get("/login");
     dataPoints = metricMap.get("95th Percentile Response Time (ms)").getTimeSeries();
     assertEquals(70, dataPoints.size());
@@ -356,7 +356,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
     timeSeries = continuousVerificationService.fetchObservedTimeSeries(
         start20MinutesAgo + 1, endTime, cvConfiguration, historyStartTime + 1);
-    assertTrue(timeSeries.containsKey("/login"));
+    assertThat(timeSeries.containsKey("/login")).isTrue();
     metricMap = timeSeries.get("/login");
     dataPoints = metricMap.get("95th Percentile Response Time (ms)").getTimeSeries();
     assertEquals(80, dataPoints.size());
@@ -370,10 +370,10 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     long historyStartTime = startTime - TimeUnit.HOURS.toMillis(1);
     timeSeries = continuousVerificationService.fetchObservedTimeSeries(
         startTime + 1, endTime, cvConfiguration, historyStartTime + 1);
-    assertTrue(timeSeries.containsKey("/login"));
+    assertThat(timeSeries.containsKey("/login")).isTrue();
 
     metricMap = timeSeries.get("/login");
-    assertTrue(metricMap.containsKey("95th Percentile Response Time (ms)"));
+    assertThat(metricMap.containsKey("95th Percentile Response Time (ms)")).isTrue();
 
     dataPoints = metricMap.get("95th Percentile Response Time (ms)").getTimeSeries();
 
@@ -568,7 +568,8 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     }
     for (TimeSeriesOfMetric metric : insideTimeSeries.getMetricTimeSeries()) {
       if (isNotEmpty(metric.getMetricDeeplinkUrl())) {
-        assertTrue(metric.getMetricDeeplinkUrl().contains("https://harness-test.saas.appdynamics.com/controller/"));
+        assertThat(metric.getMetricDeeplinkUrl().contains("https://harness-test.saas.appdynamics.com/controller/"))
+            .isTrue();
       }
     }
   }
@@ -670,9 +671,10 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     assertEquals(9, timeSeries.size());
     ArrayList<TransactionTimeSeries> timeSeriesList = new ArrayList<>(timeSeries);
     for (int i = 0; i < 8; i++) {
-      assertTrue(timeSeriesList.get(i).getMetricTimeSeries().first().compareTo(
+      assertThat(timeSeriesList.get(i).getMetricTimeSeries().first().compareTo(
                      timeSeriesList.get(i + 1).getMetricTimeSeries().first())
-          <= 0);
+          <= 0)
+          .isTrue();
     }
 
     timeSeriesMLAnalysisRecord.getTransactions().get("6").getMetrics().get("1").setMax_risk(2);
@@ -883,7 +885,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
         }
       }
     }
-    assertTrue("Atleast one record has longterm set to true", longterm);
+    assertThat(longterm).isTrue();
     TransactionTimeSeries apiArtifactsTransaction = null;
     for (Iterator<TransactionTimeSeries> it = timeseries.iterator(); it.hasNext();) {
       TransactionTimeSeries txnTimeSeries = it.next();
@@ -975,8 +977,8 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
         for (TimeSeriesRisk tsRisk : metricTimeSeries.getRisksForTimeSeries()) {
           long startTimeOfRisk = tsRisk.getStartTime();
           long endTimeOfRisk = tsRisk.getEndTime();
-          assertTrue(datapoints.containsKey(startTimeOfRisk + TimeUnit.MINUTES.toMillis(1) - 1));
-          assertTrue(datapoints.containsKey(endTimeOfRisk));
+          assertThat(datapoints.containsKey(startTimeOfRisk + TimeUnit.MINUTES.toMillis(1) - 1)).isTrue();
+          assertThat(datapoints.containsKey(endTimeOfRisk)).isTrue();
         }
       }
     }
@@ -1032,8 +1034,9 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
     ArrayList<TransactionTimeSeries> timeSeriesList = new ArrayList<>(timeSeries);
     for (int i = 0; i < timeSeriesList.size() - 1; i++) {
-      assertTrue(timeSeriesList.get(i).getMetricTimeSeries().first().getRisk()
-          >= timeSeriesList.get(i + 1).getMetricTimeSeries().first().getRisk());
+      assertThat(timeSeriesList.get(i).getMetricTimeSeries().first().getRisk()
+          >= timeSeriesList.get(i + 1).getMetricTimeSeries().first().getRisk())
+          .isTrue();
     }
     assertEquals("/api/setup-as-code", timeSeriesList.get(0).getTransactionName());
   }

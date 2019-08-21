@@ -1,9 +1,9 @@
 package software.wings.integration.verification;
 
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
@@ -61,7 +61,7 @@ public class CVActivityLogIntegrationTest extends BaseIntegrationTest {
     assertEquals(logLine, cvActivityLogApiResponse.getLog(), logLine);
     assertEquals(stateExecutionId, cvActivityLogApiResponse.getStateExecutionId());
     assertEquals("INFO", cvActivityLogApiResponse.getLogLevel());
-    assertTrue(cvActivityLogApiResponse.getTimestamp() >= now);
+    assertThat(cvActivityLogApiResponse.getTimestamp() >= now).isTrue();
     assertEquals(now, (long) cvActivityLogApiResponse.getTimestampParams().get(0));
     assertEquals(logLine, cvActivityLogApiResponse.getAnsiLog());
   }
@@ -88,7 +88,7 @@ public class CVActivityLogIntegrationTest extends BaseIntegrationTest {
     assertEquals(logLine, cvActivityLogApiResponse.getLog(), logLine);
     assertEquals(cvConfigId, cvActivityLogApiResponse.getCvConfigId());
     assertEquals("ERROR", cvActivityLogApiResponse.getLogLevel());
-    assertTrue(cvActivityLogApiResponse.getTimestamp() >= now);
+    assertThat(cvActivityLogApiResponse.getTimestamp() >= now).isTrue();
     assertEquals("\u001B[31mtest log\u001B[0m", cvActivityLogApiResponse.getAnsiLog());
   }
 

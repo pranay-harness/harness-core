@@ -1,7 +1,7 @@
 package io.harness.marketplace.gcp.events;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import com.google.inject.Inject;
 
@@ -52,7 +52,7 @@ public class GcpMarketplaceEventServiceImplTest extends BaseIntegrationTest {
     service.save(new GcpMarketplaceEvent(messageId, event));
 
     Optional<GcpMarketplaceEvent> savedEvent = service.getEvent("some-acc-id", EventType.ACCOUNT_ACTIVE);
-    assertTrue(savedEvent.isPresent());
+    assertThat(savedEvent.isPresent()).isTrue();
     assertEquals(savedEvent.get().getEvent(), event);
   }
 }

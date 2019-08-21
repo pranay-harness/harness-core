@@ -11,7 +11,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
@@ -387,7 +386,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testInitializeServiceSecretKeys() {
-    assertTrue(wingsPersistence.createQuery(ServiceSecretKey.class).asList().isEmpty());
+    assertThat(wingsPersistence.createQuery(ServiceSecretKey.class).asList().isEmpty()).isTrue();
     learningEngineService.initializeServiceSecretKeys();
     List<ServiceSecretKey> serviceSecretKeys =
         wingsPersistence.createQuery(ServiceSecretKey.class)
@@ -425,14 +424,15 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testUniqueIndexExperimentalTask() {
-    assertTrue(
+    assertThat(
         learningEngineService.addLearningEngineExperimentalAnalysisTask(LearningEngineExperimentalAnalysisTask.builder()
                                                                             .state_execution_id(stateExecutionId)
                                                                             .workflow_execution_id(workflowExecutionId)
                                                                             .stateType(StateType.ELK)
                                                                             .executionStatus(ExecutionStatus.QUEUED)
                                                                             .analysis_minute(14)
-                                                                            .build()));
+                                                                            .build()))
+        .isTrue();
 
     assertFalse(
         learningEngineService.addLearningEngineExperimentalAnalysisTask(LearningEngineExperimentalAnalysisTask.builder()

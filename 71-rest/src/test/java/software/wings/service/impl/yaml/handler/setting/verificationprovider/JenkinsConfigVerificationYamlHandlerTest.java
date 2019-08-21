@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
@@ -75,7 +75,7 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
       yamlHandler.toBean(aSettingAttribute().build(), changeContext, Collections.EMPTY_LIST);
       fail("Exception expected");
     } catch (Exception e) {
-      assertTrue(e instanceof HarnessException);
+      assertThat(e instanceof HarnessException).isTrue();
     }
 
     changeContext =
@@ -87,7 +87,7 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
       yamlHandler.toBean(aSettingAttribute().build(), changeContext, Collections.EMPTY_LIST);
       fail("Exception expected");
     } catch (Exception e) {
-      assertTrue(e instanceof HarnessException);
+      assertThat(e instanceof HarnessException).isTrue();
     }
 
     changeContext = aChangeContext()
@@ -98,7 +98,7 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
       yamlHandler.toBean(aSettingAttribute().build(), changeContext, Collections.EMPTY_LIST);
       fail("Exception expected");
     } catch (Exception e) {
-      assertTrue(e instanceof HarnessException);
+      assertThat(e instanceof HarnessException).isTrue();
     }
 
     changeContext = aChangeContext()
@@ -109,7 +109,7 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
       yamlHandler.toBean(aSettingAttribute().build(), changeContext, Collections.EMPTY_LIST);
       fail("Exception expected");
     } catch (Exception e) {
-      assertTrue(e instanceof HarnessException);
+      assertThat(e instanceof HarnessException).isTrue();
     }
   }
 

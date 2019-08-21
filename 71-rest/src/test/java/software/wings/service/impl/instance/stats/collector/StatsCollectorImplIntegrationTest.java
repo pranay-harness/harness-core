@@ -1,7 +1,7 @@
 package software.wings.service.impl.instance.stats.collector;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -97,7 +97,7 @@ public class StatsCollectorImplIntegrationTest extends BaseIntegrationTest {
     Instant lastTs = statService.getLastSnapshotTime(accountId);
     assertEquals(instant, lastTs);
     assertEquals("new stat entry should be created in database", count + 1, finalCount);
-    assertTrue(success);
+    assertThat(success).isTrue();
 
     // delete all instances
     ds.delete(ds.createQuery(Instance.class));
@@ -105,7 +105,7 @@ public class StatsCollectorImplIntegrationTest extends BaseIntegrationTest {
 
     // call CreateStats again
     success = statsCollector.createStats(accountId, instant);
-    assertTrue(success);
+    assertThat(success).isTrue();
     lastTs = statService.getLastSnapshotTime(accountId);
     assertEquals(instant, lastTs);
     long countAfter =

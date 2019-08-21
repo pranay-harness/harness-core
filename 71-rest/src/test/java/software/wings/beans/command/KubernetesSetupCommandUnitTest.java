@@ -5,7 +5,6 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -255,8 +254,8 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
     assertEquals("autoScalerName", horizontalPodAutoscaler.getMetadata().getName());
     assertEquals("default", horizontalPodAutoscaler.getMetadata().getNamespace());
     assertNotNull(horizontalPodAutoscaler.getMetadata().getLabels());
-    assertTrue(horizontalPodAutoscaler.getMetadata().getLabels().containsKey("app"));
-    assertTrue(horizontalPodAutoscaler.getMetadata().getLabels().containsKey("version"));
+    assertThat(horizontalPodAutoscaler.getMetadata().getLabels().containsKey("app")).isTrue();
+    assertThat(horizontalPodAutoscaler.getMetadata().getLabels().containsKey("version")).isTrue();
     assertEquals("appName", horizontalPodAutoscaler.getMetadata().getLabels().get("app"));
     assertEquals("9", horizontalPodAutoscaler.getMetadata().getLabels().get("version"));
     assertNotNull(horizontalPodAutoscaler.getSpec().getAdditionalProperties());
@@ -297,8 +296,8 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
     assertEquals("abaris.hpanormal.prod.0", horizontalPodAutoscaler.getMetadata().getName());
     assertEquals("default", horizontalPodAutoscaler.getMetadata().getNamespace());
     assertNotNull(horizontalPodAutoscaler.getMetadata().getLabels());
-    assertTrue(horizontalPodAutoscaler.getMetadata().getLabels().containsKey("app"));
-    assertTrue(horizontalPodAutoscaler.getMetadata().getLabels().containsKey("version"));
+    assertThat(horizontalPodAutoscaler.getMetadata().getLabels().containsKey("app")).isTrue();
+    assertThat(horizontalPodAutoscaler.getMetadata().getLabels().containsKey("version")).isTrue();
     assertEquals("appName", horizontalPodAutoscaler.getMetadata().getLabels().get("app"));
     assertEquals("9", horizontalPodAutoscaler.getMetadata().getLabels().get("version"));
     assertEquals(Integer.valueOf(1), horizontalPodAutoscaler.getSpec().getMinReplicas());
@@ -325,8 +324,8 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
     assertEquals("abaris.hpanormal.prod-0", horizontalPodAutoscaler.getMetadata().getName());
     assertEquals("default", horizontalPodAutoscaler.getMetadata().getNamespace());
     assertNotNull(horizontalPodAutoscaler.getMetadata().getLabels());
-    assertTrue(horizontalPodAutoscaler.getMetadata().getLabels().containsKey("app"));
-    assertTrue(horizontalPodAutoscaler.getMetadata().getLabels().containsKey("version"));
+    assertThat(horizontalPodAutoscaler.getMetadata().getLabels().containsKey("app")).isTrue();
+    assertThat(horizontalPodAutoscaler.getMetadata().getLabels().containsKey("version")).isTrue();
     assertEquals("appName", horizontalPodAutoscaler.getMetadata().getLabels().get("app"));
     assertEquals("9", horizontalPodAutoscaler.getMetadata().getLabels().get("version"));
     assertEquals(Integer.valueOf(2), horizontalPodAutoscaler.getSpec().getMinReplicas());
@@ -349,7 +348,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
       kubernetesSetupCommandUnit.validateBlueGreenConfig(setupParams);
       fail("Exception expected");
     } catch (Exception e) {
-      assertTrue(e instanceof InvalidRequestException);
+      assertThat(e instanceof InvalidRequestException).isTrue();
     }
   }
 
@@ -369,7 +368,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
       kubernetesSetupCommandUnit.validateBlueGreenConfig(setupParams);
       fail("Exception expected");
     } catch (Exception e) {
-      assertTrue(e instanceof InvalidRequestException);
+      assertThat(e instanceof InvalidRequestException).isTrue();
     }
   }
 
@@ -393,7 +392,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
       kubernetesSetupCommandUnit.validateBlueGreenConfig(setupParams);
       fail("Exception expected");
     } catch (Exception e) {
-      assertTrue(e instanceof InvalidRequestException);
+      assertThat(e instanceof InvalidRequestException).isTrue();
     }
   }
 

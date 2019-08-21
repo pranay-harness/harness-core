@@ -7,7 +7,6 @@ import static io.harness.k8s.manifest.ManifestHelper.processYaml;
 import static io.harness.k8s.manifest.ManifestHelper.validateValuesFileContents;
 import static io.harness.k8s.manifest.ObjectYamlUtils.toYaml;
 import static java.util.Arrays.asList;
-import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
@@ -137,19 +136,19 @@ public class ManifestHelperTest extends CategoryTest {
 
     Map map = getMapFromValuesFileContent(fileContents);
     assertThat(map.size()).isEqualTo(2);
-    assertTrue(map.containsKey("Master"));
+    assertThat(map.containsKey("Master")).isTrue();
 
     Map masterMap = (Map) map.get("Master");
     assertThat(masterMap.size()).isEqualTo(5);
-    assertTrue(masterMap.containsKey("Name"));
-    assertTrue(masterMap.containsKey("resources"));
+    assertThat(masterMap.containsKey("Name")).isTrue();
+    assertThat(masterMap.containsKey("resources")).isTrue();
 
     Map resourcesMap = (Map) masterMap.get("resources");
-    assertTrue(resourcesMap.containsKey("requests"));
+    assertThat(resourcesMap.containsKey("requests")).isTrue();
 
-    assertTrue(map.containsKey("Slave"));
+    assertThat(map.containsKey("Slave")).isTrue();
     Map slaveMap = (Map) map.get("Slave");
-    assertTrue(slaveMap.containsKey("InstallPlugins"));
+    assertThat(slaveMap.containsKey("InstallPlugins")).isTrue();
   }
 
   @Test
@@ -183,7 +182,7 @@ public class ManifestHelperTest extends CategoryTest {
         ".Values.Master.lifecycle", ".Values.Master.resources.requests.cpu", ".Values.Master.customInitContainers"));
 
     assertThat(expressionSet.size()).isEqualTo(expectedExpressionSet.size());
-    assertTrue(expressionSet.containsAll(expectedExpressionSet));
+    assertThat(expressionSet.containsAll(expectedExpressionSet)).isTrue();
   }
 
   @Test

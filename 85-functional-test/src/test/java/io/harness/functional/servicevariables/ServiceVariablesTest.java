@@ -4,7 +4,6 @@ import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.rule.OwnerRule.SWAMY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
@@ -218,10 +217,10 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
     logger.info("Validation starts");
 
     assertThat(completedWorkflowExecution.getExecutionNode().getStatus()).isEqualTo("SUCCESS");
-    assertTrue(completedWorkflowExecution.getName().equals(variablesTestName));
-    assertTrue(completedWorkflowExecution.getExecutionNode().getNext().getName().equals("Phase 1"));
-    assertTrue(completedWorkflowExecution.getExecutionNode().getNext().getStatus().equals("SUCCESS"));
-    assertTrue(completedWorkflowExecution.getExecutionNode().getNext().getGroup().getElements().size() == 1);
+    assertThat(completedWorkflowExecution.getName().equals(variablesTestName)).isTrue();
+    assertThat(completedWorkflowExecution.getExecutionNode().getNext().getName().equals("Phase 1")).isTrue();
+    assertThat(completedWorkflowExecution.getExecutionNode().getNext().getStatus().equals("SUCCESS")).isTrue();
+    assertThat(completedWorkflowExecution.getExecutionNode().getNext().getGroup().getElements().size() == 1).isTrue();
 
     GraphNode gNode = completedWorkflowExecution.getExecutionNode().getNext().getGroup().getElements().get(0);
     GraphNode verificationPhase = null;
@@ -236,16 +235,16 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
       gNode = gNode.getNext();
     }
     assertNotNull(verificationPhase);
-    assertTrue(verificationPhase.getStatus().equals("SUCCESS"));
-    assertTrue(verificationPhase.getGroup().getElements().size() == 1);
+    assertThat(verificationPhase.getStatus().equals("SUCCESS")).isTrue();
+    assertThat(verificationPhase.getGroup().getElements().size() == 1).isTrue();
 
-    assertTrue(verificationPhase.getGroup().getElements().get(0).getStatus().equals("SUCCESS"));
-    assertTrue(verificationPhase.getGroup().getElements().get(0).getName().equals("HTTP"));
+    assertThat(verificationPhase.getGroup().getElements().get(0).getStatus().equals("SUCCESS")).isTrue();
+    assertThat(verificationPhase.getGroup().getElements().get(0).getName().equals("HTTP")).isTrue();
 
     Map<String, Object> executionResults =
         (LinkedHashMap) verificationPhase.getGroup().getElements().get(0).getExecutionDetails();
-    assertTrue(executionResults.containsKey("httpResponseCode"));
-    assertTrue(executionResults.containsKey("httpResponseBody"));
+    assertThat(executionResults.containsKey("httpResponseCode")).isTrue();
+    assertThat(executionResults.containsKey("httpResponseBody")).isTrue();
 
     ExecutionDataValue dataValue = (ExecutionDataValue) executionResults.get("httpResponseBody");
     JsonPath jPath = JsonPath.from(dataValue.getValue().toString());
@@ -253,11 +252,11 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
     System.out.println(jPath.get("headers").toString());
     assertNotNull(jPath.get("headers." + NORMAL_TEXT.toLowerCase()));
     String normalTextVal = jPath.get("headers." + NORMAL_TEXT.toLowerCase()).toString();
-    assertTrue(normalTextVal.equals("Test"));
+    assertThat(normalTextVal.equals("Test")).isTrue();
 
     assertNotNull(jPath.get("headers." + ENV_OVERRIDDEN_TEXT.toLowerCase()));
     String envTextValue = jPath.get("headers." + ENV_OVERRIDDEN_TEXT.toLowerCase()).toString();
-    assertTrue(envTextValue.equals("Test"));
+    assertThat(envTextValue.equals("Test")).isTrue();
 
     logger.info("All validations ended successfully");
   }

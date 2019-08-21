@@ -3,7 +3,7 @@ package software.wings.integration;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRANJAL;
 import static javax.ws.rs.client.Entity.entity;
-import static junit.framework.TestCase.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
@@ -95,7 +95,7 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
 
     JSONObject response = jsonResponseObject.getJSONObject("resource");
     assertEquals("Request failed", restResponse.getStatus(), HttpStatus.SC_OK);
-    assertTrue("provider is not reachable", Boolean.valueOf(response.get("providerReachable").toString()));
+    assertThat(Boolean.valueOf(response.get("providerReachable").toString())).isTrue();
   }
 
   @Test
@@ -114,7 +114,7 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
 
     JSONObject response = jsonResponseObject.getJSONObject("resource");
     assertEquals("Request failed", restResponse.getStatus(), HttpStatus.SC_OK);
-    assertTrue("provider is not reachable", Boolean.valueOf(response.get("providerReachable").toString()));
+    assertThat(Boolean.valueOf(response.get("providerReachable").toString())).isTrue();
   }
 
   @Test
@@ -131,7 +131,7 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
 
     JSONObject response = jsonResponseObject.getJSONObject("resource");
     assertEquals("Request failed", restResponse.getStatus(), HttpStatus.SC_OK);
-    assertTrue("provider is not reachable", Boolean.valueOf(response.get("providerReachable").toString()));
+    assertThat(Boolean.valueOf(response.get("providerReachable").toString())).isTrue();
   }
 
   @Test
@@ -150,7 +150,7 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
 
     JSONObject response = jsonResponseObject.getJSONObject("resource");
     assertEquals("Request failed", restResponse.getStatus(), HttpStatus.SC_OK);
-    assertTrue("provider is not reachable", Boolean.valueOf(response.get("providerReachable").toString()));
+    assertThat(Boolean.valueOf(response.get("providerReachable").toString())).isTrue();
   }
 
   @Test
@@ -167,8 +167,8 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
 
     JSONObject response = jsonResponseObject.getJSONObject("resource");
     assertEquals("Request failed", restResponse.getStatus(), HttpStatus.SC_OK);
-    assertTrue(response.getString("dataForNode").contains("logs"));
-    assertTrue("provider is not reachable", Boolean.valueOf(response.get("providerReachable").toString()));
+    assertThat(response.getString("dataForNode").contains("logs")).isTrue();
+    assertThat(Boolean.valueOf(response.get("providerReachable").toString())).isTrue();
   }
 
   @Test
@@ -185,8 +185,8 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
 
     JSONObject response = jsonResponseObject.getJSONObject("resource");
     assertEquals("Request failed", restResponse.getStatus(), HttpStatus.SC_OK);
-    assertTrue(response.getString("dataForNode").contains("logs"));
-    assertTrue("provider is not reachable", Boolean.valueOf(response.get("providerReachable").toString()));
+    assertThat(response.getString("dataForNode").contains("logs")).isTrue();
+    assertThat(Boolean.valueOf(response.get("providerReachable").toString())).isTrue();
   }
 
   private DataDogSetupTestNodeData getDatadogSetupTestNodedata(boolean isWorkflowConfig, StateType stateType) {

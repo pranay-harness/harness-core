@@ -1,9 +1,9 @@
 package software.wings.service.impl;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import com.google.inject.Inject;
 
@@ -40,13 +40,14 @@ public class AuditServiceHelperTest extends WingsBaseTest {
       assertEquals("12345", auditGlobalContextData.getAuditId());
       assertNotNull(auditGlobalContextData.getEntityOperationIdentifierSet());
       assertEquals(1, auditGlobalContextData.getEntityOperationIdentifierSet().size());
-      assertTrue(
+      assertThat(
           auditGlobalContextData.getEntityOperationIdentifierSet().contains(EntityOperationIdentifier.builder()
                                                                                 .entityId("abc")
                                                                                 .entityName("Service1")
                                                                                 .entityType(EntityType.SERVICE.name())
                                                                                 .operation(entityOperation.CREATE)
-                                                                                .build()));
+                                                                                .build()))
+          .isTrue();
 
       assertFalse(
           auditGlobalContextData.getEntityOperationIdentifierSet().contains(EntityOperationIdentifier.builder()
@@ -85,13 +86,14 @@ public class AuditServiceHelperTest extends WingsBaseTest {
       assertNotNull(auditGlobalContextData.getEntityOperationIdentifierSet());
       assertEquals("12345", auditGlobalContextData.getAuditId());
       assertEquals(1, auditGlobalContextData.getEntityOperationIdentifierSet().size());
-      assertTrue(auditGlobalContextData.getEntityOperationIdentifierSet().contains(
-          EntityOperationIdentifier.builder()
-              .entityId("abc")
-              .entityName("Env1")
-              .entityType(EntityType.ENVIRONMENT.name())
-              .operation(entityOperation.CREATE)
-              .build()));
+      assertThat(auditGlobalContextData.getEntityOperationIdentifierSet().contains(
+                     EntityOperationIdentifier.builder()
+                         .entityId("abc")
+                         .entityName("Env1")
+                         .entityType(EntityType.ENVIRONMENT.name())
+                         .operation(entityOperation.CREATE)
+                         .build()))
+          .isTrue();
 
       assertFalse(auditGlobalContextData.getEntityOperationIdentifierSet().contains(
           EntityOperationIdentifier.builder()

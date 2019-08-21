@@ -1,8 +1,8 @@
 package io.harness.functional.users;
 
 import static io.harness.rule.OwnerRule.NATARAJA;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import com.google.inject.Inject;
 
@@ -45,13 +45,13 @@ public class TwoFactorAuthenticationTest extends AbstractFunctionalTest {
     assertNotNull("bearer token should not be null" + user.getToken());
     UserRestUtils urUtil = new UserRestUtils();
     List<User> userList = urUtil.getUserList(user.getToken(), getAccount().getUuid());
-    assertTrue("Should be able to fetch the User list to ensure Login successfull with 2fa", userList.size() > 0);
+    assertThat(userList.size() > 0).isTrue();
     TwoFactorAuthRestUtils.disableTwoFactorAuthentication(getAccount().getUuid(), user.getToken());
     Setup.signOut(user.getUuid(), user.getToken());
     logger.info("Disabled 2FA Login");
     user = Setup.loginUser(defaultUser, defaultPassword);
     userList = urUtil.getUserList(user.getToken(), getAccount().getUuid());
     logger.info("Getting the User List to ensure 2fa login disabled");
-    assertTrue("User List should not empty to ensure Two FA Authentication disabled", userList.size() > 0);
+    assertThat(userList.size() > 0).isTrue();
   }
 }

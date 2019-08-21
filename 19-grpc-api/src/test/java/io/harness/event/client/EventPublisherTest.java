@@ -1,7 +1,7 @@
 package io.harness.event.client;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -137,7 +137,7 @@ public class EventPublisherTest {
     Awaitility.await()
         .atMost(10, TimeUnit.SECONDS)
         .pollInterval(100, TimeUnit.MILLISECONDS)
-        .until(() -> assertTrue(fakeService.getReceivedMessages().contains(publishMessage)));
+        .until(() -> assertThat(fakeService.getReceivedMessages().contains(publishMessage)).isTrue());
   }
 
   @Test
@@ -157,7 +157,7 @@ public class EventPublisherTest {
     Awaitility.await()
         .atMost(10, TimeUnit.SECONDS)
         .pollInterval(100, TimeUnit.MILLISECONDS)
-        .until(() -> assertTrue(fakeService.getReceivedMessages().contains(publishMessage)));
+        .until(() -> assertThat(fakeService.getReceivedMessages().contains(publishMessage)).isTrue());
   }
 
   private Lifecycle ecsLifecycleEvent(String instanceId, Instant eventTime, EventType eventType) {

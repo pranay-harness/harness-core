@@ -4,7 +4,6 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
@@ -256,7 +255,7 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
     harnessUserGroupService.save(harnessUserGroup);
 
     boolean delete = harnessUserGroupService.delete(harnessUserGroupId1);
-    assertTrue(delete);
+    assertThat(delete).isTrue();
 
     HarnessUserGroup harnessUserGroupAfterDelete = harnessUserGroupService.get(harnessUserGroupId1);
     assertThat(harnessUserGroupAfterDelete).isNull();

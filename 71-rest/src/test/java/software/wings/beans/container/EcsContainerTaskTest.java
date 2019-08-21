@@ -1,9 +1,9 @@
 package software.wings.beans.container;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import io.harness.CategoryTest;
@@ -181,7 +181,7 @@ public class EcsContainerTaskTest extends CategoryTest {
 
     EcsContainerTask ecsContainerTask = new EcsContainerTask();
     str = ecsContainerTask.removeEmptySecretsContainerDefinitionString(str);
-    assertTrue(!str.contains("\"secrets\" : [ ],"));
+    assertThat(!str.contains("\"secrets\" : [ ],")).isTrue();
 
     str = "{\n"
         + "  \"containerDefinitions\" : [ {\n"
@@ -218,7 +218,7 @@ public class EcsContainerTaskTest extends CategoryTest {
         + "}";
 
     str = ecsContainerTask.removeEmptySecretsContainerDefinitionString(str);
-    assertTrue(!str.contains("\"secrets\" : [ ],"));
+    assertThat(!str.contains("\"secrets\" : [ ],")).isTrue();
 
     str = "{\n"
         + "  \"containerDefinitions\" : [ {\n"
@@ -255,7 +255,7 @@ public class EcsContainerTaskTest extends CategoryTest {
         + "}";
 
     str = ecsContainerTask.removeEmptySecretsContainerDefinitionString(str);
-    assertTrue(!str.contains("\"secrets\" : [ ],"));
+    assertThat(!str.contains("\"secrets\" : [ ],")).isTrue();
 
     str = "{\n"
         + "  \"containerDefinitions\" : [ {\n"
@@ -291,6 +291,6 @@ public class EcsContainerTaskTest extends CategoryTest {
         + "}";
 
     str = ecsContainerTask.removeEmptySecretsContainerDefinitionString(str);
-    assertTrue(!str.contains("\"secrets\" : [ ],"));
+    assertThat(!str.contains("\"secrets\" : [ ],")).isTrue();
   }
 }

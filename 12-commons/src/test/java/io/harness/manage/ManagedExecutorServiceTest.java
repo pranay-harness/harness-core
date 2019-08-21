@@ -1,6 +1,6 @@
 package io.harness.manage;
 
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -36,8 +36,8 @@ public class ManagedExecutorServiceTest extends CategoryTest {
 
     future.get();
 
-    assertTrue(isGlobalContextSetInChildThread.get());
-    assertTrue(isTestContextSetInChildThread.get());
+    assertThat(isGlobalContextSetInChildThread.get()).isTrue();
+    assertThat(isTestContextSetInChildThread.get()).isTrue();
     executor.shutdown();
   }
 }

@@ -11,7 +11,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -1023,7 +1022,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals(AnalysisTolerance.LOW, fetchedObject.getAnalysisTolerance());
     assertEquals("Config 2", fetchedObject.getName());
     assertEquals("query2", fetchedObject.getQuery());
-    assertTrue(fetchedObject.isAdvancedQuery());
+    assertThat(fetchedObject.isAdvancedQuery()).isTrue();
 
     validateDeleteCVConfiguration(savedObjectUuid);
   }
@@ -1185,7 +1184,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
     cvConfigurationList.forEach(configRecords -> {
       if (configRecords.getValidUntil() != null) {
-        assertTrue(validUntil.getTime() > configRecords.getValidUntil().getTime());
+        assertThat(validUntil.getTime() > configRecords.getValidUntil().getTime()).isTrue();
       }
     });
   }
@@ -1462,7 +1461,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
         .filter(LogMLAnalysisRecordKeys.cvConfigId, savedObjectUuid)
         .filter("appId", appId)
         .asList()
-        .forEach(logMLAnalysisRecord -> assertTrue(logMLAnalysisRecord.isDeprecated()));
+        .forEach(logMLAnalysisRecord -> assertThat(logMLAnalysisRecord.isDeprecated()).isTrue());
 
     url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId
         + "&serviceConfigurationId=" + savedObjectUuid;
@@ -1525,7 +1524,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     target = client.target(url);
     RestResponse<Boolean> updateResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(cvConfiguration, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
-    assertTrue(updateResponse.getResource());
+    assertThat(updateResponse.getResource()).isTrue();
 
     url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId
         + "&serviceConfigurationId=" + savedObjectUuid;
@@ -1533,7 +1532,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     getRequestResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<LogsCVConfiguration>>() {});
     fetchedObject = getRequestResponse.getResource();
-    assertTrue(fetchedObject.isAlertEnabled());
+    assertThat(fetchedObject.isAlertEnabled()).isTrue();
     assertEquals(0.5, fetchedObject.getAlertThreshold(), 0.0);
     assertEquals(0, fetchedObject.getSnoozeStartTime());
     assertEquals(0, fetchedObject.getSnoozeEndTime());
@@ -1542,7 +1541,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     target = client.target(url);
     updateResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(cvConfiguration, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
-    assertTrue(updateResponse.getResource());
+    assertThat(updateResponse.getResource()).isTrue();
 
     url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId
         + "&serviceConfigurationId=" + savedObjectUuid;
@@ -1550,7 +1549,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     getRequestResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<LogsCVConfiguration>>() {});
     fetchedObject = getRequestResponse.getResource();
-    assertTrue(fetchedObject.isAlertEnabled());
+    assertThat(fetchedObject.isAlertEnabled()).isTrue();
     assertEquals(0.5, fetchedObject.getAlertThreshold(), 0.0);
     assertEquals(cvConfiguration.getSnoozeStartTime(), fetchedObject.getSnoozeStartTime());
     assertEquals(cvConfiguration.getSnoozeEndTime(), fetchedObject.getSnoozeEndTime());

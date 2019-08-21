@@ -1,7 +1,7 @@
 package io.harness.e2e.dailysanity.platform.paid;
 
 import static io.harness.rule.OwnerRule.SWAMY;
-import static junit.framework.TestCase.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
@@ -56,9 +56,10 @@ public class SSOTestPaidTest extends AbstractE2ETest {
     OauthSettings oauthSettings =
         OauthSettings.builder().allowedProviders(oauthProviderTypeSet).displayName("Google").filter("").build();
     oauthSettings.setDisplayName("GOOGLE");
-    assertTrue(SSORestUtils.addOauthSettings(getAccount().getUuid(), bearerToken, oauthSettings) == HttpStatus.SC_OK);
+    assertThat(SSORestUtils.addOauthSettings(getAccount().getUuid(), bearerToken, oauthSettings) == HttpStatus.SC_OK)
+        .isTrue();
     Object ssoConfig = SSORestUtils.getAccessManagementSettings(getAccount().getUuid(), bearerToken);
-    assertTrue(SSORestUtils.deleteOAUTHSettings(getAccount().getUuid(), bearerToken) == HttpStatus.SC_OK);
+    assertThat(SSORestUtils.deleteOAUTHSettings(getAccount().getUuid(), bearerToken) == HttpStatus.SC_OK).isTrue();
     logger.info("Done");
   }
 
@@ -72,7 +73,8 @@ public class SSOTestPaidTest extends AbstractE2ETest {
     logger.info("Starting the LDAP test");
     logger.info("Creating LDAP SSO Setting");
     LdapSettings ldapSettings = SSOUtils.createDefaultLdapSettings(getAccount().getUuid());
-    assertTrue(SSORestUtils.addLdapSettings(getAccount().getUuid(), bearerToken, ldapSettings) == HttpStatus.SC_OK);
+    assertThat(SSORestUtils.addLdapSettings(getAccount().getUuid(), bearerToken, ldapSettings) == HttpStatus.SC_OK)
+        .isTrue();
     Object ssoConfig = SSORestUtils.getAccessManagementSettings(getAccount().getUuid(), bearerToken);
     logger.info("Creating a userGroup");
     logger.info("Creating a new user group");
@@ -86,7 +88,7 @@ public class SSOTestPaidTest extends AbstractE2ETest {
     logger.info("Doing an LDAP group search");
     Collection<LdapGroupResponse> ldapGroupResponses =
         SSORestUtils.searchLdapWithQuery(getAccount().getUuid(), bearerToken, QUERY, ldapId);
-    assertTrue(ldapGroupResponses.size() > 0);
+    assertThat(ldapGroupResponses.size() > 0).isTrue();
     LdapGroupResponse choosenGroup = SSOUtils.chooseLDAPGroup(ldapGroupResponses, GROUP_NAME);
     assertNotNull(choosenGroup);
     logger.info("Performing LDAP linking and syncing");
@@ -99,22 +101,23 @@ public class SSOTestPaidTest extends AbstractE2ETest {
         ()
             -> UserGroupUtils.hasUsersInUserGroup(getAccount(), bearerToken, finalLdapLinkedGroup.getName()),
         new BooleanMatcher<>(), true);
-    assertTrue(linkAndSyncSuccessful);
+    assertThat(linkAndSyncSuccessful).isTrue();
     logger.info("Testing the LDAP login");
     String ldapLoginPassword = new ScmSecret().decryptToString(new SecretName("ldap_cschmith_password"));
     LdapResponse ldapResponse =
         SSORestUtils.testAuthenticate(getAccount().getUuid(), bearerToken, LDAP_LOGIN_ID, ldapLoginPassword);
     assertNotNull(ldapResponse);
-    assertTrue(ldapResponse.getStatus().name().equals("SUCCESS"));
+    assertThat(ldapResponse.getStatus().name().equals("SUCCESS")).isTrue();
     logger.info("Testing the LDAP login - Succeeded");
     logger.info("Logging in using LDAP credentials");
     User user = UserUtils.getUser(bearerToken, getAccount().getUuid(), LDAP_LOGIN_ID);
     User user2 = UserUtils.getUser(bearerToken, getAccount().getUuid(), "ldaptest1@harness.io");
-    assertTrue(SSORestUtils.assignAuthMechanism(getAccount().getUuid(), bearerToken, "LDAP") == HttpStatus.SC_OK);
+    assertThat(SSORestUtils.assignAuthMechanism(getAccount().getUuid(), bearerToken, "LDAP") == HttpStatus.SC_OK)
+        .isTrue();
     TestUtils.sleep(30);
     String authToken = (String) retry.executeWithRetry(
         () -> Setup.getAuthToken(LDAP_LOGIN_ID, ldapLoginPassword), new NotNullMatcher(), true);
-    assertTrue(StringUtils.isNotBlank(authToken));
+    assertThat(StringUtils.isNotBlank(authToken)).isTrue();
     logger.info("Logging out in as LDAP user");
     Setup.signOut(user.getUuid(), authToken);
     logger.info("Unlink LDAP user");
@@ -126,16 +129,19 @@ public class SSOTestPaidTest extends AbstractE2ETest {
         new BooleanMatcher<>(), false);
     assertFalse(linkAndSyncSuccessful);
     logger.info("Unlink successful");
-    assertTrue(
-        SSORestUtils.assignAuthMechanism(getAccount().getUuid(), bearerToken, "USER_PASSWORD") == HttpStatus.SC_OK);
+    assertThat(
+        SSORestUtils.assignAuthMechanism(getAccount().getUuid(), bearerToken, "USER_PASSWORD") == HttpStatus.SC_OK)
+        .isTrue();
     logger.info("Disabled LDAP");
-    assertTrue(SSORestUtils.deleteLDAPSettings(getAccount().getUuid(), bearerToken) == HttpStatus.SC_OK);
+    assertThat(SSORestUtils.deleteLDAPSettings(getAccount().getUuid(), bearerToken) == HttpStatus.SC_OK).isTrue();
     logger.info("Deleted LDAP");
-    assertTrue(UserGroupRestUtils.deleteUserGroup(getAccount(), bearerToken, ldapUnlinkedGroup.getUuid()));
+    assertThat(UserGroupRestUtils.deleteUserGroup(getAccount(), bearerToken, ldapUnlinkedGroup.getUuid())).isTrue();
     logger.info("Deleted Usergroup");
     logger.info("Deleting user : " + user.getEmail() + " and " + user2.getEmail());
-    assertTrue(UserRestUtils.deleteUser(getAccount().getUuid(), bearerToken, user.getUuid()) == HttpStatus.SC_OK);
-    assertTrue(UserRestUtils.deleteUser(getAccount().getUuid(), bearerToken, user2.getUuid()) == HttpStatus.SC_OK);
+    assertThat(UserRestUtils.deleteUser(getAccount().getUuid(), bearerToken, user.getUuid()) == HttpStatus.SC_OK)
+        .isTrue();
+    assertThat(UserRestUtils.deleteUser(getAccount().getUuid(), bearerToken, user2.getUuid()) == HttpStatus.SC_OK)
+        .isTrue();
     logger.info("Done");
   }
 
@@ -148,9 +154,10 @@ public class SSOTestPaidTest extends AbstractE2ETest {
     filePath = filePath + "/"
         + "src/test/resources/secrets/"
         + "SAML_SSO_Provider.xml";
-    assertTrue(SSORestUtils.addSAMLSettings(getAccount().getUuid(), bearerToken, "SAML", filePath) == HttpStatus.SC_OK);
+    assertThat(SSORestUtils.addSAMLSettings(getAccount().getUuid(), bearerToken, "SAML", filePath) == HttpStatus.SC_OK)
+        .isTrue();
     Object ssoConfig = SSORestUtils.getAccessManagementSettings(getAccount().getUuid(), bearerToken);
-    assertTrue(SSORestUtils.deleSAMLSettings(getAccount().getUuid(), bearerToken) == HttpStatus.SC_OK);
+    assertThat(SSORestUtils.deleSAMLSettings(getAccount().getUuid(), bearerToken) == HttpStatus.SC_OK).isTrue();
     logger.info("Done");
   }
 }

@@ -3,10 +3,10 @@ package software.wings.sm.states.pcf;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyMap;
@@ -291,8 +291,8 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes());
     List<String> routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
     assertEquals(2, routes.size());
-    assertTrue(routes.contains("R1"));
-    assertTrue(routes.contains("R2"));
+    assertThat(routes.contains("R1")).isTrue();
+    assertThat(routes.contains("R2")).isTrue();
 
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());
@@ -308,8 +308,8 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes());
     routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
     assertEquals(2, routes.size());
-    assertTrue(routes.contains("R1"));
-    assertTrue(routes.contains("R2"));
+    assertThat(routes.contains("R1")).isTrue();
+    assertThat(routes.contains("R2")).isTrue();
   }
 
   @Test
@@ -337,7 +337,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes());
     List<String> routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
     assertEquals(1, routes.size());
-    assertTrue(routes.contains("R3"));
+    assertThat(routes.contains("R3")).isTrue();
 
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());
@@ -352,7 +352,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes());
     routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
     assertEquals(1, routes.size());
-    assertTrue(routes.contains("R3"));
+    assertThat(routes.contains("R3")).isTrue();
   }
 
   @Test
@@ -380,8 +380,8 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes());
     List<String> routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
     assertEquals(2, routes.size());
-    assertTrue(routes.contains("R1"));
-    assertTrue(routes.contains("R2"));
+    assertThat(routes.contains("R1")).isTrue();
+    assertThat(routes.contains("R2")).isTrue();
 
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());
@@ -396,8 +396,8 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes());
     routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
     assertEquals(2, routes.size());
-    assertTrue(routes.contains("R1"));
-    assertTrue(routes.contains("R2"));
+    assertThat(routes.contains("R1")).isTrue();
+    assertThat(routes.contains("R2")).isTrue();
   }
 
   @Test
@@ -425,7 +425,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes());
     List<String> routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
     assertEquals(1, routes.size());
-    assertTrue(routes.contains("R3"));
+    assertThat(routes.contains("R3")).isTrue();
 
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());
@@ -440,7 +440,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes());
     routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
     assertEquals(1, routes.size());
-    assertTrue(routes.contains("R3"));
+    assertThat(routes.contains("R3")).isTrue();
   }
 
   @Test
@@ -464,18 +464,18 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes());
     List<String> routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
     assertEquals(2, routes.size());
-    assertTrue(routes.contains("R1"));
-    assertTrue(routes.contains("R2"));
+    assertThat(routes.contains("R1")).isTrue();
+    assertThat(routes.contains("R2")).isTrue();
 
     assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames());
     List<String> appNames = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
     assertEquals(1, appNames.size());
-    assertTrue(appNames.contains("APP_NAME_SERVICE_NAME_ENV_NAME__1"));
+    assertThat(appNames.contains("APP_NAME_SERVICE_NAME_ENV_NAME__1")).isTrue();
 
     assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getTempRoutes());
     routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getTempRoutes();
     assertEquals(1, routes.size());
-    assertTrue(routes.contains("R3"));
+    assertThat(routes.contains("R3")).isTrue();
 
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());
@@ -490,17 +490,17 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes());
     routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
     assertEquals(2, routes.size());
-    assertTrue(routes.contains("R1"));
-    assertTrue(routes.contains("R2"));
+    assertThat(routes.contains("R1")).isTrue();
+    assertThat(routes.contains("R2")).isTrue();
 
     assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames());
     appNames = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
     assertEquals(1, appNames.size());
-    assertTrue(appNames.contains("APP_NAME_SERVICE_NAME_ENV_NAME__1"));
+    assertThat(appNames.contains("APP_NAME_SERVICE_NAME_ENV_NAME__1")).isTrue();
 
     assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getTempRoutes());
     routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getTempRoutes();
     assertEquals(1, routes.size());
-    assertTrue(routes.contains("R3"));
+    assertThat(routes.contains("R3")).isTrue();
   }
 }

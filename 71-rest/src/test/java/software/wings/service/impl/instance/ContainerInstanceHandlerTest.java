@@ -1,8 +1,8 @@
 package software.wings.service.impl.instance;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
@@ -348,7 +348,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     Set idTobeDeleted = captor.getValue();
     // This asserts only 1 instance is deleted
     assertEquals(1, idTobeDeleted.size());
-    assertTrue(idTobeDeleted.contains(INSTANCE_1_ID) || idTobeDeleted.contains(INSTANCE_2_ID));
+    assertThat(idTobeDeleted.contains(INSTANCE_1_ID) || idTobeDeleted.contains(INSTANCE_2_ID)).isTrue();
 
     if (checkSaveOrUpdate) {
       ArgumentCaptor<Instance> captorInstance = ArgumentCaptor.forClass(Instance.class);
@@ -644,7 +644,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     Set idTobeDeleted = captor.getValue();
     // This asserts only 1 instance is deleted
     assertEquals(1, idTobeDeleted.size());
-    assertTrue(idTobeDeleted.contains(instanceId));
+    assertThat(idTobeDeleted.contains(instanceId)).isTrue();
   }
 
   private void assertions_rollback(String containerId, InstanceType instanceType, boolean checkSaveOrUpdate)
@@ -653,7 +653,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     verify(instanceService).delete(captor.capture());
     Set idTobeDeleted = captor.getValue();
     assertEquals(1, idTobeDeleted.size());
-    assertTrue(idTobeDeleted.contains(INSTANCE_1_ID));
+    assertThat(idTobeDeleted.contains(INSTANCE_1_ID)).isTrue();
 
     if (checkSaveOrUpdate) {
       ArgumentCaptor<Instance> captorInstance = ArgumentCaptor.forClass(Instance.class);

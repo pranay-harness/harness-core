@@ -1,10 +1,10 @@
 package software.wings.service.impl.instance;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyLong;
@@ -370,16 +370,18 @@ public class InstanceHelperTest extends WingsBaseTest {
     assertEquals(2, event.getDeploymentSummaries().size());
     DeploymentInfo deploymentInfo1 = event.getDeploymentSummaries().get(0).getDeploymentInfo();
     DeploymentInfo deploymentInfo2 = event.getDeploymentSummaries().get(1).getDeploymentInfo();
-    assertTrue(deploymentInfo1 instanceof AwsAutoScalingGroupDeploymentInfo);
-    assertTrue(deploymentInfo2 instanceof AwsAutoScalingGroupDeploymentInfo);
+    assertThat(deploymentInfo1 instanceof AwsAutoScalingGroupDeploymentInfo).isTrue();
+    assertThat(deploymentInfo2 instanceof AwsAutoScalingGroupDeploymentInfo).isTrue();
     assertDeploymentSummaryObject(event.getDeploymentSummaries().get(0));
     assertDeploymentSummaryObject(event.getDeploymentSummaries().get(1));
-    assertTrue(asList("asgNew", "asgOld")
+    assertThat(asList("asgNew", "asgOld")
                    .contains(((AwsAmiDeploymentKey) event.getDeploymentSummaries().get(0).getAwsAmiDeploymentKey())
-                                 .getAutoScalingGroupName()));
-    assertTrue(asList("asgNew", "asgOld")
+                                 .getAutoScalingGroupName()))
+        .isTrue();
+    assertThat(asList("asgNew", "asgOld")
                    .contains(((AwsAmiDeploymentKey) event.getDeploymentSummaries().get(1).getAwsAmiDeploymentKey())
-                                 .getAutoScalingGroupName()));
+                                 .getAutoScalingGroupName()))
+        .isTrue();
   }
 
   private PhaseStepExecutionData getPhaseStepExecutionData(PhaseExecutionData phaseExecutionData) {
@@ -436,10 +438,11 @@ public class InstanceHelperTest extends WingsBaseTest {
     assertNotNull(event.getDeploymentSummaries());
     assertEquals(1, event.getDeploymentSummaries().size());
     DeploymentInfo deploymentInfo = event.getDeploymentSummaries().get(0).getDeploymentInfo();
-    assertTrue(deploymentInfo instanceof AwsCodeDeployDeploymentInfo);
+    assertThat(deploymentInfo instanceof AwsCodeDeployDeploymentInfo).isTrue();
     assertDeploymentSummaryObject(event.getDeploymentSummaries().get(0));
 
-    assertTrue(event.getDeploymentSummaries().get(0).getDeploymentInfo() instanceof AwsCodeDeployDeploymentInfo);
+    assertThat(event.getDeploymentSummaries().get(0).getDeploymentInfo() instanceof AwsCodeDeployDeploymentInfo)
+        .isTrue();
     assertDeploymentSummaryObject(event.getDeploymentSummaries().get(0));
     assertEquals(CODE_DEPLOY_key,
         ((AwsCodeDeployDeploymentKey) event.getDeploymentSummaries().get(0).getAwsCodeDeployDeploymentKey()).getKey());
@@ -483,8 +486,8 @@ public class InstanceHelperTest extends WingsBaseTest {
     DeploymentInfo deploymentInfo2 = event.getDeploymentSummaries().get(1).getDeploymentInfo();
     assertDeploymentSummaryObject(event.getDeploymentSummaries().get(0));
     assertDeploymentSummaryObject(event.getDeploymentSummaries().get(1));
-    assertTrue(deploymentInfo1 instanceof ContainerDeploymentInfoWithNames);
-    assertTrue(deploymentInfo2 instanceof ContainerDeploymentInfoWithNames);
+    assertThat(deploymentInfo1 instanceof ContainerDeploymentInfoWithNames).isTrue();
+    assertThat(deploymentInfo2 instanceof ContainerDeploymentInfoWithNames).isTrue();
 
     assertEquals(CLUSTER_NAME,
         ((ContainerDeploymentInfoWithNames) event.getDeploymentSummaries().get(0).getDeploymentInfo())
@@ -497,12 +500,14 @@ public class InstanceHelperTest extends WingsBaseTest {
     serviceNames.add("ecsNew");
     serviceNames.add("ecsOld");
 
-    assertTrue(serviceNames.contains(
-        ((ContainerDeploymentKey) event.getDeploymentSummaries().get(0).getContainerDeploymentKey())
-            .getContainerServiceName()));
-    assertTrue(serviceNames.contains(
-        ((ContainerDeploymentKey) event.getDeploymentSummaries().get(1).getContainerDeploymentKey())
-            .getContainerServiceName()));
+    assertThat(serviceNames.contains(
+                   ((ContainerDeploymentKey) event.getDeploymentSummaries().get(0).getContainerDeploymentKey())
+                       .getContainerServiceName()))
+        .isTrue();
+    assertThat(serviceNames.contains(
+                   ((ContainerDeploymentKey) event.getDeploymentSummaries().get(1).getContainerDeploymentKey())
+                       .getContainerServiceName()))
+        .isTrue();
   }
 
   @Test
@@ -544,8 +549,8 @@ public class InstanceHelperTest extends WingsBaseTest {
     DeploymentInfo deploymentInfo2 = event.getDeploymentSummaries().get(1).getDeploymentInfo();
     assertDeploymentSummaryObject(event.getDeploymentSummaries().get(0));
     assertDeploymentSummaryObject(event.getDeploymentSummaries().get(1));
-    assertTrue(deploymentInfo1 instanceof ContainerDeploymentInfoWithNames);
-    assertTrue(deploymentInfo2 instanceof ContainerDeploymentInfoWithNames);
+    assertThat(deploymentInfo1 instanceof ContainerDeploymentInfoWithNames).isTrue();
+    assertThat(deploymentInfo2 instanceof ContainerDeploymentInfoWithNames).isTrue();
 
     assertDeploymentSummaryObject(event.getDeploymentSummaries().get(0));
     assertDeploymentSummaryObject(event.getDeploymentSummaries().get(1));
@@ -561,12 +566,14 @@ public class InstanceHelperTest extends WingsBaseTest {
     serviceNames.add("kubernetesNew");
     serviceNames.add("kubernetesOld");
 
-    assertTrue(serviceNames.contains(
-        ((ContainerDeploymentKey) event.getDeploymentSummaries().get(0).getContainerDeploymentKey())
-            .getContainerServiceName()));
-    assertTrue(serviceNames.contains(
-        ((ContainerDeploymentKey) event.getDeploymentSummaries().get(1).getContainerDeploymentKey())
-            .getContainerServiceName()));
+    assertThat(serviceNames.contains(
+                   ((ContainerDeploymentKey) event.getDeploymentSummaries().get(0).getContainerDeploymentKey())
+                       .getContainerServiceName()))
+        .isTrue();
+    assertThat(serviceNames.contains(
+                   ((ContainerDeploymentKey) event.getDeploymentSummaries().get(1).getContainerDeploymentKey())
+                       .getContainerServiceName()))
+        .isTrue();
   }
 
   @Test
@@ -612,7 +619,7 @@ public class InstanceHelperTest extends WingsBaseTest {
     DeploymentInfo deploymentInfo = event.getDeploymentSummaries().get(0).getDeploymentInfo();
 
     assertDeploymentSummaryObject(event.getDeploymentSummaries().get(0));
-    assertTrue(deploymentInfo instanceof ContainerDeploymentInfoWithLabels);
+    assertThat(deploymentInfo instanceof ContainerDeploymentInfoWithLabels).isTrue();
     assertDeploymentSummaryObject(event.getDeploymentSummaries().get(0));
 
     ContainerDeploymentInfoWithLabels containerDeploymentInfoWithLabels =
@@ -666,7 +673,7 @@ public class InstanceHelperTest extends WingsBaseTest {
     DeploymentEvent event = captor.getValue();
     assertNotNull(event);
     assertEquals(0, event.getRetries());
-    assertTrue(event.isRollback());
+    assertThat(event.isRollback()).isTrue();
 
     assertNotNull(event.getDeploymentSummaries());
     assertEquals(1, event.getDeploymentSummaries().size());
@@ -678,7 +685,7 @@ public class InstanceHelperTest extends WingsBaseTest {
     DeploymentInfo deploymentInfo = event.getDeploymentSummaries().get(0).getDeploymentInfo();
 
     assertDeploymentSummaryObject(event.getDeploymentSummaries().get(0));
-    assertTrue(deploymentInfo instanceof ContainerDeploymentInfoWithLabels);
+    assertThat(deploymentInfo instanceof ContainerDeploymentInfoWithLabels).isTrue();
     assertDeploymentSummaryObject(event.getDeploymentSummaries().get(0));
 
     ContainerDeploymentInfoWithLabels containerDeploymentInfoWithLabels =
@@ -703,11 +710,11 @@ public class InstanceHelperTest extends WingsBaseTest {
     assertFalse(instanceHelper.isSupported(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH));
     assertFalse(instanceHelper.isSupported(InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM));
     assertFalse(instanceHelper.isSupported(InfrastructureMappingType.AWS_AWS_LAMBDA));
-    assertTrue(instanceHelper.isSupported(InfrastructureMappingType.AWS_ECS));
-    assertTrue(instanceHelper.isSupported(InfrastructureMappingType.AWS_AMI));
-    assertTrue(instanceHelper.isSupported(InfrastructureMappingType.AWS_AWS_CODEDEPLOY));
-    assertTrue(instanceHelper.isSupported(InfrastructureMappingType.GCP_KUBERNETES));
-    assertTrue(instanceHelper.isSupported(InfrastructureMappingType.AWS_SSH));
+    assertThat(instanceHelper.isSupported(InfrastructureMappingType.AWS_ECS)).isTrue();
+    assertThat(instanceHelper.isSupported(InfrastructureMappingType.AWS_AMI)).isTrue();
+    assertThat(instanceHelper.isSupported(InfrastructureMappingType.AWS_AWS_CODEDEPLOY)).isTrue();
+    assertThat(instanceHelper.isSupported(InfrastructureMappingType.GCP_KUBERNETES)).isTrue();
+    assertThat(instanceHelper.isSupported(InfrastructureMappingType.AWS_SSH)).isTrue();
   }
 
   @Test

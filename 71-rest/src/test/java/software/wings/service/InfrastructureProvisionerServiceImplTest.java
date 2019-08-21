@@ -1,9 +1,9 @@
 package software.wings.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -136,9 +136,9 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
 
     assertNotNull(awsInstanceFilter.getVpcIds());
     assertEquals(3, awsInstanceFilter.getVpcIds().size());
-    assertTrue(awsInstanceFilter.getVpcIds().contains("vpc1"));
-    assertTrue(awsInstanceFilter.getVpcIds().contains("vpc2"));
-    assertTrue(awsInstanceFilter.getVpcIds().contains("vpc3"));
+    assertThat(awsInstanceFilter.getVpcIds().contains("vpc1")).isTrue();
+    assertThat(awsInstanceFilter.getVpcIds().contains("vpc2")).isTrue();
+    assertThat(awsInstanceFilter.getVpcIds().contains("vpc3")).isTrue();
 
     assertNotNull(awsInstanceFilter.getTags());
     assertEquals(1, awsInstanceFilter.getTags().size());
@@ -161,9 +161,9 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     contextMap.put("out1", 1);
     Map<String, Object> resolveBlueprints =
         infrastructureProvisionerService.resolveBlueprints(contextMap, blueprints, "");
-    assertTrue(resolveBlueprints.size() == 1);
+    assertThat(resolveBlueprints.size() == 1).isTrue();
     Object value = resolveBlueprints.get("abc");
-    assertTrue(value instanceof Integer && (Integer) value == 1);
+    assertThat(value instanceof Integer && (Integer) value == 1).isTrue();
 
     Map<String, Object> someMap = new HashMap<String, Object>() {
       {
@@ -176,14 +176,14 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     contextMap.put("out2", 2);
     resolveBlueprints = infrastructureProvisionerService.resolveBlueprints(contextMap, blueprints, "");
     value = ((Map) ((Map) resolveBlueprints.get("awsInstance")).get("innerpojo")).get("key1");
-    assertTrue(value instanceof Integer && (Integer) value == 2);
+    assertThat(value instanceof Integer && (Integer) value == 2).isTrue();
 
     blueprints.put("key2", new ArrayList<>());
     try {
       infrastructureProvisionerService.resolveBlueprints(contextMap, blueprints, "");
       fail("Should throw exception");
     } catch (InvalidRequestException ex) {
-      assertTrue(ExceptionUtils.getMessage(ex).contains("Unknown Blueprint value"));
+      assertThat(ExceptionUtils.getMessage(ex).contains("Unknown Blueprint value")).isTrue();
     }
   }
 

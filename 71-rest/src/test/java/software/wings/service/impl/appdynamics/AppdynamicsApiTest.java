@@ -3,8 +3,8 @@ package software.wings.service.impl.appdynamics;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PARNIAN;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
@@ -164,7 +164,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     String savedAttributeId = saveAppdynamicsConfig();
     SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     ((AppDynamicsConfig) settingAttribute.getValue()).setPassword(UUID.randomUUID().toString().toCharArray());
-    assertTrue(appdynamicsService.validateConfig(settingAttribute, Collections.emptyList()));
+    assertThat(appdynamicsService.validateConfig(settingAttribute, Collections.emptyList())).isTrue();
   }
 
   @Test
@@ -187,7 +187,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
 
     RestResponse<List<NewRelicApplication>> allApplications =
         appdynamicsResource.getAllApplications(accountId, savedAttributeId);
-    assertTrue(allApplications.getResponseMessages().isEmpty());
+    assertThat(allApplications.getResponseMessages().isEmpty()).isTrue();
     assertEquals(sortedApplicationsByName, allApplications.getResource());
   }
 
@@ -205,7 +205,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
 
     RestResponse<Set<AppdynamicsTier>> allTiers =
         appdynamicsResource.getAllTiers(accountId, savedAttributeId, new Random().nextLong());
-    assertTrue(allTiers.getResponseMessages().isEmpty());
+    assertThat(allTiers.getResponseMessages().isEmpty()).isTrue();
     assertEquals(tiers, allTiers.getResource());
   }
 

@@ -2,7 +2,7 @@ package io.harness.functional.secrets;
 
 import static io.harness.rule.OwnerRule.MARK;
 import static junit.framework.TestCase.assertNotNull;
-import static junit.framework.TestCase.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
@@ -63,28 +63,28 @@ public class AwsSecretsManagerServiceFunctionalTest extends AbstractFunctionalTe
       logger.info("AWS Secrets Manager config created.");
 
       List<AwsSecretsManagerConfig> secretsManagerConfigs = listConfigs(getAccount().getUuid());
-      assertTrue(secretsManagerConfigs.size() > 0);
+      assertThat(secretsManagerConfigs.size() > 0).isTrue();
 
       String secretName = "MySecret";
       String secretValue = "MyValue";
       SecretText secretText = SecretsUtils.createSecretTextObject(secretName, secretValue);
 
       String secretId = SecretsRestUtils.addSecret(getAccount().getUuid(), bearerToken, secretText);
-      assertTrue(StringUtils.isNotBlank(secretId));
+      assertThat(StringUtils.isNotBlank(secretId)).isTrue();
 
       secretName = "MySecret-Updated";
       secretValue = "MyValue-Updated";
       secretText.setName(secretName);
       secretText.setValue(secretValue);
       boolean isUpdationDone = SecretsRestUtils.updateSecret(getAccount().getUuid(), bearerToken, secretId, secretText);
-      assertTrue(isUpdationDone);
+      assertThat(isUpdationDone).isTrue();
 
       // Verifying the secret decryption
       List<EncryptedData> encryptedDataList = SecretsRestUtils.listSecrets(getAccount().getUuid(), bearerToken);
-      assertTrue(encryptedDataList.size() > 0);
+      assertThat(encryptedDataList.size() > 0).isTrue();
 
       boolean isDeletionDone = SecretsRestUtils.deleteSecret(getAccount().getUuid(), bearerToken, secretId);
-      assertTrue(isDeletionDone);
+      assertThat(isDeletionDone).isTrue();
     } finally {
       if (secretsManagerId != null) {
         deleteAwsSecretsManager(getAccount().getUuid(), secretsManagerId);

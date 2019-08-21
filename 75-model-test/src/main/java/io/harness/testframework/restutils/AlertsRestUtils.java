@@ -1,6 +1,6 @@
 package io.harness.testframework.restutils;
 
-import static junit.framework.TestCase.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
@@ -42,7 +42,7 @@ public class AlertsRestUtils {
                              .queryParam("accountId", accountId)
                              .delete("/alert-notification-rules/" + ruleId)
                              .getStatusCode();
-    assertTrue(returnCode == 200);
+    assertThat(returnCode == 200).isTrue();
   }
 
   public static AlertNotificationRule updateAlert(

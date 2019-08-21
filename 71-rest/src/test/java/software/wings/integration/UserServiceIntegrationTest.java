@@ -11,7 +11,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static software.wings.beans.User.Builder.anUser;
 
@@ -98,11 +97,11 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     RestResponse<Boolean> restResponse = getRequestBuilderWithAuthHeader(target).put(
         entity(defaultEmail, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
     assertThat(restResponse.getResponseMessages()).isEmpty();
-    assertTrue(restResponse.getResource());
+    assertThat(restResponse.getResource()).isTrue();
 
     // 2. User should be disabled after disable operation above
     user = userService.getUserByEmail(defaultEmail);
-    assertTrue(user.isDisabled());
+    assertThat(user.isDisabled()).isTrue();
 
     // 3. Once the user is disabled, its logintype call will fail with 401 unauthorized error.
     target = client.target(API_BASE + "/users/logintype?userName=" + defaultEmail + "&accountId=" + userAccountId);
@@ -118,7 +117,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     restResponse = getRequestBuilderWithAuthHeader(target).put(
         entity(defaultEmail, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
     assertThat(restResponse.getResponseMessages()).isEmpty();
-    assertTrue(restResponse.getResource());
+    assertThat(restResponse.getResource()).isTrue();
 
     // 5. User should not be disabled after enabled above
     user = userService.getUserByEmail(defaultEmail);
@@ -175,7 +174,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     WebTarget target = client.target(API_BASE + "/users/verify-email?email=" + validEmail);
     RestResponse<Boolean> restResponse = getRequestBuilder(target).get(new GenericType<RestResponse<Boolean>>() {});
     assertThat(restResponse.getResponseMessages()).isEmpty();
-    assertTrue(restResponse.getResource());
+    assertThat(restResponse.getResource()).isTrue();
   }
 
   @Test
@@ -184,7 +183,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     WebTarget target = client.target(API_BASE + "/users/verify-email?email=%20" + validEmail + "%20");
     RestResponse<Boolean> restResponse = getRequestBuilder(target).get(new GenericType<RestResponse<Boolean>>() {});
     assertThat(restResponse.getResponseMessages()).isEmpty();
-    assertTrue(restResponse.getResource());
+    assertThat(restResponse.getResource()).isTrue();
   }
 
   @Test
@@ -244,7 +243,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     assertThat(restResponse.getResponseMessages()).isEmpty();
     Boolean result = restResponse.getResource();
     assertNotNull(result);
-    assertTrue(result);
+    assertThat(result).isTrue();
   }
 
   @Test
@@ -262,8 +261,8 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     assertNotNull(user);
     assertNotNull(user.getToken());
     assertNotNull(user.getAccounts());
-    assertTrue(user.getAccounts().size() > 0);
-    assertTrue(user.getSupportAccounts().size() > 0);
+    assertThat(user.getAccounts().size() > 0).isTrue();
+    assertThat(user.getSupportAccounts().size() > 0).isTrue();
   }
 
   @Test
@@ -282,8 +281,8 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     User user = response.getResource();
     assertNotNull(user);
     assertNotNull(user.getAccounts());
-    assertTrue(user.getAccounts().size() > 0);
-    assertTrue(user.getSupportAccounts().size() > 0);
+    assertThat(user.getAccounts().size() > 0).isTrue();
+    assertThat(user.getSupportAccounts().size() > 0).isTrue();
   }
 
   private String generateIdentityServiceJwtToken() throws IllegalAccessException {
@@ -316,12 +315,12 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     RestResponse<Boolean> response =
         target.request().post(entity(userInvite, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
     assertThat(response.getResponseMessages()).isEmpty();
-    assertTrue(response.getResource());
+    assertThat(response.getResource()).isTrue();
 
     // Trial signup again using the same email should succeed. A new verification email will be sent.
     response = target.request().post(entity(userInvite, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
     assertThat(response.getResponseMessages()).isEmpty();
-    assertTrue(response.getResource());
+    assertThat(response.getResource()).isTrue();
 
     userInvite = wingsPersistence.createQuery(UserInvite.class).filter(UserInviteKeys.email, email).get();
     assertNotNull(userInvite);
@@ -342,7 +341,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     // Verify the trial user is created, assigned to proper account and with the account admin roles.
     User savedUser = wingsPersistence.createQuery(User.class).filter(UserKeys.email, email).get();
     assertNotNull(savedUser);
-    assertTrue(savedUser.isEmailVerified());
+    assertThat(savedUser.isEmailVerified()).isTrue();
     assertEquals(name, savedUser.getName());
     assertEquals(1, savedUser.getAccounts().size());
 
@@ -420,7 +419,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     completeUserInviteAndSignIn(accountId, userInvite.getUuid(), userInvite);
 
     UserInvite retrievedUserInvite = wingsPersistence.get(UserInvite.class, userInvite.getUuid());
-    assertTrue(retrievedUserInvite.isCompleted());
+    assertThat(retrievedUserInvite.isCompleted()).isTrue();
 
     // Delete the user just created as a cleanup
     User user = userService.getUserByEmail(email);
@@ -608,7 +607,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
         entity(account, APPLICATION_JSON), new GenericType<RestResponse<Account>>() {});
 
     assertNotNull(response.getResource());
-    assertTrue(accountService.exists(account.getAccountName()));
+    assertThat(accountService.exists(account.getAccountName())).isTrue();
     assertNotNull(accountService.getByName(account.getCompanyName()));
   }
 
@@ -627,7 +626,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
         entity(request, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
     assertThat(response.getResponseMessages()).isEmpty();
     assertNotNull(response.getResource());
-    assertTrue(response.getResource());
+    assertThat(response.getResource()).isTrue();
   }
 
   private List<Role> getAccountAdminRoles() {

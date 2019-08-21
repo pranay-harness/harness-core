@@ -2,8 +2,8 @@ package io.harness.limits;
 
 import static io.harness.limits.ActionType.CREATE_APPLICATION;
 import static io.harness.limits.ActionType.DEPLOY;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import com.google.inject.Inject;
 
@@ -67,7 +67,7 @@ public class LimitsEnforcementIntegrationTest extends BaseIntegrationTest {
     StaticLimit limit = new StaticLimit(0);
     boolean configured =
         limitConfigSvc.configure(CREATE_APP_ACTION.getAccountId(), CREATE_APP_ACTION.getActionType(), limit);
-    assertTrue(configured);
+    assertThat(configured).isTrue();
 
     // check limits
     LimitChecker checker = limitCheckerFactory.getInstance(CREATE_APP_ACTION);
@@ -83,16 +83,16 @@ public class LimitsEnforcementIntegrationTest extends BaseIntegrationTest {
     // configure limits
     RateLimit limit = new RateLimit(1, 4, TimeUnit.SECONDS);
     boolean configured = limitConfigSvc.configure(DEPLOY_ACTION.getAccountId(), DEPLOY_ACTION.getActionType(), limit);
-    assertTrue(configured);
+    assertThat(configured).isTrue();
 
     // check limits
     LimitChecker checker = limitCheckerFactory.getInstance(DEPLOY_ACTION);
-    assertTrue("1 request allowed every 4 seconds. First request should pass.", checker.checkAndConsume());
+    assertThat(checker.checkAndConsume()).isTrue();
     assertFalse("1 request allowed every 4 seconds. Second request should fail.", checker.checkAndConsume());
 
     // wait ~4s
     Thread.sleep(4005);
 
-    assertTrue("Request made after 4 seconds should pass", checker.checkAndConsume());
+    assertThat(checker.checkAndConsume()).isTrue();
   }
 }

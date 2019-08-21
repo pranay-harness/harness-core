@@ -8,7 +8,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.joor.Reflect.on;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FakeTimeLimiter;
@@ -83,7 +82,7 @@ public class JenkinsTest extends CategoryTest {
                     .withHeader("Content-Type", "application/json")));
 
     List<JobDetails> jobs = jenkins.getJobs("parentJob");
-    assertTrue(jobs.size() == 2);
+    assertThat(jobs.size() == 2).isTrue();
   }
 
   /**
@@ -105,9 +104,9 @@ public class JenkinsTest extends CategoryTest {
                     .withHeader("Content-Type", "application/json")));
 
     List<JobDetails> jobs = jenkins.getJobs("parentJob");
-    assertTrue(jobs.size() == 2);
-    assertTrue(jobs.get(0).getJobName().equals("parentJob/parentJob_war_copy"));
-    assertTrue(jobs.get(1).getJobName().equals("parentJob/abcd"));
+    assertThat(jobs.size() == 2).isTrue();
+    assertThat(jobs.get(0).getJobName().equals("parentJob/parentJob_war_copy")).isTrue();
+    assertThat(jobs.get(1).getJobName().equals("parentJob/abcd")).isTrue();
   }
 
   /**

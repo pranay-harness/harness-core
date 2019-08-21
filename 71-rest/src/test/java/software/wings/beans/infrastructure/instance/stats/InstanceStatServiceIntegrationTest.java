@@ -3,7 +3,6 @@ package software.wings.beans.infrastructure.instance.stats;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import com.google.inject.Inject;
 
@@ -62,7 +61,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
     val initialCount = ds.getCount(fetchQuery());
 
     val saved = statService.save(stats);
-    assertTrue("stats should be saved", saved);
+    assertThat(saved).isTrue();
 
     val finalCount = ds.getCount(fetchQuery());
     assertEquals("since one item was saved, count should be incremented by one", initialCount + 1, finalCount);
@@ -83,7 +82,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
 
     statsToSave.forEach(it -> {
       val saved = statService.save(it);
-      assertTrue("instance stats should be saved", saved);
+      assertThat(saved).isTrue();
     });
 
     val to = Instant.now();
@@ -120,7 +119,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
 
     statsToSave.forEach(it -> {
       val saved = statService.save(it);
-      assertTrue("instance stats should be saved", saved);
+      assertThat(saved).isTrue();
     });
 
     val to = Instant.now();
@@ -162,12 +161,12 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
 
     val saved = statService.save(stat);
     val after = Instant.now();
-    assertTrue("instance stats should be successfully saved", saved);
+    assertThat(saved).isTrue();
 
     lastTs = statService.getLastSnapshotTime(stat.getAccountId());
     assertNotNull("stats saved, so last timestamp should NOT be null", lastTs);
 
-    assertTrue(lastTs.isAfter(before));
-    assertTrue(lastTs.isBefore(after));
+    assertThat(lastTs.isAfter(before)).isTrue();
+    assertThat(lastTs.isBefore(after)).isTrue();
   }
 }

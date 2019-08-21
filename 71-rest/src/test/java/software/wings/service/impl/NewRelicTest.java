@@ -1,9 +1,9 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.RAGHU;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl.METRIC_NAME_NON_SPECIAL_CHARS;
 import static software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl.METRIC_NAME_SPECIAL_CHARS;
 
@@ -140,13 +140,13 @@ public class NewRelicTest extends WingsBaseTest {
     assertEquals(2, batchMetricsToCollect.size());
     List<Set<String>> nonSpecialCharBatches = batchMetricsToCollect.get(METRIC_NAME_NON_SPECIAL_CHARS);
     assertEquals(1, nonSpecialCharBatches.size());
-    assertTrue(nonSpecialCharBatches.get(0).contains("WebTransaction/456/load+test-some/with_under_score1"));
-    assertTrue(nonSpecialCharBatches.get(0).contains("WebTransaction/456/load+test-some/with_under_score2"));
-    assertTrue(nonSpecialCharBatches.get(0).contains("1292Name/456/load test-some/with space_and_underscore"));
+    assertThat(nonSpecialCharBatches.get(0).contains("WebTransaction/456/load+test-some/with_under_score1")).isTrue();
+    assertThat(nonSpecialCharBatches.get(0).contains("WebTransaction/456/load+test-some/with_under_score2")).isTrue();
+    assertThat(nonSpecialCharBatches.get(0).contains("1292Name/456/load test-some/with space_and_underscore")).isTrue();
 
     List<Set<String>> specialCharBatches = batchMetricsToCollect.get(METRIC_NAME_SPECIAL_CHARS);
     assertEquals(1, specialCharBatches.size());
-    assertTrue(specialCharBatches.get(0).contains("WebTransaction/special char %?name=s1&value=v1"));
-    assertTrue(specialCharBatches.get(0).contains("WebTransaction/special char %?name=s2&value=v2"));
+    assertThat(specialCharBatches.get(0).contains("WebTransaction/special char %?name=s1&value=v1")).isTrue();
+    assertThat(specialCharBatches.get(0).contains("WebTransaction/special char %?name=s2&value=v2")).isTrue();
   }
 }

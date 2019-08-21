@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -141,22 +140,22 @@ public class WhitelistServiceTest extends WingsBaseTest {
     createWhitelists();
 
     boolean valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_1);
-    assertTrue(valid);
+    assertThat(valid).isTrue();
 
     valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_2);
-    assertTrue(valid);
+    assertThat(valid).isTrue();
 
     valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_3);
-    assertTrue(valid);
+    assertThat(valid).isTrue();
 
     valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_4);
     assertFalse(valid);
 
     valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_5);
-    assertTrue(valid);
+    assertThat(valid).isTrue();
 
     valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_6);
-    assertTrue(valid);
+    assertThat(valid).isTrue();
 
     valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_7);
     assertFalse(valid);
@@ -173,28 +172,28 @@ public class WhitelistServiceTest extends WingsBaseTest {
     when(ipWhitelistingFeature.isAvailableForAccount(accountId)).thenReturn(false);
 
     boolean valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_1);
-    assertTrue(valid);
+    assertThat(valid).isTrue();
 
     valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_2);
-    assertTrue(valid);
+    assertThat(valid).isTrue();
 
     valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_3);
-    assertTrue(valid);
+    assertThat(valid).isTrue();
 
     valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_4);
-    assertTrue(valid);
+    assertThat(valid).isTrue();
 
     valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_5);
-    assertTrue(valid);
+    assertThat(valid).isTrue();
 
     valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_6);
-    assertTrue(valid);
+    assertThat(valid).isTrue();
 
     valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_7);
-    assertTrue(valid);
+    assertThat(valid).isTrue();
 
     valid = whitelistService.isValidIPAddress(accountId, INVALID_IP_ADDRESS);
-    assertTrue(valid);
+    assertThat(valid).isTrue();
   }
 
   private void createWhitelists() {
@@ -387,7 +386,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
     whitelistService.save(whitelist);
 
     boolean delete = whitelistService.delete(accountId, whitelistId);
-    assertTrue(delete);
+    assertThat(delete).isTrue();
 
     Whitelist whitelistAfterDelete = whitelistService.get(accountId, whitelistId);
     assertThat(whitelistAfterDelete).isNull();

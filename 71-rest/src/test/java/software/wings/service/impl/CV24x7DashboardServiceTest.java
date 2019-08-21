@@ -3,9 +3,9 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -135,8 +135,8 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
 
     // assert
     assertEquals("There are 2 tags", 2, result.size());
-    assertTrue("Docker is one of the tags", result.containsKey("Docker"));
-    assertTrue("ECS is one of the tags", result.containsKey("ECS"));
+    assertThat(result.containsKey("Docker")).isTrue();
+    assertThat(result.containsKey("ECS")).isTrue();
   }
 
   @Test

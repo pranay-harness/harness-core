@@ -7,7 +7,6 @@ import static io.harness.threading.Morpheus.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import com.google.inject.Inject;
 
@@ -182,6 +181,6 @@ public class PersistentLockerDBTest extends PersistenceTest {
     }
 
     thread.join();
-    assertTrue(great);
+    assertThat(great).isTrue();
   }
 }

@@ -1,6 +1,6 @@
 package software.wings.service.impl.marketplace.gcp;
 
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
@@ -72,7 +72,7 @@ public class GCPMarketPlaceServiceIntegrationTest extends BaseIntegrationTest {
 
     statsToSave.forEach(it -> {
       val saved = statService.save(it);
-      assertTrue("instance stats should be saved", saved);
+      assertThat(saved).isTrue();
     });
 
     /*gcpMarketPlaceService.createUsageReport(SOME_ACCOUNT_ID);

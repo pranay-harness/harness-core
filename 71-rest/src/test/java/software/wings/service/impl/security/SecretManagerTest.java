@@ -1,9 +1,9 @@
 package software.wings.service.impl.security;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyMap;
@@ -235,9 +235,9 @@ public class SecretManagerTest extends CategoryTest {
     when(wingsPersistence.get(eq(EncryptedData.class), eq(encryptedDataId))).thenReturn(encryptedData);
 
     String yamlRef = secretManager.getEncryptedYamlRef(serviceVariable);
-    assertTrue(yamlRef.startsWith(EncryptionType.VAULT.getYamlName()));
-    assertTrue(yamlRef.contains(vaultConfigName));
-    assertTrue(yamlRef.contains(vaultPath));
+    assertThat(yamlRef.startsWith(EncryptionType.VAULT.getYamlName())).isTrue();
+    assertThat(yamlRef.contains(vaultConfigName)).isTrue();
+    assertThat(yamlRef.contains(vaultPath)).isTrue();
 
     QueryImpl<EncryptedData> query = mock(QueryImpl.class);
     FieldEnd fieldEnd = mock(FieldEnd.class);

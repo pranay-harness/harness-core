@@ -1,8 +1,8 @@
 package software.wings.service.impl;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
@@ -227,10 +227,10 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
         cvService.createDatadogMetricEndPointMap(dockerMetrics, ecsMetrics, null, customMetricsMap);
 
     assertEquals(metricEndPoints.size(), 4);
-    assertTrue(metricEndPoints.keySet().contains(expectedDockerCPUMetricURL));
-    assertTrue(metricEndPoints.keySet().contains(expectedDockerMEMMetricURL));
-    assertTrue(metricEndPoints.keySet().contains(expectedECSMetricURL));
-    assertTrue(metricEndPoints.keySet().contains(expectedCustomMetricURL));
+    assertThat(metricEndPoints.keySet().contains(expectedDockerCPUMetricURL)).isTrue();
+    assertThat(metricEndPoints.keySet().contains(expectedDockerMEMMetricURL)).isTrue();
+    assertThat(metricEndPoints.keySet().contains(expectedECSMetricURL)).isTrue();
+    assertThat(metricEndPoints.keySet().contains(expectedCustomMetricURL)).isTrue();
   }
 
   @Test

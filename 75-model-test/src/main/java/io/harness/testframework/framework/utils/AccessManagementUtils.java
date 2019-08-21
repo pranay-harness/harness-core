@@ -1,7 +1,7 @@
 package io.harness.testframework.framework.utils;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import com.google.gson.JsonObject;
 
@@ -32,33 +32,35 @@ public class AccessManagementUtils {
     logger.info("List the SSO Settings using ReadOnly permission");
     logger.info("The below statement fails for the bug - PL-2335. Disabling it to avoid failures");
 
-    /*assertTrue(Setup.portal()
+    /*assertThat(Setup.portal()
         .auth()
         .oauth2(roBearerToken)
         .queryParam("accountId", getAccount().getUuid())
-        .get("/sso/access-management/" + getAccount().getUuid()).getStatusCode() == HttpStatus.SC_BAD_REQUEST);
+        .get("/sso/access-management/" + getAccount().getUuid()).getStatusCode() == HttpStatus.SC_BAD_REQUEST).isTrue();
     logger.info("List SSO settings failed with Bad request as expected");*/
 
     logger.info("List the APIKeys using ReadOnly permission");
 
-    assertTrue(Setup.portal()
+    assertThat(Setup.portal()
                    .auth()
                    .oauth2(roBearerToken)
                    .queryParam("accountId", account.getUuid())
                    .get("/api-keys")
                    .getStatusCode()
-        == HttpStatus.SC_BAD_REQUEST);
+        == HttpStatus.SC_BAD_REQUEST)
+        .isTrue();
 
     logger.info("List APIKeys failed with Bad request as expected");
 
     logger.info("List the IPWhitelists using ReadOnly permission");
-    assertTrue(Setup.portal()
+    assertThat(Setup.portal()
                    .auth()
                    .oauth2(roBearerToken)
                    .queryParam("accountId", account.getUuid())
                    .get("/whitelist")
                    .getStatusCode()
-        == HttpStatus.SC_BAD_REQUEST);
+        == HttpStatus.SC_BAD_REQUEST)
+        .isTrue();
     logger.info("List IPWhitelists failed with Bad request as expected");
 
     Setup.signOut(readOnlyUserid, roBearerToken);
@@ -73,7 +75,7 @@ public class AccessManagementUtils {
     String roBearerToken = Setup.getAuthToken(userName, password);
     UserInvite invite = UserUtils.createUserInvite(account, email);
     logger.info("Attempting to create a user with expectation : " + expectedInviteStatus);
-    assertTrue(UserUtils.attemptInvite(invite, account, roBearerToken, expectedInviteStatus));
+    assertThat(UserUtils.attemptInvite(invite, account, roBearerToken, expectedInviteStatus)).isTrue();
     Setup.signOut(readOnlyUser.getUuid(), roBearerToken);
     logger.info("Readonly user logout successful");
   }
@@ -121,44 +123,47 @@ public class AccessManagementUtils {
     logger.info("Designated user's Bearer Token issued");
 
     logger.info("Get the user groups using ReadOnly permission");
-    assertTrue(Setup.portal()
+    assertThat(Setup.portal()
                    .auth()
                    .oauth2(roBearerToken)
                    .queryParam("accountId", account.getUuid())
                    .get("/userGroups/" + userGroup.getUuid())
                    .getStatusCode()
-        == expectedStatusCodeForUsersAndGroups);
+        == expectedStatusCodeForUsersAndGroups)
+        .isTrue();
     logger.info("User group test for assert succeeded");
     logger.info("List user groups failed with Bad request as expected");
 
     //    logger.info("List the LDAP Settings using ReadOnly permission");
     //    logger.info("The below statement fails for the bug - PL-2335. Disabling it to avoid failures");
     //
-    //    assertTrue(SSORestUtils.getLdapSettings(account.getUuid(), roBearerToken) == expectedStatusGroupForOthers);
-    //    logger.info("LDAP setting test succeeded");
-    //    assertTrue(SSORestUtils.deleteLDAPSettings(account.getUuid(), bearerToken) == HttpStatus.SC_OK);
+    //    assertThat(SSORestUtils.getLdapSettings(account.getUuid(), roBearerToken) ==
+    //    expectedStatusGroupForOthers).isTrue(); logger.info("LDAP setting test succeeded");
+    //    assertThat(SSORestUtils.deleteLDAPSettings(account.getUuid(), bearerToken) == HttpStatus.SC_OK).isTrue();
     //    logger.info("LDAP setting test for delete succeeded");
 
     logger.info("List the APIKeys using ReadOnly permission");
 
-    assertTrue(Setup.portal()
+    assertThat(Setup.portal()
                    .auth()
                    .oauth2(roBearerToken)
                    .queryParam("accountId", account.getUuid())
                    .get("/api-keys/" + postedEntry.getUuid())
                    .getStatusCode()
-        == expectedStatusGroupForOthers);
+        == expectedStatusGroupForOthers)
+        .isTrue();
 
     logger.info("List APIKeys failed with Bad request as expected");
 
     logger.info("List the IPWhitelists using ReadOnly permission");
-    assertTrue(Setup.portal()
+    assertThat(Setup.portal()
                    .auth()
                    .oauth2(roBearerToken)
                    .queryParam("accountId", account.getUuid())
                    .get("/whitelist/" + ipAdded.getUuid())
                    .getStatusCode()
-        == expectedStatusGroupForOthers);
+        == expectedStatusGroupForOthers)
+        .isTrue();
     logger.info("List IPWhitelists failed with Bad request as expected");
 
     Setup.signOut(readOnlyUser.getUuid(), roBearerToken);
@@ -177,14 +182,15 @@ public class AccessManagementUtils {
     String name = "UserGroup - " + System.currentTimeMillis();
     groupInfoAsJson.addProperty("name", name);
     groupInfoAsJson.addProperty("description", "Test Description - " + System.currentTimeMillis());
-    assertTrue(Setup.portal()
+    assertThat(Setup.portal()
                    .auth()
                    .oauth2(roBearerToken)
                    .queryParam("accountId", account.getUuid())
                    .body(groupInfoAsJson.toString())
                    .post("/userGroups")
                    .getStatusCode()
-        == expectedResult);
+        == expectedResult)
+        .isTrue();
     Setup.signOut(readOnlyUser.getUuid(), roBearerToken);
     logger.info("Readonly user logout successful");
   }
@@ -207,14 +213,15 @@ public class AccessManagementUtils {
     ipToWhiteList.setDescription("Test Whitelisting");
     ipToWhiteList.setStatus(WhitelistStatus.DISABLED);
 
-    assertTrue(Setup.portal()
+    assertThat(Setup.portal()
                    .auth()
                    .oauth2(roBearerToken)
                    .queryParam("accountId", account.getUuid())
                    .body(ipToWhiteList, ObjectMapperType.GSON)
                    .post("/whitelist")
                    .getStatusCode()
-        == expectedOutcome);
+        == expectedOutcome)
+        .isTrue();
 
     logger.info("Adding the IP to be whitelisted");
 
@@ -234,8 +241,8 @@ public class AccessManagementUtils {
     String roBearerToken = Setup.getAuthToken(READ_ONLY_USER, password);
     logger.info("Trying to create LDAP SSO Setting Without Permission");
     LdapSettings ldapSettings = SSOUtils.createDefaultLdapSettings(account.getUuid());
-    TestCase.assertTrue(
-        SSORestUtils.addLdapSettings(account.getUuid(), roBearerToken, ldapSettings) == statusCodeExpected);
+    assertThat(SSORestUtils.addLdapSettings(account.getUuid(), roBearerToken, ldapSettings) == statusCodeExpected)
+        .isTrue();
     logger.info("LDAP creation denied successfully");
 
     Setup.signOut(readOnlyUser.getUuid(), roBearerToken);
@@ -256,8 +263,8 @@ public class AccessManagementUtils {
     filePath = filePath + "/"
         + "src/test/resources/secrets/"
         + "SAML_SSO_Provider.xml";
-    TestCase.assertTrue(
-        SSORestUtils.addSAMLSettings(account.getUuid(), roBearerToken, "SAML", filePath) == statusCodeExpected);
+    assertThat(SSORestUtils.addSAMLSettings(account.getUuid(), roBearerToken, "SAML", filePath) == statusCodeExpected)
+        .isTrue();
     logger.info("SAML creation denied successfully");
     Setup.signOut(readOnlyUser.getUuid(), roBearerToken);
     logger.info("Readonly user logout successful");
@@ -286,21 +293,22 @@ public class AccessManagementUtils {
     logger.info("Logging in as a ReadOnly user");
     String roBearerToken = Setup.getAuthToken(READ_ONLY_USER, password);
 
-    assertTrue(Setup.portal()
+    assertThat(Setup.portal()
                    .auth()
                    .oauth2(roBearerToken)
                    .queryParam("accountId", account.getUuid())
                    .body(ipToWhiteList, ObjectMapperType.GSON)
                    .put("/whitelist/" + ipToWhiteList.getUuid())
                    .getStatusCode()
-        == statusCodeExpected);
+        == statusCodeExpected)
+        .isTrue();
 
     logger.info("Updation of whitelist denied successfully");
     Setup.signOut(readOnlyUser.getUuid(), roBearerToken);
     logger.info("Readonly user logout successful");
 
     logger.info("Deleting the created whitelist entries");
-    TestCase.assertTrue(IPWhitelistingRestUtils.deleteWhitelistedIP(account.getUuid(), bearerToken, ipAdded.getUuid()));
+    assertThat(IPWhitelistingRestUtils.deleteWhitelistedIP(account.getUuid(), bearerToken, ipAdded.getUuid())).isTrue();
   }
 
   public static void updateAndDeleteAPIKeys(Account account, String bearerToken, String userId, String password,
@@ -327,26 +335,29 @@ public class AccessManagementUtils {
     String changedName = "APIKey_Changed - " + System.currentTimeMillis();
     postCreationEntry.setName(changedName);
     postCreationEntry.setUserGroups(null);
-    assertTrue(Setup.portal()
+    assertThat(Setup.portal()
                    .auth()
                    .oauth2(roBearerToken)
                    .queryParam("accountId", account.getUuid())
                    .body(postCreationEntry, ObjectMapperType.GSON)
                    .post("/api-keys")
                    .getStatusCode()
-        == statusCodeExpected);
+        == statusCodeExpected)
+        .isTrue();
 
     logger.info("Updation of APIKeys denied successfully");
 
     logger.info("Deleting the APIKeys without permission");
-    TestCase.assertTrue(ApiKeysRestUtils.deleteApiKey(account.getUuid(), roBearerToken, postCreationEntry.getUuid())
-        == HttpStatus.SC_BAD_REQUEST);
+    assertThat(ApiKeysRestUtils.deleteApiKey(account.getUuid(), roBearerToken, postCreationEntry.getUuid())
+        == HttpStatus.SC_BAD_REQUEST)
+        .isTrue();
     logger.info("Deletion denied successfully");
 
     logger.info("Cleaning up. Deleting the APIKeys now");
 
-    TestCase.assertTrue(
-        ApiKeysRestUtils.deleteApiKey(account.getUuid(), bearerToken, postCreationEntry.getUuid()) == HttpStatus.SC_OK);
+    assertThat(
+        ApiKeysRestUtils.deleteApiKey(account.getUuid(), bearerToken, postCreationEntry.getUuid()) == HttpStatus.SC_OK)
+        .isTrue();
     Setup.signOut(readOnlyUser.getUuid(), roBearerToken);
     logger.info("Readonly user logout successful");
   }
@@ -366,16 +377,17 @@ public class AccessManagementUtils {
     User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), READ_ONLY_USER);
     logger.info("Logging in as a ReadOnly user");
     String roBearerToken = Setup.getAuthToken(READ_ONLY_USER, password);
-    assertTrue(Setup.portal()
+    assertThat(Setup.portal()
                    .auth()
                    .oauth2(roBearerToken)
                    .queryParam("accountId", account.getUuid())
                    .delete("/whitelist/" + ipAdded.getUuid())
                    .getStatusCode()
-        == statusCodeExpected);
+        == statusCodeExpected)
+        .isTrue();
     logger.info("Deletion denied to the given read only/no permission user");
     logger.info("Deleting the created whitelist entries");
-    TestCase.assertTrue(IPWhitelistingRestUtils.deleteWhitelistedIP(account.getUuid(), bearerToken, ipAdded.getUuid()));
+    assertThat(IPWhitelistingRestUtils.deleteWhitelistedIP(account.getUuid(), bearerToken, ipAdded.getUuid())).isTrue();
     Setup.signOut(readOnlyUser.getUuid(), roBearerToken);
     logger.info("Readonly user logout successful");
   }
@@ -400,14 +412,15 @@ public class AccessManagementUtils {
     apiKeyEntry.setName(name);
     logger.info("Creating an APIKey without permission");
 
-    assertTrue(Setup.portal()
+    assertThat(Setup.portal()
                    .auth()
                    .oauth2(roBearerToken)
                    .queryParam("accountId", account.getUuid())
                    .body(apiKeyEntry, ObjectMapperType.GSON)
                    .post("/api-keys")
                    .getStatusCode()
-        == statusCodeExpected);
+        == statusCodeExpected)
+        .isTrue();
 
     logger.info("APIKey creation denied successfully");
 
@@ -417,21 +430,23 @@ public class AccessManagementUtils {
 
   public static void runUserAndGroupsListTest(Account account, String bearerToken, int httpStatus) {
     logger.info("List the users using ReadOnly permission");
-    assertTrue(Setup.portal()
+    assertThat(Setup.portal()
                    .auth()
                    .oauth2(bearerToken)
                    .queryParam("accountId", account.getUuid())
                    .get("/users")
                    .getStatusCode()
-        == httpStatus);
+        == httpStatus)
+        .isTrue();
     logger.info("List users failed with Bad request as expected");
     logger.info("List the user groups using ReadOnly permission");
-    assertTrue(Setup.portal()
+    assertThat(Setup.portal()
                    .auth()
                    .oauth2(bearerToken)
                    .queryParam("accountId", account.getUuid())
                    .get("/userGroups")
                    .getStatusCode()
-        == httpStatus);
+        == httpStatus)
+        .isTrue();
   }
 }

@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml;
 
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -74,11 +74,12 @@ public class YamlGitServiceImplTest extends CategoryTest {
                            .build());
     try {
       yamlGitService.checkForValidNameSyntax(gitFileChanges);
-      assertTrue(false);
+      assertThat(false).isTrue();
     } catch (Exception ex) {
-      assertTrue(ex instanceof WingsException);
-      assertTrue(ex.getMessage().contains(
-          "Invalid entity name, entity can not contain / in the name. Caused invalid file path:"));
+      assertThat(ex instanceof WingsException).isTrue();
+      assertThat(ex.getMessage().contains(
+                     "Invalid entity name, entity can not contain / in the name. Caused invalid file path:"))
+          .isTrue();
     }
   }
 

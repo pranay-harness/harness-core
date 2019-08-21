@@ -3,9 +3,9 @@ package software.wings.integration;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static software.wings.beans.Application.Builder.anApplication;
 
 import com.google.common.collect.Lists;
@@ -85,10 +85,10 @@ public class ThirdPartyApiCallLogsIntegrationTest extends BaseIntegrationTest {
     savedApiCallLogs.forEach(savedApiCallLog -> {
       assertNotNull(savedApiCallLog.getUuid());
       savedApiCallLog.setUuid(null);
-      assertTrue(savedApiCallLog.getCreatedAt() > 0);
+      assertThat(savedApiCallLog.getCreatedAt() > 0).isTrue();
       savedApiCallLog.setCreatedAt(0);
     });
 
-    assertTrue(CollectionUtils.isEqualCollection(apiCallLogs, savedApiCallLogs));
+    assertThat(CollectionUtils.isEqualCollection(apiCallLogs, savedApiCallLogs)).isTrue();
   }
 }

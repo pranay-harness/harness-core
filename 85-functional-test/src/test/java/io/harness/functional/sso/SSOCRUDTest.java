@@ -2,7 +2,7 @@ package io.harness.functional.sso;
 
 import static io.harness.rule.OwnerRule.SWAMY;
 import static junit.framework.TestCase.assertNotNull;
-import static junit.framework.TestCase.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -25,12 +25,13 @@ public class SSOCRUDTest extends AbstractFunctionalTest {
     logger.info("Starting the LDAP test");
     logger.info("Creating LDAP SSO Setting");
     LdapSettings ldapSettings = SSOUtils.createDefaultLdapSettings(getAccount().getUuid());
-    assertTrue(SSORestUtils.addLdapSettings(getAccount().getUuid(), bearerToken, ldapSettings) == HttpStatus.SC_OK);
+    assertThat(SSORestUtils.addLdapSettings(getAccount().getUuid(), bearerToken, ldapSettings) == HttpStatus.SC_OK)
+        .isTrue();
     Object ssoConfig = SSORestUtils.getAccessManagementSettings(getAccount().getUuid(), bearerToken);
     assertNotNull(ssoConfig);
     String ldapId = SSOUtils.getLdapId(ssoConfig);
-    assertTrue(StringUtils.isNotBlank(ldapId));
-    assertTrue(SSORestUtils.deleteLDAPSettings(getAccount().getUuid(), bearerToken) == HttpStatus.SC_OK);
+    assertThat(StringUtils.isNotBlank(ldapId)).isTrue();
+    assertThat(SSORestUtils.deleteLDAPSettings(getAccount().getUuid(), bearerToken) == HttpStatus.SC_OK).isTrue();
     logger.info("LDAP CRUD test completed");
   }
 
@@ -43,10 +44,11 @@ public class SSOCRUDTest extends AbstractFunctionalTest {
     filePath = filePath + "/"
         + "src/test/resources/secrets/"
         + "SAML_SSO_Provider.xml";
-    assertTrue(SSORestUtils.addSAMLSettings(getAccount().getUuid(), bearerToken, "SAML", filePath) == HttpStatus.SC_OK);
+    assertThat(SSORestUtils.addSAMLSettings(getAccount().getUuid(), bearerToken, "SAML", filePath) == HttpStatus.SC_OK)
+        .isTrue();
     Object ssoConfig = SSORestUtils.getAccessManagementSettings(getAccount().getUuid(), bearerToken);
     assertNotNull(ssoConfig);
-    assertTrue(SSORestUtils.deleSAMLSettings(getAccount().getUuid(), bearerToken) == HttpStatus.SC_OK);
+    assertThat(SSORestUtils.deleSAMLSettings(getAccount().getUuid(), bearerToken) == HttpStatus.SC_OK).isTrue();
     logger.info("Done");
   }
 }

@@ -3,7 +3,6 @@ package software.wings.service.impl.instance.stats.collector;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -21,11 +20,11 @@ public class SnapshotTimeProviderTest extends CategoryTest {
 
     SnapshotTimeProvider provider = new SnapshotTimeProvider(lastTs, 10);
 
-    assertTrue(provider.hasNext());
+    assertThat(provider.hasNext()).isTrue();
     Instant updated = lastTs.plus(10, ChronoUnit.MINUTES);
     assertEquals(provider.next(), updated);
 
-    assertTrue(provider.hasNext());
+    assertThat(provider.hasNext()).isTrue();
     updated = updated.plus(10, ChronoUnit.MINUTES);
     assertEquals(provider.next(), updated);
 

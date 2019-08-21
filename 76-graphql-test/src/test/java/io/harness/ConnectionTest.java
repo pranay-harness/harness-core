@@ -1,6 +1,5 @@
 package io.harness;
 
-import static graphql.Assert.assertTrue;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -86,7 +85,7 @@ public class ConnectionTest extends GraphQLTest {
 
       assertThat(pipelineConnection.getPageInfo().getLimit()).isEqualTo(2);
       assertThat(pipelineConnection.getPageInfo().getOffset()).isEqualTo(0);
-      assertTrue(pipelineConnection.getPageInfo().getHasMore());
+      assertThat(pipelineConnection.getPageInfo().getHasMore()).isTrue();
       assertThat(pipelineConnection.getPageInfo().getTotal()).isEqualTo(3);
     }
 
@@ -131,7 +130,7 @@ public class ConnectionTest extends GraphQLTest {
 
       assertThat(pipelineConnection.getPageInfo().getLimit()).isEqualTo(0);
       assertThat(pipelineConnection.getPageInfo().getOffset()).isEqualTo(0);
-      assertTrue(pipelineConnection.getPageInfo().getHasMore());
+      assertThat(pipelineConnection.getPageInfo().getHasMore()).isTrue();
       assertThat(pipelineConnection.getPageInfo().getTotal()).isEqualTo(3);
     }
     {

@@ -1,8 +1,8 @@
 package software.wings.delegatetasks.terraform;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
@@ -38,6 +38,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testParseOutput() {
     String workspaceCommandOutput = "* w1\n  w2\n w3";
-    assertTrue(Arrays.asList("w1", "w2", "w3").equals(terraformProvisionTask.parseOutput(workspaceCommandOutput)));
+    assertThat(Arrays.asList("w1", "w2", "w3").equals(terraformProvisionTask.parseOutput(workspaceCommandOutput)))
+        .isTrue();
   }
 }

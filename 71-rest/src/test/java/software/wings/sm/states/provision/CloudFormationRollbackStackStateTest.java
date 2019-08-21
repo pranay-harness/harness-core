@@ -2,9 +2,9 @@ package software.wings.sm.states.provision;
 
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -121,7 +121,7 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
     assertNotNull(delegateTask);
     assertNotNull(delegateTask.getData().getParameters());
     assertEquals(delegateTask.getData().getParameters().length, 2);
-    assertTrue(delegateTask.getData().getParameters()[0] instanceof CloudFormationCreateStackRequest);
+    assertThat(delegateTask.getData().getParameters()[0] instanceof CloudFormationCreateStackRequest).isTrue();
     CloudFormationCreateStackRequest createStackRequest =
         (CloudFormationCreateStackRequest) delegateTask.getData().getParameters()[0];
     assertEquals(createStackRequest.getCommandType(), CREATE_STACK);

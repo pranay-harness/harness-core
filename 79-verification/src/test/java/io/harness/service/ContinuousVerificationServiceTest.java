@@ -9,7 +9,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
@@ -300,8 +299,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     cvConfigId = wingsPersistence.save(logsCVConfiguration);
 
     logsCVConfiguration = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
-    assertTrue(logsCVConfiguration.getBaselineStartMinute() < 0);
-    assertTrue(logsCVConfiguration.getBaselineEndMinute() < 0);
+    assertThat(logsCVConfiguration.getBaselineStartMinute() < 0).isTrue();
+    assertThat(logsCVConfiguration.getBaselineEndMinute() < 0).isTrue();
   }
 
   @Test
@@ -321,8 +320,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     datadogCvConfigId = wingsPersistence.save(logsCVConfiguration);
 
     logsCVConfiguration = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, datadogCvConfigId);
-    assertTrue(logsCVConfiguration.getBaselineStartMinute() < 0);
-    assertTrue(logsCVConfiguration.getBaselineEndMinute() < 0);
+    assertThat(logsCVConfiguration.getBaselineStartMinute() < 0).isTrue();
+    assertThat(logsCVConfiguration.getBaselineEndMinute() < 0).isTrue();
   }
 
   private DelegateTask updateBaseline(String configId, long currentMinute) {
@@ -711,7 +710,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     wingsPersistence.save(record);
 
     boolean isTriggered = continuousVerificationService.triggerWorkflowDataCollection(context);
-    assertTrue(isTriggered);
+    assertThat(isTriggered).isTrue();
   }
 
   @Test
@@ -730,7 +729,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     wingsPersistence.save(record);
 
     boolean isTriggered = continuousVerificationService.triggerWorkflowDataCollection(context);
-    assertTrue(isTriggered);
+    assertThat(isTriggered).isTrue();
   }
 
   private LogDataRecord createLogDataRecord(long startTimeInterval, StateType stateType) {
@@ -1337,7 +1336,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     ElkDataCollectionInfo elkDataCollectionInfo =
         (ElkDataCollectionInfo) delegateTasks.get(0).getData().getParameters()[0];
     assertEquals(elkDataCollectionInfo.getStartTime(), startTime);
-    assertTrue(elkDataCollectionInfo.getHosts().contains("host1"));
+    assertThat(elkDataCollectionInfo.getHosts().contains("host1")).isTrue();
   }
 
   @Test

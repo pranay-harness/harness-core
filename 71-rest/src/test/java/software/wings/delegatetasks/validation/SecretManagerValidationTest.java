@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.validation;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -53,8 +53,8 @@ public class SecretManagerValidationTest extends CategoryTest {
     validation.setParameters(new Object[] {});
     DelegateConnectionResult result = validation.validateSecretManager();
     assertNotNull(result);
-    assertTrue(result.isValidated());
-    assertTrue(result.getCriteria().contains(EncryptionType.LOCAL.name()));
+    assertThat(result.isValidated()).isTrue();
+    assertThat(result.getCriteria().contains(EncryptionType.LOCAL.name())).isTrue();
   }
 
   @Test
@@ -65,7 +65,7 @@ public class SecretManagerValidationTest extends CategoryTest {
     validation.setParameters(new Object[] {encryptionConfig});
     DelegateConnectionResult result = validation.validateSecretManager();
     assertNotNull(result);
-    assertTrue(result.isValidated());
+    assertThat(result.isValidated()).isTrue();
   }
 
   @Test
@@ -78,7 +78,7 @@ public class SecretManagerValidationTest extends CategoryTest {
     validation.setParameters(new Object[] {encryptedDataDetail});
     DelegateConnectionResult result = validation.validateSecretManager();
     assertNotNull(result);
-    assertTrue(result.isValidated());
+    assertThat(result.isValidated()).isTrue();
   }
 
   @Test
@@ -91,7 +91,7 @@ public class SecretManagerValidationTest extends CategoryTest {
     validation.setParameters(new Object[] {Arrays.asList(encryptedDataDetail)});
     DelegateConnectionResult result = validation.validateSecretManager();
     assertNotNull(result);
-    assertTrue(result.isValidated());
+    assertThat(result.isValidated()).isTrue();
   }
 
   @Test
@@ -100,6 +100,6 @@ public class SecretManagerValidationTest extends CategoryTest {
     validation.setParameters(new Object[] {Arrays.asList(new Object(), new Object())});
     DelegateConnectionResult result = validation.validateSecretManager();
     assertNotNull(result);
-    assertTrue(result.isValidated());
+    assertThat(result.isValidated()).isTrue();
   }
 }

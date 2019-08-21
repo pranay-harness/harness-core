@@ -1,6 +1,6 @@
 package software.wings.verification;
 
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.scm.SecretName;
@@ -49,7 +49,7 @@ public class APMDelegateServiceIntegrationTest extends BaseIntegrationTest {
                                             .build();
     boolean validate = apmDelegateService.validateCollector(config);
 
-    assertTrue(validate);
+    assertThat(validate).isTrue();
   }
 
   @Test
@@ -65,7 +65,7 @@ public class APMDelegateServiceIntegrationTest extends BaseIntegrationTest {
                                             .build();
     boolean validate = apmDelegateService.validateCollector(config);
 
-    assertTrue(validate);
+    assertThat(validate).isTrue();
   }
 
   @Test
@@ -83,7 +83,7 @@ public class APMDelegateServiceIntegrationTest extends BaseIntegrationTest {
     APMValidateCollectorConfig config = ddConfig.createAPMValidateCollectorConfig();
     boolean validate = apmDelegateService.validateCollector(config);
 
-    assertTrue(validate);
+    assertThat(validate).isTrue();
   }
 
   @Test
@@ -101,6 +101,6 @@ public class APMDelegateServiceIntegrationTest extends BaseIntegrationTest {
             .build();
     boolean validate = apmDelegateService.validateCollector(config);
 
-    assertTrue(validate);
+    assertThat(validate).isTrue();
   }
 }

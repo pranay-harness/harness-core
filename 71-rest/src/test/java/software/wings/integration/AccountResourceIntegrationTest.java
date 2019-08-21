@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import io.harness.beans.PageResponse;
 import io.harness.category.element.IntegrationTests;
@@ -52,7 +51,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
     List<User> users = userService.getUsersOfAccount(accountId);
     for (User user : users) {
       if (userService.canEnableOrDisable(user)) {
-        assertTrue(user.isDisabled());
+        assertThat(user.isDisabled()).isTrue();
       }
     }
 
@@ -123,7 +122,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
     assertThat(restResponse.getResponseMessages()).isEmpty();
     String accountStatus = restResponse.getResource();
     assertNotNull(accountStatus);
-    assertTrue(AccountStatus.isValid(accountStatus));
+    assertThat(AccountStatus.isValid(accountStatus)).isTrue();
     return accountStatus;
   }
 
@@ -137,7 +136,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
     assertThat(restResponse.getResponseMessages()).isEmpty();
     Boolean statusUpdated = restResponse.getResource();
     assertNotNull(statusUpdated);
-    assertTrue(statusUpdated);
+    assertThat(statusUpdated).isTrue();
 
     GovernanceConfig governanceConfig = governanceConfigService.get(accountId);
     assertNotNull(governanceConfig);

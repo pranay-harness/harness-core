@@ -1,6 +1,6 @@
 package software.wings.integration.verification;
 
-import static junit.framework.TestCase.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.google.inject.Inject;
@@ -45,7 +45,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
         splunkDelegateService.getClass().getDeclaredMethod("initSplunkServiceWithToken", SplunkConfig.class);
     method.setAccessible(true);
     Object r = method.invoke(splunkDelegateService, config);
-    assertTrue(((Service) r).getToken().startsWith("Splunk"));
+    assertThat(((Service) r).getToken().startsWith("Splunk")).isTrue();
   }
 
   @Test
@@ -64,7 +64,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
         splunkDelegateService.getClass().getDeclaredMethod("initSplunkServiceWithBasicAuth", SplunkConfig.class);
     method.setAccessible(true);
     Object r = method.invoke(splunkDelegateService, config);
-    assertTrue(((Service) r).getToken().startsWith("Basic"));
+    assertThat(((Service) r).getToken().startsWith("Basic")).isTrue();
   }
 
   @Test

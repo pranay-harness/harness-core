@@ -4,7 +4,6 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -220,7 +219,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
 
     assertEquals(expectedDirPaths.size(), ((FolderNode) envFolderNode.getChildren().get(0)).getChildren().size());
     for (DirectoryNode envChildNode : ((FolderNode) envFolderNode.getChildren().get(0)).getChildren()) {
-      assertTrue(expectedDirPaths.contains(envChildNode.getDirectoryPath().getPath()));
+      assertThat(expectedDirPaths.contains(envChildNode.getDirectoryPath().getPath())).isTrue();
       expectedDirPaths.remove(envChildNode.getDirectoryPath().getPath());
     }
 
@@ -245,7 +244,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
 
     assertEquals(expectedDirPaths.size(), ((FolderNode) serviceFolderNode.getChildren().get(0)).getChildren().size());
     for (DirectoryNode serviceChildNode : ((FolderNode) serviceFolderNode.getChildren().get(0)).getChildren()) {
-      assertTrue(expectedDirPaths.contains(serviceChildNode.getDirectoryPath().getPath()));
+      assertThat(expectedDirPaths.contains(serviceChildNode.getDirectoryPath().getPath())).isTrue();
       expectedDirPaths.remove(serviceChildNode.getDirectoryPath().getPath());
     }
 

@@ -2,9 +2,9 @@ package software.wings.integration.service.impl;
 
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
@@ -366,7 +366,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
         Set<String> artifactPaths =
             buildSourceService.getArtifactPaths(appId, jobName, settingAttribute.getUuid(), groupId, streamType.name());
         assertFalse(artifactPaths.isEmpty());
-        assertTrue(artifactPaths.contains(artifactPath));
+        assertThat(artifactPaths.contains(artifactPath)).isTrue();
     }
   }
 
@@ -474,7 +474,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
       case JENKINS:
       case BAMBOO:
       case NEXUS:
-        assertTrue(buildSourceService.validateArtifactSource(appId, settingAttribute.getUuid(), null));
+        assertThat(buildSourceService.validateArtifactSource(appId, settingAttribute.getUuid(), null)).isTrue();
         break;
       case ARTIFACTORY:
         if (repositoryType.equals("docker")) {
@@ -482,8 +482,9 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
         }
         break;
       case DOCKER:
-        assertTrue(buildSourceService.validateArtifactSource(
-            appId, settingAttribute.getUuid(), artifactStream.fetchArtifactStreamAttributes()));
+        assertThat(buildSourceService.validateArtifactSource(
+                       appId, settingAttribute.getUuid(), artifactStream.fetchArtifactStreamAttributes()))
+            .isTrue();
         break;
       case ECR:
         return;

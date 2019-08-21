@@ -1,6 +1,6 @@
 package io.harness.testframework.framework.utils;
 
-import static junit.framework.TestCase.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
@@ -44,7 +44,7 @@ public class UserUtils {
       String domainName, String EXPECTED_SUBJECT) throws IOException, MessagingException {
     List<UserInvite> userInvitationList = UserRestUtils.inviteUser(account, bearerToken, emailId + domainName);
     assertNotNull(userInvitationList);
-    assertTrue(userInvitationList.size() == 1);
+    assertThat(userInvitationList.size() == 1).isTrue();
     // Verify if email is sent, received and has signup link
     // Email check will run every 6 seconds upto 2 mins to see if email is delivered.
     logger.info("Attempting to retrieve signup mail from inbox : " + emailId);
@@ -57,7 +57,7 @@ public class UserUtils {
     String inviteUrl =
         HTMLUtils.retrieveInviteUrlFromEmail(messageDetails.getData().getParts().get(0).getBody(), "SIGN UP");
     assertNotNull(inviteUrl);
-    assertTrue(StringUtils.isNotBlank(inviteUrl));
+    assertThat(StringUtils.isNotBlank(inviteUrl)).isTrue();
     logger.info("Email read and Signup URL is available for user signup");
 
     messageDetails = null;
@@ -65,7 +65,7 @@ public class UserUtils {
     logger.info("Email deleted for the inbox : " + emailId);
     assertNotNull(messageDetails.getAdditionalProperties());
     assertNotNull(messageDetails.getAdditionalProperties().containsKey("status"));
-    assertTrue(messageDetails.getAdditionalProperties().get("status").toString().equals("ok"));
+    assertThat(messageDetails.getAdditionalProperties().get("status").toString().equals("ok")).isTrue();
     return userInvitationList;
   }
 
@@ -79,17 +79,17 @@ public class UserUtils {
     assertNotNull(completed);
     assertFalse("Error : Agreement is true before signup", incomplete.isAgreement());
     assertFalse("Error : Completion is true before signup", incomplete.isCompleted());
-    assertTrue("Error: Completion is false after signup", completed.isCompleted());
-    // Assert.assertTrue("Error : Agreement is false after signup",completed.isAgreement());
+    assertThat(completed.isCompleted()).isTrue();
+    // Assert.assertThat("Error : Agreement is false after signup",completed.isAgreement()).isTrue();
     logger.info(incomplete.getAccountId() + ":" + incomplete.getEmail());
-    assertTrue(incomplete.getEmail().equals(completed.getEmail()));
-    assertTrue(incomplete.getName().equals(completed.getName()));
-    assertTrue(incomplete.getAccountId().equals(completed.getAccountId()));
+    assertThat(incomplete.getEmail().equals(completed.getEmail())).isTrue();
+    assertThat(incomplete.getName().equals(completed.getName())).isTrue();
+    assertThat(incomplete.getAccountId().equals(completed.getAccountId())).isTrue();
     // Verify if the signed-up user can login
     String newBearerToken = Setup.getAuthToken(completed.getEmail(), UserConstants.DEFAULT_PASSWORD);
     assertNotNull("Bearer Token not successfully provided", newBearerToken);
     int statusCode = Setup.signOut(completed.getUuid(), newBearerToken);
-    assertTrue(statusCode == HttpStatus.SC_OK);
+    assertThat(statusCode == HttpStatus.SC_OK).isTrue();
     return completed;
   }
 
@@ -105,7 +105,7 @@ public class UserUtils {
     assertNotNull(messageDetails);
     String resetUrl =
         HTMLUtils.retrieveResetUrlFromEmail(messageDetails.getData().getParts().get(0).getBody(), "RESET PASSWORD");
-    assertTrue(StringUtils.isNotBlank(resetUrl));
+    assertThat(StringUtils.isNotBlank(resetUrl)).isTrue();
     logger.info(""
         + " URL is available for user password reset");
     UserRestUtils.resetPasswordWith(TestUtils.getResetTokenFromUrl(resetUrl), UserConstants.RESET_PASSWORD);
@@ -113,14 +113,14 @@ public class UserUtils {
     String bearerToken = Setup.getAuthToken(completed.getEmail(), UserConstants.RESET_PASSWORD);
     assertNotNull("Bearer Token not successfully provided", bearerToken);
     int statusCode = Setup.signOut(completed.getUuid(), bearerToken);
-    assertTrue(statusCode == HttpStatus.SC_OK);
+    assertThat(statusCode == HttpStatus.SC_OK).isTrue();
     // Delete Email
     messageDetails = null;
     messageDetails = MailinatorRestUtils.deleteEmail(emailId, emailFetchId);
     logger.info("Email deleted for the inbox : " + emailId);
     assertNotNull(messageDetails.getAdditionalProperties());
     assertNotNull(messageDetails.getAdditionalProperties().containsKey("status"));
-    assertTrue(messageDetails.getAdditionalProperties().get("status").toString().equals("ok"));
+    assertThat(messageDetails.getAdditionalProperties().get("status").toString().equals("ok")).isTrue();
     logger.info("All validation completed");
     logger.info("All validation for reset also done");
   }

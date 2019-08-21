@@ -1,7 +1,7 @@
 package io.harness.functional.apikeys;
 
 import static io.harness.rule.OwnerRule.SWAMY;
-import static junit.framework.TestCase.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
 
 import com.google.gson.JsonObject;
@@ -49,10 +49,10 @@ public class AccessMgmtApiKeysTest extends AbstractFunctionalTest {
     logger.info("Validating created APIKeys");
     assertNotNull(postCreationEntry);
     assertNotNull(postCreationEntry.getUuid());
-    assertTrue(postCreationEntry.getName().equals(name));
+    assertThat(postCreationEntry.getName().equals(name)).isTrue();
     assertNotNull(postCreationEntry.getUserGroupIds());
-    assertTrue(postCreationEntry.getUserGroupIds().size() == 1);
-    assertTrue(postCreationEntry.getUserGroupIds().get(0).equals(userGroup.getUuid()));
+    assertThat(postCreationEntry.getUserGroupIds().size() == 1).isTrue();
+    assertThat(postCreationEntry.getUserGroupIds().get(0).equals(userGroup.getUuid())).isTrue();
     logger.info("Updating APIKeys");
     String changedName = "APIKey_Changed - " + System.currentTimeMillis();
     postCreationEntry.setName(changedName);
@@ -61,19 +61,20 @@ public class AccessMgmtApiKeysTest extends AbstractFunctionalTest {
     logger.info("Validating updated APIKeys");
     assertNotNull(postCreationEntry);
     assertNotNull(postCreationEntry.getUuid());
-    assertTrue(postCreationEntry.getName().equals(changedName));
+    assertThat(postCreationEntry.getName().equals(changedName)).isTrue();
     assertNotNull(postCreationEntry.getUserGroupIds());
-    assertTrue(postCreationEntry.getUserGroupIds().size() == 1);
-    assertTrue(postCreationEntry.getUserGroupIds().get(0).equals(userGroup.getUuid()));
+    assertThat(postCreationEntry.getUserGroupIds().size() == 1).isTrue();
+    assertThat(postCreationEntry.getUserGroupIds().get(0).equals(userGroup.getUuid())).isTrue();
     ApiKeyEntry retrievedAPIKey =
         ApiKeysRestUtils.getApiKey(getAccount().getUuid(), bearerToken, postCreationEntry.getUuid());
     assertNotNull(retrievedAPIKey);
     assertNotNull(retrievedAPIKey.getUuid());
-    assertTrue(postCreationEntry.getUuid().equals(retrievedAPIKey.getUuid()));
-    assertTrue(ApiKeysRestUtils.deleteApiKey(getAccount().getUuid(), bearerToken, retrievedAPIKey.getUuid())
-        == HttpStatus.SC_OK);
+    assertThat(postCreationEntry.getUuid().equals(retrievedAPIKey.getUuid())).isTrue();
+    assertThat(ApiKeysRestUtils.deleteApiKey(getAccount().getUuid(), bearerToken, retrievedAPIKey.getUuid())
+        == HttpStatus.SC_OK)
+        .isTrue();
     logger.info("APIKey CRUD test completed");
-    assertTrue(UserGroupRestUtils.deleteUserGroup(getAccount(), bearerToken, userGroup.getUuid()));
+    assertThat(UserGroupRestUtils.deleteUserGroup(getAccount(), bearerToken, userGroup.getUuid())).isTrue();
     logger.info("Deleted Usergroup");
   }
 }

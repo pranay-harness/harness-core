@@ -3,7 +3,6 @@ package io.harness.limits.configuration;
 import static io.harness.limits.ActionType.CREATE_APPLICATION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import com.google.inject.Inject;
 
@@ -52,7 +51,7 @@ public class LimitConfigurationServiceMongoIntegrationTest extends BaseIntegrati
   public void testSaveAndGet() {
     ConfiguredLimit<StaticLimit> cl = new ConfiguredLimit<>(SOME_ACCOUNT_ID, new StaticLimit(10), CREATE_APPLICATION);
     boolean configured = configuredLimitService.configure(cl.getAccountId(), CREATE_APPLICATION, cl.getLimit());
-    assertTrue(configured);
+    assertThat(configured).isTrue();
 
     ConfiguredLimit fetchedValue = configuredLimitService.get(SOME_ACCOUNT_ID, CREATE_APPLICATION);
     assertEquals(cl, fetchedValue);
@@ -66,17 +65,17 @@ public class LimitConfigurationServiceMongoIntegrationTest extends BaseIntegrati
   public void testUpsert() {
     String accountId = SOME_ACCOUNT_ID;
     boolean configured = configuredLimitService.configure(accountId, CREATE_APPLICATION, new StaticLimit(10));
-    assertTrue(configured);
+    assertThat(configured).isTrue();
     ConfiguredLimit fetchedValue = configuredLimitService.get(accountId, CREATE_APPLICATION);
     assertEquals(new StaticLimit(10), fetchedValue.getLimit());
 
     configured = configuredLimitService.configure(accountId, CREATE_APPLICATION, new StaticLimit(20));
-    assertTrue(configured);
+    assertThat(configured).isTrue();
     fetchedValue = configuredLimitService.get(accountId, CREATE_APPLICATION);
     assertEquals(new StaticLimit(20), fetchedValue.getLimit());
 
     configured = configuredLimitService.configure(accountId, CREATE_APPLICATION, new StaticLimit(30));
-    assertTrue(configured);
+    assertThat(configured).isTrue();
     fetchedValue = configuredLimitService.get(accountId, CREATE_APPLICATION);
     assertEquals(new StaticLimit(30), fetchedValue.getLimit());
   }
@@ -90,7 +89,7 @@ public class LimitConfigurationServiceMongoIntegrationTest extends BaseIntegrati
 
     ConfiguredLimit<RateLimit> cl = new ConfiguredLimit<>(accountId, limit, CREATE_APPLICATION);
     boolean configured = configuredLimitService.configure(accountId, CREATE_APPLICATION, cl.getLimit());
-    assertTrue(configured);
+    assertThat(configured).isTrue();
     ConfiguredLimit fetchedValue = configuredLimitService.get(accountId, CREATE_APPLICATION);
     assertEquals(cl, fetchedValue);
 
@@ -98,7 +97,7 @@ public class LimitConfigurationServiceMongoIntegrationTest extends BaseIntegrati
 
     cl = new ConfiguredLimit<>(accountId, limit, CREATE_APPLICATION);
     configured = configuredLimitService.configure(accountId, CREATE_APPLICATION, cl.getLimit());
-    assertTrue(configured);
+    assertThat(configured).isTrue();
     fetchedValue = configuredLimitService.get(accountId, CREATE_APPLICATION);
     assertEquals(cl, fetchedValue);
   }

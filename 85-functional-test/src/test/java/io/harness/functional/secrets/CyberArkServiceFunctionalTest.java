@@ -3,7 +3,7 @@ package io.harness.functional.secrets;
 import static io.harness.rule.OwnerRule.MARK;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
-import static junit.framework.TestCase.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
@@ -73,7 +73,7 @@ public class CyberArkServiceFunctionalTest extends AbstractFunctionalTest {
       wingsPersistence.save(cyberArkConfig);
 
       List<CyberArkConfig> cyberArkConfigs = listConfigs(getAccount().getUuid());
-      assertTrue(cyberArkConfigs.size() > 0);
+      assertThat(cyberArkConfigs.size() > 0).isTrue();
 
       String secretName = "MyCyberArkSecret";
       // String query = "Safe=Test;Folder=root\\OS\\Windows;Object=windows1";
@@ -81,10 +81,10 @@ public class CyberArkServiceFunctionalTest extends AbstractFunctionalTest {
       SecretText secretText = SecretText.builder().name(secretName).path(query).build();
 
       secretId = SecretsRestUtils.addSecret(getAccount().getUuid(), bearerToken, secretText);
-      assertTrue(StringUtils.isNotBlank(secretId));
+      assertThat(StringUtils.isNotBlank(secretId)).isTrue();
 
       List<EncryptedData> encryptedDataList = SecretsRestUtils.listSecrets(getAccount().getUuid(), bearerToken);
-      assertTrue(encryptedDataList.size() > 0);
+      assertThat(encryptedDataList.size() > 0).isTrue();
 
       EncryptedData data = wingsPersistence.get(EncryptedData.class, secretId);
       assertNotNull(data);
@@ -92,14 +92,14 @@ public class CyberArkServiceFunctionalTest extends AbstractFunctionalTest {
       // Verifying the secret decryption
       cyberArkConfig.setClientCertificate(clientCertificate);
       char[] decrypted = secretManagementDelegateService.decrypt(data, cyberArkConfig);
-      assertTrue(EmptyPredicate.isNotEmpty(decrypted));
+      assertThat(EmptyPredicate.isNotEmpty(decrypted)).isTrue();
       String decryptedSecret = String.valueOf(decrypted);
       logger.info("Decrypted value: {}", decryptedSecret);
       assertEquals(":m23LF6f", decryptedSecret);
     } finally {
       if (secretId != null) {
         boolean deleted = SecretsRestUtils.deleteSecret(getAccount().getUuid(), bearerToken, secretId);
-        assertTrue(deleted);
+        assertThat(deleted).isTrue();
         logger.info("Secret with id {} has been deleted: {}", secretId, deleted);
       }
       if (secretsManagerId != null) {
