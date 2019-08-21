@@ -50,7 +50,7 @@ public class StackDriverIntegrationTest extends BaseIntegrationTest {
   private String appId;
   private String workflowId;
   private String workflowExecutionId;
-  private String GOOGLE_ACCOUNT = "harness-exploration";
+  private static final String GCP_PLAYGROUND = "playground-gke-gcs-gcr";
 
   @Before
   public void setUp() throws Exception {
@@ -66,7 +66,7 @@ public class StackDriverIntegrationTest extends BaseIntegrationTest {
                               .appId(appId)
                               .displayName(generateUuid())
                               .build());
-    SettingAttribute settingAttribute = settingsService.getByName(accountId, Application.GLOBAL_APP_ID, GOOGLE_ACCOUNT);
+    SettingAttribute settingAttribute = settingsService.getByName(accountId, Application.GLOBAL_APP_ID, GCP_PLAYGROUND);
     assertNotNull(settingAttribute);
     gcpConfigId = settingAttribute.getUuid();
     assertThat(isNotEmpty(gcpConfigId)).isTrue();
@@ -112,6 +112,30 @@ public class StackDriverIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<Map<String, String>>>() {});
 
     assertThat(restResponse.getResource().size() > 0).isTrue();
+  }
+
+  @Test
+  @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
+  @Category(IntegrationTests.class)
+  public void testGetSampleRecord() throws Exception {
+    String guid = generateUuid();
+    StackDriverSetupTestNodeData setupTestNodedata = StackDriverSetupTestNodeData.builder()
+                                                         .appId(appId)
+                                                         .settingId(gcpConfigId)
+                                                         .query("exception")
+                                                         .guid(guid)
+                                                         .build();
+    WebTarget target = client.target(API_BASE + "/stackdriver/get-sample-record?accountId=" + accountId);
+    Response restResponse =
+        getRequestBuilderWithAuthHeader(target).post(entity(setupTestNodedata, MediaType.APPLICATION_JSON));
+
+    String responseString = restResponse.readEntity(String.class);
+    JSONObject jsonResponseObject = new JSONObject(responseString);
+
+    JSONObject response = jsonResponseObject.getJSONObject("resource");
+    assertEquals("Request failed", restResponse.getStatus(), HttpStatus.SC_OK);
+    assertNotNull(response.get("severity"));
+    assertNotNull(response.get("textPayload"));
   }
 
   private StackDriverSetupTestNodeData getStackDriverSetupTestNodedata() {

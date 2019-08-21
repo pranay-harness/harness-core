@@ -99,7 +99,30 @@ public class StackDriverServiceImpl implements StackDriverService {
     } catch (Exception e) {
       logger.info("error getting metric data for node", e);
       throw new WingsException(STACKDRIVER_ERROR)
-          .addParam("message", "Error in getting metric data for the node. " + e.getMessage());
+          .addParam("reason", "Error in getting metric data for the node. " + e.getMessage());
+    }
+  }
+
+  @Override
+  public Object getLogSample(String accountId, String serverConfigId, String query, String guid) {
+    try {
+      final SettingAttribute settingAttribute = settingsService.get(serverConfigId);
+      List<EncryptedDataDetail> encryptionDetails =
+          secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
+      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                            .accountId(settingAttribute.getAccountId())
+                                            .appId(GLOBAL_APP_ID)
+                                            .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT * 3)
+                                            .build();
+
+      return delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)
+          .getLogSample((GcpConfig) settingAttribute.getValue(), encryptionDetails, query,
+              createApiCallLog(accountId, guid), System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1),
+              System.currentTimeMillis());
+    } catch (Exception e) {
+      logger.info("error getting metric data for node", e);
+      throw new WingsException(STACKDRIVER_ERROR)
+          .addParam("reason", "Error in getting sample log data." + e.getMessage());
     }
   }
 

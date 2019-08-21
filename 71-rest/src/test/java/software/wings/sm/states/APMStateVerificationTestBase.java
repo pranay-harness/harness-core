@@ -27,7 +27,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
-import software.wings.common.Constants;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.AppPermissionSummary;
@@ -125,7 +124,8 @@ public class APMStateVerificationTestBase extends WingsBaseTest {
 
     when(phaseElement.getServiceElement())
         .thenReturn(ServiceElement.Builder.aServiceElement().withName("dummy").withUuid("1").build());
-    when(executionContext.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM)).thenReturn(phaseElement);
+    when(executionContext.getContextElement(ContextElementType.PARAM, AbstractAnalysisStateTest.PHASE_PARAM))
+        .thenReturn(phaseElement);
     when(environment.getName()).thenReturn("dummy env");
     when(executionContext.getEnv()).thenReturn(environment);
     when(application.getName()).thenReturn("dummuy app");

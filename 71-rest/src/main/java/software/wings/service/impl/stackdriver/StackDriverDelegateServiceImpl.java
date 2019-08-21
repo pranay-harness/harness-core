@@ -349,4 +349,15 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
 
     return queryBuilder.toString() + "\"";
   }
+
+  @Override
+  public Object getLogSample(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String query,
+      ThirdPartyApiCallLog apiCallLog, long startTime, long endTime) {
+    final List<LogEntry> logEntries = fetchLogs(
+        query, startTime, endTime, apiCallLog, Collections.emptySet(), null, gcpConfig, encryptionDetails, true);
+    if (isEmpty(logEntries)) {
+      return null;
+    }
+    return logEntries.get(0);
+  }
 }
