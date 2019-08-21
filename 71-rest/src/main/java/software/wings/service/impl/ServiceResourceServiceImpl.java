@@ -885,18 +885,20 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           USER);
     }
 
-    List<InfrastructureProvisioner> provisioners = infrastructureProvisionerService.listByBlueprintDetails(
-        service.getAppId(), null, service.getUuid(), null, null);
+    if (!featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)) {
+      List<InfrastructureProvisioner> provisioners = infrastructureProvisionerService.listByBlueprintDetails(
+          service.getAppId(), null, service.getUuid(), null, null);
 
-    if (isNotEmpty(provisioners)) {
-      String infrastructureProvisionerNames =
-          provisioners.stream().map(InfrastructureProvisioner::getName).collect(joining(","));
-      throw new InvalidRequestException(
-          format("Service [%s] couldn't be deleted. Remove Service reference from the following "
-                  + plural("infrastructure provisioner", provisioners.size()) + " [" + infrastructureProvisionerNames
-                  + "] ",
-              service.getName()),
-          USER);
+      if (isNotEmpty(provisioners)) {
+        String infrastructureProvisionerNames =
+            provisioners.stream().map(InfrastructureProvisioner::getName).collect(joining(","));
+        throw new InvalidRequestException(
+            format("Service [%s] couldn't be deleted. Remove Service reference from the following "
+                    + plural("infrastructure provisioner", provisioners.size()) + " [" + infrastructureProvisionerNames
+                    + "] ",
+                service.getName()),
+            USER);
+      }
     }
 
     List<String> refPipelines =
@@ -2432,9 +2434,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public List<Service> listByDeploymentType(String appId, String deploymentType) {
-    return wingsPersistence.createQuery(Service.class)
-        .filter(ServiceKeys.appId, appId)
-        .filter(ServiceKeys.deploymentType, deploymentType)
-        .asList();
+    Query<Service> query = wingsPersistence.createQuery(Service.class).field(ServiceKeys.appId).equal(appId);
+    query.or(query.criteria(ServiceKeys.deploymentType).equal(deploymentType),
+        query.criteria(ServiceKeys.deploymentType).doesNotExist(),
+        query.criteria(ServiceKeys.deploymentType).equal(null));
+    return query.asList();
   }
 }
