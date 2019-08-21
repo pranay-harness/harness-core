@@ -1,6 +1,6 @@
 package io.harness.testframework.restutils;
 
-import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
@@ -30,7 +30,7 @@ public class SSHKeysUtils {
             .build();
 
     JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
-    assertNotNull(setAttrResponse);
+    assertThat(setAttrResponse).isNotNull();
     return setAttrResponse.getString("resource.uuid").trim();
   }
 

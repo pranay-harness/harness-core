@@ -3,7 +3,6 @@ package software.wings.service.impl.security;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyMap;
@@ -248,7 +247,7 @@ public class SecretManagerTest extends CategoryTest {
 
     doNothing().when(auditServiceHelper).reportForAuditingUsingAccountId(anyString(), any(), any(), any());
     EncryptedData encryptedDataFromYaml = secretManager.getEncryptedDataFromYamlRef(yamlRef, accountId);
-    assertNotNull(encryptedDataFromYaml);
+    assertThat(encryptedDataFromYaml).isNotNull();
     verify(wingsPersistence, times(1)).save(any(EncryptedData.class));
   }
 

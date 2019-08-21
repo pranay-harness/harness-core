@@ -1,6 +1,6 @@
 package io.harness.testframework.restutils;
 
-import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import io.harness.scm.ScmSecret;
@@ -26,13 +26,13 @@ public class CloudProviderUtils {
             .build();
 
     JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
-    assertNotNull(setAttrResponse);
+    assertThat(setAttrResponse).isNotNull();
     return setAttrResponse.getString("resource.uuid").trim();
   }
 
   public static String createGCPCloudProvider(String bearerToken, String cloudProviderName, String accountId) {
     JsonPath setAttrResponse = SettingsUtils.createGCP(bearerToken, accountId, cloudProviderName);
-    assertNotNull(setAttrResponse);
+    assertThat(setAttrResponse).isNotNull();
     return setAttrResponse.getString("resource.uuid").trim();
   }
 }

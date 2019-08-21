@@ -2,7 +2,6 @@ package io.harness.functional.rbac;
 
 import static io.harness.rule.OwnerRule.SWAMY;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 
 import com.google.gson.JsonObject;
 
@@ -33,7 +32,7 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
     User readOnlyUser = UserUtils.getUser(bearerToken, getAccount().getUuid(), READ_ONLY_USER);
     logger.info("Logging in as a ReadOnly user");
     String roBearerToken = Setup.getAuthToken(READ_ONLY_USER, "readonlyuser");
-    assertNotNull(readOnlyUser);
+    assertThat(readOnlyUser).isNotNull();
     logger.info("List the users using ReadOnly permission");
     assertThat(Setup.portal()
                    .auth()
@@ -165,7 +164,7 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
     groupInfoAsJson.addProperty("name", userGroupname);
     groupInfoAsJson.addProperty("description", "Test Description - " + System.currentTimeMillis());
     UserGroup userGroup = UserGroupUtils.createUserGroup(getAccount(), bearerToken, groupInfoAsJson);
-    assertNotNull(userGroup);
+    assertThat(userGroup).isNotNull();
     return userGroup;
   }
 }

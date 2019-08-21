@@ -1,7 +1,6 @@
 package software.wings.delegatetasks.validation;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -52,7 +51,7 @@ public class SecretManagerValidationTest extends CategoryTest {
   public void testValidationWithNullEncryptionType() {
     validation.setParameters(new Object[] {});
     DelegateConnectionResult result = validation.validateSecretManager();
-    assertNotNull(result);
+    assertThat(result).isNotNull();
     assertThat(result.isValidated()).isTrue();
     assertThat(result.getCriteria().contains(EncryptionType.LOCAL.name())).isTrue();
   }
@@ -64,7 +63,7 @@ public class SecretManagerValidationTest extends CategoryTest {
     when(encryptionConfig.getEncryptionServiceUrl()).thenReturn("https://www.google.com");
     validation.setParameters(new Object[] {encryptionConfig});
     DelegateConnectionResult result = validation.validateSecretManager();
-    assertNotNull(result);
+    assertThat(result).isNotNull();
     assertThat(result.isValidated()).isTrue();
   }
 
@@ -77,7 +76,7 @@ public class SecretManagerValidationTest extends CategoryTest {
     when(encryptedDataDetail.getEncryptionConfig()).thenReturn(encryptionConfig);
     validation.setParameters(new Object[] {encryptedDataDetail});
     DelegateConnectionResult result = validation.validateSecretManager();
-    assertNotNull(result);
+    assertThat(result).isNotNull();
     assertThat(result.isValidated()).isTrue();
   }
 
@@ -90,7 +89,7 @@ public class SecretManagerValidationTest extends CategoryTest {
     when(encryptedDataDetail.getEncryptionConfig()).thenReturn(encryptionConfig);
     validation.setParameters(new Object[] {Arrays.asList(encryptedDataDetail)});
     DelegateConnectionResult result = validation.validateSecretManager();
-    assertNotNull(result);
+    assertThat(result).isNotNull();
     assertThat(result.isValidated()).isTrue();
   }
 
@@ -99,7 +98,7 @@ public class SecretManagerValidationTest extends CategoryTest {
   public void testValidationWithListOfNonEncryptedObjects() {
     validation.setParameters(new Object[] {Arrays.asList(new Object(), new Object())});
     DelegateConnectionResult result = validation.validateSecretManager();
-    assertNotNull(result);
+    assertThat(result).isNotNull();
     assertThat(result.isValidated()).isTrue();
   }
 }

@@ -5,7 +5,6 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static software.wings.beans.Application.Builder.anApplication;
 
 import com.google.common.collect.Lists;
@@ -83,7 +82,7 @@ public class ThirdPartyApiCallLogsIntegrationTest extends BaseIntegrationTest {
     List<ThirdPartyApiCallLog> savedApiCallLogs = logResponse.getResource().getResponse();
     assertEquals(numOfApiCallLogs, savedApiCallLogs.size());
     savedApiCallLogs.forEach(savedApiCallLog -> {
-      assertNotNull(savedApiCallLog.getUuid());
+      assertThat(savedApiCallLog.getUuid()).isNotNull();
       savedApiCallLog.setUuid(null);
       assertThat(savedApiCallLog.getCreatedAt() > 0).isTrue();
       savedApiCallLog.setCreatedAt(0);

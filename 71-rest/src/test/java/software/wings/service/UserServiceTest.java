@@ -8,7 +8,6 @@ import static io.harness.rule.OwnerRule.RAGHU;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mockito.Matchers.any;
@@ -367,7 +366,7 @@ public class UserServiceTest extends WingsBaseTest {
     verify(emailDataNotificationService).send(emailDataArgumentCaptor.capture());
 
     String templateUrl = ((Map<String, String>) emailDataArgumentCaptor.getValue().getTemplateModel()).get("url");
-    assertNotNull(templateUrl);
+    assertThat(templateUrl).isNotNull();
     assertThat(UrlValidator.getInstance().isValid(templateUrl)).isTrue();
     assertThat(templateUrl.startsWith("https://qa.harness.io/#")).isTrue();
     assertThat(templateUrl.contains("inviteId=" + inviteId)).isTrue();

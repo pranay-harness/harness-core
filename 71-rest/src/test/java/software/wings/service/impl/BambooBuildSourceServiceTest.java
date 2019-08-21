@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
@@ -152,6 +151,6 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
 
     BuildDetails build =
         buildSourceService.getLastSuccessfulBuild(appId, artifactStream.getUuid(), settingAttribute.getUuid());
-    assertNotNull(build);
+    assertThat(build).isNotNull();
   }
 }

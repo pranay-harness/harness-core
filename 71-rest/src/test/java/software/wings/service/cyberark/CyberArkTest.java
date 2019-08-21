@@ -4,7 +4,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
@@ -246,7 +245,7 @@ public class CyberArkTest extends WingsBaseTest {
     // Encrypt of path reference will use a CyberArk decryption to validate the reference
     EncryptedData encryptedData = secretManager.encrypt(EncryptionType.CYBERARK, accountId,
         SettingVariableTypes.ARTIFACTORY, null, queryAsPath, null, secretName, new UsageRestrictions());
-    assertNotNull(encryptedData);
+    assertThat(encryptedData).isNotNull();
     assertEquals(EncryptionType.CYBERARK, encryptedData.getEncryptionType());
     assertEquals(SettingVariableTypes.ARTIFACTORY, encryptedData.getType());
     assertThat(encryptedData.getEncryptedValue()).isNull();
@@ -255,7 +254,7 @@ public class CyberArkTest extends WingsBaseTest {
     // creating new reference now.
     encryptedData = secretManager.encrypt(EncryptionType.CYBERARK, accountId, SettingVariableTypes.ARTIFACTORY,
         secretValue.toCharArray(), null, null, secretName, new UsageRestrictions());
-    assertNotNull(encryptedData);
+    assertThat(encryptedData).isNotNull();
     if (isGlobalKmsEnabled) {
       assertEquals(EncryptionType.KMS, encryptedData.getEncryptionType());
       assertEquals(kmsId, encryptedData.getKmsId());
@@ -263,7 +262,7 @@ public class CyberArkTest extends WingsBaseTest {
       assertEquals(EncryptionType.LOCAL, encryptedData.getEncryptionType());
     }
     assertEquals(SettingVariableTypes.ARTIFACTORY, encryptedData.getType());
-    assertNotNull(encryptedData.getEncryptedValue());
+    assertThat(encryptedData.getEncryptedValue()).isNotNull();
   }
 
   @Test
@@ -288,7 +287,7 @@ public class CyberArkTest extends WingsBaseTest {
 
     EncryptedData encryptedPasswordData =
         wingsPersistence.get(EncryptedData.class, savedJenkinsConfig.getEncryptedPassword());
-    assertNotNull(encryptedPasswordData);
+    assertThat(encryptedPasswordData).isNotNull();
     assertEquals(SettingVariableTypes.JENKINS, encryptedPasswordData.getType());
     if (isGlobalKmsEnabled) {
       assertEquals(EncryptionType.KMS, encryptedPasswordData.getEncryptionType());
@@ -299,12 +298,12 @@ public class CyberArkTest extends WingsBaseTest {
       decryptedValue = localEncryptionService.decrypt(encryptedPasswordData, accountId, localEncryptionConfig);
     }
 
-    assertNotNull(decryptedValue);
+    assertThat(decryptedValue).isNotNull();
     assertEquals(new String(jenkinsConfig.getPassword()), new String(decryptedValue));
 
     EncryptedData encryptedTokenData =
         wingsPersistence.get(EncryptedData.class, savedJenkinsConfig.getEncryptedToken());
-    assertNotNull(encryptedTokenData);
+    assertThat(encryptedTokenData).isNotNull();
     assertEquals(SettingVariableTypes.JENKINS, encryptedTokenData.getType());
     if (isGlobalKmsEnabled) {
       assertEquals(EncryptionType.KMS, encryptedTokenData.getEncryptionType());

@@ -3,7 +3,6 @@ package software.wings.integration;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.rest.RestResponse;
@@ -41,7 +40,7 @@ public class SecretManagerIntegrationTest extends BaseIntegrationTest {
     // Verify vault config was successfully created.
     assertThat(createResponse.getResponseMessages()).isEmpty();
     String secretUuid = createResponse.getResource();
-    assertNotNull(secretUuid);
+    assertThat(secretUuid).isNotNull();
 
     // 2. Update the secret text.
     target = client.target(API_BASE + "/secrets/update-secret?accountId=" + accountId + "&uuid=" + secretUuid);
@@ -70,7 +69,7 @@ public class SecretManagerIntegrationTest extends BaseIntegrationTest {
     // Verify vault config was successfully created.
     assertThat(createResponse.getResponseMessages()).isEmpty();
     String secretUuid = createResponse.getResource();
-    assertNotNull(secretUuid);
+    assertThat(secretUuid).isNotNull();
 
     // 2. Update the encrypted file.
     target = client.target(API_BASE + "/secrets/update-file?accountId=" + accountId);

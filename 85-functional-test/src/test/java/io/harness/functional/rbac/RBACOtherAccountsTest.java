@@ -2,7 +2,6 @@ package io.harness.functional.rbac;
 
 import static io.harness.rule.OwnerRule.SWAMY;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 import static software.wings.beans.Application.Builder.anApplication;
 
 import io.harness.category.element.FunctionalTests;
@@ -37,7 +36,7 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
   public void rbacManageUsersAndGroupsSetup() {
     logger.info("Running RBAC setup");
     User readOnlyUser = UserUtils.getUser(bearerToken, getAccount().getUuid(), RBAC_USER);
-    assertNotNull(readOnlyUser);
+    assertThat(readOnlyUser).isNotNull();
     userGroupManagementId = readOnlyUser.getUuid();
     userGroup = UserGroupUtils.createUserGroup(
         getAccount(), bearerToken, userGroupManagementId, PermissionTypes.ACCOUNT_MANAGEMENT.toString());
@@ -127,7 +126,7 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
     final String appName = "TestApp" + System.currentTimeMillis();
     Application application = anApplication().name(appName).build();
     Application createdApp = ApplicationRestUtils.createApplication(bearerToken, getAccount(), application);
-    assertNotNull(createdApp);
+    assertThat(createdApp).isNotNull();
     assertThat(ApplicationRestUtils.deleteApplication(roBearerToken, createdApp.getUuid(), getAccount().getUuid())
         == HttpStatus.SC_BAD_REQUEST)
         .isTrue();

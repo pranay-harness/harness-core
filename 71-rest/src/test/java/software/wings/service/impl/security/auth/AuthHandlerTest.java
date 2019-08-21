@@ -6,7 +6,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
@@ -916,9 +915,9 @@ public class AuthHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testBuildNonProdSupportUserGroup() {
     UserGroup userGroup = authHandler.buildNonProdSupportUserGroup(ACCOUNT_ID);
-    assertNotNull(userGroup);
-    assertNotNull(userGroup.getAccountPermissions());
-    assertNotNull(userGroup.getAppPermissions());
+    assertThat(userGroup).isNotNull();
+    assertThat(userGroup.getAccountPermissions()).isNotNull();
+    assertThat(userGroup.getAppPermissions()).isNotNull();
 
     AccountPermissions accountPermissions = userGroup.getAccountPermissions();
     assertEquals(1, accountPermissions.getPermissions().size());
@@ -929,9 +928,9 @@ public class AuthHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testBuildProdSupportUserGroup() {
     UserGroup userGroup = authHandler.buildProdSupportUserGroup(ACCOUNT_ID);
-    assertNotNull(userGroup);
-    assertNotNull(userGroup.getAccountPermissions());
-    assertNotNull(userGroup.getAppPermissions());
+    assertThat(userGroup).isNotNull();
+    assertThat(userGroup.getAccountPermissions()).isNotNull();
+    assertThat(userGroup.getAppPermissions()).isNotNull();
 
     AccountPermissions accountPermissions = userGroup.getAccountPermissions();
     assertEquals(1, accountPermissions.getPermissions().size());

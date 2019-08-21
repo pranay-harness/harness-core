@@ -4,7 +4,6 @@ import static io.harness.delegate.command.CommandExecutionResult.CommandExecutio
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -118,8 +117,8 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(mockDelegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
-    assertNotNull(delegateTask);
-    assertNotNull(delegateTask.getData().getParameters());
+    assertThat(delegateTask).isNotNull();
+    assertThat(delegateTask.getData().getParameters()).isNotNull();
     assertEquals(delegateTask.getData().getParameters().length, 2);
     assertThat(delegateTask.getData().getParameters()[0] instanceof CloudFormationCreateStackRequest).isTrue();
     CloudFormationCreateStackRequest createStackRequest =
@@ -128,7 +127,7 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
     assertEquals(createStackRequest.getData(), "oldBody");
     assertEquals(createStackRequest.getTimeoutInMs(), 1000);
     Map<String, String> stackParam = createStackRequest.getVariables();
-    assertNotNull(stackParam);
+    assertThat(stackParam).isNotNull();
     assertEquals(stackParam.size(), 1);
     assertEquals(stackParam.get("oldKey"), "oldVal");
   }

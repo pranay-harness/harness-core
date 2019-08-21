@@ -3,7 +3,6 @@ package software.wings.service.impl.verification;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import com.google.inject.Inject;
 
@@ -90,7 +89,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
 
     timeSeriesToAnalyze.forEach(timeSeries -> {
       TimeSeriesMetricDefinition metricDefinition = actualDefinitions.get(timeSeries.getMetricName());
-      assertNotNull(metricDefinition);
+      assertThat(metricDefinition).isNotNull();
       assertEquals(timeSeries.getMetricName(), metricDefinition.getMetricName());
       assertEquals(timeSeries.getMetricType(), metricDefinition.getMetricType().name());
     });

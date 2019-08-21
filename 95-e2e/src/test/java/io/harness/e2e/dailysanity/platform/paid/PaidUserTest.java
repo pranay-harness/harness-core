@@ -2,7 +2,6 @@ package io.harness.e2e.dailysanity.platform.paid;
 
 import static io.harness.rule.OwnerRule.NATARAJA;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 
 import io.harness.category.element.E2ETests;
 import io.harness.e2e.AbstractE2ETest;
@@ -32,7 +31,7 @@ public class PaidUserTest extends AbstractE2ETest {
     logger.info("Starting the list users test");
     UserRestUtils urUtil = new UserRestUtils();
     List<User> userList = urUtil.getUserList(bearerToken, getAccount().getUuid());
-    assertNotNull(userList);
+    assertThat(userList).isNotNull();
     assertThat(userList.size() > 0).isTrue();
   }
 

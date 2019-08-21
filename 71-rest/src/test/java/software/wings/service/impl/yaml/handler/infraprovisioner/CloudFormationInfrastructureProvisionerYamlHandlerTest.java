@@ -1,8 +1,8 @@
 package software.wings.service.impl.yaml.handler.infraprovisioner;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
@@ -80,7 +80,7 @@ public class CloudFormationInfrastructureProvisionerYamlHandlerTest extends Base
         ArgumentCaptor.forClass(CloudFormationInfrastructureProvisioner.class);
     verify(mockInfrastructureProvisionerService).save(captor.capture());
     CloudFormationInfrastructureProvisioner provisionerSaved = captor.getValue();
-    assertNotNull(provisionerSaved);
+    assertThat(provisionerSaved).isNotNull();
     assertEquals(provisionerSaved.getInfrastructureProvisionerType(), "CLOUD_FORMATION");
     assertEquals(provisionerSaved.getSourceType(), "TEMPLATE_BODY");
     assertEquals(provisionerSaved.getTemplateBody(), "Body");
@@ -113,7 +113,7 @@ public class CloudFormationInfrastructureProvisionerYamlHandlerTest extends Base
             .build();
 
     Yaml yaml1 = handler.toYaml(provisioner, APP_ID);
-    assertNotNull(yaml1);
+    assertThat(yaml1).isNotNull();
     assertEquals(yaml1.getType(), "CLOUD_FORMATION");
     assertEquals(yaml1.getHarnessApiVersion(), "1.0");
     assertEquals(yaml1.getSourceType(), "TEMPLATE_BODY");

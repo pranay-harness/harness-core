@@ -2,7 +2,6 @@ package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -167,7 +166,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
 
     ManifestFile savedmManifestFile =
         applicationManifestService.createManifestFileByServiceId(manifestFile, SERVICE_ID);
-    assertNotNull(savedmManifestFile);
+    assertThat(savedmManifestFile).isNotNull();
     applicationManifestService.createManifestFileByServiceId(manifestFileWithSameName, SERVICE_ID);
   }
 

@@ -4,7 +4,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
@@ -80,7 +79,7 @@ public abstract class BaseSettingValueConfigYamlHandlerTest extends BaseYamlHand
 
     SettingAttribute fetchedSettingAttribute =
         (SettingAttribute) settingValueYamlConfig.getYamlHandler().get(ACCOUNT_ID, yamlFilePath);
-    assertNotNull(fetchedSettingAttribute);
+    assertThat(fetchedSettingAttribute).isNotNull();
     verify(settingValueYamlConfig.getSettingAttributeSaved(), fetchedSettingAttribute);
 
     // 2. update and get Yalm String from SettingAttribute
@@ -107,7 +106,7 @@ public abstract class BaseSettingValueConfigYamlHandlerTest extends BaseYamlHand
     String yamlFilePath = getYamlFilePath(settingValueYamlConfig.getName(), settingValueYamlConfig.getYamlDirPath());
 
     SettingAttribute settingAttribute = (SettingAttribute) yamlHandler.get(ACCOUNT_ID, yamlFilePath);
-    assertNotNull(settingAttribute);
+    assertThat(settingAttribute).isNotNull();
 
     // 3. Now, Use invalid yaml path and make sure it upsertFromYaml fails
     String yamlContent = getYamlContentString(settingValueYamlConfig.getSettingAttributeSaved(), yamlHandler);
@@ -143,8 +142,8 @@ public abstract class BaseSettingValueConfigYamlHandlerTest extends BaseYamlHand
 
   protected void verify(SettingAttribute settingAttributeSaved, SettingAttribute settingAttribute) {
     assertEquals(settingAttributeSaved.getName(), settingAttribute.getName());
-    assertNotNull(settingAttributeSaved.getValue());
-    assertNotNull(settingAttribute.getValue());
+    assertThat(settingAttributeSaved.getValue()).isNotNull();
+    assertThat(settingAttribute.getValue()).isNotNull();
     assertEquals(settingAttributeSaved.getValue().toString(), settingAttribute.getValue().toString());
   }
 

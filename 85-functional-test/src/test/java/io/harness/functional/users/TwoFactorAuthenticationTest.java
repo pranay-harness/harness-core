@@ -2,7 +2,6 @@ package io.harness.functional.users;
 
 import static io.harness.rule.OwnerRule.NATARAJA;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 
 import com.google.inject.Inject;
 
@@ -34,15 +33,15 @@ public class TwoFactorAuthenticationTest extends AbstractFunctionalTest {
   public void verifyTwoFactorAuthLogin() {
     defaultPassword = scmSecret.decryptToString(new SecretName("user_default_password"));
     User user = Setup.retryLogin(defaultUser, defaultPassword);
-    assertNotNull("User Object Should not be null", user.getToken());
+    assertThat(user.getToken()).isNotNull();
     TwoFactorAuthenticationSettings otpSettings =
         TwoFactorAuthRestUtils.getOtpSettings(getAccount().getUuid(), user.getToken());
     user = TwoFactorAuthRestUtils.enableTwoFactorAuthentication(getAccount().getUuid(), user.getToken(), otpSettings);
-    assertNotNull("User Object Should not be null", user.getEmail());
+    assertThat(user.getEmail()).isNotNull();
     Setup.signOut(user.getUuid(), user.getToken());
     user = TwoFactorAuthRestUtils.retryTwoFaLogin(
         defaultUser, defaultPassword, getAccount().getUuid(), otpSettings.getTotpSecretKey());
-    assertNotNull("bearer token should not be null" + user.getToken());
+    assertThat("bearer token should not be null" + user.getToken()).isNotNull();
     UserRestUtils urUtil = new UserRestUtils();
     List<User> userList = urUtil.getUserList(user.getToken(), getAccount().getUuid());
     assertThat(userList.size() > 0).isTrue();

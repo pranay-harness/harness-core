@@ -1,7 +1,6 @@
 package io.harness.functional.secrets;
 
 import static io.harness.rule.OwnerRule.MARK;
-import static junit.framework.TestCase.assertNotNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -59,7 +58,7 @@ public class AwsSecretsManagerServiceFunctionalTest extends AbstractFunctionalTe
     String secretsManagerId = null;
     try {
       secretsManagerId = addAwsSecretsManager(secretsManagerConfig);
-      assertNotNull(secretsManagerId);
+      assertThat(secretsManagerId).isNotNull();
       logger.info("AWS Secrets Manager config created.");
 
       List<AwsSecretsManagerConfig> secretsManagerConfigs = listConfigs(getAccount().getUuid());

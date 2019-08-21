@@ -1,7 +1,6 @@
 package io.harness.functional.sso;
 
 import static io.harness.rule.OwnerRule.SWAMY;
-import static junit.framework.TestCase.assertNotNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
@@ -28,7 +27,7 @@ public class SSOCRUDTest extends AbstractFunctionalTest {
     assertThat(SSORestUtils.addLdapSettings(getAccount().getUuid(), bearerToken, ldapSettings) == HttpStatus.SC_OK)
         .isTrue();
     Object ssoConfig = SSORestUtils.getAccessManagementSettings(getAccount().getUuid(), bearerToken);
-    assertNotNull(ssoConfig);
+    assertThat(ssoConfig).isNotNull();
     String ldapId = SSOUtils.getLdapId(ssoConfig);
     assertThat(StringUtils.isNotBlank(ldapId)).isTrue();
     assertThat(SSORestUtils.deleteLDAPSettings(getAccount().getUuid(), bearerToken) == HttpStatus.SC_OK).isTrue();
@@ -47,7 +46,7 @@ public class SSOCRUDTest extends AbstractFunctionalTest {
     assertThat(SSORestUtils.addSAMLSettings(getAccount().getUuid(), bearerToken, "SAML", filePath) == HttpStatus.SC_OK)
         .isTrue();
     Object ssoConfig = SSORestUtils.getAccessManagementSettings(getAccount().getUuid(), bearerToken);
-    assertNotNull(ssoConfig);
+    assertThat(ssoConfig).isNotNull();
     assertThat(SSORestUtils.deleSAMLSettings(getAccount().getUuid(), bearerToken) == HttpStatus.SC_OK).isTrue();
     logger.info("Done");
   }

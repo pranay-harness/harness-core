@@ -7,7 +7,6 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
@@ -485,7 +484,7 @@ public class VaultTest extends WingsBaseTest {
     assertEquals(3, vaultConfigs.size());
 
     VaultConfig defaultConfig = (VaultConfig) secretManagerConfigService.getDefaultSecretManager(accountId);
-    assertNotNull(defaultConfig);
+    assertThat(defaultConfig).isNotNull();
 
     assertEquals(accountId, defaultConfig.getAccountId());
     assertEquals(VAULT_TOKEN, String.valueOf(defaultConfig.getAuthToken()));
@@ -525,7 +524,7 @@ public class VaultTest extends WingsBaseTest {
     EncryptedData encryptedData =
         vaultService.encrypt(name, keyToEncrypt, accountId, SettingVariableTypes.APP_DYNAMICS, vaultConfig, null);
     assertThat(encryptedData.getEncryptedValue()).isNull();
-    assertNotNull(encryptedData.getEncryptionKey());
+    assertThat(encryptedData.getEncryptionKey()).isNotNull();
     assertThat(isBlank(encryptedData.getEncryptionKey())).isFalse();
 
     char[] decryptedValue = vaultService.decrypt(encryptedData, accountId, vaultConfig);
@@ -543,8 +542,8 @@ public class VaultTest extends WingsBaseTest {
     vaultConfig = (VaultConfig) secretManagerConfigService.getDefaultSecretManager(accountId);
     encryptedData = vaultService.encrypt(
         name, password, accountId, SettingVariableTypes.APP_DYNAMICS, vaultConfig, savedEncryptedData);
-    assertNotNull(encryptedData.getEncryptedValue());
-    assertNotNull(encryptedData.getEncryptionKey());
+    assertThat(encryptedData.getEncryptedValue()).isNotNull();
+    assertThat(encryptedData.getEncryptionKey()).isNotNull();
     assertThat(isBlank(encryptedData.getEncryptionKey())).isFalse();
 
     decryptedValue = vaultService.decrypt(encryptedData, accountId, vaultConfig);
@@ -1333,7 +1332,7 @@ public class VaultTest extends WingsBaseTest {
     // yamlRef will be an URL format like: "hashicorpvault://vaultManagerName/harness/APP_DYNAMICS/...#value" for Vault
     // based secrets
     String yamlRef = secretManager.getEncryptedYamlRef(appDynamicsConfig);
-    assertNotNull(yamlRef);
+    assertThat(yamlRef).isNotNull();
     assertThat(yamlRef.startsWith(EncryptionType.VAULT.getYamlName() + "://" + fromConfig.getName() + "/harness/"))
         .isTrue();
     assertThat(yamlRef.contains("#value")).isTrue();

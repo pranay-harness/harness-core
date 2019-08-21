@@ -2,7 +2,6 @@ package io.harness.e2e.dailysanity.platform.paid;
 
 import static io.harness.rule.OwnerRule.NATARAJA;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 
 import com.google.inject.Inject;
 
@@ -37,13 +36,13 @@ public class TwoFactorAuthenticationE2ETest extends AbstractE2ETest {
     TwoFactorAuthenticationSettings otpSettings =
         TwoFactorAuthRestUtils.getOtpSettings(getAccount().getUuid(), user.getToken());
     user = TwoFactorAuthRestUtils.enableTwoFactorAuthentication(getAccount().getUuid(), user.getToken(), otpSettings);
-    assertNotNull("User Object should not null", user.getEmail());
+    assertThat(user.getEmail()).isNotNull();
     logger.info("Two FA Authentication Enabled");
     Setup.signOut(user.getUuid(), user.getToken());
     user = TwoFactorAuthRestUtils.retryTwoFaLogin(
         defaultUser, defaultPassword, getAccount().getUuid(), otpSettings.getTotpSecretKey());
     logger.info("Two FA Login Successfull");
-    assertNotNull("Two FA Authentication Success", user.getToken());
+    assertThat(user.getToken()).isNotNull();
     UserRestUtils urUtil = new UserRestUtils();
     List<User> userList = urUtil.getUserList(user.getToken(), getAccount().getUuid());
     logger.info("Getting the User List to ensure 2fa login success");

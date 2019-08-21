@@ -6,7 +6,6 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -238,7 +237,7 @@ public class InfrastructureDefinitionServiceTest extends WingsBaseTest {
     verify(spyInfrastructureDefinitionService, times(1)).list("appid", "envid", null);
 
     InfrastructureDefinition value = cloneInfraDef.getValue();
-    assertNull(value.getUuid());
+    assertThat(value.getUuid()).isNull();
     assertEquals(value.getEnvId(), "envid-1");
     assertEquals(value.getAppId(), "appid-1");
     assertEquals(value.getName(), "infra-name");

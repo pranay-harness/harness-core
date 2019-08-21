@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import com.google.inject.Inject;
 
@@ -35,9 +34,9 @@ public class AuditServiceHelperTest extends WingsBaseTest {
 
       AuditGlobalContextData auditGlobalContextData =
           (AuditGlobalContextData) GlobalContextManager.get(AuditGlobalContextData.AUDIT_ID);
-      assertNotNull(auditGlobalContextData);
+      assertThat(auditGlobalContextData).isNotNull();
       assertEquals("12345", auditGlobalContextData.getAuditId());
-      assertNotNull(auditGlobalContextData.getEntityOperationIdentifierSet());
+      assertThat(auditGlobalContextData.getEntityOperationIdentifierSet()).isNotNull();
       assertEquals(1, auditGlobalContextData.getEntityOperationIdentifierSet().size());
       assertThat(
           auditGlobalContextData.getEntityOperationIdentifierSet().contains(EntityOperationIdentifier.builder()
@@ -83,8 +82,8 @@ public class AuditServiceHelperTest extends WingsBaseTest {
 
       AuditGlobalContextData auditGlobalContextData =
           (AuditGlobalContextData) GlobalContextManager.get(AuditGlobalContextData.AUDIT_ID);
-      assertNotNull(auditGlobalContextData);
-      assertNotNull(auditGlobalContextData.getEntityOperationIdentifierSet());
+      assertThat(auditGlobalContextData).isNotNull();
+      assertThat(auditGlobalContextData.getEntityOperationIdentifierSet()).isNotNull();
       assertEquals("12345", auditGlobalContextData.getAuditId());
       assertEquals(1, auditGlobalContextData.getEntityOperationIdentifierSet().size());
       assertThat(auditGlobalContextData.getEntityOperationIdentifierSet().contains(

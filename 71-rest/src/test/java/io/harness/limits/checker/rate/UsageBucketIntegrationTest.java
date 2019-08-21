@@ -1,7 +1,7 @@
 package io.harness.limits.checker.rate;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import com.google.inject.Inject;
 
@@ -44,7 +44,7 @@ public class UsageBucketIntegrationTest extends BaseIntegrationTest {
     UsageBucket bucket = new UsageBucket(KEY, Arrays.asList(10L, 11L, 101L, 102L));
 
     String id = persistence.save(bucket);
-    assertNotNull(id);
+    assertThat(id).isNotNull();
 
     UsageBucket fetchedBucket = persistence.get(UsageBucket.class, id);
     assertEquals(bucket, fetchedBucket);

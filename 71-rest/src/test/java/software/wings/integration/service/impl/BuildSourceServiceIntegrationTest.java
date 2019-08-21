@@ -3,7 +3,6 @@ package software.wings.integration.service.impl;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
@@ -406,7 +405,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
             wingsPersistence.save(service);
             BuildDetails build =
                 buildSourceService.getLastSuccessfulBuild(appId, artifactStream.getUuid(), settingAttribute.getUuid());
-            assertNotNull(build);
+            assertThat(build).isNotNull();
             break;
           default:
             throw new IllegalArgumentException("invalid repo type");
@@ -418,7 +417,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
         wingsPersistence.save(service);
         BuildDetails build =
             buildSourceService.getLastSuccessfulBuild(appId, artifactStream.getUuid(), settingAttribute.getUuid());
-        assertNotNull(build);
+        assertThat(build).isNotNull();
     }
   }
 

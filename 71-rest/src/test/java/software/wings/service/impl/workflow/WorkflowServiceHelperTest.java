@@ -4,7 +4,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
@@ -334,13 +333,13 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
 
   private void verifyPhase(WorkflowPhase workflowPhase, List<String> expectedNames, int stepCount) {
     List<PhaseStep> phaseStepList = workflowPhase.getPhaseSteps();
-    assertNotNull(phaseStepList);
+    assertThat(phaseStepList).isNotNull();
     assertEquals(stepCount, phaseStepList.size());
 
     for (int index = 0; index < expectedNames.size(); index++) {
       if (EmptyPredicate.isNotEmpty(expectedNames.get(index))) {
         PhaseStep phaseStep = phaseStepList.get(index);
-        assertNotNull(phaseStep.getSteps());
+        assertThat(phaseStep.getSteps()).isNotNull();
         assertEquals(1, phaseStep.getSteps().size());
         assertEquals(expectedNames.get(index), phaseStep.getSteps().get(0).getType());
       }

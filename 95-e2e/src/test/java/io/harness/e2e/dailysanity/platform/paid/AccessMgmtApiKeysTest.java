@@ -2,7 +2,6 @@ package io.harness.e2e.dailysanity.platform.paid;
 
 import static io.harness.rule.OwnerRule.SWAMY;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 
 import com.google.gson.JsonObject;
 
@@ -35,7 +34,7 @@ public class AccessMgmtApiKeysTest extends AbstractE2ETest {
     groupInfoAsJson.addProperty("name", userGroupname);
     groupInfoAsJson.addProperty("description", "Test Description - " + System.currentTimeMillis());
     UserGroup userGroup = UserGroupUtils.createUserGroup(getAccount(), bearerToken, groupInfoAsJson);
-    assertNotNull(userGroup);
+    assertThat(userGroup).isNotNull();
     logger.info("Constructing APIKeys");
     ApiKeyEntry apiKeyEntry = ApiKeyEntry.builder().build();
     List<String> userGroupList = new ArrayList<>();
@@ -47,10 +46,10 @@ public class AccessMgmtApiKeysTest extends AbstractE2ETest {
     logger.info("Creating APIKeys");
     ApiKeyEntry postCreationEntry = ApiKeysRestUtils.createApiKey(apiKeyEntry.getAccountId(), bearerToken, apiKeyEntry);
     logger.info("Validating created APIKeys");
-    assertNotNull(postCreationEntry);
-    assertNotNull(postCreationEntry.getUuid());
+    assertThat(postCreationEntry).isNotNull();
+    assertThat(postCreationEntry.getUuid()).isNotNull();
     assertThat(postCreationEntry.getName().equals(name)).isTrue();
-    assertNotNull(postCreationEntry.getUserGroupIds());
+    assertThat(postCreationEntry.getUserGroupIds()).isNotNull();
     assertThat(postCreationEntry.getUserGroupIds().size() == 1).isTrue();
     assertThat(postCreationEntry.getUserGroupIds().get(0).equals(userGroup.getUuid())).isTrue();
     logger.info("Updating APIKeys");
@@ -59,16 +58,16 @@ public class AccessMgmtApiKeysTest extends AbstractE2ETest {
     postCreationEntry.setUserGroups(null);
     postCreationEntry = ApiKeysRestUtils.updateApiKey(apiKeyEntry.getAccountId(), bearerToken, postCreationEntry);
     logger.info("Validating updated APIKeys");
-    assertNotNull(postCreationEntry);
-    assertNotNull(postCreationEntry.getUuid());
+    assertThat(postCreationEntry).isNotNull();
+    assertThat(postCreationEntry.getUuid()).isNotNull();
     assertThat(postCreationEntry.getName().equals(changedName)).isTrue();
-    assertNotNull(postCreationEntry.getUserGroupIds());
+    assertThat(postCreationEntry.getUserGroupIds()).isNotNull();
     assertThat(postCreationEntry.getUserGroupIds().size() == 1).isTrue();
     assertThat(postCreationEntry.getUserGroupIds().get(0).equals(userGroup.getUuid())).isTrue();
     ApiKeyEntry retrievedAPIKey =
         ApiKeysRestUtils.getApiKey(getAccount().getUuid(), bearerToken, postCreationEntry.getUuid());
-    assertNotNull(retrievedAPIKey);
-    assertNotNull(retrievedAPIKey.getUuid());
+    assertThat(retrievedAPIKey).isNotNull();
+    assertThat(retrievedAPIKey.getUuid()).isNotNull();
     assertThat(postCreationEntry.getUuid().equals(retrievedAPIKey.getUuid())).isTrue();
     assertThat(ApiKeysRestUtils.deleteApiKey(getAccount().getUuid(), bearerToken, retrievedAPIKey.getUuid())
         == HttpStatus.SC_OK)

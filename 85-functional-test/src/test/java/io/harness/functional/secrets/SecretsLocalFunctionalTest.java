@@ -2,7 +2,6 @@ package io.harness.functional.secrets;
 
 import static io.harness.rule.OwnerRule.SWAMY;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -52,7 +51,7 @@ public class SecretsLocalFunctionalTest extends AbstractFunctionalTest {
     // Decryption is coupled with EncryptedSettings. Hence individual encryptedSetting test should involve a decryption
     // test
     EncryptedData data = encryptedDataList.get(0);
-    assertNotNull(data);
+    assertThat(data).isNotNull();
 
     boolean isDeletionDone = SecretsRestUtils.deleteSecret(getAccount().getUuid(), bearerToken, secretsId);
     assertThat(isDeletionDone).isTrue();
@@ -98,7 +97,7 @@ public class SecretsLocalFunctionalTest extends AbstractFunctionalTest {
     // Decryption is coupled with EncryptedSettings. Hence individual encryptedSetting test should involve a decryption
     // test
     EncryptedData data = encryptedDataList.get(0);
-    assertNotNull(data);
+    assertThat(data).isNotNull();
 
     boolean isDeletionDone = SecretsRestUtils.deleteSecret(getAccount().getUuid(), bearerToken, secretsId);
     assertThat(isDeletionDone).isTrue();

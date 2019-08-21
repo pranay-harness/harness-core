@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static software.wings.audit.AuditHeader.Builder.anAuditHeader;
@@ -586,9 +585,9 @@ public class AuditPreferenceHelperTest extends WingsBaseTest {
   }
 
   private void assertAccountLevelFilter(AuditPreference auditPreference) {
-    assertNotNull(auditPreference.getAccountAuditFilter());
-    assertNotNull(auditPreference.getAccountAuditFilter().getResourceTypes());
-    assertNotNull(auditPreference.getAccountAuditFilter().getResourceIds());
+    assertThat(auditPreference.getAccountAuditFilter()).isNotNull();
+    assertThat(auditPreference.getAccountAuditFilter().getResourceTypes()).isNotNull();
+    assertThat(auditPreference.getAccountAuditFilter().getResourceIds()).isNotNull();
 
     assertEquals(2, auditPreference.getAccountAuditFilter().getResourceIds().size());
     assertEquals(2, auditPreference.getAccountAuditFilter().getResourceTypes().size());
@@ -602,10 +601,10 @@ public class AuditPreferenceHelperTest extends WingsBaseTest {
   }
 
   private void assertApplicationFilter(AuditPreference auditPreference) {
-    assertNotNull(auditPreference.getApplicationAuditFilter());
-    assertNotNull(auditPreference.getApplicationAuditFilter().getAppIds());
-    assertNotNull(auditPreference.getApplicationAuditFilter().getResourceIds());
-    assertNotNull(auditPreference.getApplicationAuditFilter().getResourceTypes());
+    assertThat(auditPreference.getApplicationAuditFilter()).isNotNull();
+    assertThat(auditPreference.getApplicationAuditFilter().getAppIds()).isNotNull();
+    assertThat(auditPreference.getApplicationAuditFilter().getResourceIds()).isNotNull();
+    assertThat(auditPreference.getApplicationAuditFilter().getResourceTypes()).isNotNull();
 
     assertEquals(2, auditPreference.getApplicationAuditFilter().getAppIds().size());
     assertEquals(2, auditPreference.getApplicationAuditFilter().getResourceIds().size());
@@ -622,12 +621,12 @@ public class AuditPreferenceHelperTest extends WingsBaseTest {
   }
 
   private void assertTopLevelCriteria(AuditPreference auditPreference) {
-    assertNotNull(auditPreference);
+    assertThat(auditPreference).isNotNull();
     assertEquals(PreferenceType.AUDIT_PREFERENCE.name(), auditPreference.getPreferenceType());
     assertEquals(ACCOUNT_ID, auditPreference.getAccountId());
     assertEquals("1559076765000", auditPreference.getStartTime());
     assertEquals("1560195705972", auditPreference.getEndTime());
-    assertNotNull(auditPreference.getOperationTypes());
+    assertThat(auditPreference.getOperationTypes()).isNotNull();
     assertEquals(2, auditPreference.getOperationTypes().size());
     assertThat(auditPreference.getOperationTypes().containsAll(Arrays.asList("CREATE", "UPDATE"))).isTrue();
   }

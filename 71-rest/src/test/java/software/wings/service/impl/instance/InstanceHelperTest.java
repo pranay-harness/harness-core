@@ -3,7 +3,6 @@ package software.wings.service.impl.instance;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyLong;
@@ -362,10 +361,10 @@ public class InstanceHelperTest extends WingsBaseTest {
      * validate to check its valid
      * */
     DeploymentEvent event = captor.getValue();
-    assertNotNull(event);
+    assertThat(event).isNotNull();
     assertEquals(0, event.getRetries());
-    assertNotNull(event);
-    assertNotNull(event.getDeploymentSummaries());
+    assertThat(event).isNotNull();
+    assertThat(event.getDeploymentSummaries()).isNotNull();
     assertEquals(2, event.getDeploymentSummaries().size());
     DeploymentInfo deploymentInfo1 = event.getDeploymentSummaries().get(0).getDeploymentInfo();
     DeploymentInfo deploymentInfo2 = event.getDeploymentSummaries().get(1).getDeploymentInfo();
@@ -430,11 +429,11 @@ public class InstanceHelperTest extends WingsBaseTest {
      * validate to check its valid
      * */
     DeploymentEvent event = captor.getValue();
-    assertNotNull(event);
+    assertThat(event).isNotNull();
     assertEquals(0, event.getRetries());
 
-    assertNotNull(event);
-    assertNotNull(event.getDeploymentSummaries());
+    assertThat(event).isNotNull();
+    assertThat(event.getDeploymentSummaries()).isNotNull();
     assertEquals(1, event.getDeploymentSummaries().size());
     DeploymentInfo deploymentInfo = event.getDeploymentSummaries().get(0).getDeploymentInfo();
     assertThat(deploymentInfo instanceof AwsCodeDeployDeploymentInfo).isTrue();
@@ -478,7 +477,7 @@ public class InstanceHelperTest extends WingsBaseTest {
      * validate to check its valid
      * */
     DeploymentEvent event = captor.getValue();
-    assertNotNull(event);
+    assertThat(event).isNotNull();
     assertEquals(0, event.getRetries());
 
     DeploymentInfo deploymentInfo1 = event.getDeploymentSummaries().get(0).getDeploymentInfo();
@@ -541,7 +540,7 @@ public class InstanceHelperTest extends WingsBaseTest {
      * validate to check its valid
      * */
     DeploymentEvent event = captor.getValue();
-    assertNotNull(event);
+    assertThat(event).isNotNull();
     assertEquals(0, event.getRetries());
 
     DeploymentInfo deploymentInfo1 = event.getDeploymentSummaries().get(0).getDeploymentInfo();
@@ -608,10 +607,10 @@ public class InstanceHelperTest extends WingsBaseTest {
      * validate to check its valid
      * */
     DeploymentEvent event = captor.getValue();
-    assertNotNull(event);
+    assertThat(event).isNotNull();
     assertEquals(0, event.getRetries());
 
-    assertNotNull(event.getDeploymentSummaries());
+    assertThat(event.getDeploymentSummaries()).isNotNull();
     assertEquals(1, event.getDeploymentSummaries().size());
 
     DeploymentSummary deploymentSummary = event.getDeploymentSummaries().get(0);
@@ -624,12 +623,12 @@ public class InstanceHelperTest extends WingsBaseTest {
     ContainerDeploymentInfoWithLabels containerDeploymentInfoWithLabels =
         (ContainerDeploymentInfoWithLabels) deploymentInfo;
     assertEquals(CLUSTER_NAME, containerDeploymentInfoWithLabels.getClusterName());
-    assertNotNull(containerDeploymentInfoWithLabels.getLabels());
+    assertThat(containerDeploymentInfoWithLabels.getLabels()).isNotNull();
     assertEquals(1, containerDeploymentInfoWithLabels.getLabels().size());
     assertEquals("release", containerDeploymentInfoWithLabels.getLabels().get(0).getName());
     assertEquals("version1", containerDeploymentInfoWithLabels.getLabels().get(0).getValue());
 
-    assertNotNull(deploymentSummary.getContainerDeploymentKey().getLabels());
+    assertThat(deploymentSummary.getContainerDeploymentKey().getLabels()).isNotNull();
     assertEquals("release", deploymentSummary.getContainerDeploymentKey().getLabels().get(0).getName());
     assertEquals("version1", deploymentSummary.getContainerDeploymentKey().getLabels().get(0).getValue());
 
@@ -670,15 +669,15 @@ public class InstanceHelperTest extends WingsBaseTest {
      * validate to check its valid
      */
     DeploymentEvent event = captor.getValue();
-    assertNotNull(event);
+    assertThat(event).isNotNull();
     assertEquals(0, event.getRetries());
     assertThat(event.isRollback()).isTrue();
 
-    assertNotNull(event.getDeploymentSummaries());
+    assertThat(event.getDeploymentSummaries()).isNotNull();
     assertEquals(1, event.getDeploymentSummaries().size());
 
     DeploymentSummary deploymentSummary = event.getDeploymentSummaries().get(0);
-    assertNotNull(deploymentSummary.getContainerDeploymentKey());
+    assertThat(deploymentSummary.getContainerDeploymentKey()).isNotNull();
     // This is validating rollback version
     assertEquals("0", deploymentSummary.getContainerDeploymentKey().getNewVersion());
     DeploymentInfo deploymentInfo = event.getDeploymentSummaries().get(0).getDeploymentInfo();
@@ -690,12 +689,12 @@ public class InstanceHelperTest extends WingsBaseTest {
     ContainerDeploymentInfoWithLabels containerDeploymentInfoWithLabels =
         (ContainerDeploymentInfoWithLabels) deploymentInfo;
     assertEquals(CLUSTER_NAME, containerDeploymentInfoWithLabels.getClusterName());
-    assertNotNull(containerDeploymentInfoWithLabels.getLabels());
+    assertThat(containerDeploymentInfoWithLabels.getLabels()).isNotNull();
     assertEquals(1, containerDeploymentInfoWithLabels.getLabels().size());
     assertEquals("release", containerDeploymentInfoWithLabels.getLabels().get(0).getName());
     assertEquals("version1", containerDeploymentInfoWithLabels.getLabels().get(0).getValue());
 
-    assertNotNull(deploymentSummary.getContainerDeploymentKey().getLabels());
+    assertThat(deploymentSummary.getContainerDeploymentKey().getLabels()).isNotNull();
     assertEquals("release", deploymentSummary.getContainerDeploymentKey().getLabels().get(0).getName());
     assertEquals("version1", deploymentSummary.getContainerDeploymentKey().getLabels().get(0).getValue());
 

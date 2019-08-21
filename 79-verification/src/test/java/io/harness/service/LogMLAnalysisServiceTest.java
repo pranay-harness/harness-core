@@ -9,7 +9,6 @@ import static io.harness.service.LearningEngineAnalysisServiceImpl.BACKOFF_LIMIT
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
@@ -306,7 +305,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
       logMLAnalysisRecord = gson.fromJson(br, type);
     }
 
-    assertNotNull(logMLAnalysisRecord);
+    assertThat(logMLAnalysisRecord).isNotNull();
     logMLAnalysisRecord.setWorkflowExecutionId(generateUuid());
     wingsPersistence.save(logMLAnalysisRecord);
 
@@ -331,7 +330,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
       logMLAnalysisRecord = gson.fromJson(br, type);
     }
 
-    assertNotNull(logMLAnalysisRecord);
+    assertThat(logMLAnalysisRecord).isNotNull();
     logMLAnalysisRecord.setWorkflowExecutionId(workflowExecutionId);
     wingsPersistence.save(logMLAnalysisRecord);
 
@@ -551,7 +550,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     LogMLAnalysisSummary analysisSummary =
         managerAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
-    assertNotNull(analysisSummary);
+    assertThat(analysisSummary).isNotNull();
     assertEquals("This is a -1 test", analysisSummary.getAnalysisSummaryMessage());
   }
 
@@ -617,7 +616,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     LogMLAnalysisSummary analysisSummary =
         managerAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
-    assertNotNull(analysisSummary);
+    assertThat(analysisSummary).isNotNull();
     assertEquals(RiskLevel.HIGH, analysisSummary.getRiskLevel());
     assertEquals(numOfUnknownClusters, analysisSummary.getUnknownClusters().size());
     assertThat(analysisSummary.getTestClusters().isEmpty()).isTrue();
@@ -664,7 +663,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
                                                   .filter("appId", appId)
                                                   .filter(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId)
                                                   .get();
-    assertNotNull(logMLAnalysisRecord);
+    assertThat(logMLAnalysisRecord).isNotNull();
     assertThat(logMLAnalysisRecord.getUnknown_events()).isNull();
     assertThat(logMLAnalysisRecord.getTest_events()).isNull();
     assertThat(logMLAnalysisRecord.getControl_events()).isNull();
@@ -724,7 +723,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     }
     LogMLAnalysisSummary analysisSummary =
         managerAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
-    assertNotNull(analysisSummary);
+    assertThat(analysisSummary).isNotNull();
     assertEquals(numOfUnexpectedFreq > 0 ? RiskLevel.HIGH : RiskLevel.NA, analysisSummary.getRiskLevel());
     assertEquals(numOfTestClusters, analysisSummary.getTestClusters().size());
     assertThat(analysisSummary.getUnknownClusters().isEmpty()).isTrue();
@@ -780,7 +779,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
                                                   .filter("appId", appId)
                                                   .filter(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId)
                                                   .get();
-    assertNotNull(logMLAnalysisRecord);
+    assertThat(logMLAnalysisRecord).isNotNull();
     assertThat(logMLAnalysisRecord.getUnknown_events()).isNull();
     assertThat(logMLAnalysisRecord.getTest_events()).isNull();
     assertThat(logMLAnalysisRecord.getControl_events()).isNull();
@@ -791,7 +790,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     LogMLAnalysisSummary analysisSummary =
         managerAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
-    assertNotNull(analysisSummary);
+    assertThat(analysisSummary).isNotNull();
     assertEquals(RiskLevel.NA, analysisSummary.getRiskLevel());
     assertEquals(numOfControlClusters, analysisSummary.getControlClusters().size());
     assertThat(analysisSummary.getUnknownClusters().isEmpty()).isTrue();
@@ -1262,7 +1261,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
       logMLAnalysisRecord = gson.fromJson(br, type);
     }
 
-    assertNotNull(logMLAnalysisRecord);
+    assertThat(logMLAnalysisRecord).isNotNull();
     assertThat(logMLAnalysisRecord.getUnknown_events().isEmpty()).isFalse();
     assertThat(logMLAnalysisRecord.getTest_events().isEmpty()).isFalse();
     assertThat(logMLAnalysisRecord.getControl_events().isEmpty()).isFalse();
@@ -1276,10 +1275,10 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
       Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
       compressedLogMLAnalysisRecord = gson.fromJson(br, type);
     }
-    assertNotNull(compressedLogMLAnalysisRecord);
+    assertThat(compressedLogMLAnalysisRecord).isNotNull();
 
     compressedLogMLAnalysisRecord.compressLogAnalysisRecord();
-    assertNotNull(compressedLogMLAnalysisRecord.getProtoSerializedAnalyisDetails());
+    assertThat(compressedLogMLAnalysisRecord.getProtoSerializedAnalyisDetails()).isNotNull();
     assertThat(compressedLogMLAnalysisRecord.getUnknown_events()).isNull();
     assertThat(compressedLogMLAnalysisRecord.getTest_events()).isNull();
     assertThat(compressedLogMLAnalysisRecord.getControl_events()).isNull();
@@ -1290,13 +1289,13 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     compressedLogMLAnalysisRecord.decompressLogAnalysisRecord();
     assertThat(compressedLogMLAnalysisRecord.getProtoSerializedAnalyisDetails()).isNull();
-    assertNotNull(compressedLogMLAnalysisRecord.getUnknown_events());
-    assertNotNull(compressedLogMLAnalysisRecord.getTest_events());
-    assertNotNull(compressedLogMLAnalysisRecord.getControl_events());
-    assertNotNull(compressedLogMLAnalysisRecord.getControl_clusters());
-    assertNotNull(compressedLogMLAnalysisRecord.getTest_clusters());
-    assertNotNull(compressedLogMLAnalysisRecord.getUnknown_clusters());
-    assertNotNull(compressedLogMLAnalysisRecord.getIgnore_clusters());
+    assertThat(compressedLogMLAnalysisRecord.getUnknown_events()).isNotNull();
+    assertThat(compressedLogMLAnalysisRecord.getTest_events()).isNotNull();
+    assertThat(compressedLogMLAnalysisRecord.getControl_events()).isNotNull();
+    assertThat(compressedLogMLAnalysisRecord.getControl_clusters()).isNotNull();
+    assertThat(compressedLogMLAnalysisRecord.getTest_clusters()).isNotNull();
+    assertThat(compressedLogMLAnalysisRecord.getUnknown_clusters()).isNotNull();
+    assertThat(compressedLogMLAnalysisRecord.getIgnore_clusters()).isNotNull();
 
     assertEquals(logMLAnalysisRecord.getAnalysisStatus(), compressedLogMLAnalysisRecord.getAnalysisStatus());
     assertEquals(logMLAnalysisRecord.getUnknown_events(), compressedLogMLAnalysisRecord.getUnknown_events());
@@ -1320,7 +1319,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
       logMLAnalysisRecord = gson.fromJson(br, type);
     }
 
-    assertNotNull(logMLAnalysisRecord);
+    assertThat(logMLAnalysisRecord).isNotNull();
     assertThat(logMLAnalysisRecord.getUnknown_events().isEmpty()).isFalse();
     assertThat(logMLAnalysisRecord.getTest_events().isEmpty()).isFalse();
     assertThat(logMLAnalysisRecord.getControl_events().isEmpty()).isFalse();
@@ -1362,7 +1361,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertThat(savedMlAnalysisRecord.getTest_clusters()).isNull();
     assertThat(savedMlAnalysisRecord.getIgnore_clusters()).isNull();
     assertThat(savedMlAnalysisRecord.getProtoSerializedAnalyisDetails()).isNull();
-    assertNotNull(savedMlAnalysisRecord.getAnalysisDetailsCompressedJson());
+    assertThat(savedMlAnalysisRecord.getAnalysisDetailsCompressedJson()).isNotNull();
 
     analysisService.getLogAnalysisRecords(LogMLAnalysisRecordKeys.cvConfigId, logMLAnalysisRecord.getCvConfigId(),
         logMLAnalysisRecord.getLogCollectionMinute(), true);
@@ -1375,21 +1374,21 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertThat(savedMlAnalysisRecord.getTest_clusters()).isNull();
     assertThat(savedMlAnalysisRecord.getIgnore_clusters()).isNull();
     assertThat(savedMlAnalysisRecord.getAnalysisDetailsCompressedJson()).isNull();
-    assertNotNull(savedMlAnalysisRecord.getProtoSerializedAnalyisDetails());
+    assertThat(savedMlAnalysisRecord.getProtoSerializedAnalyisDetails()).isNotNull();
 
     LogMLAnalysisRecord logMLAnalysisRecordToCompare;
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
       logMLAnalysisRecordToCompare = gson.fromJson(br, type);
     }
-    assertNotNull(logMLAnalysisRecordToCompare);
-    assertNotNull(logMLAnalysisRecordToCompare.getUnknown_events());
-    assertNotNull(logMLAnalysisRecordToCompare.getTest_events());
-    assertNotNull(logMLAnalysisRecordToCompare.getControl_events());
-    assertNotNull(logMLAnalysisRecordToCompare.getControl_clusters());
-    assertNotNull(logMLAnalysisRecordToCompare.getTest_clusters());
-    assertNotNull(logMLAnalysisRecordToCompare.getUnknown_clusters());
-    assertNotNull(logMLAnalysisRecordToCompare.getIgnore_clusters());
+    assertThat(logMLAnalysisRecordToCompare).isNotNull();
+    assertThat(logMLAnalysisRecordToCompare.getUnknown_events()).isNotNull();
+    assertThat(logMLAnalysisRecordToCompare.getTest_events()).isNotNull();
+    assertThat(logMLAnalysisRecordToCompare.getControl_events()).isNotNull();
+    assertThat(logMLAnalysisRecordToCompare.getControl_clusters()).isNotNull();
+    assertThat(logMLAnalysisRecordToCompare.getTest_clusters()).isNotNull();
+    assertThat(logMLAnalysisRecordToCompare.getUnknown_clusters()).isNotNull();
+    assertThat(logMLAnalysisRecordToCompare.getIgnore_clusters()).isNotNull();
     assertThat(logMLAnalysisRecordToCompare.getAnalysisDetailsCompressedJson()).isNull();
     assertThat(logMLAnalysisRecordToCompare.getProtoSerializedAnalyisDetails()).isNull();
 
@@ -1403,7 +1402,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertThat(logMLAnalysisRecord.getTest_clusters()).isNull();
     assertThat(logMLAnalysisRecord.getIgnore_clusters()).isNull();
     assertThat(logMLAnalysisRecord.getAnalysisDetailsCompressedJson()).isNull();
-    assertNotNull(logMLAnalysisRecord.getProtoSerializedAnalyisDetails());
+    assertThat(logMLAnalysisRecord.getProtoSerializedAnalyisDetails()).isNotNull();
 
     logMLAnalysisRecord.decompressLogAnalysisRecord();
     assertEquals(logMLAnalysisRecord.getAnalysisStatus(), logMLAnalysisRecordToCompare.getAnalysisStatus());
@@ -1417,13 +1416,13 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     logMLAnalysisRecord = analysisService.getLogAnalysisRecords(LogMLAnalysisRecordKeys.cvConfigId,
         logMLAnalysisRecord.getCvConfigId(), logMLAnalysisRecord.getLogCollectionMinute(), false);
-    assertNotNull(logMLAnalysisRecord.getUnknown_events());
-    assertNotNull(logMLAnalysisRecord.getTest_events());
-    assertNotNull(logMLAnalysisRecord.getControl_events());
-    assertNotNull(logMLAnalysisRecord.getControl_clusters());
-    assertNotNull(logMLAnalysisRecord.getUnknown_clusters());
-    assertNotNull(logMLAnalysisRecord.getTest_clusters());
-    assertNotNull(logMLAnalysisRecord.getIgnore_clusters());
+    assertThat(logMLAnalysisRecord.getUnknown_events()).isNotNull();
+    assertThat(logMLAnalysisRecord.getTest_events()).isNotNull();
+    assertThat(logMLAnalysisRecord.getControl_events()).isNotNull();
+    assertThat(logMLAnalysisRecord.getControl_clusters()).isNotNull();
+    assertThat(logMLAnalysisRecord.getUnknown_clusters()).isNotNull();
+    assertThat(logMLAnalysisRecord.getTest_clusters()).isNotNull();
+    assertThat(logMLAnalysisRecord.getIgnore_clusters()).isNotNull();
     assertThat(logMLAnalysisRecord.getAnalysisDetailsCompressedJson()).isNull();
     assertThat(logMLAnalysisRecord.getProtoSerializedAnalyisDetails()).isNull();
 
@@ -1578,8 +1577,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
                                             .asList();
 
     assertThat(created).isTrue();
-    assertNotNull(feedbackRecord);
-    assertNotNull(records);
+    assertThat(feedbackRecord).isNotNull();
+    assertThat(records).isNotNull();
     assertEquals(2, records.size());
     assertNotEquals("uuid1", feedbackRecord.getUuid());
   }

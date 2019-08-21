@@ -1,8 +1,8 @@
 package software.wings.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
 
 import com.google.inject.Inject;
 
@@ -28,7 +28,7 @@ public class HarnessClientApiKeyServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testCRUD() {
     String generatedApiKey = harnessApiKeyService.generate(ClientType.PROMETHEUS.name());
-    assertNotNull(generatedApiKey);
+    assertThat(generatedApiKey).isNotNull();
 
     String keyFromGet = harnessApiKeyService.get(ClientType.PROMETHEUS.name());
     assertEquals(keyFromGet, generatedApiKey);

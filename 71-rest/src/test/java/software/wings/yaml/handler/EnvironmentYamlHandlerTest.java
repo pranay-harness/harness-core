@@ -1,8 +1,8 @@
 package software.wings.yaml.handler;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -93,11 +93,11 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
     compareEnv(environment, savedEnv);
 
     Yaml yaml = yamlHandler.toYaml(this.environment, APP_ID);
-    assertNotNull(yaml);
-    assertNotNull(yaml.getType());
+    assertThat(yaml).isNotNull();
+    assertThat(yaml.getType()).isNotNull();
 
     String yamlContent = getYamlContent(yaml);
-    assertNotNull(yamlContent);
+    assertThat(yamlContent).isNotNull();
     yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
     assertEquals(validYamlContent, yamlContent);
 

@@ -1,6 +1,5 @@
 package io.harness.testframework.framework.utils;
 
-import static junit.framework.TestCase.assertNotNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.gson.JsonObject;
@@ -66,14 +65,14 @@ public class UserGroupUtils {
     userGroup.setMemberIds(memberIds);
     assertThat(UserGroupRestUtils.updateMembers(account, bearerToken, userGroup) == HttpStatus.SC_OK).isTrue();
     userGroup = getUserGroup(account, bearerToken, userGroup.getName());
-    assertNotNull(userGroup);
-    assertNotNull(userGroup.getMemberIds());
+    assertThat(userGroup).isNotNull();
+    assertThat(userGroup.getMemberIds()).isNotNull();
     userGroup.setAccountPermissions(accountPermissions);
     assertThat(UserGroupRestUtils.updateAccountPermissions(account, bearerToken, userGroup) == HttpStatus.SC_OK)
         .isTrue();
     userGroup = getUserGroup(account, bearerToken, userGroup.getName());
-    assertNotNull(userGroup);
-    assertNotNull(userGroup.getAccountPermissions());
+    assertThat(userGroup).isNotNull();
+    assertThat(userGroup.getAccountPermissions()).isNotNull();
     return userGroup;
   }
 
@@ -159,7 +158,7 @@ public class UserGroupUtils {
     groupInfoAsJson.addProperty("name", name);
     groupInfoAsJson.addProperty("description", "Test Description - " + System.currentTimeMillis());
     UserGroup userGroup = UserGroupUtils.createUserGroup(account, bearerToken, groupInfoAsJson);
-    assertNotNull(userGroup);
+    assertThat(userGroup).isNotNull();
 
     logger.info("Creating a Notification Settings with an email id and slack webhook");
     String emailId = TestUtils.generateRandomUUID() + "@harness.mailinator.com";
@@ -168,8 +167,8 @@ public class UserGroupUtils {
     userGroup.setNotificationSettings(notificationSettings);
     logger.info("Update user group with notification settings");
     userGroup = UserGroupRestUtils.updateNotificationSettings(account, bearerToken, userGroup);
-    assertNotNull(userGroup);
-    assertNotNull(userGroup.getNotificationSettings());
+    assertThat(userGroup).isNotNull();
+    assertThat(userGroup.getNotificationSettings()).isNotNull();
     return userGroup;
   }
 }

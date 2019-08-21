@@ -4,7 +4,6 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import io.harness.beans.PageResponse;
 import io.harness.category.element.IntegrationTests;
@@ -120,7 +119,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<String>>() {});
     assertThat(restResponse.getResponseMessages()).isEmpty();
     String accountStatus = restResponse.getResource();
-    assertNotNull(accountStatus);
+    assertThat(accountStatus).isNotNull();
     assertThat(AccountStatus.isValid(accountStatus)).isTrue();
     return accountStatus;
   }
@@ -134,11 +133,11 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).post(null, new GenericType<RestResponse<Boolean>>() {});
     assertThat(restResponse.getResponseMessages()).isEmpty();
     Boolean statusUpdated = restResponse.getResource();
-    assertNotNull(statusUpdated);
+    assertThat(statusUpdated).isNotNull();
     assertThat(statusUpdated).isTrue();
 
     GovernanceConfig governanceConfig = governanceConfigService.get(accountId);
-    assertNotNull(governanceConfig);
+    assertThat(governanceConfig).isNotNull();
     assertEquals(disable, governanceConfig.isDeploymentFreeze());
 
     if (disable) {

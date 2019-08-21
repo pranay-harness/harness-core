@@ -9,7 +9,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -706,7 +705,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     target = client.target(url);
     getRequestBuilderWithAuthHeader(target).put(
         entity(fetchedObject, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
-    assertNotNull(restResponse.getResource());
+    assertThat(restResponse.getResource()).isNotNull();
   }
 
   @Test

@@ -2,7 +2,6 @@ package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
@@ -123,7 +122,7 @@ public class InstanceServiceTest extends WingsBaseTest {
 
     PageResponse pageResponse = instanceService.list(
         PageRequestBuilder.aPageRequest().addFilter("accountId", Operator.EQ, GLOBAL_ACCOUNT_ID).build());
-    assertNotNull(pageResponse);
+    assertThat(pageResponse).isNotNull();
     List<Instance> instanceList = pageResponse.getResponse();
     assertThat(instanceList).isNotNull();
     assertThat(instanceList).hasSize(2);

@@ -2,7 +2,7 @@ package io.harness.testframework.framework;
 
 import static io.restassured.RestAssured.given;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
-import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.rest.RestResponse;
 import io.harness.scm.ScmSecret;
@@ -40,7 +40,7 @@ public class Setup {
     GenericType<RestResponse<User>> genericType = new GenericType<RestResponse<User>>() {};
     RestResponse<User> userRestResponse =
         Setup.portal().header("Authorization", basicAuthValue).get("/users/login").as(genericType.getType());
-    assertNotNull(userRestResponse);
+    assertThat(userRestResponse).isNotNull();
     User user = userRestResponse.getResource();
     return user;
   }
@@ -58,9 +58,9 @@ public class Setup {
                                               .queryParam("accountId", accountId)
                                               .get("/users/login")
                                               .as(genericType.getType());
-    assertNotNull(userRestResponse);
+    assertThat(userRestResponse).isNotNull();
     User user = userRestResponse.getResource();
-    assertNotNull(user);
+    assertThat(user).isNotNull();
     return user.getToken();
   }
 

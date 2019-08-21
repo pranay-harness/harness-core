@@ -16,7 +16,6 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -701,7 +700,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     WorkflowExecution workflowExecution = workflowExecutionService.triggerOrchestrationWorkflowExecution(
         appId, env.getUuid(), workflow.getUuid(), null, executionArgs, callback, null);
-    assertNotNull(workflowExecution);
+    assertThat(workflowExecution).isNotNull();
   }
 
   @Test
@@ -740,7 +739,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     licenseService.updateAccountLicense(account.getUuid(), licenseInfo);
 
     WorkflowExecution workflowExecution = triggerPipeline(app.getUuid(), pipeline);
-    assertNotNull(workflowExecution);
+    assertThat(workflowExecution).isNotNull();
   }
 
   private Workflow createExecutableWorkflow(String appId, Environment env) {

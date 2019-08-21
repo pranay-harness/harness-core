@@ -3,7 +3,6 @@ package io.harness.e2e.dailysanity.platform.paid;
 import static io.harness.rule.OwnerRule.NATARAJA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import io.harness.category.element.E2ETests;
 import io.harness.e2e.AbstractE2ETest;
@@ -48,28 +47,28 @@ public class NewTrialAccountSignup extends AbstractE2ETest {
     logger.info("Reading the retrieved email");
     String emailFetchId = message.getId();
     MailinatorMessageDetails messageDetails = MailinatorRestUtils.readEmail(emailId, emailFetchId);
-    assertNotNull(messageDetails);
+    assertThat(messageDetails).isNotNull();
     String inviteUrl =
         HTMLUtils.retrieveInviteUrlFromEmail(messageDetails.getData().getParts().get(0).getBody(), "VERIFY EMAIL");
-    assertNotNull(inviteUrl);
+    assertThat(inviteUrl).isNotNull();
     assertThat(StringUtils.isNotBlank(inviteUrl)).isTrue();
     logger.info("Email read and Signup URL is available for user signup: " + inviteUrl);
 
     messageDetails = null;
     messageDetails = MailinatorRestUtils.deleteEmail(emailId, emailFetchId);
     logger.info("Email deleted for the inbox : " + emailId);
-    assertNotNull(messageDetails.getAdditionalProperties());
-    assertNotNull(messageDetails.getAdditionalProperties().containsKey("status"));
+    assertThat(messageDetails.getAdditionalProperties()).isNotNull();
+    assertThat(messageDetails.getAdditionalProperties().containsKey("status")).isNotNull();
     assertThat(messageDetails.getAdditionalProperties().get("status").toString().equals("ok")).isTrue();
 
     String inviteIdFromUrl = TestUtils.validateAndGetTrialUserInviteFromUrl(inviteUrl);
     User user = UserRestUtils.completeNewTrialUserSignup(bearerToken, inviteIdFromUrl);
-    assertNotNull("User Should not be null after login success", user);
+    assertThat(user).isNotNull();
     assertEquals("User login should be successfull after SignUp", user.getEmail(), userInvite.getEmail());
     Setup.signOut(user.getUuid(), user.getToken());
     User newLogedUser = Setup.loginUser(fullEmailId, testPassword);
-    assertNotNull("User Should not be null after login success", newLogedUser);
-    assertNotNull("User token Should not be null after login success", user.getToken());
+    assertThat(newLogedUser).isNotNull();
+    assertThat(user.getToken()).isNotNull();
     assertEquals("Login should work as expected after new account signup", newLogedUser.getEmail(), fullEmailId);
   }
 }

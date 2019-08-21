@@ -1,7 +1,6 @@
 package software.wings.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 import static software.wings.utils.Utils.escapifyString;
 import static software.wings.utils.Utils.getNameWithNextRevision;
 
@@ -27,7 +26,7 @@ public class UtilsTest extends CategoryTest {
     nameValuePairList.add(NameValuePair.builder().name("n3").value(null).build());
 
     Map map = Utils.toProperties(nameValuePairList);
-    assertNotNull(map);
+    assertThat(map).isNotNull();
     assertThat(map.size()).isEqualTo(3);
   }
 

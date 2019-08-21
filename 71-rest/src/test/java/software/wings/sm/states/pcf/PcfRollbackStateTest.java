@@ -4,7 +4,6 @@ import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
@@ -115,7 +114,7 @@ public class PcfRollbackStateTest extends WingsBaseTest {
     PcfCommandRollbackRequest commandRollbackRequest = (PcfCommandRollbackRequest) pcfCommandRequest;
 
     assertEquals(ACTIVITY_ID, stateExecutionData.getActivityId());
-    assertNotNull(commandRollbackRequest);
+    assertThat(commandRollbackRequest).isNotNull();
     for (PcfServiceData pcfServiceData : commandRollbackRequest.getInstanceData()) {
       if (pcfServiceData.getName().equals("APP_SERVICE_ENV__1")) {
         assertThat(1 == pcfServiceData.getDesiredCount()).isTrue();

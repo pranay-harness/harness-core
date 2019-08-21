@@ -1,7 +1,7 @@
 package software.wings.service.intfc.aws;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import com.google.inject.Inject;
 
@@ -32,7 +32,7 @@ public class AwsAppAutoScalingHelperServiceDelegateTest extends WingsBaseTest {
         + "        }";
 
     ScalableTarget scalableTarget = scalingHelperServiceDelegate.getScalableTargetFromJson(json);
-    assertNotNull(scalableTarget);
+    assertThat(scalableTarget).isNotNull();
     assertEquals("ecs", scalableTarget.getServiceNamespace());
     assertEquals("ecs:service:DesiredCount", scalableTarget.getScalableDimension());
     assertEquals(2, scalableTarget.getMinCapacity().intValue());
@@ -59,7 +59,7 @@ public class AwsAppAutoScalingHelperServiceDelegateTest extends WingsBaseTest {
         + "        }";
 
     List<ScalingPolicy> scalingPolicies = scalingHelperServiceDelegate.getScalingPolicyFromJson(json);
-    assertNotNull(scalingPolicies);
+    assertThat(scalingPolicies).isNotNull();
     assertEquals(1, scalingPolicies.size());
 
     ScalingPolicy scalingPolicy = scalingPolicies.get(0);
@@ -98,7 +98,7 @@ public class AwsAppAutoScalingHelperServiceDelegateTest extends WingsBaseTest {
         + "        }]  ";
 
     List<ScalingPolicy> scalingPolicies = scalingHelperServiceDelegate.getScalingPolicyFromJson(json);
-    assertNotNull(scalingPolicies);
+    assertThat(scalingPolicies).isNotNull();
     assertEquals(2, scalingPolicies.size());
 
     ScalingPolicy scalingPolicy = scalingPolicies.get(0);
@@ -113,7 +113,7 @@ public class AwsAppAutoScalingHelperServiceDelegateTest extends WingsBaseTest {
     assertEquals("ecs", scalingPolicy.getServiceNamespace());
     assertEquals("ecs:service:DesiredCount", scalingPolicy.getScalableDimension());
 
-    assertNotNull(scalingPolicy.getTargetTrackingScalingPolicyConfiguration());
+    assertThat(scalingPolicy.getTargetTrackingScalingPolicyConfiguration()).isNotNull();
     TargetTrackingScalingPolicyConfiguration configuration =
         scalingPolicy.getTargetTrackingScalingPolicyConfiguration();
 
@@ -121,7 +121,7 @@ public class AwsAppAutoScalingHelperServiceDelegateTest extends WingsBaseTest {
     assertEquals(300, configuration.getScaleInCooldown().intValue());
     assertEquals(300, configuration.getScaleOutCooldown().intValue());
 
-    assertNotNull(configuration.getPredefinedMetricSpecification());
+    assertThat(configuration.getPredefinedMetricSpecification()).isNotNull();
     PredefinedMetricSpecification metricSpecification = configuration.getPredefinedMetricSpecification();
     assertEquals(predefinedMetricType, metricSpecification.getPredefinedMetricType());
   }

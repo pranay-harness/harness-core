@@ -1,6 +1,6 @@
 package io.harness.testframework.restutils;
 
-import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
@@ -24,7 +24,7 @@ public class ServiceVariablesUtils {
             .post("/service-variables")
             .as(new GenericType<RestResponse<ServiceVariable>>() {}.getType());
 
-    assertNotNull(addedServiceVariable.getResource());
+    assertThat(addedServiceVariable.getResource()).isNotNull();
 
     return addedServiceVariable.getResource();
   }
@@ -39,7 +39,7 @@ public class ServiceVariablesUtils {
             .get("/service-variables")
             .as(new GenericType<RestResponse<PageResponse<ServiceVariable>>>() {}.getType());
 
-    assertNotNull(serviceReslonseList.getResource());
+    assertThat(serviceReslonseList.getResource()).isNotNull();
 
     return serviceReslonseList.getResource().getResponse();
   }

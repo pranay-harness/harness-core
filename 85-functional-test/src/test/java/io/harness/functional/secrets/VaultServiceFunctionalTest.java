@@ -1,7 +1,6 @@
 package io.harness.functional.secrets;
 
 import static io.harness.rule.OwnerRule.MARK;
-import static junit.framework.TestCase.assertNotNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
@@ -59,7 +58,7 @@ public class VaultServiceFunctionalTest extends AbstractFunctionalTest {
     vaultConfigWithAppRoleSecret.setDefault(true);
 
     String appRoleVaultId = VaultRestUtils.addVault(bearerToken, vaultConfigWithAppRoleSecret);
-    assertNotNull(appRoleVaultId);
+    assertThat(appRoleVaultId).isNotNull();
     logger.info("AppRole based Vault secret manager created.");
     List<VaultConfig> vaultConfigs = SecretsRestUtils.getListConfigs(getAccount().getUuid(), bearerToken);
     assertThat(SecretsUtils.isVaultAvailable(vaultConfigs, APPROLE_VAULT_NAME)).isTrue();

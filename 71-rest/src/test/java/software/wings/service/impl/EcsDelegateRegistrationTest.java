@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.AdditionalAnswers.returnsSecondArg;
 import static org.mockito.Matchers.any;
@@ -155,7 +154,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
         .when(delegateService)
         .upsertDelegateOperation(any(Delegate.class), any(Delegate.class));
     delegate = delegateService.handleEcsDelegateRegistration(delegate);
-    assertNotNull(delegate);
+    assertThat(delegate).isNotNull();
     assertEquals("12345", delegate.getUuid());
 
     verify(delegateService, times(1)).handleECSRegistrationUsingID(any(Delegate.class));
@@ -233,7 +232,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
         .upsertDelegateOperation(any(Delegate.class), any(Delegate.class));
 
     delegate = delegateService.handleEcsDelegateRegistration(delegate);
-    assertNotNull(delegate);
+    assertThat(delegate).isNotNull();
     assertEquals("12345", delegate.getUuid());
 
     verify(delegateService, times(1)).handleECSRegistrationUsingSeqNumAndToken(any(Delegate.class));
@@ -276,7 +275,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
         .upsertDelegateOperation(any(Delegate.class), any(Delegate.class));
 
     delegate = delegateService.handleEcsDelegateRegistration(delegate);
-    assertNotNull(delegate);
+    assertThat(delegate).isNotNull();
     assertEquals(null, delegate.getUuid());
     assertEquals("hostName_1", delegate.getHostName());
 
@@ -348,10 +347,10 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
 
     DelegateSequenceConfig config =
         delegateService.getInactiveDelegateSequenceConfigToReplace(delegate, existingDelegateSequenceConfigs);
-    assertNotNull(config);
+    assertThat(config).isNotNull();
     assertEquals(1, config.getSequenceNum().intValue());
 
-    assertNotNull(delegate.getTags());
+    assertThat(delegate.getTags()).isNotNull();
     assertEquals(2, delegate.getTags().size());
     assertThat(delegate.getTags().contains("tag1")).isTrue();
     assertThat(delegate.getTags().contains("tag2")).isTrue();
@@ -420,7 +419,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
 
     // existing sequenceConfigs are {.. seqNum = 0 / 1 / 2}, so 3 should picked as new
     DelegateSequenceConfig config = delegateService.addNewDelegateSequenceConfigRecord(delegate);
-    assertNotNull(config);
+    assertThat(config).isNotNull();
     assertEquals(3, config.getSequenceNum().intValue());
     assertEquals("hostname", config.getHostName());
     assertEquals(ACCOUNT_ID, config.getAccountId());
@@ -430,7 +429,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
     existingDelegateSequenceConfigs.get(2).setSequenceNum(Integer.valueOf(3));
     delegate.setSequenceNum(null);
     config = delegateService.addNewDelegateSequenceConfigRecord(delegate);
-    assertNotNull(config);
+    assertThat(config).isNotNull();
     assertEquals(2, config.getSequenceNum().intValue());
     assertEquals("hostname", config.getHostName());
     assertEquals(ACCOUNT_ID, config.getAccountId());
@@ -471,7 +470,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
 
     Delegate delegate = Delegate.builder().accountId(ACCOUNT_ID).hostName("hostname").build();
     delegate = delegateService.registerDelegateWithNewSequenceGeneration(delegate);
-    assertNotNull(delegate);
+    assertThat(delegate).isNotNull();
     verify(delegateService, times(0)).addNewDelegateSequenceConfigRecord(any(Delegate.class));
 
     // Case 2: creating new DelegateSequenceConfig record

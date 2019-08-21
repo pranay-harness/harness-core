@@ -1,7 +1,6 @@
 package io.harness.testframework.restutils;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.framework.email.GuerillaEmailDetails;
@@ -16,7 +15,7 @@ public class GuerillaMailUtils {
                                       .queryParam("agent", "Mozilla_foo_bar")
                                       .get()
                                       .as(GuerillaEmailInfo.class);
-    assertNotNull(emailInfo);
+    assertThat(emailInfo).isNotNull();
     boolean isEmailForgotten = forgetEmailId(emailInfo.getSidToken());
     assertThat(isEmailForgotten).isTrue();
     emailInfo = Setup.email()
@@ -26,7 +25,7 @@ public class GuerillaMailUtils {
                     .get()
                     .as(GuerillaEmailInfo.class);
 
-    assertNotNull(emailInfo);
+    assertThat(emailInfo).isNotNull();
 
     return emailInfo;
   }
@@ -43,7 +42,7 @@ public class GuerillaMailUtils {
                                                 .get()
                                                 .as(GuerillaEmailDetails.class);
 
-    assertNotNull(currentEmailList);
+    assertThat(currentEmailList).isNotNull();
     return currentEmailList;
   }
 
@@ -54,7 +53,7 @@ public class GuerillaMailUtils {
                                         .queryParam("sid_token", sidToken)
                                         .get()
                                         .as(GuerillaIndividualEmail.class);
-    assertNotNull(email);
+    assertThat(email).isNotNull();
     return email;
   }
 }

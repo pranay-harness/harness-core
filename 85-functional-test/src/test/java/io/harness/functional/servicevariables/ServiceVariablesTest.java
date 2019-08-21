@@ -3,7 +3,6 @@ package io.harness.functional.servicevariables;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.rule.OwnerRule.SWAMY;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
@@ -137,17 +136,17 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
 
     logger.info("Adding service variable : " + normalServiceVariable.getName());
     addedNormalServiceVariable = ServiceVariablesUtils.addOrGetServiceVariable(bearerToken, normalServiceVariable);
-    assertNotNull(addedNormalServiceVariable);
+    assertThat(addedNormalServiceVariable).isNotNull();
     logger.info("Adding service variable : " + overridableVariables.getName());
     addedOverridableServiceVariable = ServiceVariablesUtils.addOrGetServiceVariable(bearerToken, overridableVariables);
-    assertNotNull(addedOverridableServiceVariable);
+    assertThat(addedOverridableServiceVariable).isNotNull();
     overridableVariables.setEntityType(EntityType.ENVIRONMENT);
     overridableVariables.setEntityId(environment.getUuid());
     overridableVariables.setAppId(environment.getAppId());
     overridableVariables.setValue(ENV_OVERRIDDEN_TEXT.toCharArray());
     logger.info("Adding environment service variable : " + overridableVariables.getName());
     addedEnvOverriddenVariable = ServiceVariablesUtils.addOrGetServiceVariable(bearerToken, overridableVariables);
-    assertNotNull(addedEnvOverriddenVariable);
+    assertThat(addedEnvOverriddenVariable).isNotNull();
 
     WorkflowPhase phase1 =
         aWorkflowPhase().serviceId(service.getUuid()).infraMappingId(infrastructureMapping.getUuid()).build();
@@ -192,7 +191,7 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
         WorkflowRestUtils.startWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
     assertThat(workflowExecution).isNotNull();
 
-    assertNotNull(workflowExecution);
+    assertThat(workflowExecution).isNotNull();
 
     logger.info("Waiting for 2 mins until the workflow execution is complete");
 
@@ -225,7 +224,7 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
     GraphNode gNode = completedWorkflowExecution.getExecutionNode().getNext().getGroup().getElements().get(0);
     GraphNode verificationPhase = null;
 
-    assertNotNull(gNode);
+    assertThat(gNode).isNotNull();
 
     while (gNode.getNext() != null) {
       if (gNode.getNext().getName().equals("Verify Service")) {
@@ -234,7 +233,7 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
       }
       gNode = gNode.getNext();
     }
-    assertNotNull(verificationPhase);
+    assertThat(verificationPhase).isNotNull();
     assertThat(verificationPhase.getStatus().equals("SUCCESS")).isTrue();
     assertThat(verificationPhase.getGroup().getElements().size() == 1).isTrue();
 
@@ -250,11 +249,11 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
     JsonPath jPath = JsonPath.from(dataValue.getValue().toString());
 
     System.out.println(jPath.get("headers").toString());
-    assertNotNull(jPath.get("headers." + NORMAL_TEXT.toLowerCase()));
+    assertThat((Object) jPath.get("headers." + NORMAL_TEXT.toLowerCase())).isNotNull();
     String normalTextVal = jPath.get("headers." + NORMAL_TEXT.toLowerCase()).toString();
     assertThat(normalTextVal.equals("Test")).isTrue();
 
-    assertNotNull(jPath.get("headers." + ENV_OVERRIDDEN_TEXT.toLowerCase()));
+    assertThat((Object) jPath.get("headers." + ENV_OVERRIDDEN_TEXT.toLowerCase())).isNotNull();
     String envTextValue = jPath.get("headers." + ENV_OVERRIDDEN_TEXT.toLowerCase()).toString();
     assertThat(envTextValue.equals("Test")).isTrue();
 

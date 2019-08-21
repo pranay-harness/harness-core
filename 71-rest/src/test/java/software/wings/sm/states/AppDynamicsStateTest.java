@@ -6,7 +6,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -254,7 +253,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
                 LinkedHashMap<String, LinkedHashMap<String, List<ContinuousVerificationExecutionMetaData>>>>>>
         cvExecutionMetaData =
             continuousVerificationService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L, user);
-    assertNotNull(cvExecutionMetaData);
+    assertThat(cvExecutionMetaData).isNotNull();
     ContinuousVerificationExecutionMetaData continuousVerificationExecutionMetaData1 =
         cvExecutionMetaData.get(1519171200000L)
             .get("dummy artifact")
@@ -272,13 +271,13 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   @Category(UnitTests.class)
   public void testGetMetricType() {
     String errType = AppDynamicsState.getMetricTypeForMetric(AppdynamicsConstants.ERRORS_PER_MINUTE);
-    assertNotNull(errType);
+    assertThat(errType).isNotNull();
     assertEquals("Error Type should be", MetricType.ERROR.name(), errType);
     String throughput = AppDynamicsState.getMetricTypeForMetric(AppdynamicsConstants.CALLS_PER_MINUTE);
-    assertNotNull(throughput);
+    assertThat(throughput).isNotNull();
     assertEquals("Error Type should be", MetricType.THROUGHPUT.name(), throughput);
     String respTime = AppDynamicsState.getMetricTypeForMetric(AppdynamicsConstants.AVG_RESPONSE_TIME);
-    assertNotNull(respTime);
+    assertThat(respTime).isNotNull();
     assertEquals("Error Type should be", MetricType.RESP_TIME.name(), respTime);
 
     String dummy = AppDynamicsState.getMetricTypeForMetric("incorrectName");

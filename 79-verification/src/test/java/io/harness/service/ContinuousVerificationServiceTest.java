@@ -7,7 +7,6 @@ import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
@@ -1106,7 +1105,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
       final ContinuousVerificationAlertData alertData = (ContinuousVerificationAlertData) alert.getAlertData();
       assertEquals(MLAnalysisType.LOG_ML, alertData.getMlAnalysisType());
       assertEquals(configId, alertData.getCvConfiguration().getUuid());
-      assertNotNull(alertData.getLogAnomaly());
+      assertThat(alertData.getLogAnomaly()).isNotNull();
 
       if (alertData.getLogAnomaly().equals("msg1")) {
         assertEquals(Sets.newHashSet("host1"), alertData.getHosts());

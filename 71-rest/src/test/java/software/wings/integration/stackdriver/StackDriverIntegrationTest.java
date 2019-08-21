@@ -5,7 +5,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
@@ -67,7 +66,7 @@ public class StackDriverIntegrationTest extends BaseIntegrationTest {
                               .displayName(generateUuid())
                               .build());
     SettingAttribute settingAttribute = settingsService.getByName(accountId, Application.GLOBAL_APP_ID, GCP_PLAYGROUND);
-    assertNotNull(settingAttribute);
+    assertThat(settingAttribute).isNotNull();
     gcpConfigId = settingAttribute.getUuid();
     assertThat(isNotEmpty(gcpConfigId)).isTrue();
   }
@@ -134,8 +133,8 @@ public class StackDriverIntegrationTest extends BaseIntegrationTest {
 
     JSONObject response = jsonResponseObject.getJSONObject("resource");
     assertEquals("Request failed", restResponse.getStatus(), HttpStatus.SC_OK);
-    assertNotNull(response.get("severity"));
-    assertNotNull(response.get("textPayload"));
+    assertThat(response.get("severity")).isNotNull();
+    assertThat(response.get("textPayload")).isNotNull();
   }
 
   private StackDriverSetupTestNodeData getStackDriverSetupTestNodedata() {

@@ -5,7 +5,6 @@ import static io.harness.lock.PersistentLocker.LOCKS_STORE;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.threading.Morpheus.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 
 import com.google.inject.Inject;
 
@@ -49,7 +48,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
     }
 
     DBObject dbLock = getDbLock(uuid);
-    assertNotNull(dbLock);
+    assertThat(dbLock).isNotNull();
 
     boolean damage = false;
     try (AcquiredLock lock = persistentLocker.acquireLock(uuid, Duration.ofSeconds(1))) {

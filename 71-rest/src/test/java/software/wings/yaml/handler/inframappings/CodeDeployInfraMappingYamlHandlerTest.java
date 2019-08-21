@@ -3,7 +3,6 @@ package software.wings.yaml.handler.inframappings;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -63,15 +62,15 @@ public class CodeDeployInfraMappingYamlHandlerTest extends BaseInfraMappingYamlH
 
     CodeDeployInfrastructureMapping infrastructureMapping =
         yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
-    assertNotNull(infrastructureMapping);
+    assertThat(infrastructureMapping).isNotNull();
     assertEquals(infrastructureMapping.getName(), infraMappingName);
 
     Yaml yaml = yamlHandler.toYaml(infrastructureMapping, APP_ID);
-    assertNotNull(yaml);
+    assertThat(yaml).isNotNull();
     assertEquals(InfrastructureMappingType.AWS_AWS_CODEDEPLOY.name(), yaml.getType());
 
     String yamlContent = getYamlContent(yaml);
-    assertNotNull(yamlContent);
+    assertThat(yamlContent).isNotNull();
     yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
     assertEquals(validYamlContent, yamlContent);
 

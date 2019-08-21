@@ -4,9 +4,9 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anySet;
@@ -347,7 +347,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
 
     CloudFormationCreateStackRequest cloudFormationCreateStackRequest =
         (CloudFormationCreateStackRequest) delegateTask.getData().getParameters()[0];
-    assertNotNull(cloudFormationCreateStackRequest);
+    assertThat(cloudFormationCreateStackRequest).isNotNull();
     assertEquals(Regions.US_EAST_1.name(), cloudFormationCreateStackRequest.getRegion());
     assertEquals(CloudFormationCommandType.CREATE_STACK, cloudFormationCreateStackRequest.getCommandType());
     assertEquals(APP_ID, cloudFormationCreateStackRequest.getAppId());
@@ -400,7 +400,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
 
     CloudFormationDeleteStackRequest cloudFormationDeleteStackRequest =
         (CloudFormationDeleteStackRequest) delegateTask.getData().getParameters()[0];
-    assertNotNull(cloudFormationDeleteStackRequest);
+    assertThat(cloudFormationDeleteStackRequest).isNotNull();
     assertEquals(Regions.US_EAST_1.name(), cloudFormationDeleteStackRequest.getRegion());
     assertEquals(CloudFormationCommandType.DELETE_STACK, cloudFormationDeleteStackRequest.getCommandType());
     assertEquals(APP_ID, cloudFormationDeleteStackRequest.getAppId());

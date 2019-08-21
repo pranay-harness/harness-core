@@ -8,7 +8,6 @@ import static io.harness.rule.OwnerRule.PARNIAN;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
@@ -215,7 +214,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
 
     task = learningEngineService.getNextLearningEngineAnalysisTask(ServiceApiVersion.V1, Optional.of(true),
         Optional.of(Lists.newArrayList(MLAnalysisType.TIME_SERIES, MLAnalysisType.LOG_CLUSTER, MLAnalysisType.LOG_ML)));
-    assertNotNull(task);
+    assertThat(task).isNotNull();
     assertEquals(MLAnalysisType.LOG_CLUSTER, task.getMl_analysis_type());
     assertEquals(numOfTasks - 1,
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
@@ -224,7 +223,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
 
     task = learningEngineService.getNextLearningEngineAnalysisTask(
         ServiceApiVersion.V1, Optional.of(true), Optional.empty());
-    assertNotNull(task);
+    assertThat(task).isNotNull();
     assertEquals(MLAnalysisType.LOG_CLUSTER, task.getMl_analysis_type());
     assertEquals(numOfTasks - 2,
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
@@ -233,7 +232,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
 
     task = learningEngineService.getNextLearningEngineAnalysisTask(
         ServiceApiVersion.V1, Optional.of(true), Optional.of(Lists.newArrayList()));
-    assertNotNull(task);
+    assertThat(task).isNotNull();
     assertEquals(MLAnalysisType.LOG_CLUSTER, task.getMl_analysis_type());
     assertEquals(numOfTasks - 3,
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)

@@ -5,7 +5,6 @@ import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.data.structure.EmptyPredicate;
@@ -241,7 +240,7 @@ public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
       restResponse = getRequestBuilderWithAuthHeader(target).post(
           entity(multiPart, MediaType.MULTIPART_FORM_DATA), new GenericType<RestResponse<Object>>() {});
       assertThat(restResponse.getResponseMessages()).isEmpty();
-      assertNotNull(restResponse.getResource());
+      assertThat(restResponse.getResource()).isNotNull();
     } else {
       restResponse = getRequestBuilderWithAuthHeader(target).put(
           entity(multiPart, MediaType.MULTIPART_FORM_DATA), new GenericType<RestResponse<Object>>() {});
@@ -263,7 +262,7 @@ public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
     RestResponse<ConfigFile> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<ConfigFile>>() {});
     assertThat(restResponse.getResponseMessages()).isEmpty();
-    assertNotNull(restResponse.getResource());
+    assertThat(restResponse.getResource()).isNotNull();
 
     return restResponse.getResource();
   }
@@ -272,7 +271,7 @@ public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
     WebTarget target =
         client.target(API_BASE + "/configs/" + configId + "/download?appId=" + appId + "&version=" + version);
     String restResponse = getRequestBuilderWithAuthHeader(target).get(new GenericType<String>() {});
-    assertNotNull(restResponse);
+    assertThat(restResponse).isNotNull();
 
     return restResponse;
   }

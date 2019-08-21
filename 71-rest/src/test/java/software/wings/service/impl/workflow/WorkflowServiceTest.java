@@ -13,7 +13,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.util.Lists.newArrayList;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -2832,11 +2831,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
     HorizontalPodAutoscaler horizontalPodAutoscaler = KubernetesHelper.loadYaml(yamlHPA);
     assertEquals("autoscaling/v2beta1", horizontalPodAutoscaler.getApiVersion());
     assertEquals("HorizontalPodAutoscaler", horizontalPodAutoscaler.getKind());
-    assertNotNull(horizontalPodAutoscaler.getSpec());
-    assertNotNull(horizontalPodAutoscaler.getMetadata());
+    assertThat(horizontalPodAutoscaler.getSpec()).isNotNull();
+    assertThat(horizontalPodAutoscaler.getMetadata()).isNotNull();
     assertEquals(Integer.valueOf(2), horizontalPodAutoscaler.getSpec().getMinReplicas());
     assertEquals(Integer.valueOf(10), horizontalPodAutoscaler.getSpec().getMaxReplicas());
-    assertNotNull(horizontalPodAutoscaler.getSpec().getAdditionalProperties());
+    assertThat(horizontalPodAutoscaler.getSpec().getAdditionalProperties()).isNotNull();
     assertEquals(1, horizontalPodAutoscaler.getSpec().getAdditionalProperties().size());
     assertEquals("metrics", horizontalPodAutoscaler.getSpec().getAdditionalProperties().keySet().iterator().next());
   }
@@ -3042,7 +3041,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     phaseStep = createPhaseStep(uuid);
     workflow = constructWorkflowWithParam(phaseStep);
     workflowService.createWorkflow(workflow);
-    assertNotNull(workflowService.settingsServiceDeleting(settingAttribute).message());
+    assertThat(workflowService.settingsServiceDeleting(settingAttribute).message()).isNotNull();
   }
 
   @Test

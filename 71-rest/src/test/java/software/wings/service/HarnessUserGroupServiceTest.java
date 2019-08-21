@@ -3,7 +3,6 @@ package software.wings.service;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
@@ -112,7 +111,7 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
     HarnessUserGroup savedHarnessUserGroup2 = harnessUserGroupService.save(harnessUserGroup2);
 
     PageResponse pageResponse = harnessUserGroupService.list(aPageRequest().build());
-    assertNotNull(pageResponse);
+    assertThat(pageResponse).isNotNull();
     List<HarnessUserGroup> harnessUserGroupList = pageResponse.getResponse();
     assertThat(harnessUserGroupList).isNotNull();
     assertThat(harnessUserGroupList).hasSize(2);
@@ -193,7 +192,7 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
     harnessUserGroupService.save(harnessUserGroup2);
 
     Set<Action> actionSet = harnessUserGroupService.listAllowedUserActionsForAccount(accountId1, memberId1);
-    assertNotNull(actionSet);
+    assertThat(actionSet).isNotNull();
     assertThat(actionSet).size().isEqualTo(1);
     assertThat(actionSet).containsExactly(Action.READ);
   }
@@ -228,7 +227,7 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
     // Scenario 1
     when(accountService.listAccounts(anySet())).thenReturn(accounts);
     List<Account> result = harnessUserGroupService.listAllowedSupportAccountsForUser(memberId1, Sets.newHashSet());
-    assertNotNull(result);
+    assertThat(result).isNotNull();
     assertThat(result).size().isEqualTo(2);
     assertThat(result).containsExactlyInAnyOrder(accounts.toArray(new Account[0]));
 
@@ -236,7 +235,7 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
     when(accountService.listAccounts(anySet())).thenReturn(Lists.newArrayList(account2));
     when(accountService.list(any())).thenReturn(Lists.newArrayList(account2));
     result = harnessUserGroupService.listAllowedSupportAccountsForUser(memberId2, Sets.newHashSet());
-    assertNotNull(result);
+    assertThat(result).isNotNull();
     assertThat(result).size().isEqualTo(1);
     assertThat(result).containsExactlyInAnyOrder(account2);
   }

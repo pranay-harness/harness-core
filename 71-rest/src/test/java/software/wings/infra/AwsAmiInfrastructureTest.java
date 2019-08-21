@@ -2,7 +2,6 @@ package software.wings.infra;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static software.wings.infra.InfraDefinitionTestConstants.CLASSIC_LOAD_BALANCERS;
 import static software.wings.infra.InfraDefinitionTestConstants.HOSTNAME_CONVENTION;
 import static software.wings.infra.InfraDefinitionTestConstants.REGION;
@@ -57,7 +56,7 @@ public class AwsAmiInfrastructureTest {
   public void testGetMappingClass() {
     Class<? extends InfrastructureMapping> mappingClass = awsAmiInfrastructure.getMappingClass();
 
-    assertNotNull(mappingClass);
+    assertThat(mappingClass).isNotNull();
     assertEquals(mappingClass, AwsAmiInfrastructureMapping.class);
   }
 
@@ -65,7 +64,7 @@ public class AwsAmiInfrastructureTest {
   @Category(UnitTests.class)
   public void testGetFieldMapForClass() {
     Map<String, Object> fieldMap = awsAmiInfrastructure.getFieldMapForClass();
-    assertNotNull(fieldMap);
+    assertThat(fieldMap).isNotNull();
 
     assertThat(fieldMap.containsKey("cloudProviderId")).isFalse();
 

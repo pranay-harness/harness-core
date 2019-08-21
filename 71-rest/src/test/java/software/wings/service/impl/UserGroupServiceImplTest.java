@@ -6,7 +6,6 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -208,7 +207,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     UserGroup savedUserGroup2 = userGroupService.save(userGroup2);
 
     PageResponse pageResponse = userGroupService.list(accountId, PageRequestBuilder.aPageRequest().build(), true);
-    assertNotNull(pageResponse);
+    assertThat(pageResponse).isNotNull();
     List<UserGroup> userGroupList = pageResponse.getResponse();
     assertThat(userGroupList).isNotNull();
     assertThat(userGroupList).hasSize(2);
@@ -356,14 +355,14 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     UserGroup saved = userGroupService.save(ug);
 
     UserGroup fetchedGroup = userGroupService.get(accountId, saved.getUuid(), false);
-    assertNotNull(fetchedGroup);
-    assertNotNull(fetchedGroup.getNotificationSettings());
+    assertThat(fetchedGroup).isNotNull();
+    assertThat(fetchedGroup.getNotificationSettings()).isNotNull();
 
     NotificationSettings settings =
         new NotificationSettings(true, true, Collections.emptyList(), SlackNotificationSetting.emptyConfig(), null);
     userGroupService.updateNotificationSettings(accountId, fetchedGroup.getUuid(), settings);
     fetchedGroup = userGroupService.get(accountId, fetchedGroup.getUuid(), false);
-    assertNotNull(fetchedGroup.getNotificationSettings());
+    assertThat(fetchedGroup.getNotificationSettings()).isNotNull();
     assertEquals(settings, fetchedGroup.getNotificationSettings());
   }
 

@@ -3,7 +3,6 @@ package software.wings.integration;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import io.harness.category.element.IntegrationTests;
@@ -47,7 +46,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
     super.loginAdminUser();
 
     Account account = accountService.getByName("Harness");
-    assertNotNull(account);
+    assertThat(account).isNotNull();
 
     accountId = account.getUuid();
   }
@@ -56,7 +55,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
   @Category(IntegrationTests.class)
   public void testAccountExportImport() throws Exception {
     byte[] exportedAccountData = exportAccountData(accountId);
-    assertNotNull(exportedAccountData);
+    assertThat(exportedAccountData).isNotNull();
 
     ZipInputStream zipInputStream = new ZipInputStream(new ByteArrayInputStream(exportedAccountData));
 
@@ -96,19 +95,19 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
 
       // 4. Verify relevant data has been imported successfully.
       Application application = appService.getAppByName(qaHarnessAccountId, "Harness Verification");
-      assertNotNull(application);
+      assertThat(application).isNotNull();
       Pipeline pipeline =
           pipelineService.getPipelineByName(application.getAppId(), "Continuous Verification NewRelic Splunk Elk");
-      assertNotNull(pipeline);
+      assertThat(pipeline).isNotNull();
       Environment environment = environmentService.getEnvironmentByName(application.getUuid(), "Production");
-      assertNotNull(environment);
+      assertThat(environment).isNotNull();
       Workflow workflow = workflowService.readWorkflowByName(application.getAppId(), "CV Containers Canary AppD");
-      assertNotNull(workflow);
+      assertThat(workflow).isNotNull();
       Trigger trigger = triggerService.getTriggerByWebhookToken("q1JbgjsCqeggY3Y6z3QPCvXpvQtBzZRPcSCm0Rqm");
-      assertNotNull(trigger);
+      assertThat(trigger).isNotNull();
       // CVConfiguration cvConfiguration =
       //   cvConfigurationService.getConfiguration("Prod-Manager", application.getUuid(), environment.getUuid());
-      // assertNotNull(cvConfiguration);
+      // assertThat(cvConfiguration).isNotNull();
     } finally {
       // 5. Delete the imported account after done.
       deleteAccount(qaHarnessAccountId);
@@ -135,13 +134,13 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
 
       // 4. Verify relevant data has been imported successfully.
       Application application = appService.getAppByName(qaHarnessAccountId, "swamy-test");
-      assertNotNull(application);
+      assertThat(application).isNotNull();
       Service service = serviceResourceService.getServiceByName(application.getUuid(), "Docker");
-      assertNotNull(service);
+      assertThat(service).isNotNull();
       Environment environment = environmentService.getEnvironmentByName(application.getUuid(), "gcp");
-      assertNotNull(environment);
+      assertThat(environment).isNotNull();
       Workflow workflow = workflowService.readWorkflowByName(application.getAppId(), "DockerBasic");
-      assertNotNull(workflow);
+      assertThat(workflow).isNotNull();
     } finally {
       // 5. Delete the imported account after done.
       deleteAccount(qaHarnessAccountId);
@@ -153,7 +152,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
   public void testSpecificExport() throws Exception {
     byte[] exportedAccountData =
         exportSpecificAccountData(accountId, Application.class.getAnnotation(Entity.class).value());
-    assertNotNull(exportedAccountData);
+    assertThat(exportedAccountData).isNotNull();
 
     ZipInputStream zipInputStream = new ZipInputStream(new ByteArrayInputStream(exportedAccountData));
 
@@ -227,7 +226,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
         entity(multiPart, MediaType.MULTIPART_FORM_DATA_TYPE), new GenericType<RestResponse<ImportStatusReport>>() {});
     // Verify vault config was successfully created.
     assertThat(restResponse.getResponseMessages()).isEmpty();
-    assertNotNull(restResponse.getResource());
+    assertThat(restResponse.getResource()).isNotNull();
     assertThat(restResponse.getResource().getStatuses().size() > 0).isTrue();
   }
 
@@ -247,16 +246,16 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
     WebTarget target = client.target(API_BASE + "/account/new");
     RestResponse<Account> response = getRequestBuilderWithAuthHeader(target).post(
         entity(account, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Account>>() {});
-    assertNotNull(response.getResource());
+    assertThat(response.getResource()).isNotNull();
     assertThat(accountService.exists(account.getAccountName())).isTrue();
-    assertNotNull(accountService.getByName(account.getCompanyName()));
+    assertThat(accountService.getByName(account.getCompanyName())).isNotNull();
   }
 
   private void deleteAccount(String accountId) {
     WebTarget target = client.target(API_BASE + "/account/delete/" + accountId);
     RestResponse<Boolean> response =
         getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse<Boolean>>() {});
-    assertNotNull(response.getResource());
+    assertThat(response.getResource()).isNotNull();
     assertThat(response.getResource()).isTrue();
   }
 }

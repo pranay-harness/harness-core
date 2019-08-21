@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
@@ -141,7 +140,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
                 LinkedHashMap<String, LinkedHashMap<String, List<ContinuousVerificationExecutionMetaData>>>>>>
         execData = cvService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L, null);
 
-    assertNotNull("Execution data is not null", execData);
+    assertThat(execData).isNotNull();
     assertEquals("Execution data should be empty", 0, execData.size());
   }
 
@@ -155,7 +154,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
                 LinkedHashMap<String, LinkedHashMap<String, List<ContinuousVerificationExecutionMetaData>>>>>>
         execData = cvService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L, user);
 
-    assertNotNull("Execution data is not null", execData);
+    assertThat(execData).isNotNull();
     assertEquals("Execution data should not be empty", 1, execData.size());
   }
 
@@ -175,7 +174,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
                 LinkedHashMap<String, LinkedHashMap<String, List<ContinuousVerificationExecutionMetaData>>>>>>
         execData = cvService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L, user);
 
-    assertNotNull("Execution data is not null", execData);
+    assertThat(execData).isNotNull();
     assertEquals("Execution data should be empty", 0, execData.size());
   }
 
@@ -193,7 +192,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
             LinkedHashMap<String,
                 LinkedHashMap<String, LinkedHashMap<String, List<ContinuousVerificationExecutionMetaData>>>>>>
         execData = cvService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L, user);
-    assertNotNull("Execution data is not null", execData);
+    assertThat(execData).isNotNull();
     assertEquals("Execution data should be empty", 0, execData.size());
   }
 

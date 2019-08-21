@@ -1,8 +1,8 @@
 package software.wings.verification;
 
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -210,7 +210,7 @@ public class CloudWatchCVConfigurationYamlHandlerTest extends WingsBaseTest {
     assertEquals("EC2 instance names should be same", ec2InstanceNames, bean.getEc2InstanceNames());
     assertEquals("EC2 metrics should be same", ec2Metrics, bean.getEc2Metrics());
     assertEquals("Region should be same", region, bean.getRegion());
-    assertNotNull(bean.getUuid());
+    assertThat(bean.getUuid()).isNotNull();
   }
 
   @Test(expected = WingsException.class)

@@ -1,7 +1,7 @@
 package io.harness.testframework.restutils;
 
 import static io.restassured.config.EncoderConfig.encoderConfig;
-import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -157,7 +157,7 @@ public class SettingsUtils {
   public static int getCloudproviderConnectorCount(String bearerToken, String accountId, String category) {
     // Get all the cloudprovider/connectors
     JsonPath connectors = SettingsUtils.listCloudproviderConnector(bearerToken, accountId, category);
-    assertNotNull(connectors);
+    assertThat(connectors).isNotNull();
 
     ArrayList<HashMap<String, String>> hashMaps =
         (ArrayList<HashMap<String, String>>) connectors.getMap("resource").get("response");
@@ -181,7 +181,7 @@ public class SettingsUtils {
     boolean connFound = false;
     // Get all the cloudprovider/connectors
     JsonPath connectors = SettingsUtils.listCloudproviderConnector(bearerToken, accountId, category);
-    assertNotNull(connectors);
+    assertThat(connectors).isNotNull();
 
     ArrayList<HashMap<String, String>> hashMaps =
         (ArrayList<HashMap<String, String>>) connectors.getMap("resource").get("response");

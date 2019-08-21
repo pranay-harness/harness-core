@@ -7,7 +7,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -280,7 +279,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
           assertThat(metricResponse.getResponseMessages()).isEmpty();
           assertThat(metricResponse.getResource().isProviderReachable()).isTrue();
           assertThat(metricResponse.getResource().getLoadResponse().isLoadPresent()).isTrue();
-          assertNotNull(metricResponse.getResource().getLoadResponse().getLoadResponse());
+          assertThat(metricResponse.getResource().getLoadResponse().getLoadResponse()).isNotNull();
 
           final List<AppdynamicsMetric> tierMetrics =
               (List<AppdynamicsMetric>) metricResponse.getResource().getLoadResponse().getLoadResponse();
