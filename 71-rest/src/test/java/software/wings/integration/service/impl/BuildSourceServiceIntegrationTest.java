@@ -3,7 +3,6 @@ package software.wings.integration.service.impl;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -307,7 +306,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
     switch (type) {
       case JENKINS:
         Set<JobDetails> jobs = buildSourceService.getJobs(application.getUuid(), settingAttribute.getUuid(), null);
-        assertFalse(jobs.isEmpty());
+        assertThat(jobs.isEmpty()).isFalse();
         return;
       case ARTIFACTORY:
       case ECR:
@@ -326,7 +325,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
       case AMAZON_S3:
         Map<String, String> plans =
             buildSourceService.getPlans(application.getUuid(), settingAttribute.getUuid(), streamType.name());
-        assertFalse(plans.isEmpty());
+        assertThat(plans.isEmpty()).isFalse();
         return;
       default:
         return;
@@ -348,7 +347,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
         wingsPersistence.save(service);
         Map<String, String> plans = buildSourceService.getPlans(
             appId, settingAttribute.getUuid(), service.getUuid(), streamType.name(), repositoryType);
-        assertFalse(plans.isEmpty());
+        assertThat(plans.isEmpty()).isFalse();
     }
   }
 
@@ -365,7 +364,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
       default:
         Set<String> artifactPaths =
             buildSourceService.getArtifactPaths(appId, jobName, settingAttribute.getUuid(), groupId, streamType.name());
-        assertFalse(artifactPaths.isEmpty());
+        assertThat(artifactPaths.isEmpty()).isFalse();
         assertThat(artifactPaths.contains(artifactPath)).isTrue();
     }
   }
@@ -383,7 +382,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
       default:
         List<BuildDetails> builds =
             buildSourceService.getBuilds(appId, artifactStream.getUuid(), settingAttribute.getUuid());
-        assertFalse(builds.isEmpty());
+        assertThat(builds.isEmpty()).isFalse();
     }
   }
 
@@ -461,7 +460,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
       default:
         throw new IllegalArgumentException("invalid type: " + type);
     }
-    assertFalse(groupIds.isEmpty());
+    assertThat(groupIds.isEmpty()).isFalse();
   }
 
   @Test

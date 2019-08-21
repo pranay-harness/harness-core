@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.AdditionalAnswers.returnsSecondArg;
@@ -384,13 +383,13 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
     assertThat(delegateService.seqNumAndTokenMatchesConfig(delegate, config)).isTrue();
 
     config.setDelegateToken("abc");
-    assertFalse(delegateService.seqNumAndTokenMatchesConfig(delegate, config));
+    assertThat(delegateService.seqNumAndTokenMatchesConfig(delegate, config)).isFalse();
 
     config.setDelegateToken(null);
-    assertFalse(delegateService.seqNumAndTokenMatchesConfig(delegate, config));
+    assertThat(delegateService.seqNumAndTokenMatchesConfig(delegate, config)).isFalse();
 
     config.setDelegateToken(StringUtils.EMPTY);
-    assertFalse(delegateService.seqNumAndTokenMatchesConfig(delegate, config));
+    assertThat(delegateService.seqNumAndTokenMatchesConfig(delegate, config)).isFalse();
   }
 
   /**

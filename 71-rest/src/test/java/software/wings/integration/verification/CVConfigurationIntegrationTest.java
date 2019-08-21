@@ -8,7 +8,6 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -440,7 +439,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     getRequestResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<NewRelicCVServiceConfiguration>>() {});
     fetchedObject = getRequestResponse.getResource();
-    assertFalse(fetchedObject.isEnabled24x7());
+    assertThat(fetchedObject.isEnabled24x7()).isFalse();
     assertEquals(AnalysisTolerance.LOW, fetchedObject.getAnalysisTolerance());
     assertEquals("Config 2", fetchedObject.getName());
 
@@ -529,7 +528,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
     // Assert
     assertEquals("Datadog Config", fetchedObject.getName());
-    assertFalse(fetchedObject.isEnabled24x7());
+    assertThat(fetchedObject.isEnabled24x7()).isFalse();
     assertEquals("docker.cpu.throttled", fetchedObject.getDockerMetrics().values().iterator().next());
     assertEquals(AnalysisTolerance.MEDIUM, fetchedObject.getAnalysisTolerance());
   }
@@ -799,7 +798,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     getRequestResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<ElkCVConfiguration>>() {});
     fetchedObject = getRequestResponse.getResource();
-    assertFalse(fetchedObject.isEnabled24x7());
+    assertThat(fetchedObject.isEnabled24x7()).isFalse();
     assertEquals(AnalysisTolerance.LOW, fetchedObject.getAnalysisTolerance());
     assertEquals(121, fetchedObject.getBaselineStartMinute());
     assertEquals(330, fetchedObject.getBaselineEndMinute());
@@ -881,7 +880,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     getRequestResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<BugsnagCVConfiguration>>() {});
     fetchedObject = getRequestResponse.getResource();
-    assertFalse(fetchedObject.isEnabled24x7());
+    assertThat(fetchedObject.isEnabled24x7()).isFalse();
     assertEquals(AnalysisTolerance.LOW, fetchedObject.getAnalysisTolerance());
     assertEquals("Config 2", fetchedObject.getName());
     assertEquals("query2", fetchedObject.getQuery());
@@ -951,7 +950,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     getRequestResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<StackdriverCVConfiguration>>() {});
     fetchedObject = getRequestResponse.getResource();
-    assertFalse(fetchedObject.isEnabled24x7());
+    assertThat(fetchedObject.isEnabled24x7()).isFalse();
     assertEquals(AnalysisTolerance.LOW, fetchedObject.getAnalysisTolerance());
     assertEquals("Config 2", fetchedObject.getName());
     assertEquals("query2", fetchedObject.getQuery());
@@ -1001,7 +1000,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertThat(obj.getAnalysisTolerance()).isNull();
     assertEquals("Config 1", obj.getName());
     assertEquals("splunk_hostname", obj.getHostnameField());
-    assertFalse(obj.isAdvancedQuery());
+    assertThat(obj.isAdvancedQuery()).isFalse();
 
     url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId
         + "&stateType=" + SPLUNKV2 + "&serviceConfigurationId=" + savedObjectUuid;
@@ -1018,7 +1017,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     getRequestResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<SplunkCVConfiguration>>() {});
     fetchedObject = getRequestResponse.getResource();
-    assertFalse(fetchedObject.isEnabled24x7());
+    assertThat(fetchedObject.isEnabled24x7()).isFalse();
     assertEquals(AnalysisTolerance.LOW, fetchedObject.getAnalysisTolerance());
     assertEquals("Config 2", fetchedObject.getName());
     assertEquals("query2", fetchedObject.getQuery());
@@ -1133,7 +1132,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     getRequestResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<LogsCVConfiguration>>() {});
     fetchedObject = getRequestResponse.getResource();
-    assertFalse(fetchedObject.isEnabled24x7());
+    assertThat(fetchedObject.isEnabled24x7()).isFalse();
     assertEquals(AnalysisTolerance.LOW, fetchedObject.getAnalysisTolerance());
     assertEquals("Config 2", fetchedObject.getName());
     assertEquals("query2", fetchedObject.getQuery());
@@ -1509,7 +1508,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     RestResponse<LogsCVConfiguration> getRequestResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<LogsCVConfiguration>>() {});
     LogsCVConfiguration fetchedObject = getRequestResponse.getResource();
-    assertFalse(fetchedObject.isAlertEnabled());
+    assertThat(fetchedObject.isAlertEnabled()).isFalse();
     assertEquals(0.1, fetchedObject.getAlertThreshold(), 0.0);
     assertEquals(0, fetchedObject.getSnoozeStartTime());
     assertEquals(0, fetchedObject.getSnoozeEndTime());

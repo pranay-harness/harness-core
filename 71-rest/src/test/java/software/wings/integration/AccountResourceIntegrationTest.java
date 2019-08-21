@@ -4,7 +4,6 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import io.harness.beans.PageResponse;
@@ -70,7 +69,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
     users = userService.getUsersOfAccount(accountId);
     for (User user : users) {
       if (userService.canEnableOrDisable(user)) {
-        assertFalse(user.isDisabled());
+        assertThat(user.isDisabled()).isFalse();
       }
     }
 

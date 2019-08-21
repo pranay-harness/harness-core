@@ -3,8 +3,8 @@ package software.wings.service;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -95,13 +95,13 @@ public class KmsKeysRotationTest extends WingsBaseTest {
     if (isEmpty(newAccessKey)) {
       newAccessKey = System.getProperty(AWS_ACCESS_KEY);
     }
-    assertFalse("access key must be provided", isEmpty(newAccessKey));
+    assertThat(isEmpty(newAccessKey)).isFalse();
 
     String newSecretKey = System.getenv(AWS_SECRET_KEY);
     if (isEmpty(newSecretKey)) {
       newSecretKey = System.getProperty(AWS_SECRET_KEY);
     }
-    assertFalse("secret key must be provided", isEmpty(newSecretKey));
+    assertThat(isEmpty(newSecretKey)).isFalse();
 
     kmsConfig.setAccessKey(newAccessKey);
     kmsConfig.setSecretKey(newSecretKey);
@@ -129,19 +129,19 @@ public class KmsKeysRotationTest extends WingsBaseTest {
     if (isEmpty(newAccessKey)) {
       newAccessKey = System.getProperty(AWS_ACCESS_KEY);
     }
-    assertFalse("access key must be provided", isEmpty(newAccessKey));
+    assertThat(isEmpty(newAccessKey)).isFalse();
 
     String newSecretKey = System.getenv(AWS_SECRET_KEY);
     if (isEmpty(newSecretKey)) {
       newSecretKey = System.getProperty(AWS_SECRET_KEY);
     }
-    assertFalse("secret key must be provided", isEmpty(newSecretKey));
+    assertThat(isEmpty(newSecretKey)).isFalse();
 
     String newSecretArn = System.getenv(AWS_SECRET_ARN);
     if (isEmpty(newSecretArn)) {
       newSecretArn = System.getProperty(AWS_SECRET_ARN);
     }
-    assertFalse("arn must be provided", isEmpty(newSecretArn));
+    assertThat(isEmpty(newSecretArn)).isFalse();
 
     String newKmsConfigId = kmsService.saveKmsConfig(GLOBAL_ACCOUNT_ID,
         KmsConfig.builder()

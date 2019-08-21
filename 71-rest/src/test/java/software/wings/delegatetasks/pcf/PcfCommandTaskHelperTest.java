@@ -2,7 +2,6 @@ package software.wings.delegatetasks.pcf;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 
@@ -94,7 +93,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
 
     assertEquals(MANIFEST_YAML_1, stringBuilder.toString());
     pcfCommandTaskHelper.deleteCreatedFile(Arrays.asList(file));
-    assertFalse(file.exists());
+    assertThat(file.exists()).isFalse();
   }
 
   @Test
@@ -104,11 +103,11 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
     names.add("App__Account__dev__");
 
     assertThat(names.contains(pcfCommandTaskHelper.getAppPrefix("App__Account__dev__1"))).isTrue();
-    assertFalse(names.contains(pcfCommandTaskHelper.getAppPrefix("App__Login__dev__1")));
+    assertThat(names.contains(pcfCommandTaskHelper.getAppPrefix("App__Login__dev__1"))).isFalse();
 
     names.clear();
     names.add("App__Login__dev__");
-    assertFalse(names.contains(pcfCommandTaskHelper.getAppPrefix("App__Account__dev__1")));
+    assertThat(names.contains(pcfCommandTaskHelper.getAppPrefix("App__Account__dev__1"))).isFalse();
     assertThat(names.contains(pcfCommandTaskHelper.getAppPrefix("App__Login__dev__1"))).isTrue();
   }
 }

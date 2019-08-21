@@ -5,7 +5,6 @@ import static io.harness.rule.OwnerRule.RAGHU;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
@@ -87,7 +86,7 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(getTarget).get(new GenericType<RestResponse<Object>>() {});
     List<LogElement> logElements = parseElkResponse(response.getResource(), "info", "@timestamp",
         "yyyy-MM-dd'T'HH:mm:ssXXX", "kubernetes.pod_name", "harness-learning-engine", "log", 0, false, -1, -1);
-    assertFalse(logElements.isEmpty());
+    assertThat(logElements.isEmpty()).isFalse();
   }
 
   @Test

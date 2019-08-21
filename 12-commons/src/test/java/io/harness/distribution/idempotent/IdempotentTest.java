@@ -5,7 +5,6 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -101,7 +100,7 @@ public class IdempotentTest extends CategoryTest {
     try (IdempotentLock<BooleanIdempotentResult> idempotent =
              idempotentRegistry.create(id, ofMillis(1), ofMillis(1), ofMillis(500))) {
       assertNotNull(idempotent);
-      assertFalse(idempotent.alreadyExecuted());
+      assertThat(idempotent.alreadyExecuted()).isFalse();
       idempotent.succeeded(TRUE);
     }
     try (IdempotentLock<BooleanIdempotentResult> idempotent = idempotentRegistry.create(id)) {
@@ -111,7 +110,7 @@ public class IdempotentTest extends CategoryTest {
     sleep(ofMillis(510));
     try (IdempotentLock<BooleanIdempotentResult> idempotent = idempotentRegistry.create(id)) {
       assertNotNull(idempotent);
-      assertFalse(idempotent.alreadyExecuted());
+      assertThat(idempotent.alreadyExecuted()).isFalse();
     }
   }
 

@@ -3,7 +3,6 @@ package io.harness.functional.Connectors;
 import static io.harness.rule.OwnerRule.MEENAKSHI;
 import static io.harness.rule.OwnerRule.SUNIL;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import io.harness.category.element.FunctionalTests;
@@ -181,7 +180,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
     // Verify connector is deleted i.e connector with specific name doesn't exist
     boolean connectorFound = SettingsUtils.checkCloudproviderConnectorExist(
         bearerToken, getAccount().getUuid(), CATEGORY, CONNECTOR_NAME_NEXUS);
-    assertFalse(connectorFound);
+    assertThat(connectorFound).isFalse();
   }
 
   public boolean TC4_createJenkinsConnector() {
@@ -252,7 +251,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
     // Verify connector is deleted i.e connector with specific name doesn't exist
     boolean connectorFound = SettingsUtils.checkCloudproviderConnectorExist(
         bearerToken, getAccount().getUuid(), CATEGORY, CONNECTOR_NAME_JENKINS);
-    assertFalse(connectorFound);
+    assertThat(connectorFound).isFalse();
   }
 
   public boolean TC7_createDockerConnector() {
@@ -318,7 +317,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
     // Verify connector is deleted i.e connector with specific name doesn't exist
     boolean connectorFound = SettingsUtils.checkCloudproviderConnectorExist(
         bearerToken, getAccount().getUuid(), CATEGORY, CONNECTOR_NAME_DOCKER);
-    assertFalse(connectorFound);
+    assertThat(connectorFound).isFalse();
   }
 
   public boolean TC10_createBambooConnector() {
@@ -384,7 +383,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
     // Verify connector is deleted i.e connector with specific name doesn't exist
     boolean connectorFound = SettingsUtils.checkCloudproviderConnectorExist(
         bearerToken, getAccount().getUuid(), CATEGORY, CONNECTOR_NAME_BAMBOO);
-    assertFalse(connectorFound);
+    assertThat(connectorFound).isFalse();
   }
 
   public boolean TC13_createArtifactoryConnector() {
@@ -449,6 +448,6 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
     // Verify connector is deleted i.e connector with specific name doesn't exist
     boolean connectorFound = SettingsUtils.checkCloudproviderConnectorExist(
         bearerToken, getAccount().getUuid(), CATEGORY, CONNECTOR_NAME_ARTIFACTORY);
-    assertFalse(connectorFound);
+    assertThat(connectorFound).isFalse();
   }
 }

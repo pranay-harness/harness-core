@@ -7,7 +7,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
@@ -389,7 +388,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     assertNotNull(savedVaultConfig2);
 
     try {
-      assertFalse(savedVaultConfig.isDefault());
+      assertThat(savedVaultConfig.isDefault()).isFalse();
       assertThat(savedVaultConfig2.isDefault()).isTrue();
 
       // Update 1st vault config to be default again. 2nd vault config will be set to be non-default.
@@ -401,7 +400,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
       assertThat(savedVaultConfig.isDefault()).isTrue();
 
       savedVaultConfig2 = wingsPersistence.get(VaultConfig.class, vaultConfig2Id);
-      assertFalse(savedVaultConfig2.isDefault());
+      assertThat(savedVaultConfig2.isDefault()).isFalse();
     } finally {
       // Delete both vault configs.
       deleteVaultConfig(vaultConfigId);

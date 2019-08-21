@@ -1,7 +1,6 @@
 package software.wings.service.impl.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
 
 import com.google.inject.Inject;
 
@@ -27,6 +26,6 @@ public class AuthRuleFilterTest extends WingsBaseTest {
         .isTrue();
 
     permissionAttribute = new PermissionAttribute(PermissionType.APP, Action.READ);
-    assertFalse(authRuleFilter.isAccountLevelPermissions(Arrays.asList(permissionAttribute)));
+    assertThat(authRuleFilter.isAccountLevelPermissions(Arrays.asList(permissionAttribute))).isFalse();
   }
 }

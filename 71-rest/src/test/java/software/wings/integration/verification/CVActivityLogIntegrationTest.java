@@ -3,7 +3,6 @@ package software.wings.integration.verification;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
@@ -54,7 +53,7 @@ public class CVActivityLogIntegrationTest extends BaseIntegrationTest {
     RestResponse<List<CVActivityLogApiResponse>> response = getRequestBuilderWithAuthHeader(getTarget).get(
         new GenericType<RestResponse<List<CVActivityLogApiResponse>>>() {});
 
-    assertFalse("not empty resource" + response.getResource(), response.getResource().isEmpty());
+    assertThat(response.getResource().isEmpty()).isFalse();
     assertEquals(response.getResource().size(), 1);
     CVActivityLogApiResponse cvActivityLogApiResponse = response.getResource().get(0);
     assertEquals(0, (long) cvActivityLogApiResponse.getDataCollectionMinute());
@@ -81,7 +80,7 @@ public class CVActivityLogIntegrationTest extends BaseIntegrationTest {
     RestResponse<List<CVActivityLogApiResponse>> response = getRequestBuilderWithAuthHeader(getTarget).get(
         new GenericType<RestResponse<List<CVActivityLogApiResponse>>>() {});
 
-    assertFalse("not empty resource" + response.getResource(), response.getResource().isEmpty());
+    assertThat(response.getResource().isEmpty()).isFalse();
     assertEquals(response.getResource().size(), 1);
     CVActivityLogApiResponse cvActivityLogApiResponse = response.getResource().get(0);
     assertEquals(TimeUnit.MILLISECONDS.toMinutes(now), (long) cvActivityLogApiResponse.getDataCollectionMinute());

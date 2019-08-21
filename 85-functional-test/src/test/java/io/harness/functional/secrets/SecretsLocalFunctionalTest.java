@@ -2,7 +2,6 @@ package io.harness.functional.secrets;
 
 import static io.harness.rule.OwnerRule.SWAMY;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import io.harness.category.element.FunctionalTests;
@@ -34,7 +33,7 @@ public class SecretsLocalFunctionalTest extends AbstractFunctionalTest {
     SecretText secretText = SecretsUtils.createSecretTextObject(secretsName, secretValue);
     List<EncryptedData> encryptedDataList = SecretsRestUtils.listSecrets(getAccount().getUuid(), bearerToken);
     boolean isSecretPresent = SecretsUtils.isSecretAvailable(encryptedDataList, secretsName);
-    assertFalse(isSecretPresent);
+    assertThat(isSecretPresent).isFalse();
 
     String secretsId = SecretsRestUtils.addSecret(getAccount().getUuid(), bearerToken, secretText);
     assertThat(StringUtils.isNotBlank(secretsId)).isTrue();
@@ -59,7 +58,7 @@ public class SecretsLocalFunctionalTest extends AbstractFunctionalTest {
     assertThat(isDeletionDone).isTrue();
     encryptedDataList = SecretsRestUtils.listSecrets(getAccount().getUuid(), bearerToken);
     isSecretPresent = SecretsUtils.isSecretAvailable(encryptedDataList, secretsNewName);
-    assertFalse(isSecretPresent);
+    assertThat(isSecretPresent).isFalse();
   }
 
   /*
@@ -80,7 +79,7 @@ public class SecretsLocalFunctionalTest extends AbstractFunctionalTest {
         SecretsUtils.createSecretTextObjectWithUsageRestriction(secretsName, secretValue, "NON_PROD");
     List<EncryptedData> encryptedDataList = SecretsRestUtils.listSecrets(getAccount().getUuid(), bearerToken);
     boolean isSecretPresent = SecretsUtils.isSecretAvailable(encryptedDataList, secretsName);
-    assertFalse(isSecretPresent);
+    assertThat(isSecretPresent).isFalse();
     String secretsId = SecretsRestUtils.addSecretWithUsageRestrictions(getAccount().getUuid(), bearerToken, secretText);
     assertThat(StringUtils.isNotBlank(secretsId)).isTrue();
 
@@ -105,7 +104,7 @@ public class SecretsLocalFunctionalTest extends AbstractFunctionalTest {
     assertThat(isDeletionDone).isTrue();
     encryptedDataList = SecretsRestUtils.listSecrets(getAccount().getUuid(), bearerToken);
     isSecretPresent = SecretsUtils.isSecretAvailable(encryptedDataList, secretsNewName);
-    assertFalse(isSecretPresent);
+    assertThat(isSecretPresent).isFalse();
   }
 
   @Test
@@ -122,7 +121,7 @@ public class SecretsLocalFunctionalTest extends AbstractFunctionalTest {
 
     List<EncryptedData> encryptedDataList = SecretsRestUtils.listSecretsFile(getAccount().getUuid(), bearerToken);
     boolean isSecretPresent = SecretsUtils.isSecretAvailable(encryptedDataList, secretsName);
-    assertFalse(isSecretPresent);
+    assertThat(isSecretPresent).isFalse();
 
     String secretId = SecretsRestUtils.addSecretFile(getAccount().getUuid(), bearerToken, secretsName, filePath);
     assertThat(StringUtils.isNotBlank(secretId)).isTrue();
@@ -141,6 +140,6 @@ public class SecretsLocalFunctionalTest extends AbstractFunctionalTest {
     assertThat(isDeleted).isTrue();
     encryptedDataList = SecretsRestUtils.listSecretsFile(getAccount().getUuid(), bearerToken);
     isSecretPresent = SecretsUtils.isSecretAvailable(encryptedDataList, secretsNewName);
-    assertFalse(isSecretPresent);
+    assertThat(isSecretPresent).isFalse();
   }
 }

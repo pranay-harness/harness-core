@@ -3,7 +3,6 @@ package software.wings.integration;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
@@ -159,7 +158,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
                 TreeMap<String,
                     Map<String, Map<String, Map<String, List<ContinuousVerificationExecutionMetaData>>>>>>>>() {});
 
-    assertFalse("not empty resource" + response.getResource(), response.getResource().isEmpty());
+    assertThat(response.getResource().isEmpty()).isFalse();
 
     long start = Instant.ofEpochMilli(now).truncatedTo(ChronoUnit.DAYS).toEpochMilli();
 
@@ -178,7 +177,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
 
     // validate it doesnt contain info from other account.
     for (ContinuousVerificationExecutionMetaData cv : cvList) {
-      assertFalse("We should not get executions of second account", cv.getAccountId().equals(accountId + "123"));
+      assertThat(cv.getAccountId().equals(accountId + "123")).isFalse();
     }
   }
 

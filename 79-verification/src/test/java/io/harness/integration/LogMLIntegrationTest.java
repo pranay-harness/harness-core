@@ -7,7 +7,6 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -771,7 +770,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     assertEquals("No baseline data for the given query was found.", logMLAnalysisSummary.getAnalysisSummaryMessage());
     LogMLAnalysisRecord logAnalysisRecord =
         analysisService.getLogAnalysisRecords(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId, 0, false);
-    assertFalse(logAnalysisRecord.isBaseLineCreated());
+    assertThat(logAnalysisRecord.isBaseLineCreated()).isFalse();
     assertEquals(1, logAnalysisRecord.getControl_clusters().size());
     assertThat(isEmpty(logAnalysisRecord.getTest_clusters())).isTrue();
     assertThat(isEmpty(logAnalysisRecord.getTest_events())).isTrue();
@@ -858,7 +857,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     assertThat(isEmpty(logAnalysisRecord.getControl_clusters())).isTrue();
     assertThat(isEmpty(logAnalysisRecord.getTest_clusters())).isTrue();
     assertEquals(1, logAnalysisRecord.getUnknown_clusters().size());
-    assertFalse(isEmpty(logAnalysisRecord.getTest_events()));
+    assertThat(isEmpty(logAnalysisRecord.getTest_events())).isFalse();
   }
 
   @Test

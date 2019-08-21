@@ -1,7 +1,6 @@
 package io.harness.limits.checker;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import com.google.inject.Inject;
@@ -58,7 +57,7 @@ public class MongoStaticLimitCheckerIntegrationTest extends BaseIntegrationTest 
     }
 
     boolean allowed = checker.checkAndConsume();
-    assertFalse(allowed);
+    assertThat(allowed).isFalse();
 
     int decrementTimes = ThreadLocalRandom.current().nextInt(0, maxLimit);
     for (int i = 0; i < decrementTimes; i++) {
@@ -85,7 +84,7 @@ public class MongoStaticLimitCheckerIntegrationTest extends BaseIntegrationTest 
     concurrentConsumeCheck(checker, maxLimit);
 
     boolean allowed = checker.checkAndConsume();
-    assertFalse(allowed);
+    assertThat(allowed).isFalse();
 
     List<Future> deleteFutures = new ArrayList<>();
     int decrementTimes = ThreadLocalRandom.current().nextInt(0, maxLimit);

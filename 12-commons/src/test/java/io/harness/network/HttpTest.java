@@ -2,7 +2,6 @@ package io.harness.network;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -29,10 +28,10 @@ public class HttpTest extends CategoryTest {
     assertThat(Http.validUrl("https://shortenedUrl/")).isTrue();
     assertThat(Http.validUrl("http://toli:123")).isTrue();
 
-    assertFalse(Http.validUrl("invalidUrl"));
-    assertFalse(Http.validUrl("invalidUrl"));
-    assertFalse(Http.validUrl("abc://invalid.com"));
-    assertFalse(Http.validUrl("abc://invalid.com"));
+    assertThat(Http.validUrl("invalidUrl")).isFalse();
+    assertThat(Http.validUrl("invalidUrl")).isFalse();
+    assertThat(Http.validUrl("abc://invalid.com")).isFalse();
+    assertThat(Http.validUrl("abc://invalid.com")).isFalse();
   }
 
   @Test
@@ -45,7 +44,7 @@ public class HttpTest extends CategoryTest {
         .isTrue();
     assertThat(Http.shouldUseNonProxy("http://wings.jenkins.com:80", "*.jenkins.com|*localhost.com|*.sumologic.com"))
         .isTrue();
-    assertFalse(Http.shouldUseNonProxy("http://wings.jenkins.com", "*localhost.com|*.sumologic.com"));
+    assertThat(Http.shouldUseNonProxy("http://wings.jenkins.com", "*localhost.com|*.sumologic.com")).isFalse();
   }
 
   @Test

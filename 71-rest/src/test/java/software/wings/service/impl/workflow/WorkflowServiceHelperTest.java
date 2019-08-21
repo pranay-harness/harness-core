@@ -4,7 +4,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -90,23 +89,23 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
 
     isDaemonSchedulingStrategy = workflowServiceHelper.isDaemonSchedulingStrategy(
         APP_ID, aWorkflowPhase().serviceId(SERVICE_ID).build(), OrchestrationWorkflowType.CANARY);
-    assertFalse(isDaemonSchedulingStrategy);
+    assertThat(isDaemonSchedulingStrategy).isFalse();
     isDaemonSchedulingStrategy = workflowServiceHelper.isDaemonSchedulingStrategy(
         APP_ID, aWorkflowPhase().serviceId(SERVICE_ID).build(), OrchestrationWorkflowType.ROLLING);
-    assertFalse(isDaemonSchedulingStrategy);
+    assertThat(isDaemonSchedulingStrategy).isFalse();
     isDaemonSchedulingStrategy = workflowServiceHelper.isDaemonSchedulingStrategy(
         APP_ID, aWorkflowPhase().serviceId(SERVICE_ID).build(), OrchestrationWorkflowType.CUSTOM);
-    assertFalse(isDaemonSchedulingStrategy);
+    assertThat(isDaemonSchedulingStrategy).isFalse();
 
     serviceSpecification.setSchedulingStrategy(ECS_REPLICA_SCHEDULING_STRATEGY);
     isDaemonSchedulingStrategy = workflowServiceHelper.isDaemonSchedulingStrategy(
         APP_ID, aWorkflowPhase().serviceId(SERVICE_ID).build(), OrchestrationWorkflowType.BASIC);
-    assertFalse(isDaemonSchedulingStrategy);
+    assertThat(isDaemonSchedulingStrategy).isFalse();
 
     serviceSpecification.resetToDefaultSpecification();
     isDaemonSchedulingStrategy = workflowServiceHelper.isDaemonSchedulingStrategy(
         APP_ID, aWorkflowPhase().serviceId(SERVICE_ID).build(), OrchestrationWorkflowType.BASIC);
-    assertFalse(isDaemonSchedulingStrategy);
+    assertThat(isDaemonSchedulingStrategy).isFalse();
 
     serviceSpecification.setServiceSpecJson(serviceSpecification.getServiceSpecJson().replace("REPLICA", "DAEMON"));
     isDaemonSchedulingStrategy = workflowServiceHelper.isDaemonSchedulingStrategy(

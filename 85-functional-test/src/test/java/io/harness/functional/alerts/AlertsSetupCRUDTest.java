@@ -2,7 +2,6 @@ package io.harness.functional.alerts;
 
 import static io.harness.rule.OwnerRule.SWAMY;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import io.harness.category.element.FunctionalTests;
@@ -45,14 +44,15 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
     logger.info("Verifying the updated alerts notification rule");
     assertNotNull(updatedAlert);
     assertThat(updatedAlert.getAlertCategory().name().equals(createdAlert.getAlertCategory().name())).isTrue();
-    assertFalse(updatedAlert.getAlertFilter().getAlertType().name().equals(
-        createdAlert.getAlertFilter().getAlertType().name()));
+    assertThat(
+        updatedAlert.getAlertFilter().getAlertType().name().equals(createdAlert.getAlertFilter().getAlertType().name()))
+        .isFalse();
 
     logger.info("Delete the alert");
     AlertsRestUtils.deleteAlerts(getAccount().getUuid(), bearerToken, updatedAlert.getUuid());
     logger.info("Verify if the deleted alert does not exist");
     List<AlertNotificationRule> alertsList = AlertsRestUtils.listAlerts(getAccount().getUuid(), bearerToken);
-    assertFalse(AlertsUtils.isAlertAvailable(alertsList, createdAlert));
+    assertThat(AlertsUtils.isAlertAvailable(alertsList, createdAlert)).isFalse();
   }
 
   @Test
@@ -130,10 +130,11 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
 
     logger.info("Verifying the updated alerts notification rule");
     assertNotNull(updatedAlert);
-    assertFalse(updatedAlert.getAlertCategory().name().equals(createdAlert.getAlertCategory().name()));
+    assertThat(updatedAlert.getAlertCategory().name().equals(createdAlert.getAlertCategory().name())).isFalse();
     assertThat(updatedAlert.getAlertCategory().name().equals(AlertCategory.ContinuousVerification.name())).isTrue();
-    assertFalse(updatedAlert.getAlertFilter().getAlertType().name().equals(
-        createdAlert.getAlertFilter().getAlertType().name()));
+    assertThat(
+        updatedAlert.getAlertFilter().getAlertType().name().equals(createdAlert.getAlertFilter().getAlertType().name()))
+        .isFalse();
     assertThat(
         updatedAlert.getAlertFilter().getAlertType().name().equals(AlertType.CONTINUOUS_VERIFICATION_ALERT.name()))
         .isTrue();
@@ -161,7 +162,7 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
     AlertsRestUtils.deleteAlerts(getAccount().getUuid(), bearerToken, updatedAlert.getUuid());
     logger.info("Verify if the deleted alert does not exist");
     List<AlertNotificationRule> alertsList = AlertsRestUtils.listAlerts(getAccount().getUuid(), bearerToken);
-    assertFalse(AlertsUtils.isAlertAvailable(alertsList, createdAlert));
+    assertThat(AlertsUtils.isAlertAvailable(alertsList, createdAlert)).isFalse();
   }
 
   private AlertNotificationRule updateAndVerifyAllTypes(
@@ -178,8 +179,9 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
       logger.info("Verifying the updated alerts notification rule");
       assertNotNull(updatedAlert);
       assertThat(updatedAlert.getAlertCategory().name().equals(createdAlert.getAlertCategory().name())).isTrue();
-      assertFalse(updatedAlert.getAlertFilter().getAlertType().name().equals(
-          createdAlert.getAlertFilter().getAlertType().name()));
+      assertThat(updatedAlert.getAlertFilter().getAlertType().name().equals(
+                     createdAlert.getAlertFilter().getAlertType().name()))
+          .isFalse();
       assertThat(updatedAlert.getAlertFilter().getAlertType().name().equals(alertType.name())).isTrue();
       previous = alertType.name();
     }

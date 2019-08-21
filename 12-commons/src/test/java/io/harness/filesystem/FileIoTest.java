@@ -8,7 +8,6 @@ import static io.harness.filesystem.FileIo.writeFile;
 import static java.nio.file.Files.lines;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -63,7 +62,7 @@ public class FileIoTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void waitForDirectoryToBeAccessibleOutOfProcessNegativeTest() {
-    assertFalse(waitForDirectoryToBeAccessibleOutOfProcess(getRandomTempDirectory(), 3));
+    assertThat(waitForDirectoryToBeAccessibleOutOfProcess(getRandomTempDirectory(), 3)).isFalse();
   }
 
   @Test
@@ -72,13 +71,13 @@ public class FileIoTest extends CategoryTest {
     final String fileName = tempDirectory + "/testfile.txt";
     deleteFileIfExists(fileName);
     File testFile = new File(fileName);
-    assertFalse(testFile.exists());
+    assertThat(testFile.exists()).isFalse();
     try (FileOutputStream outputStream = new FileOutputStream(testFile)) {
       outputStream.write("RandomTextContent".getBytes());
     }
     assertThat(testFile.exists()).isTrue();
     deleteFileIfExists(fileName);
-    assertFalse(testFile.exists());
+    assertThat(testFile.exists()).isFalse();
   }
 
   @Test
@@ -94,8 +93,8 @@ public class FileIoTest extends CategoryTest {
     }
     assertThat(testFile.exists()).isTrue();
     deleteDirectoryAndItsContentIfExists(directoryName);
-    assertFalse(testFile.exists());
-    assertFalse(directory.exists());
+    assertThat(testFile.exists()).isFalse();
+    assertThat(directory.exists()).isFalse();
   }
 
   @Test

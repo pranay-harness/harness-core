@@ -1,7 +1,7 @@
 package software.wings.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 
 import io.harness.category.element.UnitTests;
@@ -20,8 +20,7 @@ public class MigrationServiceTest extends WingsBaseTest {
   public void versionsShouldBeUnique() {
     Set<Integer> versions = new HashSet<>();
     MigrationList.getMigrations().forEach(pair -> {
-      assertFalse(
-          "Duplicate schema version " + pair.getKey() + " in migrations list", versions.contains(pair.getKey()));
+      assertThat(versions.contains(pair.getKey())).isFalse();
       versions.add(pair.getKey());
     });
   }

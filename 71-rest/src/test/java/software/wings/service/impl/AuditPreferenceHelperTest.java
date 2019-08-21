@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -322,8 +321,8 @@ public class AuditPreferenceHelperTest extends WingsBaseTest {
     AuditPreference auditPreference =
         (AuditPreference) auditPreferenceHelper.parseJsonIntoPreference(topLevelCriteriaFilter);
     assertTopLevelCriteria(auditPreference);
-    assertFalse(auditPreference.isIncludeAccountLevelResources());
-    assertFalse(auditPreference.isIncludeAppLevelResources());
+    assertThat(auditPreference.isIncludeAccountLevelResources()).isFalse();
+    assertThat(auditPreference.isIncludeAppLevelResources()).isFalse();
 
     // 1. Only UPDATE AND CREATE
     PageRequest<AuditHeader> pageRequest = getAuditHeaderPageRequest(auditPreference);
@@ -638,7 +637,7 @@ public class AuditPreferenceHelperTest extends WingsBaseTest {
     try {
       pageRequest = auditPreferenceHelper.generatePageRequestFromAuditPreference(auditPreference, "0", "100");
     } catch (Exception e) {
-      assertFalse("failed with error: " + e.getMessage(), true);
+      assertThat(true).isFalse();
     }
     return pageRequest;
   }

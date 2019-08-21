@@ -1,7 +1,6 @@
 package io.harness.testframework.framework.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import io.harness.data.structure.UUIDGenerator;
@@ -77,8 +76,8 @@ public class UserUtils {
     UserInvite completed = UserRestUtils.completeUserRegistration(account, bearerToken, incomplete);
     UserRestUtils.completePaidUserSignupAndSignin(bearerToken, account.getUuid(), "dummy", incomplete);
     assertNotNull(completed);
-    assertFalse("Error : Agreement is true before signup", incomplete.isAgreement());
-    assertFalse("Error : Completion is true before signup", incomplete.isCompleted());
+    assertThat(incomplete.isAgreement()).isFalse();
+    assertThat(incomplete.isCompleted()).isFalse();
     assertThat(completed.isCompleted()).isTrue();
     // Assert.assertThat("Error : Agreement is false after signup",completed.isAgreement()).isTrue();
     logger.info(incomplete.getAccountId() + ":" + incomplete.getEmail());

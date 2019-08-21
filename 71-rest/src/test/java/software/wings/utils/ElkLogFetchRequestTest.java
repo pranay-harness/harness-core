@@ -1,7 +1,7 @@
 package software.wings.utils;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -143,7 +143,7 @@ public class ElkLogFetchRequestTest extends CategoryTest {
         new File(getClass().getClassLoader().getResource("./elk/elk.txt").getFile()), LinkedHashMap.class);
     List<LogElement> logElements = parseElkResponse(map, "info", "@timestamp", "yyyy-MM-dd'T'HH:mm:ss.SSSX",
         "kubernetes.pod.name", "rddashboard-prod-5-67d88f4657-ff7k9", "log", 0, false, -1, -1);
-    assertFalse(logElements.isEmpty());
+    assertThat(logElements.isEmpty()).isFalse();
     assertEquals("Hostname should be correct", "rddashboard-prod-5-67d88f4657-ff7k9", logElements.get(0).getHost());
   }
 

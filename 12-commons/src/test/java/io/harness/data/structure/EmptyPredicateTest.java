@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
 
 import io.harness.CategoryTest;
 import io.harness.category.FastUnitTests;
@@ -31,63 +30,63 @@ public class EmptyPredicateTest extends CategoryTest {
   public void testNull() {
     Custom custom = null;
     assertThat(isEmpty(custom)).isTrue();
-    assertFalse(isNotEmpty(custom));
+    assertThat(isNotEmpty(custom)).isFalse();
 
     List<Integer> list = null;
     assertThat(isEmpty(list)).isTrue();
-    assertFalse(isNotEmpty(list));
+    assertThat(isNotEmpty(list)).isFalse();
 
     String string = null;
     assertThat(isEmpty(string)).isTrue();
-    assertFalse(isNotEmpty(string));
+    assertThat(isNotEmpty(string)).isFalse();
 
     Map map = null;
     assertThat(isEmpty(map)).isTrue();
-    assertFalse(isNotEmpty(map));
+    assertThat(isNotEmpty(map)).isFalse();
 
     ImplementsCollection<String> collection = null;
     assertThat(isEmpty(collection)).isTrue();
-    assertFalse(isNotEmpty(collection));
+    assertThat(isNotEmpty(collection)).isFalse();
 
     ImplementsMap<String, String> implMap = null;
     assertThat(isEmpty(implMap)).isTrue();
-    assertFalse(isNotEmpty(implMap));
+    assertThat(isNotEmpty(implMap)).isFalse();
 
     Object[] objects = null;
     assertThat(isEmpty(objects)).isTrue();
-    assertFalse(isNotEmpty(objects));
+    assertThat(isNotEmpty(objects)).isFalse();
 
     long[] longs = null;
     assertThat(isEmpty(longs)).isTrue();
-    assertFalse(isNotEmpty(longs));
+    assertThat(isNotEmpty(longs)).isFalse();
 
     int[] ints = null;
     assertThat(isEmpty(ints)).isTrue();
-    assertFalse(isNotEmpty(ints));
+    assertThat(isNotEmpty(ints)).isFalse();
 
     short[] shorts = null;
     assertThat(isEmpty(shorts)).isTrue();
-    assertFalse(isNotEmpty(shorts));
+    assertThat(isNotEmpty(shorts)).isFalse();
 
     char[] chars = null;
     assertThat(isEmpty(chars)).isTrue();
-    assertFalse(isNotEmpty(chars));
+    assertThat(isNotEmpty(chars)).isFalse();
 
     byte[] bytes = null;
     assertThat(isEmpty(bytes)).isTrue();
-    assertFalse(isNotEmpty(bytes));
+    assertThat(isNotEmpty(bytes)).isFalse();
 
     double[] doubles = null;
     assertThat(isEmpty(doubles)).isTrue();
-    assertFalse(isNotEmpty(doubles));
+    assertThat(isNotEmpty(doubles)).isFalse();
 
     float[] floats = null;
     assertThat(isEmpty(floats)).isTrue();
-    assertFalse(isNotEmpty(floats));
+    assertThat(isNotEmpty(floats)).isFalse();
 
     boolean[] booleans = null;
     assertThat(isEmpty(booleans)).isTrue();
-    assertFalse(isNotEmpty(booleans));
+    assertThat(isNotEmpty(booleans)).isFalse();
   }
 
   @Test
@@ -95,128 +94,128 @@ public class EmptyPredicateTest extends CategoryTest {
   public void testEmpty() {
     Custom custom = Custom.builder().empty(true).build();
     assertThat(isEmpty(custom)).isTrue();
-    assertFalse(isNotEmpty(custom));
+    assertThat(isNotEmpty(custom)).isFalse();
 
     List<String> list = new ArrayList();
     assertThat(isEmpty(list)).isTrue();
-    assertFalse(isNotEmpty(list));
+    assertThat(isNotEmpty(list)).isFalse();
 
     String string = "";
     assertThat(isEmpty(string)).isTrue();
-    assertFalse(isNotEmpty(string));
+    assertThat(isNotEmpty(string)).isFalse();
 
     Map<String, String> map = new HashMap();
     assertThat(isEmpty(map)).isTrue();
-    assertFalse(isNotEmpty(map));
+    assertThat(isNotEmpty(map)).isFalse();
 
     ImplementsCollection<String> collection = new ImplementsCollection(true);
     assertThat(isEmpty(collection)).isTrue();
-    assertFalse(isNotEmpty(collection));
+    assertThat(isNotEmpty(collection)).isFalse();
 
     ImplementsMap<String, String> implMap = new ImplementsMap<>(true);
     assertThat(isEmpty(implMap)).isTrue();
-    assertFalse(isNotEmpty(implMap));
+    assertThat(isNotEmpty(implMap)).isFalse();
 
     Object[] objects = new Object[0];
     assertThat(isEmpty(objects)).isTrue();
-    assertFalse(isNotEmpty(objects));
+    assertThat(isNotEmpty(objects)).isFalse();
 
     long[] longs = new long[0];
     assertThat(isEmpty(longs)).isTrue();
-    assertFalse(isNotEmpty(longs));
+    assertThat(isNotEmpty(longs)).isFalse();
 
     int[] ints = new int[0];
     assertThat(isEmpty(ints)).isTrue();
-    assertFalse(isNotEmpty(ints));
+    assertThat(isNotEmpty(ints)).isFalse();
 
     short[] shorts = new short[0];
     assertThat(isEmpty(shorts)).isTrue();
-    assertFalse(isNotEmpty(shorts));
+    assertThat(isNotEmpty(shorts)).isFalse();
 
     char[] chars = new char[0];
     assertThat(isEmpty(chars)).isTrue();
-    assertFalse(isNotEmpty(chars));
+    assertThat(isNotEmpty(chars)).isFalse();
 
     byte[] bytes = new byte[0];
     assertThat(isEmpty(bytes)).isTrue();
-    assertFalse(isNotEmpty(bytes));
+    assertThat(isNotEmpty(bytes)).isFalse();
 
     double[] doubles = new double[0];
     assertThat(isEmpty(doubles)).isTrue();
-    assertFalse(isNotEmpty(doubles));
+    assertThat(isNotEmpty(doubles)).isFalse();
 
     float[] floats = new float[0];
     assertThat(isEmpty(floats)).isTrue();
-    assertFalse(isNotEmpty(floats));
+    assertThat(isNotEmpty(floats)).isFalse();
 
     boolean[] booleans = new boolean[0];
     assertThat(isEmpty(booleans)).isTrue();
-    assertFalse(isNotEmpty(booleans));
+    assertThat(isNotEmpty(booleans)).isFalse();
   }
 
   @Test
   @Category({FastUnitTests.class})
   public void testNotEmpty() {
     Custom custom = Custom.builder().empty(false).build();
-    assertFalse(isEmpty(custom));
+    assertThat(isEmpty(custom)).isFalse();
     assertThat(isNotEmpty(custom)).isTrue();
 
     List<String> list = asList("foo");
-    assertFalse(isEmpty(list));
+    assertThat(isEmpty(list)).isFalse();
     assertThat(isNotEmpty(list)).isTrue();
 
     String string = "some";
-    assertFalse(isEmpty(string));
+    assertThat(isEmpty(string)).isFalse();
     assertThat(isNotEmpty(string)).isTrue();
 
     Map<String, String> map = new HashMap() {
       { put("foo", "foo"); }
     };
-    assertFalse(isEmpty(map));
+    assertThat(isEmpty(map)).isFalse();
     assertThat(isNotEmpty(map)).isTrue();
 
     ImplementsCollection<String> collection = new ImplementsCollection(false);
-    assertFalse(isEmpty(collection));
+    assertThat(isEmpty(collection)).isFalse();
     assertThat(isNotEmpty(collection)).isTrue();
 
     ImplementsMap<String, String> implMap = new ImplementsMap<>(false);
-    assertFalse(isEmpty(implMap));
+    assertThat(isEmpty(implMap)).isFalse();
     assertThat(isNotEmpty(implMap)).isTrue();
 
     Object[] objects = new Object[1];
-    assertFalse(isEmpty(objects));
+    assertThat(isEmpty(objects)).isFalse();
     assertThat(isNotEmpty(objects)).isTrue();
 
     long[] longs = new long[1];
-    assertFalse(isEmpty(longs));
+    assertThat(isEmpty(longs)).isFalse();
     assertThat(isNotEmpty(longs)).isTrue();
 
     int[] ints = new int[1];
-    assertFalse(isEmpty(ints));
+    assertThat(isEmpty(ints)).isFalse();
     assertThat(isNotEmpty(ints)).isTrue();
 
     short[] shorts = new short[1];
-    assertFalse(isEmpty(shorts));
+    assertThat(isEmpty(shorts)).isFalse();
     assertThat(isNotEmpty(shorts)).isTrue();
 
     char[] chars = new char[1];
-    assertFalse(isEmpty(chars));
+    assertThat(isEmpty(chars)).isFalse();
     assertThat(isNotEmpty(chars)).isTrue();
 
     byte[] bytes = new byte[1];
-    assertFalse(isEmpty(bytes));
+    assertThat(isEmpty(bytes)).isFalse();
     assertThat(isNotEmpty(bytes)).isTrue();
 
     double[] doubles = new double[1];
-    assertFalse(isEmpty(doubles));
+    assertThat(isEmpty(doubles)).isFalse();
     assertThat(isNotEmpty(doubles)).isTrue();
 
     float[] floats = new float[1];
-    assertFalse(isEmpty(floats));
+    assertThat(isEmpty(floats)).isFalse();
     assertThat(isNotEmpty(floats)).isTrue();
 
     boolean[] booleans = new boolean[1];
-    assertFalse(isEmpty(booleans));
+    assertThat(isEmpty(booleans)).isFalse();
     assertThat(isNotEmpty(booleans)).isTrue();
   }
 }

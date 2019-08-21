@@ -7,7 +7,6 @@ import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
@@ -644,7 +643,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         null, TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()), StateType.SUMO, connectorId);
     wingsPersistence.save(context);
     boolean isTriggered = continuousVerificationService.triggerWorkflowDataCollection(context);
-    assertFalse(isTriggered);
+    assertThat(isTriggered).isFalse();
   }
 
   @Test
@@ -657,7 +656,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()), StateType.DATA_DOG_LOG, datadogConnectorId);
     wingsPersistence.save(context);
     boolean isTriggered = continuousVerificationService.triggerWorkflowDataCollection(context);
-    assertFalse(isTriggered);
+    assertThat(isTriggered).isFalse();
   }
 
   @Test
@@ -674,7 +673,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     wingsPersistence.save(record);
 
     boolean isTriggered = continuousVerificationService.triggerWorkflowDataCollection(context);
-    assertFalse(isTriggered);
+    assertThat(isTriggered).isFalse();
   }
 
   @Test
@@ -692,7 +691,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     wingsPersistence.save(record);
 
     boolean isTriggered = continuousVerificationService.triggerWorkflowDataCollection(context);
-    assertFalse(isTriggered);
+    assertThat(isTriggered).isFalse();
   }
 
   @Test
@@ -1361,7 +1360,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     wingsPersistence.save(logDataRecord);
 
     // No Data Collection task will be created
-    assertFalse(continuousVerificationService.triggerWorkflowDataCollection(analysisContext));
+    assertThat(continuousVerificationService.triggerWorkflowDataCollection(analysisContext)).isFalse();
 
     List<DelegateTask> delegateTasks =
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();

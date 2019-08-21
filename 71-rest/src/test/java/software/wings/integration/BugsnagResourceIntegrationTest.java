@@ -5,7 +5,6 @@ import static javax.ws.rs.client.Entity.entity;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
@@ -86,10 +85,10 @@ public class BugsnagResourceIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<Set<BugsnagApplication>>>() {});
 
     assertThat(restResponse.getResponseMessages()).isEmpty();
-    assertFalse(restResponse.getResource().isEmpty());
+    assertThat(restResponse.getResource().isEmpty()).isFalse();
 
     for (BugsnagApplication app : restResponse.getResource()) {
-      assertFalse(isBlank(app.getName()));
+      assertThat(isBlank(app.getName())).isFalse();
     }
   }
 
@@ -103,10 +102,10 @@ public class BugsnagResourceIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<Set<BugsnagApplication>>>() {});
 
     assertThat(restResponse.getResponseMessages()).isEmpty();
-    assertFalse(restResponse.getResource().isEmpty());
+    assertThat(restResponse.getResource().isEmpty()).isFalse();
 
     for (BugsnagApplication app : restResponse.getResource()) {
-      assertFalse(isBlank(app.getName()));
+      assertThat(isBlank(app.getName())).isFalse();
     }
   }
 

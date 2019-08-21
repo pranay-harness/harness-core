@@ -102,7 +102,7 @@ public class PivotalClientTest extends WingsBaseTest {
       try {
         applicationDetail = pcfClient.getApplicationByName(pcfRequestConfig);
         // Exception expected as application does not exist
-        assertFalse(true);
+        assertThat(true).isFalse();
       } catch (PivotalClientApiException e) {
       }
     }

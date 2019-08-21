@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl.METRIC_NAME_NON_SPECIAL_CHARS;
 import static software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl.METRIC_NAME_SPECIAL_CHARS;
 
@@ -73,7 +72,7 @@ public class NewRelicTest extends WingsBaseTest {
   public void getAllApplications() throws IOException, CloneNotSupportedException {
     List<NewRelicApplication> allApplications =
         newRelicDelegateService.getAllApplications(newRelicConfig, Collections.emptyList(), null);
-    assertFalse(allApplications.isEmpty());
+    assertThat(allApplications.isEmpty()).isFalse();
   }
 
   @Test
@@ -85,7 +84,7 @@ public class NewRelicTest extends WingsBaseTest {
     NewRelicApplication demoApp = getDemoApp();
     List<NewRelicApplicationInstance> applicationInstances =
         newRelicDelegateService.getApplicationInstances(newRelicConfig, Collections.emptyList(), demoApp.getId(), null);
-    assertFalse(applicationInstances.isEmpty());
+    assertThat(applicationInstances.isEmpty()).isFalse();
   }
 
   @Test
@@ -97,7 +96,7 @@ public class NewRelicTest extends WingsBaseTest {
     NewRelicApplication demoApp = getDemoApp();
     Collection<NewRelicMetric> metricsNameToCollect =
         newRelicDelegateService.getTxnNameToCollect(newRelicConfig, Collections.emptyList(), demoApp.getId(), null);
-    assertFalse(metricsNameToCollect.isEmpty());
+    assertThat(metricsNameToCollect.isEmpty()).isFalse();
   }
 
   private NewRelicApplication getDemoApp() throws IOException, CloneNotSupportedException {

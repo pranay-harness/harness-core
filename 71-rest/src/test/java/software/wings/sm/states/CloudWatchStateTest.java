@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
@@ -43,7 +42,7 @@ public class CloudWatchStateTest extends WingsBaseTest {
     assertThat(isEmpty(cloudWatchState.fetchLoadBalancerMetrics())).isTrue();
     assertThat(isEmpty(cloudWatchState.fetchEc2Metrics())).isTrue();
     assertThat(cloudWatchState.isShouldDoLambdaVerification()).isTrue();
-    assertFalse(cloudWatchState.isShouldDoECSClusterVerification());
+    assertThat(cloudWatchState.isShouldDoECSClusterVerification()).isFalse();
 
     assertThat(invalidFields.size() == 0).isTrue();
   }
@@ -58,7 +57,7 @@ public class CloudWatchStateTest extends WingsBaseTest {
     assertThat(isEmpty(cloudWatchState.fetchLoadBalancerMetrics())).isTrue();
     assertThat(isEmpty(cloudWatchState.fetchEc2Metrics())).isTrue();
     assertThat(cloudWatchState.isShouldDoECSClusterVerification()).isTrue();
-    assertFalse(cloudWatchState.isShouldDoLambdaVerification());
+    assertThat(cloudWatchState.isShouldDoLambdaVerification()).isFalse();
 
     assertThat(invalidFields.size() == 0).isTrue();
   }
@@ -77,8 +76,8 @@ public class CloudWatchStateTest extends WingsBaseTest {
     assertThat(isEmpty(cloudWatchState.fetchEcsMetrics())).isTrue();
     assertThat(isNotEmpty(cloudWatchState.fetchLoadBalancerMetrics())).isTrue();
     assertThat(isEmpty(cloudWatchState.fetchEc2Metrics())).isTrue();
-    assertFalse(cloudWatchState.isShouldDoLambdaVerification());
-    assertFalse(cloudWatchState.isShouldDoECSClusterVerification());
+    assertThat(cloudWatchState.isShouldDoLambdaVerification()).isFalse();
+    assertThat(cloudWatchState.isShouldDoECSClusterVerification()).isFalse();
 
     assertThat(invalidFields.size() == 0).isTrue();
   }
@@ -95,8 +94,8 @@ public class CloudWatchStateTest extends WingsBaseTest {
     assertThat(isEmpty(cloudWatchState.fetchEcsMetrics())).isTrue();
     assertThat(isEmpty(cloudWatchState.fetchLoadBalancerMetrics())).isTrue();
     assertThat(isNotEmpty(cloudWatchState.fetchEc2Metrics())).isTrue();
-    assertFalse(cloudWatchState.isShouldDoLambdaVerification());
-    assertFalse(cloudWatchState.isShouldDoECSClusterVerification());
+    assertThat(cloudWatchState.isShouldDoLambdaVerification()).isFalse();
+    assertThat(cloudWatchState.isShouldDoECSClusterVerification()).isFalse();
 
     assertThat(invalidFields.size() == 0).isTrue();
   }

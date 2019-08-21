@@ -4,7 +4,6 @@ import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
@@ -197,14 +196,14 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
     Service service = new Service().withDeployments(new Deployment(), new Deployment());
     boolean ret = ecsContainerServiceImpl.hasServiceReachedSteadyState(service);
 
-    assertFalse(ret);
+    assertThat(ret).isFalse();
 
     service =
         new Service()
             .withDeployments(new Deployment().withUpdatedAt(new Date(10)))
             .withEvents(new ServiceEvent().withMessage("Foo has reached a steady state.").withCreatedAt(new Date(5)));
     ret = ecsContainerServiceImpl.hasServiceReachedSteadyState(service);
-    assertFalse(ret);
+    assertThat(ret).isFalse();
 
     service =
         new Service()

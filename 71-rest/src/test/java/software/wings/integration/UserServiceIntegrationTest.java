@@ -8,7 +8,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -121,7 +120,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
     // 5. User should not be disabled after enabled above
     user = userService.getUserByEmail(defaultEmail);
-    assertFalse(user.isDisabled());
+    assertThat(user.isDisabled()).isFalse();
   }
 
   @Test
@@ -132,7 +131,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     assertEquals(1, restResponse.getResponseMessages().size());
     final ResponseMessage responseMessage = restResponse.getResponseMessages().get(0);
     assertEquals(ErrorCode.INVALID_EMAIL, responseMessage.getCode());
-    assertFalse(restResponse.getResource());
+    assertThat(restResponse.getResource()).isFalse();
   }
 
   @Test
@@ -143,7 +142,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     assertEquals(1, restResponse.getResponseMessages().size());
     final ResponseMessage responseMessage = restResponse.getResponseMessages().get(0);
     assertEquals(ErrorCode.INVALID_EMAIL, responseMessage.getCode());
-    assertFalse(restResponse.getResource());
+    assertThat(restResponse.getResource()).isFalse();
   }
 
   @Test
@@ -154,7 +153,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     assertEquals(1, restResponse.getResponseMessages().size());
     final ResponseMessage responseMessage = restResponse.getResponseMessages().get(0);
     assertEquals(ErrorCode.USER_DOMAIN_NOT_ALLOWED, responseMessage.getCode());
-    assertFalse(restResponse.getResource());
+    assertThat(restResponse.getResource()).isFalse();
   }
 
   @Test
@@ -165,7 +164,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     assertEquals(1, restResponse.getResponseMessages().size());
     final ResponseMessage responseMessage = restResponse.getResponseMessages().get(0);
     assertEquals(ErrorCode.USER_ALREADY_REGISTERED, responseMessage.getCode());
-    assertFalse(restResponse.getResource());
+    assertThat(restResponse.getResource()).isFalse();
   }
 
   @Test
@@ -324,7 +323,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
     userInvite = wingsPersistence.createQuery(UserInvite.class).filter(UserInviteKeys.email, email).get();
     assertNotNull(userInvite);
-    assertFalse(userInvite.isCompleted());
+    assertThat(userInvite.isCompleted()).isFalse();
     assertEquals(name, userInvite.getName());
     String inviteId = userInvite.getUuid();
     assertNotNull(inviteId);
@@ -353,7 +352,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
           target.request().post(entity(userInvite, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
     }
     assertThat(response.getResponseMessages()).isEmpty();
-    assertFalse(response.getResource());
+    assertThat(response.getResource()).isFalse();
 
     // Delete the user just created as a cleanup
     userService.delete(savedUser.getAccounts().get(0).getUuid(), savedUser.getUuid());
@@ -410,7 +409,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     final char[] pwd = "somepwd".toCharArray();
     UserInvite userInvite = inviteUser(accountId, name, email);
     assertNotNull(userInvite.getUuid());
-    assertFalse(userInvite.isCompleted());
+    assertThat(userInvite.isCompleted()).isFalse();
     assertEquals(email, userInvite.getEmail());
 
     userInvite.setName(name);
@@ -599,7 +598,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
                           .build();
 
-    assertFalse(accountService.exists(account.getAccountName()));
+    assertThat(accountService.exists(account.getAccountName())).isFalse();
     assertThat(accountService.getByName(account.getCompanyName())).isNull();
 
     WebTarget target = client.target(API_BASE + "/users/account");

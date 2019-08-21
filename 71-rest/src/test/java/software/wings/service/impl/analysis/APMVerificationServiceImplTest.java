@@ -3,7 +3,6 @@ package software.wings.service.impl.analysis;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -146,7 +145,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
 
     // verify
     assertNotNull(response);
-    assertFalse(response.getLoadResponse().isLoadPresent());
+    assertThat(response.getLoadResponse().isLoadPresent()).isFalse();
   }
 
   @Test(expected = WingsException.class)
@@ -342,7 +341,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testCreate24x7TaskBadState() {
     boolean response = service.collect247Data("cvConfigId", StateType.HTTP, 1540419553000l, 1540420454000l);
-    assertFalse(response);
+    assertThat(response).isFalse();
   }
 
   @Test

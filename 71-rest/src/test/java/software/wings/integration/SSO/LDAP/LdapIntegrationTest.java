@@ -2,7 +2,6 @@ package software.wings.integration.SSO.LDAP;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static software.wings.integration.SSO.LDAP.LdapIntegrationTestConstants.ACCOUNT_ID;
@@ -228,7 +227,7 @@ public class LdapIntegrationTest extends BaseIntegrationTest implements WingsInt
     RestResponse<UserGroup> userGroupResponse =
         getRequestBuilderWithAuthHeader(target).put(Entity.json(""), new GenericType<RestResponse<UserGroup>>() {});
     UserGroup userGroup = userGroupResponse.getResource();
-    assertFalse(userGroup.isSsoLinked());
+    assertThat(userGroup.isSsoLinked()).isFalse();
   }
 
   public void loginUsingLdap() {

@@ -4,7 +4,6 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
@@ -144,7 +143,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
     validateMapContents(outputMap, "securityGroups", "sgs");
     ExistingStackInfo existingStackInfo = createStackResponse.getExistingStackInfo();
     assertNotNull(existingStackInfo);
-    assertFalse(existingStackInfo.isStackExisted());
+    assertThat(existingStackInfo.isStackExisted()).isFalse();
   }
 
   @Test
@@ -208,7 +207,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
     validateMapContents(outputMap, "securityGroups", "sgs");
     ExistingStackInfo existingStackInfo = createStackResponse.getExistingStackInfo();
     assertNotNull(existingStackInfo);
-    assertFalse(existingStackInfo.isStackExisted());
+    assertThat(existingStackInfo.isStackExisted()).isFalse();
   }
 
   private void validateMapContents(Map<String, Object> map, String key, String value) {

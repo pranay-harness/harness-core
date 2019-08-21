@@ -11,7 +11,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
@@ -147,12 +146,12 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
         + "&featureName=" + FeatureName.values()[0].name());
     RestResponse<Boolean> restResponse =
         getRequestBuilderWithLearningAuthHeader(target).get(new GenericType<RestResponse<Boolean>>() {});
-    assertFalse(restResponse.getResource());
+    assertThat(restResponse.getResource()).isFalse();
 
     target = client.target(
         API_BASE + "/account/feature-flag-enabled?accountId=" + accountId + "&featureName=" + generateUuid());
     restResponse = getRequestBuilderWithLearningAuthHeader(target).get(new GenericType<RestResponse<Boolean>>() {});
-    assertFalse(restResponse.getResource());
+    assertThat(restResponse.getResource()).isFalse();
   }
 
   @Test
@@ -165,11 +164,11 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicApplication>>>() {});
 
     assertThat(restResponse.getResponseMessages()).isEmpty();
-    assertFalse(restResponse.getResource().isEmpty());
+    assertThat(restResponse.getResource().isEmpty()).isFalse();
 
     for (NewRelicApplication app : restResponse.getResource()) {
       assertThat(app.getId() > 0).isTrue();
-      assertFalse(isBlank(app.getName()));
+      assertThat(isBlank(app.getName())).isFalse();
     }
   }
 
@@ -186,7 +185,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicApplication>>>() {});
 
     assertThat(restResponse.getResponseMessages()).isEmpty();
-    assertFalse(restResponse.getResource().isEmpty());
+    assertThat(restResponse.getResource().isEmpty()).isFalse();
   }
 
   @Test
@@ -198,7 +197,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
         new GenericType<RestResponse<List<NewRelicApplicationInstance>>>() {});
 
     assertThat(restResponse.getResponseMessages()).isEmpty();
-    assertFalse("failed" + restResponse.getResponseMessages(), restResponse.getResource().isEmpty());
+    assertThat(restResponse.getResource().isEmpty()).isFalse();
   }
 
   @Test
@@ -234,7 +233,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     RestResponse<List<NewRelicApplicationInstance>> nodesResponse = getRequestBuilderWithAuthHeader(target).get(
         new GenericType<RestResponse<List<NewRelicApplicationInstance>>>() {});
     List<NewRelicApplicationInstance> nodes = nodesResponse.getResource();
-    assertFalse(nodes.isEmpty());
+    assertThat(nodes.isEmpty()).isFalse();
     long toTime = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(60);
     NewRelicApplicationInstance node = nodes.iterator().next();
 
@@ -262,7 +261,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     assertNotNull(metricResponse.getResource().getLoadResponse().getLoadResponse());
     List<NewRelicMetric> txnsWithData =
         (List<NewRelicMetric>) metricResponse.getResource().getLoadResponse().getLoadResponse();
-    assertFalse(txnsWithData.isEmpty());
+    assertThat(txnsWithData.isEmpty()).isFalse();
     NewRelicMetricData newRelicMetricData =
         JsonUtils.asObject(JsonUtils.asJson(metricResponse.getResource().getDataForNode()), NewRelicMetricData.class);
     // found at least a node with data
@@ -667,7 +666,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
     NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisRecords.iterator().next();
     assertEquals(RiskLevel.NA, metricsAnalysis.getRiskLevel());
-    assertFalse(metricsAnalysis.isShowTimeSeries());
+    assertThat(metricsAnalysis.isShowTimeSeries()).isFalse();
     assertEquals("No data available", metricsAnalysis.getMessage());
   }
 
@@ -801,7 +800,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisRecords.iterator().next();
 
     assertEquals(RiskLevel.NA, metricsAnalysis.getRiskLevel());
-    assertFalse(metricsAnalysis.isShowTimeSeries());
+    assertThat(metricsAnalysis.isShowTimeSeries()).isFalse();
     assertEquals("No data available", metricsAnalysis.getMessage());
   }
 
@@ -937,7 +936,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisRecords.iterator().next();
 
     assertEquals(RiskLevel.LOW, metricsAnalysis.getRiskLevel());
-    assertFalse(metricsAnalysis.isShowTimeSeries());
+    assertThat(metricsAnalysis.isShowTimeSeries()).isFalse();
     assertEquals("No problems found", metricsAnalysis.getMessage());
   }
 
