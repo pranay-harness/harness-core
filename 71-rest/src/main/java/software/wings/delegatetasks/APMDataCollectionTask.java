@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -30,7 +31,6 @@ import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
-import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.TaskType;
 import software.wings.helpers.ext.apm.APMRestClient;
 import software.wings.service.impl.ThirdPartyApiCallLog;

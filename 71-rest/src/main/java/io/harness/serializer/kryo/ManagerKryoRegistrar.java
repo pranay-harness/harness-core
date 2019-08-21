@@ -129,7 +129,6 @@ import software.wings.beans.CountsByStatuses;
 import software.wings.beans.CyberArkConfig;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.DelegatePackage;
-import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.EcrConfig;
@@ -814,8 +813,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(CountsByStatuses.class, 4008);
     kryo.register(DatadogConfig.DatadogYaml.class, 5468);
     kryo.register(DatadogConfig.class, 5467);
-    kryo.register(DelegateTaskResponse.ResponseCode.class, 5520);
-    kryo.register(DelegateTaskResponse.class, 5006);
     kryo.register(ShellScriptParameters.class, 5186);
     kryo.register(TerraformProvisionParameters.TerraformCommand.class, 5524);
     kryo.register(TerraformProvisionParameters.TerraformCommandUnit.class, 5525);

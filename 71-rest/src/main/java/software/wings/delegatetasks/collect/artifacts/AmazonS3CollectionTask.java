@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -12,7 +13,6 @@ import io.harness.waiter.ListNotifyResponseData;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.DelegateTaskResponse;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.helpers.ext.amazons3.AmazonS3Service;
 

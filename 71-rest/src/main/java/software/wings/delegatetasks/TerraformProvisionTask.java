@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
@@ -38,7 +39,6 @@ import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformExecutionData.TerraformExecutionDataBuilder;
-import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
 import software.wings.beans.GitOperationContext;

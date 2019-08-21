@@ -11,13 +11,13 @@ import static software.wings.beans.command.K8sDummyCommandUnit.FetchFiles;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;

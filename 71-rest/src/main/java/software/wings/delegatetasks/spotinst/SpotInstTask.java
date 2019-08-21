@@ -6,12 +6,12 @@ import static java.lang.String.format;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import software.wings.beans.DelegateTaskResponse;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.spotinst.taskhandler.SpotInstDeployTaskHandler;
 import software.wings.delegatetasks.spotinst.taskhandler.SpotInstSetupTaskHandler;

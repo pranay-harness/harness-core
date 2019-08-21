@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
@@ -12,7 +13,6 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import software.wings.beans.DelegateTaskResponse;
 import software.wings.helpers.ext.external.comm.CollaborationProviderRequest;
 import software.wings.helpers.ext.external.comm.CollaborationProviderResponse;
 import software.wings.helpers.ext.external.comm.handlers.EmailHandler;

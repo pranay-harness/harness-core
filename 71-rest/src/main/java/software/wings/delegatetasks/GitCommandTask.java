@@ -8,13 +8,13 @@ import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
 import software.wings.beans.GitOperationContext;

@@ -13,13 +13,13 @@ import static software.wings.settings.validation.SmtpConnectivityValidationAttri
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.apache.commons.lang3.NotImplementedException;
-import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostValidationResponse;
