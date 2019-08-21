@@ -356,6 +356,9 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
   public <T> PageResponse<T> listWithTagFilters(
       PageRequest<T> request, String filter, EntityType entityType, boolean withTags) {
     Long resourceLookupRecordCount = 0l;
+    String limit = request.getLimit();
+    int pageSize = request.getPageSize();
+    String offset = request.getOffset();
 
     if (isNotBlank(filter)) {
       String accountId = getAccountIdFromPageRequest(request);
@@ -414,9 +417,14 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
         throw new InvalidRequestException(format("Unhandled entity type %s while getting list", entityType));
     }
 
-    if (isNotBlank(filter) && resourceLookupRecordCount > 0l) {
-      pageResponse.setTotal(resourceLookupRecordCount);
-      pageResponse.setPageSize(Integer.parseInt(request.getLimit()));
+    if (isNotBlank(filter)) {
+      pageResponse.setPageSize(pageSize);
+      pageResponse.setLimit(limit);
+      pageResponse.setOffset(offset);
+
+      if (resourceLookupRecordCount > 0l) {
+        pageResponse.setTotal(resourceLookupRecordCount);
+      }
     }
 
     if (withTags) {
