@@ -126,10 +126,19 @@ public class DatadogState extends AbstractMetricAnalysisState {
 
   @Override
   public Map<String, String> validateFields() {
+    Map<String, String> validateFields = new HashMap<>();
     if (isNotEmpty(customMetrics)) {
-      return validateDatadogCustomMetrics(customMetrics);
+      validateFields.putAll(validateDatadogCustomMetrics(customMetrics));
     }
-    return new HashMap<>();
+    if (isNotEmpty(metrics)) {
+      List<String> metricList = Arrays.asList(metrics.split(","));
+      metricList.forEach(metric -> {
+        if (metric.startsWith("trace.")) {
+          validateFields.put(metric, "Unsupported metric type for workflow verification");
+        }
+      });
+    }
+    return validateFields;
   }
 
   @Override

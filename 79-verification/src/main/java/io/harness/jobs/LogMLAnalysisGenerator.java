@@ -18,6 +18,7 @@ import software.wings.beans.FeatureName;
 import software.wings.common.VerificationConstants;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskBuilder;
@@ -275,17 +276,21 @@ public class LogMLAnalysisGenerator implements Runnable {
     final String failureUrl = "/verification/" + LearningEngineService.RESOURCE_URL
         + VerificationConstants.NOTIFY_LEARNING_FAILURE + "?taskId=" + taskId;
 
-    LearningEngineAnalysisTask feedbackTask = LearningEngineAnalysisTask.builder()
-                                                  .feedback_url(feedbackUrl)
-                                                  .logMLResultUrl(logMLResultUrl)
-                                                  .state_execution_id(context.getStateExecutionId())
-                                                  .query(Arrays.asList(context.getQuery()))
-                                                  .ml_analysis_type(MLAnalysisType.FEEDBACK_ANALYSIS)
-                                                  .analysis_save_url(logAnalysisSaveUrl)
-                                                  .analysis_failure_url(failureUrl)
-                                                  .analysis_minute(logAnalysisMinute)
-                                                  .stateType(context.getStateType())
-                                                  .build();
+    LearningEngineAnalysisTask feedbackTask =
+        LearningEngineAnalysisTask.builder()
+            .feedback_url(feedbackUrl)
+            .logMLResultUrl(logMLResultUrl)
+            .state_execution_id(context.getStateExecutionId())
+            .query(Arrays.asList(context.getQuery()))
+            .ml_analysis_type(MLAnalysisType.FEEDBACK_ANALYSIS)
+            .service_id(learningEngineService.getServiceIdFromStateExecutionId(context.getStateExecutionId()))
+            .shouldUseSupervisedModel(learningEngineService.shouldUseSupervisedModel(
+                AnalysisContextKeys.stateExecutionId, context.getStateExecutionId()))
+            .analysis_save_url(logAnalysisSaveUrl)
+            .analysis_failure_url(failureUrl)
+            .analysis_minute(logAnalysisMinute)
+            .stateType(context.getStateType())
+            .build();
 
     feedbackTask.setAppId(context.getAppId());
     feedbackTask.setUuid(taskId);

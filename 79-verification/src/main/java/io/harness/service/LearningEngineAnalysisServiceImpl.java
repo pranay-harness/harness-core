@@ -15,6 +15,9 @@ import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageRequest.PageRequestBuilder;
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.WingsException;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
@@ -26,6 +29,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.api.PhaseElement;
 import software.wings.beans.ServiceSecretKey;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.beans.ServiceSecretKey.ServiceSecretKeyKeys;
@@ -34,14 +38,19 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.MLAnalysisType;
+import software.wings.service.impl.analysis.SupervisedTrainingStatus;
+import software.wings.service.impl.analysis.SupervisedTrainingStatus.SupervisedTrainingStatusKeys;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskKeys;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask.LearningEngineExperimentalAnalysisTaskKeys;
 import software.wings.service.impl.newrelic.MLExperiments;
+import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.service.intfc.verification.CVActivityLogService.Logger;
+import software.wings.sm.ContextElement;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
@@ -70,6 +79,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   @Inject private VerificationManagerClientHelper managerClientHelper;
   @Inject private VerificationManagerClient managerClient;
   @Inject private CVActivityLogService cvActivityLogService;
+  @Inject private DataStoreService dataStoreService;
 
   private final ServiceApiVersion learningEngineApiVersion;
 
@@ -508,6 +518,58 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
       logger.error("for {} failed to reach to manager. Will assume that state is still valid", e);
       return true;
     }
+  }
+
+  @Override
+  public boolean shouldUseSupervisedModel(String fieldName, String fieldValue) {
+    String serviceId;
+    if (SupervisedTrainingStatusKeys.serviceId.equals(fieldName)) {
+      serviceId = fieldValue;
+    } else if (AnalysisContextKeys.stateExecutionId.equals(fieldName)) {
+      serviceId = getServiceIdFromStateExecutionId(fieldValue);
+      if (isEmpty(serviceId)) {
+        return false;
+      }
+    } else {
+      logger.info("Unexpected fieldname provided in shouldUseSupervisedModel. Name: {}", fieldName);
+      return false;
+    }
+
+    PageRequest<SupervisedTrainingStatus> supervisedTrainingStatusPageRequest =
+        PageRequestBuilder.aPageRequest()
+            .addFilter(SupervisedTrainingStatusKeys.serviceId, Operator.EQ, serviceId)
+            .build();
+    List<SupervisedTrainingStatus> trainingStatuses =
+        dataStoreService.list(SupervisedTrainingStatus.class, supervisedTrainingStatusPageRequest);
+    if (isNotEmpty(trainingStatuses)) {
+      if (trainingStatuses.size() > 1) {
+        logger.info("More than one supervised training status found for service {} : {}", serviceId, trainingStatuses);
+        return false;
+      } else {
+        logger.info("One supervised training status found for service {}. Returning {}", serviceId,
+            trainingStatuses.get(0).isSupervisedReady());
+        return trainingStatuses.get(0).isSupervisedReady();
+      }
+    }
+    logger.info("No supervised training status found for serviceId {}", serviceId);
+    return false;
+  }
+
+  @Override
+  public String getServiceIdFromStateExecutionId(String stateExecutionId) {
+    StateExecutionInstance instance = wingsPersistence.get(StateExecutionInstance.class, stateExecutionId);
+    PhaseElement phaseElement = null;
+    for (ContextElement element : instance.getContextElements()) {
+      if (element instanceof PhaseElement) {
+        phaseElement = (PhaseElement) element;
+        break;
+      }
+    }
+    if (phaseElement != null) {
+      return phaseElement.getServiceElement().getUuid();
+    }
+    logger.error("There is no serviceID associated with the stateExecutionId: " + instance.getUuid());
+    return null;
   }
   /**
    *

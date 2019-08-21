@@ -63,6 +63,7 @@ import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord.LogMLAnalysisRecordKeys;
 import software.wings.service.impl.analysis.LogMLAnalysisStatus;
 import software.wings.service.impl.analysis.MLAnalysisType;
+import software.wings.service.impl.analysis.SupervisedTrainingStatus.SupervisedTrainingStatusKeys;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates.TimeSeriesMetricTemplatesKeys;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
@@ -946,18 +947,22 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         + "&cvConfigId=" + logsCVConfiguration.getUuid() + "&analysisMinute=" + logCollectionMinute;
     final String failureUrl = "/verification/" + LearningEngineService.RESOURCE_URL
         + VerificationConstants.NOTIFY_LEARNING_FAILURE + "?taskId=" + taskId;
-    LearningEngineAnalysisTask feedbackTask = LearningEngineAnalysisTask.builder()
-                                                  .feedback_url(feedbackUrl)
-                                                  .logMLResultUrl(logMLResultUrl)
-                                                  .state_execution_id(stateExecutionIdForLETask)
-                                                  .query(Arrays.asList(logsCVConfiguration.getQuery()))
-                                                  .ml_analysis_type(MLAnalysisType.FEEDBACK_ANALYSIS)
-                                                  .analysis_save_url(logAnalysisSaveUrl)
-                                                  .analysis_failure_url(failureUrl)
-                                                  .cvConfigId(logsCVConfiguration.getUuid())
-                                                  .analysis_minute(logCollectionMinute)
-                                                  .stateType(logsCVConfiguration.getStateType())
-                                                  .build();
+    LearningEngineAnalysisTask feedbackTask =
+        LearningEngineAnalysisTask.builder()
+            .feedback_url(feedbackUrl)
+            .logMLResultUrl(logMLResultUrl)
+            .state_execution_id(stateExecutionIdForLETask)
+            .query(Arrays.asList(logsCVConfiguration.getQuery()))
+            .ml_analysis_type(MLAnalysisType.FEEDBACK_ANALYSIS)
+            .analysis_save_url(logAnalysisSaveUrl)
+            .analysis_failure_url(failureUrl)
+            .cvConfigId(logsCVConfiguration.getUuid())
+            .service_id(logsCVConfiguration.getServiceId())
+            .shouldUseSupervisedModel(learningEngineService.shouldUseSupervisedModel(
+                SupervisedTrainingStatusKeys.serviceId, logsCVConfiguration.getServiceId()))
+            .analysis_minute(logCollectionMinute)
+            .stateType(logsCVConfiguration.getStateType())
+            .build();
 
     feedbackTask.setAppId(logsCVConfiguration.getAppId());
     feedbackTask.setUuid(taskId);
