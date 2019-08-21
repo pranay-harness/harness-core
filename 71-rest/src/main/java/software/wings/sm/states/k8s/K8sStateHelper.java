@@ -85,6 +85,7 @@ import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.impl.HelmChartConfigHelperService;
 import software.wings.service.impl.KubernetesHelperService;
+import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -131,6 +132,7 @@ public class K8sStateHelper {
   @Inject GitFileConfigHelperService gitFileConfigHelperService;
   @Inject ApplicationManifestUtils applicationManifestUtils;
   @Inject private HelmChartConfigHelperService helmChartConfigHelperService;
+  @Inject private ServiceTemplateHelper serviceTemplateHelper;
 
   private static final long MIN_TASK_TIMEOUT_IN_MINUTES = 1L;
   private static final long MAX_TASK_TIMEOUT_IN_MINUTES = 120L;
@@ -433,7 +435,8 @@ public class K8sStateHelper {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Environment env = workflowStandardParams.getEnv();
     ContainerInfrastructureMapping infraMapping = getContainerInfrastructureMapping(context);
-    String serviceTemplateId = infraMapping.getServiceTemplateId();
+    String serviceTemplateId = serviceTemplateHelper.fetchServiceTemplateId(infraMapping);
+
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();
     Artifact artifact = ((DeploymentExecutionContext) context).getArtifactForService(serviceId);

@@ -16,4 +16,5 @@ public class ExecutionEvent extends Queuable {
   private String appId;
   private String workflowId;
   private List<String> infraMappingIds;
+  private List<String> infraDefinitionIds;
 }

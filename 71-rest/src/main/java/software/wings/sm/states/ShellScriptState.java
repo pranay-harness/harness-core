@@ -62,7 +62,9 @@ import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.SSHKeyDataProvider;
 import software.wings.service.impl.WinRmConnectionAttributesDataProvider;
+import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.security.SecretManager;
@@ -91,6 +93,8 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
   @Inject @Transient private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
   @Inject @Transient private SweepingOutputService sweepingOutputService;
   @Inject @Transient private TemplateUtils templateUtils;
+  @Inject @Transient private ServiceTemplateService serviceTemplateService;
+  @Inject @Transient private ServiceTemplateHelper serviceTemplateHelper;
 
   @Getter @Setter @Attributes(title = "Execute on Delegate") private boolean executeOnDelegate;
 
@@ -239,8 +243,8 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
 
     String appId = workflowStandardParams == null ? null : workflowStandardParams.getAppId();
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infrastructureMappingId);
-    String serviceTemplateId = infrastructureMapping == null ? null : infrastructureMapping.getServiceTemplateId();
-
+    String serviceTemplateId =
+        infrastructureMapping == null ? null : serviceTemplateHelper.fetchServiceTemplateId(infrastructureMapping);
     String username = null;
     String keyPath = null;
     boolean keyless = false;

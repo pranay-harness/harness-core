@@ -68,6 +68,7 @@ import software.wings.service.impl.aws.model.AwsLambdaFunctionParams.AwsLambdaFu
 import software.wings.service.impl.aws.model.AwsLambdaFunctionResult;
 import software.wings.service.impl.aws.model.AwsLambdaVpcConfig;
 import software.wings.service.impl.aws.model.AwsLambdaVpcConfig.AwsLambdaVpcConfigBuilder;
+import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.DelegateService;
@@ -104,7 +105,7 @@ public class AwsLambdaState extends State {
   @Inject private transient LogService logService;
   @Inject private transient ArtifactStreamService artifactStreamService;
   @Inject private transient EncryptionService encryptionService;
-
+  @Inject private transient ServiceTemplateHelper serviceTemplateHelper;
   @Attributes(title = "Command")
   @DefaultValue(Constants.AWS_LAMBDA_COMMAND_NAME)
   private String commandName = Constants.AWS_LAMBDA_COMMAND_NAME;
@@ -342,10 +343,10 @@ public class AwsLambdaState extends State {
     if (isNotEmpty(aliases)) {
       wfRequestBuilder.evaluatedAliases(getEvaluatedAliases(context));
     }
+    String serviceTemplateId = serviceTemplateHelper.fetchServiceTemplateId(infrastructureMapping);
     Map<String, String> serviceVariables =
         serviceTemplateService
-            .computeServiceVariables(appId, envId, infrastructureMapping.getServiceTemplateId(),
-                context.getWorkflowExecutionId(), OBTAIN_VALUE)
+            .computeServiceVariables(appId, envId, serviceTemplateId, context.getWorkflowExecutionId(), OBTAIN_VALUE)
             .stream()
             .filter(serviceVariable -> !ServiceVariable.Type.ARTIFACT.equals(serviceVariable.getType()))
             .collect(

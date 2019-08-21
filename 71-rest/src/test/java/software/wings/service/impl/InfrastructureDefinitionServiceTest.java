@@ -1,17 +1,41 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static software.wings.infra.InfraDefinitionTestConstants.INFRA_DEFINITION_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.HOST_NAME;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.inject.Inject;
 
 import com.amazonaws.services.ecs.model.LaunchType;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.WingsException;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
+import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
+import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AwsInstanceFilter.AwsInstanceFilterKeys;
+import software.wings.dl.WingsPersistence;
 import software.wings.infra.AwsAmiInfrastructure;
 import software.wings.infra.AwsAmiInfrastructure.AwsAmiInfrastructureKeys;
 import software.wings.infra.AwsEcsInfrastructure;
@@ -22,15 +46,32 @@ import software.wings.infra.AwsLambdaInfrastructure;
 import software.wings.infra.AwsLambdaInfrastructure.AwsLambdaInfrastructureKeys;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.GoogleKubernetesEngine.GoogleKubernetesEngineKeys;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.PhysicalInfra;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureDefinitionServiceImpl;
+import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.TriggerService;
+import software.wings.service.intfc.WorkflowService;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 public class InfrastructureDefinitionServiceTest extends WingsBaseTest {
-  @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
+  @Mock private Query<InfrastructureDefinition> query;
+  @Mock private WingsPersistence wingsPersistence;
+
+  @Mock private WorkflowService workflowService;
+  @Mock private PipelineService pipelineService;
+  @Mock private TriggerService triggerService;
+
+  @Inject @InjectMocks private InfrastructureDefinitionService infrastructureDefinitionService;
+
+  @Spy
+  @InjectMocks
+  private InfrastructureDefinitionService spyInfrastructureDefinitionService =
+      new InfrastructureDefinitionServiceImpl();
 
   @Test
   @Category(UnitTests.class)
@@ -170,6 +211,89 @@ public class InfrastructureDefinitionServiceTest extends WingsBaseTest {
 
     Map<String, String> expectedExpressions = new HashMap<>();
     expectedExpressions.put(AwsInstanceInfrastructureKeys.region, "randomValue");
-    assertTrue(expectedExpressions.equals(awsInstanceInfrastructure.getExpressions()));
+    assertEquals(expectedExpressions, awsInstanceInfrastructure.getExpressions());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCloneAndSaveWith() {
+    // given
+    InfrastructureDefinition infraDef =
+        InfrastructureDefinition.builder().uuid("infra-uuid").envId("envid").appId("appid").name("infra-name").build();
+
+    doReturn(InfrastructureDefinition.builder().build())
+        .when(spyInfrastructureDefinitionService)
+        .save(any(InfrastructureDefinition.class), any(boolean.class));
+    doReturn(aPageResponse().withResponse(Collections.singletonList(infraDef)).build())
+        .when(spyInfrastructureDefinitionService)
+        .list("appid", "envid", null);
+
+    spyInfrastructureDefinitionService.cloneInfrastructureDefinitions("appid", "envid", "appid-1", "envid-1");
+
+    // test
+    ArgumentCaptor<InfrastructureDefinition> cloneInfraDef = ArgumentCaptor.forClass(InfrastructureDefinition.class);
+
+    verify(spyInfrastructureDefinitionService, times(1)).save(cloneInfraDef.capture(), any(boolean.class));
+    verify(spyInfrastructureDefinitionService, times(1)).list("appid", "envid", null);
+
+    InfrastructureDefinition value = cloneInfraDef.getValue();
+    assertNull(value.getUuid());
+    assertEquals(value.getEnvId(), "envid-1");
+    assertEquals(value.getAppId(), "appid-1");
+    assertEquals(value.getName(), "infra-name");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionOnDeleteReferencedByWorkflow() {
+    mockPhysicalInfra();
+    when(workflowService.obtainWorkflowNamesReferencedByInfrastructureDefinition(APP_ID, INFRA_DEFINITION_ID))
+        .thenReturn(asList("Referenced Workflow"));
+
+    Assertions.assertThatExceptionOfType(WingsException.class)
+        .isThrownBy(() -> infrastructureDefinitionService.delete(APP_ID, INFRA_DEFINITION_ID));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionOnDeleteReferencedByTrigger() {
+    mockPhysicalInfra();
+    when(workflowService.obtainWorkflowNamesReferencedByInfrastructureDefinition(APP_ID, INFRA_DEFINITION_ID))
+        .thenReturn(asList());
+    when(pipelineService.obtainPipelineNamesReferencedByTemplatedEntity(APP_ID, INFRA_DEFINITION_ID))
+        .thenReturn(asList());
+
+    when(triggerService.obtainTriggerNamesReferencedByTemplatedEntityId(APP_ID, INFRA_DEFINITION_ID))
+        .thenReturn(asList("Referenced Trigger"));
+    assertThatThrownBy(() -> infrastructureDefinitionService.delete(APP_ID, INFRA_DEFINITION_ID))
+        .isInstanceOf(WingsException.class);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionOnDeleteReferencedByPipeline() {
+    mockPhysicalInfra();
+    when(workflowService.obtainWorkflowNamesReferencedByServiceInfrastructure(APP_ID, INFRA_DEFINITION_ID))
+        .thenReturn(asList());
+    when(pipelineService.obtainPipelineNamesReferencedByTemplatedEntity(APP_ID, INFRA_DEFINITION_ID))
+        .thenReturn(asList("Referenced Pipeline"));
+    assertThatThrownBy(() -> infrastructureDefinitionService.delete(APP_ID, INFRA_DEFINITION_ID))
+        .isInstanceOf(WingsException.class);
+  }
+
+  private void mockPhysicalInfra() {
+    InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder()
+            .uuid(INFRA_DEFINITION_ID)
+            .appId(APP_ID)
+            .envId(ENV_ID)
+            .cloudProviderType(CloudProviderType.PHYSICAL_DATA_CENTER)
+            .deploymentType(DeploymentType.SSH)
+            .infrastructure(
+                PhysicalInfra.builder().cloudProviderId(SETTING_ID).hostNames(singletonList(HOST_NAME)).build())
+            .build();
+
+    when(wingsPersistence.getWithAppId(InfrastructureDefinition.class, APP_ID, INFRA_DEFINITION_ID))
+        .thenReturn(infrastructureDefinition);
   }
 }

@@ -71,7 +71,7 @@ import javax.validation.constraints.NotNull;
       }), @Index(options = @IndexOptions(name = "lastDeployedSearch"), fields = {
         @Field(WorkflowExecutionKeys.appId)
         , @Field(WorkflowExecutionKeys.status), @Field(WorkflowExecutionKeys.workflowId),
-            @Field(WorkflowExecutionKeys.infraMappingIds), @Field(WorkflowExecutionKeys.infraDefinitionIds),
+            @Field(WorkflowExecutionKeys.infraMappingIds),
             @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
       }), @Index(options = @IndexOptions(name = "appId_endTs", background = true), fields = {
         @Field(WorkflowExecutionKeys.appId), @Field(value = WorkflowExecutionKeys.endTs)

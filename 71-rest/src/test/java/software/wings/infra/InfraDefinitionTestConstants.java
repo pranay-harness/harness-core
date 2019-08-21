@@ -21,4 +21,6 @@ public interface InfraDefinitionTestConstants {
   String HOSTNAME_CONVENTION = "hostNameConvention";
 
   String RELEASE_NAME = "releaseName";
+
+  String INFRA_DEFINITION_ID = "infraDefinitionId";
 }

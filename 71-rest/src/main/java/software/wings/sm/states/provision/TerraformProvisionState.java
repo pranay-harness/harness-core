@@ -255,14 +255,7 @@ public abstract class TerraformProvisionState extends State {
       }
       if (terraformExecutionData.getOutputs() != null) {
         Map<String, Object> outputs = parseOutputs(terraformExecutionData.getOutputs());
-        Map<String, Object> contextOutputs = new HashMap<>();
-        for (Map.Entry<String, Object> entry : outputs.entrySet()) {
-          if (!(entry.getValue() instanceof List || entry.getValue() instanceof Map)) {
-            contextOutputs.put(entry.getKey(), entry.getValue());
-          }
-        }
-        outputInfoElement.addOutPuts(contextOutputs);
-
+        outputInfoElement.addOutPuts(outputs);
         ManagerExecutionLogCallback executionLogCallback = infrastructureProvisionerService.getManagerExecutionCallback(
             terraformProvisioner.getAppId(), terraformExecutionData.getActivityId(), commandUnit().name());
         infrastructureProvisionerService.regenerateInfrastructureMappings(

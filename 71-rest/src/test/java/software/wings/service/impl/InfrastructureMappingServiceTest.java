@@ -113,6 +113,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.scheduler.BackgroundJobScheduler;
+import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ContainerService;
@@ -172,6 +173,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Mock private YamlPushService yamlPushService;
   @Mock private AzureHelperService azureHelperService;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private ServiceTemplateHelper serviceTemplateHelper;
 
   @Inject @InjectMocks private InfrastructureMappingService infrastructureMappingService;
 
@@ -674,7 +676,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     when(awsInfrastructureProvider.saveHost(newHosts.get(0))).thenReturn(newHosts.get(0));
 
     ServiceTemplate serviceTemplate = aServiceTemplate().withAppId(APP_ID).withUuid(TEMPLATE_ID).build();
-    when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(serviceTemplate);
+    when(serviceTemplateHelper.fetchServiceTemplate(awsInfrastructureMapping)).thenReturn(serviceTemplate);
 
     when(serviceInstanceService.updateInstanceMappings(
              any(ServiceTemplate.class), any(InfrastructureMapping.class), any(List.class)))
@@ -690,7 +692,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     verify(awsInfrastructureProvider)
         .listHosts(awsInfrastructureMapping, computeProviderSetting, Collections.emptyList(), new PageRequest<>());
     verify(awsInfrastructureProvider).saveHost(newHosts.get(0));
-    verify(serviceTemplateService).get(APP_ID, TEMPLATE_ID);
+    verify(serviceTemplateHelper).fetchServiceTemplate(awsInfrastructureMapping);
     verify(serviceInstanceService).updateInstanceMappings(serviceTemplate, awsInfrastructureMapping, newHosts);
   }
 
@@ -838,7 +840,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     when(awsInfrastructureProvider.saveHost(provisionedHost)).thenReturn(provisionedHost);
 
     ServiceTemplate serviceTemplate = aServiceTemplate().withAppId(APP_ID).withUuid(TEMPLATE_ID).build();
-    when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(serviceTemplate);
+    when(serviceTemplateHelper.fetchServiceTemplate(awsInfrastructureMapping)).thenReturn(serviceTemplate);
 
     when(serviceInstanceService.updateInstanceMappings(
              any(ServiceTemplate.class), any(InfrastructureMapping.class), any(List.class)))
@@ -855,7 +857,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     verify(awsInfrastructureProvider)
         .maybeSetAutoScaleCapacityAndGetHosts(APP_ID, null, awsInfrastructureMapping, computeProviderSetting);
     verify(awsInfrastructureProvider).saveHost(provisionedHost);
-    verify(serviceTemplateService).get(APP_ID, TEMPLATE_ID);
+    verify(serviceTemplateHelper).fetchServiceTemplate(awsInfrastructureMapping);
     verify(serviceInstanceService)
         .updateInstanceMappings(serviceTemplate, awsInfrastructureMapping, singletonList(provisionedHost));
   }

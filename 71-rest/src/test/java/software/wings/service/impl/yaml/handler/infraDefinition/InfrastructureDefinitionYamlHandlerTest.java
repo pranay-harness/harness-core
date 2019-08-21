@@ -1,12 +1,13 @@
 package software.wings.service.impl.yaml.handler.infraDefinition;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verify;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
@@ -47,11 +48,13 @@ import software.wings.service.impl.yaml.handler.InfraDefinition.DirectKubernetes
 import software.wings.service.impl.yaml.handler.InfraDefinition.GoogleKubernetesEngineYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.InfrastructureDefinitionYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.PcfInfraStructureYamlHandler;
+import software.wings.service.impl.yaml.handler.InfraDefinition.PhysicalInfraWinrmYamlHandler;
+import software.wings.service.impl.yaml.handler.InfraDefinition.PhysicalInfraYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
-import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
@@ -68,9 +71,9 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
   @Mock private YamlHandlerFactory mockYamlHandlerFactory;
   @Mock private AppService appService;
   @Mock private ServiceResourceService serviceResourceService;
-  @Mock private InfrastructureMappingService infrastructureMappingService;
+  @Mock private EnvironmentService environmentService;
+  @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
 
-  @InjectMocks @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @InjectMocks @Inject private InfrastructureDefinitionYamlHandler handler;
   @InjectMocks @Inject private AwsLambdaInfrastructureYamlHandler awsLambdaInfrastructureYamlHandler;
   @InjectMocks @Inject private GoogleKubernetesEngineYamlHandler googleKubernetesEngineYamlHandler;
@@ -81,6 +84,8 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
   @InjectMocks @Inject private CodeDeployInfrastructureYamlHandler codeDeployInfrastructureYamlHandler;
   @InjectMocks @Inject private AwsEcsInfrastructureYamlHandler awsEcsInfrastructureYamlHandler;
   @InjectMocks @Inject private PcfInfraStructureYamlHandler pcfInfraStructureYamlHandler;
+  @InjectMocks @Inject private PhysicalInfraYamlHandler physicalInfraYamlHandler;
+  @InjectMocks @Inject private PhysicalInfraWinrmYamlHandler physicalInfraWinrmYamlHandler;
 
   private final String yamlFilePath = "Setup/Applications/APP_NAME/Environments/"
       + "ENV_NAME/Infrastructure Definitions/infra-def.yaml";
@@ -103,6 +108,9 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
     private static final String AWS_CODEDEPLOY = "aws_codedeploy.yaml";
     private static final String GCP_KUBERNETES_PROVISIONER = "gcp_kubernetes_provisioner.yaml";
     private static final String PCF = "pcf.yaml";
+    private static final String PHYSICAL_INFRA = "physical_infra.yaml";
+    private static final String PHYSICAL_INFRA_WINRM = "physical_infra_winrm.yaml";
+    private static final String PHYSICAL_INFRA_PROVISIONER = "physicalInfra_provisioner.yaml";
   }
   private ArgumentCaptor<InfrastructureDefinition> captor = ArgumentCaptor.forClass(InfrastructureDefinition.class);
 
@@ -133,6 +141,8 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
     doReturn(awsLambdaInfrastructureYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), any());
     testCRUD(validYamlInfraStructureFiles.AWS_LAMBDA, InfrastructureType.AWS_LAMBDA, DeploymentType.AWS_LAMBDA,
         CloudProviderType.AWS);
+    testCRUD(validYamlInfraStructureFiles.AWS_LAMBDA_PROVISIONER, InfrastructureType.AWS_LAMBDA,
+        DeploymentType.AWS_LAMBDA, CloudProviderType.AWS);
   }
 
   @Test
@@ -150,6 +160,8 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
   public void testCRUDAndGet_GCP_KUBERNETES() throws IOException {
     doReturn(googleKubernetesEngineYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), any());
     testCRUD(validYamlInfraStructureFiles.GCP_KUBERNETES, InfrastructureType.GCP_KUBERNETES_ENGINE,
+        DeploymentType.KUBERNETES, CloudProviderType.GCP);
+    testCRUD(validYamlInfraStructureFiles.GCP_KUBERNETES_PROVISIONER, InfrastructureType.GCP_KUBERNETES_ENGINE,
         DeploymentType.KUBERNETES, CloudProviderType.GCP);
   }
   @Test
@@ -202,6 +214,24 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
         CloudProviderType.PCF);
   }
 
+  @Test
+  @Category(UnitTests.class)
+  public void TestCRUDAndGet_PhysicalInfra() throws IOException {
+    doReturn(physicalInfraYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), any());
+    testCRUD(validYamlInfraStructureFiles.PHYSICAL_INFRA, InfrastructureType.PHYSICAL_INFRA, DeploymentType.SSH,
+        CloudProviderType.PHYSICAL_DATA_CENTER);
+    testCRUD(validYamlInfraStructureFiles.PHYSICAL_INFRA_PROVISIONER, InfrastructureType.PHYSICAL_INFRA,
+        DeploymentType.SSH, CloudProviderType.PHYSICAL_DATA_CENTER);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void TestCRUDAndGet_PhysicalInfraWinrm() throws IOException {
+    doReturn(physicalInfraWinrmYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), any());
+    testCRUD(validYamlInfraStructureFiles.PHYSICAL_INFRA_WINRM, InfrastructureType.PHYSICAL_INFRA_WINRM,
+        DeploymentType.WINRM, CloudProviderType.PHYSICAL_DATA_CENTER);
+  }
+
   private void testCRUD(String yamlFileName, String cloudProviderInfrastructureType, DeploymentType deploymentType,
       CloudProviderType cloudProviderType) throws IOException {
     doReturn(null).when(mockYamlHelper).getInfraDefinitionByAppIdYamlPath(anyString(), anyString(), anyString());
@@ -218,7 +248,10 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
     Yaml yaml = (Yaml) getYaml(yamlString, Yaml.class);
     changeContext.setYaml(yaml);
 
-    InfrastructureDefinition savedDefinition = handler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
+    handler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
+
+    verify(infrastructureDefinitionService).save(captor.capture(), any(boolean.class));
+    InfrastructureDefinition savedDefinition = captor.getValue();
 
     assertNotNull(savedDefinition);
     assertEquals(savedDefinition.getCloudProviderType(), cloudProviderType);
@@ -233,6 +266,10 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
     yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
     assertEquals(yamlString, yamlContent);
 
+    doReturn(savedDefinition)
+        .when(infrastructureDefinitionService)
+        .getInfraDefByName(anyString(), anyString(), anyString());
+
     InfrastructureDefinition retrievedDefinition = handler.get(ACCOUNT_ID, yamlFilePath);
 
     assertNotNull(retrievedDefinition);
@@ -244,8 +281,9 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
 
     handler.delete(changeContext);
 
-    InfrastructureDefinition afterDeleteDefinition = handler.get(ACCOUNT_ID, yamlFilePath);
-    assertThat(afterDeleteDefinition).isNull();
+    verify(infrastructureDefinitionService).deleteByYamlGit(anyString(), anyString());
+
+    reset(infrastructureDefinitionService);
   }
 
   private ChangeContext<Yaml> getChangeContext(String validYamlContent) {

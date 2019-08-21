@@ -23,7 +23,7 @@ public interface InfrastructureDefinitionService extends OwnedByEnvironment {
   PageResponse<InfrastructureDefinition> list(@NotEmpty String appId, @NotEmpty String envId, String serviceId);
   PageResponse<InfraDefinitionDetail> listInfraDefinitionDetail(
       PageRequest<InfrastructureDefinition> pageRequest, @NotEmpty String appId, @NotEmpty String envId);
-  InfrastructureDefinition save(@Valid InfrastructureDefinition infrastructureDefinition);
+  InfrastructureDefinition save(@Valid InfrastructureDefinition infrastructureDefinition, boolean migration);
   InfrastructureDefinition get(String appId, String infraDefinitionId);
   InfrastructureDefinition update(@Valid InfrastructureDefinition infrastructureDefinition);
   void delete(String appId, String infraDefinitionId);
@@ -39,8 +39,6 @@ public interface InfrastructureDefinitionService extends OwnedByEnvironment {
   List<String> fetchCloudProviderIds(String appId, List<String> infraDefinitionIds);
 
   InfrastructureDefinition getInfraDefByName(String appId, String envId, String infraDefName);
-
-  void applyProvisionerOutputs(InfrastructureDefinition infrastructureDefinition, Map<String, Object> contextMap);
 
   List<InfrastructureDefinition> getInfraStructureDefinitionByUuids(String appId, List<String> infraDefinitionIds);
 
@@ -84,4 +82,13 @@ public interface InfrastructureDefinitionService extends OwnedByEnvironment {
   List<String> listNamesByConnectionAttr(@NotEmpty String accountId, @NotEmpty String attributeId);
 
   List<String> listNamesByScopedService(String appId, String serviceName);
+
+  void cloneInfrastructureDefinitions(String sourceAppID, String sourceEnvID, String targetAppID, String targetEnvID);
+
+  Integer getPcfRunningInstances(String appId, String infraMappingId, String appNameExpression, String serviceId);
+
+  List<InfrastructureDefinition> getNameAndIdForEnvironments(String appId, List<String> envIds);
+
+  List<InfrastructureDefinition> getDefinitionWithFieldsForEnvironments(
+      String appId, List<String> envIds, List<String> projections);
 }

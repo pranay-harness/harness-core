@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutput;
+import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
@@ -23,6 +24,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.ScriptStateExecutionData;
+import software.wings.api.ShellScriptProvisionerOutputElement;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
@@ -123,9 +125,16 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
     ShellScriptProvisionExecutionData executionData = (ShellScriptProvisionExecutionData) responseEntry.getValue();
     executionData.setActivityId(activityId);
 
+    ShellScriptProvisionerOutputElement outputInfoElement =
+        context.getContextElement(ContextElementType.SHELL_SCRIPT_PROVISION);
+    if (outputInfoElement == null) {
+      outputInfoElement = ShellScriptProvisionerOutputElement.builder().build();
+    }
+
     if (executionData.getExecutionStatus() == ExecutionStatus.SUCCESS) {
       String output = executionData.getOutput();
       Map<String, Object> outputMap = parseOutput(output);
+      outputInfoElement.addOutPuts(outputMap);
       ManagerExecutionLogCallback managerExecutionCallback =
           infrastructureProvisionerService.getManagerExecutionCallback(context.getAppId(), activityId, COMMAND_UNIT);
       infrastructureProvisionerService.regenerateInfrastructureMappings(
@@ -136,6 +145,8 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
     activityService.updateStatus(activityId, context.getAppId(), executionData.getExecutionStatus());
     return ExecutionResponse.Builder.anExecutionResponse()
         .withStateExecutionData(executionData)
+        .addContextElement(outputInfoElement)
+        .addNotifyElement(outputInfoElement)
         .withExecutionStatus(executionData.getExecutionStatus())
         .withErrorMessage(executionData.getErrorMsg())
         .build();

@@ -1,20 +1,24 @@
 package software.wings.infra;
 
+import static java.lang.String.format;
 import static software.wings.beans.InfrastructureType.AWS_LAMBDA;
 
 import com.google.common.collect.ImmutableSet;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.exception.InvalidRequestException;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.annotation.ExcludeFieldMap;
 import software.wings.api.CloudProviderType;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
+import software.wings.utils.Validator;
 
 import java.util.List;
 import java.util.Map;
@@ -69,7 +73,48 @@ public class AwsLambdaInfrastructure
   }
 
   @Override
-  public void applyExpressions(Map<String, Object> resolvedExpressions) {}
+  public void applyExpressions(
+      Map<String, Object> resolvedExpressions, String appId, String envId, String infraDefinitionId) {
+    for (Map.Entry<String, Object> entry : resolvedExpressions.entrySet()) {
+      switch (entry.getKey()) {
+        case "region":
+          Validator.ensureType(String.class, entry.getValue(), "Region should be of String type");
+          setRegion((String) entry.getValue());
+          break;
+        case "role":
+          Validator.ensureType(String.class, entry.getValue(), "IAM Role should be of String type");
+          setRole((String) entry.getValue());
+          break;
+        case "vpcId":
+          Validator.ensureType(String.class, entry.getValue(), "Vpc Id should be of String type");
+          setVpcId((String) entry.getValue());
+          break;
+        case "subnetIds":
+          try {
+            setSubnetIds(getList(entry.getValue()));
+          } catch (ClassCastException e) {
+            throw new InvalidRequestException(
+                "Subnet Ids should be of List or comma-separated String type. Found : " + entry.getValue());
+          }
+          break;
+        case "securityGroupIds":
+          try {
+            setSecurityGroupIds(getList(entry.getValue()));
+          } catch (ClassCastException e) {
+            throw new InvalidRequestException(
+                "Security Groups should be of List or comma-separated String type. Found : " + entry.getValue());
+          }
+          break;
+        default: { throw new InvalidRequestException(format("Unknown expression : [%s]", entry.getKey())); }
+      }
+    }
+    if (StringUtils.isEmpty(region)) {
+      throw new InvalidRequestException("Region Mapping is Required");
+    }
+    if (StringUtils.isEmpty(role)) {
+      throw new InvalidRequestException("Role Mapping is Required");
+    }
+  }
 
   @Data
   @EqualsAndHashCode(callSuper = true)

@@ -1,12 +1,18 @@
 package software.wings.infra;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 import static software.wings.beans.InfrastructureType.AWS_ECS;
 
 import com.google.common.collect.ImmutableSet;
 
+import com.amazonaws.services.ecs.model.LaunchType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidRequestException;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -83,7 +89,60 @@ public class AwsEcsInfrastructure
   }
 
   @Override
-  public void applyExpressions(Map<String, Object> resolvedExpressions) {}
+  public void applyExpressions(
+      Map<String, Object> resolvedExpressions, String appId, String envId, String infraDefinitionId) {
+    if (isNotEmpty(resolvedExpressions)) {
+      for (Map.Entry<String, Object> expression : resolvedExpressions.entrySet()) {
+        Object value = expression.getValue();
+        switch (expression.getKey()) {
+          case "region":
+            setRegion((String) value);
+            break;
+          case "clusterName":
+            setClusterName((String) value);
+            break;
+          case "vpcId":
+            setVpcId((String) value);
+            break;
+          case "subnetIds":
+            setSubnetIds(getList(value));
+            break;
+          case "securityGroupIds":
+            setSecurityGroupIds(getList(value));
+            break;
+          case "executionRole":
+            setExecutionRole((String) value);
+            break;
+          default:
+            throw new InvalidRequestException(format("Unknown expression : [%s]", expression.getKey()));
+        }
+      }
+    }
+
+    ensureSetString(getRegion(), "Region is required");
+    ensureSetString(getClusterName(), "Cluster is required");
+    if (LaunchType.FARGATE.toString().equals(getLaunchType())) {
+      ensureSetString(getExecutionRole(), "Task execution role is required for Fargate Launch type");
+      ensureSetString(getVpcId(), "VpcId is required for Fargate Launch Type");
+      ensureSetStringArray(getSecurityGroupIds(), "Security group ids are required for Fargate launch type");
+      ensureSetStringArray(getSubnetIds(), "Subnet ids are required for Fargate launch type");
+    }
+  }
+
+  private void ensureSetString(String field, String errorMessage) {
+    if (isEmpty(field)) {
+      throw new InvalidRequestException(errorMessage);
+    }
+  }
+
+  private void ensureSetStringArray(List<String> fields, String errorMessage) {
+    if (EmptyPredicate.isEmpty(fields)) {
+      throw new InvalidRequestException(errorMessage);
+    }
+    if (fields.stream().anyMatch(EmptyPredicate::isEmpty)) {
+      throw new InvalidRequestException(errorMessage);
+    }
+  }
 
   @Data
   @EqualsAndHashCode(callSuper = true)

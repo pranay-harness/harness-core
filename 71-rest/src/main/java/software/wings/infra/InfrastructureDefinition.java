@@ -69,6 +69,17 @@ public class InfrastructureDefinition implements PersistentEntity, UuidAware, Na
     return infrastructureMapping;
   }
 
+  public InfrastructureDefinition cloneForUpdate() {
+    return InfrastructureDefinition.builder()
+        .name(getName())
+        .provisionerId(getProvisionerId())
+        .cloudProviderType(getCloudProviderType())
+        .deploymentType(getDeploymentType())
+        .infrastructure(getInfrastructure())
+        .scopedToServices(getScopedToServices())
+        .build();
+  }
+
   /**
    * The type Yaml.
    */

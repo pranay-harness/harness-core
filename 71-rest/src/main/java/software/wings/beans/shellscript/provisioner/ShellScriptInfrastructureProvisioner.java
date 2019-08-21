@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.api.ShellScriptProvisionerOutputElement;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisionerType;
@@ -27,7 +28,7 @@ public class ShellScriptInfrastructureProvisioner extends InfrastructureProvisio
 
   @Override
   public String variableKey() {
-    return "shellScriptProvisioner";
+    return ShellScriptProvisionerOutputElement.KEY;
   }
 
   @Builder

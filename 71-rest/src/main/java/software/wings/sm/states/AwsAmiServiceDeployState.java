@@ -72,6 +72,7 @@ import software.wings.service.impl.aws.model.AwsAmiPreDeploymentData;
 import software.wings.service.impl.aws.model.AwsAmiResizeData;
 import software.wings.service.impl.aws.model.AwsAmiServiceDeployRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceDeployResponse;
+import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.DelegateService;
@@ -127,6 +128,7 @@ public class AwsAmiServiceDeployState extends State {
   @Inject private transient HostService hostService;
   @Inject private transient AwsUtils awsUtils;
   @Inject private transient AwsAsgHelperServiceManager awsAsgHelperServiceManager;
+  @Inject private transient ServiceTemplateHelper serviceTemplateHelper;
 
   public AwsAmiServiceDeployState(String name) {
     this(name, StateType.AWS_AMI_SERVICE_DEPLOY.name());
@@ -502,6 +504,8 @@ public class AwsAmiServiceDeployState extends State {
     List<Instance> ec2InstancesAdded = amiServiceDeployResponse.getInstancesAdded();
     List<InstanceElement> instanceElements = emptyList();
     if (isNotEmpty(ec2InstancesAdded)) {
+      String serviceTemplateId = serviceTemplateHelper.fetchServiceTemplateId(infrastructureMapping);
+
       instanceElements =
           amiServiceDeployResponse.getInstancesAdded()
               .stream()
@@ -515,7 +519,7 @@ public class AwsAmiServiceDeployState extends State {
                                 .withHostConnAttr(infrastructureMapping.getHostConnectionAttrs())
                                 .withInfraMappingId(infrastructureMapping.getUuid())
                                 .withInfraDefinitionId(infrastructureMapping.getInfrastructureDefinitionId())
-                                .withServiceTemplateId(infrastructureMapping.getServiceTemplateId())
+                                .withServiceTemplateId(serviceTemplateId)
                                 .build();
                 Host savedHost = hostService.saveHost(host);
                 HostElement hostElement = aHostElement()

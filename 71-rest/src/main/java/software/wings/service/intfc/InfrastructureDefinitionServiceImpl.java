@@ -1,7 +1,9 @@
 package software.wings.service.intfc;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageRequestBuilder;
 import static io.harness.beans.PageResponse.PageResponseBuilder;
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
@@ -22,10 +24,12 @@ import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.PCF;
 import static software.wings.api.DeploymentType.SPOTINST;
+import static software.wings.api.DeploymentType.SSH;
 import static software.wings.api.DeploymentType.WINRM;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
+import static software.wings.utils.Utils.safe;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -40,10 +44,12 @@ import com.amazonaws.services.ecs.model.LaunchType;
 import com.microsoft.azure.management.compute.VirtualMachine;
 import com.mongodb.DuplicateKeyException;
 import io.fabric8.utils.CountingMap;
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.beans.SortOrder.OrderType;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.aws.AwsElbListener;
@@ -59,18 +65,27 @@ import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AmiDeploymentType;
+import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInstanceFilter.AwsInstanceFilterKeys;
+import software.wings.beans.BlueprintProperty;
+import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMapping.InfrastructureMappingKeys;
+import software.wings.beans.InfrastructureProvisioner;
+import software.wings.beans.NameValuePair;
+import software.wings.beans.PcfConfig;
 import software.wings.beans.Service;
-import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.infrastructure.Host;
+import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.azure.AzureHelperService;
@@ -88,9 +103,11 @@ import software.wings.infra.FieldKeyValMapProvider;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.GoogleKubernetesEngine.GoogleKubernetesEngineKeys;
 import software.wings.infra.InfraDefinitionDetail;
+import software.wings.infra.InfraMappingDetail;
 import software.wings.infra.InfraMappingInfrastructureProvider;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.InfrastructureDefinition.InfrastructureDefinitionKeys;
+import software.wings.infra.PcfInfraStructure;
 import software.wings.infra.PhysicalInfra;
 import software.wings.infra.PhysicalInfraWinrm;
 import software.wings.infra.ProvisionerAware;
@@ -99,18 +116,22 @@ import software.wings.infra.WinRmBasedInfrastructure;
 import software.wings.prune.PruneEvent;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.AwsInfrastructureProvider;
+import software.wings.service.impl.PcfHelperService;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
 import software.wings.service.intfc.aws.manager.AwsRoute53HelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
+import software.wings.utils.EcsConvention;
+import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -142,10 +163,26 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Inject private WorkflowService workflowService;
   @Inject private PipelineService pipelineService;
   @Inject private TriggerService triggerService;
+  @Inject private PcfHelperService pcfHelperService;
+  @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
 
   @Inject private Queue<PruneEvent> pruneQueue;
 
   @Inject private AuditServiceHelper auditServiceHelper;
+
+  private static Map<CloudProviderType, EnumSet<DeploymentType>> supportedCloudProviderDeploymentTypes =
+      new HashMap<CloudProviderType, EnumSet<DeploymentType>>() {
+        {
+          put(CloudProviderType.AWS, EnumSet.of(SSH, WINRM, ECS, AWS_LAMBDA, AMI, AWS_CODEDEPLOY));
+          put(CloudProviderType.AZURE, EnumSet.of(SSH, WINRM, HELM, KUBERNETES));
+          put(CloudProviderType.GCP, EnumSet.of(HELM, KUBERNETES));
+          put(CloudProviderType.KUBERNETES_CLUSTER, EnumSet.of(HELM, KUBERNETES));
+          put(CloudProviderType.PCF, EnumSet.of(PCF));
+          put(CloudProviderType.PHYSICAL_DATA_CENTER, EnumSet.of(SSH, WINRM));
+        }
+      };
+
+  @Inject private WorkflowExecutionService workflowExecutionService;
 
   @Override
   public PageResponse<InfrastructureDefinition> list(PageRequest<InfrastructureDefinition> pageRequest) {
@@ -203,9 +240,11 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   }
 
   @Override
-  public InfrastructureDefinition save(InfrastructureDefinition infrastructureDefinition) {
+  public InfrastructureDefinition save(InfrastructureDefinition infrastructureDefinition, boolean migration) {
     String accountId = appService.getAccountIdByAppId(infrastructureDefinition.getAppId());
-    validateInfraDefinition(infrastructureDefinition);
+    if (!migration) {
+      validateInfraDefinition(infrastructureDefinition);
+    }
     String uuid;
     try {
       uuid = wingsPersistence.save(infrastructureDefinition);
@@ -215,13 +254,15 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
           WingsException.USER);
     }
     infrastructureDefinition.setUuid(uuid);
-    // TODO: look at git sync once support is added
-    yamlPushService.pushYamlChangeSet(accountId, null, infrastructureDefinition, Type.CREATE, false, false);
+    if (!migration) {
+      yamlPushService.pushYamlChangeSet(accountId, null, infrastructureDefinition, Type.CREATE, false, false);
+    }
     return infrastructureDefinition;
   }
 
   @VisibleForTesting
   public void validateInfraDefinition(@Valid InfrastructureDefinition infraDefinition) {
+    validateCloudProviderAndDeploymentType(infraDefinition.getCloudProviderType(), infraDefinition.getDeploymentType());
     if (isNotEmpty(infraDefinition.getProvisionerId())) {
       ProvisionerAware provisionerAwareInfra = (ProvisionerAware) infraDefinition.getInfrastructure();
       Map<String, String> expressions = provisionerAwareInfra.getExpressions();
@@ -232,10 +273,18 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       removeUnsupportedExpressions(provisionerAwareInfra);
     }
     InfrastructureMapping infrastructureMapping = infraDefinition.getInfraMapping();
-    // Some Hack To validate without Service Template
-    infrastructureMapping.setServiceTemplateId("dummy");
     infrastructureMapping.setAccountId(appService.getAccountIdByAppId(infraDefinition.getAppId()));
     infrastructureMappingService.validateInfraMapping(infrastructureMapping, false);
+  }
+
+  private void validateCloudProviderAndDeploymentType(
+      CloudProviderType cloudProviderType, DeploymentType deploymentType) {
+    if (supportedCloudProviderDeploymentTypes.containsKey(cloudProviderType)) {
+      if (supportedCloudProviderDeploymentTypes.get(cloudProviderType).contains(deploymentType)) {
+        return;
+      }
+    }
+    throw new InvalidRequestException("Invalid CloudProvider and Deployment type combination", USER);
   }
 
   @VisibleForTesting
@@ -443,9 +492,6 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       infraMapping = infrastructureDefinition.getInfraMapping();
       infraMapping.setServiceId(serviceId);
       infraMapping.setAccountId(appService.getAccountIdByAppId(appId));
-      ServiceTemplate serviceTemplate = serviceTemplateService.get(
-          infrastructureDefinition.getAppId(), serviceId, infrastructureDefinition.getEnvId());
-      infraMapping.setServiceTemplateId(serviceTemplate.getUuid());
       infraMapping.setInfrastructureDefinitionId(infraDefinitionId);
       infraMapping.setAutoPopulate(true);
       return infrastructureMappingService.save(infraMapping);
@@ -455,37 +501,76 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   private void renderExpression(InfrastructureDefinition infrastructureDefinition, ExecutionContext context) {
     Map<String, Object> fieldMapForClass =
         ((FieldKeyValMapProvider) infrastructureDefinition.getInfrastructure()).getFieldMapForClass();
-    for (Entry<String, Object> entry : fieldMapForClass.entrySet()) {
-      if (entry.getValue() instanceof String) {
-        entry.setValue(context.renderExpression((String) entry.getValue()));
-      } else if (entry.getValue() instanceof List) {
-        List result = new ArrayList();
-        for (Object o : (List) entry.getValue()) {
-          if (o instanceof String) {
-            result.addAll(getList(context.renderExpression((String) o)));
-          } else {
-            result.add(o);
-          }
+    Map<String, String> renderedFieldMap = new HashMap<>();
+
+    if (isEmpty(infrastructureDefinition.getProvisionerId())) {
+      for (Entry<String, Object> entry : fieldMapForClass.entrySet()) {
+        if (entry.getValue() instanceof String && isTemplated((String) entry.getValue())) {
+          renderedFieldMap.put(entry.getKey(), context.renderExpression((String) entry.getValue()));
         }
-        entry.setValue(result);
       }
+      saveFieldMapForDefinition(infrastructureDefinition, renderedFieldMap);
+    } else {
+      ProvisionerAware provisionerAwareInfrastructure = (ProvisionerAware) infrastructureDefinition.getInfrastructure();
+      InfrastructureProvisioner infrastructureProvisioner = infrastructureProvisionerService.get(
+          infrastructureDefinition.getAppId(), infrastructureDefinition.getProvisionerId());
+
+      List<BlueprintProperty> properties = getBlueprintProperties(infrastructureDefinition);
+      addProvisionerKeys(properties, infrastructureProvisioner);
+      Map<String, Object> resolvedExpressions = infrastructureProvisionerService.resolveProperties(
+          context.asMap(), properties, Optional.empty(), Optional.empty(), true);
+      provisionerAwareInfrastructure.applyExpressions(resolvedExpressions, infrastructureDefinition.getAppId(),
+          infrastructureDefinition.getEnvId(), infrastructureDefinition.getUuid());
     }
-    saveFieldMapForDefinition(infrastructureDefinition, fieldMapForClass);
   }
 
-  private List getList(Object input) {
-    if (input instanceof String) {
-      return Arrays.asList(((String) input).split(","));
+  private List<BlueprintProperty> getBlueprintProperties(InfrastructureDefinition infrastructureDefinition) {
+    List<BlueprintProperty> properties = new ArrayList<>();
+    Map<String, String> expressions =
+        ((ProvisionerAware) infrastructureDefinition.getInfrastructure()).getExpressions();
+    if (infrastructureDefinition.getInfrastructure() instanceof PhysicalInfra) {
+      BlueprintProperty hostArrayPathProperty = BlueprintProperty.builder()
+                                                    .name(PhysicalInfra.hostArrayPath)
+                                                    .value(expressions.get(PhysicalInfra.hostArrayPath))
+                                                    .build();
+      List<NameValuePair> fields =
+          expressions.entrySet()
+              .stream()
+              .filter(expression -> !expression.getKey().equals(PhysicalInfra.hostArrayPath))
+              .map(expression -> NameValuePair.builder().name(expression.getKey()).value(expression.getValue()).build())
+              .collect(Collectors.toList());
+      hostArrayPathProperty.setFields(fields);
+      properties.add(hostArrayPathProperty);
+
+    } else {
+      expressions.entrySet()
+          .stream()
+          .map(expression -> BlueprintProperty.builder().name(expression.getKey()).value(expression.getValue()).build())
+          .forEach(properties::add);
     }
-    return (List) input;
+    return properties;
+  }
+
+  private void addProvisionerKeys(
+      List<BlueprintProperty> properties, InfrastructureProvisioner infrastructureProvisioner) {
+    if (infrastructureProvisioner instanceof ShellScriptInfrastructureProvisioner) {
+      properties.forEach(property -> {
+        property.setValue(format("${%s.%s}", infrastructureProvisioner.variableKey(), property.getValue()));
+        property.getFields().forEach(field -> field.setValue(format("${%s}", field.getValue())));
+      });
+    }
+  }
+
+  private boolean isTemplated(String expression) {
+    return expression != null && expression.contains("$");
   }
 
   private void saveFieldMapForDefinition(
-      InfrastructureDefinition infrastructureDefinition, Map<String, Object> fieldMapForClass) {
+      InfrastructureDefinition infrastructureDefinition, Map<String, String> fieldMapForClass) {
     try {
       Class<? extends InfraMappingInfrastructureProvider> aClass =
           infrastructureDefinition.getInfrastructure().getClass();
-      for (Entry<String, Object> entry : fieldMapForClass.entrySet()) {
+      for (Entry<String, String> entry : fieldMapForClass.entrySet()) {
         Field field = aClass.getDeclaredField(entry.getKey());
         field.setAccessible(true);
         field.set(infrastructureDefinition.getInfrastructure(), entry.getValue());
@@ -613,9 +698,41 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       return infraDefinitionDetail;
     }
     infraDefinitionDetail.setInfrastructureDefinition(infrastructureDefinition);
-    infraDefinitionDetail.setDerivedInfraMappings(getMappings(infrastructureDefinition.getUuid(), appId));
+    infraDefinitionDetail.setDerivedInfraMappingDetailList(
+        safe(getMappings(infrastructureDefinition.getUuid(), appId))
+            .stream()
+            .map(infraMapping
+                -> InfraMappingDetail.builder()
+                       .infrastructureMapping(infraMapping)
+                       .workflowExecutionList(getLatestWFEFor(infraMapping.getAppId(), infraMapping.getUuid(), 1))
+                       .build())
+            .collect(toList()));
 
     return infraDefinitionDetail;
+  }
+
+  private List<WorkflowExecution> getLatestWFEFor(String appID, String infraMappingID, int limit) {
+    try {
+      PageRequest<WorkflowExecution> workflowExecutionPageRequest =
+          aPageRequest()
+              .addFilter(WorkflowExecutionKeys.infraMappingIds, Operator.CONTAINS, infraMappingID)
+              .addFilter(WorkflowExecutionKeys.appId, EQ, appID)
+              .addFilter(WorkflowExecutionKeys.status, EQ, ExecutionStatus.SUCCESS)
+              .addOrder(WorkflowExecutionKeys.createdAt, OrderType.DESC)
+              .withLimit(String.valueOf(limit))
+              .build();
+
+      final List<WorkflowExecution> workflowExecutions =
+          workflowExecutionService.listExecutions(workflowExecutionPageRequest, false, false, false, false)
+              .getResponse();
+
+      workflowExecutions.forEach(we -> we.setStateMachine(null));
+      return workflowExecutions;
+    } catch (Exception e) {
+      logger.error(format("Failed to fetch recent executions for inframapping [%s]", infraMappingID), e);
+    }
+
+    return Collections.emptyList();
   }
 
   @Override
@@ -945,22 +1062,6 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     return null;
   }
 
-  @Override
-  public void applyProvisionerOutputs(
-      InfrastructureDefinition infrastructureDefinition, Map<String, Object> contextMap) {
-    Map<String, Object> fieldMapForClass =
-        ((FieldKeyValMapProvider) infrastructureDefinition.getInfrastructure()).getFieldMapForClass();
-    for (Entry<String, Object> entry : fieldMapForClass.entrySet()) {
-      if (entry.getValue() instanceof String) {
-        Object evaluated = evaluateExpression((String) entry.getValue(), contextMap);
-        if (evaluated instanceof String) {
-          entry.setValue(evaluated);
-        }
-      }
-    }
-    saveFieldMapForDefinition(infrastructureDefinition, fieldMapForClass);
-  }
-
   private void prune(String appId, String infraDefinitionId) {
     pruneQueue.send(new PruneEvent(InfrastructureDefinition.class, appId, infraDefinitionId));
     wingsPersistence.delete(InfrastructureDefinition.class, appId, infraDefinitionId);
@@ -1084,5 +1185,76 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
         .stream()
         .map(InfrastructureDefinition::getName)
         .collect(Collectors.toList());
+  }
+
+  @Override
+  public void cloneInfrastructureDefinitions(
+      final String sourceAppID, final String sourceEnvID, final String targetAppID, final String targetEnvID) {
+    safe(list(sourceAppID, sourceEnvID, null)).forEach(infraDef -> {
+      try {
+        final InfrastructureDefinition clonedInfraDef = infraDef.cloneForUpdate();
+        clonedInfraDef.setEnvId(targetEnvID);
+        clonedInfraDef.setAppId(targetAppID);
+        save(clonedInfraDef, false);
+      } catch (Exception e) {
+        logger.error("Failed to clone infrastructure definition name {}, id {} of environment {}", infraDef.getName(),
+            infraDef.getUuid(), infraDef.getEnvId(), e);
+      }
+    });
+  }
+
+  @Override
+  public List<InfrastructureDefinition> getNameAndIdForEnvironments(String appId, List<String> envIds) {
+    return getDefinitionWithFieldsForEnvironments(appId, envIds, null);
+  }
+
+  @Override
+  public List<InfrastructureDefinition> getDefinitionWithFieldsForEnvironments(
+      String appId, List<String> envIds, List<String> projections) {
+    Query baseQuery = wingsPersistence.createQuery(InfrastructureDefinition.class)
+                          .project(InfrastructureDefinitionKeys.uuid, true)
+                          .project(InfrastructureDefinitionKeys.name, true)
+                          .filter(InfrastructureDefinitionKeys.appId, appId)
+                          .field(InfrastructureDefinitionKeys.envId)
+                          .in(envIds);
+
+    if (EmptyPredicate.isNotEmpty(projections)) {
+      projections.forEach(projection -> baseQuery.project(projection, true));
+    }
+    return baseQuery.asList();
+  }
+
+  @Override
+  public Integer getPcfRunningInstances(
+      String appId, String infraDefinitionId, String appNameExpression, String serviceId) {
+    InfrastructureDefinition infrastructureDefinition = get(appId, infraDefinitionId);
+    notNullCheck("Infrastructure Definition does not exist", infrastructureDefinition);
+
+    Application app = appService.get(infrastructureDefinition.getAppId());
+    Environment env =
+        environmentService.get(infrastructureDefinition.getAppId(), infrastructureDefinition.getEnvId(), false);
+    Service service = serviceResourceService.get(appId, serviceId);
+
+    Map<String, Object> context = new HashMap<>();
+    context.put("app", app);
+    context.put("env", env);
+    context.put("service", service);
+
+    InfraMappingInfrastructureProvider infrastructure = infrastructureDefinition.getInfrastructure();
+    if (!(infrastructure instanceof PcfInfraStructure)) {
+      throw new WingsException(INVALID_ARGUMENT, USER)
+          .addParam("args", "InvalidConfiguration, Needs Instance of PcfConfig");
+    }
+
+    SettingAttribute computeProviderSetting = settingsService.get(infrastructure.getCloudProviderId());
+    notNullCheck("Compute Provider Does not Exist", computeProviderSetting);
+
+    appNameExpression = StringUtils.isNotBlank(appNameExpression)
+        ? Misc.normalizeExpression(evaluator.substitute(appNameExpression, context))
+        : EcsConvention.getTaskFamily(app.getName(), service.getName(), env.getName());
+
+    return pcfHelperService.getRunningInstanceCount((PcfConfig) computeProviderSetting.getValue(),
+        ((PcfInfraStructure) infrastructure).getOrganization(), ((PcfInfraStructure) infrastructure).getSpace(),
+        appNameExpression);
   }
 }

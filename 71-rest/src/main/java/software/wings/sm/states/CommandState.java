@@ -89,6 +89,7 @@ import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ActivityHelperService;
+import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -159,6 +160,7 @@ public class CommandState extends State {
   @Inject @Transient private transient TemplateService templateService;
   @Inject @Transient private transient SweepingOutputService sweepingOutputService;
   @Inject @Transient private transient TemplateUtils templateUtils;
+  @Inject @Transient private transient ServiceTemplateHelper serviceTemplateHelper;
 
   @Inject @Transient private transient WingsPersistence wingsPersistence;
 
@@ -708,8 +710,7 @@ public class CommandState extends State {
       if (infrastructureMapping != null) {
         service = serviceResourceService.get(appId, infrastructureMapping.getServiceId());
         if (instanceElement == null) {
-          String serviceTemplateId = infrastructureMapping.getServiceTemplateId();
-          serviceTemplate = serviceTemplateService.get(appId, serviceTemplateId);
+          serviceTemplate = serviceTemplateHelper.fetchServiceTemplate(infrastructureMapping);
         }
       }
     }

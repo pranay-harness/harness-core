@@ -3,7 +3,7 @@ type: INFRA_DEFINITION
 cloudProviderType: AZURE
 deploymentType: SSH
 infrastructure:
-- type: AZURE_SSH
+- type: AZURE_INFRA
   cloudProviderName: TEST_CLOUD_PROVIDER
   hostConnectionAttrsName: TEST_CLOUD_PROVIDER
   resourceGroup: default

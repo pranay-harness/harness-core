@@ -124,6 +124,7 @@ import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
+import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.EnvironmentService;
@@ -214,6 +215,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject private ContainerMasterUrlHelper containerMasterUrlHelper;
+  @Inject private ServiceTemplateHelper serviceTemplateHelper;
   @Inject private EventPublishHelper eventPublishHelper;
 
   @Inject private Queue<PruneEvent> pruneQueue;
@@ -374,17 +376,21 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @ValidationGroups(Create.class)
   public InfrastructureMapping save(InfrastructureMapping infraMapping, boolean fromYaml) {
     // The default name uses a bunch of user inputs, which is why we generate it at the time of save.
+    boolean infraRefactor =
+        featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infraMapping.getAccountId());
     if (infraMapping.isAutoPopulate()) {
       setAutoPopulatedName(infraMapping);
     }
 
     SettingAttribute computeProviderSetting = settingsService.get(infraMapping.getComputeProviderSettingId());
 
-    ServiceTemplate serviceTemplate =
-        serviceTemplateService.get(infraMapping.getAppId(), infraMapping.getServiceTemplateId());
-    notNullCheck("Service Template", serviceTemplate, USER);
+    if (!infraRefactor) {
+      ServiceTemplate serviceTemplate =
+          serviceTemplateService.get(infraMapping.getAppId(), infraMapping.getServiceTemplateId());
+      notNullCheck("Service Template", serviceTemplate, USER);
+      infraMapping.setServiceId(serviceTemplate.getServiceId());
+    }
 
-    infraMapping.setServiceId(serviceTemplate.getServiceId());
     if (computeProviderSetting != null) {
       infraMapping.setComputeProviderName(computeProviderSetting.getName());
     }
@@ -1200,7 +1206,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                      .withInfraMappingId(pyInfraMapping.getUuid())
                      .withInfraDefinitionId(pyInfraMapping.getInfrastructureDefinitionId())
                      .withHostConnAttr(pyInfraMapping.getHostConnectionAttrs())
-                     .withServiceTemplateId(pyInfraMapping.getServiceTemplateId())
+                     .withServiceTemplateId(serviceTemplateHelper.fetchServiceTemplateId(pyInfraMapping))
                      .build())
           .collect(toList());
     } else if (infrastructureMapping instanceof PhysicalInfrastructureMappingWinRm) {
@@ -1222,7 +1228,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                      .withInfraMappingId(pyInfraMappingWinRm.getUuid())
                      .withInfraDefinitionId(pyInfraMappingWinRm.getInfrastructureDefinitionId())
                      .withWinrmConnAttr(pyInfraMappingWinRm.getWinRmConnectionAttributes())
-                     .withServiceTemplateId(pyInfraMappingWinRm.getServiceTemplateId())
+                     .withServiceTemplateId(serviceTemplateHelper.fetchServiceTemplateId(pyInfraMappingWinRm))
                      .build())
           .collect(toList());
     } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
@@ -1256,8 +1262,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       InfrastructureMapping infrastructureMapping, List<Host> hosts) {
     InfrastructureProvider infrastructureProvider =
         getInfrastructureProviderByComputeProviderType(infrastructureMapping.getComputeProviderType());
-    ServiceTemplate serviceTemplate =
-        serviceTemplateService.get(infrastructureMapping.getAppId(), infrastructureMapping.getServiceTemplateId());
+    ServiceTemplate serviceTemplate = serviceTemplateHelper.fetchServiceTemplate(infrastructureMapping);
 
     List<Host> savedHosts = hosts.stream().map(infrastructureProvider::saveHost).collect(toList());
     return serviceInstanceService.updateInstanceMappings(serviceTemplate, infrastructureMapping, savedHosts);

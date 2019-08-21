@@ -41,6 +41,7 @@ import software.wings.common.InfrastructureConstants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.infra.AwsInstanceInfrastructure;
 import software.wings.infra.InfrastructureDefinition;
+import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.ServiceResourceService;
@@ -78,6 +79,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   @Inject private AwsLambdaHelperServiceManager awsLambdaHelperServiceManager;
   @Inject private AwsEcsHelperServiceManager awsEcsHelperServiceManager;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private ServiceTemplateHelper serviceTemplateHelper;
 
   @Override
   public PageResponse<Host> listHosts(AwsInfrastructureMapping awsInfrastructureMapping,
@@ -300,7 +302,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
                    .withEnvId(infrastructureMapping.getEnvId())
                    .withHostConnAttr(infrastructureMapping.getHostConnectionAttrs())
                    .withInfraMappingId(infrastructureMapping.getUuid())
-                   .withServiceTemplateId(infrastructureMapping.getServiceTemplateId())
+                   .withServiceTemplateId(serviceTemplateHelper.fetchServiceTemplateId(infrastructureMapping))
                    .build())
         .collect(toList());
   }

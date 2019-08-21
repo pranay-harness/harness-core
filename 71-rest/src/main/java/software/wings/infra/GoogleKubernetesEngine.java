@@ -1,11 +1,13 @@
 package software.wings.infra;
 
+import static java.lang.String.format;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.beans.InfrastructureType.GCP_KUBERNETES_ENGINE;
 
 import com.google.common.collect.ImmutableSet;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.exception.InvalidRequestException;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,6 +18,7 @@ import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
+import software.wings.utils.Validator;
 
 import java.util.Map;
 import java.util.Set;
@@ -64,7 +67,30 @@ public class GoogleKubernetesEngine
   }
 
   @Override
-  public void applyExpressions(Map<String, Object> resolvedExpressions) {}
+  public void applyExpressions(
+      Map<String, Object> resolvedExpressions, String appId, String envId, String infraDefinitionId) {
+    for (Map.Entry<String, Object> entry : resolvedExpressions.entrySet()) {
+      switch (entry.getKey()) {
+        case "clusterName":
+          Validator.ensureType(String.class, entry.getValue(), "Region should be of String type");
+          setClusterName((String) entry.getValue());
+          break;
+        case "namespace":
+          Validator.ensureType(String.class, entry.getValue(), "Namespace should be of String type");
+          setNamespace((String) entry.getValue());
+          break;
+        case "releaseName":
+          Validator.ensureType(String.class, entry.getValue(), "Release name should be of String type");
+          setReleaseName((String) entry.getValue());
+          break;
+        default:
+          throw new InvalidRequestException(format("Unknown expression : [%s]", entry.getKey()));
+      }
+    }
+    if (getClusterName() == null) {
+      throw new InvalidRequestException("Cluster Name is mandatory");
+    }
+  }
 
   @Data
   @EqualsAndHashCode(callSuper = true)

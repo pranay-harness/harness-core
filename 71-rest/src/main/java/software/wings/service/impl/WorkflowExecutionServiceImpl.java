@@ -1327,6 +1327,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                    .appId(workflowExecution.getAppId())
                                    .workflowId(workflowExecution.getWorkflowId())
                                    .infraMappingIds(workflowExecution.getInfraMappingIds())
+                                   .infraDefinitionIds(workflowExecution.getInfraDefinitionIds())
                                    .build());
       savedWorkflowExecution = wingsPersistence.getWithAppId(
           WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
@@ -1920,20 +1921,26 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public DeploymentMetadata fetchDeploymentMetadata(String appId, ExecutionArgs executionArgs) {
+    String accountId = appService.getAccountIdByAppId(appId);
     Validator.notNullCheck("Workflow type is required", executionArgs.getWorkflowType());
     DeploymentMetadata finalDeploymentMetadata;
+    Pipeline pipeline = null;
     if (executionArgs.getWorkflowType() == ORCHESTRATION) {
       Workflow workflow = workflowService.readWorkflow(appId, executionArgs.getOrchestrationId());
       finalDeploymentMetadata =
           workflowService.fetchDeploymentMetadata(appId, workflow, executionArgs.getWorkflowVariables(), null, null);
     } else {
-      String accountId = appService.getAccountIdByAppId(appId);
-      if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+      if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)) {
+        pipeline = pipelineService.readPipelineWithResolvedVariables(
+            appId, executionArgs.getPipelineId(), executionArgs.getWorkflowVariables());
+
+        finalDeploymentMetadata = pipelineService.fetchDeploymentMetadata(appId, pipeline, null, null);
+      } else if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+        pipeline = pipelineService.readPipeline(appId, executionArgs.getPipelineId(), false);
+        finalDeploymentMetadata = pipelineService.fetchDeploymentMetadata(appId, pipeline, null, null);
+      } else {
         return DeploymentMetadata.builder().build();
       }
-
-      Pipeline pipeline = pipelineService.readPipeline(appId, executionArgs.getPipelineId(), false);
-      finalDeploymentMetadata = pipelineService.fetchDeploymentMetadata(appId, pipeline, null, null);
     }
 
     if (finalDeploymentMetadata != null) {

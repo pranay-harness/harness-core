@@ -94,6 +94,7 @@ import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.HelmChartConfigHelperService;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
+import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -147,6 +148,7 @@ public class HelmDeployState extends State {
   @Inject private transient ApplicationManifestService applicationManifestService;
   @Inject private transient ApplicationManifestUtils applicationManifestUtils;
   @Inject private transient HelmChartConfigHelperService helmChartConfigHelperService;
+  @Inject private transient ServiceTemplateHelper serviceTemplateHelper;
 
   @DefaultValue("10") private int steadyStateTimeout; // Minutes
 
@@ -889,7 +891,7 @@ public class HelmDeployState extends State {
 
     // ToDo anshul - Remove this piece of code once the values yaml in service has been migrated to ManifestFiles format
     if (!appManifestMap.containsKey(K8sValuesLocation.ServiceOverride)) {
-      ServiceTemplate serviceTemplate = serviceTemplateService.get(appId, infrastructureMapping.getServiceTemplateId());
+      ServiceTemplate serviceTemplate = serviceTemplateHelper.fetchServiceTemplate(infrastructureMapping);
       if (serviceTemplate != null) {
         Service service = serviceResourceService.get(appId, serviceTemplate.getServiceId(), false);
         if (service != null && isNotBlank(service.getHelmValueYaml())) {

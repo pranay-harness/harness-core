@@ -74,6 +74,7 @@ import software.wings.api.ServiceNowImportSetResponse;
 import software.wings.api.ServiceNowImportSetResult;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.api.ShellScriptApprovalExecutionData;
+import software.wings.api.ShellScriptProvisionerOutputElement;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.api.SplunkStateExecutionData;
 import software.wings.api.TerraformExecutionData;
@@ -1326,5 +1327,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(MasterUrlFetchTaskParameter.class, 7226);
     kryo.register(SpotInstListenerUpdateStateExecutionData.class, 7227);
     kryo.register(CyberArkConfig.class, 7228);
+    kryo.register(ShellScriptProvisionerOutputElement.class, 7229);
   }
 }

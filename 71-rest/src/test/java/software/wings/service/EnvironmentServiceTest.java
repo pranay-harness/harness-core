@@ -79,6 +79,8 @@ import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.FeatureName;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Notification;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.Pipeline;
@@ -97,6 +99,9 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ResourceLookupService;
@@ -132,6 +137,9 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Mock private YamlPushService yamlPushService;
   @Mock private YamlDirectoryService yamlDirectoryService;
   @Mock private AuditServiceHelper auditServiceHelper;
+  @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
+  @Mock private FeatureFlagService featureFlagService;
+  @Mock private InfrastructureMappingService infrastructureMappingService;
 
   @Inject @InjectMocks private WingsPersistence realWingsPersistence;
   @Inject @InjectMocks private EnvironmentService environmentService;
@@ -251,6 +259,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
 
     Environment environment =
         anEnvironment().uuid(ENV_ID).appId(APP_ID).name(ENV_NAME).description(ENV_DESCRIPTION).build();
+
     Environment clonedEnvironment = environment.cloneInternal();
     when(wingsPersistence.getWithAppId(Environment.class, APP_ID, ENV_ID)).thenReturn(environment);
     when(wingsPersistence.saveAndGet(any(), any(Environment.class))).thenReturn(clonedEnvironment);
@@ -281,14 +290,26 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     when(serviceTemplateService.save(any(ServiceTemplate.class))).thenReturn(clonedServiceTemplate);
     when(serviceTemplateService.get(APP_ID, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, MASKED))
         .thenReturn(serviceTemplate);
+    when(infrastructureMappingService.save(any(InfrastructureMapping.class)))
+        .thenReturn(aPhysicalInfrastructureMapping().build());
 
     CloneMetadata cloneMetadata = CloneMetadata.builder().environment(environment).build();
-    environmentService.cloneEnvironment(APP_ID, ENV_ID, cloneMetadata);
+
+    when(featureFlagService.isEnabled(any(FeatureName.class), any())).thenReturn(Boolean.TRUE);
+    doNothing()
+        .when(infrastructureDefinitionService)
+        .cloneInfrastructureDefinitions(eq(APP_ID), eq(ENV_ID), eq(APP_ID), any());
+
+    clonedEnvironment = environmentService.cloneEnvironment(APP_ID, ENV_ID, cloneMetadata);
+
     verify(wingsPersistence).getWithAppId(Environment.class, APP_ID, ENV_ID);
     verify(wingsPersistence).saveAndGet(any(), any(Environment.class));
     verify(serviceTemplateService).list(pageRequest, false, OBTAIN_VALUE);
     verify(serviceTemplateService).save(any(ServiceTemplate.class));
     verify(serviceTemplateService).get(APP_ID, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, MASKED);
+    verify(infrastructureDefinitionService, times(1))
+        .cloneInfrastructureDefinitions(APP_ID, ENV_ID, APP_ID, clonedEnvironment.getUuid());
+    verify(infrastructureMappingService, times(1)).save(any(PhysicalInfrastructureMapping.class));
   }
 
   /**
