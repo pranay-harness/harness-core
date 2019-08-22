@@ -7,15 +7,14 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
-import io.harness.beans.SortOrder;
-import io.harness.beans.SortOrder.OrderType;
 import io.harness.beans.WorkflowType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.expression.ExpressionEvaluator;
-import io.harness.mongo.SampleEntity.SampleEntityKeys;
 import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
+import org.apache.commons.lang3.StringUtils;
+import software.wings.beans.Account;
 import software.wings.beans.EntityType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Variable;
@@ -28,41 +27,36 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
-public class SetInfraDefinitionTriggers implements Migration {
+@Singleton
+public class SetInfraDefinitionTriggers {
   @Inject private TriggerService triggerService;
   @Inject private WorkflowService workflowService;
   @Inject private AppService appService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
-  private static final String accountId = "zEaak-FLS425IEO7OLzMUg";
+  private final String DEBUG_LINE = " INFRA_MAPPING_MIGRATION: ";
 
-  @Override
-  public void migrate() {
-    logger.info("Running infra migration for Triggers. Retrieving applications for accountId: " + accountId);
-    List<String> apps = appService.getAppIdsByAccountId(accountId);
+  public void migrate(Account account) {
+    logger.info(StringUtils.join(
+        DEBUG_LINE, "Starting Infra Definition migration for triggers, accountId ", account.getUuid()));
+    List<String> apps = appService.getAppIdsByAccountId(account.getUuid());
 
     if (isEmpty(apps)) {
-      logger.info("No applications found");
+      logger.info(StringUtils.join(DEBUG_LINE, "No applications found for accountId: ", account.getUuid()));
       return;
     }
-    logger.info("Updating {} applications.", apps.size());
     for (String appId : apps) {
       migrate(appId);
     }
-    // migrate("d1Z4dCeET12A2epYnEpmvw");
   }
 
   public void migrate(String appId) {
-    SortOrder sortOrder = new SortOrder();
-    sortOrder.setFieldName(SampleEntityKeys.createdAt);
-    sortOrder.setOrderType(OrderType.DESC);
     List<Trigger> triggers =
-        triggerService
-            .list(aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, appId).addOrder(sortOrder).build(), false,
-                null)
+        triggerService.list(aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, appId).build(), false, null)
             .getResponse();
 
     logger.info("Updating {} triggers.", triggers.size());
@@ -119,68 +113,68 @@ public class SetInfraDefinitionTriggers implements Migration {
 
     List<Variable> userVariables = workflow.getOrchestrationWorkflow().getUserVariables();
 
-    Variable infraUserVariable = null;
+    List<Variable> infraUserVariables = new ArrayList<>();
     for (Variable userVariable : userVariables) {
       if (userVariable.obtainEntityType() != null
           && userVariable.obtainEntityType().equals(EntityType.INFRASTRUCTURE_MAPPING)) {
-        infraUserVariable = userVariable;
-        break;
+        infraUserVariables.add(userVariable);
       }
     }
 
-    if (infraUserVariable == null) {
+    if (isEmpty(infraUserVariables)) {
       logger.info(
           "[INFRA_MIGRATION_INFO] Trigger with workflow where infraMapping not templatised. skipping migration. TriggerId: "
           + trigger.getUuid());
       return false;
     }
 
-    String variableName = infraUserVariable.getName();
+    for (Variable infraUserVariable : infraUserVariables) {
+      String variableName = infraUserVariable.getName();
 
-    if (!trigger.getWorkflowVariables().containsKey(variableName)) {
-      // Workflow has infraMapping templatised but trigger doesn't have infraMapping variable. Invalid trigger
-      logger.info(
-          "[INFRA_MIGRATION_INFO]Workflow has infra Mapping templatised but trigger does not have infra mapping variable. TriggerId: "
-          + trigger.getUuid());
-      return false;
-    }
+      if (!trigger.getWorkflowVariables().containsKey(variableName)) {
+        // Workflow has infraMapping templatised but trigger doesn't have infraMapping variable. Invalid trigger
+        logger.info(
+            "[INFRA_MIGRATION_INFO]Workflow has infra Mapping templatised but trigger does not have infra mapping variable. TriggerId: "
+            + trigger.getUuid());
+        continue;
+      }
 
-    // infra definition variable name
-    String infraDefVariableName =
-        WorkflowServiceTemplateHelper.getInfraDefVariableNameFromInfraMappingVariableName(variableName);
+      // infra definition variable name
+      String infraDefVariableName =
+          WorkflowServiceTemplateHelper.getInfraDefVariableNameFromInfraMappingVariableName(variableName);
 
-    String infraMappingId = trigger.getWorkflowVariables().get(variableName);
+      String infraMappingId = trigger.getWorkflowVariables().get(variableName);
 
-    // Couldn't find a method which directly tells if trigger is parametrized or not similar to pipeline.
+      // Couldn't find a method which directly tells if trigger is parametrized or not similar to pipeline.
 
-    if (ExpressionEvaluator.containsVariablePattern(infraMappingId)) {
-      trigger.getWorkflowVariables().put(infraDefVariableName, infraMappingId);
-      trigger.getWorkflowVariables().remove(variableName);
-      return true;
-    } else {
-      InfrastructureMapping infrastructureMapping =
-          infrastructureMappingService.get(trigger.getAppId(), infraMappingId);
-      if (infrastructureMapping == null) {
-        logger.info("[INFRA_MIGRATION_INFO]Couldn't fetch infraMapping for trigger. Trigger:  " + trigger.getUuid()
-            + "infraMappingId: " + infraMappingId);
-
-        // Removing infraMapping variable as it does not have a valid infraMappingId. removing will mark workflow
-        // incomplete and later user can complete the workflow
+      if (ExpressionEvaluator.containsVariablePattern(infraMappingId)) {
+        trigger.getWorkflowVariables().put(infraDefVariableName, infraMappingId);
         trigger.getWorkflowVariables().remove(variableName);
-        return true;
-      }
+      } else {
+        InfrastructureMapping infrastructureMapping =
+            infrastructureMappingService.get(trigger.getAppId(), infraMappingId);
+        if (infrastructureMapping == null) {
+          logger.info("[INFRA_MIGRATION_INFO]Couldn't fetch infraMapping for trigger. Trigger:  " + trigger.getUuid()
+              + "infraMappingId: " + infraMappingId);
 
-      String infraDefId = infrastructureMapping.getInfrastructureDefinitionId();
-      if (isEmpty(infraDefId)) {
-        // infra definition migration might have failed.Needs manual intervention
-        logger.error("[INFRA_MIGRATION_ERROR]Couldn't find infraDefinition id  for trigger. Trigger:  "
-            + trigger.getUuid() + "infraMappingId: " + infraMappingId);
+          // Removing infraMapping variable as it does not have a valid infraMappingId. removing will mark workflow
+          // incomplete and later user can complete the workflow
+          trigger.getWorkflowVariables().remove(variableName);
+          continue;
+        }
 
-        return false;
+        String infraDefId = infrastructureMapping.getInfrastructureDefinitionId();
+        if (isEmpty(infraDefId)) {
+          // infra definition migration might have failed.Needs manual intervention
+          logger.error("[INFRA_MIGRATION_ERROR]Couldn't find infraDefinition id  for trigger. Trigger:  "
+              + trigger.getUuid() + "infraMappingId: " + infraMappingId);
+
+          continue;
+        }
+        trigger.getWorkflowVariables().put(infraDefVariableName, infraDefId);
+        trigger.getWorkflowVariables().remove(variableName);
       }
-      trigger.getWorkflowVariables().put(infraDefVariableName, infraDefId);
-      trigger.getWorkflowVariables().remove(variableName);
-      return true;
     }
+    return true;
   }
 }

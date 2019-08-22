@@ -530,7 +530,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     graph2.addNode(GraphNode.builder().id("n5").name("http").type(HTTP.name()).build());
     graph2.getLinks().add(aLink().withId("l3").withFrom("n3").withTo("n5").withType("success").build());
 
-    Workflow updatedWorkflow = workflowService.updateWorkflow(workflow);
+    Workflow updatedWorkflow = workflowService.updateWorkflow(workflow, false);
     assertThat(updatedWorkflow)
         .isNotNull()
         .isEqualToComparingOnlyGivenFields(workflow, "uuid", "name", "description", "orchestrationWorkflow")
@@ -1184,7 +1184,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     Workflow workflow2 = aWorkflow().appId(APP_ID).uuid(workflow1.getUuid()).name(name2).build();
 
-    workflowService.updateWorkflow(workflow2, null);
+    workflowService.updateWorkflow(workflow2, null, false);
 
     Workflow orchestrationWorkflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
     assertThat(orchestrationWorkflow3).isNotNull().hasFieldOrPropertyWithValue("name", name2);
@@ -1205,7 +1205,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     Workflow workflow2 = aWorkflow().appId(APP_ID).envId(ENV_ID_CHANGED).uuid(workflow1.getUuid()).name(name2).build();
 
-    workflowService.updateWorkflow(workflow2, null);
+    workflowService.updateWorkflow(workflow2, null, false);
 
     Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
     assertThat(workflow3).isNotNull().hasFieldOrPropertyWithValue("envId", ENV_ID_CHANGED);
@@ -1256,7 +1256,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                              .name(name2)
                              .build();
 
-    workflowService.updateWorkflow(workflow2, null);
+    workflowService.updateWorkflow(workflow2, null, false);
 
     Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
     assertThat(workflow3).isNotNull().hasFieldOrPropertyWithValue("envId", "ENV_ID_CHANGED");
@@ -1303,7 +1303,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                              .name(name2)
                              .build();
 
-    workflowService.updateWorkflow(workflow2, null);
+    workflowService.updateWorkflow(workflow2, null, false);
   }
 
   @Test
@@ -1328,7 +1328,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                              .build();
 
     try {
-      workflowService.updateWorkflow(workflow2, null);
+      workflowService.updateWorkflow(workflow2, null, false);
     } catch (WingsException e) {
       assertThat(e.getMessage()).isNotNull();
       assertThat(e.getParams().get("message"))
@@ -1356,7 +1356,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     Workflow workflow2 = aWorkflow().appId(APP_ID).envId(ENV_ID_CHANGED).uuid(workflow1.getUuid()).name(name2).build();
 
-    workflowService.updateWorkflow(workflow2, null);
+    workflowService.updateWorkflow(workflow2, null, false);
 
     Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
     assertThat(workflow3).isNotNull().hasFieldOrPropertyWithValue("envId", ENV_ID_CHANGED);
@@ -1466,7 +1466,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     Workflow workflow2 = aWorkflow().appId(APP_ID).envId(ENV_ID_CHANGED).uuid(workflow1.getUuid()).name(name2).build();
 
-    workflowService.updateWorkflow(workflow2, null);
+    workflowService.updateWorkflow(workflow2, null, false);
 
     Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
     assertThat(workflow3).isNotNull().hasFieldOrPropertyWithValue("envId", ENV_ID_CHANGED);
@@ -1483,7 +1483,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     Workflow workflow2 = aWorkflow().appId(APP_ID).envId(ENV_ID_CHANGED).uuid(workflow1.getUuid()).name(name2).build();
 
-    workflowService.updateWorkflow(workflow2, null);
+    workflowService.updateWorkflow(workflow2, null, false);
 
     Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
     assertThat(workflow3).isNotNull().hasFieldOrPropertyWithValue("envId", ENV_ID_CHANGED);
@@ -2237,7 +2237,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     workflow2.setTemplateExpressions(
         asList(getEnvTemplateExpression(), getInfraTemplateExpression(), getServiceTemplateExpression()));
 
-    workflowService.updateWorkflow(workflow2, null);
+    workflowService.updateWorkflow(workflow2, null, false);
 
     Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
 
@@ -2255,7 +2255,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     workflow2.setTemplateExpressions(asList(getEnvTemplateExpression()));
 
-    workflowService.updateWorkflow(workflow2, null);
+    workflowService.updateWorkflow(workflow2, null, false);
 
     Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
 
@@ -2301,7 +2301,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     workflow2.setTemplateExpressions(asList(getEnvTemplateExpression()));
 
-    workflowService.updateWorkflow(workflow2, null);
+    workflowService.updateWorkflow(workflow2, null, false);
 
     Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
 
@@ -2382,7 +2382,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     workflow2.setTemplateExpressions(
         asList(getEnvTemplateExpression(), getInfraTemplateExpression(), getServiceTemplateExpression()));
 
-    workflowService.updateWorkflow(workflow2, null);
+    workflowService.updateWorkflow(workflow2, null, false);
 
     Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
 
@@ -2408,7 +2408,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
             .metadata(ImmutableMap.of("entityType", "SERVICE"))
             .build()));
 
-    workflowService.updateWorkflow(workflow2, null);
+    workflowService.updateWorkflow(workflow2, null, false);
 
     Workflow templatizedWorkflow = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
 
@@ -2469,7 +2469,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     workflow2.setTemplateExpressions(asList(getEnvTemplateExpression()));
 
-    workflowService.updateWorkflow(workflow2, null);
+    workflowService.updateWorkflow(workflow2, null, false);
 
     Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
 
@@ -2506,7 +2506,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                                            .build();
     workflow3.setTemplateExpressions(asList(envExpression));
 
-    workflow3 = workflowService.updateWorkflow(workflow3, null);
+    workflow3 = workflowService.updateWorkflow(workflow3, null, false);
 
     assertThat(workflow3.getTemplateExpressions())
         .isNotEmpty()
@@ -2584,7 +2584,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     workflow2.setTemplateExpressions(
         asList(getEnvTemplateExpression(), getInfraTemplateExpression(), getServiceTemplateExpression()));
 
-    workflowService.updateWorkflow(workflow2, null);
+    workflowService.updateWorkflow(workflow2, null, false);
 
     Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
 
@@ -2593,7 +2593,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     // Detemplatize service Infra
     workflow2.setTemplateExpressions(asList(getEnvTemplateExpression(), getInfraTemplateExpression()));
 
-    workflowService.updateWorkflow(workflow2, null);
+    workflowService.updateWorkflow(workflow2, null, false);
 
     Workflow templatizedWorkflow = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
 

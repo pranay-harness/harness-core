@@ -103,7 +103,7 @@ public class AddVerifyToRollbackWorkflows implements Migration {
     if (modified) {
       try {
         logger.info("--- Workflow updated: {}", workflow.getName());
-        workflowService.updateWorkflow(workflow);
+        workflowService.updateWorkflow(workflow, false);
         Thread.sleep(100);
       } catch (Exception e) {
         logger.error("Error updating workflow", e);

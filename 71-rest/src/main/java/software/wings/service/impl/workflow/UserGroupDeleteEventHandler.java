@@ -35,7 +35,7 @@ public class UserGroupDeleteEventHandler {
     List<Workflow> workflows = workflowService.listWorkflows(request);
     for (Workflow workflow : workflows) {
       modifyWorkflow(workflow, deletedUserGroupId);
-      workflowService.updateWorkflow(workflow);
+      workflowService.updateWorkflow(workflow, false);
     }
   }
 

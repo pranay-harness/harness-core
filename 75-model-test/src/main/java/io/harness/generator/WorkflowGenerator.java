@@ -522,6 +522,6 @@ public class WorkflowGenerator {
       }
     }
 
-    return workflowService.updateWorkflow(workflow);
+    return workflowService.updateWorkflow(workflow, false);
   }
 }

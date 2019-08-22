@@ -144,7 +144,7 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTest {
                             .build();
 
     validateWorkflow(savedTemplate, workflow);
-    verify(workflowService, times(0)).updateWorkflow(workflow);
+    verify(workflowService, times(0)).updateWorkflow(workflow, false);
   }
 
   @Test
@@ -167,7 +167,7 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTest {
     final Workflow workflow = generateWorkflow(savedTemplate, step);
 
     validateWorkflow(savedTemplate, workflow);
-    verify(workflowService).updateWorkflow(workflow);
+    verify(workflowService).updateWorkflow(workflow, false);
   }
 
   private void validateWorkflow(Template savedTemplate, Workflow workflow) {

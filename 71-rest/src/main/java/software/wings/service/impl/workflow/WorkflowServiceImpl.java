@@ -1177,8 +1177,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
-  public Workflow updateWorkflow(Workflow workflow) {
-    return updateWorkflow(workflow, workflow.getOrchestrationWorkflow());
+  public Workflow updateWorkflow(Workflow workflow, boolean migration) {
+    return updateWorkflow(workflow, workflow.getOrchestrationWorkflow(), migration);
   }
 
   /**
@@ -1207,11 +1207,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     // Update Workflow Phase steps
     workflowServiceTemplateHelper.updateLinkedWorkflowPhases(
         orchestrationWorkflow.getWorkflowPhases(), existingOrchestrationWorkflow.getWorkflowPhases(), fromYaml);
-    return updateWorkflow(workflow, workflow.getOrchestrationWorkflow());
+    return updateWorkflow(workflow, workflow.getOrchestrationWorkflow(), false);
   }
 
   @Override
-  public Workflow updateWorkflow(Workflow workflow, OrchestrationWorkflow orchestrationWorkflow) {
+  public Workflow updateWorkflow(Workflow workflow, OrchestrationWorkflow orchestrationWorkflow, boolean migration) {
     if (featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(workflow.getAppId()))) {
       workflowServiceHelper.validateServiceAndInfraDefinition(
           workflow.getAppId(), workflow.getServiceId(), workflow.getInfraDefinitionId());
@@ -1221,17 +1221,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     validateWorkflowVariables(orchestrationWorkflow);
-    return updateWorkflow(workflow, orchestrationWorkflow, true, false, false, false);
+    return updateWorkflow(workflow, orchestrationWorkflow, true, false, false, false, migration);
   }
 
   @Override
   public Workflow updateWorkflow(Workflow workflow, OrchestrationWorkflow orchestrationWorkflow, boolean infraChanged,
       boolean envChanged, boolean cloned) {
-    return updateWorkflow(workflow, orchestrationWorkflow, true, infraChanged, envChanged, cloned);
+    return updateWorkflow(workflow, orchestrationWorkflow, true, infraChanged, envChanged, cloned, false);
   }
 
   private Workflow updateWorkflow(Workflow workflow, OrchestrationWorkflow orchestrationWorkflow,
-      boolean onSaveCallNeeded, boolean infraChanged, boolean envChanged, boolean cloned) {
+      boolean onSaveCallNeeded, boolean infraChanged, boolean envChanged, boolean cloned, boolean migration) {
     boolean infraRefactor =
         featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(workflow.getAppId()));
     Workflow savedWorkflow = readWorkflow(workflow.getAppId(), workflow.getUuid());
@@ -1264,7 +1264,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
     orchestrationWorkflow = workflowServiceHelper.propagateWorkflowDataToPhases(orchestrationWorkflow,
         templateExpressions, workflow.getAppId(), serviceId, infraRefactor ? infraDefinitionId : inframappingId,
-        envChanged, infraChanged);
+        envChanged, infraChanged, migration);
 
     setUnset(ops, "templateExpressions", templateExpressions);
 
@@ -1584,7 +1584,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         generateRollbackProvisioners(phaseStep, PhaseStepType.ROLLBACK_PROVISIONERS, ROLLBACK_PROVISIONERS));
 
     orchestrationWorkflow =
-        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
+        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow, false).getOrchestrationWorkflow();
     return orchestrationWorkflow.getPreDeploymentSteps();
   }
 
@@ -1601,7 +1601,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     orchestrationWorkflow.setPostDeploymentSteps(phaseStep);
 
     orchestrationWorkflow =
-        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
+        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow, false).getOrchestrationWorkflow();
     return orchestrationWorkflow.getPostDeploymentSteps();
   }
 
@@ -1637,7 +1637,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     orchestrationWorkflow =
-        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
+        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow, false).getOrchestrationWorkflow();
     return orchestrationWorkflow.getWorkflowPhaseIdMap().get(workflowPhase.getUuid());
   }
 
@@ -1675,7 +1675,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     orchestrationWorkflow =
-        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
+        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow, false).getOrchestrationWorkflow();
 
     return orchestrationWorkflow.getWorkflowPhaseIdMap().get(clonedWorkflowPhase.getUuid());
   }
@@ -2053,7 +2053,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(phaseId, rollbackWorkflowPhase);
     orchestrationWorkflow =
-        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
+        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow, false).getOrchestrationWorkflow();
     return orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(phaseId);
   }
 
@@ -2071,7 +2071,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     orchestrationWorkflow.getWorkflowPhaseIdMap().remove(phaseId);
     orchestrationWorkflow.getWorkflowPhaseIds().remove(phaseId);
     orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().remove(phaseId);
-    updateWorkflow(workflow, orchestrationWorkflow);
+    updateWorkflow(workflow, orchestrationWorkflow, false);
   }
 
   private void validateWorkflowPhase(String phaseId, CanaryOrchestrationWorkflow orchestrationWorkflow) {
@@ -2105,7 +2105,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     orchestrationWorkflow =
-        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
+        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow, false).getOrchestrationWorkflow();
     return orchestrationWorkflow.getGraph()
         .getSubworkflows()
         .get(subworkflowId)
@@ -2140,7 +2140,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (originalWorkflow.getOrchestrationWorkflow() != null) {
       savedWorkflow.setOrchestrationWorkflow(originalWorkflow.getOrchestrationWorkflow().cloneInternal());
     }
-    return updateWorkflow(savedWorkflow, savedWorkflow.getOrchestrationWorkflow(), false, false, false, true);
+    return updateWorkflow(savedWorkflow, savedWorkflow.getOrchestrationWorkflow(), false, false, false, true, false);
   }
 
   private Workflow cloneWorkflow(Workflow workflow, Workflow originalWorkflow) {
@@ -2174,7 +2174,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       clonedOrchestrationWorkflow.setCloneMetadata(cloneMetadata.getServiceMapping());
       savedWorkflow.setOrchestrationWorkflow(clonedOrchestrationWorkflow);
     }
-    return updateWorkflow(savedWorkflow, savedWorkflow.getOrchestrationWorkflow(), false, true, true, true);
+    return updateWorkflow(savedWorkflow, savedWorkflow.getOrchestrationWorkflow(), false, true, true, true, false);
   }
 
   @Override
@@ -2204,7 +2204,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     orchestrationWorkflow.setNotificationRules(notificationRules);
     orchestrationWorkflow =
-        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
+        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow, false).getOrchestrationWorkflow();
     return orchestrationWorkflow.getNotificationRules();
   }
 
@@ -2225,7 +2225,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     orchestrationWorkflow.setFailureStrategies(failureStrategies);
     orchestrationWorkflow =
-        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
+        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow, false).getOrchestrationWorkflow();
     return orchestrationWorkflow.getFailureStrategies();
   }
 
@@ -2242,7 +2242,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     orchestrationWorkflow.setUserVariables(userVariables);
     orchestrationWorkflow =
-        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
+        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow, false).getOrchestrationWorkflow();
     return orchestrationWorkflow.getUserVariables();
   }
 
