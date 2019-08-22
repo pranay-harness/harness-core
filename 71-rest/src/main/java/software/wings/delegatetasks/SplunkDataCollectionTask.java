@@ -124,7 +124,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
             addHeartbeat(host, dataCollectionInfo, logCollectionMinute, logElements);
             callables.add(() -> fetchLogs(host, query, logCollectionMinute));
           }
-          List<Optional<List<LogElement>>> results = executeParrallel(callables);
+          List<Optional<List<LogElement>>> results = executeParallel(callables);
           results.forEach(result -> {
             if (result.isPresent()) {
               logElements.addAll(result.get());

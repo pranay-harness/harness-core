@@ -178,7 +178,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
             throw new IllegalStateException("Invalid type " + dataCollectionInfo.getTimeSeriesMlAnalysisType());
         }
       }
-      List<Optional<List<AppdynamicsMetricData>>> results = executeParrallel(callables);
+      List<Optional<List<AppdynamicsMetricData>>> results = executeParallel(callables);
       results.forEach(result -> {
         if (result.isPresent()) {
           metricsData.addAll(result.get());

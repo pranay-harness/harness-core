@@ -2,7 +2,6 @@ package software.wings.delegatetasks;
 
 import static io.harness.exception.WingsException.ExecutionContext.DELEGATE;
 import static org.joor.Reflect.on;
-import static software.wings.delegatetasks.RemoteMethodReturnValueData.Builder.aRemoteMethodReturnValueData;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -72,6 +71,6 @@ public class ServiceImplDelegateTask extends AbstractDelegateRunnableTask {
         logger.error("Task error", exception);
       }
     }
-    return aRemoteMethodReturnValueData().withReturnValue(methodReturnValue).withException(exception).build();
+    return RemoteMethodReturnValueData.builder().returnValue(methodReturnValue).exception(exception).build();
   }
 }

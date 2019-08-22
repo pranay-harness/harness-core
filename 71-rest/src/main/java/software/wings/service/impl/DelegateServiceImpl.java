@@ -47,7 +47,6 @@ import static software.wings.common.Constants.DOCKER_DELEGATE;
 import static software.wings.common.Constants.ECS_DELEGATE;
 import static software.wings.common.Constants.KUBERNETES_DELEGATE;
 import static software.wings.common.Constants.MAX_DELEGATE_LAST_HEARTBEAT;
-import static software.wings.delegatetasks.RemoteMethodReturnValueData.Builder.aRemoteMethodReturnValueData;
 import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -142,6 +141,7 @@ import software.wings.beans.alert.DelegateProfileErrorAlert;
 import software.wings.beans.alert.DelegatesDownAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.beans.alert.NoEligibleDelegatesAlert;
+import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
@@ -1671,7 +1671,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
           response = ErrorNotifyResponseData.builder().errorMessage(errorMessage).build();
         } else {
           InvalidRequestException exception = new InvalidRequestException(errorMessage, USER);
-          response = aRemoteMethodReturnValueData().withException(exception).build();
+          response = RemoteMethodReturnValueData.builder().exception(exception).build();
         }
         processDelegateResponse(accountId, null, taskId,
             DelegateTaskResponse.builder()

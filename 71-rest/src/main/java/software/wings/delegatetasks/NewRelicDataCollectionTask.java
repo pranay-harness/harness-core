@@ -421,7 +421,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
             }
           }
           logger.info("submitting parallel tasks {}", callables.size());
-          List<Optional<Boolean>> results = executeParrallel(callables);
+          List<Optional<Boolean>> results = executeParallel(callables);
           for (Optional<Boolean> result : results) {
             if (!result.isPresent() || !result.get()) {
               logger.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
