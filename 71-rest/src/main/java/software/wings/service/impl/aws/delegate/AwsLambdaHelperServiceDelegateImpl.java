@@ -30,6 +30,7 @@ import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.lambda.model.InvokeResult;
 import com.amazonaws.services.lambda.model.ListAliasesRequest;
 import com.amazonaws.services.lambda.model.ListAliasesResult;
+import com.amazonaws.services.lambda.model.ListFunctionsRequest;
 import com.amazonaws.services.lambda.model.LogType;
 import com.amazonaws.services.lambda.model.PublishVersionRequest;
 import com.amazonaws.services.lambda.model.PublishVersionResult;
@@ -78,6 +79,8 @@ import java.util.Map.Entry;
 @Slf4j
 public class AwsLambdaHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsLambdaHelperServiceDelegate {
+  private int MAX_RESULTS = 1000;
+
   @VisibleForTesting
   public AWSLambdaClient getAmazonLambdaClient(String region, AwsConfig awsConfig) {
     AWSLambdaClientBuilder builder = AWSLambdaClientBuilder.standard().withRegion(region);
@@ -135,8 +138,9 @@ public class AwsLambdaHelperServiceDelegateImpl
       AWSLambdaClient lambdaClient = getAmazonLambdaClient(request.getRegion(), awsConfig);
       AwsLambdaFunctionResponseBuilder response = AwsLambdaFunctionResponse.builder();
       List<String> lambdaFunctions = new ArrayList<>();
-      lambdaClient.listFunctions().getFunctions().forEach(
-          functionConfiguration -> { lambdaFunctions.add(functionConfiguration.getFunctionName()); });
+      lambdaClient.listFunctions(new ListFunctionsRequest().withMaxItems(MAX_RESULTS))
+          .getFunctions()
+          .forEach(functionConfiguration -> { lambdaFunctions.add(functionConfiguration.getFunctionName()); });
       return response.lambdaFunctions(lambdaFunctions).executionStatus(SUCCESS).build();
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
