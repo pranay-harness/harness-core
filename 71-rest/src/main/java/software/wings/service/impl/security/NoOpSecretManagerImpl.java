@@ -68,8 +68,8 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public EncryptedData encrypt(EncryptionType encryptionType, String accountId, SettingVariableTypes settingType,
-      char[] secret, String path, EncryptedData encryptedData, String secretName, UsageRestrictions usageRestrictions) {
+  public EncryptedData encrypt(String accountId, SettingVariableTypes settingType, char[] secret, String path,
+      EncryptedData encryptedData, String secretName, UsageRestrictions usageRestrictions) {
     throw new UnsupportedOperationException();
   }
 

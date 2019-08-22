@@ -53,9 +53,8 @@ public interface SecretManager extends OwnedByAccount {
 
   String encrypt(String accountId, String secret, UsageRestrictions usageRestrictions);
 
-  EncryptedData encrypt(EncryptionType encryptionType, String accountId, SettingVariableTypes settingType,
-      char[] secret, String secretPath, EncryptedData encryptedData, String secretName,
-      UsageRestrictions usageRestrictions);
+  EncryptedData encrypt(String accountId, SettingVariableTypes settingType, char[] secret, String secretPath,
+      EncryptedData encryptedData, String secretName, UsageRestrictions usageRestrictions);
 
   Optional<EncryptedDataDetail> encryptedDataDetails(String accountId, String fieldName, String refId);
 

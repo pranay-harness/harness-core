@@ -64,6 +64,7 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.OverrideType;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.User;
 import software.wings.beans.VaultConfig;
@@ -710,6 +711,55 @@ public class VaultTest extends WingsBaseTest {
     assertEquals(user.getEmail(), secretChangeLog.getUser().getEmail());
     assertEquals(user.getName(), secretChangeLog.getUser().getName());
     assertEquals("Created", secretChangeLog.getDescription());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testNoOnDemandMigrationOnSecretUpdate() {
+    if (isKmsEnabled) {
+      return;
+    }
+
+    VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
+    String vaultId = vaultService.saveVaultConfig(accountId, vaultConfig);
+
+    String password = UUID.randomUUID().toString();
+    final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+    SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
+
+    String savedAttributeId = wingsPersistence.save(settingAttribute);
+    SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
+    assertEquals(settingAttribute, savedAttribute);
+
+    Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
+                                     .field(EncryptedDataKeys.parentIds)
+                                     .hasThisOne(savedAttributeId);
+    assertEquals(1, query.count());
+
+    EncryptedData encryptedData = query.get();
+    assertEquals(EncryptionType.VAULT, encryptedData.getEncryptionType());
+    assertEquals(vaultId, encryptedData.getKmsId());
+
+    // Change the default to KMS
+    KmsConfig kmsConfig = getKmsConfig();
+    kmsService.saveKmsConfig(accountId, kmsConfig);
+
+    assertEquals(EncryptionType.KMS, secretManager.getEncryptionType(accountId));
+
+    String updatedAppId = UUID.randomUUID().toString();
+    wingsPersistence.updateField(SettingAttribute.class, savedAttributeId, SettingAttributeKeys.appId, updatedAppId);
+
+    SettingAttribute updatedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
+    assertEquals(updatedAppId, updatedAttribute.getAppId());
+
+    query = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
+                .field(EncryptedDataKeys.parentIds)
+                .hasThisOne(savedAttributeId);
+    assertEquals(1, query.count());
+
+    encryptedData = query.get();
+    assertEquals(EncryptionType.VAULT, encryptedData.getEncryptionType());
+    assertEquals(vaultId, encryptedData.getKmsId());
   }
 
   @Test
