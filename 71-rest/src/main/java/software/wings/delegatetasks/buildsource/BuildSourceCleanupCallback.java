@@ -8,11 +8,11 @@ import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
-import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.NotifyCallback;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;

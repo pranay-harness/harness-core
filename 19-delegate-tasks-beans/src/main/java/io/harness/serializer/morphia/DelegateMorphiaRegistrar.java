@@ -1,5 +1,6 @@
 package io.harness.serializer.morphia;
 
+import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.morphia.MorphiaRegistrar;
@@ -20,5 +21,8 @@ public class DelegateMorphiaRegistrar implements MorphiaRegistrar {
     };
 
     h.put("delegate.command.CommandExecutionResult", CommandExecutionResult.class);
+    h.put("delegate.beans.ErrorNotifyResponseData", ErrorNotifyResponseData.class);
+
+    h.put("waiter.ErrorNotifyResponseData", ErrorNotifyResponseData.class);
   }
 }

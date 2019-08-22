@@ -5,7 +5,6 @@ import io.harness.beans.SweepingOutput;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.state.inspection.ExpressionVariableUsage;
 import io.harness.state.inspection.StateInspection;
-import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.ListNotifyResponseData;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyResponse;
@@ -36,7 +35,6 @@ public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
     };
 
     h.put("waiter.ListNotifyResponseData", ListNotifyResponseData.class);
-    h.put("waiter.ErrorNotifyResponseData", ErrorNotifyResponseData.class);
     h.put("state.inspection.ExpressionVariableUsage", ExpressionVariableUsage.class);
   }
 }

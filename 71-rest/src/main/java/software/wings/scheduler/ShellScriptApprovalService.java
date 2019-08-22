@@ -5,11 +5,11 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
-import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.ApprovalStateExecutionData;
