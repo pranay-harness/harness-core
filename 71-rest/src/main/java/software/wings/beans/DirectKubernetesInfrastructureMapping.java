@@ -1,7 +1,6 @@
 package software.wings.beans;
 
 import static java.lang.String.format;
-import static software.wings.settings.SettingValue.SettingVariableTypes.KUBERNETES_CLUSTER;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -38,13 +37,6 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
   @Override
   public void applyProvisionerVariables(
       Map<String, Object> map, NodeFilteringType nodeFilteringType, boolean featureFlagEnabled) {}
-
-  @SchemaIgnore
-  @Override
-  public String getClusterName() {
-    return KUBERNETES_CLUSTER.name().equals(getComputeProviderType()) ? getComputeProviderName()
-                                                                      : super.getClusterName();
-  }
 
   @SchemaIgnore
   @Override
