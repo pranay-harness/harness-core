@@ -83,6 +83,21 @@ then
 fi
 cd ../..
 
+mkdir -p dist/batch-processing ;
+cd dist/batch-processing
+cp ../../78-batch-processing/target/batch-processing-capsule.jar .
+cp ../../78-batch-processing/batch-processing-config.yml .
+cp ../../dockerization/batch-processing/Dockerfile-batch-processing-jenkins-k8 Dockerfile
+cp ../../dockerization/batch-processing/Dockerfile-batch-processing-jenkins-k8-gcr Dockerfile-gcr
+cp -r ../../dockerization/batch-processing/scripts/ .
+cp -r ../../dockerization/common-resources/ .
+echo ${VERSION} > version.txt
+if [ ! -z ${PURPOSE} ]
+then
+    echo ${PURPOSE} > purpose.txt
+fi
+cd ../..
+
 echo "System-Properties: version=1.0.${VERSION} logdnakey=${LOGDNA_KEY}" >> app.mf
 echo "Application-Version: version=1.0.${VERSION}" >> app.mf
 
