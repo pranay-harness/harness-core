@@ -171,7 +171,7 @@ public class AccountDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   private void compareSettingAttributes(List<SettingAttribute> lhs, List<SettingAttribute> rhs) {
-    assertEquals(lhs.size(), rhs.size());
+    assertThat(rhs).hasSize(lhs.size());
     assertThat(lhs).containsAll(rhs);
   }
 }

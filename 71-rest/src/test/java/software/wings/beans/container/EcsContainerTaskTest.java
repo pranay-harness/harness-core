@@ -36,7 +36,7 @@ public class EcsContainerTaskTest extends CategoryTest {
         ecsContainerTask.createTaskDefinition(CONTAINER_NAME, IMAGE_NAME, EXEC_ROLE, DOMAIN_NAME);
 
     assertThat(taskDefinition).isNotNull();
-    assertEquals(1, taskDefinition.getContainerDefinitions().size());
+    assertThat(taskDefinition.getContainerDefinitions()).hasSize(1);
     assertEquals("256", taskDefinition.getCpu());
     assertEquals("1024", taskDefinition.getMemory());
     assertEquals(EXEC_ROLE, taskDefinition.getExecutionRoleArn());
@@ -49,13 +49,13 @@ public class EcsContainerTaskTest extends CategoryTest {
     assertEquals(256, containerDefinitionAws.getCpu().intValue());
     assertEquals(1024, containerDefinitionAws.getMemory().intValue());
     assertThat(containerDefinitionAws.getPortMappings()).isNotNull();
-    assertEquals(1, containerDefinitionAws.getPortMappings().size());
+    assertThat(containerDefinitionAws.getPortMappings()).hasSize(1);
     assertEquals(80, containerDefinitionAws.getPortMappings().iterator().next().getContainerPort().intValue());
 
     taskDefinition = ecsContainerTask.createTaskDefinition(CONTAINER_NAME, IMAGE_NAME, null, DOMAIN_NAME);
 
     assertThat(taskDefinition).isNotNull();
-    assertEquals(1, taskDefinition.getContainerDefinitions().size());
+    assertThat(taskDefinition.getContainerDefinitions()).hasSize(1);
     assertEquals("256", taskDefinition.getCpu());
     assertEquals("1024", taskDefinition.getMemory());
     assertEquals("", taskDefinition.getExecutionRoleArn());
@@ -67,7 +67,7 @@ public class EcsContainerTaskTest extends CategoryTest {
     assertEquals(256, containerDefinitionAws.getCpu().intValue());
     assertEquals(1024, containerDefinitionAws.getMemory().intValue());
     assertThat(containerDefinitionAws.getPortMappings()).isNotNull();
-    assertEquals(1, containerDefinitionAws.getPortMappings().size());
+    assertThat(containerDefinitionAws.getPortMappings()).hasSize(1);
     assertEquals(80, containerDefinitionAws.getPortMappings().iterator().next().getContainerPort().intValue());
 
     containerDefinition = ContainerDefinition.builder()
@@ -99,7 +99,7 @@ public class EcsContainerTaskTest extends CategoryTest {
         ecsContainerTask.createTaskDefinition(CONTAINER_NAME, IMAGE_NAME, EXEC_ROLE, DOMAIN_NAME);
 
     assertThat(taskDefinition).isNotNull();
-    assertEquals(1, taskDefinition.getContainerDefinitions().size());
+    assertThat(taskDefinition.getContainerDefinitions()).hasSize(1);
     assertEquals("256", taskDefinition.getCpu());
     assertEquals(EXEC_ROLE, taskDefinition.getExecutionRoleArn());
 
@@ -111,13 +111,13 @@ public class EcsContainerTaskTest extends CategoryTest {
     assertEquals(256, containerDefinitionAws.getCpu().intValue());
     assertEquals(1024, containerDefinitionAws.getMemory().intValue());
     assertThat(containerDefinitionAws.getPortMappings()).isNotNull();
-    assertEquals(1, containerDefinitionAws.getPortMappings().size());
+    assertThat(containerDefinitionAws.getPortMappings()).hasSize(1);
     assertEquals(80, containerDefinitionAws.getPortMappings().iterator().next().getContainerPort().intValue());
 
     taskDefinition = ecsContainerTask.createTaskDefinition(CONTAINER_NAME, IMAGE_NAME, null, DOMAIN_NAME);
 
     assertThat(taskDefinition).isNotNull();
-    assertEquals(1, taskDefinition.getContainerDefinitions().size());
+    assertThat(taskDefinition.getContainerDefinitions()).hasSize(1);
     assertEquals("256", taskDefinition.getCpu());
     assertEquals("", taskDefinition.getExecutionRoleArn());
 
@@ -128,7 +128,7 @@ public class EcsContainerTaskTest extends CategoryTest {
     assertEquals(256, containerDefinitionAws.getCpu().intValue());
     assertEquals(1024, containerDefinitionAws.getMemory().intValue());
     assertThat(containerDefinitionAws.getPortMappings()).isNotNull();
-    assertEquals(1, containerDefinitionAws.getPortMappings().size());
+    assertThat(containerDefinitionAws.getPortMappings()).hasSize(1);
     assertEquals(80, containerDefinitionAws.getPortMappings().iterator().next().getContainerPort().intValue());
 
     containerDefinition = ContainerDefinition.builder()

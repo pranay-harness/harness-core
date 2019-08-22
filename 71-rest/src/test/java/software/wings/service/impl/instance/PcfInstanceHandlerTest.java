@@ -206,7 +206,7 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
     ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
     verify(instanceService).delete(captor.capture());
     Set idTobeDeleted = captor.getValue();
-    assertEquals(1, idTobeDeleted.size());
+    assertThat(idTobeDeleted).hasSize(1);
     assertThat(idTobeDeleted.contains(INSTANCE_2_ID)).isTrue();
   }
 

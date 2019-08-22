@@ -153,7 +153,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
                                               .build();
     wingsPersistence.save(workflowExecution);
     List<InstanceElement> deployedNodes = workflowResource.getDeployedNodes(appId, workflowId).getResource();
-    assertEquals(numOfExecutionSummaries * numOfHosts, deployedNodes.size());
+    assertThat(deployedNodes).hasSize(numOfExecutionSummaries * numOfHosts);
     deployedNodes.forEach(deployedNode -> {
       assertThat(hostElements.containsKey(deployedNode.getHost().getUuid())).isTrue();
       HostElement hostElement = hostElements.get(deployedNode.getHost().getUuid());

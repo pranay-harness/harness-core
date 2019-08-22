@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -104,7 +105,7 @@ public class YamlChangeSetHelperTest extends CategoryTest {
     verify(yamlChangeSetService)
         .saveChangeSet(accountIdCaptor.capture(), gitFileChangesCaptor.capture(), entityCaptor.capture());
 
-    assertEquals(2, gitFileChangesCaptor.getValue().size());
+    assertThat(gitFileChangesCaptor.getValue()).hasSize(2);
     gitFileChangeForDelete = (GitFileChange) gitFileChangesCaptor.getValue().get(0);
     assertEquals(ACCOUNTID, gitFileChangeForDelete.getAccountId());
     assertEquals(ChangeType.DELETE, gitFileChangeForDelete.getChangeType());
@@ -143,7 +144,7 @@ public class YamlChangeSetHelperTest extends CategoryTest {
     verify(yamlChangeSetService)
         .saveChangeSet(accountIdCaptor.capture(), fileChangesCaptor.capture(), entityCaptor.capture());
 
-    assertEquals(1, fileChangesCaptor.getValue().size());
+    assertThat(fileChangesCaptor.getValue()).hasSize(1);
     gitFileChangeForModify = (GitFileChange) fileChangesCaptor.getValue().get(0);
     assertEquals(ACCOUNTID, gitFileChangeForModify.getAccountId());
     assertEquals(ChangeType.MODIFY, gitFileChangeForModify.getChangeType());
@@ -189,7 +190,7 @@ public class YamlChangeSetHelperTest extends CategoryTest {
     verify(yamlChangeSetService)
         .saveChangeSet(accountIdCaptor.capture(), gitFileChangesCaptorForAS.capture(), entityCaptor.capture());
 
-    assertEquals(2, gitFileChangesCaptorForAS.getValue().size());
+    assertThat(gitFileChangesCaptorForAS.getValue()).hasSize(2);
     gitFileChangeForDelete = (GitFileChange) gitFileChangesCaptorForAS.getValue().get(0);
     assertEquals(ACCOUNTID, gitFileChangeForDelete.getAccountId());
     assertEquals(ChangeType.DELETE, gitFileChangeForDelete.getChangeType());
@@ -225,7 +226,7 @@ public class YamlChangeSetHelperTest extends CategoryTest {
     verify(yamlChangeSetService)
         .saveChangeSet(accountIdCaptor.capture(), fileChangesCaptorForAS.capture(), entityCaptor.capture());
 
-    assertEquals(1, fileChangesCaptorForAS.getValue().size());
+    assertThat(fileChangesCaptorForAS.getValue()).hasSize(1);
     gitFileChangeForModify = (GitFileChange) fileChangesCaptorForAS.getValue().get(0);
     assertEquals(ACCOUNTID, gitFileChangeForModify.getAccountId());
     assertEquals(ChangeType.MODIFY, gitFileChangeForModify.getChangeType());

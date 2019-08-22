@@ -134,13 +134,13 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     assertEquals("us-east-1", ((AwsInfrastructureMapping) mapping).getRegion());
 
     assertThat(awsInstanceFilter.getVpcIds()).isNotNull();
-    assertEquals(3, awsInstanceFilter.getVpcIds().size());
+    assertThat(awsInstanceFilter.getVpcIds()).hasSize(3);
     assertThat(awsInstanceFilter.getVpcIds().contains("vpc1")).isTrue();
     assertThat(awsInstanceFilter.getVpcIds().contains("vpc2")).isTrue();
     assertThat(awsInstanceFilter.getVpcIds().contains("vpc3")).isTrue();
 
     assertThat(awsInstanceFilter.getTags()).isNotNull();
-    assertEquals(1, awsInstanceFilter.getTags().size());
+    assertThat(awsInstanceFilter.getTags()).hasSize(1);
     assertEquals("name", awsInstanceFilter.getTags().get(0).getKey());
     assertEquals("mockName", awsInstanceFilter.getTags().get(0).getValue());
   }

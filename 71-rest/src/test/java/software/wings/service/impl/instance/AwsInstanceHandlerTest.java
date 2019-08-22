@@ -3,7 +3,6 @@ package software.wings.service.impl.instance;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anySet;
@@ -235,7 +234,7 @@ public class AwsInstanceHandlerTest extends WingsBaseTest {
     ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
     verify(instanceService).delete(captor.capture());
     Set idTobeDeleted = captor.getValue();
-    assertEquals(2, idTobeDeleted.size());
+    assertThat(idTobeDeleted).hasSize(2);
     assertThat(idTobeDeleted.contains(instance3.getInstanceId())).isTrue();
     assertThat(idTobeDeleted.contains(instance2.getInstanceId())).isTrue();
 

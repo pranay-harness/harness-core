@@ -137,7 +137,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     List<HeatMap> heatMaps = continuousVerificationService.getHeatMap(
         accountId, appId, serviceId, endTime - TimeUnit.HOURS.toMillis(hoursToAsk), endTime, false);
 
-    assertEquals(1, heatMaps.size());
+    assertThat(heatMaps).hasSize(1);
 
     HeatMap heatMapSummary = heatMaps.get(0);
     assertEquals(TimeUnit.HOURS.toMinutes(hoursToAsk) / CRON_POLL_INTERVAL_IN_MINUTES,
@@ -202,7 +202,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     List<HeatMap> heatMaps = continuousVerificationService.getHeatMap(
         accountId, appId, serviceId, endTime - TimeUnit.HOURS.toMillis(hoursToAsk), endTime, false);
 
-    assertEquals(1, heatMaps.size());
+    assertThat(heatMaps).hasSize(1);
 
     HeatMap heatMapSummary = heatMaps.get(0);
     assertEquals(TimeUnit.HOURS.toMinutes(hoursToAsk) / CRON_POLL_INTERVAL_IN_MINUTES,
@@ -219,7 +219,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
         endTime - TimeUnit.HOURS.toMillis(hoursToAsk) - TimeUnit.MINUTES.toMillis(35),
         endTime + TimeUnit.MINUTES.toMillis(48), false);
 
-    assertEquals(1, heatMaps.size());
+    assertThat(heatMaps).hasSize(1);
 
     heatMapSummary = heatMaps.get(0);
 
@@ -254,7 +254,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     heatMaps = continuousVerificationService.getHeatMap(accountId, appId, serviceId,
         endTime - TimeUnit.HOURS.toMillis(hoursToAsk) - TimeUnit.MINUTES.toMillis(35),
         endTime + TimeUnit.MINUTES.toMillis(48), false);
-    assertEquals(1, heatMaps.size());
+    assertThat(heatMaps).hasSize(1);
 
     heatMapSummary = heatMaps.get(0);
 
@@ -343,7 +343,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     assertThat(timeSeries.containsKey("/login")).isTrue();
     metricMap = timeSeries.get("/login");
     dataPoints = metricMap.get("95th Percentile Response Time (ms)").getTimeSeries();
-    assertEquals(70, dataPoints.size());
+    assertThat(dataPoints).hasSize(70);
   }
 
   private void testTSFor20Mins(long endTime, CVConfiguration cvConfiguration) {
@@ -358,7 +358,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     assertThat(timeSeries.containsKey("/login")).isTrue();
     metricMap = timeSeries.get("/login");
     dataPoints = metricMap.get("95th Percentile Response Time (ms)").getTimeSeries();
-    assertEquals(80, dataPoints.size());
+    assertThat(dataPoints).hasSize(80);
   }
 
   @NotNull
@@ -376,7 +376,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
     dataPoints = metricMap.get("95th Percentile Response Time (ms)").getTimeSeries();
 
-    assertEquals(75, dataPoints.size());
+    assertThat(dataPoints).hasSize(75);
 
     // [-inf, end-15) => risk=0
     // [end-15, end] => risk=1
@@ -521,8 +521,8 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     List<HeatMap> heatMaps =
         cvDashboardResource.getHeatMapSummary(accountId, appId, serviceId, 1541083500000L, 1541126700000L)
             .getResource();
-    assertEquals(1, heatMaps.size());
-    assertEquals(48, heatMaps.get(0).getRiskLevelSummary().size());
+    assertThat(heatMaps).hasSize(1);
+    assertThat(heatMaps.get(0).getRiskLevelSummary()).hasSize(48);
   }
 
   @Test
@@ -539,7 +539,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
         cvDashboardResource.getFilteredTimeSeriesOfHeatMapUnit(accountId, cvConfigId, startTime + 1, 1541177160000L, 0,
             Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList());
 
-    assertEquals(7, timeSeries.getResource().size());
+    assertThat(timeSeries.getResource()).hasSize(7);
   }
 
   @Test
@@ -557,7 +557,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
                                                                      .endTime(1541177160000L)
                                                                      .historyStartTime(0)
                                                                      .build());
-    assertEquals(7, timeSeries.size());
+    assertThat(timeSeries).hasSize(7);
     TransactionTimeSeries insideTimeSeries = null;
     for (TransactionTimeSeries series : timeSeries) {
       if (series.getTransactionName().equals("/todolist/exception")) {
@@ -667,7 +667,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
                 Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList())
             .getResource();
 
-    assertEquals(9, timeSeries.size());
+    assertThat(timeSeries).hasSize(9);
     ArrayList<TransactionTimeSeries> timeSeriesList = new ArrayList<>(timeSeries);
     for (int i = 0; i < 8; i++) {
       assertThat(timeSeriesList.get(i).getMetricTimeSeries().first().compareTo(
@@ -689,7 +689,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
                 currentTime, 0, Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList())
             .getResource();
 
-    assertEquals(9, timeSeries.size());
+    assertThat(timeSeries).hasSize(9);
     timeSeriesList = new ArrayList<>(timeSeries);
     assertEquals(timeSeriesMLAnalysisRecord.getTransactions().get("6").getTxn_name(),
         timeSeriesList.get(0).getTransactionName());
@@ -771,9 +771,9 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
                                                                      .endTime(endTime)
                                                                      .historyStartTime(historyStart + 1)
                                                                      .build());
-    assertEquals(5, timeseries.size());
+    assertThat(timeseries).hasSize(5);
     assertThat(timeseries.first().getMetricTimeSeries()).isNotNull();
-    assertEquals(9, timeseries.first().getMetricTimeSeries().first().getRisksForTimeSeries().size());
+    assertThat(timeseries.first().getMetricTimeSeries().first().getRisksForTimeSeries()).hasSize(9);
     TimeSeriesRisk timeSeriesRisk =
         timeseries.first().getMetricTimeSeries().first().getRisksForTimeSeries().iterator().next();
     Iterator<TransactionTimeSeries> iterator = timeseries.iterator();
@@ -909,7 +909,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     for (TimeSeriesDataPoint datapoint : apiArtifactsRespTimeTS.getTimeSeries()) {
       actualTimeSeries.add(datapoint.getValue());
     }
-    assertEquals(135, actualTimeSeries.size());
+    assertThat(actualTimeSeries).hasSize(135);
     assertEquals(expectedTimeSeries, actualTimeSeries);
   }
 
@@ -1105,7 +1105,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
             .getFilteredTimeSeriesOfHeatMapUnit(accountId, cvConfigId, 1541678400000L, 1541685600000L, 0,
                 Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList())
             .getResource();
-    assertEquals(43, timeSeries.size());
+    assertThat(timeSeries).hasSize(43);
   }
 
   @Test
@@ -1146,20 +1146,20 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
                 Lists.newArrayList(), Lists.newArrayList())
             .getResource();
     List<TransactionTimeSeries> timeSeriesList = new ArrayList<>(timeSeries);
-    assertEquals(3, timeSeries.size());
+    assertThat(timeSeries).hasSize(3);
     assertEquals("/api/userGroups", timeSeriesList.get(0).getTransactionName());
-    assertEquals(1, timeSeriesList.get(0).getMetricTimeSeries().size());
+    assertThat(timeSeriesList.get(0).getMetricTimeSeries()).hasSize(1);
     assertEquals(
         "95th Percentile Response Time (ms)", timeSeriesList.get(0).getMetricTimeSeries().first().getMetricName());
 
     assertEquals("/api/setup-as-code", timeSeriesList.get(1).getTransactionName());
-    assertEquals(2, timeSeriesList.get(1).getMetricTimeSeries().size());
+    assertThat(timeSeriesList.get(1).getMetricTimeSeries()).hasSize(2);
     assertEquals(
         "95th Percentile Response Time (ms)", timeSeriesList.get(1).getMetricTimeSeries().first().getMetricName());
     assertEquals("Number of Slow Calls", timeSeriesList.get(1).getMetricTimeSeries().last().getMetricName());
 
     assertEquals("/api/infrastructure-mappings", timeSeriesList.get(2).getTransactionName());
-    assertEquals(2, timeSeriesList.get(2).getMetricTimeSeries().size());
+    assertThat(timeSeriesList.get(2).getMetricTimeSeries()).hasSize(2);
     assertEquals(
         "95th Percentile Response Time (ms)", timeSeriesList.get(2).getMetricTimeSeries().first().getMetricName());
     assertEquals("Number of Slow Calls", timeSeriesList.get(2).getMetricTimeSeries().last().getMetricName());
@@ -1201,9 +1201,9 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
             .getFilteredTimeSeriesOfHeatMapUnit(accountId, cvConfigId, 1541678400000L, 1541685600000L, 0,
                 Lists.newArrayList(), Lists.newArrayList("95th Percentile Response Time (ms)"), Lists.newArrayList())
             .getResource();
-    assertEquals(43, timeSeries.size());
+    assertThat(timeSeries).hasSize(43);
     timeSeries.forEach(transactionTimeSeries -> {
-      assertEquals(1, transactionTimeSeries.getMetricTimeSeries().size());
+      assertThat(transactionTimeSeries.getMetricTimeSeries()).hasSize(1);
       assertEquals(
           "95th Percentile Response Time (ms)", transactionTimeSeries.getMetricTimeSeries().first().getMetricName());
     });
@@ -1213,9 +1213,9 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
                      .getFilteredTimeSeriesOfHeatMapUnit(accountId, cvConfigId, 1541678400000L, 1541685600000L, 0,
                          Lists.newArrayList(), Lists.newArrayList("Number of Slow Calls"), Lists.newArrayList())
                      .getResource();
-    assertEquals(17, timeSeries.size());
+    assertThat(timeSeries).hasSize(17);
     timeSeries.forEach(transactionTimeSeries -> {
-      assertEquals(1, transactionTimeSeries.getMetricTimeSeries().size());
+      assertThat(transactionTimeSeries.getMetricTimeSeries()).hasSize(1);
       assertEquals("Number of Slow Calls", transactionTimeSeries.getMetricTimeSeries().first().getMetricName());
     });
   }
@@ -1257,11 +1257,11 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
                 Lists.newArrayList("/api/setup-as-code", "/api/infrastructure-mappings"),
                 Lists.newArrayList("95th Percentile Response Time (ms)", "Number of Slow Calls"), Lists.newArrayList())
             .getResource();
-    assertEquals(2, timeSeries.size());
+    assertThat(timeSeries).hasSize(2);
     assertEquals("/api/setup-as-code", timeSeries.first().getTransactionName());
     assertEquals("/api/infrastructure-mappings", timeSeries.last().getTransactionName());
     timeSeries.forEach(transactionTimeSeries -> {
-      assertEquals(2, transactionTimeSeries.getMetricTimeSeries().size());
+      assertThat(transactionTimeSeries.getMetricTimeSeries()).hasSize(2);
       assertEquals(
           "95th Percentile Response Time (ms)", transactionTimeSeries.getMetricTimeSeries().first().getMetricName());
       assertEquals("Number of Slow Calls", transactionTimeSeries.getMetricTimeSeries().last().getMetricName());
@@ -1273,11 +1273,11 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
                          Lists.newArrayList("Number of Slow Calls"), Lists.newArrayList())
                      .getResource();
 
-    assertEquals(2, timeSeries.size());
+    assertThat(timeSeries).hasSize(2);
     assertEquals("/api/setup-as-code", timeSeries.first().getTransactionName());
     assertEquals("/api/infrastructure-mappings", timeSeries.last().getTransactionName());
     timeSeries.forEach(transactionTimeSeries -> {
-      assertEquals(1, transactionTimeSeries.getMetricTimeSeries().size());
+      assertThat(transactionTimeSeries.getMetricTimeSeries()).hasSize(1);
       assertEquals("Number of Slow Calls", transactionTimeSeries.getMetricTimeSeries().first().getMetricName());
     });
   }

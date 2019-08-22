@@ -334,13 +334,13 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   private void verifyPhase(WorkflowPhase workflowPhase, List<String> expectedNames, int stepCount) {
     List<PhaseStep> phaseStepList = workflowPhase.getPhaseSteps();
     assertThat(phaseStepList).isNotNull();
-    assertEquals(stepCount, phaseStepList.size());
+    assertThat(phaseStepList).hasSize(stepCount);
 
     for (int index = 0; index < expectedNames.size(); index++) {
       if (EmptyPredicate.isNotEmpty(expectedNames.get(index))) {
         PhaseStep phaseStep = phaseStepList.get(index);
         assertThat(phaseStep.getSteps()).isNotNull();
-        assertEquals(1, phaseStep.getSteps().size());
+        assertThat(phaseStep.getSteps()).hasSize(1);
         assertEquals(expectedNames.get(index), phaseStep.getSteps().get(0).getType());
       }
     }

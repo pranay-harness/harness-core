@@ -100,7 +100,7 @@ public class KmsAlertTest extends WingsBaseTest {
                                          .addFilter("accountId", Operator.EQ, accountId)
                                          .build();
     PageResponse<Alert> alerts = alertService.list(pageRequest);
-    assertEquals(1, alerts.size());
+    assertThat(alerts).hasSize(1);
     Alert alert = alerts.get(0);
     assertEquals(accountId, alert.getAccountId());
     assertEquals(AlertType.InvalidKMS, alert.getType());
@@ -117,7 +117,7 @@ public class KmsAlertTest extends WingsBaseTest {
                       .addFilter("status", Operator.EQ, AlertStatus.Closed)
                       .addFilter("accountId", Operator.EQ, accountId)
                       .build();
-    assertEquals(1, alertService.list(pageRequest).size());
+    assertThat(alertService.list(pageRequest)).hasSize(1);
   }
 
   @Test
@@ -137,7 +137,7 @@ public class KmsAlertTest extends WingsBaseTest {
                                          .addFilter("accountId", Operator.EQ, accountId)
                                          .build();
     PageResponse<Alert> alerts = alertService.list(pageRequest);
-    assertEquals(1, alerts.size());
+    assertThat(alerts).hasSize(1);
     Alert alert = alerts.get(0);
     assertEquals(accountId, alert.getAccountId());
     assertEquals(AlertType.InvalidKMS, alert.getType());
@@ -159,7 +159,7 @@ public class KmsAlertTest extends WingsBaseTest {
                       .addFilter("status", Operator.EQ, AlertStatus.Closed)
                       .addFilter("accountId", Operator.EQ, accountId)
                       .build();
-    assertEquals(1, alertService.list(pageRequest).size());
+    assertThat(alertService.list(pageRequest)).hasSize(1);
   }
 
   @Test
@@ -176,7 +176,7 @@ public class KmsAlertTest extends WingsBaseTest {
                                          .addFilter("accountId", Operator.EQ, accountId)
                                          .build();
     PageResponse<Alert> alerts = alertService.list(pageRequest);
-    assertEquals(1, alerts.size());
+    assertThat(alerts).hasSize(1);
     Alert alert = alerts.get(0);
     assertEquals(accountId, alert.getAccountId());
     assertEquals(AlertType.InvalidKMS, alert.getType());
@@ -193,6 +193,6 @@ public class KmsAlertTest extends WingsBaseTest {
                       .addFilter("status", Operator.EQ, AlertStatus.Closed)
                       .addFilter("accountId", Operator.EQ, accountId)
                       .build();
-    assertEquals(1, alertService.list(pageRequest).size());
+    assertThat(alertService.list(pageRequest)).hasSize(1);
   }
 }

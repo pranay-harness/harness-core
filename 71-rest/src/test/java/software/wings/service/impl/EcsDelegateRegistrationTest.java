@@ -351,7 +351,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
     assertEquals(1, config.getSequenceNum().intValue());
 
     assertThat(delegate.getTags()).isNotNull();
-    assertEquals(2, delegate.getTags().size());
+    assertThat(delegate.getTags()).hasSize(2);
     assertThat(delegate.getTags().contains("tag1")).isTrue();
     assertThat(delegate.getTags().contains("tag2")).isTrue();
     assertEquals("hostname_1", delegate.getHostName());

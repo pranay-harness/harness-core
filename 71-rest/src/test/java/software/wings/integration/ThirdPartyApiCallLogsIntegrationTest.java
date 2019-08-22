@@ -4,7 +4,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static software.wings.beans.Application.Builder.anApplication;
 
 import com.google.common.collect.Lists;
@@ -80,7 +79,7 @@ public class ThirdPartyApiCallLogsIntegrationTest extends BaseIntegrationTest {
         new GenericType<RestResponse<PageResponse<ThirdPartyApiCallLog>>>() {});
 
     List<ThirdPartyApiCallLog> savedApiCallLogs = logResponse.getResource().getResponse();
-    assertEquals(numOfApiCallLogs, savedApiCallLogs.size());
+    assertThat(savedApiCallLogs).hasSize(numOfApiCallLogs);
     savedApiCallLogs.forEach(savedApiCallLog -> {
       assertThat(savedApiCallLog.getUuid()).isNotNull();
       savedApiCallLog.setUuid(null);

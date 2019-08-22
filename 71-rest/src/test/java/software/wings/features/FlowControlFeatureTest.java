@@ -1,7 +1,6 @@
 package software.wings.features;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.service.impl.PreDeploymentCheckerTest.getWorkflow;
@@ -64,7 +63,7 @@ public class FlowControlFeatureTest extends WingsBaseTest {
     Collection<Usage> disallowedUsages = flowControlFeature.getDisallowedUsages(TEST_ACCOUNT_ID, AccountType.COMMUNITY);
 
     assertThat(disallowedUsages).isNotNull();
-    assertEquals(1, disallowedUsages.size());
+    assertThat(disallowedUsages).hasSize(1);
   }
 
   @Test

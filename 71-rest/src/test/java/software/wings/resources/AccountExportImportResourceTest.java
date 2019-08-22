@@ -1,7 +1,6 @@
 package software.wings.resources;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -98,7 +97,7 @@ public class AccountExportImportResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testFindClashedUserIdMapping() {
     Map<String, String> userIdMapping = accountExportImportResource.findClashedUserIdMapping(accountId, users);
-    assertEquals(1, userIdMapping.size());
+    assertThat(userIdMapping).hasSize(1);
     assertThat(userIdMapping.containsKey(userId)).isTrue();
     verify(wingsMongoPersistence).save(user);
 

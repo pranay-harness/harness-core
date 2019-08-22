@@ -209,7 +209,7 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
     ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
     verify(instanceService).delete(captor.capture());
     Set idTobeDeleted = captor.getValue();
-    assertEquals(1, idTobeDeleted.size());
+    assertThat(idTobeDeleted).hasSize(1);
     assertThat(idTobeDeleted.contains(instance3.getInstanceId())).isTrue();
   }
 
@@ -354,7 +354,7 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
     ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
     verify(instanceService).delete(captor.capture());
     Set idTobeDeleted = captor.getValue();
-    assertEquals(1, idTobeDeleted.size());
+    assertThat(idTobeDeleted).hasSize(1);
     assertThat(idTobeDeleted.contains(instance3.getInstanceId())).isTrue();
 
     ArgumentCaptor<Instance> captorInstance = ArgumentCaptor.forClass(Instance.class);

@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml;
 
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -191,7 +192,7 @@ public class GitClientImplTest extends WingsBaseTest {
                                    .gitFileChanges(new ArrayList<>())
                                    .build();
     gitClient.addToGitDiffResult(singletonList(entry), diffResult, headCommitId, gitConfig, repository);
-    assertEquals(1, diffResult.getGitFileChanges().size());
+    assertThat(diffResult.getGitFileChanges()).hasSize(1);
     GitFileChange gitFileChange = diffResult.getGitFileChanges().iterator().next();
     assertEquals(oldObjectIdString, gitFileChange.getObjectId());
     assertEquals(oldPath, gitFileChange.getFilePath());
@@ -200,7 +201,7 @@ public class GitClientImplTest extends WingsBaseTest {
     diffResult.getGitFileChanges().clear();
 
     gitClient.addToGitDiffResult(singletonList(entry), diffResult, headCommitId, gitConfig, repository);
-    assertEquals(1, diffResult.getGitFileChanges().size());
+    assertThat(diffResult.getGitFileChanges()).hasSize(1);
     gitFileChange = diffResult.getGitFileChanges().iterator().next();
     assertEquals(newObjectIdString, gitFileChange.getObjectId());
     assertEquals(newPath, gitFileChange.getFilePath());

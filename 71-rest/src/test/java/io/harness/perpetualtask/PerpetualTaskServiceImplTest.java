@@ -104,7 +104,7 @@ public class PerpetualTaskServiceImplTest {
                                            .field("clientHandle")
                                            .equal(clientHandle);
     List<PerpetualTaskRecord> records = query.asList();
-    Assert.assertEquals(1, records.size());*/
+    Assert.assertThat( records).hasSize(1);*/
   }
 
   @Test

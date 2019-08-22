@@ -141,7 +141,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
         execData = cvService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L, null);
 
     assertThat(execData).isNotNull();
-    assertEquals("Execution data should be empty", 0, execData.size());
+    assertThat(execData).hasSize(0);
   }
 
   @Test
@@ -155,7 +155,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
         execData = cvService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L, user);
 
     assertThat(execData).isNotNull();
-    assertEquals("Execution data should not be empty", 1, execData.size());
+    assertThat(execData).hasSize(1);
   }
 
   @Test
@@ -175,7 +175,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
         execData = cvService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L, user);
 
     assertThat(execData).isNotNull();
-    assertEquals("Execution data should be empty", 0, execData.size());
+    assertThat(execData).isEmpty();
   }
 
   @Test
@@ -193,7 +193,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
                 LinkedHashMap<String, LinkedHashMap<String, List<ContinuousVerificationExecutionMetaData>>>>>>
         execData = cvService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L, user);
     assertThat(execData).isNotNull();
-    assertEquals("Execution data should be empty", 0, execData.size());
+    assertThat(execData).hasSize(0);
   }
 
   @Test

@@ -40,7 +40,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     when(secretManager.encrypt("111", "123", null)).thenReturn("xyz");
     apmVerificationConfig.encryptFields(secretManager);
 
-    assertEquals(2, apmVerificationConfig.getHeadersList().size());
+    assertThat(apmVerificationConfig.getHeadersList()).hasSize(2);
     assertEquals("*****", apmVerificationConfig.getHeadersList().get(0).getValue());
     assertEquals("xyz", apmVerificationConfig.getHeadersList().get(0).getEncryptedValue());
     assertEquals("123", apmVerificationConfig.getHeadersList().get(1).getValue());
@@ -80,7 +80,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     when(secretManager.encryptedDataDetails("111", "api_key", "xyz"))
         .thenReturn(Optional.of(EncryptedDataDetail.builder().fieldName("api_key").build()));
     List<EncryptedDataDetail> encryptedDataDetails = apmVerificationConfig.encryptedDataDetails(secretManager);
-    assertEquals(1, encryptedDataDetails.size());
+    assertThat(encryptedDataDetails).hasSize(1);
     assertThat(encryptedDataDetails.isEmpty()).isFalse();
     assertEquals("api_key", encryptedDataDetails.get(0).getFieldName());
   }
@@ -97,7 +97,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     when(secretManager.encrypt("111", "123", null)).thenReturn("xyz");
     apmVerificationConfig.encryptFields(secretManager);
 
-    assertEquals(2, apmVerificationConfig.getOptionsList().size());
+    assertThat(apmVerificationConfig.getOptionsList()).hasSize(2);
     assertEquals("*****", apmVerificationConfig.getOptionsList().get(0).getValue());
     assertEquals("xyz", apmVerificationConfig.getOptionsList().get(0).getEncryptedValue());
     assertEquals("123", apmVerificationConfig.getOptionsList().get(1).getValue());
@@ -119,7 +119,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     when(secretManager.encryptedDataDetails("111", "api_key", "xyz"))
         .thenReturn(Optional.of(EncryptedDataDetail.builder().fieldName("api_key").build()));
     List<EncryptedDataDetail> encryptedDataDetails = apmVerificationConfig.encryptedDataDetails(secretManager);
-    assertEquals(1, encryptedDataDetails.size());
+    assertThat(encryptedDataDetails).hasSize(1);
     assertThat(encryptedDataDetails.isEmpty()).isFalse();
     assertEquals("api_key", encryptedDataDetails.get(0).getFieldName());
   }
@@ -195,7 +195,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     Map<String, String> collectionHeaders = apmVerificationConfig.collectionHeaders();
     assertEquals("${api_key}", collectionHeaders.get("api_key"));
     assertEquals("123", collectionHeaders.get("api_key_plain"));
-    assertEquals(2, collectionHeaders.size());
+    assertThat(collectionHeaders).hasSize(2);
   }
 
   @Test
@@ -212,7 +212,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     Map<String, String> collectionParams = apmVerificationConfig.collectionParams();
     assertEquals("${api_key}", collectionParams.get("api_key"));
     assertEquals("123", collectionParams.get("api_key_plain"));
-    assertEquals(2, collectionParams.size());
+    assertThat(collectionParams).hasSize(2);
   }
 
   @Test

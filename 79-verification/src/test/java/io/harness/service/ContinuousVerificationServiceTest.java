@@ -347,7 +347,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     continuousVerificationService.triggerLogDataCollection(accountId);
     delegateTasks =
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
-    assertEquals(1, delegateTasks.size());
+    assertThat(delegateTasks).hasSize(1);
 
     wingsPersistence.save(logsCVConfiguration);
 
@@ -461,7 +461,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     verify(cvTaskService, times(2)).enqueueTask(eq(accountId), anyString(), anyLong(), anyLong());
     List<DelegateTask> delegateTasks =
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
-    assertEquals(2, delegateTasks.size());
+    assertThat(delegateTasks).hasSize(2);
 
     DelegateTask delegateTask = delegateTasks.get(0);
     SumoDataCollectionInfo sumoDataCollectionInfo = (SumoDataCollectionInfo) delegateTask.getData().getParameters()[0];
@@ -498,7 +498,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     verify(cvTaskService, times(4)).enqueueTask(eq(accountId), anyString(), anyLong(), anyLong());
     delegateTasks =
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
-    assertEquals(4, delegateTasks.size());
+    assertThat(delegateTasks).hasSize(4);
 
     delegateTask = delegateTasks.get(2);
     assertEquals(accountId, delegateTask.getAccountId());
@@ -528,7 +528,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     continuousVerificationService.triggerLogDataCollection(accountId);
     List<DelegateTask> delegateTasks =
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
-    assertEquals(2, delegateTasks.size());
+    assertThat(delegateTasks).hasSize(2);
     DelegateTask delegateTask = delegateTasks.get(1);
     assertEquals(accountId, delegateTask.getAccountId());
     assertEquals(appId, delegateTask.getAppId());
@@ -562,7 +562,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     continuousVerificationService.triggerLogDataCollection(accountId);
     delegateTasks =
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
-    assertEquals(4, delegateTasks.size());
+    assertThat(delegateTasks).hasSize(4);
 
     delegateTask = delegateTasks.get(3);
     assertEquals(accountId, delegateTask.getAccountId());
@@ -594,7 +594,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     continuousVerificationService.triggerWorkflowDataCollection(context);
     List<DelegateTask> delegateTasks =
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
-    assertEquals(1, delegateTasks.size());
+    assertThat(delegateTasks).hasSize(1);
     DelegateTask delegateTask = delegateTasks.get(0);
 
     assertEquals(accountId, delegateTask.getAccountId());
@@ -619,7 +619,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     continuousVerificationService.triggerWorkflowDataCollection(context);
     List<DelegateTask> delegateTasks =
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
-    assertEquals(1, delegateTasks.size());
+    assertThat(delegateTasks).hasSize(1);
     DelegateTask delegateTask = delegateTasks.get(0);
 
     assertEquals(accountId, delegateTask.getAccountId());
@@ -782,7 +782,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     for (int i = 0; i < numOfHosts; i++) {
       hosts.add("host-" + i);
     }
-    assertEquals(numOfMinutes / 2, learningEngineAnalysisTasks.size());
+    assertThat(learningEngineAnalysisTasks).hasSize(numOfMinutes / 2);
     for (int i = 0; i < numOfMinutes / 2; i++) {
       LearningEngineAnalysisTask learningEngineAnalysisTask = learningEngineAnalysisTasks.get(i);
       assertThat(learningEngineAnalysisTask.getWorkflow_id()).isNull();
@@ -865,7 +865,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     continuousVerificationService.triggerLogsL2Clustering(accountId);
     learningEngineAnalysisTasks =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("appId", appId).asList();
-    assertEquals(1, learningEngineAnalysisTasks.size());
+    assertThat(learningEngineAnalysisTasks).hasSize(1);
     final int clusterMinute = 100 + CRON_POLL_INTERVAL_IN_MINUTES - 1;
     LearningEngineAnalysisTask learningEngineAnalysisTask = learningEngineAnalysisTasks.get(0);
     validateL2Clustering(learningEngineAnalysisTask, clusterMinute);
@@ -906,7 +906,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     continuousVerificationService.triggerLogsL2Clustering(accountId);
     learningEngineAnalysisTasks =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("appId", appId).asList();
-    assertEquals(1, learningEngineAnalysisTasks.size());
+    assertThat(learningEngineAnalysisTasks).hasSize(1);
 
     for (int i = numOfMinutes; i < CRON_POLL_INTERVAL_IN_MINUTES; i++) {
       for (int j = 0; j < numOfHosts; j++) {
@@ -925,7 +925,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     continuousVerificationService.triggerLogsL2Clustering(accountId);
     learningEngineAnalysisTasks =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("appId", appId).asList();
-    assertEquals(1, learningEngineAnalysisTasks.size());
+    assertThat(learningEngineAnalysisTasks).hasSize(1);
 
     wingsPersistence.delete(
         wingsPersistence.createQuery(LogDataRecord.class).filter(LogDataRecordKeys.clusterLevel, ClusterLevel.L0));
@@ -935,7 +935,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     continuousVerificationService.triggerLogsL2Clustering(accountId);
     learningEngineAnalysisTasks =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("appId", appId).asList();
-    assertEquals(3, learningEngineAnalysisTasks.size());
+    assertThat(learningEngineAnalysisTasks).hasSize(3);
 
     LearningEngineAnalysisTask learningEngineAnalysisTask = learningEngineAnalysisTasks.get(2);
     validateL2Clustering(learningEngineAnalysisTask, clusterMinute);
@@ -1016,7 +1016,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
       sleep(ofMillis(500));
     } while (alerts.isEmpty() && tryCount < 1000);
 
-    assertEquals(1, alerts.size());
+    assertThat(alerts).hasSize(1);
     final Alert alert = alerts.get(0);
     assertEquals(appId, alert.getAppId());
     assertEquals(accountId, alert.getAccountId());
@@ -1035,7 +1035,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.6, 10);
     sleep(ofMillis(2000));
     alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
-    assertEquals(1, alerts.size());
+    assertThat(alerts).hasSize(1);
 
     // diff minute should throw another alert
     continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.6, 20);
@@ -1046,7 +1046,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     } while (alerts.size() < 2 && tryCount < 10);
 
     alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
-    assertEquals(2, alerts.size());
+    assertThat(alerts).hasSize(2);
   }
 
   @Test
@@ -1092,7 +1092,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
       sleep(ofMillis(500));
     } while (alerts.size() < 2 && tryCount < 10);
 
-    assertEquals(2, alerts.size());
+    assertThat(alerts).hasSize(2);
     Set<String> alertAnomalies = new HashSet<>();
     alerts.forEach(alert -> {
       assertEquals(appId, alert.getAppId());
@@ -1122,7 +1122,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     continuousVerificationService.triggerLogAnalysisAlertIfNecessary(configId, logMLAnalysisRecord, 10);
     sleep(ofMillis(2000));
     alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
-    assertEquals(2, alerts.size());
+    assertThat(alerts).hasSize(2);
 
     // diff minute should throw another alert
     continuousVerificationService.triggerLogAnalysisAlertIfNecessary(configId, logMLAnalysisRecord, 30);
@@ -1133,7 +1133,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     } while (alerts.size() < 4 && tryCount < 1000);
 
     alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
-    assertEquals(4, alerts.size());
+    assertThat(alerts).hasSize(4);
   }
 
   private List<CVFeedbackRecord> getFeedbacks() {
@@ -1205,7 +1205,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
             .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, MLAnalysisType.FEEDBACK_ANALYSIS)
             .asList();
-    assertEquals(1, learningEngineAnalysisTasks.size());
+    assertThat(learningEngineAnalysisTasks).hasSize(1);
     assertEquals(oldMinute, learningEngineAnalysisTasks.get(0).getAnalysis_minute());
   }
 
@@ -1307,7 +1307,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
             .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, MLAnalysisType.FEEDBACK_ANALYSIS)
             .asList();
-    assertEquals(1, learningEngineAnalysisTasks.size());
+    assertThat(learningEngineAnalysisTasks).hasSize(1);
     assertEquals(oldMinute, learningEngineAnalysisTasks.get(0).getAnalysis_minute());
   }
 
@@ -1328,7 +1328,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     List<DelegateTask> delegateTasks =
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
-    assertEquals(1, delegateTasks.size());
+    assertThat(delegateTasks).hasSize(1);
     assertEquals(delegateTasks.get(0).getData().getTaskType(), ELK_COLLECT_LOG_DATA.name());
 
     ElkDataCollectionInfo elkDataCollectionInfo =

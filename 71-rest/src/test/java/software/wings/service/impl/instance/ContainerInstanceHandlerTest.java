@@ -347,7 +347,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     verify(instanceService).delete(captor.capture());
     Set idTobeDeleted = captor.getValue();
     // This asserts only 1 instance is deleted
-    assertEquals(1, idTobeDeleted.size());
+    assertThat(idTobeDeleted).hasSize(1);
     assertThat(idTobeDeleted.contains(INSTANCE_1_ID) || idTobeDeleted.contains(INSTANCE_2_ID)).isTrue();
 
     if (checkSaveOrUpdate) {
@@ -643,7 +643,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     verify(instanceService).delete(captor.capture());
     Set idTobeDeleted = captor.getValue();
     // This asserts only 1 instance is deleted
-    assertEquals(1, idTobeDeleted.size());
+    assertThat(idTobeDeleted).hasSize(1);
     assertThat(idTobeDeleted.contains(instanceId)).isTrue();
   }
 
@@ -652,7 +652,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
     verify(instanceService).delete(captor.capture());
     Set idTobeDeleted = captor.getValue();
-    assertEquals(1, idTobeDeleted.size());
+    assertThat(idTobeDeleted).hasSize(1);
     assertThat(idTobeDeleted.contains(INSTANCE_1_ID)).isTrue();
 
     if (checkSaveOrUpdate) {

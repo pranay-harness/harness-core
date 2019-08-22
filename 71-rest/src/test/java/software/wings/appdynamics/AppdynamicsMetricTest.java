@@ -1,5 +1,6 @@
 package software.wings.appdynamics;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -27,7 +28,7 @@ public class AppdynamicsMetricTest extends CategoryTest {
 
     final List<AppdynamicsMetric> metrics =
         JsonUtils.asObject(metricResponse, new TypeReference<List<AppdynamicsMetric>>() {});
-    assertEquals(4, metrics.size());
+    assertThat(metrics).hasSize(4);
 
     assertEquals(AppdynamicsMetricType.leaf, metrics.get(0).getType());
     assertEquals("Average Response Time (ms)", metrics.get(0).getName());

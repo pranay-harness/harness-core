@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Lists;
@@ -80,7 +81,7 @@ public class ThirdPartyApiCallServiceTest extends WingsBaseTest {
     RestResponse<List<ThirdPartyApiCallLog>> restResponse =
         activityResource.listLogs(appId, stateExecutionId, 0, 0, aPageRequest().build());
     List<ThirdPartyApiCallLog> savedApiCallLogs = restResponse.getResource();
-    assertEquals(numOfApiCallLogs, savedApiCallLogs.size());
+    assertThat(savedApiCallLogs).hasSize(numOfApiCallLogs);
     for (int i = 0; i < numOfApiCallLogs; i++) {
       assertEquals(numOfApiCallLogs - i, savedApiCallLogs.get(i).getCreatedAt());
       assertEquals(accountId, savedApiCallLogs.get(i).getAccountId());

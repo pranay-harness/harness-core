@@ -88,7 +88,7 @@ public class ServiceGuardAlertTest extends VerificationBaseIntegrationTest {
 
     sleep(ofMillis(5000));
     alerts = wingsPersistence.createQuery(Alert.class).filter(AlertKeys.appId, appId).asList();
-    assertEquals(1, alerts.size());
+    assertThat(alerts).hasSize(1);
     Alert alert = alerts.get(0);
     assertEquals(accountId, alert.getAccountId());
     assertEquals(AlertType.CONTINUOUS_VERIFICATION_ALERT, alert.getType());
@@ -110,7 +110,7 @@ public class ServiceGuardAlertTest extends VerificationBaseIntegrationTest {
 
     sleep(ofMillis(5000));
     alerts = wingsPersistence.createQuery(Alert.class).filter(AlertKeys.appId, appId).asList();
-    assertEquals(2, alerts.size());
+    assertThat(alerts).hasSize(2);
 
     // snooze should not create new alert
     wingsPersistence.updateField(
@@ -128,6 +128,6 @@ public class ServiceGuardAlertTest extends VerificationBaseIntegrationTest {
 
     sleep(ofMillis(5000));
     alerts = wingsPersistence.createQuery(Alert.class).filter(AlertKeys.appId, appId).asList();
-    assertEquals(2, alerts.size());
+    assertThat(alerts).hasSize(2);
   }
 }

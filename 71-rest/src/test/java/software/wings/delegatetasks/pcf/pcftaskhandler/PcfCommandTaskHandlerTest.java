@@ -188,7 +188,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     assertEquals(pcfSetupCommandResponse.getNewApplicationDetails().getApplicationGuid(), "10");
 
     assertThat(pcfSetupCommandResponse.getDownsizeDetails()).isNotNull();
-    assertEquals(2, pcfSetupCommandResponse.getDownsizeDetails().size());
+    assertThat(pcfSetupCommandResponse.getDownsizeDetails()).hasSize(2);
     Set<String> appsToBeDownsized = new HashSet<>(
         pcfSetupCommandResponse.getDownsizeDetails().stream().map(app -> app.getApplicationName()).collect(toList()));
     assertThat(appsToBeDownsized.contains("a_s_e__3")).isTrue();
@@ -307,7 +307,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
 
     assertEquals(CommandExecutionStatus.SUCCESS, pcfDeployCommandResponse.getCommandExecutionStatus());
     List<PcfServiceData> pcfServiceDatas = pcfDeployCommandResponse.getInstanceDataUpdated();
-    assertEquals(3, pcfServiceDatas.size());
+    assertThat(pcfServiceDatas).hasSize(3);
     for (PcfServiceData data : pcfServiceDatas) {
       if (data.getName().equals("a_s_e__4")) {
         assertEquals(1, data.getPreviousCount());
@@ -436,7 +436,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
 
     assertEquals(CommandExecutionStatus.SUCCESS, pcfDeployCommandResponse.getCommandExecutionStatus());
     assertThat(pcfDeployCommandResponse.getPcfInstanceElements()).isNotNull();
-    assertEquals(2, pcfDeployCommandResponse.getPcfInstanceElements().size());
+    assertThat(pcfDeployCommandResponse.getPcfInstanceElements()).hasSize(2);
 
     Set<String> pcfInstanceElements = new HashSet<>();
     ((PcfDeployCommandResponse) pcfCommandExecutionResponse.getPcfCommandResponse())
@@ -473,7 +473,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
 
     assertEquals(CommandExecutionStatus.SUCCESS, pcfInfraMappingDataResponse.getCommandExecutionStatus());
     assertThat(pcfInfraMappingDataResponse.getOrganizations()).isNotNull();
-    assertEquals(1, pcfInfraMappingDataResponse.getOrganizations().size());
+    assertThat(pcfInfraMappingDataResponse.getOrganizations()).hasSize(1);
     assertEquals(ORG, pcfInfraMappingDataResponse.getOrganizations().get(0));
 
     // Fetch Spaces for org
@@ -486,7 +486,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     pcfInfraMappingDataResponse = (PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
 
     assertThat(pcfInfraMappingDataResponse.getSpaces()).isNotNull();
-    assertEquals(1, pcfInfraMappingDataResponse.getSpaces().size());
+    assertThat(pcfInfraMappingDataResponse.getSpaces()).hasSize(1);
     assertEquals(SPACE, pcfInfraMappingDataResponse.getSpaces().get(0));
 
     // Fetch Routes
@@ -496,7 +496,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
         pcfDataFetchCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
     pcfInfraMappingDataResponse = (PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
     assertThat(pcfInfraMappingDataResponse.getRouteMaps()).isNotNull();
-    assertEquals(2, pcfInfraMappingDataResponse.getRouteMaps().size());
+    assertThat(pcfInfraMappingDataResponse.getRouteMaps()).hasSize(2);
     assertThat(pcfInfraMappingDataResponse.getRouteMaps().contains("R1")).isTrue();
     assertThat(pcfInfraMappingDataResponse.getRouteMaps().contains("R2")).isTrue();
   }
@@ -551,7 +551,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
 
     assertEquals(CommandExecutionStatus.SUCCESS, pcfInstanceSyncResponse.getCommandExecutionStatus());
     assertThat(pcfInstanceSyncResponse.getInstanceIndices()).isNotNull();
-    assertEquals(1, pcfInstanceSyncResponse.getInstanceIndices().size());
+    assertThat(pcfInstanceSyncResponse.getInstanceIndices()).hasSize(1);
     assertEquals("2", pcfInstanceSyncResponse.getInstanceIndices().get(0));
   }
 }

@@ -47,7 +47,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
 
     CapabilityHelper.embedCapabilitiesInDelegateTask(task, encryptionConfigs);
     assertThat(task.getExecutionCapabilities()).isNotNull();
-    assertEquals(2, task.getExecutionCapabilities().size());
+    assertThat(task.getExecutionCapabilities()).hasSize(2);
 
     Set<String> criterias = new HashSet<>();
     criterias.add(HTTP_VAUTL_URL + ":" + HTTP_PORT);
@@ -70,7 +70,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
 
     CapabilityHelper.embedCapabilitiesInDelegateTask(task, encryptionConfigs);
     assertThat(task.getExecutionCapabilities()).isNotNull();
-    assertEquals(2, task.getExecutionCapabilities().size());
+    assertThat(task.getExecutionCapabilities()).hasSize(2);
 
     Set<String> criterias = new HashSet<>();
     criterias.add(AWS_KMS_URL + ":" + HTTPS_PORT);
@@ -112,7 +112,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
 
     Map encryptionMap = CapabilityHelper.fetchEncryptionDetailsListFromParameters(taskData);
     assertThat(encryptionMap).isNotNull();
-    assertEquals(1, encryptionMap.size());
+    assertThat(encryptionMap).hasSize(1);
     EncryptionConfig encryptionConfig = (EncryptionConfig) encryptionMap.values().iterator().next();
 
     assertEquals(EncryptionType.VAULT, encryptionConfig.getEncryptionType());
@@ -135,7 +135,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
 
     Map encryptionMap = CapabilityHelper.fetchEncryptionDetailsListFromParameters(taskData);
     assertThat(encryptionMap).isNotNull();
-    assertEquals(1, encryptionMap.size());
+    assertThat(encryptionMap).hasSize(1);
     EncryptionConfig encryptionConfig = (EncryptionConfig) encryptionMap.values().iterator().next();
     assertEquals(EncryptionType.KMS, encryptionConfig.getEncryptionType());
     assertThat(encryptionConfig instanceof KmsConfig).isTrue();

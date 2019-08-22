@@ -86,7 +86,7 @@ public class APMDataCollectionTaskTest extends CategoryTest {
     String batchUrl = "urlData{$harness_batch{pod_name:${host},'|'}}";
     List<String> batchedHosts =
         (List<String>) useReflectionToMakeInnerClassVisible().invoke(dataCollectionTask.getDataCollector(tr), batchUrl);
-    assertEquals("batched hosts should have 1 item", 1, batchedHosts.size());
+    assertThat(batchedHosts).hasSize(1);
     assertEquals(
         "Batched string should be", "urlData{pod_name:test.host.node1|pod_name:test.host.node2}", batchedHosts.get(0));
   }
@@ -106,16 +106,16 @@ public class APMDataCollectionTaskTest extends CategoryTest {
     String batchUrl = "urlData{$harness_batch{pod_name:${host},'|'}}";
     List<String> batchedHosts =
         (List<String>) useReflectionToMakeInnerClassVisible().invoke(dataCollectionTask.getDataCollector(tr), batchUrl);
-    assertEquals("batched hosts should have 2 items", 4, batchedHosts.size());
+    assertThat(batchedHosts).hasSize(4);
     // Since hostList in the CollectionTask class is a set, the order isn't maintained. So wecant compare directly.
-    int occuranceCount1 = StringUtils.countMatches(batchedHosts.get(0), "test.host.node");
-    int occuranceCount2 = StringUtils.countMatches(batchedHosts.get(1), "test.host.node");
-    int occuranceCount3 = StringUtils.countMatches(batchedHosts.get(2), "test.host.node");
-    int occuranceCount4 = StringUtils.countMatches(batchedHosts.get(3), "test.host.node");
-    assertThat(occuranceCount1 == 15).isTrue();
-    assertThat(occuranceCount2 == 15).isTrue();
-    assertThat(occuranceCount3 == 15).isTrue();
-    assertThat(occuranceCount4 == 7).isTrue();
+    int occurrenceCount1 = StringUtils.countMatches(batchedHosts.get(0), "test.host.node");
+    int occurrenceCount2 = StringUtils.countMatches(batchedHosts.get(1), "test.host.node");
+    int occurrenceCount3 = StringUtils.countMatches(batchedHosts.get(2), "test.host.node");
+    int occurrenceCount4 = StringUtils.countMatches(batchedHosts.get(3), "test.host.node");
+    assertThat(occurrenceCount1 == 15).isTrue();
+    assertThat(occurrenceCount2 == 15).isTrue();
+    assertThat(occurrenceCount3 == 15).isTrue();
+    assertThat(occurrenceCount4 == 7).isTrue();
   }
 
   @Test

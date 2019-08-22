@@ -208,7 +208,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
     metricNames = Arrays.asList("apdexScore");
     metrics = newRelicService.getMetricsCorrespondingToMetricNames(metricNames);
     assertThat(metrics.containsKey("apdexScore")).isTrue();
-    assertEquals(1, metrics.size());
+    assertThat(metrics).hasSize(1);
     assertThat(metrics.get("apdexScore").getTags().size() >= 1).isTrue();
     assertEquals(Sets.newHashSet("WebTransactions"), metrics.get("apdexScore").getTags());
 
@@ -217,7 +217,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
     assertThat(metrics.containsKey("apdexScore")).isTrue();
     assertThat(metrics.containsKey("averageResponseTime")).isTrue();
     assertThat(metrics.containsKey("requestsPerMinute")).isTrue();
-    assertEquals(3, metrics.size());
+    assertThat(metrics).hasSize(3);
 
     /*
     Case 3: metricNames contains a list in which are metric names are incorrect

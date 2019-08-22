@@ -4,7 +4,6 @@ import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -137,7 +136,7 @@ public class IdempotentTest extends CategoryTest {
       }
     });
 
-    assertEquals(1, integers.size());
+    assertThat(integers).hasSize(1);
   }
 
   @Test

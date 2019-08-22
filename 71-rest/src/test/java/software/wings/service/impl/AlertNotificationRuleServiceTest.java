@@ -94,7 +94,7 @@ public class AlertNotificationRuleServiceTest extends WingsBaseTest {
     alertNotificationRuleService.deleteById(savedRuleInAccount1.getUuid(), savedRuleInAccount1.getAccountId());
 
     assertThat(alertNotificationRuleService.getAll(ACCOUNT_1_ID)).isEmpty();
-    assertEquals(1, alertNotificationRuleService.getAll(ACCOUNT_2_ID).size());
+    assertThat(alertNotificationRuleService.getAll(ACCOUNT_2_ID)).hasSize(1);
     assertEquals(savedRuleInAccount2, alertNotificationRuleService.getAll(ACCOUNT_2_ID).get(0));
   }
 
@@ -125,7 +125,7 @@ public class AlertNotificationRuleServiceTest extends WingsBaseTest {
 
     alertNotificationRuleService.update(updatedAlertNotificationRule);
 
-    assertEquals(1, alertNotificationRuleService.getAll(ACCOUNT_1_ID).size());
+    assertThat(alertNotificationRuleService.getAll(ACCOUNT_1_ID)).hasSize(1);
     assertEquals(updatedAlertNotificationRule, alertNotificationRuleService.getAll(ACCOUNT_1_ID).get(0));
   }
 
@@ -142,7 +142,7 @@ public class AlertNotificationRuleServiceTest extends WingsBaseTest {
 
     alertNotificationRuleService.update(updatedAlertNotificationRule);
 
-    assertEquals(1, alertNotificationRuleService.getAll(ACCOUNT_1_ID).size());
+    assertThat(alertNotificationRuleService.getAll(ACCOUNT_1_ID)).hasSize(1);
     assertEquals(updatedAlertNotificationRule, alertNotificationRuleService.getAll(ACCOUNT_1_ID).get(0));
   }
 }

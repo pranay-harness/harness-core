@@ -1,6 +1,6 @@
 package software.wings.service.impl.analysis;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.beans.ExecutionStatus;
@@ -101,7 +101,7 @@ public class TimeSeriesRawDataTest extends CategoryTest {
     TimeSeriesRawData.populateRawDataFromAnalysisRecords(
         record, accountId, executionStatus, existingRawDataMap, serviceId);
 
-    assertEquals(2, existingRawDataMap.keySet().size());
-    assertEquals(4, getRawDataList(existingRawDataMap).size());
+    assertThat(existingRawDataMap.keySet()).hasSize(2);
+    assertThat(getRawDataList(existingRawDataMap)).hasSize(4);
   }
 }

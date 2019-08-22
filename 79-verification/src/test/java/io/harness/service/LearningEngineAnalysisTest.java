@@ -290,7 +290,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
 
     List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority).asList();
-    assertEquals(1, learningEngineAnalysisTasks.size());
+    assertThat(learningEngineAnalysisTasks).hasSize(1);
     LearningEngineAnalysisTask analysisTask = learningEngineAnalysisTasks.get(0);
     assertEquals(workflowExecutionId, analysisTask.getWorkflow_execution_id());
     assertEquals(stateExecutionId, analysisTask.getState_execution_id());
@@ -390,7 +390,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
         wingsPersistence.createQuery(ServiceSecretKey.class)
             .filter(ServiceSecretKeyKeys.serviceType, ServiceType.LEARNING_ENGINE)
             .asList();
-    assertEquals(1, serviceSecretKeys.size());
+    assertThat(serviceSecretKeys).hasSize(1);
 
     String secretKey = serviceSecretKeys.get(0).getServiceSecret();
 
@@ -402,7 +402,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
     serviceSecretKeys = wingsPersistence.createQuery(ServiceSecretKey.class)
                             .filter(ServiceSecretKeyKeys.serviceType, ServiceType.LEARNING_ENGINE)
                             .asList();
-    assertEquals(1, serviceSecretKeys.size());
+    assertThat(serviceSecretKeys).hasSize(1);
 
     assertEquals(secretKey, serviceSecretKeys.get(0).getServiceSecret());
   }
@@ -487,7 +487,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
                                                          .filter("appId", this.appId)
                                                          .order("-analysis_minute")
                                                          .asList();
-    assertEquals(1, analysisTasks.size());
+    assertThat(analysisTasks).hasSize(1);
     LearningEngineAnalysisTask analysisTask = analysisTasks.get(0);
     // this is beyond 2 hours, so analysis start minute should be currentTime - 2 hours. analysisMin should be
     // currentTime - 1h45m
@@ -502,7 +502,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
                         .filter("appId", this.appId)
                         .order("-analysis_minute")
                         .asList();
-    assertEquals(1, analysisTasks.size());
+    assertThat(analysisTasks).hasSize(1);
 
     // there has been no new analysis saved since the previous trigger, so no new task should be created
     assertEquals(
@@ -525,7 +525,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
                         .filter("appId", this.appId)
                         .order("-analysis_minute")
                         .asList();
-    assertEquals(2, analysisTasks.size());
+    assertThat(analysisTasks).hasSize(2);
 
     analysisTask = analysisTasks.get(0);
     assertEquals(timeSeriesMLAnalysisRecord.getAnalysisMinute() + CRON_POLL_INTERVAL_IN_MINUTES,

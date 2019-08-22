@@ -161,7 +161,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     Reflect.on(splunkV2State).set("stateExecutionService", stateExecutionService);
 
     Map<String, String> nodes = splunkV2State.getLastExecutionNodes(context);
-    assertEquals(5, nodes.size());
+    assertThat(nodes).hasSize(5);
     for (int i = 0; i < 5; ++i) {
       assertThat(nodes.keySet().contains("serviceA"
                      + "-" + i + ".harness.com"))
@@ -266,7 +266,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
         .thenReturn(Arrays.asList(stateExecutionData));
 
     Map<String, String> nodes = splunkV2State.getLastExecutionNodes(context);
-    assertEquals(3, nodes.size());
+    assertThat(nodes).hasSize(3);
     assertThat(nodes.keySet().contains("serviceA-0.harness.com")).isFalse();
     assertThat(nodes.keySet().contains("serviceA-1.harness.com")).isFalse();
     for (int i = 2; i < 5; ++i) {
@@ -311,7 +311,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     FieldUtils.writeField(splunkV2State, "infraMappingService", infraMappingService, true);
     FieldUtils.writeField(splunkV2State, "serviceResourceService", serviceResourceService, true);
     Map<String, String> nodes = splunkV2State.getCanaryNewHostNames(context);
-    assertEquals(5, nodes.size());
+    assertThat(nodes).hasSize(5);
     for (int i = 0; i < 5; ++i) {
       assertThat(nodes.keySet().contains("serviceA"
                      + "-" + i + ".harness.com"))
@@ -355,7 +355,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     FieldUtils.writeField(splunkV2State, "infraMappingService", infraMappingService, true);
     FieldUtils.writeField(splunkV2State, "serviceResourceService", serviceResourceService, true);
     Map<String, String> nodes = splunkV2State.getCanaryNewHostNames(context);
-    assertEquals(5, nodes.size());
+    assertThat(nodes).hasSize(5);
     for (int i = 0; i < 5; ++i) {
       assertThat(nodes.keySet().contains("serviceA"
                      + "-" + i + ".harness.com"))

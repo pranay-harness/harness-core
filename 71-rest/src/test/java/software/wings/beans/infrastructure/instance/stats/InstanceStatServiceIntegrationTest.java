@@ -89,7 +89,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
     val accountId = statsToSave.get(0).getAccountId();
     val timelineFromDb = statService.aggregate(accountId, from, to);
 
-    assertEquals(statsToSave.size(), timelineFromDb.size());
+    assertThat(timelineFromDb).hasSize(statsToSave.size());
 
     for (int i = 0; i < timelineFromDb.size(); i++) {
       val savedValue = statsToSave.get(i);

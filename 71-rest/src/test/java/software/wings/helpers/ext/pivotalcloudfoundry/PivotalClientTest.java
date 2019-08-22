@@ -23,7 +23,7 @@ public class PivotalClientTest extends WingsBaseTest {
       // Get Organization list
       List<OrganizationSummary> organizationList = pcfClient.getOrganizations(pcfRequestConfig);
       assertThat(organizationList).isNotNull();
-      assertEquals(1, organizationList.size());
+      assertThat( organizationList).hasSize(1);
 
       String organization = organizationList.get(0).getName();
       assertEquals("Ad-PCF", organization);
@@ -33,7 +33,7 @@ public class PivotalClientTest extends WingsBaseTest {
       List<String> spaces = pcfClient.getSpacesForOrganization(pcfRequestConfig);
       System.out.println(spaces);
       assertThat(spaces).isNotNull();
-      assertEquals(1, spaces.size());
+      assertThat( spaces).hasSize(1);
       assertEquals("development", spaces.get(0).toLowerCase());
 
       // push an application with 1 instance

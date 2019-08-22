@@ -127,7 +127,7 @@ public class PcfRollbackStateTest extends WingsBaseTest {
         assertThat(2 == pcfServiceData.getPreviousCount()).isTrue();
       }
     }
-    assertEquals(2, commandRollbackRequest.getRouteMaps().size());
+    assertThat(commandRollbackRequest.getRouteMaps()).hasSize(2);
     assertThat(commandRollbackRequest.getRouteMaps().contains("R1")).isTrue();
     assertThat(commandRollbackRequest.getRouteMaps().contains("R2")).isTrue();
   }

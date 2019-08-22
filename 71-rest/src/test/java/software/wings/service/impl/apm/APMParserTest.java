@@ -1,5 +1,6 @@
 package software.wings.service.impl.apm;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
@@ -54,7 +55,7 @@ public class APMParserTest extends WingsBaseTest {
                 .metricInfos(metricInfoIterator.next())
                 .build()));
 
-    assertEquals(80, records.size());
+    assertThat(records).hasSize(80);
     records.forEach(record -> record.setValidUntil(null));
     String output = Resources.toString(
         APMParserTest.class.getResource("/apm/datadog_sample_collected_response.json"), Charsets.UTF_8);
@@ -87,7 +88,7 @@ public class APMParserTest extends WingsBaseTest {
                 .metricInfos(metricInfoIterator.next())
                 .build()));
 
-    assertEquals(80, records.size());
+    assertThat(records).hasSize(80);
     records.forEach(record -> record.setValidUntil(null));
     String output = Resources.toString(
         APMParserTest.class.getResource("/apm/datadog_sample_collected_response.json"), Charsets.UTF_8);
@@ -125,7 +126,7 @@ public class APMParserTest extends WingsBaseTest {
                                                          .metricInfos(metricInfos)
                                                          .build()));
 
-    assertEquals(61, records.size());
+    assertThat(records).hasSize(61);
     records.forEach(record -> record.setValidUntil(null));
     String output = Resources.toString(
         APMParserTest.class.getResource("/apm/graphana_sample_collected_response_500.json"), Charsets.UTF_8);
@@ -163,7 +164,7 @@ public class APMParserTest extends WingsBaseTest {
                                                          .metricInfos(metricInfos)
                                                          .build()));
 
-    assertEquals(61, records.size());
+    assertThat(records).hasSize(61);
     records.forEach(record -> record.setValidUntil(null));
     String output = Resources.toString(
         APMParserTest.class.getResource("/apm/graphana_sample_collected_response_500.json"), Charsets.UTF_8);
@@ -201,7 +202,7 @@ public class APMParserTest extends WingsBaseTest {
                                                          .metricInfos(metricInfos)
                                                          .build()));
 
-    assertEquals(4, records.size());
+    assertThat(records).hasSize(4);
     records.forEach(record -> record.setValidUntil(null));
     String output = Resources.toString(
         APMParserTest.class.getResource("/apm/graphana_sample_collected_response_500_multiple.json"), Charsets.UTF_8);
@@ -245,7 +246,7 @@ public class APMParserTest extends WingsBaseTest {
                                                          .groupName(DEFAULT_GROUP_NAME)
                                                          .build()));
 
-    assertEquals(10, records.size());
+    assertThat(records).hasSize(10);
     records.forEach(record -> record.setValidUntil(null));
     String output =
         Resources.toString(APMParserTest.class.getResource("/apm/insights_sample_collected.json"), Charsets.UTF_8);
@@ -289,7 +290,7 @@ public class APMParserTest extends WingsBaseTest {
                                                          .groupName(DEFAULT_GROUP_NAME)
                                                          .build()));
 
-    assertEquals(10, records.size());
+    assertThat(records).hasSize(10);
     records.forEach(record -> record.setValidUntil(null));
     String output =
         Resources.toString(APMParserTest.class.getResource("/apm/insights-variation-1-collected.json"), Charsets.UTF_8);

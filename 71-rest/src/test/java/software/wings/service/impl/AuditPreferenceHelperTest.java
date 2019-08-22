@@ -589,8 +589,8 @@ public class AuditPreferenceHelperTest extends WingsBaseTest {
     assertThat(auditPreference.getAccountAuditFilter().getResourceTypes()).isNotNull();
     assertThat(auditPreference.getAccountAuditFilter().getResourceIds()).isNotNull();
 
-    assertEquals(2, auditPreference.getAccountAuditFilter().getResourceIds().size());
-    assertEquals(2, auditPreference.getAccountAuditFilter().getResourceTypes().size());
+    assertThat(auditPreference.getAccountAuditFilter().getResourceIds()).hasSize(2);
+    assertThat(auditPreference.getAccountAuditFilter().getResourceTypes()).hasSize(2);
 
     assertThat(auditPreference.getAccountAuditFilter().getResourceIds().containsAll(
                    Arrays.asList("AccresourceId1", "AccresourceId2")))
@@ -606,9 +606,9 @@ public class AuditPreferenceHelperTest extends WingsBaseTest {
     assertThat(auditPreference.getApplicationAuditFilter().getResourceIds()).isNotNull();
     assertThat(auditPreference.getApplicationAuditFilter().getResourceTypes()).isNotNull();
 
-    assertEquals(2, auditPreference.getApplicationAuditFilter().getAppIds().size());
-    assertEquals(2, auditPreference.getApplicationAuditFilter().getResourceIds().size());
-    assertEquals(2, auditPreference.getApplicationAuditFilter().getResourceTypes().size());
+    assertThat(auditPreference.getApplicationAuditFilter().getAppIds()).hasSize(2);
+    assertThat(auditPreference.getApplicationAuditFilter().getResourceIds()).hasSize(2);
+    assertThat(auditPreference.getApplicationAuditFilter().getResourceTypes()).hasSize(2);
 
     assertThat(auditPreference.getApplicationAuditFilter().getAppIds().containsAll(Arrays.asList("AppId1", "AppId2")))
         .isTrue();
@@ -627,7 +627,7 @@ public class AuditPreferenceHelperTest extends WingsBaseTest {
     assertEquals("1559076765000", auditPreference.getStartTime());
     assertEquals("1560195705972", auditPreference.getEndTime());
     assertThat(auditPreference.getOperationTypes()).isNotNull();
-    assertEquals(2, auditPreference.getOperationTypes().size());
+    assertThat(auditPreference.getOperationTypes()).hasSize(2);
     assertThat(auditPreference.getOperationTypes().containsAll(Arrays.asList("CREATE", "UPDATE"))).isTrue();
   }
 

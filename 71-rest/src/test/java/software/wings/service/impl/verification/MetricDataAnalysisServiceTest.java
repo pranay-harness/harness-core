@@ -1,6 +1,7 @@
 package software.wings.service.impl.verification;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
@@ -85,7 +86,7 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
             .filter("appId", this.appId)
             .order(TimeSeriesMLTransactionThresholds.CREATED_AT_KEY)
             .asList();
-    assertEquals(numOfTransactions * numOfMetricsPerTxns, thresholds.size());
+    assertThat(thresholds).hasSize(numOfTransactions * numOfMetricsPerTxns);
     for (int i = 0; i < numOfTransactions * numOfMetricsPerTxns; i++) {
       TimeSeriesMLTransactionThresholds threshold = thresholds.get(i);
       assertEquals(serviceId, threshold.getServiceId());
@@ -97,7 +98,7 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
       assertEquals(0, threshold.getVersion());
       assertEquals("metric-" + i, threshold.getThresholds().getMetricName());
       assertEquals(MetricType.THROUGHPUT, threshold.getThresholds().getMetricType());
-      assertEquals(1, threshold.getThresholds().getCustomThresholds().size());
+      assertThat(threshold.getThresholds().getCustomThresholds()).hasSize(1);
       assertEquals(
           ThresholdType.ALERT_WHEN_HIGHER, threshold.getThresholds().getCustomThresholds().get(0).getThresholdType());
       assertEquals(
@@ -138,7 +139,7 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
                      .filter("appId", this.appId)
                      .order(TimeSeriesMLTransactionThresholds.CREATED_AT_KEY)
                      .asList();
-    assertEquals(numOfTransactions * numOfMetricsPerTxns, thresholds.size());
+    assertThat(thresholds).hasSize(numOfTransactions * numOfMetricsPerTxns);
     for (int i = 0; i < numOfTransactions * numOfMetricsPerTxns; i++) {
       TimeSeriesMLTransactionThresholds threshold = thresholds.get(i);
       assertEquals(serviceId, threshold.getServiceId());
@@ -149,7 +150,7 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
       assertEquals(cvConfigId, threshold.getCvConfigId());
       assertEquals("metric-" + i, threshold.getThresholds().getMetricName());
       assertEquals(MetricType.THROUGHPUT, threshold.getThresholds().getMetricType());
-      assertEquals(1, threshold.getThresholds().getCustomThresholds().size());
+      assertThat(threshold.getThresholds().getCustomThresholds()).hasSize(1);
       assertEquals(
           ThresholdType.ALERT_WHEN_HIGHER, threshold.getThresholds().getCustomThresholds().get(0).getThresholdType());
       assertEquals(

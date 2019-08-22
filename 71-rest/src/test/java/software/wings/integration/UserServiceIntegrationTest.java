@@ -127,7 +127,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   public void testBlankEmail() {
     WebTarget target = client.target(API_BASE + "/users/verify-email?email=");
     RestResponse<Boolean> restResponse = getRequestBuilder(target).get(new GenericType<RestResponse<Boolean>>() {});
-    assertEquals(1, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).hasSize(1);
     final ResponseMessage responseMessage = restResponse.getResponseMessages().get(0);
     assertEquals(ErrorCode.INVALID_EMAIL, responseMessage.getCode());
     assertThat(restResponse.getResource()).isFalse();
@@ -138,7 +138,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   public void testInvalidEmail() {
     WebTarget target = client.target(API_BASE + "/users/verify-email?email=xyz.com");
     RestResponse<Boolean> restResponse = getRequestBuilder(target).get(new GenericType<RestResponse<Boolean>>() {});
-    assertEquals(1, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).hasSize(1);
     final ResponseMessage responseMessage = restResponse.getResponseMessages().get(0);
     assertEquals(ErrorCode.INVALID_EMAIL, responseMessage.getCode());
     assertThat(restResponse.getResource()).isFalse();
@@ -149,7 +149,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   public void testDomainNotAllowed() {
     WebTarget target = client.target(API_BASE + "/users/verify-email?email=xyz@some-domain.io");
     RestResponse<Boolean> restResponse = getRequestBuilder(target).get(new GenericType<RestResponse<Boolean>>() {});
-    assertEquals(1, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).hasSize(1);
     final ResponseMessage responseMessage = restResponse.getResponseMessages().get(0);
     assertEquals(ErrorCode.USER_DOMAIN_NOT_ALLOWED, responseMessage.getCode());
     assertThat(restResponse.getResource()).isFalse();
@@ -160,7 +160,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   public void testUserExists() {
     WebTarget target = client.target(API_BASE + "/users/verify-email?email=admin@harness.io");
     RestResponse<Boolean> restResponse = getRequestBuilder(target).get(new GenericType<RestResponse<Boolean>>() {});
-    assertEquals(1, restResponse.getResponseMessages().size());
+    assertThat(restResponse.getResponseMessages()).hasSize(1);
     final ResponseMessage responseMessage = restResponse.getResponseMessages().get(0);
     assertEquals(ErrorCode.USER_ALREADY_REGISTERED, responseMessage.getCode());
     assertThat(restResponse.getResource()).isFalse();
@@ -341,7 +341,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     assertThat(savedUser).isNotNull();
     assertThat(savedUser.isEmailVerified()).isTrue();
     assertEquals(name, savedUser.getName());
-    assertEquals(1, savedUser.getAccounts().size());
+    assertThat(savedUser.getAccounts()).hasSize(1);
 
     userInvite.setPassword(pwd.toCharArray());
     // Trial signup a few more time using the same email will trigger the rejection, and the singup result will be
@@ -386,7 +386,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     assertEquals(name, savedUser.getName());
     assertEquals(email, savedUser.getEmail());
     assertThat(savedUser.getPassword()).isNull();
-    assertEquals(1, savedUser.getAccounts().size());
+    assertThat(savedUser.getAccounts()).hasSize(1);
     assertEquals(accountName, savedUser.getAccounts().get(0).getAccountName());
     assertEquals(companyName, savedUser.getAccounts().get(0).getCompanyName());
 
@@ -472,7 +472,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     assertEquals(name.trim(), savedUser.getName());
     assertEquals(email.trim(), savedUser.getEmail());
     assertThat(savedUser.getPassword()).isNull();
-    assertEquals(1, savedUser.getAccounts().size());
+    assertThat(savedUser.getAccounts()).hasSize(1);
     assertEquals(accountName.trim(), savedUser.getAccounts().get(0).getAccountName());
     assertEquals(companyName.trim(), savedUser.getAccounts().get(0).getCompanyName());
   }
@@ -504,7 +504,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
       final String jsonResponse = new String(ByteStreams.toByteArray((InputStream) e.getResponse().getEntity()));
       final RestResponse<User> restResponse =
           JsonUtils.asObject(jsonResponse, new TypeReference<RestResponse<User>>() {});
-      assertEquals(1, restResponse.getResponseMessages().size());
+      assertThat(restResponse.getResponseMessages()).hasSize(1);
       assertEquals(ErrorCode.INVALID_ARGUMENT, restResponse.getResponseMessages().get(0).getCode());
     }
   }
@@ -536,7 +536,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
       final String jsonResponse = new String(ByteStreams.toByteArray((InputStream) e.getResponse().getEntity()));
       final RestResponse<User> restResponse =
           JsonUtils.asObject(jsonResponse, new TypeReference<RestResponse<User>>() {});
-      assertEquals(1, restResponse.getResponseMessages().size());
+      assertThat(restResponse.getResponseMessages()).hasSize(1);
       assertEquals(ErrorCode.INVALID_EMAIL, restResponse.getResponseMessages().get(0).getCode());
     }
   }
@@ -568,7 +568,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
       final String jsonResponse = new String(ByteStreams.toByteArray((InputStream) e.getResponse().getEntity()));
       final RestResponse<User> restResponse =
           JsonUtils.asObject(jsonResponse, new TypeReference<RestResponse<User>>() {});
-      assertEquals(1, restResponse.getResponseMessages().size());
+      assertThat(restResponse.getResponseMessages()).hasSize(1);
       assertEquals(ErrorCode.USER_ALREADY_REGISTERED, restResponse.getResponseMessages().get(0).getCode());
     }
   }
@@ -656,7 +656,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
         entity(userInviteJson, APPLICATION_JSON), new GenericType<RestResponse<List<UserInvite>>>() {});
     assertThat(response.getResponseMessages()).isEmpty();
     assertThat(response.getResource()).isNotNull();
-    assertEquals(1, response.getResource().size());
+    assertThat(response.getResource()).hasSize(1);
 
     return response.getResource().get(0);
   }

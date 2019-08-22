@@ -333,7 +333,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
     CloudFormationListStacksResponse listStacksResponse = (CloudFormationListStacksResponse) formationCommandResponse;
     List<StackSummaryInfo> summaryInfos = listStacksResponse.getStackSummaryInfos();
     assertThat(summaryInfos).isNotNull();
-    assertEquals(2, summaryInfos.size());
+    assertThat(summaryInfos).hasSize(2);
     validateStackSummaryInfo(summaryInfos.get(0), "sId1", "sName1", "sStatus1", "sReason1");
     validateStackSummaryInfo(summaryInfos.get(1), "sId2", "sName2", "sStatus2", "sReason2");
   }
