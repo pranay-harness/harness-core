@@ -1,6 +1,7 @@
 package software.wings.service.impl.appdynamics;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
@@ -79,6 +80,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     if (response.isSuccessful()) {
       return response.body()
           .stream()
+          .filter(application -> isNotEmpty(application.getName()))
           .sorted(Comparator.comparing(application -> application.getName()))
           .collect(Collectors.toList());
     } else {
