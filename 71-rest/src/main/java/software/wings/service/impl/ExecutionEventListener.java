@@ -86,12 +86,14 @@ public class ExecutionEventListener extends QueueListener<ExecutionEvent> {
               .in(asList(RUNNING, PAUSED))
               .project(WorkflowExecutionKeys.uuid, true);
 
-      if (isNotEmpty(message.getInfraMappingIds())) {
-        runningQuery.field(WorkflowExecutionKeys.infraMappingIds).in(message.getInfraMappingIds());
-      }
-
-      if (isNotEmpty(message.getInfraDefinitionIds())) {
-        runningQuery.field(WorkflowExecutionKeys.infraDefinitionIds).in(message.getInfraDefinitionIds());
+      if (!infraRefactor) {
+        if (isNotEmpty(message.getInfraMappingIds())) {
+          runningQuery.field(WorkflowExecutionKeys.infraMappingIds).in(message.getInfraMappingIds());
+        }
+      } else {
+        if (isNotEmpty(message.getInfraDefinitionIds())) {
+          runningQuery.field(WorkflowExecutionKeys.infraDefinitionIds).in(message.getInfraDefinitionIds());
+        }
       }
 
       WorkflowExecution runningWorkflowExecutions = runningQuery.get();
@@ -109,12 +111,15 @@ public class ExecutionEventListener extends QueueListener<ExecutionEvent> {
                                                       .filter(WorkflowExecutionKeys.workflowId, message.getWorkflowId())
                                                       .filter(WorkflowExecutionKeys.status, QUEUED)
                                                       .order(Sort.ascending(WorkflowExecutionKeys.createdAt));
-      if (isNotEmpty(message.getInfraMappingIds())) {
-        queueQuery.field(WorkflowExecutionKeys.infraMappingIds).in(message.getInfraMappingIds());
-      }
 
-      if (isNotEmpty(message.getInfraDefinitionIds())) {
-        queueQuery.field(WorkflowExecutionKeys.infraDefinitionIds).in(message.getInfraDefinitionIds());
+      if (!infraRefactor) {
+        if (isNotEmpty(message.getInfraMappingIds())) {
+          queueQuery.field(WorkflowExecutionKeys.infraMappingIds).in(message.getInfraMappingIds());
+        }
+      } else {
+        if (isNotEmpty(message.getInfraDefinitionIds())) {
+          queueQuery.field(WorkflowExecutionKeys.infraDefinitionIds).in(message.getInfraDefinitionIds());
+        }
       }
 
       WorkflowExecution workflowExecution = queueQuery.get();
