@@ -128,6 +128,24 @@ public class AppdynamicsApiTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  public void testNullApplicationName() throws IOException {
+    Call<List<NewRelicApplication>> restCall = mock(Call.class);
+    when(restCall.execute())
+        .thenReturn(
+            Response.success(Lists.newArrayList(NewRelicApplication.builder().id(123).name(generateUuid()).build(),
+                NewRelicApplication.builder().id(345).build())));
+    when(appdynamicsRestClient.listAllApplications(anyString())).thenReturn(restCall);
+
+    String savedAttributeId = saveAppdynamicsConfig();
+    SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
+    ((AppDynamicsConfig) settingAttribute.getValue()).setPassword(UUID.randomUUID().toString().toCharArray());
+    final List<NewRelicApplication> applications = appdynamicsService.getApplications(savedAttributeId);
+    assertEquals(1, applications.size());
+    assertEquals(123, applications.get(0).getId());
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void testInvalidCredential() throws IOException {
     Call<List<NewRelicApplication>> restCall = mock(Call.class);
     when(restCall.execute())
