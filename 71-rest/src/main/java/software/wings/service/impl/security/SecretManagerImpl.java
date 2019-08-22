@@ -775,6 +775,7 @@ public class SecretManagerImpl implements SecretManager {
       return;
     }
 
+    // 1. Decrypt the secret from the Source secret manager
     char[] decrypted;
     switch (fromEncryptionType) {
       case LOCAL:
@@ -788,21 +789,9 @@ public class SecretManagerImpl implements SecretManager {
         break;
       case AWS_SECRETS_MANAGER:
         decrypted = secretsManagerService.decrypt(encryptedData, accountId, (AwsSecretsManagerConfig) fromConfig);
-        // Delete the AWS secrets after it's transitioned out.
-        String awsSecretName =
-            isEmpty(encryptedData.getPath()) ? encryptedData.getEncryptionKey() : encryptedData.getPath();
-        secretsManagerService.deleteSecret(accountId, awsSecretName, (AwsSecretsManagerConfig) fromConfig);
         break;
       case AZURE_VAULT:
         decrypted = azureVaultService.decrypt(encryptedData, accountId, (AzureVaultConfig) fromConfig);
-        // delete the Azure secret since it's transitioning out. TODO Discuss with mark to delete after the secret
-        // has been moved to a new vault
-
-        String azureSecretName =
-            isEmpty(encryptedData.getPath()) ? encryptedData.getEncryptionKey() : encryptedData.getPath();
-        logger.info("Deleting encrypted data name {} from Azure config {} in account {}", azureSecretName,
-            fromConfig.getUuid(), accountId);
-        azureVaultService.delete(accountId, azureSecretName, (AzureVaultConfig) fromConfig);
         break;
       case CYBERARK:
         decrypted = cyberArkService.decrypt(encryptedData, accountId, (CyberArkConfig) fromConfig);
@@ -811,9 +800,10 @@ public class SecretManagerImpl implements SecretManager {
         throw new IllegalStateException("Invalid type : " + fromEncryptionType);
     }
 
+    // 2. Create/encrypt the secrect into the target secret manager
     EncryptedData encrypted;
-    String encryptionKey;
-    String secretValue;
+    String encryptionKey = encryptedData.getEncryptionKey();
+    String secretValue = decrypted == null ? null : String.valueOf(decrypted);
     switch (toEncryptionType) {
       case LOCAL:
         encrypted = localEncryptionService.encrypt(decrypted, accountId, (LocalEncryptionConfig) toConfig);
@@ -822,21 +812,15 @@ public class SecretManagerImpl implements SecretManager {
         encrypted = kmsService.encrypt(decrypted, accountId, (KmsConfig) toConfig);
         break;
       case VAULT:
-        encryptionKey = encryptedData.getEncryptionKey();
-        secretValue = decrypted == null ? null : String.valueOf(decrypted);
         encrypted = vaultService.encrypt(encryptedData.getName(), secretValue, accountId, encryptedData.getType(),
             (VaultConfig) toConfig, EncryptedData.builder().encryptionKey(encryptionKey).build());
         break;
       case AWS_SECRETS_MANAGER:
-        encryptionKey = encryptedData.getEncryptionKey();
-        secretValue = decrypted == null ? null : String.valueOf(decrypted);
         encrypted =
             secretsManagerService.encrypt(encryptedData.getName(), secretValue, accountId, encryptedData.getType(),
                 (AwsSecretsManagerConfig) toConfig, EncryptedData.builder().encryptionKey(encryptionKey).build());
         break;
       case AZURE_VAULT:
-        encryptionKey = encryptedData.getEncryptionKey();
-        secretValue = decrypted == null ? null : String.valueOf(decrypted);
         encrypted = azureVaultService.encrypt(encryptedData.getName(), secretValue, accountId, encryptedData.getType(),
             (AzureVaultConfig) toConfig, EncryptedData.builder().encryptionKey(encryptionKey).build());
         break;
@@ -845,6 +829,38 @@ public class SecretManagerImpl implements SecretManager {
             UNSUPPORTED_OPERATION_EXCEPTION, "Deprecate operation is not supported for CyberArk secret manager");
       default:
         throw new IllegalStateException("Invalid type : " + toEncryptionType);
+    }
+
+    // 3. Delete the secrets from secret engines once it's transitioned out to a new secret manager.
+    // PL-3160: this applies to VAULT/AWS_SECRETS_MANAGER/AZURE_VAULT, But we should never delete the 'Referenced'
+    // secrets.
+    String secretName = null;
+    switch (fromEncryptionType) {
+      case VAULT:
+        if (isEmpty(encryptedData.getPath())) {
+          secretName = encryptionKey;
+          vaultService.deleteSecret(accountId, secretName, (VaultConfig) fromConfig);
+        }
+        break;
+      case AWS_SECRETS_MANAGER:
+        if (isEmpty(encryptedData.getPath())) {
+          secretName = encryptedData.getEncryptionKey();
+          secretsManagerService.deleteSecret(accountId, secretName, (AwsSecretsManagerConfig) fromConfig);
+        }
+        break;
+      case AZURE_VAULT:
+        if (isEmpty(encryptedData.getPath())) {
+          secretName = encryptedData.getEncryptionKey();
+          azureVaultService.delete(accountId, secretName, (AzureVaultConfig) fromConfig);
+        }
+        break;
+      default:
+        // No operation for other secret manager types
+        break;
+    }
+    if (secretName != null) {
+      logger.info("Deleting secret name {} from secret manager {} of type {} in account {}", secretName,
+          fromConfig.getUuid(), fromEncryptionType, accountId);
     }
 
     encryptedData.setKmsId(toKmsId);
