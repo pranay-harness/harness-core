@@ -701,7 +701,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     infraDefinitionDetail.setInfrastructureDefinition(infrastructureDefinition);
     infraDefinitionDetail.setDerivedInfraMappingDetailList(
         safe(getMappings(infrastructureDefinition.getUuid(), appId))
-            .stream()
+            .parallelStream()
             .map(infraMapping
                 -> InfraMappingDetail.builder()
                        .infrastructureMapping(infraMapping)

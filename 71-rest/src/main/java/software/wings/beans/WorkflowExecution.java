@@ -77,6 +77,11 @@ import javax.validation.constraints.NotNull;
         @Field(WorkflowExecutionKeys.appId), @Field(value = WorkflowExecutionKeys.endTs)
       }), @Index(options = @IndexOptions(name = "pipelineExecutionId", background = true), fields = {
         @Field(WorkflowExecutionKeys.pipelineExecutionId)
+      }), @Index(options = @IndexOptions(name = "lastInfraMappingSearch"), fields = {
+        @Field(WorkflowExecutionKeys.appId)
+        , @Field(WorkflowExecutionKeys.workflowType), @Field(WorkflowExecutionKeys.status),
+            @Field(WorkflowExecutionKeys.infraMappingIds),
+            @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
       })
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
