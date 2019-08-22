@@ -517,7 +517,8 @@ public class JenkinsImpl implements Jenkins {
               sleep(ofSeconds(1L));
               continue;
             } else {
-              throw e;
+              throw new Exception("Failed to collect environment variables from Jenkins: " + path
+                  + ".\nThis might be because 'Capture environment variables' is enabled in Jenkins step but EnvInject plugin is not installed in the Jenkins instance.");
             }
           }
 
