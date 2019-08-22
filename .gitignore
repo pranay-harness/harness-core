@@ -25,6 +25,7 @@ mygclogfilename.gc
 portal-gc-logs.gc
 portal.log
 event-server*.log
+batch-processing*.log
 python/**/*-checkpoint.ipynb
 python/**/*.pyc
 python/**/.pyenv
