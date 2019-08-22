@@ -35,12 +35,12 @@ import java.util.function.Supplier;
 @Slf4j
 public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTask {
   private String delegateHostname;
-  private String delegateId;
-  private String accountId;
-  private String appId;
-  private String taskId;
-  private String taskType;
-  private boolean isAsync;
+  @Getter private String delegateId;
+  @Getter private String accountId;
+  @Getter private String appId;
+  @Getter private String taskId;
+  @Getter private String taskType;
+  @Getter private boolean isAsync;
   @Getter private Object[] parameters;
   private Consumer<DelegateTaskResponse> consumer;
   private Supplier<Boolean> preExecute;
@@ -134,36 +134,8 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
     }
   }
 
-  protected <T> List<Optional<T>> executeParrallel(List<Callable<T>> callables) throws IOException {
+  protected <T> List<Optional<T>> executeParallel(List<Callable<T>> callables) throws IOException {
     return dataCollectionService.executeParrallel(callables);
-  }
-
-  public String getDelegateId() {
-    return delegateId;
-  }
-
-  public String getTaskId() {
-    return taskId;
-  }
-
-  public String getAccountId() {
-    return accountId;
-  }
-
-  public String getAppId() {
-    return appId;
-  }
-
-  public String getTaskType() {
-    return taskType;
-  }
-
-  public boolean isAsync() {
-    return isAsync;
-  }
-
-  public void setAsync(boolean async) {
-    isAsync = async;
   }
 
   public ThirdPartyApiCallLog createApiCallLog(String stateExecutionId) {

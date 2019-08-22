@@ -307,8 +307,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
                         .chartVersion(CHART_VERSION)
                         .build());
 
-    when(delegateService.executeTask(any()))
-        .thenReturn(RemoteMethodReturnValueData.Builder.aRemoteMethodReturnValueData().build());
+    when(delegateService.executeTask(any())).thenReturn(RemoteMethodReturnValueData.builder().build());
 
     helmDeployState.execute(context);
   }

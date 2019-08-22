@@ -256,7 +256,7 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
       logger.info("fetching cloud watch metrics for {} strategy {} for min {}",
           dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getAnalysisComparisonStrategy(),
           dataCollectionMinute);
-      List<Optional<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> results = executeParrallel(callables);
+      List<Optional<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> results = executeParallel(callables);
       logger.info("done fetching cloud watch metrics for {} strategy {} for min {}",
           dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getAnalysisComparisonStrategy(),
           dataCollectionMinute);

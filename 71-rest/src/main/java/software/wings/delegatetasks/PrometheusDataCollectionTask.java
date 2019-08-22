@@ -194,7 +194,7 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
         default:
           throw new IllegalStateException("Invalid type " + dataCollectionInfo.getTimeSeriesMlAnalysisType());
       }
-      results = executeParrallel(callables);
+      results = executeParallel(callables);
       logger.info("done fetching Prometheus metrics for {} Analysis Type {} for min {}",
           dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getTimeSeriesMlAnalysisType(),
           dataCollectionMinute);

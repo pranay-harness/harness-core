@@ -382,7 +382,7 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
       logger.info("fetching stackdriver metrics for {} strategy {} for min {}",
           dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getTimeSeriesMlAnalysisType(),
           dataCollectionCurrentMinute);
-      List<Optional<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> results = executeParrallel(callables);
+      List<Optional<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> results = executeParallel(callables);
       logger.info("done fetching stackdriver metrics for {} strategy {} for min {}",
           dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getTimeSeriesMlAnalysisType(),
           dataCollectionCurrentMinute);

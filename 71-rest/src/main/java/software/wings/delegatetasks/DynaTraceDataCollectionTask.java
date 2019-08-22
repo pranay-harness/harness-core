@@ -321,7 +321,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
 
       logger.info("fetching dynatrace metrics for {} strategy {} for min {}", dataCollectionInfo.getStateExecutionId(),
           dataCollectionInfo.getAnalysisComparisonStrategy(), dataCollectionMinute);
-      List<Optional<DynaTraceMetricDataResponse>> results = executeParrallel(callables);
+      List<Optional<DynaTraceMetricDataResponse>> results = executeParallel(callables);
       logger.info("done fetching dynatrace metrics for {} strategy {} for min {}",
           dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getAnalysisComparisonStrategy(),
           dataCollectionMinute);

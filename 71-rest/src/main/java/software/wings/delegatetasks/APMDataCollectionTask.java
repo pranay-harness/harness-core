@@ -415,7 +415,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
         }
       }
 
-      executeParrallel(callabels)
+      executeParallel(callabels)
           .stream()
           .filter(Optional::isPresent)
           .forEach(response -> responses.add(response.get()));
