@@ -23,7 +23,11 @@ public class GitRestUtils {
     List<GitData> response =
         (List<GitData>) retry.executeWithRetry(() -> retriveGitResponse(appName), new GitResponseMatcher(), null);
 
-    return response;
+    if (response.size() >= 2) {
+      return response;
+    } else {
+      return getGitAllForApp(appName);
+    }
   }
 
   public static List<GitData> getGitEnvForApp(String envName, String appName) {
