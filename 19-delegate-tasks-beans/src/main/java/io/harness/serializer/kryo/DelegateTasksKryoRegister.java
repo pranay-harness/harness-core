@@ -6,6 +6,7 @@ import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.AwsRegionCapability;
@@ -73,5 +74,6 @@ public class DelegateTasksKryoRegister implements KryoRegistrar {
     kryo.register(IgnoreValidationCapability.class, 19021);
     kryo.register(SystemEnvCheckerCapability.class, 19022);
     kryo.register(SpotInstSwapRoutesTaskParameters.class, 19023);
+    kryo.register(ErrorNotifyResponseData.class, 5213);
   }
 }

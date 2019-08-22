@@ -1,7 +1,5 @@
-package io.harness.waiter;
+package io.harness.delegate.beans;
 
-import io.harness.delegate.beans.DelegateMetaInfo;
-import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import lombok.Builder;
 import lombok.Data;
 

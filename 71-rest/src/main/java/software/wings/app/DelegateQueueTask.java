@@ -17,11 +17,11 @@ import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
+import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.version.VersionInfoManager;
-import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 import org.atmosphere.cpr.BroadcasterFactory;
