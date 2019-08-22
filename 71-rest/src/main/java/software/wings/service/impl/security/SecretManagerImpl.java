@@ -57,6 +57,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
+import io.harness.serializer.KryoUtils;
 import io.harness.stream.BoundedInputStream;
 import lombok.Builder;
 import lombok.Data;
@@ -179,21 +180,35 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public EncryptedData encrypt(EncryptionType encryptionType, String accountId, SettingVariableTypes settingType,
-      char[] secret, String path, EncryptedData encryptedData, String secretName, UsageRestrictions usageRestrictions) {
+  public EncryptedData encrypt(String accountId, SettingVariableTypes settingType, char[] secret, String path,
+      EncryptedData encryptedData, String secretName, UsageRestrictions usageRestrictions) {
     String toEncrypt = secret == null ? null : String.valueOf(secret);
     // Need to initialize an EncryptedData instance to carry the 'path' value for delegate to validate against.
     if (encryptedData == null) {
       encryptedData = EncryptedData.builder()
                           .name(secretName)
                           .path(path)
-                          .encryptionType(encryptionType)
                           .accountId(accountId)
                           .type(settingType)
                           .enabled(true)
                           .parentIds(new HashSet<>())
                           .build();
     }
+
+    String kmsId = encryptedData.getKmsId();
+    EncryptionType encryptionType = encryptedData.getEncryptionType();
+    EncryptionType accountEncryptionType = getEncryptionType(accountId);
+    if (encryptionType == null
+        || (encryptionType != accountEncryptionType && encryptionType == LOCAL
+               && accountEncryptionType != EncryptionType.CYBERARK)) {
+      // PL-3160: 1. For new secrets, it always use account level encryption type to encrypt and save
+      // 2. For existing secrets with LOCAL encryption, always use account level default secret manager to save if
+      // default is not CYBERARK
+      // 3. Else use the secrets' currently associated secret manager for update.
+      encryptionType = accountEncryptionType;
+      kmsId = null;
+    }
+    encryptedData.setEncryptionType(encryptionType);
 
     EncryptedData rv;
     switch (encryptionType) {
@@ -204,13 +219,13 @@ public class SecretManagerImpl implements SecretManager {
         break;
 
       case KMS:
-        final KmsConfig kmsConfig = (KmsConfig) secretManagerConfigService.getDefaultSecretManager(accountId);
+        final KmsConfig kmsConfig = (KmsConfig) getSecretManager(accountId, kmsId);
         rv = kmsService.encrypt(secret, accountId, kmsConfig);
         rv.setKmsId(kmsConfig.getUuid());
         break;
 
       case VAULT:
-        final VaultConfig vaultConfig = (VaultConfig) secretManagerConfigService.getDefaultSecretManager(accountId);
+        final VaultConfig vaultConfig = (VaultConfig) getSecretManager(accountId, kmsId);
         encryptedData.setKmsId(vaultConfig.getUuid());
         rv = vaultService.encrypt(secretName, toEncrypt, accountId, settingType, vaultConfig, encryptedData);
         rv.setKmsId(vaultConfig.getUuid());
@@ -218,7 +233,7 @@ public class SecretManagerImpl implements SecretManager {
 
       case AWS_SECRETS_MANAGER:
         final AwsSecretsManagerConfig secretsManagerConfig =
-            (AwsSecretsManagerConfig) secretManagerConfigService.getDefaultSecretManager(accountId);
+            (AwsSecretsManagerConfig) getSecretManager(accountId, kmsId);
         encryptedData.setKmsId(secretsManagerConfig.getUuid());
         rv = secretsManagerService.encrypt(
             secretName, toEncrypt, accountId, settingType, secretsManagerConfig, encryptedData);
@@ -226,16 +241,14 @@ public class SecretManagerImpl implements SecretManager {
         break;
 
       case AZURE_VAULT:
-        final AzureVaultConfig azureConfig =
-            (AzureVaultConfig) secretManagerConfigService.getDefaultSecretManager(accountId);
+        final AzureVaultConfig azureConfig = (AzureVaultConfig) getSecretManager(accountId, kmsId);
         encryptedData.setKmsId(azureConfig.getUuid());
         rv = azureVaultService.encrypt(secretName, toEncrypt, accountId, settingType, azureConfig, encryptedData);
         rv.setKmsId(azureConfig.getUuid());
         break;
 
       case CYBERARK:
-        final CyberArkConfig cyberArkConfig =
-            (CyberArkConfig) secretManagerConfigService.getDefaultSecretManager(accountId);
+        final CyberArkConfig cyberArkConfig = (CyberArkConfig) getSecretManager(accountId, kmsId);
         encryptedData.setKmsId(cyberArkConfig.getUuid());
         if (isNotEmpty(encryptedData.getPath())) {
           // CyberArk encrypt need to use decrypt of the secret reference as a way of validating the reference is valid.
@@ -274,10 +287,14 @@ public class SecretManagerImpl implements SecretManager {
     return rv;
   }
 
+  private SecretManagerConfig getSecretManager(String accountId, String kmsId) {
+    return isEmpty(kmsId) ? secretManagerConfigService.getDefaultSecretManager(accountId)
+                          : secretManagerConfigService.getSecretManager(accountId, kmsId);
+  }
+
   public String encrypt(String accountId, String secret, UsageRestrictions usageRestrictions) {
-    EncryptedData encryptedData =
-        encrypt(getEncryptionType(accountId), accountId, SettingVariableTypes.APM_VERIFICATION, secret.toCharArray(),
-            null, null, UUID.randomUUID().toString(), usageRestrictions);
+    EncryptedData encryptedData = encrypt(accountId, SettingVariableTypes.APM_VERIFICATION, secret.toCharArray(), null,
+        null, UUID.randomUUID().toString(), usageRestrictions);
     String recordId = wingsPersistence.save(encryptedData);
     generateAuditForEncryptedRecord(accountId, null, recordId);
     return recordId;
@@ -455,7 +472,7 @@ public class SecretManagerImpl implements SecretManager {
     if (variableType == SettingVariableTypes.SECRET_TEXT && encryptedData != null) {
       EncryptionType encryptionType = encryptedData.getEncryptionType();
       if (encryptionType == EncryptionType.VAULT && isNotEmpty(encryptedData.getPath())) {
-        EncryptionConfig encryptionConfig = secretManagerConfigService.getDefaultSecretManager(accountId);
+        EncryptionConfig encryptionConfig = getSecretManager(accountId, encryptedData.getKmsId());
         if (encryptionConfig instanceof VaultConfig) {
           secretChangeLogs.addAll(vaultService.getVaultSecretChangeLogs(encryptedData, (VaultConfig) encryptionConfig));
           // Sort the change log by change time in descending order.
@@ -1017,17 +1034,16 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public String saveSecret(
       String accountId, String name, String value, String path, UsageRestrictions usageRestrictions) {
-    return upsertSecretInternal(accountId, null, name, value, path, getEncryptionType(accountId), usageRestrictions);
+    return upsertSecretInternal(accountId, null, name, value, path, usageRestrictions);
   }
 
   @Override
   public List<String> importSecrets(String accountId, List<SecretText> secretTexts) {
     List<String> secretIds = new ArrayList<>();
-    EncryptionType encryptionType = getEncryptionType(accountId);
     for (SecretText secretText : secretTexts) {
       try {
         String secretId = upsertSecretInternal(accountId, null, secretText.getName(), secretText.getValue(),
-            secretText.getPath(), encryptionType, secretText.getUsageRestrictions());
+            secretText.getPath(), secretText.getUsageRestrictions());
         secretIds.add(secretId);
         logger.info("Imported secret '{}' successfully with uid: {}", secretText.getName(), secretId);
       } catch (WingsException e) {
@@ -1111,6 +1127,11 @@ public class SecretManagerImpl implements SecretManager {
     return encryptedDataId != null;
   }
 
+  private String upsertSecretInternal(
+      String accountId, String uuid, String name, String value, String path, UsageRestrictions usageRestrictions) {
+    return upsertSecretInternal(accountId, uuid, name, value, path, null, usageRestrictions);
+  }
+
   /**
    * This API is to combine multiple secret operations such as INSERT/UPDATE/UPSERT.
    *
@@ -1129,32 +1150,18 @@ public class SecretManagerImpl implements SecretManager {
       throw new WingsException("Secret name '" + name + "' contains illegal characters", USER);
     }
 
-    if (isNotEmpty(path)) {
-      switch (encryptionType) {
-        case VAULT:
-          // Path should always have a "#" in and a key name after the #.
-          if (path.indexOf('#') < 0) {
-            throw new WingsException(
-                "Secret path need to include the # sign with the the key name after. E.g. /foo/bar/my-secret#my-key.");
-          }
-          break;
-        case AWS_SECRETS_MANAGER:
-          break;
-        case CYBERARK:
-          break;
-        default:
-          throw new WingsException(
-              "Secret path can be specified only if the secret manager is of VAULT/AWS_SECRETS_MANAGER/CYBERARK type!");
-      }
-    }
-
     char[] secretValue = isEmpty(value) ? null : value.toCharArray();
     if (isEmpty(uuid)) {
       // INSERT use case
       usageRestrictionsService.validateUsageRestrictionsOnEntitySave(accountId, usageRestrictions);
 
-      EncryptedData encryptedData = encrypt(encryptionType, accountId, SettingVariableTypes.SECRET_TEXT, secretValue,
-          path, null, name, usageRestrictions);
+      if (encryptionType == null) {
+        encryptionType = getEncryptionType(accountId);
+      }
+      validateSecretPath(encryptionType, path);
+
+      EncryptedData encryptedData =
+          encrypt(accountId, SettingVariableTypes.SECRET_TEXT, secretValue, path, null, name, usageRestrictions);
       encryptedData.addSearchTag(name);
       try {
         encryptedDataId = wingsPersistence.save(encryptedData);
@@ -1168,13 +1175,18 @@ public class SecretManagerImpl implements SecretManager {
     } else {
       // UPDATE use case
       EncryptedData savedData = wingsPersistence.get(EncryptedData.class, uuid);
-
-      // savedData will be updated and saved again as a part of update, so need this oldEntity
-      EncryptedData oldEntity = wingsPersistence.get(EncryptedData.class, uuid);
       if (savedData == null) {
         // UPDATE use case. Return directly when record doesn't exist.
         return null;
       }
+
+      // PL-3160: Make sure update/edit of existing secret to stick with the currently associated secret manager
+      // Not switching to the current default secret manager.
+      encryptionType = savedData.getEncryptionType();
+      validateSecretPath(encryptionType, path);
+
+      // savedData will be updated and saved again as a part of update, so need this oldEntity
+      EncryptedData oldEntity = KryoUtils.clone(savedData);
 
       // validate usage restriction.
       usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
@@ -1255,8 +1267,8 @@ public class SecretManagerImpl implements SecretManager {
       // Re-encrypt if secret value or path has changed. Update should not change the existing Encryption type and
       // secret manager if the secret is 'path' enabled!
       if (needReencryption) {
-        EncryptedData encryptedData = encrypt(getEncryptionType(accountId), accountId, SettingVariableTypes.SECRET_TEXT,
-            secretValue, path, savedData, name, usageRestrictions);
+        EncryptedData encryptedData =
+            encrypt(accountId, SettingVariableTypes.SECRET_TEXT, secretValue, path, savedData, name, usageRestrictions);
         savedData.setEncryptionKey(encryptedData.getEncryptionKey());
         savedData.setEncryptedValue(encryptedData.getEncryptedValue());
         savedData.setEncryptionType(encryptedData.getEncryptionType());
@@ -1283,6 +1295,27 @@ public class SecretManagerImpl implements SecretManager {
     }
 
     return encryptedDataId;
+  }
+
+  private void validateSecretPath(EncryptionType encryptionType, String path) {
+    if (isNotEmpty(path)) {
+      switch (encryptionType) {
+        case VAULT:
+          // Path should always have a "#" in and a key name after the #.
+          if (path.indexOf('#') < 0) {
+            throw new WingsException(
+                "Secret path need to include the # sign with the the key name after. E.g. /foo/bar/my-secret#my-key.");
+          }
+          break;
+        case AWS_SECRETS_MANAGER:
+          break;
+        case CYBERARK:
+          break;
+        default:
+          throw new WingsException(
+              "Secret path can be specified only if the secret manager is of VAULT/AWS_SECRETS_MANAGER/CYBERARK type!");
+      }
+    }
   }
 
   private boolean eligibleForCrudAudit(EncryptedData savedData) {
@@ -1511,7 +1544,7 @@ public class SecretManagerImpl implements SecretManager {
       }
 
       // This is needed for auditing as encryptedData will be changed in the process of update
-      oldEntityData = wingsPersistence.get(EncryptedData.class, uuid);
+      oldEntityData = KryoUtils.clone(encryptedData);
     }
 
     if (encryptedData == null) {
@@ -1540,6 +1573,7 @@ public class SecretManagerImpl implements SecretManager {
       throw new WingsException(DEFAULT_ERROR_CODE, e);
     }
 
+    String kmsId = update ? encryptedData.getKmsId() : null;
     EncryptionConfig encryptionConfig;
     EncryptedData newEncryptedFile = null;
     // HAR-9736: Update of encrypted file may not pick a new file for upload and no need to encrypt empty file.
@@ -1554,8 +1588,7 @@ public class SecretManagerImpl implements SecretManager {
           break;
 
         case KMS:
-          encryptionConfig = update ? secretManagerConfigService.getSecretManager(accountId, encryptedData.getKmsId())
-                                    : secretManagerConfigService.getDefaultSecretManager(accountId);
+          encryptionConfig = getSecretManager(accountId, kmsId);
           KmsConfig kmsConfig = (KmsConfig) encryptionConfig;
           newEncryptedFile = kmsService.encryptFile(accountId, kmsConfig, name, inputBytes);
           newEncryptedFile.setKmsId(kmsConfig.getUuid());
@@ -1565,16 +1598,14 @@ public class SecretManagerImpl implements SecretManager {
           break;
 
         case VAULT:
-          encryptionConfig = update ? secretManagerConfigService.getSecretManager(accountId, encryptedData.getKmsId())
-                                    : secretManagerConfigService.getDefaultSecretManager(accountId);
+          encryptionConfig = getSecretManager(accountId, kmsId);
           VaultConfig vaultConfig = (VaultConfig) encryptionConfig;
           newEncryptedFile = vaultService.encryptFile(accountId, vaultConfig, name, inputBytes, encryptedData);
           newEncryptedFile.setKmsId(vaultConfig.getUuid());
           break;
 
         case AWS_SECRETS_MANAGER:
-          encryptionConfig = update ? secretManagerConfigService.getSecretManager(accountId, encryptedData.getKmsId())
-                                    : secretManagerConfigService.getDefaultSecretManager(accountId);
+          encryptionConfig = getSecretManager(accountId, kmsId);
           AwsSecretsManagerConfig secretsManagerConfig = (AwsSecretsManagerConfig) encryptionConfig;
           newEncryptedFile =
               secretsManagerService.encryptFile(accountId, secretsManagerConfig, name, inputBytes, encryptedData);
@@ -1584,9 +1615,7 @@ public class SecretManagerImpl implements SecretManager {
         case AZURE_VAULT:
           // if it's an update call, we need to update the secret value in the same secret store.
           // Otherwise it should be saved in the default secret store of the account.
-          encryptionConfig = update
-              ? azureSecretsManagerService.getEncryptionConfig(accountId, encryptedData.getKmsId())
-              : secretManagerConfigService.getDefaultSecretManager(accountId);
+          encryptionConfig = getSecretManager(accountId, kmsId);
           AzureVaultConfig azureConfig = (AzureVaultConfig) encryptionConfig;
           logger.info("Creating file in azure vault with secret name: {}, in vault: {}, in accountName: {}", name,
               azureConfig.getName(), accountId);

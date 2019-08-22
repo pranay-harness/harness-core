@@ -35,7 +35,6 @@ import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.reflection.ReflectionUtils;
-import io.harness.security.encryption.EncryptionType;
 import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.DatastoreImpl;
@@ -447,13 +446,12 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
     }
 
     final String accountId = object.getAccountId();
-    EncryptionType encryptionType = secretManager.getEncryptionType(accountId);
     String encryptedId =
         savedObject == null ? (String) encryptedField.get(object) : (String) encryptedField.get(savedObject);
     EncryptedData encryptedData = isBlank(encryptedId) ? null : get(EncryptedData.class, encryptedId);
     String path = encryptedData == null ? null : encryptedData.getPath();
-    EncryptedData encryptedPair = secretManager.encrypt(encryptionType, accountId, object.getSettingType(), secret,
-        path, encryptedData, UUID.randomUUID().toString(), null);
+    EncryptedData encryptedPair = secretManager.encrypt(
+        accountId, object.getSettingType(), secret, path, encryptedData, UUID.randomUUID().toString(), null);
 
     String changeLogDescription = "";
 

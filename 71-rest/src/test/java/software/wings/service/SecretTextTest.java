@@ -52,14 +52,12 @@ import org.mockito.Mock;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
-import software.wings.beans.Account.Builder;
 import software.wings.beans.AccountType;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.KmsConfig;
-import software.wings.beans.LicenseInfo;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -155,7 +153,7 @@ public class SecretTextTest extends WingsBaseTest {
   public void setup() throws IOException, IllegalAccessException {
     initMocks(this);
 
-    Account account = getAccount();
+    Account account = getAccount(AccountType.PAID);
     accountId = account.getUuid();
     when(accountService.get(accountId)).thenReturn(account);
 
@@ -2192,14 +2190,5 @@ public class SecretTextTest extends WingsBaseTest {
         assertEquals(secretTexts.get(j * numOfServiceVariables).getName(), encryptedDataList.get(0).getName());
       }
     }
-  }
-
-  private Account getAccount() {
-    Builder accountBuilder = Builder.anAccount().withUuid(generateUuid());
-    LicenseInfo license = getLicenseInfo();
-    license.setAccountType(AccountType.PAID);
-    accountBuilder.withLicenseInfo(license);
-
-    return accountBuilder.build();
   }
 }
