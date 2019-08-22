@@ -8,8 +8,8 @@ import static java.util.Collections.singletonList;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.task.TaskLogContext;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.delegatetasks.TaskLogContext;
 
 import java.util.List;
 import java.util.function.Consumer;
