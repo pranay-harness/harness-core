@@ -73,7 +73,7 @@ public interface InfrastructureDefinitionService extends OwnedByEnvironment {
 
   void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String infraDefinitionId);
 
-  void ensureSafeToDelete(@NotEmpty String appId, @NotEmpty String infraDefinitionId);
+  void ensureSafeToDelete(@NotEmpty String appId, InfrastructureDefinition infrastructureDefinition);
 
   List<String> listNamesByProvisionerId(@NotEmpty String appId, @NotEmpty String provisionerId);
 

@@ -441,7 +441,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     InfrastructureDefinition infrastructureDefinition = get(appId, infraDefinitionId);
     Validator.notNullCheck("Infrastructure definition", infrastructureDefinition);
 
-    ensureSafeToDelete(appId, infrastructureDefinition.getUuid());
+    ensureSafeToDelete(appId, infrastructureDefinition);
 
     wingsPersistence.delete(InfrastructureDefinition.class, appId, infraDefinitionId);
     yamlPushService.pushYamlChangeSet(accountId, infrastructureDefinition, null, Type.DELETE, false, false);
@@ -1091,13 +1091,15 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   ;
 
   @Override
-  public void ensureSafeToDelete(@NotEmpty String appId, @NotEmpty String infraDefinitionId) {
+  public void ensureSafeToDelete(@NotEmpty String appId, InfrastructureDefinition infrastructureDefinition) {
+    final String infraDefinitionId = infrastructureDefinition.getUuid();
+    final String infraDefinitionName = infrastructureDefinition.getName();
     List<String> refWorkflows =
         workflowService.obtainWorkflowNamesReferencedByInfrastructureDefinition(appId, infraDefinitionId);
 
     if (!refWorkflows.isEmpty()) {
       throw new InvalidRequestException(
-          format(" Infrastructure Definition %s is referenced by %s %s [%s].", infraDefinitionId, refWorkflows.size(),
+          format(" Infrastructure Definition %s is referenced by %s %s [%s].", infraDefinitionName, refWorkflows.size(),
               plural("workflow", refWorkflows.size()), Joiner.on(", ").join(refWorkflows)),
           USER);
     }
@@ -1106,16 +1108,18 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
         pipelineService.obtainPipelineNamesReferencedByTemplatedEntity(appId, infraDefinitionId);
     if (isNotEmpty(refPipelines)) {
       throw new InvalidRequestException(
-          format("Infrastructure Definition is referenced by %d %s [%s] as a workflow variable.", refPipelines.size(),
-              plural("pipeline", refPipelines.size()), Joiner.on(", ").join(refPipelines)),
+          format("Infrastructure Definition %s is referenced by %d %s [%s] as a workflow variable.",
+              infraDefinitionName, refPipelines.size(), plural("pipeline", refPipelines.size()),
+              Joiner.on(", ").join(refPipelines)),
           USER);
     }
 
     List<String> refTriggers = triggerService.obtainTriggerNamesReferencedByTemplatedEntityId(appId, infraDefinitionId);
     if (isNotEmpty(refTriggers)) {
       throw new InvalidRequestException(
-          format("Infrastructure Definition is referenced by %d %s [%s] as a workflow variable.", refTriggers.size(),
-              plural("trigger", refTriggers.size()), Joiner.on(", ").join(refTriggers)),
+          format("Infrastructure Definition %s is referenced by %d %s [%s] as a workflow variable.",
+              infraDefinitionName, refTriggers.size(), plural("trigger", refTriggers.size()),
+              Joiner.on(", ").join(refTriggers)),
           USER);
     }
   }
