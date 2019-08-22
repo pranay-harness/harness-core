@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.exception.WingsException.ExecutionContext.DELEGATE;
@@ -162,7 +163,18 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
             logService.save(getAccountId(),
                 constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(), getAppId(),
                     LogLevel.INFO, "Collecting environment variables for Jenkins task", RUNNING));
-            jenkinsExecutionResponse.setEnvVars(jenkins.getEnvVars(jenkinsBuildWithDetails.getUrl()));
+
+            try {
+              jenkinsExecutionResponse.setEnvVars(jenkins.getEnvVars(jenkinsBuildWithDetails.getUrl()));
+            } catch (WingsException e) {
+              logService.save(getAccountId(),
+                  constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(), getAppId(),
+                      LogLevel.ERROR,
+                      (String) e.getParams().getOrDefault(
+                          "message", "Failed to collect environment variables from Jenkins"),
+                      FAILURE));
+              throw e;
+            }
           }
 
           logService.save(getAccountId(),
