@@ -12,6 +12,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
@@ -1079,7 +1080,6 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
   public void transitionAndDeleteVault() throws InterruptedException, IllegalAccessException {
     Thread listenerThread = startTransitionListener();
@@ -1088,7 +1088,6 @@ public class VaultTest extends WingsBaseTest {
       vaultService.saveVaultConfig(accountId, fromConfig);
 
       int numOfSettingAttributes = 5;
-      Map<String, SettingAttribute> encryptedEntities = new HashMap<>();
       for (int i = 0; i < numOfSettingAttributes; i++) {
         String password = UUID.randomUUID().toString();
         final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
@@ -1096,23 +1095,22 @@ public class VaultTest extends WingsBaseTest {
 
         wingsPersistence.save(settingAttribute);
         appDynamicsConfig.setPassword(null);
-        encryptedEntities.put(settingAttribute.getUuid(), settingAttribute);
       }
 
       Query<EncryptedData> query =
           wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, accountId);
-      List<EncryptedData> encryptedData = new ArrayList<>();
+      List<EncryptedData> encryptedDataList = new ArrayList<>();
       assertEquals(numOfEncRecords + numOfSettingAttributes, query.count());
       for (EncryptedData data : query.asList()) {
         if (data.getKmsId() == null || data.getType() == SettingVariableTypes.VAULT) {
           continue;
         }
-        encryptedData.add(data);
+        encryptedDataList.add(data);
         assertEquals(fromConfig.getUuid(), data.getKmsId());
         assertEquals(accountId, data.getAccountId());
       }
 
-      assertEquals(numOfSettingAttributes, encryptedData.size());
+      assertEquals(numOfSettingAttributes, encryptedDataList.size());
 
       VaultConfig toConfig = getVaultConfig(VAULT_TOKEN);
       vaultService.saveVaultConfig(accountId, toConfig);
@@ -1133,8 +1131,25 @@ public class VaultTest extends WingsBaseTest {
       assertEquals(
           1, secretManagerConfigService.listSecretManagersByType(accountId, EncryptionType.VAULT, true).size());
 
-      query = wingsPersistence.createQuery(EncryptedData.class);
+      query = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority);
       assertEquals(numOfEncRecords + numOfSettingAttributes, query.count());
+
+      // Verified old secrets has been deleted from Vault
+      for (EncryptedData encryptedData : encryptedDataList) {
+        verify(secretManagementDelegateService)
+            .deleteVaultSecret(eq(encryptedData.getEncryptionKey()), any(VaultConfig.class));
+      }
+
+      encryptedDataList.clear();
+      for (EncryptedData data : query.asList()) {
+        if (data.getKmsId() == null || data.getType() == SettingVariableTypes.VAULT) {
+          continue;
+        }
+        encryptedDataList.add(data);
+        assertEquals(toConfig.getUuid(), data.getKmsId());
+        assertEquals(accountId, data.getAccountId());
+      }
+      assertEquals(numOfSettingAttributes, encryptedDataList.size());
     } finally {
       stopTransitionListener(listenerThread);
     }
