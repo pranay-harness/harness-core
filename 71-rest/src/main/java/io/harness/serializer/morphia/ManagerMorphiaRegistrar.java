@@ -530,6 +530,7 @@ import software.wings.sm.states.BugsnagState;
 import software.wings.sm.states.CloudWatchState;
 import software.wings.sm.states.CommandState;
 import software.wings.sm.states.CustomLogVerificationState;
+import software.wings.sm.states.CustomLogVerificationState.ResponseMapper;
 import software.wings.sm.states.DatadogLogState;
 import software.wings.sm.states.DatadogState;
 import software.wings.sm.states.DcNodeSelectState;
@@ -1223,8 +1224,10 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("sm.states.collaboration.ServiceNowCreateUpdateState", ServiceNowCreateUpdateState.class);
     w.put("sm.states.CommandState", CommandState.class);
     w.put("sm.states.CustomLogVerificationState", CustomLogVerificationState.class);
+    w.put("sm.states.CustomLogVerificationState$ResponseMapper", ResponseMapper.class);
     w.put("sm.states.DatadogLogState", DatadogLogState.class);
     w.put("sm.states.DatadogState", DatadogState.class);
+    w.put("sm.states.DatadogState$Metric", DatadogState.Metric.class);
     w.put("sm.states.DcNodeSelectState", DcNodeSelectState.class);
     w.put("sm.states.DynatraceState", DynatraceState.class);
     w.put("sm.states.EcsBGRollbackRoute53DNSWeightState", EcsBGRollbackRoute53DNSWeightState.class);
