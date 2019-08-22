@@ -104,7 +104,7 @@ public class HelmReleaseNameSuffixMigration implements Migration {
     if (workflowModified) {
       try {
         logger.info("Updating workflow: {} - {}", workflow.getUuid(), workflow.getName());
-        workflowService.updateWorkflow(workflow);
+        workflowService.updateWorkflow(workflow, false);
         Thread.sleep(100);
       } catch (Exception e) {
         logger.error("Error updating workflow", e);

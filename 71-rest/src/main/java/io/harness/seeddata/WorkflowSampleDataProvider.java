@@ -62,7 +62,7 @@ public class WorkflowSampleDataProvider {
 
     setK8sSetupContainer(workflowPhase, "1");
 
-    workflowService.updateWorkflow(workflow);
+    workflowService.updateWorkflow(workflow, false);
 
     return savedWorkflow.getUuid();
   }

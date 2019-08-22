@@ -64,13 +64,13 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
 
   boolean ensureArtifactCheck(String appId, OrchestrationWorkflow orchestrationWorkflow);
 
-  @ValidationGroups(Update.class) Workflow updateWorkflow(@Valid Workflow workflow);
+  @ValidationGroups(Update.class) Workflow updateWorkflow(@Valid Workflow workflow, boolean migration);
 
   @ValidationGroups(Update.class)
   Workflow updateLinkedWorkflow(@Valid Workflow workflow, Workflow existingWorkflow, boolean fromYaml);
 
   @ValidationGroups(Update.class)
-  Workflow updateWorkflow(@Valid Workflow workflow, OrchestrationWorkflow orchestrationWorkflow);
+  Workflow updateWorkflow(@Valid Workflow workflow, OrchestrationWorkflow orchestrationWorkflow, boolean migration);
 
   @ValidationGroups(Update.class)
   Workflow updateWorkflow(@Valid Workflow workflow, OrchestrationWorkflow orchestrationWorkflow,

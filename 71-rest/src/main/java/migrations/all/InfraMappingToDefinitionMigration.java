@@ -8,15 +8,14 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import io.harness.exception.ExceptionUtils;
-import io.harness.mongo.SampleEntity.SampleEntityKeys;
 import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.mongodb.morphia.query.Sort;
 import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
+import software.wings.beans.Account;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInstanceFilter.AwsInstanceFilterKeys;
@@ -57,6 +56,7 @@ import software.wings.infra.InfrastructureDefinition.InfrastructureDefinitionBui
 import software.wings.infra.PcfInfraStructure;
 import software.wings.infra.PhysicalInfra;
 import software.wings.infra.PhysicalInfraWinrm;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
@@ -75,16 +75,25 @@ import java.util.stream.Collectors;
 @Slf4j
 public class InfraMappingToDefinitionMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private AccountService accountService;
   @Inject private AppService appService;
   @Inject private EnvironmentService environmentService;
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private SetInfraDefinitionTriggers setInfraDefinitionTriggers;
+  @Inject private SetInfraDefinitionPipelines setInfraDefinitionPipelines;
+  @Inject private SetInfraDefinitionWorkflows setInfraDefinitionWorkflows;
 
   private final String DEBUG_LINE = " INFRA_MAPPING_MIGRATION: ";
   private final String accountId = "zEaak-FLS425IEO7OLzMUg";
 
   public void migrate() {
-    logger.info(StringUtils.join(DEBUG_LINE, "Starting migration for accountId ", accountId));
+    logger.info(StringUtils.join(DEBUG_LINE, "Starting Infra Definition migration for accountId ", accountId));
+    Account account = accountService.get(accountId);
+    if (account == null) {
+      logger.info(StringUtils.join(DEBUG_LINE, "Account does not exist, accountId ", accountId));
+      return;
+    }
 
     List<String> appIds = appService.getAppIdsByAccountId(accountId);
 
@@ -108,15 +117,12 @@ public class InfraMappingToDefinitionMigration implements Migration {
       for (String envId : envIds) {
         logger.info(StringUtils.join(DEBUG_LINE, "Starting migration for envId ", envId));
 
-        Sort sort = Sort.descending(SampleEntityKeys.createdAt);
-
         try (HIterator<InfrastructureMapping> infrastructureMappingHIterator =
                  new HIterator<>(wingsPersistence.createQuery(InfrastructureMapping.class)
                                      .field(InfrastructureMappingKeys.appId)
                                      .equal(appId)
                                      .field(InfrastructureMappingKeys.envId)
                                      .equal(envId)
-                                     .order(sort)
                                      .fetch())) {
           for (InfrastructureMapping infrastructureMapping : infrastructureMappingHIterator) {
             logger.info(StringUtils.join(
@@ -157,8 +163,11 @@ public class InfraMappingToDefinitionMigration implements Migration {
 
       logger.info(StringUtils.join(DEBUG_LINE, "Finished migration for appId ", appId));
     }
+    setInfraDefinitionTriggers.migrate(account);
+    setInfraDefinitionPipelines.migrate(account);
+    setInfraDefinitionWorkflows.migrate(account);
 
-    logger.info(StringUtils.join(DEBUG_LINE, "Finished migration for accountId ", accountId));
+    logger.info(StringUtils.join(DEBUG_LINE, "Finished Infra mapping migration for accountId ", accountId));
   }
 
   private Optional<InfrastructureDefinition> createInfraDefinition(

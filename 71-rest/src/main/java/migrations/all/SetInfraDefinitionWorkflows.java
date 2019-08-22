@@ -8,14 +8,13 @@ import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.beans.OrchestrationWorkflowType;
-import io.harness.beans.SortOrder;
-import io.harness.beans.SortOrder.OrderType;
 import io.harness.exception.ExceptionUtils;
-import io.harness.mongo.SampleEntity.SampleEntityKeys;
 import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
+import org.apache.commons.lang3.StringUtils;
+import software.wings.beans.Account;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.OrchestrationWorkflow;
@@ -24,6 +23,7 @@ import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowKeys;
 import software.wings.beans.WorkflowPhase;
+import software.wings.dl.WingsPersistence;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.service.intfc.AppService;
@@ -31,46 +31,49 @@ import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.WorkflowService;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 @Slf4j
-public class SetInfraDefinitionWorkflows implements Migration {
+@Singleton
+public class SetInfraDefinitionWorkflows {
   @Inject private WorkflowService workflowService;
   @Inject private AppService appService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   private static final String accountId = "zEaak-FLS425IEO7OLzMUg";
+  private final String DEBUG_LINE = " INFRA_MAPPING_MIGRATION: ";
+  @Inject private WingsPersistence wingsPersistence;
 
-  @Override
-  public void migrate() {
-    logger.info("Running infra migration for Workflows .Retrieving applications for accountId: " + accountId);
-    List<String> apps = appService.getAppIdsByAccountId(accountId);
+  public void migrate(Account account) {
+    logger.info(StringUtils.join(
+        DEBUG_LINE, "Starting Infra Definition migration for Workflows, accountId ", account.getUuid()));
 
-    if (isEmpty(apps)) {
-      logger.info("No applications found");
-      return;
+    long workflowsSize =
+        wingsPersistence.createQuery(Workflow.class).filter(WorkflowKeys.accountId, account.getUuid()).count();
+    logger.info("Total workflows for account = " + workflowsSize);
+
+    int numberOfPages = (int) ((workflowsSize + 999) / 1000);
+    List<Workflow> workflows = new ArrayList<>();
+    for (int i = 0; i < numberOfPages; i++) {
+      List<Workflow> newWorkflows = workflowService
+                                        .listWorkflows(aPageRequest()
+                                                           .withLimit(UNLIMITED)
+                                                           .withOffset(String.valueOf(i * 1000))
+                                                           .addFilter(WorkflowKeys.accountId, EQ, account.getUuid())
+                                                           .build())
+                                        .getResponse();
+      if (!isEmpty(newWorkflows)) {
+        workflows.addAll(newWorkflows);
+      }
     }
-    logger.info("Updating {} applications.", apps.size());
-    for (String appId : apps) {
-      migrate(appId);
-    }
-    // migrate("d1Z4dCeET12A2epYnEpmvw");
-  }
-
-  public void migrate(String appId) {
-    SortOrder sortOrder = new SortOrder();
-    sortOrder.setFieldName(SampleEntityKeys.createdAt);
-    sortOrder.setOrderType(OrderType.DESC);
-    List<Workflow> workflows =
-        workflowService
-            .listWorkflows(
-                aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, appId).addOrder(sortOrder).build())
-            .getResponse();
 
     logger.info("Updating {} workflows.", workflows.size());
     for (Workflow workflow : workflows) {
       try {
+        logger.info(StringUtils.join(
+            DEBUG_LINE, "Starting Infra Definition migration for Workflow, workflowId ", workflow.getUuid()));
         migrate(workflow);
       } catch (Exception e) {
         logger.error("[INFRA_MIGRATION_ERROR] Migration failed for WorkflowId: " + workflow.getUuid()
@@ -99,9 +102,11 @@ public class SetInfraDefinitionWorkflows implements Migration {
     modified = migrateWorkflowPhases(workflow, canaryOrchestrationWorkflow.getWorkflowPhases(), workflow.getAppId());
     Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap = canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap();
 
+    boolean rollbackModified = false;
     if (!isEmpty(rollbackWorkflowPhaseIdMap)) {
-      modified = migrateRollbackWorkflowPhaseIdMap(workflow, rollbackWorkflowPhaseIdMap, workflow.getAppId());
+      rollbackModified = migrateRollbackWorkflowPhaseIdMap(workflow, rollbackWorkflowPhaseIdMap, workflow.getAppId());
     }
+    modified = modified || rollbackModified;
 
     switch (orchestrationWorkflowType) {
       case BASIC:
@@ -135,7 +140,7 @@ public class SetInfraDefinitionWorkflows implements Migration {
 
     if (modified) {
       try {
-        workflowService.updateWorkflow(workflow);
+        workflowService.updateWorkflow(workflow, true);
         logger.info("--- Workflow updated: {}, {}", workflow.getUuid(), workflow.getName());
         Thread.sleep(100);
       } catch (Exception e) {
@@ -197,33 +202,43 @@ public class SetInfraDefinitionWorkflows implements Migration {
   }
 
   private boolean migrateWorkflowPhases(Workflow workflow, List<WorkflowPhase> workflowPhases, String appId) {
-    boolean modified = false;
+    List<Boolean> modified = new ArrayList<>();
+    logger.info(StringUtils.join(DEBUG_LINE, "Migrating workflowPhases, ", workflowPhases.size()));
     for (WorkflowPhase workflowPhase : workflowPhases) {
+      logger.info(StringUtils.join(DEBUG_LINE, "Starting Migration for  workflowPhase ", workflowPhase.getUuid()));
       if (workflowPhase.getInfraDefinitionId() != null) {
         logger.info(
             "[INFRA_MIGRATION_INFO]WorkflowPhase already has infraDefinitionId, no migration needed, WorkflowId: "
             + workflow.getUuid());
         continue;
       }
-      modified = modified || setInfraDefFromInfraMapping(workflow, workflowPhase);
+      modified.add(setInfraDefFromInfraMapping(workflow, workflowPhase));
     }
-    return modified;
+    if (isEmpty(modified)) {
+      return false;
+    }
+    return modified.stream().anyMatch(t -> t.equals(true));
   }
 
   private boolean migrateRollbackWorkflowPhaseIdMap(
       Workflow workflow, Map<String, WorkflowPhase> workflowPhases, String appId) {
-    boolean modified = false;
+    List<Boolean> modified = new ArrayList<>();
+    logger.info(StringUtils.join(DEBUG_LINE, "Migrating Rollback workflowPhases, ", workflowPhases.size()));
     for (WorkflowPhase workflowPhase : workflowPhases.values()) {
+      logger.info(
+          StringUtils.join(DEBUG_LINE, "Starting Migration for  rollback workflowPhase ", workflowPhase.getUuid()));
       if (workflowPhase.getInfraDefinitionId() != null) {
         logger.info(
             "[INFRA_MIGRATION_INFO]WorkflowPhase already has infraDefinitionId, no migration needed. WorkfLowId: "
             + workflow.getUuid());
         continue;
       }
-
-      modified = modified || setInfraDefFromInfraMapping(workflow, workflowPhase);
+      modified.add(setInfraDefFromInfraMapping(workflow, workflowPhase));
     }
-    return modified;
+    if (isEmpty(modified)) {
+      return false;
+    }
+    return modified.stream().anyMatch(t -> t.equals(true));
   }
 
   private boolean setInfraDefFromInfraMapping(Workflow workflow, WorkflowPhase workflowPhase) {

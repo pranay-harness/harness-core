@@ -163,7 +163,7 @@ public abstract class AbstractTemplateProcessor {
               }
             }
             if (updateNeeded) {
-              workflowService.updateWorkflow(workflow);
+              workflowService.updateWorkflow(workflow, false);
             }
           }
         } catch (Exception e) {

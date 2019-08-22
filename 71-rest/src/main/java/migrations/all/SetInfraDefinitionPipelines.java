@@ -7,20 +7,21 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
-import io.harness.beans.SortOrder;
-import io.harness.beans.SortOrder.OrderType;
 import io.harness.exception.ExceptionUtils;
-import io.harness.mongo.SampleEntity.SampleEntityKeys;
 import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
+import org.apache.commons.lang3.StringUtils;
+import software.wings.beans.Account;
 import software.wings.beans.EntityType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
+import software.wings.beans.Pipeline.PipelineKeys;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
@@ -29,41 +30,43 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
 
+import java.util.ArrayList;
 import java.util.List;
 @Slf4j
-public class SetInfraDefinitionPipelines implements Migration {
+@Singleton
+public class SetInfraDefinitionPipelines {
   @Inject private PipelineService pipelineService;
   @Inject private WorkflowService workflowService;
   @Inject private AppService appService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
+  @Inject private WingsPersistence wingsPersistence;
   private static final String accountId = "zEaak-FLS425IEO7OLzMUg";
+  private final String DEBUG_LINE = " INFRA_MAPPING_MIGRATION: ";
 
-  @Override
-  public void migrate() {
-    logger.info("Running infra migration for pipelines.Retrieving applications for accountId: " + accountId);
-    List<String> apps = appService.getAppIdsByAccountId(accountId);
+  public void migrate(Account account) {
+    logger.info(StringUtils.join(
+        DEBUG_LINE, "Starting Infra Definition migration for Pipelines, accountId ", account.getUuid()));
 
-    if (isEmpty(apps)) {
-      logger.info("No applications found");
-      return;
+    long pipelineSize =
+        wingsPersistence.createQuery(Pipeline.class).filter(PipelineKeys.accountId, account.getUuid()).count();
+    logger.info("Total pipelines for account = " + pipelineSize);
+
+    int numberOfPages = (int) ((pipelineSize + 999) / 1000);
+    List<Pipeline> pipelines = new ArrayList<>();
+    for (int i = 0; i < numberOfPages; i++) {
+      List<Pipeline> newPipelines = pipelineService
+                                        .listPipelines(aPageRequest()
+                                                           .withLimit(UNLIMITED)
+                                                           .withOffset(String.valueOf(i * 1000))
+                                                           .addFilter(PipelineKeys.accountId, EQ, account.getUuid())
+                                                           .build(),
+                                            true, 0, false, null)
+                                        .getResponse();
+      if (!isEmpty(newPipelines)) {
+        pipelines.addAll(newPipelines);
+      }
     }
-    logger.info("Updating {} applications.", apps.size());
-    for (String appId : apps) {
-      migrate(appId);
-    }
-    // migrate("d1Z4dCeET12A2epYnEpmvw");
-  }
-
-  public void migrate(String appId) {
-    SortOrder sortOrder = new SortOrder();
-    sortOrder.setFieldName(SampleEntityKeys.createdAt);
-    sortOrder.setOrderType(OrderType.DESC);
-    List<Pipeline> pipelines =
-        pipelineService
-            .listPipelines(
-                aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, appId).addOrder(sortOrder).build())
-            .getResponse();
 
     logger.info("Updating {} pipelines.", pipelines.size());
     for (Pipeline pipeline : pipelines) {
@@ -133,62 +136,62 @@ public class SetInfraDefinitionPipelines implements Migration {
     }
 
     List<Variable> userVariables = workflow.getOrchestrationWorkflow().getUserVariables();
-    Variable infraUserVariable = null;
+    List<Variable> infraUserVariables = new ArrayList<>();
     for (Variable userVariable : userVariables) {
       if (userVariable.obtainEntityType() != null
           && userVariable.obtainEntityType().equals(EntityType.INFRASTRUCTURE_MAPPING)) {
-        infraUserVariable = userVariable;
-        break;
+        infraUserVariables.add(userVariable);
       }
     }
 
-    if (infraUserVariable == null) {
+    if (isEmpty(infraUserVariables)) {
       logger.info(
           "[INFRA_MIGRATION_INFO] Pipeline stage with workflow where infraMapping not templatised. skipping migration. PipelineId: "
           + pipeline.getUuid() + " pipelineStageId: " + stageElement.getUuid());
       return false;
     }
 
-    String infraMappingVariableName = infraUserVariable.getName();
+    for (Variable infraUserVariable : infraUserVariables) {
+      String infraMappingVariableName = infraUserVariable.getName();
 
-    if (!stageElement.getWorkflowVariables().containsKey(infraMappingVariableName)) {
-      // Workflow has infraMapping templatised but pipeline doesn't have infraMapping variable. Invalid pipeline
-      logger.info(
-          "[INFRA_MIGRATION_INFO] Workflow has infra Mapping templatised but pipeline stage does not have infra mapping variable. PipelineId: "
-          + pipeline.getUuid() + " pipelineStageId: " + stageElement.getUuid());
-      return false;
-    }
-
-    // new variable name
-    String infraDefVariableName =
-        WorkflowServiceTemplateHelper.getInfraDefVariableNameFromInfraMappingVariableName(infraMappingVariableName);
-    String infraMappingId = stageElement.getWorkflowVariables().get(infraMappingVariableName);
-
-    if (pipeline.isEnvParameterized()) {
-      stageElement.getWorkflowVariables().put(infraDefVariableName, infraMappingId);
-      stageElement.getWorkflowVariables().remove(infraMappingVariableName);
-      return true;
-    } else {
-      InfrastructureMapping infrastructureMapping =
-          infrastructureMappingService.get(pipeline.getAppId(), infraMappingId);
-      if (infrastructureMapping == null) {
-        logger.info("[INFRA_MIGRATION_INFO] Couldn't fetch infraMapping for pipeline. Pipeline:  " + pipeline.getUuid()
-            + " infraMappingId: " + infraMappingId + " pipelineStageId: " + stageElement.getUuid());
-        // Removing infraMapping variable as it does not have a valid infraMappingId. removing will mark workflow
-        // incomplete and later user can complete the workflow
+      if (!stageElement.getWorkflowVariables().containsKey(infraMappingVariableName)) {
+        // Workflow has infraMapping templatised but pipeline doesn't have infraMapping variable. Invalid pipeline
+        logger.info(
+            "[INFRA_MIGRATION_INFO] Workflow has infra Mapping templatised but pipeline stage does not have infra mapping variable. PipelineId: "
+            + pipeline.getUuid() + " pipelineStageId: " + stageElement.getUuid());
+        continue;
+      }
+      // new variable name
+      String infraDefVariableName =
+          WorkflowServiceTemplateHelper.getInfraDefVariableNameFromInfraMappingVariableName(infraMappingVariableName);
+      String infraMappingId = stageElement.getWorkflowVariables().get(infraMappingVariableName);
+      if (pipeline.isEnvParameterized()) {
+        stageElement.getWorkflowVariables().put(infraDefVariableName, infraMappingId);
         stageElement.getWorkflowVariables().remove(infraMappingVariableName);
-        return true;
-      }
+      } else {
+        InfrastructureMapping infrastructureMapping =
+            infrastructureMappingService.get(pipeline.getAppId(), infraMappingId);
+        if (infrastructureMapping == null) {
+          logger.info(
+              "[INFRA_MIGRATION_INFO] Couldn't fetch infraMapping for pipeline. Pipeline:  " + pipeline.getUuid()
+              + " infraMappingId: " + infraMappingId + " pipelineStageId: " + stageElement.getUuid());
+          // Removing infraMapping variable as it does not have a valid infraMappingId. removing will mark workflow
+          // incomplete and later user can complete the workflow
+          stageElement.getWorkflowVariables().remove(infraMappingVariableName);
+          continue;
+        }
 
-      String infraDefId = infrastructureMapping.getInfrastructureDefinitionId();
-      if (isEmpty(infraDefId)) {
-        logger.error("[INFRA_MIGRATION_ERROR]Couldn't find infraDefinition id  for pipeline. Pipeline:  "
-            + pipeline.getUuid() + "infraMappingId: " + infraMappingId + " pipelineStageId: " + stageElement.getUuid());
-        return false;
+        String infraDefId = infrastructureMapping.getInfrastructureDefinitionId();
+        if (isEmpty(infraDefId)) {
+          logger.error(
+              "[INFRA_MIGRATION_ERROR]Couldn't find infraDefinition id  for pipeline. Pipeline:  " + pipeline.getUuid()
+              + "infraMappingId: " + infraMappingId + " pipelineStageId: " + stageElement.getUuid());
+          continue;
+        }
+        stageElement.getWorkflowVariables().put(infraDefVariableName, infraDefId);
+        stageElement.getWorkflowVariables().remove(infraMappingVariableName);
       }
-      stageElement.getWorkflowVariables().put(infraDefVariableName, infraDefId);
-      stageElement.getWorkflowVariables().remove(infraMappingVariableName);
-      return true;
     }
+    return true;
   }
 }

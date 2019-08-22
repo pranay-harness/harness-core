@@ -1789,11 +1789,12 @@ public class WorkflowServiceHelper {
    * @param infraId
    * @param envChanged
    * @param infraChanged
+   * @param migration
    * @return OrchestrationWorkflow
    */
   public OrchestrationWorkflow propagateWorkflowDataToPhases(OrchestrationWorkflow orchestrationWorkflow,
       List<TemplateExpression> templateExpressions, String appId, String serviceId, String infraId, boolean envChanged,
-      boolean infraChanged) {
+      boolean infraChanged, boolean migration) {
     if (orchestrationWorkflow != null) {
       OrchestrationWorkflowType orchestrationWorkflowType = orchestrationWorkflow.getOrchestrationWorkflowType();
       if (orchestrationWorkflowType.equals(BASIC) || orchestrationWorkflowType.equals(ROLLING)
@@ -1801,7 +1802,8 @@ public class WorkflowServiceHelper {
         handleBasicWorkflow((CanaryOrchestrationWorkflow) orchestrationWorkflow, templateExpressions, appId, serviceId,
             infraId, envChanged, infraChanged);
       } else if (orchestrationWorkflowType.equals(MULTI_SERVICE) || orchestrationWorkflowType.equals(CANARY)) {
-        handleCanaryOrMultiServiceWorkflow(orchestrationWorkflow, templateExpressions, appId, envChanged, infraChanged);
+        handleCanaryOrMultiServiceWorkflow(
+            orchestrationWorkflow, templateExpressions, appId, envChanged, infraChanged, migration);
       }
     }
     return orchestrationWorkflow;
@@ -1896,7 +1898,8 @@ public class WorkflowServiceHelper {
   }
 
   private void handleCanaryOrMultiServiceWorkflow(OrchestrationWorkflow orchestrationWorkflow,
-      List<TemplateExpression> templateExpressions, String appId, boolean envChanged, boolean infraChanged) {
+      List<TemplateExpression> templateExpressions, String appId, boolean envChanged, boolean infraChanged,
+      boolean migration) {
     boolean infraRefactor =
         featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(appId));
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
@@ -1919,7 +1922,7 @@ public class WorkflowServiceHelper {
 
         boolean envTemplatized = WorkflowServiceTemplateHelper.isEnvironmentTemplatized(templateExpressions);
 
-        if (envTemplatized) {
+        if (envTemplatized && !migration) {
           if (infraRefactor && !WorkflowServiceTemplateHelper.isInfraDefinitionTemplatized(phaseTemplateExpressions)) {
             Service service = serviceResourceService.get(appId, phase.getServiceId(), false);
             notNullCheck("Service", service, USER);

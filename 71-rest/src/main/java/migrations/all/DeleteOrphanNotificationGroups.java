@@ -62,7 +62,7 @@ public class DeleteOrphanNotificationGroups implements Migration {
                                                          .collect(Collectors.toList());
 
           owf.setNotificationRules(notificationRules);
-          workflowService.updateWorkflow(workflow);
+          workflowService.updateWorkflow(workflow, false);
         }
       }
 

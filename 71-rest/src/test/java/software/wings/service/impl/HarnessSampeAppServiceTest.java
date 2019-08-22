@@ -114,18 +114,18 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
       Workflow rollingWf = workflowService.readWorkflowByName(sampleApp.getAppId(), K8S_ROLLING_WORKFLOW_NAME);
       assertThat(rollingWf).isNotNull();
       rollingWf.setName("Test Rolling Workflow");
-      workflowService.updateWorkflow(rollingWf);
+      workflowService.updateWorkflow(rollingWf, false);
     } else {
       Workflow basicWf = workflowService.readWorkflowByName(sampleApp.getAppId(), K8S_BASIC_WORKFLOW_NAME);
       assertThat(basicWf).isNotNull();
       basicWf.setName("Test Basic Workflow");
-      workflowService.updateWorkflow(basicWf);
+      workflowService.updateWorkflow(basicWf, false);
     }
 
     Workflow canaryWf = workflowService.readWorkflowByName(sampleApp.getAppId(), K8S_CANARY_WORKFLOW_NAME);
     assertThat(canaryWf).isNotNull();
     canaryWf.setName("Test Canary Workflow");
-    workflowService.updateWorkflow(canaryWf);
+    workflowService.updateWorkflow(canaryWf, false);
 
     Pipeline k8sPipeline = pipelineService.getPipelineByName(sampleApp.getAppId(), K8S_PIPELINE_NAME);
     assertThat(k8sPipeline).isNotNull();

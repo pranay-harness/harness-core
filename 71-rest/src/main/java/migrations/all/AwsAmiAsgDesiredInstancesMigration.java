@@ -117,7 +117,7 @@ public class AwsAmiAsgDesiredInstancesMigration implements Migration {
 
     if (workflowModified) {
       logger.info("Updating workflow: {} - {}", workflow.getUuid(), workflow.getName());
-      workflowService.updateWorkflow(workflow);
+      workflowService.updateWorkflow(workflow, false);
       Thread.sleep(100);
     }
   }

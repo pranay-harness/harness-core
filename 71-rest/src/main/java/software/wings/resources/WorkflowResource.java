@@ -283,7 +283,7 @@ public class WorkflowResource {
     validateUuid(workflow, "workflowId", workflowId);
     authService.checkWorkflowPermissionsForEnv(appId, workflow, Action.UPDATE);
     workflow.setAppId(appId);
-    return new RestResponse<>(workflowService.updateWorkflow(workflow, null));
+    return new RestResponse<>(workflowService.updateWorkflow(workflow, null, false));
   }
 
   /**

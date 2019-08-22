@@ -154,7 +154,7 @@ public class HttpTemplateProcessorTest extends TemplateBaseTest {
                             .build();
 
     validateWorkflow(savedTemplate, workflow);
-    verify(workflowService, times(0)).updateWorkflow(workflow);
+    verify(workflowService, times(0)).updateWorkflow(workflow, false);
   }
 
   private void validateWorkflow(Template savedTemplate, Workflow workflow) {
@@ -251,6 +251,6 @@ public class HttpTemplateProcessorTest extends TemplateBaseTest {
     Workflow workflow = generateWorkflow(savedTemplate, step);
 
     validateWorkflow(savedTemplate, workflow);
-    verify(workflowService).updateWorkflow(workflow);
+    verify(workflowService).updateWorkflow(workflow, false);
   }
 }
