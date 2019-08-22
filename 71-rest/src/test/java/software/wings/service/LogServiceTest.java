@@ -4,7 +4,6 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.service.impl.LogServiceImpl.MAX_LOG_ROWS_PER_ACTIVITY;
@@ -56,7 +55,7 @@ public class LogServiceTest extends WingsBaseTest {
                                   .addFilter("activityId", EQ, activityId)
                                   .addFilter("commandUnitName", EQ, unitName)
                                   .build();
-    assertEquals(100, logService.list(appId, pageRequest).size());
+    assertThat(logService.list(appId, pageRequest)).hasSize(100);
   }
 
   @Test
@@ -70,7 +69,7 @@ public class LogServiceTest extends WingsBaseTest {
                                   .addFilter("activityId", EQ, activityId)
                                   .addFilter("commandUnitName", EQ, unitName)
                                   .build();
-    assertEquals(MAX_LOG_ROWS_PER_ACTIVITY, logService.list(appId, pageRequest).size());
+    assertThat(logService.list(appId, pageRequest)).hasSize(MAX_LOG_ROWS_PER_ACTIVITY);
   }
 
   @Test
@@ -80,7 +79,7 @@ public class LogServiceTest extends WingsBaseTest {
     logService.batchedSave(logs);
     File file = logService.exportLogs(appId, activityId);
     List<String> logLines = FileUtils.readLines(file, "UTF-8");
-    assertEquals(100, logLines.size());
+    assertThat(logLines).hasSize(100);
     for (int i = 0; i < 100; i++) {
       assertThat(logLines.get(i).endsWith("log-" + i)).isTrue();
     }

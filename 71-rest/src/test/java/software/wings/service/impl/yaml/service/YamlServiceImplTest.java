@@ -66,18 +66,18 @@ public class YamlServiceImplTest extends WingsBaseTest {
 
     String validFilePath = "Setup/Applications/app1/Index.yaml";
     gitFileChange.add(aGitFileChange().withAccountId(ACCOUNT_ID).withFilePath(validFilePath).build());
-    assertEquals(2, gitFileChange.size());
+    assertThat(gitFileChange).hasSize(2);
 
     filteredGitFileChange = yamlService.filterInvalidFilePaths(gitFileChange);
     assertThat(filteredGitFileChange).isNotNull();
-    assertEquals(1, filteredGitFileChange.size());
+    assertThat(filteredGitFileChange).hasSize(1);
     assertEquals(validFilePath, filteredGitFileChange.get(0).getFilePath());
 
     gitFileChange.clear();
     gitFileChange.add(aGitFileChange().withAccountId(ACCOUNT_ID).withFilePath(validFilePath).build());
     filteredGitFileChange = yamlService.filterInvalidFilePaths(gitFileChange);
     assertThat(filteredGitFileChange).isNotNull();
-    assertEquals(1, filteredGitFileChange.size());
+    assertThat(filteredGitFileChange).hasSize(1);
     assertEquals(validFilePath, filteredGitFileChange.get(0).getFilePath());
   }
 }

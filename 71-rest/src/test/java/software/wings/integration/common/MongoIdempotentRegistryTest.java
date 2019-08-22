@@ -72,7 +72,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
       }
     });
 
-    assertEquals(1, integers.size());
+    assertThat(integers).hasSize(1);
   }
 
   @Test

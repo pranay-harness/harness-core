@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -87,7 +86,7 @@ public class KmsKeysRotationTest extends WingsBaseTest {
   public void rotateAwsKeysSameARN() throws Exception {
     Collection<SecretManagerConfig> kmsConfigs =
         secretManagerConfigService.listSecretManagersByType(GLOBAL_ACCOUNT_ID, EncryptionType.KMS, true);
-    assertEquals(1, kmsConfigs.size());
+    assertThat(kmsConfigs).hasSize(1);
     KmsConfig kmsConfig = (KmsConfig) kmsConfigs.iterator().next();
     assertThat(kmsConfig).isNotNull();
     String newAccessKey = System.getenv(AWS_ACCESS_KEY);
@@ -120,7 +119,7 @@ public class KmsKeysRotationTest extends WingsBaseTest {
   public void rotateAwsKeysAndArn() throws Exception {
     Collection<SecretManagerConfig> kmsConfigs =
         secretManagerConfigService.listSecretManagersByType(GLOBAL_ACCOUNT_ID, EncryptionType.KMS, true);
-    assertEquals(1, kmsConfigs.size());
+    assertThat(kmsConfigs).hasSize(1);
     KmsConfig oldKmsConfig = (KmsConfig) kmsConfigs.iterator().next();
     String kmsName = oldKmsConfig.getName();
     assertThat(oldKmsConfig).isNotNull();
@@ -181,7 +180,7 @@ public class KmsKeysRotationTest extends WingsBaseTest {
       List<Key<EncryptedData>> oldSecrets = wingsPersistence.createQuery(EncryptedData.class)
                                                 .filter(EncryptedDataKeys.kmsId, oldKmsConfig.getUuid())
                                                 .asKeyList();
-      assertEquals("remaining non migrated secrets " + oldSecrets, 0, oldSecrets.size());
+      assertThat(oldSecrets).hasSize(0);
       logger.info("total migrated secrets are {}",
           wingsPersistence.createQuery(EncryptedData.class)
               .filter(EncryptedDataKeys.kmsId, newKmsConfigId)

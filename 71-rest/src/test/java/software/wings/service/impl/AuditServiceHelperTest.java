@@ -37,7 +37,7 @@ public class AuditServiceHelperTest extends WingsBaseTest {
       assertThat(auditGlobalContextData).isNotNull();
       assertEquals("12345", auditGlobalContextData.getAuditId());
       assertThat(auditGlobalContextData.getEntityOperationIdentifierSet()).isNotNull();
-      assertEquals(1, auditGlobalContextData.getEntityOperationIdentifierSet().size());
+      assertThat(auditGlobalContextData.getEntityOperationIdentifierSet()).hasSize(1);
       assertThat(
           auditGlobalContextData.getEntityOperationIdentifierSet().contains(EntityOperationIdentifier.builder()
                                                                                 .entityId("abc")
@@ -85,7 +85,7 @@ public class AuditServiceHelperTest extends WingsBaseTest {
       assertThat(auditGlobalContextData).isNotNull();
       assertThat(auditGlobalContextData.getEntityOperationIdentifierSet()).isNotNull();
       assertEquals("12345", auditGlobalContextData.getAuditId());
-      assertEquals(1, auditGlobalContextData.getEntityOperationIdentifierSet().size());
+      assertThat(auditGlobalContextData.getEntityOperationIdentifierSet()).hasSize(1);
       assertThat(auditGlobalContextData.getEntityOperationIdentifierSet().contains(
                      EntityOperationIdentifier.builder()
                          .entityId("abc")

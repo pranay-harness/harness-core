@@ -365,7 +365,7 @@ public class InstanceHelperTest extends WingsBaseTest {
     assertEquals(0, event.getRetries());
     assertThat(event).isNotNull();
     assertThat(event.getDeploymentSummaries()).isNotNull();
-    assertEquals(2, event.getDeploymentSummaries().size());
+    assertThat(event.getDeploymentSummaries()).hasSize(2);
     DeploymentInfo deploymentInfo1 = event.getDeploymentSummaries().get(0).getDeploymentInfo();
     DeploymentInfo deploymentInfo2 = event.getDeploymentSummaries().get(1).getDeploymentInfo();
     assertThat(deploymentInfo1 instanceof AwsAutoScalingGroupDeploymentInfo).isTrue();
@@ -434,7 +434,7 @@ public class InstanceHelperTest extends WingsBaseTest {
 
     assertThat(event).isNotNull();
     assertThat(event.getDeploymentSummaries()).isNotNull();
-    assertEquals(1, event.getDeploymentSummaries().size());
+    assertThat(event.getDeploymentSummaries()).hasSize(1);
     DeploymentInfo deploymentInfo = event.getDeploymentSummaries().get(0).getDeploymentInfo();
     assertThat(deploymentInfo instanceof AwsCodeDeployDeploymentInfo).isTrue();
     assertDeploymentSummaryObject(event.getDeploymentSummaries().get(0));
@@ -611,7 +611,7 @@ public class InstanceHelperTest extends WingsBaseTest {
     assertEquals(0, event.getRetries());
 
     assertThat(event.getDeploymentSummaries()).isNotNull();
-    assertEquals(1, event.getDeploymentSummaries().size());
+    assertThat(event.getDeploymentSummaries()).hasSize(1);
 
     DeploymentSummary deploymentSummary = event.getDeploymentSummaries().get(0);
     DeploymentInfo deploymentInfo = event.getDeploymentSummaries().get(0).getDeploymentInfo();
@@ -624,7 +624,7 @@ public class InstanceHelperTest extends WingsBaseTest {
         (ContainerDeploymentInfoWithLabels) deploymentInfo;
     assertEquals(CLUSTER_NAME, containerDeploymentInfoWithLabels.getClusterName());
     assertThat(containerDeploymentInfoWithLabels.getLabels()).isNotNull();
-    assertEquals(1, containerDeploymentInfoWithLabels.getLabels().size());
+    assertThat(containerDeploymentInfoWithLabels.getLabels()).hasSize(1);
     assertEquals("release", containerDeploymentInfoWithLabels.getLabels().get(0).getName());
     assertEquals("version1", containerDeploymentInfoWithLabels.getLabels().get(0).getValue());
 
@@ -674,7 +674,7 @@ public class InstanceHelperTest extends WingsBaseTest {
     assertThat(event.isRollback()).isTrue();
 
     assertThat(event.getDeploymentSummaries()).isNotNull();
-    assertEquals(1, event.getDeploymentSummaries().size());
+    assertThat(event.getDeploymentSummaries()).hasSize(1);
 
     DeploymentSummary deploymentSummary = event.getDeploymentSummaries().get(0);
     assertThat(deploymentSummary.getContainerDeploymentKey()).isNotNull();
@@ -690,7 +690,7 @@ public class InstanceHelperTest extends WingsBaseTest {
         (ContainerDeploymentInfoWithLabels) deploymentInfo;
     assertEquals(CLUSTER_NAME, containerDeploymentInfoWithLabels.getClusterName());
     assertThat(containerDeploymentInfoWithLabels.getLabels()).isNotNull();
-    assertEquals(1, containerDeploymentInfoWithLabels.getLabels().size());
+    assertThat(containerDeploymentInfoWithLabels.getLabels()).hasSize(1);
     assertEquals("release", containerDeploymentInfoWithLabels.getLabels().get(0).getName());
     assertEquals("version1", containerDeploymentInfoWithLabels.getLabels().get(0).getValue());
 

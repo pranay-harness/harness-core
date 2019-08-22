@@ -93,7 +93,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
         yamlDirectoryService.doApplications(ACCOUNT_ID, directoryPath, false, appPermissionSummaryMap);
     assertThat(directoryNode).isNotNull();
     assertThat(directoryNode.getChildren()).isNotNull();
-    assertEquals(1, directoryNode.getChildren().size());
+    assertThat(directoryNode.getChildren()).hasSize(1);
 
     FolderNode appNode = (FolderNode) directoryNode.getChildren().get(0);
     assertEquals(APP_ID, appNode.getAppId());
@@ -156,7 +156,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
 
   private void performWorkflowNodeValidation(FolderNode workflowNode) {
     assertThat(workflowNode.getChildren()).isNotNull();
-    assertEquals(1, workflowNode.getChildren().size());
+    assertThat(workflowNode.getChildren()).hasSize(1);
     AppLevelYamlNode workflowYamlNode = (AppLevelYamlNode) workflowNode.getChildren().get(0);
     assertEquals(
         "Setup/Applications/APP_NAME/Workflows/WORKFLOW_NAME.yaml", workflowYamlNode.getDirectoryPath().getPath());
@@ -168,7 +168,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
 
   private void performPipelineNodeValidation(FolderNode pipelineNode) {
     assertThat(pipelineNode.getChildren()).isNotNull();
-    assertEquals(1, pipelineNode.getChildren().size());
+    assertThat(pipelineNode.getChildren()).hasSize(1);
     AppLevelYamlNode pipelineYamlNode = (AppLevelYamlNode) pipelineNode.getChildren().get(0);
     assertEquals(
         "Setup/Applications/APP_NAME/Pipelines/PIPELINE_NAME.yaml", pipelineYamlNode.getDirectoryPath().getPath());
@@ -180,7 +180,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
 
   private void performProvisionerNodeValidation(FolderNode provisionerFolderNode) {
     assertThat(provisionerFolderNode.getChildren()).isNotNull();
-    assertEquals(1, provisionerFolderNode.getChildren().size());
+    assertThat(provisionerFolderNode.getChildren()).hasSize(1);
     AppLevelYamlNode provisionerYamlNode = (AppLevelYamlNode) provisionerFolderNode.getChildren().get(0);
     assertEquals("Setup/Applications/APP_NAME/Provisioners/PROVISIONER_NAME.yaml",
         provisionerYamlNode.getDirectoryPath().getPath());
@@ -191,7 +191,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
   }
   private void performTriggerNodeValidation(FolderNode triggerFolderNode) {
     assertThat(triggerFolderNode.getChildren()).isNotNull();
-    assertEquals(1, triggerFolderNode.getChildren().size());
+    assertThat(triggerFolderNode.getChildren()).hasSize(1);
     AppLevelYamlNode triggerYamlNode = (AppLevelYamlNode) triggerFolderNode.getChildren().get(0);
     assertEquals(
         "Setup/Applications/APP_NAME/Triggers/TRIGGER_NAME.yaml", triggerYamlNode.getDirectoryPath().getPath());
@@ -203,7 +203,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
 
   private void performEnvironmentNodeValidation(FolderNode envFolderNode) {
     assertThat(envFolderNode.getChildren()).isNotNull();
-    assertEquals(1, envFolderNode.getChildren().size());
+    assertThat(envFolderNode.getChildren()).hasSize(1);
 
     // This is actual Service Folder for service with Name "SERVICE_NAME"
     assertEquals(ENV_NAME, envFolderNode.getChildren().get(0).getName());
@@ -216,7 +216,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
             "Setup/Applications/APP_NAME/Environments/ENV_NAME/Service Verification",
             "Setup/Applications/APP_NAME/Environments/ENV_NAME/Config Files"));
 
-    assertEquals(expectedDirPaths.size(), ((FolderNode) envFolderNode.getChildren().get(0)).getChildren().size());
+    assertThat(((FolderNode) envFolderNode.getChildren().get(0)).getChildren()).hasSize(expectedDirPaths.size());
     for (DirectoryNode envChildNode : ((FolderNode) envFolderNode.getChildren().get(0)).getChildren()) {
       assertThat(expectedDirPaths.contains(envChildNode.getDirectoryPath().getPath())).isTrue();
       expectedDirPaths.remove(envChildNode.getDirectoryPath().getPath());
@@ -227,7 +227,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
 
   private void performServiceNodeValidation(FolderNode serviceFolderNode) {
     assertThat(serviceFolderNode.getChildren()).isNotNull();
-    assertEquals(1, serviceFolderNode.getChildren().size());
+    assertThat(serviceFolderNode.getChildren()).hasSize(1);
 
     // This is actual Service Folder for service with Name "SERVICE_NAME"
     assertEquals(SERVICE_NAME, serviceFolderNode.getChildren().get(0).getName());
@@ -241,7 +241,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
             "Setup/Applications/APP_NAME/Services/SERVICE_NAME/Artifact Servers",
             "Setup/Applications/APP_NAME/Services/SERVICE_NAME/Config Files"));
 
-    assertEquals(expectedDirPaths.size(), ((FolderNode) serviceFolderNode.getChildren().get(0)).getChildren().size());
+    assertThat(((FolderNode) serviceFolderNode.getChildren().get(0)).getChildren()).hasSize(expectedDirPaths.size());
     for (DirectoryNode serviceChildNode : ((FolderNode) serviceFolderNode.getChildren().get(0)).getChildren()) {
       assertThat(expectedDirPaths.contains(serviceChildNode.getDirectoryPath().getPath())).isTrue();
       expectedDirPaths.remove(serviceChildNode.getDirectoryPath().getPath());

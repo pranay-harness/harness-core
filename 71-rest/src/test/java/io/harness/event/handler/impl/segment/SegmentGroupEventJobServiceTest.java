@@ -46,7 +46,7 @@ public class SegmentGroupEventJobServiceTest extends BaseIntegrationTest {
     SegmentGroupEventJobContext ctxFromDb = segmentGroupEventJobService.get(ctx.getUuid());
 
     assertThat(ctxFromDb).isNotNull();
-    assertEquals(1, ctxFromDb.getAccountIds().size());
+    assertThat(ctxFromDb.getAccountIds()).hasSize(1);
 
     accountId = "some-other-account-" + SegmentGroupEventJobServiceTest.class.getSimpleName();
     segmentGroupEventJobService.schedule(accountId, 10);
@@ -55,7 +55,7 @@ public class SegmentGroupEventJobServiceTest extends BaseIntegrationTest {
     assertEquals(1, count);
     ctxFromDb = segmentGroupEventJobService.get(ctx.getUuid());
     assertThat(ctxFromDb).isNotNull();
-    assertEquals(2, ctxFromDb.getAccountIds().size());
+    assertThat(ctxFromDb.getAccountIds()).hasSize(2);
   }
 
   @Test
@@ -69,7 +69,7 @@ public class SegmentGroupEventJobServiceTest extends BaseIntegrationTest {
     SegmentGroupEventJobContext ctxFromDb = segmentGroupEventJobService.get(ctx.getUuid());
 
     assertThat(ctxFromDb).isNotNull();
-    assertEquals(1, ctxFromDb.getAccountIds().size());
+    assertThat(ctxFromDb.getAccountIds()).hasSize(1);
 
     int count = persistence.createQuery(SegmentGroupEventJobContext.class).asList().size();
     assertEquals(1, count);

@@ -230,7 +230,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
     assertEquals("Log Verification running.", response.getErrorMessage());
 
     List<DelegateTask> tasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).asList();
-    assertEquals(1, tasks.size());
+    assertThat(tasks).hasSize(1);
     DelegateTask task = tasks.get(0);
     assertEquals(TaskType.ELK_COLLECT_LOG_DATA.name(), task.getData().getTaskType());
     verify(activityLogger).info(contains("Triggered data collection"), anyLong(), anyLong());

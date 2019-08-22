@@ -49,7 +49,7 @@ public class InstanceMapperTest extends WingsBaseTest {
     assertEquals(ts, statsSnapshot.getTimestamp());
     assertEquals(accountId, statsSnapshot.getAccountId());
     assertEquals(instances.size(), statsSnapshot.getTotal());
-    assertEquals(2, statsSnapshot.getAggregateCounts().size());
+    assertThat(statsSnapshot.getAggregateCounts()).hasSize(2);
     assertEquals(2,
         statsSnapshot.getAggregateCounts().stream().filter(s -> s.getEntityType() == EntityType.APPLICATION).count());
 

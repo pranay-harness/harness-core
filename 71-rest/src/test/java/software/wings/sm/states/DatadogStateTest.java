@@ -65,7 +65,7 @@ public class DatadogStateTest extends WingsBaseTest {
     Map<String, List<APMMetricInfo>> metricEndpointsInfo = DatadogState.metricEndpointsInfo(Optional.of("todolist"),
         Optional.of(Lists.newArrayList("system.cpu.iowait", "trace.servlet.request.duration")), Optional.empty(),
         Optional.empty(), Optional.of(KUBERNETES));
-    assertEquals(4, metricEndpointsInfo.size());
+    assertThat(metricEndpointsInfo).hasSize(4);
     List<APMMetricInfo> apmMetricInfos = metricEndpointsInfo.values().iterator().next();
     for (String query : metricEndpointsInfo.keySet()) {
       if (query.contains("system.cpu.iowait")) {
@@ -83,7 +83,7 @@ public class DatadogStateTest extends WingsBaseTest {
     Map<String, List<APMMetricInfo>> metricEndpointsInfo = DatadogState.metricEndpointsInfo(Optional.empty(),
         Optional.of(Lists.newArrayList("kubernetes.cpu.usage.total")), Optional.empty(), Optional.empty(),
         Optional.of(KUBERNETES));
-    assertEquals(1, metricEndpointsInfo.size());
+    assertThat(metricEndpointsInfo).hasSize(1);
     List<APMMetricInfo> apmMetricInfos = metricEndpointsInfo.values().iterator().next();
     String query =
         "query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=kubernetes.cpu.usage.total{pod_name:${host}}by{pod_name}.rollup(avg,60)/1000000000/kubernetes.cpu.capacity{*}.rollup(avg,60)*100";
@@ -99,7 +99,7 @@ public class DatadogStateTest extends WingsBaseTest {
     Map<String, List<APMMetricInfo>> metricEndpointsInfo =
         DatadogState.metricEndpointsInfo(Optional.empty(), Optional.of(Lists.newArrayList("docker.cpu.usage")),
             Optional.empty(), Optional.empty(), Optional.of(KUBERNETES));
-    assertEquals(1, metricEndpointsInfo.size());
+    assertThat(metricEndpointsInfo).hasSize(1);
     List<APMMetricInfo> apmMetricInfos = metricEndpointsInfo.values().iterator().next();
     String query =
         "query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=docker.cpu.usage{pod_name:${host}}by{pod_name}.rollup(avg,60)";
@@ -115,7 +115,7 @@ public class DatadogStateTest extends WingsBaseTest {
     Map<String, List<APMMetricInfo>> metricEndpointsInfo =
         DatadogState.metricEndpointsInfo(Optional.of("todolist"), Optional.of(Lists.newArrayList("docker.cpu.usage")),
             Optional.of("cluster:harness-test"), Optional.empty(), Optional.empty());
-    assertEquals(4, metricEndpointsInfo.size());
+    assertThat(metricEndpointsInfo).hasSize(4);
     List<APMMetricInfo> apmMetricInfos = metricEndpointsInfo.values().iterator().next();
     String query =
         "query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=docker.cpu.usage{cluster:harness-test}.rollup(avg,60)";
@@ -147,7 +147,7 @@ public class DatadogStateTest extends WingsBaseTest {
   public void testServiceLevelMetrics() {
     Map<String, List<APMMetricInfo>> metricEndpointsInfo = DatadogState.metricEndpointsInfo(
         Optional.of("todolist"), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(KUBERNETES));
-    assertEquals(3, metricEndpointsInfo.size());
+    assertThat(metricEndpointsInfo).hasSize(3);
     Set<String> traceMetrics = new HashSet<>(Arrays.asList("Request Duration", "Errors", "Hits"));
     metricEndpointsInfo.forEach((k, v) -> {
       assertThat(v.size() == 1).isTrue();
@@ -177,7 +177,7 @@ public class DatadogStateTest extends WingsBaseTest {
     customMetricMap.put("service:todolist", metrics);
     Map<String, List<APMMetricInfo>> metricEndpointsInfo = DatadogState.metricEndpointsInfo(
         Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(customMetricMap), Optional.empty());
-    assertEquals(2, metricEndpointsInfo.size());
+    assertThat(metricEndpointsInfo).hasSize(2);
     Set<String> traceMetrics = new HashSet<>(Arrays.asList("Request Duration", "Errors", "Hits"));
     metricEndpointsInfo.forEach((k, v) -> {
       v.forEach(metricInfo -> {
@@ -211,7 +211,7 @@ public class DatadogStateTest extends WingsBaseTest {
     customMetricMap.put("service:todolist", getMetricsSet(Arrays.asList("THROUGHPUT", "THROUGHPUT")));
 
     Map<String, String> invalidFields = DatadogState.validateDatadogCustomMetrics(customMetricMap);
-    assertEquals(2, invalidFields.size());
+    assertThat(invalidFields).hasSize(2);
   }
 
   @Test
@@ -224,7 +224,7 @@ public class DatadogStateTest extends WingsBaseTest {
     customMetricMap.put("service:todolist", metrics);
 
     Map<String, String> invalidFields = DatadogState.validateDatadogCustomMetrics(customMetricMap);
-    assertEquals(1, invalidFields.size());
+    assertThat(invalidFields).hasSize(1);
   }
 
   @Test
@@ -237,7 +237,7 @@ public class DatadogStateTest extends WingsBaseTest {
     customMetricMap.put("service:todolist", metrics);
 
     Map<String, String> invalidFields = DatadogState.validateDatadogCustomMetrics(customMetricMap);
-    assertEquals(1, invalidFields.size());
+    assertThat(invalidFields).hasSize(1);
   }
 
   @Test
@@ -260,7 +260,7 @@ public class DatadogStateTest extends WingsBaseTest {
     DatadogState state = new DatadogState("testName");
     state.setMetrics(metrics);
     Map<String, String> validateFields = state.validateFields();
-    assertEquals(0, validateFields.size());
+    assertThat(validateFields).hasSize(0);
   }
 
   @Test
@@ -270,7 +270,7 @@ public class DatadogStateTest extends WingsBaseTest {
     DatadogState state = new DatadogState("testName");
     state.setMetrics(metrics);
     Map<String, String> validateFields = state.validateFields();
-    assertEquals(1, validateFields.size());
+    assertThat(validateFields).hasSize(1);
     assertThat(validateFields.containsKey("trace.servlet.request.errors")).isTrue();
   }
 }

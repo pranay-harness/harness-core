@@ -95,11 +95,11 @@ public class CloudWatchServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testFetchMetricsAllMetrics() {
     Map<AwsNameSpace, List<CloudWatchMetric>> cloudwatchMetrics = CloudWatchServiceImpl.fetchMetrics();
-    assertEquals("There are 4 different types of metrics", 4, cloudwatchMetrics.keySet().size());
-    assertEquals("There are 4 lambda metrics in the list", 4, cloudwatchMetrics.get(AwsNameSpace.LAMBDA).size());
-    assertEquals("There are 4 ECS metrics in the list", 4, cloudwatchMetrics.get(AwsNameSpace.ECS).size());
-    assertEquals("There are 9 EC2 metrics in the list", 9, cloudwatchMetrics.get(AwsNameSpace.EC2).size());
-    assertEquals("There are 13 ELB metrics in the list", 13, cloudwatchMetrics.get(AwsNameSpace.ELB).size());
+    assertThat(cloudwatchMetrics.keySet()).hasSize(4);
+    assertThat(cloudwatchMetrics.get(AwsNameSpace.LAMBDA)).hasSize(4);
+    assertThat(cloudwatchMetrics.get(AwsNameSpace.ECS)).hasSize(4);
+    assertThat(cloudwatchMetrics.get(AwsNameSpace.EC2)).hasSize(9);
+    assertThat(cloudwatchMetrics.get(AwsNameSpace.ELB)).hasSize(13);
   }
 
   @Test
@@ -115,13 +115,13 @@ public class CloudWatchServiceTest extends WingsBaseTest {
 
     Map<AwsNameSpace, List<CloudWatchMetric>> cloudwatchMetrics =
         CloudWatchServiceImpl.fetchMetrics(cvServiceConfiguration);
-    assertEquals("There are 2 different types of metrics", 2, cloudwatchMetrics.keySet().size());
+    assertThat(cloudwatchMetrics.keySet()).hasSize(2);
     assertThat(cloudwatchMetrics.containsKey(AwsNameSpace.LAMBDA)).isFalse();
     assertThat(cloudwatchMetrics.containsKey(AwsNameSpace.EC2)).isFalse();
-    assertEquals("There is 1 ECS metric in the list", 1, cloudwatchMetrics.get(AwsNameSpace.ECS).size());
+    assertThat(cloudwatchMetrics.get(AwsNameSpace.ECS)).hasSize(1);
     assertEquals("The ECS metric is CPUUtillization", "CPUUtilization",
         cloudwatchMetrics.get(AwsNameSpace.ECS).get(0).getMetricName());
-    assertEquals("There are 1 ELB metric in the list", 1, cloudwatchMetrics.get(AwsNameSpace.ELB).size());
+    assertThat(cloudwatchMetrics.get(AwsNameSpace.ELB)).hasSize(1);
     assertEquals("The ELB metric is HTTPCode_Backend_2XX", "HTTPCode_Backend_2XX",
         cloudwatchMetrics.get(AwsNameSpace.ELB).get(0).getMetricName());
   }
@@ -133,7 +133,7 @@ public class CloudWatchServiceTest extends WingsBaseTest {
 
     Map<AwsNameSpace, List<CloudWatchMetric>> cloudwatchMetrics =
         CloudWatchServiceImpl.fetchMetrics(cvServiceConfiguration);
-    assertEquals("There are 0 different types of metrics", 0, cloudwatchMetrics.keySet().size());
+    assertThat(cloudwatchMetrics.keySet()).hasSize(0);
     assertThat(cloudwatchMetrics.containsKey(AwsNameSpace.LAMBDA)).isFalse();
     assertThat(cloudwatchMetrics.containsKey(AwsNameSpace.EC2)).isFalse();
     assertThat(cloudwatchMetrics.containsKey(AwsNameSpace.ECS)).isFalse();

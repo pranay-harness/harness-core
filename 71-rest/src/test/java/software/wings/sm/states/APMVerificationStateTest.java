@@ -78,18 +78,18 @@ public class APMVerificationStateTest extends WingsBaseTest {
         yamlUtils.read(yamlStr, new TypeReference<List<APMVerificationState.MetricCollectionInfo>>() {});
     apmVerificationState.setMetricCollectionInfos(mcInfo);
     Map<String, List<APMMetricInfo>> apmMetricInfos = apmVerificationState.apmMetricInfos(context);
-    assertEquals(3, apmMetricInfos.size());
-    assertEquals(2, apmMetricInfos.get("query").size());
+    assertThat(apmMetricInfos).hasSize(3);
+    assertThat(apmMetricInfos.get("query")).hasSize(2);
     assertThat(apmMetricInfos.get("query").get(0).getResponseMappers().get("txnName").getFieldValue()).isNotNull();
     assertThat(apmMetricInfos.get("query").get(1).getResponseMappers().get("txnName").getJsonPath()).isNotNull();
     String body = "this is a dummy collection body";
-    assertEquals("One metric with body", 1, apmMetricInfos.get("queryWithHost" + URL_BODY_APPENDER + body).size());
+    assertThat(apmMetricInfos.get("queryWithHost" + URL_BODY_APPENDER + body)).hasSize(1);
     assertEquals("Body should be present", body,
         apmMetricInfos.get("queryWithHost" + URL_BODY_APPENDER + body).get(0).getBody());
     assertEquals("Method should be post", Method.POST,
         apmMetricInfos.get("queryWithHost" + URL_BODY_APPENDER + body).get(0).getMethod());
 
-    assertEquals("There should be one query with host", 1, apmMetricInfos.get("queryWithHost").size());
+    assertThat(apmMetricInfos.get("queryWithHost")).hasSize(1);
     APMMetricInfo metricWithHost = apmMetricInfos.get("queryWithHost").get(0);
     assertThat(metricWithHost.getResponseMappers().get("host").getJsonPath()).isNotNull();
     assertThat(metricWithHost.getResponseMappers().get("host").getRegexs()).isNotNull();

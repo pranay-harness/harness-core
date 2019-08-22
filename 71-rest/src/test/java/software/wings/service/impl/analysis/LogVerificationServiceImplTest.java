@@ -1,6 +1,6 @@
 package software.wings.service.impl.analysis;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -63,7 +63,7 @@ public class LogVerificationServiceImplTest extends CategoryTest {
     // execute
     Set<BugsnagApplication> appList = service.getOrgProjectListBugsnag("setting", "", StateType.BUG_SNAG, false);
 
-    assertEquals(1, appList.size());
+    assertThat(appList).hasSize(1);
   }
 
   @Test
@@ -88,7 +88,7 @@ public class LogVerificationServiceImplTest extends CategoryTest {
     // execute
     Set<BugsnagApplication> appList = service.getOrgProjectListBugsnag("setting", "orgId", StateType.BUG_SNAG, true);
 
-    assertEquals(1, appList.size());
+    assertThat(appList).hasSize(1);
   }
 
   @Test(expected = WingsException.class)
@@ -113,6 +113,6 @@ public class LogVerificationServiceImplTest extends CategoryTest {
     // execute
     Set<BugsnagApplication> appList = service.getOrgProjectListBugsnag("setting", "", StateType.NEW_RELIC, false);
 
-    assertEquals(1, appList.size());
+    assertThat(appList).hasSize(1);
   }
 }

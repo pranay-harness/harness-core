@@ -137,7 +137,7 @@ public class YamlCloneServiceImplTest extends WingsBaseTest {
     Optional<List<String>> errorMessages = Optional.of(new ArrayList<>());
     yamlCloneServiceImpl.traverseDirectory(gitFileChangeList, ACCOUNT_ID, workflowsFolder,
         workflowsFolder.getDirectoryPath().getPath(), false, errorMessages);
-    assertEquals(1, gitFileChangeList.size());
+    assertThat(gitFileChangeList).hasSize(1);
     assertEquals(ACCOUNT_ID, gitFileChangeList.get(0).getAccountId());
     assertEquals(NEW_PATH_FOR_WORKFLOW, gitFileChangeList.get(0).getFilePath());
 
@@ -203,7 +203,7 @@ public class YamlCloneServiceImplTest extends WingsBaseTest {
     verify(yamlService).processChangeSet(captor.capture(), anyBoolean());
     List changes = captor.getValue();
     assertThat(changes).isNotNull();
-    assertEquals(1, changes.size());
+    assertThat(changes).hasSize(1);
     assertThat(changes.get(0) instanceof Change).isTrue();
     Change change = (Change) changes.get(0);
     assertEquals(ChangeType.ADD, change.getChangeType());

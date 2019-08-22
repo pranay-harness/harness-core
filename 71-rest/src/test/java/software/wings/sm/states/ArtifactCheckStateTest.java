@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
@@ -125,6 +126,6 @@ public class ArtifactCheckStateTest extends WingsBaseTest {
     ExecutionResponse executionResponse = artifactCheckState.execute(context);
     assertEquals(ExecutionStatus.SUCCESS, executionResponse.getExecutionStatus());
     assertEquals("Waiting for artifacts:[artifact1, artifact2] to be downloaded", executionResponse.getErrorMessage());
-    assertEquals(2, executionResponse.getCorrelationIds().size());
+    assertThat(executionResponse.getCorrelationIds()).hasSize(2);
   }
 }

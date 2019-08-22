@@ -208,12 +208,12 @@ public class CyberArkTest extends WingsBaseTest {
     List<EncryptedData> encryptedDataList =
         wingsPersistence.createQuery(EncryptedData.class, excludeAuthority).asList();
     if (isGlobalKmsEnabled) {
-      assertEquals(numOfEncryptedValsForCyberArk + numOfEncryptedValsForCyberKms, encryptedDataList.size());
+      assertThat(encryptedDataList).hasSize(numOfEncryptedValsForCyberArk + numOfEncryptedValsForCyberKms);
     } else {
-      assertEquals(numOfEncryptedValsForCyberArk, encryptedDataList.size());
+      assertThat(encryptedDataList).hasSize(numOfEncryptedValsForCyberArk);
       for (EncryptedData encryptedData : encryptedDataList) {
         assertEquals(encryptedData.getName(), name + "_clientCertificate");
-        assertEquals(1, encryptedData.getParentIds().size());
+        assertThat(encryptedData.getParentIds()).hasSize(1);
         assertEquals(savedConfig.getUuid(), encryptedData.getParentIds().iterator().next());
       }
     }
@@ -225,9 +225,9 @@ public class CyberArkTest extends WingsBaseTest {
     cyberArkResource.saveCyberArkConfig(accountId, savedConfig);
     encryptedDataList =
         wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, accountId).asList();
-    assertEquals(numOfEncryptedValsForCyberArk, encryptedDataList.size());
+    assertThat(encryptedDataList).hasSize(numOfEncryptedValsForCyberArk);
     for (EncryptedData encryptedData : encryptedDataList) {
-      assertEquals(1, encryptedData.getParentIds().size());
+      assertThat(encryptedData.getParentIds()).hasSize(1);
       assertEquals(savedConfig.getUuid(), encryptedData.getParentIds().iterator().next());
     }
   }
@@ -281,7 +281,7 @@ public class CyberArkTest extends WingsBaseTest {
 
     List<EncryptedDataDetail> encryptedDataDetails =
         secretManager.getEncryptionDetails(savedJenkinsConfig, accountId, null);
-    assertEquals(2, encryptedDataDetails.size());
+    assertThat(encryptedDataDetails).hasSize(2);
 
     char[] decryptedValue;
 

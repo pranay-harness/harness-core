@@ -358,53 +358,53 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
       List<String> appIdList = asList(APP_1_ID, APP_2_ID, APP_3_ID, APP_4_ID, APP_5_ID);
       List<InstanceStatsByService> currentAppInstanceStatsByService =
           dashboardService.getAppInstanceStatsByService(ACCOUNT_1_ID, appIdList, System.currentTimeMillis());
-      assertEquals(7, currentAppInstanceStatsByService.size());
+      assertThat(currentAppInstanceStatsByService).hasSize(7);
       List<InstanceStatsByService> appInstanceStatsByServiceAtTime =
           dashboardService.getAppInstanceStatsByService(ACCOUNT_1_ID, appIdList, System.currentTimeMillis());
-      assertEquals(7, appInstanceStatsByServiceAtTime.size());
+      assertThat(appInstanceStatsByServiceAtTime).hasSize(7);
       List<Instance> currentInstances =
           dashboardService.getAppInstancesForAccount(ACCOUNT_1_ID, System.currentTimeMillis());
-      assertEquals(6, currentInstances.size());
+      assertThat(currentInstances).hasSize(6);
 
       List<Instance> instancesAtTime = dashboardService.getAppInstancesForAccount(ACCOUNT_1_ID, currentTime - 60000);
-      assertEquals(2, instancesAtTime.size());
+      assertThat(instancesAtTime).hasSize(2);
 
       appInstanceStatsByServiceAtTime =
           dashboardService.getAppInstanceStatsByService(ACCOUNT_1_ID, appIdList, currentTime - 60000);
-      assertEquals(1, appInstanceStatsByServiceAtTime.size());
+      assertThat(appInstanceStatsByServiceAtTime).hasSize(1);
       assertEquals(2, appInstanceStatsByServiceAtTime.get(0).getTotalCount());
 
       instancesAtTime = dashboardService.getAppInstancesForAccount(ACCOUNT_1_ID, currentTime - 50000);
-      assertEquals(1, instancesAtTime.size());
+      assertThat(instancesAtTime).hasSize(1);
 
       appInstanceStatsByServiceAtTime =
           dashboardService.getAppInstanceStatsByService(ACCOUNT_1_ID, appIdList, currentTime - 50000);
-      assertEquals(1, appInstanceStatsByServiceAtTime.size());
+      assertThat(appInstanceStatsByServiceAtTime).hasSize(1);
       assertEquals(2, appInstanceStatsByServiceAtTime.get(0).getTotalCount());
 
       instancesAtTime = dashboardService.getAppInstancesForAccount(ACCOUNT_1_ID, currentTime - 40000);
-      assertEquals(1, instancesAtTime.size());
+      assertThat(instancesAtTime).hasSize(1);
 
       appInstanceStatsByServiceAtTime =
           dashboardService.getAppInstanceStatsByService(ACCOUNT_1_ID, appIdList, currentTime - 40000);
-      assertEquals(2, appInstanceStatsByServiceAtTime.size());
+      assertThat(appInstanceStatsByServiceAtTime).hasSize(2);
       assertEquals(1, appInstanceStatsByServiceAtTime.get(0).getTotalCount());
       assertEquals(2, appInstanceStatsByServiceAtTime.get(1).getTotalCount());
 
       instancesAtTime = dashboardService.getAppInstancesForAccount(ACCOUNT_1_ID, currentTime - 30000);
-      assertEquals(5, instancesAtTime.size());
+      assertThat(instancesAtTime).hasSize(5);
 
       instancesAtTime = dashboardService.getAppInstancesForAccount(ACCOUNT_1_ID, currentTime - 20000);
-      assertEquals(5, instancesAtTime.size());
+      assertThat(instancesAtTime).hasSize(5);
 
       instancesAtTime = dashboardService.getAppInstancesForAccount(ACCOUNT_1_ID, currentTime - 10000);
-      assertEquals(5, instancesAtTime.size());
+      assertThat(instancesAtTime).hasSize(5);
 
       instancesAtTime = dashboardService.getAppInstancesForAccount(ACCOUNT_1_ID, currentTime);
-      assertEquals(6, instancesAtTime.size());
+      assertThat(instancesAtTime).hasSize(6);
 
       instancesAtTime = dashboardService.getAppInstancesForAccount(ACCOUNT_2_ID, currentTime - 30000);
-      assertEquals(2, instancesAtTime.size());
+      assertThat(instancesAtTime).hasSize(2);
     } finally {
       UserThreadLocal.unset();
     }
@@ -420,15 +420,15 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
       PageResponse<InstanceSummaryStatsByService> currentAppInstanceStatsByService =
           dashboardService.getAppInstanceSummaryStatsByService(
               ACCOUNT_1_ID, appIdList, System.currentTimeMillis(), 0, 5);
-      assertEquals(5, currentAppInstanceStatsByService.getResponse().size());
+      assertThat(currentAppInstanceStatsByService.getResponse()).hasSize(5);
 
       currentAppInstanceStatsByService = dashboardService.getAppInstanceSummaryStatsByService(
           ACCOUNT_1_ID, appIdList, System.currentTimeMillis(), 5, 10);
-      assertEquals(2, currentAppInstanceStatsByService.getResponse().size());
+      assertThat(currentAppInstanceStatsByService.getResponse()).hasSize(2);
 
       currentAppInstanceStatsByService = dashboardService.getAppInstanceSummaryStatsByService(
           ACCOUNT_1_ID, appIdList, System.currentTimeMillis(), 0, 10);
-      assertEquals(7, currentAppInstanceStatsByService.getResponse().size());
+      assertThat(currentAppInstanceStatsByService.getResponse()).hasSize(7);
     } finally {
       UserThreadLocal.unset();
     }
@@ -442,14 +442,14 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
       List<InstanceStatsByEnvironment> serviceInstances;
 
       serviceInstances = dashboardService.getServiceInstances(ACCOUNT_1_ID, SERVICE_2_ID, System.currentTimeMillis());
-      assertEquals(1, serviceInstances.size());
+      assertThat(serviceInstances).hasSize(1);
 
       serviceInstances = dashboardService.getServiceInstances(ACCOUNT_1_ID, SERVICE_1_ID, System.currentTimeMillis());
-      assertEquals(1, serviceInstances.size());
+      assertThat(serviceInstances).hasSize(1);
 
       serviceInstances = dashboardService.getServiceInstances(ACCOUNT_1_ID, SERVICE_7_ID, currentTime - 100000);
-      assertEquals(1, serviceInstances.size());
-      assertEquals(1, serviceInstances.get(0).getInstanceStatsByArtifactList().size());
+      assertThat(serviceInstances).hasSize(1);
+      assertThat(serviceInstances.get(0).getInstanceStatsByArtifactList()).hasSize(1);
       assertEquals(
           2, serviceInstances.get(0).getInstanceStatsByArtifactList().get(0).getInstanceStats().getTotalCount());
     } finally {
@@ -582,9 +582,9 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
       ServiceInstanceDashboard serviceInstanceDashboard =
           dashboardService.getServiceInstanceDashboard(ACCOUNT_1_ID, APP_1_ID, SERVICE_1_ID);
       assertThat(serviceInstanceDashboard).isNotNull();
-      assertEquals(1, serviceInstanceDashboard.getCurrentActiveInstancesList().size());
+      assertThat(serviceInstanceDashboard.getCurrentActiveInstancesList()).hasSize(1);
       assertEquals(1, serviceInstanceDashboard.getCurrentActiveInstancesList().get(0).getInstanceCount());
-      assertEquals(1, serviceInstanceDashboard.getDeploymentHistoryList().size());
+      assertThat(serviceInstanceDashboard.getDeploymentHistoryList()).hasSize(1);
       DeploymentHistory deploymentHistory = serviceInstanceDashboard.getDeploymentHistoryList().get(0);
       assertThat(deepEquals(expectedDeployment.getEnvs(), deploymentHistory.getEnvs())).isTrue();
       assertThat(deepEquals(expectedDeployment.getInframappings(), deploymentHistory.getInframappings())).isTrue();

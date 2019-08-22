@@ -2836,7 +2836,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertEquals(Integer.valueOf(2), horizontalPodAutoscaler.getSpec().getMinReplicas());
     assertEquals(Integer.valueOf(10), horizontalPodAutoscaler.getSpec().getMaxReplicas());
     assertThat(horizontalPodAutoscaler.getSpec().getAdditionalProperties()).isNotNull();
-    assertEquals(1, horizontalPodAutoscaler.getSpec().getAdditionalProperties().size());
+    assertThat(horizontalPodAutoscaler.getSpec().getAdditionalProperties()).hasSize(1);
     assertEquals("metrics", horizontalPodAutoscaler.getSpec().getAdditionalProperties().keySet().iterator().next());
   }
 

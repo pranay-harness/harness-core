@@ -250,9 +250,9 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
 
     AwsVpcConfiguration awsvpcConfiguration = createServiceRequest.getNetworkConfiguration().getAwsvpcConfiguration();
     assertEquals(AssignPublicIp.ENABLED.name(), awsvpcConfiguration.getAssignPublicIp());
-    assertEquals(1, awsvpcConfiguration.getSecurityGroups().size());
+    assertThat(awsvpcConfiguration.getSecurityGroups()).hasSize(1);
     assertEquals(SECURITY_GROUP_ID_1, awsvpcConfiguration.getSecurityGroups().iterator().next());
-    assertEquals(1, awsvpcConfiguration.getSubnets().size());
+    assertThat(awsvpcConfiguration.getSubnets()).hasSize(1);
     assertEquals(SUBNET_ID, awsvpcConfiguration.getSubnets().iterator().next());
 
     assertEquals(CONTAINER_SERVICE_NAME, createServiceRequest.getServiceName());
@@ -267,7 +267,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
         taskDefinition.getFamily() + ":" + taskDefinition.getRevision(), createServiceRequest.getTaskDefinition());
 
     assertThat(createServiceRequest.getLoadBalancers()).isNotNull();
-    assertEquals(1, createServiceRequest.getLoadBalancers().size());
+    assertThat(createServiceRequest.getLoadBalancers()).hasSize(1);
     LoadBalancer loadBalancer = createServiceRequest.getLoadBalancers().iterator().next();
     assertEquals(CONTAINER_NAME, loadBalancer.getContainerName());
     assertEquals(TARGET_GROUP_ARN, loadBalancer.getTargetGroupArn());
@@ -318,7 +318,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
 
     List<ServiceRegistry> serviceRegistries = createServiceRequest.getServiceRegistries();
     assertThat(createServiceRequest.getServiceRegistries()).isNotNull();
-    assertEquals(1, serviceRegistries.size());
+    assertThat(serviceRegistries).hasSize(1);
     ServiceRegistry serviceRegistry = createServiceRequest.getServiceRegistries().get(0);
     assertThat(serviceRegistry).isNotNull();
     assertEquals("arn:aws:servicediscovery:us-east-1:448640225317:service/srv-v43my342legaqd3r",
@@ -336,7 +336,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     Service service = ecsSetupCommandTaskHelper.getAwsServiceFromJson(ecsSErviceSpecJsonString, logger);
     assertThat(service).isNotNull();
     assertThat(service.getServiceRegistries()).isNotNull();
-    assertEquals(1, service.getServiceRegistries().size());
+    assertThat(service.getServiceRegistries()).hasSize(1);
 
     // Valid case
     ecsSetupCommandTaskHelper.validateServiceRegistries(
@@ -391,9 +391,9 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     assertThat(createServiceRequest.getNetworkConfiguration()).isNotNull();
     assertThat(createServiceRequest.getNetworkConfiguration().getAwsvpcConfiguration()).isNotNull();
     AwsVpcConfiguration awsVpcConfiguration = createServiceRequest.getNetworkConfiguration().getAwsvpcConfiguration();
-    assertEquals(1, awsVpcConfiguration.getSecurityGroups().size());
+    assertThat(awsVpcConfiguration.getSecurityGroups()).hasSize(1);
     assertEquals("sg1", awsVpcConfiguration.getSecurityGroups().get(0));
-    assertEquals(1, awsVpcConfiguration.getSubnets().size());
+    assertThat(awsVpcConfiguration.getSubnets()).hasSize(1);
     assertEquals("subnet1", awsVpcConfiguration.getSubnets().get(0));
     assertEquals(AssignPublicIp.DISABLED.name(), awsVpcConfiguration.getAssignPublicIp());
   }
@@ -451,7 +451,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     assertEquals(
         taskDefinition.getFamily() + ":" + taskDefinition.getRevision(), createServiceRequest.getTaskDefinition());
     assertThat(createServiceRequest.getLoadBalancers()).isNotNull();
-    assertEquals(1, createServiceRequest.getLoadBalancers().size());
+    assertThat(createServiceRequest.getLoadBalancers()).hasSize(1);
 
     LoadBalancer loadBalancer = createServiceRequest.getLoadBalancers().iterator().next();
     assertEquals(CONTAINER_NAME, loadBalancer.getContainerName());
@@ -481,7 +481,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
 
     assertEquals("abc", registerTaskDefinitionRequest.getExecutionRoleArn());
     assertThat(registerTaskDefinitionRequest.getContainerDefinitions()).isNotNull();
-    assertEquals(1, registerTaskDefinitionRequest.getContainerDefinitions().size());
+    assertThat(registerTaskDefinitionRequest.getContainerDefinitions()).hasSize(1);
 
     ContainerDefinition containerDefinition = registerTaskDefinitionRequest.getContainerDefinitions().get(0);
     assertThat(containerDefinition).isNotNull();
@@ -490,14 +490,14 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     assertEquals(1, containerDefinition.getCpu().intValue());
     assertEquals(DOCKER_DOMAIN_NAME + "/" + DOCKER_IMG_NAME, containerDefinition.getImage());
     assertThat(containerDefinition.getPortMappings()).isNotNull();
-    assertEquals(1, containerDefinition.getPortMappings().size());
+    assertThat(containerDefinition.getPortMappings()).hasSize(1);
 
     PortMapping portMapping = containerDefinition.getPortMappings().iterator().next();
     assertEquals(80, portMapping.getContainerPort().intValue());
     assertEquals("tcp", portMapping.getProtocol());
 
     assertThat(containerDefinition.getSecrets()).isNotNull();
-    assertEquals(1, containerDefinition.getSecrets().size());
+    assertThat(containerDefinition.getSecrets()).hasSize(1);
     assertEquals("environment_variable_name", containerDefinition.getSecrets().get(0).getName());
     assertEquals("arn:aws:ssm:region:aws_account_id:parameter/parameter_name",
         containerDefinition.getSecrets().get(0).getValueFrom());
@@ -534,11 +534,11 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     assertEquals(setupParams.getTaskFamily(), registerTaskDefinitionRequest.getFamily());
     assertThat(registerTaskDefinitionRequest.getRequiresCompatibilities().contains(LaunchType.FARGATE.name())).isTrue();
     assertEquals(NetworkMode.Awsvpc.name().toLowerCase(), registerTaskDefinitionRequest.getNetworkMode().toLowerCase());
-    assertEquals(1, registerTaskDefinitionRequest.getContainerDefinitions().size());
+    assertThat(registerTaskDefinitionRequest.getContainerDefinitions()).hasSize(1);
     com.amazonaws.services.ecs.model.ContainerDefinition taskDefinition1 =
         registerTaskDefinitionRequest.getContainerDefinitions().iterator().next();
     assertThat(taskDefinition1.getPortMappings()).isNotNull();
-    assertEquals(1, taskDefinition1.getPortMappings().size());
+    assertThat(taskDefinition1.getPortMappings()).hasSize(1);
 
     PortMapping portMapping = taskDefinition1.getPortMappings().iterator().next();
     assertEquals("tcp", portMapping.getProtocol());
@@ -611,7 +611,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     EcsContainerTask ecsContainerTask = ecsSetupCommandTaskHelper.createEcsContainerTaskIfNull(null);
     assertThat(ecsContainerTask).isNotNull();
     assertThat(ecsContainerTask.getContainerDefinitions()).isNotNull();
-    assertEquals(1, ecsContainerTask.getContainerDefinitions().size());
+    assertThat(ecsContainerTask.getContainerDefinitions()).hasSize(1);
     assertEquals(1, ecsContainerTask.getContainerDefinitions().get(0).getCpu().intValue());
     assertEquals(256, ecsContainerTask.getContainerDefinitions().get(0).getMemory().intValue());
     assertThat(ecsContainerTask.getContainerDefinitions().get(0).getPortMappings()).isNotNull();

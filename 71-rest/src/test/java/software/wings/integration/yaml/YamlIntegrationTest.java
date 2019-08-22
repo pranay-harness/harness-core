@@ -107,7 +107,7 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
     logger.info("Created Application : " + application.getName());
 
     GitFetchFilesResult gitFetchFilesResult = getGitFetchFilesResult(yamlPath);
-    assertEquals(1, gitFetchFilesResult.getFiles().size());
+    assertThat(gitFetchFilesResult.getFiles()).hasSize(1);
     assertEquals("Index.yaml", gitFetchFilesResult.getFiles().get(0).getFilePath());
   }
 
@@ -204,7 +204,7 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
     String yamlPath = yamlIntegrationTestHelper.getCloudProviderYamlPath(cloudProviderName);
 
     GitFetchFilesResult gitFetchFilesResult = getGitFetchFilesResult(yamlPath);
-    assertEquals(1, gitFetchFilesResult.getFiles().size());
+    assertThat(gitFetchFilesResult.getFiles()).hasSize(1);
     assertEquals(cloudProviderName + YamlConstants.YAML_EXTENSION, gitFetchFilesResult.getFiles().get(0).getFilePath());
   }
 
@@ -225,7 +225,7 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
     String yamlPath = yamlIntegrationTestHelper.getInfraProvisionerYamlPath(application, infraProvisioner);
 
     GitFetchFilesResult gitFetchFilesResult = getGitFetchFilesResult(yamlPath);
-    assertEquals(1, gitFetchFilesResult.getFiles().size());
+    assertThat(gitFetchFilesResult.getFiles()).hasSize(1);
     assertEquals(
         infraProvisionerName + YamlConstants.YAML_EXTENSION, gitFetchFilesResult.getFiles().get(0).getFilePath());
   }
@@ -246,7 +246,7 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
 
     String yamlPath = yamlIntegrationTestHelper.getEnvironmentYamlPath(application, environment);
     GitFetchFilesResult gitFetchFilesResult = getGitFetchFilesResult(yamlPath);
-    assertEquals(1, gitFetchFilesResult.getFiles().size());
+    assertThat(gitFetchFilesResult.getFiles()).hasSize(1);
     assertEquals(YamlConstants.INDEX_YAML, gitFetchFilesResult.getFiles().get(0).getFilePath());
   }
 

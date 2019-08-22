@@ -665,7 +665,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
 
     int count = usageRestrictionsService.removeAppEnvReferences(ACCOUNT_ID, APP_ID, ENV_ID);
     assertEquals(0, count);
-    assertEquals(1, usageRestrictions.getAppEnvRestrictions().size());
+    assertThat(usageRestrictions.getAppEnvRestrictions()).hasSize(1);
     verifyZeroInteractions(settingsService);
     verifyZeroInteractions(secretManager);
 
@@ -684,7 +684,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
 
     int count = usageRestrictionsService.removeAppEnvReferences(ACCOUNT_ID, APP_ID, null);
     assertEquals(0, count);
-    assertEquals(1, usageRestrictions.getAppEnvRestrictions().size());
+    assertThat(usageRestrictions.getAppEnvRestrictions()).hasSize(1);
     verifyZeroInteractions(settingsService);
     verifyZeroInteractions(secretManager);
 
@@ -731,13 +731,13 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
     assertThat(summary).isNotNull();
     assertEquals(1, summary.getTotal());
     assertEquals(1, summary.getNumOfSettings());
-    assertEquals(1, summary.getSettings().size());
+    assertThat(summary.getSettings()).hasSize(1);
 
     summary = usageRestrictionsService.getReferenceSummaryForEnv(ACCOUNT_ID, ENV_ID_1);
     assertThat(summary).isNotNull();
     assertEquals(1, summary.getTotal());
     assertEquals(1, summary.getNumOfSettings());
-    assertEquals(1, summary.getSettings().size());
+    assertThat(summary.getSettings()).hasSize(1);
   }
 
   private UsageRestrictions setupUsageRestrictionsForAppEnvReferenceTesting() {

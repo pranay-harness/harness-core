@@ -59,7 +59,7 @@ public class CVActivityLogServiceTest extends BaseIntegrationTest {
         .info("activity log from test at minute %t and another minute %t", now, nextMinute);
     CVActivityLog cvActivityLog =
         wingsPersistence.createQuery(CVActivityLog.class).filter(CVActivityLogKeys.cvConfigId, cvConfigId).get();
-    assertEquals(2, cvActivityLog.getTimestampParams().size());
+    assertThat(cvActivityLog.getTimestampParams()).hasSize(2);
     assertEquals(nextMinute, (long) cvActivityLog.getTimestampParams().get(1));
     assertEquals(now, (long) cvActivityLog.getTimestampParams().get(0));
   }
@@ -116,7 +116,7 @@ public class CVActivityLogServiceTest extends BaseIntegrationTest {
         cvActivityLogService.findByCVConfigId(
             cvConfigId, TimeUnit.MINUTES.toMillis(nowMinute), TimeUnit.MINUTES.toMillis(nowMinute - 1)));
     List<CVActivityLog> activityLogs = cvActivityLogService.findByCVConfigId(cvConfigId, nowMilli, nowMilli);
-    assertEquals(1, activityLogs.size());
+    assertThat(activityLogs).hasSize(1);
     assertEquals(cvConfigId, activityLogs.get(0).getCvConfigId());
     assertThat(activityLogs.get(0).getStateExecutionId()).isNull();
     assertEquals(nowMinute, activityLogs.get(0).getDataCollectionMinute());
@@ -130,7 +130,7 @@ public class CVActivityLogServiceTest extends BaseIntegrationTest {
     String logLine = "test log message: " + generateUUID();
     cvActivityLogService.getLoggerByStateExecutionId(stateExecutionId).info(logLine);
     List<CVActivityLog> activityLogs = cvActivityLogService.findByStateExecutionId(stateExecutionId);
-    assertEquals(1, activityLogs.size());
+    assertThat(activityLogs).hasSize(1);
     assertEquals(stateExecutionId, activityLogs.get(0).getStateExecutionId());
     assertThat(activityLogs.get(0).getCvConfigId()).isNull();
     assertEquals(0, activityLogs.get(0).getDataCollectionMinute());
@@ -152,7 +152,7 @@ public class CVActivityLogServiceTest extends BaseIntegrationTest {
 
     List<CVActivityLog> activityLogs = cvActivityLogService.findByCVConfigId(
         cvConfigId, TimeUnit.MINUTES.toMillis(nowMinute), TimeUnit.MINUTES.toMillis(nowMinute + 1));
-    assertEquals(2, activityLogs.size());
+    assertThat(activityLogs).hasSize(2);
     assertEquals(cvConfigId, activityLogs.get(0).getCvConfigId());
     assertEquals(nowMinute, activityLogs.get(0).getDataCollectionMinute());
     assertEquals(logLine1, activityLogs.get(0).getLog());

@@ -52,7 +52,7 @@ public class WingsMongoExportImportTest extends WingsBaseTest {
 
     List<String> records = mongoExportImport.exportRecords(new BasicDBObject("accountId", accountId), collectionName);
     assertThat(records).isNotNull();
-    assertEquals(1, records.size());
+    assertThat(records).hasSize(1);
 
     String appJson = records.get(0);
     logger.info("Application JSON: " + appJson);

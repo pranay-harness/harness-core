@@ -1,5 +1,6 @@
 package software.wings.metrics;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static software.wings.common.VerificationConstants.HEARTBEAT_METRIC_NAME;
 
@@ -100,7 +101,7 @@ public class TimeSeriesDataRecordTest {
             getTimeSeriesInputForTest(now.getMillis(), 1, host2, null, transactionMap),
             getTimeSeriesInputForTest(now.getMillis(), 1, null, ClusterLevel.H0, new HashMap<>()));
 
-    assertEquals(6, dataRecords.size());
+    assertThat(dataRecords).hasSize(6);
 
     expectedOutput.sort(
         Comparator.comparing(TimeSeriesDataRecord::getDataCollectionMinute)
@@ -150,7 +151,7 @@ public class TimeSeriesDataRecordTest {
         getNewRelicInputForTest(now.getMillis(), 1, host2, null, transaction2, metrics),
         getNewRelicInputForTest(now.getMillis(), 1, null, ClusterLevel.H0, HEARTBEAT_METRIC_NAME, new ArrayList<>()));
 
-    assertEquals(10, dataRecords.size());
+    assertThat(dataRecords).hasSize(10);
 
     expectedOutput.sort(
         Comparator.comparing(NewRelicMetricDataRecord::getDataCollectionMinute)

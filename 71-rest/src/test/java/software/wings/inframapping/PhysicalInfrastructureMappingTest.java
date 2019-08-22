@@ -1,5 +1,6 @@
 package software.wings.inframapping;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Lists;
@@ -40,7 +41,7 @@ public class PhysicalInfrastructureMappingTest extends WingsBaseTest {
 
     infrastructureMapping.applyProvisionerVariables(blueprintProperties, null, false);
 
-    assertEquals(2, infrastructureMapping.hosts().size());
+    assertThat(infrastructureMapping.hosts()).hasSize(2);
     assertEquals("abc.com", infrastructureMapping.hosts().get(0).getPublicDns());
     assertEquals(123, infrastructureMapping.hosts().get(0).getProperties().get("amiId"));
     assertEquals("abcd.com", infrastructureMapping.hosts().get(1).getPublicDns());

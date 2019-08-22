@@ -642,7 +642,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     Thread.sleep(TimeUnit.SECONDS.toMillis(20));
     LogMLAnalysisSummary logMLAnalysisSummary =
         mgrAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
-    assertEquals(1, logMLAnalysisSummary.getControlClusters().size());
+    assertThat(logMLAnalysisSummary.getControlClusters()).hasSize(1);
     assertThat(logMLAnalysisSummary.getTestClusters()).isEmpty();
     assertEquals("No new data for the given queries. Showing baseline data if any.",
         logMLAnalysisSummary.getAnalysisSummaryMessage());
@@ -770,7 +770,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     LogMLAnalysisRecord logAnalysisRecord =
         analysisService.getLogAnalysisRecords(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId, 0, false);
     assertThat(logAnalysisRecord.isBaseLineCreated()).isFalse();
-    assertEquals(1, logAnalysisRecord.getControl_clusters().size());
+    assertThat(logAnalysisRecord.getControl_clusters()).hasSize(1);
     assertThat(isEmpty(logAnalysisRecord.getTest_clusters())).isTrue();
     assertThat(isEmpty(logAnalysisRecord.getTest_events())).isTrue();
 
@@ -855,7 +855,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     assertThat(logAnalysisRecord.isBaseLineCreated()).isTrue();
     assertThat(isEmpty(logAnalysisRecord.getControl_clusters())).isTrue();
     assertThat(isEmpty(logAnalysisRecord.getTest_clusters())).isTrue();
-    assertEquals(1, logAnalysisRecord.getUnknown_clusters().size());
+    assertThat(logAnalysisRecord.getUnknown_clusters()).hasSize(1);
     assertThat(isEmpty(logAnalysisRecord.getTest_events())).isFalse();
   }
 
@@ -1103,11 +1103,11 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     }
     LogMLAnalysisSummary logMLAnalysisSummary =
         mgrAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SUMO);
-    assertEquals(1, logMLAnalysisSummary.getControlClusters().size());
-    assertEquals(1, logMLAnalysisSummary.getTestClusters().size());
+    assertThat(logMLAnalysisSummary.getControlClusters()).hasSize(1);
+    assertThat(logMLAnalysisSummary.getTestClusters()).hasSize(1);
     assertThat(logMLAnalysisSummary.getUnknownClusters()).isEmpty();
-    assertEquals(5, logMLAnalysisSummary.getControlClusters().get(0).getHostSummary().size());
-    assertEquals(5, logMLAnalysisSummary.getTestClusters().get(0).getHostSummary().size());
+    assertThat(logMLAnalysisSummary.getControlClusters().get(0).getHostSummary()).hasSize(5);
+    assertThat(logMLAnalysisSummary.getTestClusters().get(0).getHostSummary()).hasSize(5);
     assertEquals(numOfNodes * messageCount,
         logMLAnalysisSummary.getControlClusters().get(0).getHostSummary().values().iterator().next().getCount());
   }
@@ -1539,7 +1539,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     Thread.sleep(TimeUnit.SECONDS.toMillis(20));
     LogMLAnalysisRecord logAnalysisRecord =
         analysisService.getLogAnalysisRecords(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId, 0, false);
-    assertEquals(1, logAnalysisRecord.getControl_events().size());
+    assertThat(logAnalysisRecord.getControl_events()).hasSize(1);
     assertEquals("ignore", logAnalysisRecord.getControl_events().get("20000").get(0).getText());
     assertThat(isEmpty(logAnalysisRecord.getTest_events())).isTrue();
   }

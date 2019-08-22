@@ -286,7 +286,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
                                               .build();
     List<AppdynamicsMetric> tierBTMetrics = delegateService.getTierBTMetrics(appDynamicsConfig, new Random().nextLong(),
         new Random().nextLong(), Collections.emptyList(), createApiCallLog(accountId, null));
-    assertEquals(2, tierBTMetrics.size());
+    assertThat(tierBTMetrics).hasSize(2);
     assertEquals(bts, tierBTMetrics);
   }
 
@@ -378,7 +378,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
         delegateService.getTierBTMetricData(appDynamicsConfig, new Random().nextLong(), generateUuid(), generateUuid(),
             generateUuid(), System.currentTimeMillis() - new Random().nextInt(), System.currentTimeMillis(),
             Collections.emptyList(), createApiCallLog(accountId, null));
-    assertEquals(2, tierBTMetricData.size());
+    assertThat(tierBTMetricData).hasSize(2);
     assertEquals(btData, tierBTMetricData);
   }
 

@@ -85,7 +85,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
 
     Map<String, TimeSeriesMetricDefinition> actualDefinitions =
         cvConfigurationService.getMetricDefinitionMap(StateType.PROMETHEUS, cvServiceConfiguration);
-    assertEquals(3, actualDefinitions.size());
+    assertThat(actualDefinitions).hasSize(3);
 
     timeSeriesToAnalyze.forEach(timeSeries -> {
       TimeSeriesMetricDefinition metricDefinition = actualDefinitions.get(timeSeries.getMetricName());
@@ -114,7 +114,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     Map<String, TimeSeriesMetricDefinition> actualDefinitions =
         cvConfigurationService.getMetricDefinitionMap(StateType.DATA_DOG, cvServiceConfiguration);
 
-    assertEquals(6, actualDefinitions.size());
+    assertThat(actualDefinitions).hasSize(6);
 
     List<String> expectedKeySet = Lists.newArrayList("Docker CPU Usage", "Docker RSS Memory (%)",
         "Docker CPU Throttled", "ECS Container CPU Usage", "ECS Container RSS Memory", "ECS Container Memory Usage");
@@ -173,7 +173,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     Map<String, TimeSeriesMetricDefinition> actualDefinitions =
         cvConfigurationService.getMetricDefinitionMap(StateType.CLOUD_WATCH, cvServiceConfiguration);
 
-    assertEquals(6, actualDefinitions.size());
+    assertThat(actualDefinitions).hasSize(6);
 
     cloudWatchMetrics.forEach(metric -> {
       TimeSeriesMetricDefinition definition = actualDefinitions.get(metric.getMetricName());

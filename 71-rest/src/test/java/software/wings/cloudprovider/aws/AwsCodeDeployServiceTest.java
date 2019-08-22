@@ -138,7 +138,7 @@ public class AwsCodeDeployServiceTest extends WingsBaseTest {
     instanceList =
         awsCodeDeployService.listDeploymentInstances(Regions.US_EAST_1.getName(), null, null, "deploymentId");
     assertThat(instanceList).isNotNull();
-    assertEquals(1, instanceList.size());
+    assertThat(instanceList).hasSize(1);
     assertEquals(PUBLIC_DNS_NAME, instanceList.iterator().next().getPublicDnsName());
   }
 }

@@ -987,7 +987,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
             .build());
 
     // map should not contains any null values as that cause db.update to fail
-    assertEquals(8, keyValuePairs.size());
+    assertThat(keyValuePairs).hasSize(8);
     assertEquals(keyValuePairs.get("clusterName"), CLUSTER_NAME);
     assertEquals(keyValuePairs.get("region"), "us-east-1");
     assertEquals(keyValuePairs.get("assignPublicIp"), false);
@@ -1017,12 +1017,12 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
             .tempRouteMap(asList(ROUTE))
             .build());
 
-    assertEquals(4, keyValuePairs.size());
+    assertThat(keyValuePairs).hasSize(4);
     assertEquals(keyValuePairs.get("organization"), ORGANIZATION);
     assertEquals(keyValuePairs.get("space"), SPACE);
     assertThat(keyValuePairs.get("tempRouteMap")).isNotNull();
-    assertEquals(1, ((List) keyValuePairs.get("tempRouteMap")).size());
-    assertEquals(1, ((List) keyValuePairs.get("routeMaps")).size());
+    assertThat((List) keyValuePairs.get("tempRouteMap")).hasSize(1);
+    assertThat((List) keyValuePairs.get("routeMaps")).hasSize(1);
     assertEquals(ROUTE, ((List) keyValuePairs.get("tempRouteMap")).get(0));
     assertEquals(ROUTE, ((List) keyValuePairs.get("routeMaps")).get(0));
   }

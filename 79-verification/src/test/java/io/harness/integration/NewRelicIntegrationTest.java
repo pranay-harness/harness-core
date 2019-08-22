@@ -352,7 +352,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
               new GenericType<RestResponse<Set<NewRelicMetricDataRecord>>>() {});
 
       final Set<NewRelicMetricDataRecord> metricsFromDb = metricResponse.getResource();
-      assertEquals((batchNum + 1) * numOfMetricsPerBatch * hosts.size() * numOfMinutes, metricsFromDb.size());
+      assertThat(metricsFromDb).hasSize((batchNum + 1) * numOfMetricsPerBatch * hosts.size() * numOfMinutes);
       Query<NewRelicMetricDataRecord> query =
           wingsPersistence.createQuery(NewRelicMetricDataRecord.class).filter("stateExecutionId", stateExecutionId);
       assertEquals((batchNum + 1) * numOfMetricsPerBatch * hosts.size() * numOfMinutes * 2, query.count());
@@ -406,7 +406,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     RestResponse<List<NewRelicMetricAnalysisRecord>> restResponse = getRequestBuilderWithAuthHeader(target).get(
         new GenericType<RestResponse<List<NewRelicMetricAnalysisRecord>>>() {});
     List<NewRelicMetricAnalysisRecord> savedRecords = restResponse.getResource();
-    assertEquals(1, savedRecords.size());
+    assertThat(savedRecords).hasSize(1);
     NewRelicMetricAnalysisRecord savedRecord = savedRecords.get(0);
     assertThat(savedRecord.getWorkflowExecutionId()).isNull();
 
@@ -416,7 +416,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     restResponse = getRequestBuilderWithAuthHeader(target).get(
         new GenericType<RestResponse<List<NewRelicMetricAnalysisRecord>>>() {});
     savedRecords = restResponse.getResource();
-    assertEquals(1, savedRecords.size());
+    assertThat(savedRecords).hasSize(1);
     savedRecord = savedRecords.get(0);
     assertEquals("CV-Demo", savedRecord.getWorkflowExecutionId());
   }
@@ -467,7 +467,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     RestResponse<List<NewRelicMetricAnalysisRecord>> restResponse = getRequestBuilderWithAuthHeader(target).get(
         new GenericType<RestResponse<List<NewRelicMetricAnalysisRecord>>>() {});
     List<NewRelicMetricAnalysisRecord> savedRecords = restResponse.getResource();
-    assertEquals(1, savedRecords.size());
+    assertThat(savedRecords).hasSize(1);
     NewRelicMetricAnalysisRecord savedRecord = savedRecords.get(0);
     assertThat(savedRecord.getWorkflowExecutionId()).isNull();
 
@@ -477,7 +477,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     restResponse = getRequestBuilderWithAuthHeader(target).get(
         new GenericType<RestResponse<List<NewRelicMetricAnalysisRecord>>>() {});
     savedRecords = restResponse.getResource();
-    assertEquals(1, savedRecords.size());
+    assertThat(savedRecords).hasSize(1);
     savedRecord = savedRecords.get(0);
     assertEquals("CV-Demo", savedRecord.getWorkflowExecutionId());
   }
@@ -525,12 +525,12 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
         new GenericType<RestResponse<List<NewRelicMetricAnalysisRecord>>>() {});
 
     List<NewRelicMetricAnalysisRecord> savedRecords = restResponse.getResource();
-    assertEquals(1, savedRecords.size());
+    assertThat(savedRecords).hasSize(1);
     NewRelicMetricAnalysisRecord savedRecord = savedRecords.get(0);
     assertThat(savedRecord).isNotNull();
 
     final List<NewRelicMetricAnalysis> analyses = savedRecord.getMetricAnalyses();
-    assertEquals(record.getMetricAnalyses().size(), analyses.size());
+    assertThat(analyses).hasSize(record.getMetricAnalyses().size());
 
     assertEquals(analysis1, analyses.get(0));
     assertEquals(analysis2, analyses.get(1));
@@ -661,7 +661,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
     Set<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
         metricDataAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId);
-    assertEquals(1, metricAnalysisRecords.size());
+    assertThat(metricAnalysisRecords).hasSize(1);
 
     NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisRecords.iterator().next();
     assertEquals(RiskLevel.NA, metricsAnalysis.getRiskLevel());
@@ -794,7 +794,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
     Set<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
         metricDataAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId);
-    assertEquals(1, metricAnalysisRecords.size());
+    assertThat(metricAnalysisRecords).hasSize(1);
 
     NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisRecords.iterator().next();
 
@@ -930,7 +930,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
     Set<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
         metricDataAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId);
-    assertEquals(1, metricAnalysisRecords.size());
+    assertThat(metricAnalysisRecords).hasSize(1);
 
     NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisRecords.iterator().next();
 
@@ -1094,14 +1094,14 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
     Set<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
         metricDataAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId);
-    assertEquals(1, metricAnalysisRecords.size());
+    assertThat(metricAnalysisRecords).hasSize(1);
 
     NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisRecords.iterator().next();
 
     assertEquals(RiskLevel.LOW, metricsAnalysis.getRiskLevel());
     assertThat(metricsAnalysis.isShowTimeSeries()).isTrue();
     assertEquals("No problems found", metricsAnalysis.getMessage());
-    assertEquals(1, metricsAnalysis.getMetricAnalyses().size());
+    assertThat(metricsAnalysis.getMetricAnalyses()).hasSize(1);
   }
 
   private URIBuilder getURIBuilder(String path, int port) {

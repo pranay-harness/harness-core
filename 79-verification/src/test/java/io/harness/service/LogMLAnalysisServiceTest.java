@@ -283,7 +283,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     logDataRecords = analysisService.getLogData(
         logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2, accountId);
-    assertEquals(1, logDataRecords.size());
+    assertThat(logDataRecords).hasSize(1);
     final LogDataRecord logDataRecord = logDataRecords.iterator().next();
     assertEquals(logElement.getLogMessage(), logDataRecord.getLogMessage());
     assertEquals(logElement.getQuery(), logDataRecord.getQuery());
@@ -407,7 +407,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     Set<LogDataRecord> logDataRecords = analysisService.getLogData(
         logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2, accountId);
-    assertEquals(1, logDataRecords.size());
+    assertThat(logDataRecords).hasSize(1);
     final LogDataRecord logDataRecord = logDataRecords.iterator().next();
     assertEquals(logElement.getLogMessage(), logDataRecord.getLogMessage());
     assertEquals(logElement.getQuery(), logDataRecord.getQuery());
@@ -454,7 +454,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
         query, appId, stateExecutionId, workflowId, serviceId, Collections.singleton(host), logCollectionMinute, false);
     Set<LogDataRecord> logDataRecords = analysisService.getLogData(
         logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2, accountId);
-    assertEquals(1, logDataRecords.size());
+    assertThat(logDataRecords).hasSize(1);
     LogDataRecord logDataRecord = logDataRecords.iterator().next();
     assertEquals(logElement.getLogMessage(), logDataRecord.getLogMessage());
     assertEquals(logElement.getQuery(), logDataRecord.getQuery());
@@ -471,7 +471,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     logDataRecords = analysisService.getLogData(
         logRequest, true, workflowExecutionId, ClusterLevel.L2, StateType.SPLUNKV2, accountId);
-    assertEquals(1, logDataRecords.size());
+    assertThat(logDataRecords).hasSize(1);
     logDataRecord = logDataRecords.iterator().next();
     assertEquals(logElement.getLogMessage(), logDataRecord.getLogMessage());
     assertEquals(logElement.getQuery(), logDataRecord.getQuery());
@@ -618,7 +618,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
         managerAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
     assertThat(analysisSummary).isNotNull();
     assertEquals(RiskLevel.HIGH, analysisSummary.getRiskLevel());
-    assertEquals(numOfUnknownClusters, analysisSummary.getUnknownClusters().size());
+    assertThat(analysisSummary.getUnknownClusters()).hasSize(numOfUnknownClusters);
     assertThat(analysisSummary.getTestClusters().isEmpty()).isTrue();
     assertThat(analysisSummary.getControlClusters().isEmpty()).isTrue();
     assertEquals(numOfUnknownClusters + " anomalous clusters found", analysisSummary.getAnalysisSummaryMessage());
@@ -725,7 +725,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
         managerAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
     assertThat(analysisSummary).isNotNull();
     assertEquals(numOfUnexpectedFreq > 0 ? RiskLevel.HIGH : RiskLevel.NA, analysisSummary.getRiskLevel());
-    assertEquals(numOfTestClusters, analysisSummary.getTestClusters().size());
+    assertThat(analysisSummary.getTestClusters()).hasSize(numOfTestClusters);
     assertThat(analysisSummary.getUnknownClusters().isEmpty()).isTrue();
     assertThat(analysisSummary.getControlClusters().isEmpty()).isTrue();
     String message;
@@ -792,7 +792,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
         managerAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
     assertThat(analysisSummary).isNotNull();
     assertEquals(RiskLevel.NA, analysisSummary.getRiskLevel());
-    assertEquals(numOfControlClusters, analysisSummary.getControlClusters().size());
+    assertThat(analysisSummary.getControlClusters()).hasSize(numOfControlClusters);
     assertThat(analysisSummary.getUnknownClusters().isEmpty()).isTrue();
     assertThat(analysisSummary.getTestClusters().isEmpty()).isTrue();
     String message = "No new data for the given queries. Showing baseline data if any.";
@@ -1024,14 +1024,14 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     InputStream is = getClass().getClassLoader().getResourceAsStream("verification/LogAnalysisRecord.json");
     String jsonTxt = IOUtils.toString(is, Charset.defaultCharset());
     LogMLAnalysisRecord records = JsonUtils.asObject(jsonTxt, LogMLAnalysisRecord.class);
-    assertEquals(7, records.getUnknown_events().size());
-    assertEquals(33, records.getTest_events().size());
-    assertEquals(31, records.getControl_events().size());
-    assertEquals(31, records.getControl_clusters().size());
-    assertEquals(26, records.getTest_clusters().size());
-    assertEquals(4, records.getUnknown_clusters().size());
+    assertThat(records.getUnknown_events()).hasSize(7);
+    assertThat(records.getTest_events()).hasSize(33);
+    assertThat(records.getControl_events()).hasSize(31);
+    assertThat(records.getControl_clusters()).hasSize(31);
+    assertThat(records.getTest_clusters()).hasSize(26);
+    assertThat(records.getUnknown_clusters()).hasSize(4);
     assertThat(records.getCluster_scores().getTest()).isEmpty();
-    assertEquals(4, records.getCluster_scores().getUnknown().size());
+    assertThat(records.getCluster_scores().getUnknown()).hasSize(4);
   }
 
   @Test
@@ -1488,12 +1488,12 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     analysisService.save24X7LogAnalysisRecords(logMLAnalysisRecord.getAppId(), logMLAnalysisRecord.getCvConfigId(),
         logMLAnalysisRecord.getLogCollectionMinute(), null, logMLAnalysisRecord, Optional.empty(), Optional.empty());
 
-    assertEquals(1, wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList().size());
+    assertThat(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList()).hasSize(1);
 
     analysisService.save24X7LogAnalysisRecords(logMLAnalysisRecord.getAppId(), logMLAnalysisRecord.getCvConfigId(),
         logMLAnalysisRecord.getLogCollectionMinute(), null, logMLAnalysisRecord, Optional.empty(), Optional.empty());
 
-    assertEquals(1, wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList().size());
+    assertThat(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList()).hasSize(1);
   }
 
   @Test
@@ -1579,7 +1579,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertThat(created).isTrue();
     assertThat(feedbackRecord).isNotNull();
     assertThat(records).isNotNull();
-    assertEquals(2, records.size());
+    assertThat(records).hasSize(2);
     assertNotEquals("uuid1", feedbackRecord.getUuid());
   }
 

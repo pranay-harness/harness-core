@@ -920,7 +920,7 @@ public class AuthHandlerTest extends WingsBaseTest {
     assertThat(userGroup.getAppPermissions()).isNotNull();
 
     AccountPermissions accountPermissions = userGroup.getAccountPermissions();
-    assertEquals(1, accountPermissions.getPermissions().size());
+    assertThat(accountPermissions.getPermissions()).hasSize(1);
     assertThat(accountPermissions.getPermissions().contains(AUDIT_VIEWER)).isTrue();
   }
 
@@ -933,7 +933,7 @@ public class AuthHandlerTest extends WingsBaseTest {
     assertThat(userGroup.getAppPermissions()).isNotNull();
 
     AccountPermissions accountPermissions = userGroup.getAccountPermissions();
-    assertEquals(1, accountPermissions.getPermissions().size());
+    assertThat(accountPermissions.getPermissions()).hasSize(1);
     assertThat(accountPermissions.getPermissions().contains(AUDIT_VIEWER)).isTrue();
   }
 

@@ -4,6 +4,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.threading.Morpheus.sleep;
 import static net.sf.ezmorph.test.ArrayAssertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
 
@@ -82,7 +83,7 @@ public class DelegateCollectionCallbackAlertTest extends WingsBaseTest {
     sleep(Duration.ofMillis(2000));
     PageResponse<Alert> alerts =
         alertService.list(aPageRequest().addFilter("accountId", Operator.EQ, accountId).build());
-    assertEquals(1, alerts.size());
+    assertThat(alerts).hasSize(1);
     Alert alert = alerts.get(0);
     assertEquals(AlertType.CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT, alert.getType());
     assertEquals(AlertCategory.ContinuousVerification, alert.getCategory());
@@ -94,7 +95,7 @@ public class DelegateCollectionCallbackAlertTest extends WingsBaseTest {
     dataCollectionCallback.notify(response);
     sleep(Duration.ofMillis(2000));
     alerts = alertService.list(aPageRequest().addFilter("accountId", Operator.EQ, accountId).build());
-    assertEquals(1, alerts.size());
+    assertThat(alerts).hasSize(1);
     alert = alerts.get(0);
     assertEquals(AlertType.CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT, alert.getType());
     assertEquals(AlertCategory.ContinuousVerification, alert.getCategory());
@@ -111,7 +112,7 @@ public class DelegateCollectionCallbackAlertTest extends WingsBaseTest {
                                    .addFilter("accountId", Operator.EQ, accountId)
                                    .addFilter("status", Operator.EQ, AlertStatus.Open)
                                    .build());
-    assertEquals(1, alerts.size());
+    assertThat(alerts).hasSize(1);
     alert = alerts.get(0);
     assertEquals(AlertType.CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT, alert.getType());
     assertEquals(AlertCategory.ContinuousVerification, alert.getCategory());

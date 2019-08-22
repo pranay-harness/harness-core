@@ -205,7 +205,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
     assertEquals(USER_NAME, pcfCommandRequest.getPcfConfig().getUsername());
     assertEquals(ORG, pcfCommandRequest.getOrganization());
     assertEquals(SPACE, pcfCommandRequest.getSpace());
-    assertEquals(2, pcfCommandRequest.getRouteMaps().size());
+    assertThat(pcfCommandRequest.getRouteMaps()).hasSize(2);
     assertThat(pcfCommandRequest.getRouteMaps().contains("R1")).isTrue();
     assertThat(pcfCommandRequest.getRouteMaps().contains("R2")).isTrue();
   }

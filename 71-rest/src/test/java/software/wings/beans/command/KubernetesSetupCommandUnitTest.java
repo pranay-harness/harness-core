@@ -258,7 +258,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
     assertEquals("appName", horizontalPodAutoscaler.getMetadata().getLabels().get("app"));
     assertEquals("9", horizontalPodAutoscaler.getMetadata().getLabels().get("version"));
     assertThat(horizontalPodAutoscaler.getSpec().getAdditionalProperties()).isNotNull();
-    assertEquals(1, horizontalPodAutoscaler.getSpec().getAdditionalProperties().size());
+    assertThat(horizontalPodAutoscaler.getSpec().getAdditionalProperties()).hasSize(1);
     assertEquals("metrics", horizontalPodAutoscaler.getSpec().getAdditionalProperties().keySet().iterator().next());
     assertEquals(Integer.valueOf(3), horizontalPodAutoscaler.getSpec().getMinReplicas());
     assertEquals(Integer.valueOf(6), horizontalPodAutoscaler.getSpec().getMaxReplicas());

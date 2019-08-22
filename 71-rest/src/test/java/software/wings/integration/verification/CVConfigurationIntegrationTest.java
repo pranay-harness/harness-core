@@ -412,7 +412,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<Object>>>() {});
     List<Object> allConifgs = allConfigResponse.getResource();
 
-    assertEquals(1, allConifgs.size());
+    assertThat(allConifgs).hasSize(1);
 
     NewRelicCVServiceConfiguration obj =
         JsonUtils.asObject(JsonUtils.asJson(allConifgs.get(0)), NewRelicCVServiceConfiguration.class);
@@ -755,7 +755,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<Object>>>() {});
     List<Object> allConifgs = allConfigResponse.getResource();
 
-    assertEquals(1, allConifgs.size());
+    assertThat(allConifgs).hasSize(1);
 
     ElkCVConfiguration obj = JsonUtils.asObject(JsonUtils.asJson(allConifgs.get(0)), ElkCVConfiguration.class);
 
@@ -844,7 +844,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<Object>>>() {});
     List<Object> allConifgs = allConfigResponse.getResource();
 
-    assertEquals(1, allConifgs.size());
+    assertThat(allConifgs).hasSize(1);
 
     BugsnagCVConfiguration obj = JsonUtils.asObject(JsonUtils.asJson(allConifgs.get(0)), BugsnagCVConfiguration.class);
 
@@ -921,7 +921,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<Object>>>() {});
     List<Object> allConifgs = allConfigResponse.getResource();
 
-    assertEquals(1, allConifgs.size());
+    assertThat(allConifgs).hasSize(1);
 
     StackdriverCVConfiguration obj =
         JsonUtils.asObject(JsonUtils.asJson(allConifgs.get(0)), StackdriverCVConfiguration.class);
@@ -986,7 +986,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<Object>>>() {});
     List<Object> allConifgs = allConfigResponse.getResource();
 
-    assertEquals(1, allConifgs.size());
+    assertThat(allConifgs).hasSize(1);
 
     SplunkCVConfiguration obj = JsonUtils.asObject(JsonUtils.asJson(allConifgs.get(0)), SplunkCVConfiguration.class);
 
@@ -1093,7 +1093,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<Object>>>() {});
     List<Object> allConifgs = allConfigResponse.getResource();
 
-    assertEquals(1, allConifgs.size());
+    assertThat(allConifgs).hasSize(1);
 
     LogsCVConfiguration obj = JsonUtils.asObject(JsonUtils.asJson(allConifgs.get(0)), LogsCVConfiguration.class);
 
@@ -1257,7 +1257,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<Object>>>() {});
     List<Object> allConfigs = allConfigResponse.getResource();
 
-    assertEquals(2, allConfigs.size());
+    assertThat(allConfigs).hasSize(2);
 
     NewRelicCVServiceConfiguration obj =
         JsonUtils.asObject(JsonUtils.asJson(allConfigs.get(0)), NewRelicCVServiceConfiguration.class);
@@ -1276,7 +1276,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<Object>>>() {});
     List<Object> listOfConfigsByEnv = listOfConfigsByEnvResponse.getResource();
 
-    assertEquals(2, listOfConfigsByEnv.size());
+    assertThat(listOfConfigsByEnv).hasSize(2);
 
     obj = JsonUtils.asObject(JsonUtils.asJson(listOfConfigsByEnv.get(0)), NewRelicCVServiceConfiguration.class);
     assertEquals(appId, obj.getAppId());
@@ -1289,7 +1289,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<Object>>>() {});
     listOfConfigsByEnv = listOfConfigsByEnvResponse.getResource();
 
-    assertEquals(2, listOfConfigsByEnv.size());
+    assertThat(listOfConfigsByEnv).hasSize(2);
 
     appDObject =
         JsonUtils.asObject(JsonUtils.asJson(listOfConfigsByEnv.get(0)), AppDynamicsCVServiceConfiguration.class);
@@ -1304,7 +1304,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<Object>>>() {});
     listOfConfigsByEnv = listOfConfigsByEnvResponse.getResource();
 
-    assertEquals(1, listOfConfigsByEnv.size());
+    assertThat(listOfConfigsByEnv).hasSize(1);
 
     appDObject =
         JsonUtils.asObject(JsonUtils.asJson(listOfConfigsByEnv.get(0)), AppDynamicsCVServiceConfiguration.class);
@@ -1602,7 +1602,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     RestResponse<List<CVConfiguration>> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<CVConfiguration>>>() {});
     List<CVConfiguration> cvConfigurations = restResponse.getResource();
-    assertEquals(numOfEnvs * 2, cvConfigurations.size());
+    assertThat(cvConfigurations).hasSize(numOfEnvs * 2);
     for (int i = 0; i < numOfEnvs; i++) {
       assertEquals("app0" + testUuid, cvConfigurations.get(i * 2).getAppId());
       assertEquals("env" + i + testUuid, cvConfigurations.get(i * 2).getEnvId());
@@ -1617,7 +1617,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<CVConfiguration>>>() {});
     cvConfigurations = restResponse.getResource();
-    assertEquals(numOfEnvs * 2 * 2, cvConfigurations.size());
+    assertThat(cvConfigurations).hasSize(numOfEnvs * 2 * 2);
     for (int i = 0; i < 2; i++) {
       for (int j = 0; j < numOfEnvs; j++) {
         final int index = i * numOfEnvs * 2 + j * 2;
@@ -1639,7 +1639,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<CVConfiguration>>>() {});
     cvConfigurations = restResponse.getResource();
-    assertEquals(8, cvConfigurations.size());
+    assertThat(cvConfigurations).hasSize(8);
 
     for (int i = 0; i < 2; i++) {
       for (int j = 0; j < 2; j++) {

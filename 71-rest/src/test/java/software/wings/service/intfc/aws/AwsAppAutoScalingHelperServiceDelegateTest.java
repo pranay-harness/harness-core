@@ -60,7 +60,7 @@ public class AwsAppAutoScalingHelperServiceDelegateTest extends WingsBaseTest {
 
     List<ScalingPolicy> scalingPolicies = scalingHelperServiceDelegate.getScalingPolicyFromJson(json);
     assertThat(scalingPolicies).isNotNull();
-    assertEquals(1, scalingPolicies.size());
+    assertThat(scalingPolicies).hasSize(1);
 
     ScalingPolicy scalingPolicy = scalingPolicies.get(0);
     validateScalingPolicy("TrackingPolicyTest", "ECSServiceAverageCPUUtilization", scalingPolicy);
@@ -99,7 +99,7 @@ public class AwsAppAutoScalingHelperServiceDelegateTest extends WingsBaseTest {
 
     List<ScalingPolicy> scalingPolicies = scalingHelperServiceDelegate.getScalingPolicyFromJson(json);
     assertThat(scalingPolicies).isNotNull();
-    assertEquals(2, scalingPolicies.size());
+    assertThat(scalingPolicies).hasSize(2);
 
     ScalingPolicy scalingPolicy = scalingPolicies.get(0);
     validateScalingPolicy("TrackingPolicyTest", "ECSServiceAverageCPUUtilization", scalingPolicy);

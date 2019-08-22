@@ -244,7 +244,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
     ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
     verify(instanceService).delete(captor.capture());
     Set idTobeDeleted = captor.getValue();
-    assertEquals(2, idTobeDeleted.size());
+    assertThat(idTobeDeleted).hasSize(2);
     assertThat(idTobeDeleted.contains(instance1.getInstanceId())).isTrue();
     assertThat(idTobeDeleted.contains(instance2.getInstanceId())).isTrue();
 
@@ -290,14 +290,14 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
     ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
     verify(instanceService).delete(captor.capture());
     Set idTobeDeleted = captor.getValue();
-    assertEquals(1, idTobeDeleted.size());
+    assertThat(idTobeDeleted).hasSize(1);
     assertThat(idTobeDeleted.contains(instance2.getInstanceId())).isTrue();
 
     ArgumentCaptor<Instance> captorInstance = ArgumentCaptor.forClass(Instance.class);
     verify(instanceService, times(1)).save(captorInstance.capture());
 
     List<Instance> capturedInstances = captorInstance.getAllValues();
-    assertEquals(1, capturedInstances.size());
+    assertThat(capturedInstances).hasSize(1);
     Set<String> hostNames = new HashSet<>(asList(HOST_NAME_IP3));
     assertThat(hostNames.contains(capturedInstances.get(0).getHostInstanceKey().getHostName())).isTrue();
   }
@@ -391,14 +391,14 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
     ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
     verify(instanceService).delete(captor.capture());
     Set idTobeDeleted = captor.getValue();
-    assertEquals(1, idTobeDeleted.size());
+    assertThat(idTobeDeleted).hasSize(1);
     assertThat(idTobeDeleted.contains(instance2.getInstanceId())).isTrue();
 
     ArgumentCaptor<Instance> captorInstance = ArgumentCaptor.forClass(Instance.class);
     verify(instanceService, times(1)).save(captorInstance.capture());
 
     List<Instance> capturedInstances = captorInstance.getAllValues();
-    assertEquals(1, capturedInstances.size());
+    assertThat(capturedInstances).hasSize(1);
     Set<String> hostNames = new HashSet<>(asList(HOST_NAME_IP3));
     assertEquals("1", capturedInstances.get(0).getLastArtifactBuildNum());
     assertEquals("old", capturedInstances.get(0).getLastArtifactName());

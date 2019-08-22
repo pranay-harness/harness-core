@@ -290,16 +290,16 @@ public class DataDogIntegrationTest extends VerificationBaseIntegrationTest {
     Thread.sleep(10000);
     Set<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
         metricDataAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId);
-    assertEquals(1, metricAnalysisRecords.size());
+    assertThat(metricAnalysisRecords).hasSize(1);
 
     NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisRecords.iterator().next();
 
     assertEquals(RiskLevel.LOW, metricsAnalysis.getRiskLevel());
     assertThat(metricsAnalysis.isShowTimeSeries()).isTrue();
     assertEquals("No problems found", metricsAnalysis.getMessage());
-    assertEquals(1, metricsAnalysis.getMetricAnalyses().size());
+    assertThat(metricsAnalysis.getMetricAnalyses()).hasSize(1);
     assertEquals("Dummy txn1", metricsAnalysis.getMetricAnalyses().get(0).getMetricName());
-    assertEquals(2, metricsAnalysis.getMetricAnalyses().get(0).getMetricValues().size());
+    assertThat(metricsAnalysis.getMetricAnalyses().get(0).getMetricValues()).hasSize(2);
     assertEquals("Servlet", metricsAnalysis.getMetricAnalyses().get(0).getTag());
     assertEquals(0, metricsAnalysis.getAnalysisMinute());
 

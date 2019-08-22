@@ -133,7 +133,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
     Map<String, Double> result = cv24x7DashboardService.getMetricTags(accountId, appId, cvConfigId, 0l, 0l);
 
     // assert
-    assertEquals("There are 2 tags", 2, result.size());
+    assertThat(result).hasSize(2);
     assertThat(result.containsKey("Docker")).isTrue();
     assertThat(result.containsKey("ECS")).isTrue();
   }
@@ -147,7 +147,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
     Map<String, Double> result = cv24x7DashboardService.getMetricTags(accountId, appId, cvConfigId, 0l, 0l);
 
     // assert
-    assertEquals("There are 0 tags", 0, result.size());
+    assertThat(result).hasSize(0);
   }
 
   private LogMLAnalysisRecord buildAnalysisRecord(int analysisMin, LogMLAnalysisStatus status, String cvConfigId) {
@@ -228,7 +228,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
 
     LogMLAnalysisSummary summary = cv24x7DashboardService.getAnalysisSummary(cvConfigId, startTime, endTime, appId);
 
-    assertEquals(10, summary.getUnknownClusters().size());
+    assertThat(summary.getUnknownClusters()).hasSize(10);
   }
 
   @Test
@@ -271,7 +271,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
 
     LogMLAnalysisSummary summary = cv24x7DashboardService.getAnalysisSummary(cvConfigId, startTime, endTime, appId);
 
-    assertEquals(10, summary.getUnknownClusters().size());
+    assertThat(summary.getUnknownClusters()).hasSize(10);
     LogMLClusterSummary feedbackCluster = null;
     for (LogMLClusterSummary clusterSummary : summary.getUnknownClusters()) {
       if (isNotEmpty(clusterSummary.getLogMLFeedbackId())) {
@@ -311,7 +311,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
 
     LogMLAnalysisSummary summary = cv24x7DashboardService.getAnalysisSummary(cvConfigId, startTime, endTime, appId);
 
-    assertEquals(20, summary.getUnknownClusters().size());
+    assertThat(summary.getUnknownClusters()).hasSize(20);
   }
 
   private void createSumoConfigWithBaseline(String cvConfigId, long currentTime, long baselineEndDelta) {

@@ -62,7 +62,7 @@ public class GitChangeSetRunnableTest extends WingsBaseTest {
     verify(yamlChangeSetService).updateStatusForGivenYamlChangeSets(anyString(), any(), anyList(), captor.capture());
     List stuckChangeSetIds = captor.getValue();
     assertThat(stuckChangeSetIds).isNotNull();
-    assertEquals(1, stuckChangeSetIds.size());
+    assertThat(stuckChangeSetIds).hasSize(1);
     assertEquals("12345", stuckChangeSetIds.get(0));
   }
 }

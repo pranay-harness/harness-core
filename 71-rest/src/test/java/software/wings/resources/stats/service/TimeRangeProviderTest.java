@@ -1,5 +1,6 @@
 package software.wings.resources.stats.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import io.harness.CategoryTest;
@@ -21,7 +22,7 @@ public class TimeRangeProviderTest extends CategoryTest {
 
     TimeRangeProvider provider = new TimeRangeProvider(ZoneOffset.UTC);
     List<TimeRange> timeRanges = provider.monthlyRanges(from.toInstant(ZoneOffset.UTC), to.toInstant(ZoneOffset.UTC));
-    assertEquals("Size should be 4: Oct, Nov, Dec, Jan", 4, timeRanges.size());
+    assertThat(timeRanges).hasSize(4);
     assertEquals("October 2018", timeRanges.get(0).getLabel());
     assertEquals("January 2019", timeRanges.get(3).getLabel());
   }

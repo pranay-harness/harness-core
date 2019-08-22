@@ -134,7 +134,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
         managerAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId);
 
     assertThat(resultList).isNotNull();
-    assertEquals(numOfGroups, resultList.size());
+    assertThat(resultList).hasSize(numOfGroups);
     resultList.forEach(record -> assertEquals(numOfMinutes, record.getAnalysisMinute()));
   }
 
@@ -174,7 +174,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
 
     // verify
     assertThat(historicalRecords).isNotNull();
-    assertEquals("Historical list should be of size 4", 4, historicalRecords.size());
+    assertThat(historicalRecords).hasSize(4);
   }
 
   @Test
@@ -203,7 +203,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
 
     // verify
     assertThat(historicalRecords).isNotNull();
-    assertEquals("Historical list should be of size 0", 0, historicalRecords.size());
+    assertThat(historicalRecords).hasSize(0);
   }
 
   @Test
@@ -231,7 +231,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
 
     // verify
     assertThat(historicalRecordsBadCvConfigId).isNotNull();
-    assertEquals("Historical list should be of size 0", 0, historicalRecordsBadCvConfigId.size());
+    assertThat(historicalRecordsBadCvConfigId).hasSize(0);
   }
 
   @Test
