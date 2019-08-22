@@ -22,6 +22,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
+import io.harness.serializer.JsonUtils;
 import io.harness.serializer.YamlUtils;
 import lombok.Builder;
 import lombok.Data;
@@ -567,7 +568,12 @@ public class DatadogState extends AbstractMetricAnalysisState {
       // group the metrics by txn.
       Map<String, Set<Metric>> txnMetricMap = new HashMap<>();
       customMetrics.forEach((filter, metricSet) -> {
-        metricSet.forEach(metric -> {
+        List<Metric> metricList = new ArrayList<>();
+        for (Object metricObj : metricSet) {
+          Metric metric = JsonUtils.asObject(JsonUtils.asJson(metricObj), Metric.class);
+          metricList.add(metric);
+        }
+        metricList.forEach(metric -> {
           String txnFilter = filter + "-" + metric.getTxnName();
           if (!txnMetricMap.containsKey(txnFilter)) {
             txnMetricMap.put(txnFilter, new HashSet<>());
@@ -581,7 +587,6 @@ public class DatadogState extends AbstractMetricAnalysisState {
         AtomicInteger throughputCount = new AtomicInteger(0);
         AtomicInteger otherMetricsCount = new AtomicInteger(0);
         AtomicInteger errorResponseCount = new AtomicInteger(0);
-
         metricSet.forEach(metric -> {
           if (metric.getMlMetricType().equals(THROUGHPUT.name())) {
             throughputCount.incrementAndGet();
