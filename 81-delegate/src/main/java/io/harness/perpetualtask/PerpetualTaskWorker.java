@@ -1,10 +1,13 @@
 package io.harness.perpetualtask;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.inject.Inject;
 
 import io.grpc.ManagedChannel;
 import io.harness.perpetualtask.PerpetualTaskServiceGrpc.PerpetualTaskServiceBlockingStub;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -12,7 +15,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -23,20 +25,23 @@ public class PerpetualTaskWorker implements Runnable {
   private final String delegateId = "";
   private Set<PerpetualTaskId> assignedTasks;
   // map of tasks currently in running state
-  private Map<PerpetualTaskId, ScheduledFuture<?>> runningTaskMap;
+  private Map<PerpetualTaskId, PerpetualTask> runningTaskMap;
 
   private final ScheduledExecutorService scheduledService;
+  private final SimpleTimeLimiter simpleTimeLimiter;
 
   private final PerpetualTaskServiceBlockingStub serviceBlockingStub;
-  private final PerpetualTaskFactory taskFactory;
+
+  private static Map<String, PerpetualTaskFactory> factoryMap;
 
   @Inject
-  public PerpetualTaskWorker(ManagedChannel channel) {
+  public PerpetualTaskWorker(ManagedChannel channel, Map<String, PerpetualTaskFactory> factoryMap) {
     runningTaskMap = new ConcurrentHashMap<>();
     scheduledService = Executors.newScheduledThreadPool(CORE_POOL_SIZE);
+    simpleTimeLimiter = new SimpleTimeLimiter();
 
-    taskFactory = new PerpetualTaskFactory();
     serviceBlockingStub = PerpetualTaskServiceGrpc.newBlockingStub(channel);
+    this.factoryMap = factoryMap;
   }
 
   @Override
@@ -57,6 +62,11 @@ public class PerpetualTaskWorker implements Runnable {
     assignedTasks = new HashSet<>(list.getTaskIdListList());
   }
 
+  @VisibleForTesting
+  protected Set<PerpetualTaskId> getAssignedTaskIds() {
+    return assignedTasks;
+  }
+
   protected PerpetualTaskContext getTaskContext(PerpetualTaskId taskId) {
     return serviceBlockingStub.getTaskContext(taskId);
   }
@@ -67,34 +77,47 @@ public class PerpetualTaskWorker implements Runnable {
     PerpetualTaskSchedule schedule = context.getTaskSchedule();
     long interval = schedule.getInterval();
     long timeout = schedule.getTimeout();
-    // TODO: support timeout
-    ScheduledFuture<?> taskHandle =
-        scheduledService.scheduleAtFixedRate(taskFactory.newTask(taskId, params), 0, interval, TimeUnit.SECONDS);
 
-    runningTaskMap.put(taskId, taskHandle);
+    PerpetualTaskFactory factory = factoryMap.get(getTaskType(params));
+    PerpetualTask task = factory.newTask(taskId, params);
+    runningTaskMap.put(taskId, task);
+
+    Void v = simpleTimeLimiter.callWithTimeout(task, timeout, TimeUnit.SECONDS, true);
+    // TODO: support interval
+    // ScheduledFuture<?> taskHandle =
+    //    scheduledService.scheduleAtFixedRate(taskFactory.newTask(taskId, params), 0, interval, TimeUnit.SECONDS);
+
+    // runningTaskMap.put(taskId, taskHandle);
   }
 
   public void startAssignedTasks() throws Exception {
-    for (PerpetualTaskId taskId : assignedTasks) {
+    for (PerpetualTaskId taskId : this.getAssignedTaskIds()) {
       // start the task if the task is not currently running
       if (!runningTaskMap.containsKey(taskId)) {
-        logger.info("Starting the task with id: " + taskId.getId());
+        logger.info("Starting the task with id: {}", taskId.getId());
         startTask(taskId);
       }
     }
   }
 
   protected void stopTask(PerpetualTaskId taskId) {
-    runningTaskMap.get(taskId).cancel(true);
+    PerpetualTask task = runningTaskMap.get(taskId);
+    task.stop();
     runningTaskMap.remove(taskId);
   }
 
   public void stopCancelledTasks() {
     for (PerpetualTaskId taskId : runningTaskMap.keySet()) {
-      if (!assignedTasks.contains(taskId)) {
-        logger.info("Stopping the task with id: " + taskId.getId());
+      if (!this.getAssignedTaskIds().contains(taskId)) {
+        logger.info("Stopping the task with id: {}", taskId.getId());
         stopTask(taskId);
       }
     }
+  }
+
+  private String getTaskType(PerpetualTaskParams params) {
+    String typeUrl = params.getCustomizedParams().getTypeUrl();
+    String fullyQualifiedClassName = typeUrl.split("/")[1];
+    return StringUtils.substringAfterLast(fullyQualifiedClassName, ".");
   }
 }

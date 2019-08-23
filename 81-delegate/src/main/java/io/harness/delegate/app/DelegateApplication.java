@@ -17,20 +17,17 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Module;
-import com.google.inject.Provides;
 import com.google.inject.name.Names;
 
 import com.ning.http.client.AsyncHttpClient;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.message.MessageService;
 import io.harness.delegate.service.DelegateService;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.client.PublisherModule;
-import io.harness.govern.ProviderModule;
 import io.harness.managerclient.ManagerClientModule;
+import io.harness.perpetualtask.PerpetualTaskWorkerModule;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.YamlUtils;
 import io.harness.threading.ExecutorModule;
@@ -40,6 +37,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.LogManager;
 import org.slf4j.bridge.SLF4JBridgeHandler;
+import software.wings.delegatetasks.k8s.client.KubernetesClientFactoryModule;
 
 import java.io.File;
 import java.io.IOException;
@@ -106,14 +104,10 @@ public class DelegateApplication {
         bind(DelegateConfiguration.class).toInstance(configuration);
       }
     });
-    modules.add(new ProviderModule() {
-      @Provides
-      public ManagedChannel getGrpcChannel() {
-        return ManagedChannelBuilder.forAddress("localhost", 9879).usePlaintext().build();
-      }
-    });
     modules.add(new ManagerClientModule(configuration.getManagerUrl(), configuration.getVerificationServiceUrl(),
         configuration.getAccountId(), configuration.getAccountSecret()));
+    modules.add(new PerpetualTaskWorkerModule());
+    modules.add(new KubernetesClientFactoryModule());
     modules.add(new PublisherModule(
         configuration.getPublishTarget(), configuration.getAccountId(), configuration.getQueueFilePath()));
     modules.addAll(new DelegateModule().cumulativeDependencies());

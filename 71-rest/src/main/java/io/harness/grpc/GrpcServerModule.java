@@ -1,8 +1,10 @@
 package io.harness.grpc;
 
+import com.google.inject.multibindings.Multibinder;
+
 import io.grpc.BindableService;
 import io.harness.govern.DependencyModule;
-import io.harness.perpetualtask.PerpetualTaskService;
+import io.harness.perpetualtask.grpc.PerpetualTaskServiceGrpc;
 
 import java.util.Set;
 
@@ -19,7 +21,9 @@ public class GrpcServerModule extends DependencyModule {
   @Override
   protected void configure() {
     // TODO: make GrpcServerModule generic by removing PerpetualTaskService as a dependency
-    bind(BindableService.class).to(PerpetualTaskService.class);
+
+    Multibinder<BindableService> multiBinder = Multibinder.newSetBinder(binder(), BindableService.class);
+    multiBinder.addBinding().to(PerpetualTaskServiceGrpc.class);
   }
 
   @Override

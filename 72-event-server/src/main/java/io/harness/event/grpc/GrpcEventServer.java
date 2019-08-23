@@ -30,7 +30,7 @@ public class GrpcEventServer {
   }
 
   @Inject
-  public void initalize() throws IOException {
+  public void initialize() throws IOException {
     // Ingress will forward to plain server in production.
     plainServer = ServerBuilder.forPort(eventServiceConfig.getPlainTextPort())
                       .intercept(authInterceptor)

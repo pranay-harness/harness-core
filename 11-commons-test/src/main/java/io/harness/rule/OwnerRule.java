@@ -68,6 +68,7 @@ public class OwnerRule extends RepeatRule {
                                            .add(DEEPAK)
                                            .add(GARVIT)
                                            .add(GEORGE)
+                                           .add(HANTANG)
                                            .add(HARSH)
                                            .add(HITESH)
                                            .add(JATIN)

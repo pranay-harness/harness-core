@@ -37,10 +37,10 @@ message PodInfo {
 
   // label without value is invalid
   map<string,string> labels = 6;
-  repeated Owner owner = 8;
-  Owner top_level_owner = 9;
+  repeated Owner owner = 7;
+  Owner top_level_owner = 8;
 
-  repeated Container containers = 7;
+  repeated Container containers = 9;
 
 }
 

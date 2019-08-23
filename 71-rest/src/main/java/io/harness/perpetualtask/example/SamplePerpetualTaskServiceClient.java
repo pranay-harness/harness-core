@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class SamplePerpetualTaskServiceClient implements PerpetualTaskServiceClient {
   SamplePerpetualTaskParams defaultParams;
-  Map<String, SamplePerpetualTaskParams> taskParamsMap; // <taskId, params>
+  Map<String, SamplePerpetualTaskParams> taskParamsMap; // <clientHandle, params>
   PerpetualTaskService service;
 
   @Inject
@@ -29,10 +29,10 @@ public class SamplePerpetualTaskServiceClient implements PerpetualTaskServiceCli
   public String createTask(SamplePerpetualTaskParams params) {
     String clientHandle = UUID.randomUUID().toString();
 
-    PerpetualTaskSchedule config = PerpetualTaskSchedule.newBuilder().build();
-    String recordId = service.createTask(this.getClass().getSimpleName(), clientHandle, config);
+    PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder().build();
+    service.createTask(this.getClass().getSimpleName(), clientHandle, schedule);
     taskParamsMap.put(clientHandle, params);
-    return recordId;
+    return clientHandle;
   }
 
   public void deleteTask(String taskId) {

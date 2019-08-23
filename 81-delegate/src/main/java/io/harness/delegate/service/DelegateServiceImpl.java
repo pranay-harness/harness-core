@@ -947,8 +947,7 @@ public class DelegateServiceImpl implements DelegateService {
   private void startTaskPolling() {
     taskPollExecutor.scheduleAtFixedRate(this ::pollForTask, 0, POLL_INTERVAL_SECONDS, TimeUnit.SECONDS);
     if ("true".equalsIgnoreCase(delegateConfiguration.getEnablePerpetualTasks())) {
-      // TODO: delay instead of fixed rate
-      perpetualTaskExecutor.scheduleAtFixedRate(perpetualTaskWorker, 0, POLL_INTERVAL_SECONDS, TimeUnit.SECONDS);
+      perpetualTaskExecutor.scheduleWithFixedDelay(perpetualTaskWorker, 0, POLL_INTERVAL_SECONDS, TimeUnit.SECONDS);
     }
   }
 

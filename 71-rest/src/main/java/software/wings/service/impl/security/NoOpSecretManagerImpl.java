@@ -78,6 +78,10 @@ public class NoOpSecretManagerImpl implements SecretManager {
     throw new UnsupportedOperationException();
   }
 
+  public List<EncryptedDataDetail> getEncryptionDetails(EncryptableSetting object) {
+    throw new UnsupportedOperationException();
+  }
+
   @Override
   public List<EncryptedDataDetail> getEncryptionDetails(
       EncryptableSetting object, String appId, String workflowExecutionId) {
