@@ -19,6 +19,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -28,6 +29,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.trigger.Condition.Type;
+import software.wings.stencils.DefaultValue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +43,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @Builder
 @AllArgsConstructor
+@Slf4j
 @Indexes({
   @Index(
       options = @IndexOptions(name = "uniqueTriggerIdx", unique = true), fields = { @Field("appId")
@@ -68,7 +71,7 @@ public class DeploymentTrigger implements PersistentEntity, UuidAware, CreatedAt
 
   @EntityName @NotEmpty @Trimmed private String name;
   private String description;
-  private boolean triggerEnabled = true;
+  @DefaultValue("true") private boolean triggerEnabled;
 
   private List<Long> nextIterations;
   private Action action;
@@ -87,9 +90,13 @@ public class DeploymentTrigger implements PersistentEntity, UuidAware, CreatedAt
       nextIterations = new ArrayList<>();
     }
 
-    ScheduledCondition scheduledCondition = (ScheduledCondition) condition;
-    if (expandNextIterations(PREFIX + scheduledCondition.getCronExpression(), nextIterations)) {
-      return nextIterations;
+    try {
+      ScheduledCondition scheduledCondition = (ScheduledCondition) condition;
+      if (expandNextIterations(PREFIX + scheduledCondition.getCronExpression(), nextIterations)) {
+        return nextIterations;
+      }
+    } catch (Exception ex) {
+      logger.error("Failed to schedule trigger {}", name, ex);
     }
 
     return null;

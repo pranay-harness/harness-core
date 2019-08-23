@@ -1,6 +1,7 @@
 package software.wings.service.impl.trigger;
 
 import static io.harness.exception.WingsException.USER;
+import static software.wings.beans.trigger.Action.ActionType.PIPELINE;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -11,6 +12,7 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.trigger.DeploymentTrigger;
+import software.wings.beans.trigger.PipelineAction;
 import software.wings.beans.trigger.PipelineCondition;
 import software.wings.service.intfc.PipelineService;
 
@@ -75,10 +77,17 @@ public class PipelineTriggerProcessor implements TriggerProcessor {
   }
 
   private void validatePipelineId(DeploymentTrigger deploymentTrigger, PipelineCondition pipelineCondition) {
+    String pipelineName;
     try {
-      pipelineService.fetchPipelineName(deploymentTrigger.getAppId(), pipelineCondition.getPipelineId());
+      pipelineName = pipelineService.fetchPipelineName(deploymentTrigger.getAppId(), pipelineCondition.getPipelineId());
     } catch (WingsException exception) {
       throw new WingsException("Pipeline does not exist for pipeline id " + pipelineCondition.getPipelineId(), USER);
+    }
+    if (deploymentTrigger.getAction().getActionType().equals(PIPELINE)
+        && ((PipelineCondition) deploymentTrigger.getCondition())
+               .getPipelineId()
+               .equals(((PipelineAction) deploymentTrigger.getAction()).getPipelineId())) {
+      throw new WingsException("Trigger condition pipeline " + pipelineName + " is same as that of action ");
     }
   }
 

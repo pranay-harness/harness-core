@@ -41,21 +41,25 @@ public class PipelineConditionTriggerTest extends WingsBaseTest {
           .name("Pipeline Trigger")
           .appId(APP_ID)
           .action(PipelineAction.builder().pipelineId(PIPELINE_ID).triggerArgs(TriggerArgs.builder().build()).build())
-          .condition(PipelineCondition.builder().pipelineId(PIPELINE_ID).build())
+          .condition(PipelineCondition.builder().pipelineId("PIPELINE_ID1").build())
           .build();
 
   @Test
   @Category(UnitTests.class)
-  public void shouldSavePipelineWebhookTriggerNoArtifactSelections() {
+  public void shouldSavePipelineTriggerNoArtifactSelections() {
     Pipeline pipeline = buildPipeline();
-    pipeline.setName(PIPELINE_NAME);
+    Pipeline conditionPipeline = buildPipeline();
+    conditionPipeline.setUuid("PIPELINE_ID1");
+    conditionPipeline.setName("PIPELINE_NAME1");
     setPipelineStages(pipeline);
     pipeline.getPipelineVariables().add(aVariable().name("MyVar").build());
     on(pipelineTriggerProcessor).set("pipelineService", pipelineService);
     on(deploymentTriggerServiceHelper).set("pipelineService", pipelineService);
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
     when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
+    when(pipelineService.readPipeline(APP_ID, "PIPELINE_ID1", true)).thenReturn(conditionPipeline);
     when(pipelineService.fetchPipelineName(APP_ID, PIPELINE_ID)).thenReturn(PIPELINE_NAME);
+    when(pipelineService.fetchPipelineName(APP_ID, "PIPELINE_ID1")).thenReturn("PIPELINE_NAME1");
 
     DeploymentTrigger trigger = deploymentTriggerService.save(pipelineTrigger);
 
@@ -63,7 +67,7 @@ public class PipelineConditionTriggerTest extends WingsBaseTest {
     assertThat(savedTrigger.getCondition()).isInstanceOf(PipelineCondition.class);
     PipelineCondition pipelineCondition = (PipelineCondition) savedTrigger.getCondition();
 
-    assertThat(pipelineCondition.getPipelineName()).isEqualTo(PIPELINE_NAME);
-    assertThat(pipelineCondition.getPipelineId()).isEqualTo(PIPELINE_ID);
+    assertThat(pipelineCondition.getPipelineName()).isEqualTo("PIPELINE_NAME1");
+    assertThat(pipelineCondition.getPipelineId()).isEqualTo("PIPELINE_ID1");
   }
 }

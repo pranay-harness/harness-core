@@ -162,15 +162,15 @@ public class WebHookServiceImpl implements WebHookService {
     }
 
     Map<String, Map<String, ArtifactSummary>> serviceBuildNumbers = new HashMap<>();
+    Map<String, Object> payLoadMap = webHookRequest.getParameters().entrySet().stream().collect(
+        Collectors.toMap(Map.Entry::getKey, e -> (Object) e.getValue()));
 
-    Response response = resolveServiceBuildNumbersWithArtifactVariables(appId, webHookRequest, serviceBuildNumbers);
+    Response response =
+        resolveServiceBuildNumbersWithArtifactVariables(appId, webHookRequest, serviceBuildNumbers, payLoadMap);
 
     if (response != null) {
       return response;
     }
-
-    Map<String, Object> payLoadMap = webHookRequest.getParameters().entrySet().stream().collect(
-        Collectors.toMap(Map.Entry::getKey, e -> (Object) e.getValue()));
 
     WorkflowExecution workflowExecution = webhookTriggerDeploymentExecution.validateExpressionsAndTriggerDeployment(
         deploymentTrigger, payLoadMap, serviceBuildNumbers);
@@ -409,8 +409,8 @@ public class WebHookServiceImpl implements WebHookService {
     return null;
   }
 
-  private Response resolveServiceBuildNumbersWithArtifactVariables(
-      String appId, WebHookRequest webHookRequest, Map<String, Map<String, ArtifactSummary>> serviceArtifactMapping) {
+  private Response resolveServiceBuildNumbersWithArtifactVariables(String appId, WebHookRequest webHookRequest,
+      Map<String, Map<String, ArtifactSummary>> serviceArtifactMapping, Map<String, Object> payLoadMap) {
     List<Map<String, String>> artifacts = webHookRequest.getArtifacts();
     if (artifacts != null) {
       for (Map<String, String> artifact : artifacts) {
@@ -423,6 +423,11 @@ public class WebHookServiceImpl implements WebHookService {
         if (artifact.containsKey("artifactVariableName")) {
           artifactVariableName = artifact.get("artifactVariableName");
         }
+
+        String appName = appService.get(appId).getName();
+        // TODO harsh use common method to generate from
+        artifactStreamName = appName + "_" + serviceName + "_" + artifactStreamName;
+        payLoadMap.put(artifactStreamName, (Object) buildNumber);
 
         logger.info(
             "WebHook params Service name {}, Artifact Variable Name {}, Build Number {} and Artifact Source Name {}",

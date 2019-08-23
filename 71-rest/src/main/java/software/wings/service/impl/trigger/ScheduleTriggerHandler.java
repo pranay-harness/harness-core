@@ -58,6 +58,10 @@ public class ScheduleTriggerHandler implements Handler<DeploymentTrigger> {
   }
   @Override
   public void handle(DeploymentTrigger entity) {
-    deploymentTriggerService.triggerScheduledExecutionAsync(entity);
+    try {
+      deploymentTriggerService.triggerScheduledExecutionAsync(entity);
+    } catch (Exception ex) {
+      logger.error("Failed to execute schedule trigger {} from app {}", entity.getName(), entity.getAppId(), ex);
+    }
   }
 }
