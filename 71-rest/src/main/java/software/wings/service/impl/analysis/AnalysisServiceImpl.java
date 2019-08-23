@@ -96,6 +96,7 @@ import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateType;
 import software.wings.utils.Misc;
 import software.wings.verification.CVConfiguration;
@@ -405,7 +406,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     } else if (isNotEmpty(stateExecutionId)) {
       List<StateExecutionInstance> stateExecutionInstances =
           wingsPersistence.createQuery(StateExecutionInstance.class, excludeAuthority)
-              .filter("uuid", stateExecutionId)
+              .filter(StateExecutionInstanceKeys.uuid, stateExecutionId)
               .asList();
       if (isNotEmpty(stateExecutionInstances) && stateExecutionInstances.size() == 1) {
         StateExecutionInstance stateExecutionInstance = stateExecutionInstances.get(0);
@@ -490,7 +491,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     } else if (isNotEmpty(stateExecutionId)) {
       List<StateExecutionInstance> stateExecutionInstances =
           wingsPersistence.createQuery(StateExecutionInstance.class, excludeAuthority)
-              .filter("uuid", stateExecutionId)
+              .filter(StateExecutionInstanceKeys.uuid, stateExecutionId)
               .asList();
 
       if (isNotEmpty(stateExecutionInstances) && stateExecutionInstances.size() == 1) {
@@ -1238,7 +1239,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Override
   public Map<String, InstanceElement> getLastExecutionNodes(String appId, String workflowId) {
     WorkflowExecution workflowExecution = wingsPersistence.createQuery(WorkflowExecution.class)
-                                              .filter("appId", appId)
+                                              .filter(WorkflowExecutionKeys.appId, appId)
                                               .filter(WorkflowExecutionKeys.workflowId, workflowId)
                                               .filter(WorkflowExecutionKeys.status, SUCCESS)
                                               .order(Sort.descending(WorkflowExecutionKeys.createdAt))

@@ -8,8 +8,6 @@ import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrati
 import static software.wings.beans.RollingOrchestrationWorkflow.RollingOrchestrationWorkflowBuilder.aRollingOrchestrationWorkflow;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
-import static software.wings.sm.states.ContainerServiceSetup.DESIRED_INSTANCE_COUNT_KEY;
-import static software.wings.sm.states.ContainerServiceSetup.FIXED_INSTANCES;
 import static software.wings.sm.states.KubernetesDeploy.INSTANCE_COUNT_KEY;
 import static software.wings.sm.states.KubernetesDeploy.INSTANCE_UNIT_TYPE_KEY;
 import static software.wings.sm.states.KubernetesSetup.PORT_KEY;
@@ -31,6 +29,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
+import software.wings.sm.states.ContainerServiceSetup.ContainerServiceSetupKeys;
 import software.wings.utils.Validator;
 
 import java.util.Map;
@@ -166,8 +165,8 @@ public class WorkflowSampleDataProvider {
 
     // Add properties
     Map<String, Object> properties = kubernetesSetupNode.getProperties();
-    properties.put(FIXED_INSTANCES, instanceCount);
-    properties.put(DESIRED_INSTANCE_COUNT_KEY, FIXED_INSTANCES);
+    properties.put(ContainerServiceSetupKeys.fixedInstances, instanceCount);
+    properties.put(ContainerServiceSetupKeys.desiredInstanceCount, ContainerServiceSetupKeys.fixedInstances);
     properties.put(PORT_KEY, 80);
     properties.put(TARGET_PORT_KEY, 8080);
     properties.put(SERVICE_TYPE_KEY, "LoadBalancer");

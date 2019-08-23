@@ -99,7 +99,6 @@ public abstract class CloudFormationState extends State {
   private static final int IDSIZE = 8;
   private static final Set<Character> ALLOWED_CHARS =
       Sets.newHashSet(Lists.charactersOf("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-"));
-  public static final String AWS_CONFIG_ID_KEY = "awsConfigId";
 
   public CloudFormationState(String name, String stateType) {
     super(name, stateType);

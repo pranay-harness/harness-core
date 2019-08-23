@@ -14,6 +14,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.beans.infrastructure.instance.Instance.InstanceKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.instance.InstanceService;
 
@@ -51,7 +52,7 @@ public class CleanupOrphanInstances implements Migration {
       Set<String> infraMappings = infraKeyList.stream().map(key -> (String) key.getId()).collect(Collectors.toSet());
 
       Query<Instance> query = wingsPersistence.createQuery(Instance.class, excludeAuthority)
-                                  .filter("isDeleted", false)
+                                  .filter(InstanceKeys.isDeleted, false)
                                   .project("_id", true)
                                   .project("appId", true)
                                   .project("envId", true)

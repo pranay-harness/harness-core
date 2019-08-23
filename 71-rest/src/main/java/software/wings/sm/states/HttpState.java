@@ -35,6 +35,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.jexl3.JexlException;
 import org.apache.commons.jexl3.JexlException.Parsing;
@@ -74,19 +75,13 @@ import java.util.Map;
 
 /**
  * Http state which makes a call to http service.
- *
- * @author Rishi
  */
+@FieldNameConstants(innerTypeName = "HttpStateKeys")
 @Attributes
 @Slf4j
 public class HttpState extends State implements SweepingOutputStateMixin {
   private static final String ASSERTION_ERROR_MSG =
       "Assertion should return true/false (Expression syntax is based on java language).";
-
-  public static final String URL_KEY = "url";
-  public static final String METHOD_KEY = "method";
-  public static final String HEADER = "header";
-  public static final String BODY = "body";
 
   @Attributes(required = true, title = "URL") private String url;
   @Attributes(required = true, enums = {"GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"}, title = "Method")
