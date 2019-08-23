@@ -42,6 +42,15 @@ public interface PipelineService extends OwnedByApplication {
   Pipeline readPipeline(String appId, String pipelineId, boolean withServices);
 
   /**
+   * Read pipeline with variables.
+   *
+   * @param appId        the app id
+   * @param pipelineId   the pipeline id
+   * @return the pipeline
+   */
+  Pipeline readPipelineWithVariables(String appId, String pipelineId);
+
+  /**
    * Reads pipeline with Services, EnvironmentIds, Pipeline Variables and Resolved Pipeline variables
    *
    * @return

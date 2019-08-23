@@ -94,6 +94,7 @@ import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -448,6 +449,21 @@ public class PipelineServiceImpl implements PipelineService {
       // Note: It filters out the services that does need artifact
       setServicesAndPipelineVariables(pipeline);
     }
+    return pipeline;
+  }
+
+  /**
+   * Read Pipeline with Services. It filters out the services that does not need artifact
+   * @param appId        the app id
+   * @param pipelineId   the pipeline id
+   * @return
+   */
+  @Override
+  public Pipeline readPipelineWithVariables(String appId, String pipelineId) {
+    Pipeline pipeline = wingsPersistence.getWithAppId(Pipeline.class, appId, pipelineId);
+    notNullCheck("Pipeline does not exist", pipeline, USER);
+    // Note: It filters out the services that does need artifact
+    setPipelineDetails(Collections.singletonList(pipeline));
     return pipeline;
   }
 
