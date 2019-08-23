@@ -1,7 +1,7 @@
 package io.harness.logging;
 
 import static io.harness.logging.LoggingInitializer.RESPONSE_MESSAGE_FILE;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -35,6 +35,6 @@ public class ErrorCodePropertiesTest extends CategoryTest {
 
     // Assert that all errorCodes are defined in properties
     // and each property should have ErrorCode enum
-    assertEquals(errorCodeSet, propertiesSet);
+    assertThat(propertiesSet).isEqualTo(errorCodeSet);
   }
 }

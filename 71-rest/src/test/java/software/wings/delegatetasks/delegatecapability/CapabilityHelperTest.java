@@ -1,7 +1,6 @@
 package software.wings.delegatetasks.delegatecapability;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
@@ -115,9 +114,9 @@ public class CapabilityHelperTest extends WingsBaseTest {
     assertThat(encryptionMap).hasSize(1);
     EncryptionConfig encryptionConfig = (EncryptionConfig) encryptionMap.values().iterator().next();
 
-    assertEquals(EncryptionType.VAULT, encryptionConfig.getEncryptionType());
+    assertThat(encryptionConfig.getEncryptionType()).isEqualTo(EncryptionType.VAULT);
     assertThat(encryptionConfig instanceof VaultConfig).isTrue();
-    assertEquals(HTTP_VAUTL_URL, ((VaultConfig) encryptionConfig).getVaultUrl());
+    assertThat(((VaultConfig) encryptionConfig).getVaultUrl()).isEqualTo(HTTP_VAUTL_URL);
   }
 
   @Test
@@ -137,9 +136,9 @@ public class CapabilityHelperTest extends WingsBaseTest {
     assertThat(encryptionMap).isNotNull();
     assertThat(encryptionMap).hasSize(1);
     EncryptionConfig encryptionConfig = (EncryptionConfig) encryptionMap.values().iterator().next();
-    assertEquals(EncryptionType.KMS, encryptionConfig.getEncryptionType());
+    assertThat(encryptionConfig.getEncryptionType()).isEqualTo(EncryptionType.KMS);
     assertThat(encryptionConfig instanceof KmsConfig).isTrue();
-    assertEquals(US_EAST_2, ((KmsConfig) encryptionConfig).getRegion());
+    assertThat(((KmsConfig) encryptionConfig).getRegion()).isEqualTo(US_EAST_2);
   }
 
   @Test
@@ -147,7 +146,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
   public void testGetHttpCapabilityForDecryption_VaultConfig() throws Exception {
     EncryptionConfig encryptionConfig = VaultConfig.builder().vaultUrl(HTTP_VAUTL_URL).build();
     HttpConnectionExecutionCapability capability = CapabilityHelper.getHttpCapabilityForDecryption(encryptionConfig);
-    assertEquals(capability.fetchCapabilityBasis(), HTTP_VAUTL_URL + ":" + HTTP_PORT);
+    assertThat(HTTP_VAUTL_URL + ":" + HTTP_PORT).isEqualTo(capability.fetchCapabilityBasis());
   }
 
   @Test
@@ -155,6 +154,6 @@ public class CapabilityHelperTest extends WingsBaseTest {
   public void testGetHttpCapabilityForDecryption_KmsConfig() throws Exception {
     EncryptionConfig encryptionConfig = KmsConfig.builder().region(US_EAST_2).build();
     HttpConnectionExecutionCapability capability = CapabilityHelper.getHttpCapabilityForDecryption(encryptionConfig);
-    assertEquals(capability.fetchCapabilityBasis(), AWS_KMS_URL + ":" + HTTPS_PORT);
+    assertThat(AWS_KMS_URL + ":" + HTTPS_PORT).isEqualTo(capability.fetchCapabilityBasis());
   }
 }

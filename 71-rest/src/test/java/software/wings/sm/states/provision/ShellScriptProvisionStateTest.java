@@ -1,6 +1,6 @@
 package software.wings.sm.states.provision;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
@@ -21,8 +21,8 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testParseOutput() {
-    assertEquals(Collections.emptyMap(), state.parseOutput(null));
-    assertEquals(Collections.emptyMap(), state.parseOutput(""));
+    assertThat(state.parseOutput(null)).isEqualTo(Collections.emptyMap());
+    assertThat(state.parseOutput("")).isEqualTo(Collections.emptyMap());
 
     String json = "{\n"
         + "\t\"key1\":\"val1\",\n"
@@ -31,6 +31,6 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
     Map<String, Object> expectedMap = new LinkedHashMap<>();
     expectedMap.put("key1", "val1");
     expectedMap.put("key2", "val2");
-    assertEquals(expectedMap, state.parseOutput(json));
+    assertThat(state.parseOutput(json)).isEqualTo(expectedMap);
   }
 }

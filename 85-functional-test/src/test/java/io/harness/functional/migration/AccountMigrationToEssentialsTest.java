@@ -1,7 +1,7 @@
 package io.harness.functional.migration;
 
 import static io.harness.rule.OwnerRule.ANKIT;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotEquals;
 
 import io.harness.category.element.FunctionalTests;
@@ -23,7 +23,7 @@ public class AccountMigrationToEssentialsTest extends AbstractAccountMigrationTe
   public void testMigrateAlreadyCompliantTrialAccountToEssentials() {
     updateAccountLicense(AccountType.ESSENTIALS);
 
-    assertEquals(AccountType.ESSENTIALS, getAccountType());
+    assertThat(getAccountType()).isEqualTo(AccountType.ESSENTIALS);
   }
 
   @Test
@@ -44,7 +44,7 @@ public class AccountMigrationToEssentialsTest extends AbstractAccountMigrationTe
 
     updateAccountLicense(AccountType.ESSENTIALS, requiredInfoToComply);
 
-    assertEquals(AccountType.ESSENTIALS, getAccountType());
+    assertThat(getAccountType()).isEqualTo(AccountType.ESSENTIALS);
   }
 
   private void makeAccountNonCompliant() {

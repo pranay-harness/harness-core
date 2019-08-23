@@ -1,7 +1,7 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -93,8 +93,8 @@ public class AnalysisServiceTest extends WingsBaseTest {
                                   .filter(CVFeedbackRecordKeys.serviceId, serviceId)
                                   .get();
 
-    assertEquals(FeedbackAction.ADD_TO_BASELINE, record.getActionTaken());
-    assertEquals("This is a log message", record.getLogMessage());
+    assertThat(record.getActionTaken()).isEqualTo(FeedbackAction.ADD_TO_BASELINE);
+    assertThat(record.getLogMessage()).isEqualTo("This is a log message");
   }
 
   @Test(expected = WingsException.class)

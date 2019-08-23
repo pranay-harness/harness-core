@@ -82,8 +82,8 @@ public class GCPMarketPlaceServiceIntegrationTest extends BaseIntegrationTest {
     val gcpUsageReports = gcpUsageReportService.fetchGCPUsageReport(SOME_ACCOUNT_ID, startTime, reportEndTime);
     val savedGCPUsageReport = gcpUsageReports.get(0);
 
-    assertEquals(savedGCPUsageReport.getStartTimestamp(), usageReportEndTime);
-    assertEquals(savedGCPUsageReport.getEndTimestamp(), reportEndTime);
+    assertThat( usageReportEndTime).isEqualTo(savedGCPUsageReport.getStartTimestamp());
+    assertThat( reportEndTime).isEqualTo(savedGCPUsageReport.getEndTimestamp());
 
     val nextReportStartTime = reportEndTime;
     val nextReportEndTime = nextReportStartTime.plus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
@@ -91,8 +91,8 @@ public class GCPMarketPlaceServiceIntegrationTest extends BaseIntegrationTest {
         gcpUsageReportService.fetchGCPUsageReport(SOME_ACCOUNT_ID, nextReportStartTime, nextReportEndTime);
     val nextSavedGCPUsageReport = nextGCPUsageReports.get(0);
 
-    assertEquals(nextSavedGCPUsageReport.getStartTimestamp(), nextReportStartTime);
-    assertEquals(nextSavedGCPUsageReport.getEndTimestamp(), nextReportEndTime);*/
+    assertThat( nextReportStartTime).isEqualTo(nextSavedGCPUsageReport.getStartTimestamp());
+    assertThat( nextReportEndTime).isEqualTo(nextSavedGCPUsageReport.getEndTimestamp());*/
   }
 
   private GCPUsageReport getSampleGCPUsageReport(Instant startTime, Instant endTime) {

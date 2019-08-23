@@ -1,7 +1,6 @@
 package software.wings.integration.SSO.LDAP;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static software.wings.integration.SSO.LDAP.LdapIntegrationTestConstants.ACCOUNT_ID;
 import static software.wings.integration.SSO.LDAP.LdapIntegrationTestConstants.ADMIN_HARNESS_ID;
@@ -132,7 +131,7 @@ public class LdapIntegrationTest extends BaseIntegrationTest implements WingsInt
     logger.info("Calling url: " + url);
     WebTarget target = client.target(url);
     Response response = getRequestBuilderWithAuthHeader(target).put(Entity.json(JsonUtils.asJson("")));
-    assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+    assertThat(Response.Status.OK.getStatusCode()).isEqualTo(response.getStatus());
   }
 
   public void createAndTestLdapSettings() {
@@ -142,10 +141,10 @@ public class LdapIntegrationTest extends BaseIntegrationTest implements WingsInt
     RestResponse<LdapSettings> ldapSettingsRestResponse = getRequestBuilderWithAuthHeader(target).post(
         Entity.json(JsonUtils.asJson(ldapSettings)), new GenericType<RestResponse<LdapSettings>>() {});
     LdapSettings resource = ldapSettingsRestResponse.getResource();
-    assertEquals(resource.getAccountId(), ACCOUNT_ID);
+    assertThat(ACCOUNT_ID).isEqualTo(resource.getAccountId());
     assertThat(resource.getConnectionSettings()).isNotNull();
-    assertEquals(resource.getUserSettingsList().size(), 1);
-    assertEquals(resource.getGroupSettingsList().size(), 2);
+    assertThat(1).isEqualTo(resource.getUserSettingsList().size());
+    assertThat(2).isEqualTo(resource.getGroupSettingsList().size());
   }
 
   public void ldapConnectionSettingsTest() {
@@ -155,7 +154,7 @@ public class LdapIntegrationTest extends BaseIntegrationTest implements WingsInt
     RestResponse<LdapTestResponse> ldapSettingsRestResponse = getRequestBuilderWithAuthHeader(target).post(
         Entity.json(JsonUtils.asJson(ldapSettings)), new GenericType<RestResponse<LdapTestResponse>>() {});
     LdapTestResponse resource = ldapSettingsRestResponse.getResource();
-    assertEquals(Status.SUCCESS, resource.getStatus());
+    assertThat(resource.getStatus()).isEqualTo(Status.SUCCESS);
   }
 
   public void ldapUserSettingsTest() {
@@ -165,7 +164,7 @@ public class LdapIntegrationTest extends BaseIntegrationTest implements WingsInt
     RestResponse<LdapTestResponse> ldapSettingsRestResponse = getRequestBuilderWithAuthHeader(target).post(
         Entity.json(JsonUtils.asJson(ldapSettings)), new GenericType<RestResponse<LdapTestResponse>>() {});
     LdapTestResponse resource = ldapSettingsRestResponse.getResource();
-    assertEquals(Status.SUCCESS, resource.getStatus());
+    assertThat(resource.getStatus()).isEqualTo(Status.SUCCESS);
   }
 
   public void ldapGroupSettingsTest() {
@@ -175,7 +174,7 @@ public class LdapIntegrationTest extends BaseIntegrationTest implements WingsInt
     RestResponse<LdapTestResponse> ldapSettingsRestResponse = getRequestBuilderWithAuthHeader(target).post(
         Entity.json(JsonUtils.asJson(ldapSettings)), new GenericType<RestResponse<LdapTestResponse>>() {});
     LdapTestResponse resource = ldapSettingsRestResponse.getResource();
-    assertEquals(Status.SUCCESS, resource.getStatus());
+    assertThat(resource.getStatus()).isEqualTo(Status.SUCCESS);
   }
 
   public void enableLdapAsDefaultLoginMechanism() {
@@ -185,7 +184,7 @@ public class LdapIntegrationTest extends BaseIntegrationTest implements WingsInt
     LDAPTestAuthenticationRequest ldapTestAuthenticationRequest = LdapTestHelper.getAuthenticationRequestObject();
     Response response =
         getRequestBuilderWithAuthHeader(target).put(Entity.json(JsonUtils.asJson(ldapTestAuthenticationRequest)));
-    assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+    assertThat(Response.Status.OK.getStatusCode()).isEqualTo(response.getStatus());
   }
 
   public void searchGroupByNameTest() {
@@ -215,7 +214,7 @@ public class LdapIntegrationTest extends BaseIntegrationTest implements WingsInt
         Entity.json(JsonUtils.asJson(ldapLinkGroupRequest)), new GenericType<RestResponse<UserGroup>>() {});
     UserGroup userGroup = userGroupRestResponse.getResource();
     assertThat(userGroup.isSsoLinked()).isTrue();
-    assertEquals(userGroup.getSsoGroupId(), LDAP_GROUP_DN_TO_LINK_TO_HARNESS_GROUP);
+    assertThat(LDAP_GROUP_DN_TO_LINK_TO_HARNESS_GROUP).isEqualTo(userGroup.getSsoGroupId());
   }
 
   public void unlinkLdapGroupToHarnessUserGroupTest() {

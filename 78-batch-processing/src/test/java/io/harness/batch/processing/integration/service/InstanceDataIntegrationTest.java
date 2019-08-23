@@ -1,6 +1,6 @@
 package io.harness.batch.processing.integration.service;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import io.harness.batch.processing.ccm.InstanceState;
@@ -58,8 +58,8 @@ public class InstanceDataIntegrationTest extends BaseIntegrationTest {
 
     savedInstanceData =
         instanceDataService.fetchActiveInstanceData(TEST_ACCOUNT_ID, TEST_INSTANCE_ID, activeInstanceStates);
-    assertEquals(startTime, savedInstanceData.getUsageStartTime());
-    assertEquals(InstanceState.RUNNING, savedInstanceData.getInstanceState());
+    assertThat(savedInstanceData.getUsageStartTime()).isEqualTo(startTime);
+    assertThat(savedInstanceData.getInstanceState()).isEqualTo(InstanceState.RUNNING);
 
     Instant endTime = Instant.now();
     boolean instanceStopped =

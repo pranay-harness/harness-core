@@ -1,6 +1,6 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -37,7 +37,7 @@ public class HttpHelmRepoConfigYamlHandlerTest extends BaseSettingValueConfigYam
     String httpHelmRepoSettingName = HTTP_HELM_CHART_SETTING_NAME + System.currentTimeMillis();
 
     SettingAttribute settingAttributeSaved = createHttpHelmRepoConnector(httpHelmRepoSettingName);
-    assertEquals(httpHelmRepoSettingName, settingAttributeSaved.getName());
+    assertThat(settingAttributeSaved.getName()).isEqualTo(httpHelmRepoSettingName);
 
     testCRUD(generateSettingValueYamlConfig(httpHelmRepoSettingName, settingAttributeSaved));
   }

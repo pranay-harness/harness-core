@@ -1,7 +1,6 @@
 package software.wings.inframapping;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -42,10 +41,10 @@ public class PhysicalInfrastructureMappingTest extends WingsBaseTest {
     infrastructureMapping.applyProvisionerVariables(blueprintProperties, null, false);
 
     assertThat(infrastructureMapping.hosts()).hasSize(2);
-    assertEquals("abc.com", infrastructureMapping.hosts().get(0).getPublicDns());
-    assertEquals(123, infrastructureMapping.hosts().get(0).getProperties().get("amiId"));
-    assertEquals("abcd.com", infrastructureMapping.hosts().get(1).getPublicDns());
-    assertEquals(1234, infrastructureMapping.hosts().get(1).getProperties().get("amiId"));
+    assertThat(infrastructureMapping.hosts().get(0).getPublicDns()).isEqualTo("abc.com");
+    assertThat(infrastructureMapping.hosts().get(0).getProperties().get("amiId")).isEqualTo(123);
+    assertThat(infrastructureMapping.hosts().get(1).getPublicDns()).isEqualTo("abcd.com");
+    assertThat(infrastructureMapping.hosts().get(1).getProperties().get("amiId")).isEqualTo(1234);
 
     Assertions.assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> infrastructureMapping.applyProvisionerVariables(null, null, false));

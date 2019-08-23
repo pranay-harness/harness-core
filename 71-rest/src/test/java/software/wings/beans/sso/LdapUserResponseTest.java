@@ -1,6 +1,6 @@
 package software.wings.beans.sso;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -20,6 +20,6 @@ public class LdapUserResponseTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void getEmailGetterTest() {
-    assertEquals(capitalLettersEmail.toLowerCase(), ldapUserResponse.getEmail());
+    assertThat(ldapUserResponse.getEmail()).isEqualTo(capitalLettersEmail.toLowerCase());
   }
 }

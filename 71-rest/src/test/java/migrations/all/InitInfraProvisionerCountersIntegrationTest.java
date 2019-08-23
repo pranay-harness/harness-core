@@ -1,6 +1,6 @@
 package migrations.all;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotEquals;
 
 import com.google.inject.Inject;
@@ -37,7 +37,7 @@ public class InitInfraProvisionerCountersIntegrationTest extends BaseIntegration
                             .endsWith(ActionType.CREATE_INFRA_PROVISIONER.toString())
                             .count();
 
-    assertEquals(0, initialCount);
+    assertThat(initialCount).isEqualTo(0);
     initInfraProvisionerCounters.migrate();
 
     long finalCount = wingsPersistence.createQuery(Counter.class)

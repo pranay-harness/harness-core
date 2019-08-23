@@ -3,7 +3,6 @@ package software.wings.service.impl.workflow;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
@@ -71,7 +70,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
         + "      name: cpu\n"
         + "      targetAverageUtilization: 80\n";
 
-    assertEquals(yamlForHPAWithCustomMetric, hpaString);
+    assertThat(hpaString).isEqualTo(yamlForHPAWithCustomMetric);
   }
 
   @Test
@@ -341,7 +340,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
         PhaseStep phaseStep = phaseStepList.get(index);
         assertThat(phaseStep.getSteps()).isNotNull();
         assertThat(phaseStep.getSteps()).hasSize(1);
-        assertEquals(expectedNames.get(index), phaseStep.getSteps().get(0).getType());
+        assertThat(phaseStep.getSteps().get(0).getType()).isEqualTo(expectedNames.get(index));
       }
     }
   }

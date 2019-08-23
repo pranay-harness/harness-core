@@ -3,7 +3,6 @@ package software.wings.service.impl.instance;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
@@ -361,10 +360,10 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
     verify(instanceService, times(2)).save(captorInstance.capture());
     List<Instance> instanceList = captorInstance.getAllValues();
     assertThat(instanceList.get(0)).isNotNull();
-    assertEquals("1", instanceList.get(0).getLastArtifactBuildNum());
-    assertEquals("old", instanceList.get(0).getLastArtifactName());
+    assertThat(instanceList.get(0).getLastArtifactBuildNum()).isEqualTo("1");
+    assertThat(instanceList.get(0).getLastArtifactName()).isEqualTo("old");
     assertThat(instanceList.get(1)).isNotNull();
-    assertEquals("1", instanceList.get(1).getLastArtifactBuildNum());
-    assertEquals("old", instanceList.get(1).getLastArtifactName());
+    assertThat(instanceList.get(1).getLastArtifactBuildNum()).isEqualTo("1");
+    assertThat(instanceList.get(1).getLastArtifactName()).isEqualTo("old");
   }
 }

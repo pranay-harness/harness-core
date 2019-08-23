@@ -3,7 +3,6 @@ package software.wings.integration;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
@@ -88,7 +87,7 @@ public class SplunkResourceIntegrationTest extends BaseIntegrationTest {
     JSONObject jsonResponseObject = new JSONObject(responseString);
 
     JSONObject response = jsonResponseObject.getJSONObject("resource");
-    assertEquals("Request failed", restResponse.getStatus(), HttpStatus.SC_OK);
+    assertThat(HttpStatus.SC_OK).isEqualTo(restResponse.getStatus());
     assertThat(Boolean.valueOf(response.get("providerReachable").toString())).isTrue();
   }
 

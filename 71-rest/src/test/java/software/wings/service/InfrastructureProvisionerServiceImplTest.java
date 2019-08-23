@@ -2,7 +2,6 @@ package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -131,7 +130,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     InfrastructureMapping mapping = captor.getValue();
     AwsInstanceFilter awsInstanceFilter = ((AwsInfrastructureMapping) mapping).getAwsInstanceFilter();
     assertThat(awsInstanceFilter).isNotNull();
-    assertEquals("us-east-1", ((AwsInfrastructureMapping) mapping).getRegion());
+    assertThat(((AwsInfrastructureMapping) mapping).getRegion()).isEqualTo("us-east-1");
 
     assertThat(awsInstanceFilter.getVpcIds()).isNotNull();
     assertThat(awsInstanceFilter.getVpcIds()).hasSize(3);
@@ -141,8 +140,8 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
 
     assertThat(awsInstanceFilter.getTags()).isNotNull();
     assertThat(awsInstanceFilter.getTags()).hasSize(1);
-    assertEquals("name", awsInstanceFilter.getTags().get(0).getKey());
-    assertEquals("mockName", awsInstanceFilter.getTags().get(0).getValue());
+    assertThat(awsInstanceFilter.getTags().get(0).getKey()).isEqualTo("name");
+    assertThat(awsInstanceFilter.getTags().get(0).getValue()).isEqualTo("mockName");
   }
 
   @Test

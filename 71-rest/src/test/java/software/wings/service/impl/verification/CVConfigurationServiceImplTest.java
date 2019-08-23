@@ -2,7 +2,6 @@ package software.wings.service.impl.verification;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
 
 import com.google.inject.Inject;
 
@@ -90,8 +89,8 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     timeSeriesToAnalyze.forEach(timeSeries -> {
       TimeSeriesMetricDefinition metricDefinition = actualDefinitions.get(timeSeries.getMetricName());
       assertThat(metricDefinition).isNotNull();
-      assertEquals(timeSeries.getMetricName(), metricDefinition.getMetricName());
-      assertEquals(timeSeries.getMetricType(), metricDefinition.getMetricType().name());
+      assertThat(metricDefinition.getMetricName()).isEqualTo(timeSeries.getMetricName());
+      assertThat(metricDefinition.getMetricType().name()).isEqualTo(timeSeries.getMetricType());
     });
   }
 
@@ -128,8 +127,8 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     expectedKeySet.forEach(key -> {
       TimeSeriesMetricDefinition definition = actualDefinitions.get(key);
 
-      assertEquals(key, definition.getMetricName());
-      assertEquals(MetricType.INFRA, definition.getMetricType());
+      assertThat(definition.getMetricName()).isEqualTo(key);
+      assertThat(definition.getMetricType()).isEqualTo(MetricType.INFRA);
     });
   }
 
@@ -177,8 +176,8 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
 
     cloudWatchMetrics.forEach(metric -> {
       TimeSeriesMetricDefinition definition = actualDefinitions.get(metric.getMetricName());
-      assertEquals(metric.getMetricName(), definition.getMetricName());
-      assertEquals(metric.getMetricType(), definition.getMetricType().name());
+      assertThat(definition.getMetricName()).isEqualTo(metric.getMetricName());
+      assertThat(definition.getMetricType().name()).isEqualTo(metric.getMetricType());
     });
   }
 }

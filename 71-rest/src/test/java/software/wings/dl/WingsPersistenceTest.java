@@ -5,7 +5,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -599,7 +598,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
       // decrypt and compare
       encryptionService.decrypt((EncryptableSetting) result.getValue(),
           secretManager.getEncryptionDetails((EncryptableSetting) result.getValue(), null, null));
-      assertEquals(password, new String(((JenkinsConfig) result.getValue()).getPassword()));
+      assertThat(new String(((JenkinsConfig) result.getValue()).getPassword())).isEqualTo(password);
     }
   }
 

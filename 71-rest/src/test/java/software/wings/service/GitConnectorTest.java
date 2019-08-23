@@ -2,7 +2,6 @@ package software.wings.service;
 
 import static io.harness.eraro.ErrorCode.USAGE_LIMITS_EXCEEDED;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
@@ -93,7 +92,7 @@ public class GitConnectorTest extends WingsBaseTest {
                                .withValue(gitConfig)
                                .build());
     } catch (WingsException e) {
-      assertEquals(e.getCode(), USAGE_LIMITS_EXCEEDED);
+      assertThat(USAGE_LIMITS_EXCEEDED).isEqualTo(e.getCode());
       failed = true;
     }
     assertThat(failed).isTrue();

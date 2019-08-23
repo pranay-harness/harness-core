@@ -1,6 +1,6 @@
 package software.wings.utils;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -12,134 +12,134 @@ public class EcsConventionTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetTaskFamily() {
     String asgNamePrefix = EcsConvention.getTaskFamily("appName", "serviceName", "envName");
-    assertEquals("appName__serviceName__envName", asgNamePrefix);
+    assertThat(asgNamePrefix).isEqualTo("appName__serviceName__envName");
 
     asgNamePrefix = EcsConvention.getTaskFamily("app&Name", "service+Name", "env*Name");
-    assertEquals("app__Name__service__Name__env__Name", asgNamePrefix);
+    assertThat(asgNamePrefix).isEqualTo("app__Name__service__Name__env__Name");
 
     asgNamePrefix = EcsConvention.getTaskFamily("app/Name", "service.Name", "env'Name");
-    assertEquals("app__Name__service__Name__env__Name", asgNamePrefix);
+    assertThat(asgNamePrefix).isEqualTo("app__Name__service__Name__env__Name");
 
     asgNamePrefix = EcsConvention.getTaskFamily("app$Name", "service Name", "env\"Name");
-    assertEquals("app__Name__service__Name__env__Name", asgNamePrefix);
+    assertThat(asgNamePrefix).isEqualTo("app__Name__service__Name__env__Name");
 
     asgNamePrefix = EcsConvention.getTaskFamily("app$Name", "service|Name", "env\\Name");
-    assertEquals("app__Name__service__Name__env__Name", asgNamePrefix);
+    assertThat(asgNamePrefix).isEqualTo("app__Name__service__Name__env__Name");
 
     asgNamePrefix = EcsConvention.getTaskFamily("appName", null, null);
-    assertEquals("appName__null__null", asgNamePrefix);
+    assertThat(asgNamePrefix).isEqualTo("appName__null__null");
   }
 
   @Test
   @Category(UnitTests.class)
   public void testGetServiceNamePrefixFromServiceName() {
     String serviceNamePrefix = EcsConvention.getServiceNamePrefixFromServiceName("abc__test__123");
-    assertEquals("abc__test__", serviceNamePrefix);
+    assertThat(serviceNamePrefix).isEqualTo("abc__test__");
 
     serviceNamePrefix = EcsConvention.getServiceNamePrefixFromServiceName("abc__test__service__123");
-    assertEquals("abc__test__service__", serviceNamePrefix);
+    assertThat(serviceNamePrefix).isEqualTo("abc__test__service__");
 
     serviceNamePrefix = EcsConvention.getServiceNamePrefixFromServiceName("abc__test__service__test");
-    assertEquals("abc__test__service__test", serviceNamePrefix);
+    assertThat(serviceNamePrefix).isEqualTo("abc__test__service__test");
   }
 
   @Test
   @Category(UnitTests.class)
   public void testGetContainerName() {
     String containerName = EcsConvention.getContainerName("container");
-    assertEquals("container", containerName);
+    assertThat(containerName).isEqualTo("container");
 
     containerName = EcsConvention.getContainerName("contai+ner");
-    assertEquals("contai_ner", containerName);
+    assertThat(containerName).isEqualTo("contai_ner");
 
     containerName = EcsConvention.getContainerName("contai*ner");
-    assertEquals("contai_ner", containerName);
+    assertThat(containerName).isEqualTo("contai_ner");
 
     containerName = EcsConvention.getContainerName("contai/ner");
-    assertEquals("contai_ner", containerName);
+    assertThat(containerName).isEqualTo("contai_ner");
 
     containerName = EcsConvention.getContainerName("contai$ner");
-    assertEquals("contai_ner", containerName);
+    assertThat(containerName).isEqualTo("contai_ner");
 
     containerName = EcsConvention.getContainerName("contai&ner");
-    assertEquals("contai_ner", containerName);
+    assertThat(containerName).isEqualTo("contai_ner");
 
     containerName = EcsConvention.getContainerName("contai\\ner");
-    assertEquals("contai_ner", containerName);
+    assertThat(containerName).isEqualTo("contai_ner");
 
     containerName = EcsConvention.getContainerName("contai\"ner");
-    assertEquals("contai_ner", containerName);
+    assertThat(containerName).isEqualTo("contai_ner");
 
     containerName = EcsConvention.getContainerName("contai'ner");
-    assertEquals("contai_ner", containerName);
+    assertThat(containerName).isEqualTo("contai_ner");
 
     containerName = EcsConvention.getContainerName("contai:ner");
-    assertEquals("contai_ner", containerName);
+    assertThat(containerName).isEqualTo("contai_ner");
 
     containerName = EcsConvention.getContainerName("contai.ner");
-    assertEquals("contai_ner", containerName);
+    assertThat(containerName).isEqualTo("contai_ner");
 
     containerName = EcsConvention.getContainerName("contai|ner");
-    assertEquals("contai_ner", containerName);
+    assertThat(containerName).isEqualTo("contai_ner");
   }
 
   @Test
   @Category(UnitTests.class)
   public void testGetVolumeName() {
     String volumePath = EcsConvention.getVolumeName("path");
-    assertEquals("vol_path_vol", volumePath);
+    assertThat(volumePath).isEqualTo("vol_path_vol");
 
     volumePath = EcsConvention.getVolumeName("pa+th");
-    assertEquals("vol_pa__th_vol", volumePath);
+    assertThat(volumePath).isEqualTo("vol_pa__th_vol");
 
     volumePath = EcsConvention.getVolumeName("pa/th");
-    assertEquals("vol_pa__th_vol", volumePath);
+    assertThat(volumePath).isEqualTo("vol_pa__th_vol");
 
     volumePath = EcsConvention.getVolumeName("pa*th");
-    assertEquals("vol_pa__th_vol", volumePath);
+    assertThat(volumePath).isEqualTo("vol_pa__th_vol");
 
     volumePath = EcsConvention.getVolumeName("pa$th");
-    assertEquals("vol_pa__th_vol", volumePath);
+    assertThat(volumePath).isEqualTo("vol_pa__th_vol");
 
     volumePath = EcsConvention.getVolumeName("pa&th");
-    assertEquals("vol_pa__th_vol", volumePath);
+    assertThat(volumePath).isEqualTo("vol_pa__th_vol");
 
     volumePath = EcsConvention.getVolumeName("pa|th");
-    assertEquals("vol_pa__th_vol", volumePath);
+    assertThat(volumePath).isEqualTo("vol_pa__th_vol");
 
     volumePath = EcsConvention.getVolumeName("pa.th");
-    assertEquals("vol_pa__th_vol", volumePath);
+    assertThat(volumePath).isEqualTo("vol_pa__th_vol");
 
     volumePath = EcsConvention.getVolumeName("pa:th");
-    assertEquals("vol_pa__th_vol", volumePath);
+    assertThat(volumePath).isEqualTo("vol_pa__th_vol");
 
     volumePath = EcsConvention.getVolumeName("pa\"th");
-    assertEquals("vol_pa__th_vol", volumePath);
+    assertThat(volumePath).isEqualTo("vol_pa__th_vol");
 
     volumePath = EcsConvention.getVolumeName("pa'th");
-    assertEquals("vol_pa__th_vol", volumePath);
+    assertThat(volumePath).isEqualTo("vol_pa__th_vol");
 
     volumePath = EcsConvention.getVolumeName("pa\\th");
-    assertEquals("vol_pa__th_vol", volumePath);
+    assertThat(volumePath).isEqualTo("vol_pa__th_vol");
   }
 
   @Test
   @Category(UnitTests.class)
   public void testGetRevisionFromServiceName() {
     int revision = EcsConvention.getRevisionFromServiceName("aaa__123");
-    assertEquals(123, revision);
+    assertThat(revision).isEqualTo(123);
 
     revision = EcsConvention.getRevisionFromServiceName("aaa__bbb__ccc__123");
-    assertEquals(123, revision);
+    assertThat(revision).isEqualTo(123);
 
     revision = EcsConvention.getRevisionFromServiceName("aaabbbccc");
-    assertEquals(-1, revision);
+    assertThat(revision).isEqualTo(-1);
 
     // case where after last __, no number is mentioned.
     revision = EcsConvention.getRevisionFromServiceName("aaa__bbb__ccc");
-    assertEquals(-1, revision);
+    assertThat(revision).isEqualTo(-1);
 
     revision = EcsConvention.getRevisionFromServiceName(null);
-    assertEquals("null string as input doesn't work", -1, revision);
+    assertThat(revision).isEqualTo(-1);
   }
 }

@@ -2,7 +2,6 @@ package software.wings.beans.container;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import io.harness.CategoryTest;
@@ -37,38 +36,38 @@ public class EcsContainerTaskTest extends CategoryTest {
 
     assertThat(taskDefinition).isNotNull();
     assertThat(taskDefinition.getContainerDefinitions()).hasSize(1);
-    assertEquals("256", taskDefinition.getCpu());
-    assertEquals("1024", taskDefinition.getMemory());
-    assertEquals(EXEC_ROLE, taskDefinition.getExecutionRoleArn());
+    assertThat(taskDefinition.getCpu()).isEqualTo("256");
+    assertThat(taskDefinition.getMemory()).isEqualTo("1024");
+    assertThat(taskDefinition.getExecutionRoleArn()).isEqualTo(EXEC_ROLE);
 
     com.amazonaws.services.ecs.model.ContainerDefinition containerDefinitionAws =
         taskDefinition.getContainerDefinitions().get(0);
     assertThat(containerDefinitionAws).isNotNull();
-    assertEquals(CONTAINER_NAME, containerDefinitionAws.getName());
-    assertEquals(DOMAIN_NAME + "/" + IMAGE_NAME, containerDefinitionAws.getImage());
-    assertEquals(256, containerDefinitionAws.getCpu().intValue());
-    assertEquals(1024, containerDefinitionAws.getMemory().intValue());
+    assertThat(containerDefinitionAws.getName()).isEqualTo(CONTAINER_NAME);
+    assertThat(containerDefinitionAws.getImage()).isEqualTo(DOMAIN_NAME + "/" + IMAGE_NAME);
+    assertThat(containerDefinitionAws.getCpu().intValue()).isEqualTo(256);
+    assertThat(containerDefinitionAws.getMemory().intValue()).isEqualTo(1024);
     assertThat(containerDefinitionAws.getPortMappings()).isNotNull();
     assertThat(containerDefinitionAws.getPortMappings()).hasSize(1);
-    assertEquals(80, containerDefinitionAws.getPortMappings().iterator().next().getContainerPort().intValue());
+    assertThat(containerDefinitionAws.getPortMappings().iterator().next().getContainerPort().intValue()).isEqualTo(80);
 
     taskDefinition = ecsContainerTask.createTaskDefinition(CONTAINER_NAME, IMAGE_NAME, null, DOMAIN_NAME);
 
     assertThat(taskDefinition).isNotNull();
     assertThat(taskDefinition.getContainerDefinitions()).hasSize(1);
-    assertEquals("256", taskDefinition.getCpu());
-    assertEquals("1024", taskDefinition.getMemory());
-    assertEquals("", taskDefinition.getExecutionRoleArn());
+    assertThat(taskDefinition.getCpu()).isEqualTo("256");
+    assertThat(taskDefinition.getMemory()).isEqualTo("1024");
+    assertThat(taskDefinition.getExecutionRoleArn()).isEqualTo("");
 
     containerDefinitionAws = taskDefinition.getContainerDefinitions().get(0);
     assertThat(containerDefinitionAws).isNotNull();
-    assertEquals(CONTAINER_NAME, containerDefinitionAws.getName());
-    assertEquals(DOMAIN_NAME + "/" + IMAGE_NAME, containerDefinitionAws.getImage());
-    assertEquals(256, containerDefinitionAws.getCpu().intValue());
-    assertEquals(1024, containerDefinitionAws.getMemory().intValue());
+    assertThat(containerDefinitionAws.getName()).isEqualTo(CONTAINER_NAME);
+    assertThat(containerDefinitionAws.getImage()).isEqualTo(DOMAIN_NAME + "/" + IMAGE_NAME);
+    assertThat(containerDefinitionAws.getCpu().intValue()).isEqualTo(256);
+    assertThat(containerDefinitionAws.getMemory().intValue()).isEqualTo(1024);
     assertThat(containerDefinitionAws.getPortMappings()).isNotNull();
     assertThat(containerDefinitionAws.getPortMappings()).hasSize(1);
-    assertEquals(80, containerDefinitionAws.getPortMappings().iterator().next().getContainerPort().intValue());
+    assertThat(containerDefinitionAws.getPortMappings().iterator().next().getContainerPort().intValue()).isEqualTo(80);
 
     containerDefinition = ContainerDefinition.builder()
                               .portMappings(asList(portMapping))
@@ -100,36 +99,36 @@ public class EcsContainerTaskTest extends CategoryTest {
 
     assertThat(taskDefinition).isNotNull();
     assertThat(taskDefinition.getContainerDefinitions()).hasSize(1);
-    assertEquals("256", taskDefinition.getCpu());
-    assertEquals(EXEC_ROLE, taskDefinition.getExecutionRoleArn());
+    assertThat(taskDefinition.getCpu()).isEqualTo("256");
+    assertThat(taskDefinition.getExecutionRoleArn()).isEqualTo(EXEC_ROLE);
 
     com.amazonaws.services.ecs.model.ContainerDefinition containerDefinitionAws =
         taskDefinition.getContainerDefinitions().get(0);
     assertThat(containerDefinitionAws).isNotNull();
-    assertEquals(CONTAINER_NAME, containerDefinitionAws.getName());
-    assertEquals(DOMAIN_NAME + "/" + IMAGE_NAME, containerDefinitionAws.getImage());
-    assertEquals(256, containerDefinitionAws.getCpu().intValue());
-    assertEquals(1024, containerDefinitionAws.getMemory().intValue());
+    assertThat(containerDefinitionAws.getName()).isEqualTo(CONTAINER_NAME);
+    assertThat(containerDefinitionAws.getImage()).isEqualTo(DOMAIN_NAME + "/" + IMAGE_NAME);
+    assertThat(containerDefinitionAws.getCpu().intValue()).isEqualTo(256);
+    assertThat(containerDefinitionAws.getMemory().intValue()).isEqualTo(1024);
     assertThat(containerDefinitionAws.getPortMappings()).isNotNull();
     assertThat(containerDefinitionAws.getPortMappings()).hasSize(1);
-    assertEquals(80, containerDefinitionAws.getPortMappings().iterator().next().getContainerPort().intValue());
+    assertThat(containerDefinitionAws.getPortMappings().iterator().next().getContainerPort().intValue()).isEqualTo(80);
 
     taskDefinition = ecsContainerTask.createTaskDefinition(CONTAINER_NAME, IMAGE_NAME, null, DOMAIN_NAME);
 
     assertThat(taskDefinition).isNotNull();
     assertThat(taskDefinition.getContainerDefinitions()).hasSize(1);
-    assertEquals("256", taskDefinition.getCpu());
-    assertEquals("", taskDefinition.getExecutionRoleArn());
+    assertThat(taskDefinition.getCpu()).isEqualTo("256");
+    assertThat(taskDefinition.getExecutionRoleArn()).isEqualTo("");
 
     containerDefinitionAws = taskDefinition.getContainerDefinitions().get(0);
     assertThat(containerDefinitionAws).isNotNull();
-    assertEquals(CONTAINER_NAME, containerDefinitionAws.getName());
-    assertEquals(DOMAIN_NAME + "/" + IMAGE_NAME, containerDefinitionAws.getImage());
-    assertEquals(256, containerDefinitionAws.getCpu().intValue());
-    assertEquals(1024, containerDefinitionAws.getMemory().intValue());
+    assertThat(containerDefinitionAws.getName()).isEqualTo(CONTAINER_NAME);
+    assertThat(containerDefinitionAws.getImage()).isEqualTo(DOMAIN_NAME + "/" + IMAGE_NAME);
+    assertThat(containerDefinitionAws.getCpu().intValue()).isEqualTo(256);
+    assertThat(containerDefinitionAws.getMemory().intValue()).isEqualTo(1024);
     assertThat(containerDefinitionAws.getPortMappings()).isNotNull();
     assertThat(containerDefinitionAws.getPortMappings()).hasSize(1);
-    assertEquals(80, containerDefinitionAws.getPortMappings().iterator().next().getContainerPort().intValue());
+    assertThat(containerDefinitionAws.getPortMappings().iterator().next().getContainerPort().intValue()).isEqualTo(80);
 
     containerDefinition = ContainerDefinition.builder()
                               .portMappings(asList(portMapping))

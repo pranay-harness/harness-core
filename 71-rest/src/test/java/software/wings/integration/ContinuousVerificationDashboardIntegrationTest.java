@@ -172,8 +172,8 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
                                                                .next()
                                                                .get("dummy phase");
     ContinuousVerificationExecutionMetaData continuousVerificationExecutionMetaData1 = cvList.get(0);
-    assertEquals(continuousVerificationExecutionMetaData1.getAccountId(), accountId);
-    assertEquals(continuousVerificationExecutionMetaData1.getArtifactName(), "cv dummy artifact");
+    assertThat(accountId).isEqualTo(continuousVerificationExecutionMetaData1.getAccountId());
+    assertThat("cv dummy artifact").isEqualTo(continuousVerificationExecutionMetaData1.getArtifactName());
 
     // validate it doesnt contain info from other account.
     for (ContinuousVerificationExecutionMetaData cv : cvList) {
@@ -218,8 +218,8 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
 
     // Verify
     assertThat(workflowExecutionList.size() > 0).isTrue();
-    assertEquals("ExecutionId matches", workflowExecutionId, workflowExecutionList.get(0).getWorkflowExecutionId());
-    assertEquals("Status is success", ExecutionStatus.SUCCESS, workflowExecutionList.get(0).getStatus());
+    assertThat(workflowExecutionList.get(0).getWorkflowExecutionId()).isEqualTo(workflowExecutionId);
+    assertThat(workflowExecutionList.get(0).getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
   @Test
@@ -254,10 +254,10 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
     for (WorkflowExecution execution : workflowExecutionList) {
       if (execution.getUuid().equals(workflowExecutionId)) {
         executionFound = true;
-        assertEquals("Status is success", ExecutionStatus.SUCCESS, execution.getStatus());
-        assertEquals("pipeline id matches", "pipelineId", execution.getPipelineSummary().getPipelineId());
-        assertEquals("pipeline name matches", "pipelineName", execution.getPipelineSummary().getPipelineName());
-        assertEquals("EnvID should match", envId, execution.getEnvId());
+        assertThat(execution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+        assertThat(execution.getPipelineSummary().getPipelineId()).isEqualTo("pipelineId");
+        assertThat(execution.getPipelineSummary().getPipelineName()).isEqualTo("pipelineName");
+        assertThat(execution.getEnvId()).isEqualTo(envId);
       }
     }
     assertThat(executionFound).isTrue();
@@ -302,13 +302,13 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
 
     // Verify
     assertThat(workflowExecutionList.size() > 0).isTrue();
-    assertEquals("ExecutionId matches", workflowExecutionId, workflowExecutionList.get(0).getUuid());
-    assertEquals("Status is success", ExecutionStatus.SUCCESS, workflowExecutionList.get(0).getStatus());
+    assertThat(workflowExecutionList.get(0).getUuid()).isEqualTo(workflowExecutionId);
+    assertThat(workflowExecutionList.get(0).getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertEquals(
         "pipeline id matches", "pipelineId", workflowExecutionList.get(0).getPipelineSummary().getPipelineId());
     assertEquals(
         "pipeline name matches", "pipelineName", workflowExecutionList.get(0).getPipelineSummary().getPipelineName());
-    assertEquals("EnvId exists and matches", envId, workflowExecutionList.get(0).getEnvId());
+    assertThat(workflowExecutionList.get(0).getEnvId()).isEqualTo(envId);
   }
 
   @Test

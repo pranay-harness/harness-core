@@ -362,7 +362,7 @@ public class InstanceHelperTest extends WingsBaseTest {
      * */
     DeploymentEvent event = captor.getValue();
     assertThat(event).isNotNull();
-    assertEquals(0, event.getRetries());
+    assertThat(event.getRetries()).isEqualTo(0);
     assertThat(event).isNotNull();
     assertThat(event.getDeploymentSummaries()).isNotNull();
     assertThat(event.getDeploymentSummaries()).hasSize(2);
@@ -430,7 +430,7 @@ public class InstanceHelperTest extends WingsBaseTest {
      * */
     DeploymentEvent event = captor.getValue();
     assertThat(event).isNotNull();
-    assertEquals(0, event.getRetries());
+    assertThat(event.getRetries()).isEqualTo(0);
 
     assertThat(event).isNotNull();
     assertThat(event.getDeploymentSummaries()).isNotNull();
@@ -478,7 +478,7 @@ public class InstanceHelperTest extends WingsBaseTest {
      * */
     DeploymentEvent event = captor.getValue();
     assertThat(event).isNotNull();
-    assertEquals(0, event.getRetries());
+    assertThat(event.getRetries()).isEqualTo(0);
 
     DeploymentInfo deploymentInfo1 = event.getDeploymentSummaries().get(0).getDeploymentInfo();
     DeploymentInfo deploymentInfo2 = event.getDeploymentSummaries().get(1).getDeploymentInfo();
@@ -541,7 +541,7 @@ public class InstanceHelperTest extends WingsBaseTest {
      * */
     DeploymentEvent event = captor.getValue();
     assertThat(event).isNotNull();
-    assertEquals(0, event.getRetries());
+    assertThat(event.getRetries()).isEqualTo(0);
 
     DeploymentInfo deploymentInfo1 = event.getDeploymentSummaries().get(0).getDeploymentInfo();
     DeploymentInfo deploymentInfo2 = event.getDeploymentSummaries().get(1).getDeploymentInfo();
@@ -608,7 +608,7 @@ public class InstanceHelperTest extends WingsBaseTest {
      * */
     DeploymentEvent event = captor.getValue();
     assertThat(event).isNotNull();
-    assertEquals(0, event.getRetries());
+    assertThat(event.getRetries()).isEqualTo(0);
 
     assertThat(event.getDeploymentSummaries()).isNotNull();
     assertThat(event.getDeploymentSummaries()).hasSize(1);
@@ -622,18 +622,18 @@ public class InstanceHelperTest extends WingsBaseTest {
 
     ContainerDeploymentInfoWithLabels containerDeploymentInfoWithLabels =
         (ContainerDeploymentInfoWithLabels) deploymentInfo;
-    assertEquals(CLUSTER_NAME, containerDeploymentInfoWithLabels.getClusterName());
+    assertThat(containerDeploymentInfoWithLabels.getClusterName()).isEqualTo(CLUSTER_NAME);
     assertThat(containerDeploymentInfoWithLabels.getLabels()).isNotNull();
     assertThat(containerDeploymentInfoWithLabels.getLabels()).hasSize(1);
-    assertEquals("release", containerDeploymentInfoWithLabels.getLabels().get(0).getName());
-    assertEquals("version1", containerDeploymentInfoWithLabels.getLabels().get(0).getValue());
+    assertThat(containerDeploymentInfoWithLabels.getLabels().get(0).getName()).isEqualTo("release");
+    assertThat(containerDeploymentInfoWithLabels.getLabels().get(0).getValue()).isEqualTo("version1");
 
     assertThat(deploymentSummary.getContainerDeploymentKey().getLabels()).isNotNull();
-    assertEquals("release", deploymentSummary.getContainerDeploymentKey().getLabels().get(0).getName());
-    assertEquals("version1", deploymentSummary.getContainerDeploymentKey().getLabels().get(0).getValue());
+    assertThat(deploymentSummary.getContainerDeploymentKey().getLabels().get(0).getName()).isEqualTo("release");
+    assertThat(deploymentSummary.getContainerDeploymentKey().getLabels().get(0).getValue()).isEqualTo("version1");
 
-    assertEquals("release", containerDeploymentInfoWithLabels.getLabels().get(0).getName());
-    assertEquals("version1", containerDeploymentInfoWithLabels.getLabels().get(0).getValue());
+    assertThat(containerDeploymentInfoWithLabels.getLabels().get(0).getName()).isEqualTo("release");
+    assertThat(containerDeploymentInfoWithLabels.getLabels().get(0).getValue()).isEqualTo("version1");
   }
 
   @Test
@@ -670,7 +670,7 @@ public class InstanceHelperTest extends WingsBaseTest {
      */
     DeploymentEvent event = captor.getValue();
     assertThat(event).isNotNull();
-    assertEquals(0, event.getRetries());
+    assertThat(event.getRetries()).isEqualTo(0);
     assertThat(event.isRollback()).isTrue();
 
     assertThat(event.getDeploymentSummaries()).isNotNull();
@@ -679,7 +679,7 @@ public class InstanceHelperTest extends WingsBaseTest {
     DeploymentSummary deploymentSummary = event.getDeploymentSummaries().get(0);
     assertThat(deploymentSummary.getContainerDeploymentKey()).isNotNull();
     // This is validating rollback version
-    assertEquals("0", deploymentSummary.getContainerDeploymentKey().getNewVersion());
+    assertThat(deploymentSummary.getContainerDeploymentKey().getNewVersion()).isEqualTo("0");
     DeploymentInfo deploymentInfo = event.getDeploymentSummaries().get(0).getDeploymentInfo();
 
     assertDeploymentSummaryObject(event.getDeploymentSummaries().get(0));
@@ -688,18 +688,18 @@ public class InstanceHelperTest extends WingsBaseTest {
 
     ContainerDeploymentInfoWithLabels containerDeploymentInfoWithLabels =
         (ContainerDeploymentInfoWithLabels) deploymentInfo;
-    assertEquals(CLUSTER_NAME, containerDeploymentInfoWithLabels.getClusterName());
+    assertThat(containerDeploymentInfoWithLabels.getClusterName()).isEqualTo(CLUSTER_NAME);
     assertThat(containerDeploymentInfoWithLabels.getLabels()).isNotNull();
     assertThat(containerDeploymentInfoWithLabels.getLabels()).hasSize(1);
-    assertEquals("release", containerDeploymentInfoWithLabels.getLabels().get(0).getName());
-    assertEquals("version1", containerDeploymentInfoWithLabels.getLabels().get(0).getValue());
+    assertThat(containerDeploymentInfoWithLabels.getLabels().get(0).getName()).isEqualTo("release");
+    assertThat(containerDeploymentInfoWithLabels.getLabels().get(0).getValue()).isEqualTo("version1");
 
     assertThat(deploymentSummary.getContainerDeploymentKey().getLabels()).isNotNull();
-    assertEquals("release", deploymentSummary.getContainerDeploymentKey().getLabels().get(0).getName());
-    assertEquals("version1", deploymentSummary.getContainerDeploymentKey().getLabels().get(0).getValue());
+    assertThat(deploymentSummary.getContainerDeploymentKey().getLabels().get(0).getName()).isEqualTo("release");
+    assertThat(deploymentSummary.getContainerDeploymentKey().getLabels().get(0).getValue()).isEqualTo("version1");
 
-    assertEquals("release", containerDeploymentInfoWithLabels.getLabels().get(0).getName());
-    assertEquals("version1", containerDeploymentInfoWithLabels.getLabels().get(0).getValue());
+    assertThat(containerDeploymentInfoWithLabels.getLabels().get(0).getName()).isEqualTo("release");
+    assertThat(containerDeploymentInfoWithLabels.getLabels().get(0).getValue()).isEqualTo("version1");
   }
 
   @Test
@@ -722,35 +722,35 @@ public class InstanceHelperTest extends WingsBaseTest {
 
     // privateDnsName is nonNull and contains .
     String name = instanceHelper.getPrivateDnsName(privateDnsName);
-    assertEquals("ip-172-31-11-6", name);
+    assertThat(name).isEqualTo("ip-172-31-11-6");
 
     // privateDnsName is nonNull and does not contains . (not sure if this can happen, but good to handle)
     privateDnsName = "ip-172-31-11-6ec2_internal";
     name = instanceHelper.getPrivateDnsName(privateDnsName);
-    assertEquals(privateDnsName, name);
+    assertThat(name).isEqualTo(privateDnsName);
 
     // privateDnsName is nonNull and empty
     privateDnsName = "";
     name = instanceHelper.getPrivateDnsName(privateDnsName);
-    assertEquals(StringUtils.EMPTY, name);
+    assertThat(name).isEqualTo(StringUtils.EMPTY);
 
     // privateDnsName is nonNull and contains spaces
     privateDnsName = "  ";
     name = instanceHelper.getPrivateDnsName(privateDnsName);
-    assertEquals(StringUtils.EMPTY, name);
+    assertThat(name).isEqualTo(StringUtils.EMPTY);
 
     // privateDnsName is null
     privateDnsName = null;
     name = instanceHelper.getPrivateDnsName(privateDnsName);
-    assertEquals(StringUtils.EMPTY, name);
+    assertThat(name).isEqualTo(StringUtils.EMPTY);
   }
 
   private void assertDeploymentSummaryObject(DeploymentSummary deploymentSummary) {
-    assertEquals(APP_ID, deploymentSummary.getAppId());
-    assertEquals(ACCOUNT_ID, deploymentSummary.getAccountId());
-    assertEquals(INFRA_MAP_ID, deploymentSummary.getInfraMappingId());
-    assertEquals(WORKFLOW_EXECUTION_ID, deploymentSummary.getWorkflowExecutionId());
-    assertEquals(STATE_EXECUTION_INSTANCE_ID, deploymentSummary.getStateExecutionInstanceId());
+    assertThat(deploymentSummary.getAppId()).isEqualTo(APP_ID);
+    assertThat(deploymentSummary.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(deploymentSummary.getInfraMappingId()).isEqualTo(INFRA_MAP_ID);
+    assertThat(deploymentSummary.getWorkflowExecutionId()).isEqualTo(WORKFLOW_EXECUTION_ID);
+    assertThat(deploymentSummary.getStateExecutionInstanceId()).isEqualTo(STATE_EXECUTION_INSTANCE_ID);
   }
 
   @Test
@@ -806,7 +806,7 @@ public class InstanceHelperTest extends WingsBaseTest {
         .when(instanceService)
         .updateSyncSuccess(anyString(), anyString(), anyString(), anyString(), anyString(), anyLong());
     instanceHelper.manualSync(APP_ID, INFRA_MAP_ID);
-    assertEquals(1, count.get());
+    assertThat(count.get()).isEqualTo(1);
   }
 
   @Test
@@ -864,6 +864,6 @@ public class InstanceHelperTest extends WingsBaseTest {
         .when(instanceService)
         .handleSyncFailure(anyString(), anyString(), anyString(), anyString(), anyString(), anyLong(), anyString());
     instanceHelper.manualSync(APP_ID, INFRA_MAP_ID);
-    assertEquals(1, count.get());
+    assertThat(count.get()).isEqualTo(1);
   }
 }

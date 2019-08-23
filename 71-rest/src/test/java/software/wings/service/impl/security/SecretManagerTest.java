@@ -2,7 +2,6 @@ package software.wings.service.impl.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyMap;
@@ -111,9 +110,9 @@ public class SecretManagerTest extends CategoryTest {
 
     PageResponse<EncryptedData> finalPageResponse =
         secretManager.listSecrets(accountId, pageRequest, null, null, false);
-    assertEquals(offset + pageSize, finalPageResponse.getStart());
-    assertEquals(pageSize, finalPageResponse.getPageSize());
-    assertEquals(0, finalPageResponse.getTotal().longValue());
+    assertThat(finalPageResponse.getStart()).isEqualTo(offset + pageSize);
+    assertThat(finalPageResponse.getPageSize()).isEqualTo(pageSize);
+    assertThat(finalPageResponse.getTotal().longValue()).isEqualTo(0);
 
     verify(wingsPersistence, times(1)).query(eq(EncryptedData.class), any(PageRequest.class));
   }
@@ -137,9 +136,9 @@ public class SecretManagerTest extends CategoryTest {
 
     PageResponse<EncryptedData> finalPageResponse =
         secretManager.listSecrets(accountId, pageRequest, null, null, false);
-    assertEquals(2 * PageRequest.DEFAULT_UNLIMITED + 3, finalPageResponse.getStart());
-    assertEquals(pageSize, finalPageResponse.getPageSize());
-    assertEquals(2 * PageRequest.DEFAULT_UNLIMITED + 3, finalPageResponse.getTotal().longValue());
+    assertThat(finalPageResponse.getStart()).isEqualTo(2 * PageRequest.DEFAULT_UNLIMITED + 3);
+    assertThat(finalPageResponse.getPageSize()).isEqualTo(pageSize);
+    assertThat(finalPageResponse.getTotal().longValue()).isEqualTo(2 * PageRequest.DEFAULT_UNLIMITED + 3);
 
     verify(wingsPersistence, times(3)).query(eq(EncryptedData.class), any(PageRequest.class));
   }
@@ -161,9 +160,9 @@ public class SecretManagerTest extends CategoryTest {
 
     PageResponse<EncryptedData> finalPageResponse =
         secretManager.listSecrets(accountId, pageRequest, null, null, false);
-    assertEquals(offset + pageSize + 3, finalPageResponse.getStart());
-    assertEquals(pageSize, finalPageResponse.getPageSize());
-    assertEquals(pageSize, finalPageResponse.getTotal().longValue());
+    assertThat(finalPageResponse.getStart()).isEqualTo(offset + pageSize + 3);
+    assertThat(finalPageResponse.getPageSize()).isEqualTo(pageSize);
+    assertThat(finalPageResponse.getTotal().longValue()).isEqualTo(pageSize);
 
     verify(wingsPersistence, times(1)).query(eq(EncryptedData.class), any(PageRequest.class));
   }
@@ -189,9 +188,9 @@ public class SecretManagerTest extends CategoryTest {
     PageResponse<EncryptedData> finalPageResponse =
         secretManager.listSecrets(accountId, pageRequest, null, null, false);
     verify(wingsPersistence, times(3)).query(eq(EncryptedData.class), any(PageRequest.class));
-    assertEquals(pageSize, finalPageResponse.getPageSize());
-    assertEquals(3, finalPageResponse.getTotal().longValue());
-    assertEquals(offset + 5 * pageSize, finalPageResponse.getStart());
+    assertThat(finalPageResponse.getPageSize()).isEqualTo(pageSize);
+    assertThat(finalPageResponse.getTotal().longValue()).isEqualTo(3);
+    assertThat(finalPageResponse.getStart()).isEqualTo(offset + 5 * pageSize);
   }
 
   @Test

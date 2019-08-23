@@ -129,12 +129,12 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
       learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
     }
 
-    assertEquals(numOfTasks, wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count());
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count()).isEqualTo(numOfTasks);
 
     for (int i = 1; i <= numOfTasks; i++) {
       LearningEngineAnalysisTask leTask = learningEngineService.getNextLearningEngineAnalysisTask(
           ServiceApiVersion.V1, Optional.of(false), Optional.empty());
-      assertEquals(ExecutionStatus.RUNNING, leTask.getExecutionStatus());
+      assertThat(leTask.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
 
       assertEquals(numOfTasks - i,
           wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
@@ -170,12 +170,12 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
       learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
     }
 
-    assertEquals(numOfTasks, wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count());
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count()).isEqualTo(numOfTasks);
 
     for (int i = 1; i <= numOfTasks; i++) {
       LearningEngineAnalysisTask task = learningEngineService.getNextLearningEngineAnalysisTask(
           ServiceApiVersion.V1, Optional.of(true), Optional.empty());
-      assertEquals(ExecutionStatus.RUNNING, task.getExecutionStatus());
+      assertThat(task.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
 
       assertEquals(numOfTasks - i,
           wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
@@ -206,7 +206,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
       learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
     }
 
-    assertEquals(numOfTasks, wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count());
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count()).isEqualTo(numOfTasks);
 
     LearningEngineAnalysisTask task = learningEngineService.getNextLearningEngineAnalysisTask(ServiceApiVersion.V1,
         Optional.of(true), Optional.of(Lists.newArrayList(MLAnalysisType.TIME_SERIES, MLAnalysisType.LOG_ML)));
@@ -215,7 +215,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
     task = learningEngineService.getNextLearningEngineAnalysisTask(ServiceApiVersion.V1, Optional.of(true),
         Optional.of(Lists.newArrayList(MLAnalysisType.TIME_SERIES, MLAnalysisType.LOG_CLUSTER, MLAnalysisType.LOG_ML)));
     assertThat(task).isNotNull();
-    assertEquals(MLAnalysisType.LOG_CLUSTER, task.getMl_analysis_type());
+    assertThat(task.getMl_analysis_type()).isEqualTo(MLAnalysisType.LOG_CLUSTER);
     assertEquals(numOfTasks - 1,
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
             .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.QUEUED)
@@ -224,7 +224,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
     task = learningEngineService.getNextLearningEngineAnalysisTask(
         ServiceApiVersion.V1, Optional.of(true), Optional.empty());
     assertThat(task).isNotNull();
-    assertEquals(MLAnalysisType.LOG_CLUSTER, task.getMl_analysis_type());
+    assertThat(task.getMl_analysis_type()).isEqualTo(MLAnalysisType.LOG_CLUSTER);
     assertEquals(numOfTasks - 2,
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
             .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.QUEUED)
@@ -233,7 +233,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
     task = learningEngineService.getNextLearningEngineAnalysisTask(
         ServiceApiVersion.V1, Optional.of(true), Optional.of(Lists.newArrayList()));
     assertThat(task).isNotNull();
-    assertEquals(MLAnalysisType.LOG_CLUSTER, task.getMl_analysis_type());
+    assertThat(task.getMl_analysis_type()).isEqualTo(MLAnalysisType.LOG_CLUSTER);
     assertEquals(numOfTasks - 3,
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
             .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.QUEUED)
@@ -255,7 +255,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
       learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
     }
 
-    assertEquals(numOfTasks, wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count());
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count()).isEqualTo(numOfTasks);
 
     for (int i = 1; i <= numOfTasks; i++) {
       LearningEngineAnalysisTask analysisTask = learningEngineService.getNextLearningEngineAnalysisTask(
@@ -292,10 +292,10 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority).asList();
     assertThat(learningEngineAnalysisTasks).hasSize(1);
     LearningEngineAnalysisTask analysisTask = learningEngineAnalysisTasks.get(0);
-    assertEquals(workflowExecutionId, analysisTask.getWorkflow_execution_id());
-    assertEquals(stateExecutionId, analysisTask.getState_execution_id());
-    assertEquals(0, analysisTask.getAnalysis_minute());
-    assertEquals(0, analysisTask.getRetry());
+    assertThat(analysisTask.getWorkflow_execution_id()).isEqualTo(workflowExecutionId);
+    assertThat(analysisTask.getState_execution_id()).isEqualTo(stateExecutionId);
+    assertThat(analysisTask.getAnalysis_minute()).isEqualTo(0);
+    assertThat(analysisTask.getRetry()).isEqualTo(0);
   }
 
   @Test
@@ -352,12 +352,12 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
     }
     Thread.sleep(TimeUnit.SECONDS.toMillis(10));
 
-    assertEquals(numOfTasks, wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count());
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count()).isEqualTo(numOfTasks);
 
     for (int i = 1; i <= numOfTasks; i++) {
       LearningEngineAnalysisTask analysisTask = learningEngineService.getNextLearningEngineAnalysisTask(
           ServiceApiVersion.V1, Optional.empty(), Optional.empty());
-      assertEquals(ExecutionStatus.RUNNING, analysisTask.getExecutionStatus());
+      assertThat(analysisTask.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
 
       assertEquals(numOfTasks - i,
           wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
@@ -404,18 +404,18 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
                             .asList();
     assertThat(serviceSecretKeys).hasSize(1);
 
-    assertEquals(secretKey, serviceSecretKeys.get(0).getServiceSecret());
+    assertThat(serviceSecretKeys.get(0).getServiceSecret()).isEqualTo(secretKey);
   }
 
   @Test
   @Category(UnitTests.class)
   public void testParseVersion() {
     ServiceApiVersion latestVersion = ServiceApiVersion.values()[ServiceApiVersion.values().length - 1];
-    assertEquals(latestVersion, Misc.parseApisVersion("application/json"));
+    assertThat(Misc.parseApisVersion("application/json")).isEqualTo(latestVersion);
 
     for (ServiceApiVersion serviceApiVersion : ServiceApiVersion.values()) {
       String headerString = "application/" + serviceApiVersion.name().toLowerCase() + "+json, application/json";
-      assertEquals(serviceApiVersion, Misc.parseApisVersion(headerString));
+      assertThat(Misc.parseApisVersion(headerString)).isEqualTo(serviceApiVersion);
     }
   }
 
@@ -493,7 +493,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
     // currentTime - 1h45m
     assertEquals(
         currentMinute - PREDECTIVE_HISTORY_MINUTES + CRON_POLL_INTERVAL_IN_MINUTES, analysisTask.getAnalysis_minute());
-    assertEquals(currentMinute - PREDECTIVE_HISTORY_MINUTES * 2 + 1, analysisTask.getAnalysis_start_min());
+    assertThat(analysisTask.getAnalysis_start_min()).isEqualTo(currentMinute - PREDECTIVE_HISTORY_MINUTES * 2 + 1);
     assertEquals(
         analysisTask.getAnalysis_start_min() + PREDECTIVE_HISTORY_MINUTES - 1, analysisTask.getPrediction_start_time());
 
@@ -507,7 +507,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
     // there has been no new analysis saved since the previous trigger, so no new task should be created
     assertEquals(
         currentMinute - PREDECTIVE_HISTORY_MINUTES + CRON_POLL_INTERVAL_IN_MINUTES, analysisTask.getAnalysis_minute());
-    assertEquals(currentMinute - PREDECTIVE_HISTORY_MINUTES * 2 + 1, analysisTask.getAnalysis_start_min());
+    assertThat(analysisTask.getAnalysis_start_min()).isEqualTo(currentMinute - PREDECTIVE_HISTORY_MINUTES * 2 + 1);
     assertEquals(
         analysisTask.getAnalysis_start_min() + PREDECTIVE_HISTORY_MINUTES - 1, analysisTask.getPrediction_start_time());
 
@@ -549,7 +549,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
     lockObject.put("time", new Date(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(6)));
     collection.insert(lockObject);
 
-    assertEquals(1, collection.find().size());
+    assertThat(collection.find().size()).isEqualTo(1);
 
     continuousVerificationService.cleanupStuckLocks();
     assertThat(collection.find().size()).isEqualTo(0);
@@ -558,10 +558,10 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
     lockObject.put(ID_KEY, new ObjectId());
     lockObject.put("time", new Date(System.currentTimeMillis()));
     collection.insert(lockObject);
-    assertEquals(1, collection.find().size());
+    assertThat(collection.find().size()).isEqualTo(1);
 
     continuousVerificationService.cleanupStuckLocks();
-    assertEquals(1, collection.find().size());
+    assertThat(collection.find().size()).isEqualTo(1);
   }
 
   @Test
@@ -585,7 +585,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
     for (int i = 0; i < LearningEngineAnalysisTask.RETRIES - 1; i++) {
       LearningEngineAnalysisTask leTask = learningEngineService.getNextLearningEngineAnalysisTask(
           ServiceApiVersion.V1, Optional.of(false), Optional.empty());
-      assertEquals(ExecutionStatus.RUNNING, leTask.getExecutionStatus());
+      assertThat(leTask.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
 
       assertEquals(0,
           wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
@@ -611,7 +611,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
 
     LearningEngineAnalysisTask leTask = learningEngineService.getNextLearningEngineAnalysisTask(
         ServiceApiVersion.V1, Optional.of(false), Optional.empty());
-    assertEquals(ExecutionStatus.RUNNING, leTask.getExecutionStatus());
+    assertThat(leTask.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
 
     assertEquals(0,
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)

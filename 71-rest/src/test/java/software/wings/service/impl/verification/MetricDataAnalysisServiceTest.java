@@ -89,15 +89,15 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
     assertThat(thresholds).hasSize(numOfTransactions * numOfMetricsPerTxns);
     for (int i = 0; i < numOfTransactions * numOfMetricsPerTxns; i++) {
       TimeSeriesMLTransactionThresholds threshold = thresholds.get(i);
-      assertEquals(serviceId, threshold.getServiceId());
-      assertEquals(StateType.NEW_RELIC, threshold.getStateType());
-      assertEquals(DEFAULT_GROUP_NAME, threshold.getGroupName());
-      assertEquals("transaction-" + i, threshold.getTransactionName());
-      assertEquals("metric-" + i, threshold.getMetricName());
-      assertEquals(cvConfigId, threshold.getCvConfigId());
-      assertEquals(0, threshold.getVersion());
-      assertEquals("metric-" + i, threshold.getThresholds().getMetricName());
-      assertEquals(MetricType.THROUGHPUT, threshold.getThresholds().getMetricType());
+      assertThat(threshold.getServiceId()).isEqualTo(serviceId);
+      assertThat(threshold.getStateType()).isEqualTo(StateType.NEW_RELIC);
+      assertThat(threshold.getGroupName()).isEqualTo(DEFAULT_GROUP_NAME);
+      assertThat(threshold.getTransactionName()).isEqualTo("transaction-" + i);
+      assertThat(threshold.getMetricName()).isEqualTo("metric-" + i);
+      assertThat(threshold.getCvConfigId()).isEqualTo(cvConfigId);
+      assertThat(threshold.getVersion()).isEqualTo(0);
+      assertThat(threshold.getThresholds().getMetricName()).isEqualTo("metric-" + i);
+      assertThat(threshold.getThresholds().getMetricType()).isEqualTo(MetricType.THROUGHPUT);
       assertThat(threshold.getThresholds().getCustomThresholds()).hasSize(1);
       assertEquals(
           ThresholdType.ALERT_WHEN_HIGHER, threshold.getThresholds().getCustomThresholds().get(0).getThresholdType());
@@ -142,14 +142,14 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
     assertThat(thresholds).hasSize(numOfTransactions * numOfMetricsPerTxns);
     for (int i = 0; i < numOfTransactions * numOfMetricsPerTxns; i++) {
       TimeSeriesMLTransactionThresholds threshold = thresholds.get(i);
-      assertEquals(serviceId, threshold.getServiceId());
-      assertEquals(StateType.NEW_RELIC, threshold.getStateType());
-      assertEquals(DEFAULT_GROUP_NAME, threshold.getGroupName());
-      assertEquals("transaction-" + i, threshold.getTransactionName());
-      assertEquals("metric-" + i, threshold.getMetricName());
-      assertEquals(cvConfigId, threshold.getCvConfigId());
-      assertEquals("metric-" + i, threshold.getThresholds().getMetricName());
-      assertEquals(MetricType.THROUGHPUT, threshold.getThresholds().getMetricType());
+      assertThat(threshold.getServiceId()).isEqualTo(serviceId);
+      assertThat(threshold.getStateType()).isEqualTo(StateType.NEW_RELIC);
+      assertThat(threshold.getGroupName()).isEqualTo(DEFAULT_GROUP_NAME);
+      assertThat(threshold.getTransactionName()).isEqualTo("transaction-" + i);
+      assertThat(threshold.getMetricName()).isEqualTo("metric-" + i);
+      assertThat(threshold.getCvConfigId()).isEqualTo(cvConfigId);
+      assertThat(threshold.getThresholds().getMetricName()).isEqualTo("metric-" + i);
+      assertThat(threshold.getThresholds().getMetricType()).isEqualTo(MetricType.THROUGHPUT);
       assertThat(threshold.getThresholds().getCustomThresholds()).hasSize(1);
       assertEquals(
           ThresholdType.ALERT_WHEN_HIGHER, threshold.getThresholds().getCustomThresholds().get(0).getThresholdType());

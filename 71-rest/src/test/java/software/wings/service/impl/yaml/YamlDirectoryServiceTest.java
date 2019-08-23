@@ -96,26 +96,26 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     assertThat(directoryNode.getChildren()).hasSize(1);
 
     FolderNode appNode = (FolderNode) directoryNode.getChildren().get(0);
-    assertEquals(APP_ID, appNode.getAppId());
-    assertEquals(ACCOUNT_ID, appNode.getAccountId());
-    assertEquals("Application", appNode.getShortClassName());
+    assertThat(appNode.getAppId()).isEqualTo(APP_ID);
+    assertThat(appNode.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(appNode.getShortClassName()).isEqualTo("Application");
 
     for (DirectoryNode node : appNode.getChildren()) {
-      assertEquals(ACCOUNT_ID, node.getAccountId());
+      assertThat(node.getAccountId()).isEqualTo(ACCOUNT_ID);
 
       switch (node.getName()) {
         case "Index.yaml": {
-          assertEquals("Setup/Applications/APP_NAME/Index.yaml", node.getDirectoryPath().getPath());
+          assertThat(node.getDirectoryPath().getPath()).isEqualTo("Setup/Applications/APP_NAME/Index.yaml");
           YamlNode yamlNode = (YamlNode) node;
-          assertEquals(APP_ID, yamlNode.getUuid());
-          assertEquals(NodeType.YAML, yamlNode.getType());
+          assertThat(yamlNode.getUuid()).isEqualTo(APP_ID);
+          assertThat(yamlNode.getType()).isEqualTo(NodeType.YAML);
           break;
         }
         case "Defaults.yaml": {
-          assertEquals("Setup/Applications/APP_NAME/Defaults.yaml", node.getDirectoryPath().getPath());
+          assertThat(node.getDirectoryPath().getPath()).isEqualTo("Setup/Applications/APP_NAME/Defaults.yaml");
           YamlNode yamlNode = (YamlNode) node;
-          assertEquals(APP_ID, yamlNode.getUuid());
-          assertEquals(NodeType.YAML, yamlNode.getType());
+          assertThat(yamlNode.getUuid()).isEqualTo(APP_ID);
+          assertThat(yamlNode.getType()).isEqualTo(NodeType.YAML);
           break;
         }
         case "Services":
@@ -160,10 +160,10 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     AppLevelYamlNode workflowYamlNode = (AppLevelYamlNode) workflowNode.getChildren().get(0);
     assertEquals(
         "Setup/Applications/APP_NAME/Workflows/WORKFLOW_NAME.yaml", workflowYamlNode.getDirectoryPath().getPath());
-    assertEquals(APP_ID, workflowYamlNode.getAppId());
-    assertEquals(ACCOUNT_ID, workflowYamlNode.getAccountId());
-    assertEquals(WORKFLOW_ID, workflowYamlNode.getUuid());
-    assertEquals("WORKFLOW_NAME.yaml", workflowYamlNode.getName());
+    assertThat(workflowYamlNode.getAppId()).isEqualTo(APP_ID);
+    assertThat(workflowYamlNode.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(workflowYamlNode.getUuid()).isEqualTo(WORKFLOW_ID);
+    assertThat(workflowYamlNode.getName()).isEqualTo("WORKFLOW_NAME.yaml");
   }
 
   private void performPipelineNodeValidation(FolderNode pipelineNode) {
@@ -172,10 +172,10 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     AppLevelYamlNode pipelineYamlNode = (AppLevelYamlNode) pipelineNode.getChildren().get(0);
     assertEquals(
         "Setup/Applications/APP_NAME/Pipelines/PIPELINE_NAME.yaml", pipelineYamlNode.getDirectoryPath().getPath());
-    assertEquals(APP_ID, pipelineYamlNode.getAppId());
-    assertEquals(ACCOUNT_ID, pipelineYamlNode.getAccountId());
-    assertEquals(PIPELINE_ID, pipelineYamlNode.getUuid());
-    assertEquals("PIPELINE_NAME.yaml", pipelineYamlNode.getName());
+    assertThat(pipelineYamlNode.getAppId()).isEqualTo(APP_ID);
+    assertThat(pipelineYamlNode.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(pipelineYamlNode.getUuid()).isEqualTo(PIPELINE_ID);
+    assertThat(pipelineYamlNode.getName()).isEqualTo("PIPELINE_NAME.yaml");
   }
 
   private void performProvisionerNodeValidation(FolderNode provisionerFolderNode) {
@@ -184,10 +184,10 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     AppLevelYamlNode provisionerYamlNode = (AppLevelYamlNode) provisionerFolderNode.getChildren().get(0);
     assertEquals("Setup/Applications/APP_NAME/Provisioners/PROVISIONER_NAME.yaml",
         provisionerYamlNode.getDirectoryPath().getPath());
-    assertEquals(APP_ID, provisionerYamlNode.getAppId());
-    assertEquals(ACCOUNT_ID, provisionerYamlNode.getAccountId());
-    assertEquals(PROVISIONER_ID, provisionerYamlNode.getUuid());
-    assertEquals("PROVISIONER_NAME.yaml", provisionerYamlNode.getName());
+    assertThat(provisionerYamlNode.getAppId()).isEqualTo(APP_ID);
+    assertThat(provisionerYamlNode.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(provisionerYamlNode.getUuid()).isEqualTo(PROVISIONER_ID);
+    assertThat(provisionerYamlNode.getName()).isEqualTo("PROVISIONER_NAME.yaml");
   }
   private void performTriggerNodeValidation(FolderNode triggerFolderNode) {
     assertThat(triggerFolderNode.getChildren()).isNotNull();
@@ -195,10 +195,10 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     AppLevelYamlNode triggerYamlNode = (AppLevelYamlNode) triggerFolderNode.getChildren().get(0);
     assertEquals(
         "Setup/Applications/APP_NAME/Triggers/TRIGGER_NAME.yaml", triggerYamlNode.getDirectoryPath().getPath());
-    assertEquals(APP_ID, triggerYamlNode.getAppId());
-    assertEquals(ACCOUNT_ID, triggerYamlNode.getAccountId());
-    assertEquals(TRIGGER_ID, triggerYamlNode.getUuid());
-    assertEquals("TRIGGER_NAME.yaml", triggerYamlNode.getName());
+    assertThat(triggerYamlNode.getAppId()).isEqualTo(APP_ID);
+    assertThat(triggerYamlNode.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(triggerYamlNode.getUuid()).isEqualTo(TRIGGER_ID);
+    assertThat(triggerYamlNode.getName()).isEqualTo("TRIGGER_NAME.yaml");
   }
 
   private void performEnvironmentNodeValidation(FolderNode envFolderNode) {
@@ -206,8 +206,8 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     assertThat(envFolderNode.getChildren()).hasSize(1);
 
     // This is actual Service Folder for service with Name "SERVICE_NAME"
-    assertEquals(ENV_NAME, envFolderNode.getChildren().get(0).getName());
-    assertEquals(NodeType.FOLDER, envFolderNode.getChildren().get(0).getType());
+    assertThat(envFolderNode.getChildren().get(0).getName()).isEqualTo(ENV_NAME);
+    assertThat(envFolderNode.getChildren().get(0).getType()).isEqualTo(NodeType.FOLDER);
 
     // These are nested yaml strcutures for service like index.yaml, config files, commands etc.
     Set<String> expectedDirPaths =
@@ -230,8 +230,8 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     assertThat(serviceFolderNode.getChildren()).hasSize(1);
 
     // This is actual Service Folder for service with Name "SERVICE_NAME"
-    assertEquals(SERVICE_NAME, serviceFolderNode.getChildren().get(0).getName());
-    assertEquals(NodeType.FOLDER, serviceFolderNode.getChildren().get(0).getType());
+    assertThat(serviceFolderNode.getChildren().get(0).getName()).isEqualTo(SERVICE_NAME);
+    assertThat(serviceFolderNode.getChildren().get(0).getType()).isEqualTo(NodeType.FOLDER);
 
     // These are nested yaml structures for service like index.yaml, config files, commands etc.
     Set<String> expectedDirPaths =
@@ -326,9 +326,9 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
 
   private FolderNode validateFolderNodeGotAppAccId(FolderNode node, String dirPath) {
     FolderNode currentFolderNode = node;
-    assertEquals(NodeType.FOLDER, currentFolderNode.getType());
-    assertEquals(APP_ID, currentFolderNode.getAppId());
-    assertEquals(dirPath, currentFolderNode.getDirectoryPath().getPath());
+    assertThat(currentFolderNode.getType()).isEqualTo(NodeType.FOLDER);
+    assertThat(currentFolderNode.getAppId()).isEqualTo(APP_ID);
+    assertThat(currentFolderNode.getDirectoryPath().getPath()).isEqualTo(dirPath);
     return currentFolderNode;
   }
 }

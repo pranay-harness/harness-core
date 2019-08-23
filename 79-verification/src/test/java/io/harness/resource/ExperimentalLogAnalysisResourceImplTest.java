@@ -1,7 +1,6 @@
 package io.harness.resource;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -91,7 +90,7 @@ public class ExperimentalLogAnalysisResourceImplTest extends VerificationBaseTes
     when(logAnalysisService.getExpAnalysisInfoList()).thenReturn(expectedData);
     RestResponse<List<ExpAnalysisInfo>> response = logAnalysisResource.getLogExpAnalysisInfo(mockAccountId);
 
-    assertEquals(response.getResource(), expectedData);
+    assertThat(expectedData).isEqualTo(response.getResource());
   }
 
   @Test

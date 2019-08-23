@@ -26,7 +26,7 @@ public class JenkinsIntegrationTest extends BaseIntegrationTest {
   //    wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class).filter("name", "Harness Jenkins"));
   //
   //    JenkinsConfig jenkinsConfig = obtainJenkinsConfig();
-  //    assertEquals("https://jenkins.wings.software", jenkinsConfig.getJenkinsUrl());
+  //    assertThat( jenkinsConfig.getJenkinsUrl()).isEqualTo("https://jenkins.wings.software");
   //  }
   //
   //  @Test

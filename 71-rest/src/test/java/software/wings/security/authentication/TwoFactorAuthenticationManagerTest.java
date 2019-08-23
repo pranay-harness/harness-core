@@ -4,7 +4,6 @@ import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -197,7 +196,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
             account.getUuid(), twoFactorAdminOverrideSettings);
         Assert.fail("Enabled 2FA");
       } catch (WingsException e) {
-        assertEquals(ErrorCode.INVALID_REQUEST, e.getCode());
+        assertThat(e.getCode()).isEqualTo(ErrorCode.INVALID_REQUEST);
       }
     }
   }
@@ -279,7 +278,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
         twoFactorAuthenticationManager.enableTwoFactorAuthenticationSettings(user, settings);
         Assert.fail();
       } catch (WingsException e) {
-        assertEquals(ErrorCode.INVALID_REQUEST, e.getCode());
+        assertThat(e.getCode()).isEqualTo(ErrorCode.INVALID_REQUEST);
       }
     }
   }

@@ -1,6 +1,6 @@
 package io.harness.k8s.kubectl;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -15,6 +15,6 @@ public class DeleteCommandTest extends CategoryTest {
 
     DeleteCommand deleteCommand = client.delete().resources("Deployment/nginx ConfigMap/config");
 
-    assertEquals("kubectl delete Deployment/nginx ConfigMap/config", deleteCommand.command());
+    assertThat(deleteCommand.command()).isEqualTo("kubectl delete Deployment/nginx ConfigMap/config");
   }
 }

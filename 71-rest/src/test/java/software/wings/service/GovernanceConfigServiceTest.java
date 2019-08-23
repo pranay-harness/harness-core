@@ -1,6 +1,6 @@
 package software.wings.service;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.utils.WingsTestConstants.USER_ID;
@@ -113,13 +113,13 @@ public class GovernanceConfigServiceTest extends BaseIntegrationTest {
         governanceConfigService.upsert(accountId, inputConfig);
         fail("Saved governance config");
       } catch (WingsException e) {
-        assertEquals(ErrorCode.INVALID_REQUEST, e.getCode());
+        assertThat(e.getCode()).isEqualTo(ErrorCode.INVALID_REQUEST);
       }
     }
   }
 
   private void compare(GovernanceConfig lhs, GovernanceConfig rhs) {
-    assertEquals(lhs.getAccountId(), rhs.getAccountId());
-    assertEquals(lhs.isDeploymentFreeze(), rhs.isDeploymentFreeze());
+    assertThat(rhs.getAccountId()).isEqualTo(lhs.getAccountId());
+    assertThat(rhs.isDeploymentFreeze()).isEqualTo(lhs.isDeploymentFreeze());
   }
 }

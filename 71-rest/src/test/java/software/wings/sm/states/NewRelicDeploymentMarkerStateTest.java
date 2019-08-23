@@ -2,7 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -116,14 +116,14 @@ public class NewRelicDeploymentMarkerStateTest extends WingsBaseTest {
       spyRelicDeploymentMarkerState.execute(executionContext);
       fail("Passed with wrong app name");
     } catch (WingsException e) {
-      assertEquals("Can not find application by name", e.getMessage());
+      assertThat(e.getMessage()).isEqualTo("Can not find application by name");
     }
 
     doReturn(NewRelicApplication.builder().id(30444).build())
         .when(newRelicService)
         .resolveApplicationName(anyString(), anyString());
     ExecutionResponse executionResponse = spyRelicDeploymentMarkerState.execute(executionContext);
-    assertEquals(ExecutionStatus.RUNNING, executionResponse.getExecutionStatus());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
 
     doThrow(new RuntimeException("Can not find application by id"))
         .when(newRelicService)
@@ -133,7 +133,7 @@ public class NewRelicDeploymentMarkerStateTest extends WingsBaseTest {
       spyRelicDeploymentMarkerState.execute(executionContext);
       fail("Passed with wrong app id");
     } catch (RuntimeException e) {
-      assertEquals("Can not find application by id", e.getMessage());
+      assertThat(e.getMessage()).isEqualTo("Can not find application by id");
     }
   }
 }

@@ -1,7 +1,6 @@
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 import io.harness.category.element.UnitTests;
@@ -33,7 +32,7 @@ public class MigrationServiceTest extends WingsBaseTest {
       if (last.get() == -1) {
         last.set(pair.getKey() - 1);
       }
-      assertEquals("Schema version " + pair.getKey() + " is not sequential", last.get(), pair.getKey() - 1);
+      assertThat(pair.getKey() - 1).isEqualTo(last.get());
       last.set(pair.getKey());
     });
     assertNotEquals("No items in migration list", last.get(), -1);

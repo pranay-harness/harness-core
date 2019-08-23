@@ -3,7 +3,6 @@ package software.wings.integration;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import io.harness.beans.PageResponse;
 import io.harness.category.element.IntegrationTests;
@@ -45,7 +44,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
     disableAccount(accountId, true);
 
     String accountStatus = getAccountStatus(accountId);
-    assertEquals(AccountStatus.INACTIVE, accountStatus);
+    assertThat(accountStatus).isEqualTo(AccountStatus.INACTIVE);
     List<User> users = userService.getUsersOfAccount(accountId);
     for (User user : users) {
       if (userService.canEnableOrDisable(user)) {
@@ -60,11 +59,11 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
     RestResponse<PageResponse<Alert>> restResponse =
         alertResponse.readEntity(new GenericType<RestResponse<PageResponse<Alert>>>() {});
     assertThat(restResponse.getResponseMessages().size()).isGreaterThan(0);
-    assertEquals(restResponse.getResponseMessages().get(0).getCode(), ErrorCode.ACCOUNT_MIGRATED);
+    assertThat(ErrorCode.ACCOUNT_MIGRATED).isEqualTo(restResponse.getResponseMessages().get(0).getCode());
 
     disableAccount(accountId, false);
     accountStatus = getAccountStatus(accountId);
-    assertEquals(AccountStatus.ACTIVE, accountStatus);
+    assertThat(accountStatus).isEqualTo(AccountStatus.ACTIVE);
     users = userService.getUsersOfAccount(accountId);
     for (User user : users) {
       if (userService.canEnableOrDisable(user)) {
@@ -138,11 +137,11 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
 
     GovernanceConfig governanceConfig = governanceConfigService.get(accountId);
     assertThat(governanceConfig).isNotNull();
-    assertEquals(disable, governanceConfig.isDeploymentFreeze());
+    assertThat(governanceConfig.isDeploymentFreeze()).isEqualTo(disable);
 
     if (disable) {
       Account account = wingsPersistence.get(Account.class, accountId);
-      assertEquals(migratedToClusterUrl, account.getMigratedToClusterUrl());
+      assertThat(account.getMigratedToClusterUrl()).isEqualTo(migratedToClusterUrl);
     }
   }
 }

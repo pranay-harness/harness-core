@@ -1,6 +1,6 @@
 package io.harness.delegate.beans.executioncapability;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -42,9 +42,9 @@ public class HttpConnectionExecutionCapabilityTest extends CategoryTest {
   @Category(UnitTests.class)
   public void fetchCapabilityBasis() {
     String capabilityBasis = httpConnectionExecutionCapability.fetchCapabilityBasis();
-    assertEquals(capabilityBasis, URL_HTTP);
+    assertThat(URL_HTTP).isEqualTo(capabilityBasis);
 
     capabilityBasis = httpsConnectionExecutionCapability.fetchCapabilityBasis();
-    assertEquals(capabilityBasis, URL_HTTPS);
+    assertThat(URL_HTTPS).isEqualTo(capabilityBasis);
   }
 }

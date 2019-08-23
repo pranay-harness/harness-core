@@ -1,7 +1,6 @@
 package io.harness.event.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -120,7 +119,7 @@ public class EventPublisherTest {
     Awaitility.await()
         .atMost(10, TimeUnit.SECONDS)
         .pollInterval(1, TimeUnit.SECONDS)
-        .until(() -> assertEquals(messagesPublished.get(), fakeService.getMessageCount()));
+        .until(() -> assertThat(fakeService.getMessageCount()).isEqualTo(messagesPublished.get()));
   }
 
   @Test

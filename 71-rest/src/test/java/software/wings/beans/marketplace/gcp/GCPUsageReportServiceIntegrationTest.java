@@ -1,7 +1,6 @@
 package software.wings.beans.marketplace.gcp;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import com.google.inject.Inject;
 
@@ -53,12 +52,12 @@ public class GCPUsageReportServiceIntegrationTest extends BaseIntegrationTest {
     assertThat(id).isNotNull();
 
     val fetchedGCPUsageReport = persistence.get(GCPUsageReport.class, id);
-    assertEquals(fetchedGCPUsageReport, gcpUsageReport);
+    assertThat(gcpUsageReport).isEqualTo(fetchedGCPUsageReport);
 
     val newId = persistence.save(gcpUsageReport);
     assertThat(newId).isNotNull();
 
-    assertEquals(id, newId);
+    assertThat(newId).isEqualTo(id);
   }
 
   @Test
@@ -69,7 +68,7 @@ public class GCPUsageReportServiceIntegrationTest extends BaseIntegrationTest {
     assertThat(id).isNotNull();
 
     val lastGCPUsageReportTime = gcpUsageReportService.fetchLastGCPUsageReportTime(SOME_ACCOUNT_ID);
-    assertEquals(lastGCPUsageReportTime, gcpUsageReport.getEndTimestamp());
+    assertThat(gcpUsageReport.getEndTimestamp()).isEqualTo(lastGCPUsageReportTime);
   }
 
   private GCPUsageReport getSampleGCPUsageReport() {

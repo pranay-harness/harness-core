@@ -7,7 +7,6 @@ import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.joor.Reflect.on;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
@@ -107,7 +106,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
     // Invoke Jenkins Poll Task
     params.setSubTaskType(JenkinsSubTaskType.POLL_TASK);
     response = jenkinsTask.run(params);
-    assertEquals("jenkins job description didn't come through", "test-description", response.getDescription());
+    assertThat(response.getDescription()).isEqualTo("test-description");
     assertThat(response.getEnvVars()).isNullOrEmpty();
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
@@ -223,7 +222,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
     when(jenkins.getEnvVars(anyString())).thenReturn(envVars);
     params.setSubTaskType(JenkinsSubTaskType.POLL_TASK);
     response = jenkinsTask.run(params);
-    assertEquals("jenkins job description didn't come through", "test-description", response.getDescription());
+    assertThat(response.getDescription()).isEqualTo("test-description");
     assertThat(response.getEnvVars()).isNotEmpty().containsOnly(entry(env1, envVars.get(env1)));
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }

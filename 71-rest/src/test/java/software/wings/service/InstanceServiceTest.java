@@ -1,7 +1,6 @@
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
@@ -160,12 +159,13 @@ public class InstanceServiceTest extends WingsBaseTest {
   }
 
   private void compare(Instance lhs, Instance rhs) {
-    //    assertEquals(lhs.getUuid(), rhs.getUuid());
-    assertEquals(lhs.getContainerInstanceKey().getContainerId(), rhs.getContainerInstanceKey().getContainerId());
-    assertEquals(lhs.getInfraMappingId(), rhs.getInfraMappingId());
-    assertEquals(lhs.getAccountId(), rhs.getAccountId());
-    assertEquals(lhs.getAppId(), rhs.getAppId());
-    assertEquals(lhs.getInstanceType(), rhs.getInstanceType());
-    assertEquals(lhs.getInstanceType(), rhs.getInstanceType());
+    //    assertThat( rhs.getUuid()).isEqualTo(lhs.getUuid());
+    assertThat(rhs.getContainerInstanceKey().getContainerId())
+        .isEqualTo(lhs.getContainerInstanceKey().getContainerId());
+    assertThat(rhs.getInfraMappingId()).isEqualTo(lhs.getInfraMappingId());
+    assertThat(rhs.getAccountId()).isEqualTo(lhs.getAccountId());
+    assertThat(rhs.getAppId()).isEqualTo(lhs.getAppId());
+    assertThat(rhs.getInstanceType()).isEqualTo(lhs.getInstanceType());
+    assertThat(rhs.getInstanceType()).isEqualTo(lhs.getInstanceType());
   }
 }

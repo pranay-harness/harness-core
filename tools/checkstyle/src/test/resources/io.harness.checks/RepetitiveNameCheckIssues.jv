@@ -4,6 +4,6 @@ import org.junit.Assert;
 
 public class RepetitiveNameCheckIssues {
     void func() {
-        Assert.assertEquals(123, revision);
+        Assert.assertThat( revision).isEqualTo(123);
     }
 }

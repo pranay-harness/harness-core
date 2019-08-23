@@ -115,7 +115,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
     apmVerificationState.setMetricCollectionInfos(Arrays.asList(info));
     Map<String, String> invalidFields = apmVerificationState.validateFields();
     assertThat(invalidFields.size() == 1).isTrue();
-    assertEquals("ResponseMapping should be missing", "responseMapping", invalidFields.keySet().iterator().next());
+    assertThat(invalidFields.keySet().iterator().next()).isEqualTo("responseMapping");
   }
 
   @Test
@@ -130,7 +130,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
     apmVerificationState.setMetricCollectionInfos(Arrays.asList(info));
     Map<String, String> invalidFields = apmVerificationState.validateFields();
     assertThat(invalidFields.size() == 1).isTrue();
-    assertEquals("transactionName should be missing", "transactionName", invalidFields.keySet().iterator().next());
+    assertThat(invalidFields.keySet().iterator().next()).isEqualTo("transactionName");
   }
 
   @Test

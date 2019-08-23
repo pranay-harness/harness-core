@@ -1,7 +1,6 @@
 package software.wings.service.impl.yaml;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
@@ -107,14 +106,14 @@ public class YamlChangeSetHelperTest extends CategoryTest {
 
     assertThat(gitFileChangesCaptor.getValue()).hasSize(2);
     gitFileChangeForDelete = (GitFileChange) gitFileChangesCaptor.getValue().get(0);
-    assertEquals(ACCOUNTID, gitFileChangeForDelete.getAccountId());
-    assertEquals(ChangeType.DELETE, gitFileChangeForDelete.getChangeType());
-    assertEquals(OLD, gitFileChangeForDelete.getFileContent());
+    assertThat(gitFileChangeForDelete.getAccountId()).isEqualTo(ACCOUNTID);
+    assertThat(gitFileChangeForDelete.getChangeType()).isEqualTo(ChangeType.DELETE);
+    assertThat(gitFileChangeForDelete.getFileContent()).isEqualTo(OLD);
 
     gitFileChangeForADD = (GitFileChange) gitFileChangesCaptor.getValue().get(1);
-    assertEquals(ACCOUNTID, gitFileChangeForADD.getAccountId());
-    assertEquals(ChangeType.ADD, gitFileChangeForADD.getChangeType());
-    assertEquals(NEW, gitFileChangeForADD.getFileContent());
+    assertThat(gitFileChangeForADD.getAccountId()).isEqualTo(ACCOUNTID);
+    assertThat(gitFileChangeForADD.getChangeType()).isEqualTo(ChangeType.ADD);
+    assertThat(gitFileChangeForADD.getFileContent()).isEqualTo(NEW);
   }
 
   @Test
@@ -146,9 +145,9 @@ public class YamlChangeSetHelperTest extends CategoryTest {
 
     assertThat(fileChangesCaptor.getValue()).hasSize(1);
     gitFileChangeForModify = (GitFileChange) fileChangesCaptor.getValue().get(0);
-    assertEquals(ACCOUNTID, gitFileChangeForModify.getAccountId());
-    assertEquals(ChangeType.MODIFY, gitFileChangeForModify.getChangeType());
-    assertEquals(OLD, gitFileChangeForModify.getFileContent());
+    assertThat(gitFileChangeForModify.getAccountId()).isEqualTo(ACCOUNTID);
+    assertThat(gitFileChangeForModify.getChangeType()).isEqualTo(ChangeType.MODIFY);
+    assertThat(gitFileChangeForModify.getFileContent()).isEqualTo(OLD);
   }
 
   @Test
@@ -192,14 +191,14 @@ public class YamlChangeSetHelperTest extends CategoryTest {
 
     assertThat(gitFileChangesCaptorForAS.getValue()).hasSize(2);
     gitFileChangeForDelete = (GitFileChange) gitFileChangesCaptorForAS.getValue().get(0);
-    assertEquals(ACCOUNTID, gitFileChangeForDelete.getAccountId());
-    assertEquals(ChangeType.DELETE, gitFileChangeForDelete.getChangeType());
-    assertEquals(OLD, gitFileChangeForDelete.getFileContent());
+    assertThat(gitFileChangeForDelete.getAccountId()).isEqualTo(ACCOUNTID);
+    assertThat(gitFileChangeForDelete.getChangeType()).isEqualTo(ChangeType.DELETE);
+    assertThat(gitFileChangeForDelete.getFileContent()).isEqualTo(OLD);
 
     gitFileChangeForADD = (GitFileChange) gitFileChangesCaptorForAS.getValue().get(1);
-    assertEquals(ACCOUNTID, gitFileChangeForADD.getAccountId());
-    assertEquals(ChangeType.ADD, gitFileChangeForADD.getChangeType());
-    assertEquals(NEW, gitFileChangeForADD.getFileContent());
+    assertThat(gitFileChangeForADD.getAccountId()).isEqualTo(ACCOUNTID);
+    assertThat(gitFileChangeForADD.getChangeType()).isEqualTo(ChangeType.ADD);
+    assertThat(gitFileChangeForADD.getFileContent()).isEqualTo(NEW);
   }
 
   @Test
@@ -228,8 +227,8 @@ public class YamlChangeSetHelperTest extends CategoryTest {
 
     assertThat(fileChangesCaptorForAS.getValue()).hasSize(1);
     gitFileChangeForModify = (GitFileChange) fileChangesCaptorForAS.getValue().get(0);
-    assertEquals(ACCOUNTID, gitFileChangeForModify.getAccountId());
-    assertEquals(ChangeType.MODIFY, gitFileChangeForModify.getChangeType());
-    assertEquals(OLD, gitFileChangeForModify.getFileContent());
+    assertThat(gitFileChangeForModify.getAccountId()).isEqualTo(ACCOUNTID);
+    assertThat(gitFileChangeForModify.getChangeType()).isEqualTo(ChangeType.MODIFY);
+    assertThat(gitFileChangeForModify.getFileContent()).isEqualTo(OLD);
   }
 }

@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static software.wings.audit.AuditHeader.Builder.anAuditHeader;
@@ -622,10 +621,10 @@ public class AuditPreferenceHelperTest extends WingsBaseTest {
 
   private void assertTopLevelCriteria(AuditPreference auditPreference) {
     assertThat(auditPreference).isNotNull();
-    assertEquals(PreferenceType.AUDIT_PREFERENCE.name(), auditPreference.getPreferenceType());
-    assertEquals(ACCOUNT_ID, auditPreference.getAccountId());
-    assertEquals("1559076765000", auditPreference.getStartTime());
-    assertEquals("1560195705972", auditPreference.getEndTime());
+    assertThat(auditPreference.getPreferenceType()).isEqualTo(PreferenceType.AUDIT_PREFERENCE.name());
+    assertThat(auditPreference.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(auditPreference.getStartTime()).isEqualTo("1559076765000");
+    assertThat(auditPreference.getEndTime()).isEqualTo("1560195705972");
     assertThat(auditPreference.getOperationTypes()).isNotNull();
     assertThat(auditPreference.getOperationTypes()).hasSize(2);
     assertThat(auditPreference.getOperationTypes().containsAll(Arrays.asList("CREATE", "UPDATE"))).isTrue();

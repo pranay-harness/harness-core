@@ -3,7 +3,6 @@ package software.wings.cloudprovider.aws;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static java.util.Arrays.asList;
-import static net.sf.ezmorph.test.ArrayAssertions.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -139,6 +138,6 @@ public class AwsCodeDeployServiceTest extends WingsBaseTest {
         awsCodeDeployService.listDeploymentInstances(Regions.US_EAST_1.getName(), null, null, "deploymentId");
     assertThat(instanceList).isNotNull();
     assertThat(instanceList).hasSize(1);
-    assertEquals(PUBLIC_DNS_NAME, instanceList.iterator().next().getPublicDnsName());
+    assertThat(instanceList.iterator().next().getPublicDnsName()).isEqualTo(PUBLIC_DNS_NAME);
   }
 }

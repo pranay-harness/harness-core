@@ -234,7 +234,7 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
 
     Network network = task.getContainers().get(0).getNetworks().get(0);
     assertThat(network.getIPv4Addresses()).isNotNull();
-    assertEquals("172.31.21.197", network.getIPv4Addresses().get(0));
+    assertThat(network.getIPv4Addresses().get(0)).isEqualTo("172.31.21.197");
 
     EcsContainerServiceImpl serviceImpl = new EcsContainerServiceImpl();
     assertEquals("172.31.21.197", serviceImpl.getIp("ip", task.getContainers().get(0)));

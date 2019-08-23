@@ -177,8 +177,8 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   @RealMongo
   public void testResult() throws InterruptedException, UnableToRegisterIdempotentOperationException {
     wingsPersistence.delete(Idempotent.class, dataId.getValue());
-    assertEquals("data: result 1", operation(dataId));
-    assertEquals("data: result 1", operation(dataId));
+    assertThat(operation(dataId)).isEqualTo("data: result 1");
+    assertThat(operation(dataId)).isEqualTo("data: result 1");
   }
 
   @Test

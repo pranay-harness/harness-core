@@ -1,6 +1,6 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -44,7 +44,7 @@ public class NexusConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandle
 
     // 1. Create Nexus verification record
     SettingAttribute settingAttributeSaved = createNexusVerificationProvider(nexusProviderName);
-    assertEquals(nexusProviderName, settingAttributeSaved.getName());
+    assertThat(settingAttributeSaved.getName()).isEqualTo(nexusProviderName);
 
     testCRUD(generateSettingValueYamlConfig(nexusProviderName, settingAttributeSaved));
   }

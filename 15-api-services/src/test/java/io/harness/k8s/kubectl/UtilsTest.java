@@ -2,6 +2,7 @@ package io.harness.k8s.kubectl;
 
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static io.harness.k8s.kubectl.Utils.parseLatestRevisionNumberFromRolloutHistory;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import io.harness.CategoryTest;
@@ -20,7 +21,7 @@ public class UtilsTest extends CategoryTest {
         + "4         kubectl edit deploy/demo1-nginx-deployment\n"
         + "\n";
 
-    assertEquals("4", parseLatestRevisionNumberFromRolloutHistory(rolloutHistory));
+    assertThat(parseLatestRevisionNumberFromRolloutHistory(rolloutHistory)).isEqualTo("4");
 
     rolloutHistory = "daemonsets \"datadog-agent\"\n"
         + "REVISION  CHANGE-CAUSE\n"
@@ -28,15 +29,15 @@ public class UtilsTest extends CategoryTest {
         + "3         <none>\n"
         + "\n";
 
-    assertEquals("3", parseLatestRevisionNumberFromRolloutHistory(rolloutHistory));
+    assertThat(parseLatestRevisionNumberFromRolloutHistory(rolloutHistory)).isEqualTo("3");
   }
 
   @Test
   @Category(UnitTests.class)
   public void encloseWithQuotesIfNeededTest() {
-    assertEquals("kubectl", encloseWithQuotesIfNeeded("kubectl"));
-    assertEquals("kubectl", encloseWithQuotesIfNeeded("kubectl "));
-    assertEquals("config", encloseWithQuotesIfNeeded("config"));
+    assertThat(encloseWithQuotesIfNeeded("kubectl")).isEqualTo("kubectl");
+    assertThat(encloseWithQuotesIfNeeded("kubectl ")).isEqualTo("kubectl");
+    assertThat(encloseWithQuotesIfNeeded("config")).isEqualTo("config");
     assertEquals("\"C:\\Program Files\\Docker\\Docker\\Resources\\bin\\kubectl.exe\"",
         encloseWithQuotesIfNeeded("C:\\Program Files\\Docker\\Docker\\Resources\\bin\\kubectl.exe"));
   }

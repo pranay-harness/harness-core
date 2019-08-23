@@ -2,7 +2,6 @@ package software.wings.verification;
 
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -174,16 +173,16 @@ public class CloudWatchCVConfigurationYamlHandlerTest extends WingsBaseTest {
     CloudWatchCVServiceConfiguration.CloudWatchCVConfigurationYaml yaml =
         yamlHandler.toYaml(cvServiceConfiguration, appId);
 
-    assertEquals("Name should be same", cvServiceConfiguration.getName(), yaml.getName());
-    assertEquals("AccountId should be same", cvServiceConfiguration.getAccountId(), yaml.getAccountId());
-    assertEquals("service name should be same", serviceName, yaml.getServiceName());
-    assertEquals("envId should be same", envName, yaml.getEnvName());
-    assertEquals("LoadBalancer metrics should be same", loadBalancerMetrics, yaml.getLoadBalancerMetrics());
-    assertEquals("ECS metrics should be same", ecsMetrics, yaml.getEcsMetrics());
-    assertEquals("Lambda function metrics should be same", lambdaFunctionsMetrics, yaml.getLambdaFunctionsMetrics());
-    assertEquals("EC2 instance names should be same", ec2InstanceNames, yaml.getEc2InstanceNames());
-    assertEquals("EC2 metrics should be same", ec2Metrics, yaml.getEc2Metrics());
-    assertEquals("Region should be same", region, yaml.getRegion());
+    assertThat(yaml.getName()).isEqualTo(cvServiceConfiguration.getName());
+    assertThat(yaml.getAccountId()).isEqualTo(cvServiceConfiguration.getAccountId());
+    assertThat(yaml.getServiceName()).isEqualTo(serviceName);
+    assertThat(yaml.getEnvName()).isEqualTo(envName);
+    assertThat(yaml.getLoadBalancerMetrics()).isEqualTo(loadBalancerMetrics);
+    assertThat(yaml.getEcsMetrics()).isEqualTo(ecsMetrics);
+    assertThat(yaml.getLambdaFunctionsMetrics()).isEqualTo(lambdaFunctionsMetrics);
+    assertThat(yaml.getEc2InstanceNames()).isEqualTo(ec2InstanceNames);
+    assertThat(yaml.getEc2Metrics()).isEqualTo(ec2Metrics);
+    assertThat(yaml.getRegion()).isEqualTo(region);
   }
 
   @Test
@@ -200,16 +199,16 @@ public class CloudWatchCVConfigurationYamlHandlerTest extends WingsBaseTest {
     changeContext.setYaml(yaml);
     CloudWatchCVServiceConfiguration bean = yamlHandler.upsertFromYaml(changeContext, null);
 
-    assertEquals("name should match", yaml.getName(), bean.getName());
-    assertEquals("AccountId should be same", yaml.getAccountId(), bean.getAccountId());
-    assertEquals("serviceId should be same", serviceId, bean.getServiceId());
-    assertEquals("envId should be same", envId, bean.getEnvId());
-    assertEquals("LoadBalancer metrics should be same", loadBalancerMetrics, bean.getLoadBalancerMetrics());
-    assertEquals("ECS metrics should be same", ecsMetrics, bean.getEcsMetrics());
-    assertEquals("Lambda function metrics should be same", lambdaFunctionsMetrics, bean.getLambdaFunctionsMetrics());
-    assertEquals("EC2 instance names should be same", ec2InstanceNames, bean.getEc2InstanceNames());
-    assertEquals("EC2 metrics should be same", ec2Metrics, bean.getEc2Metrics());
-    assertEquals("Region should be same", region, bean.getRegion());
+    assertThat(bean.getName()).isEqualTo(yaml.getName());
+    assertThat(bean.getAccountId()).isEqualTo(yaml.getAccountId());
+    assertThat(bean.getServiceId()).isEqualTo(serviceId);
+    assertThat(bean.getEnvId()).isEqualTo(envId);
+    assertThat(bean.getLoadBalancerMetrics()).isEqualTo(loadBalancerMetrics);
+    assertThat(bean.getEcsMetrics()).isEqualTo(ecsMetrics);
+    assertThat(bean.getLambdaFunctionsMetrics()).isEqualTo(lambdaFunctionsMetrics);
+    assertThat(bean.getEc2InstanceNames()).isEqualTo(ec2InstanceNames);
+    assertThat(bean.getEc2Metrics()).isEqualTo(ec2Metrics);
+    assertThat(bean.getRegion()).isEqualTo(region);
     assertThat(bean.getUuid()).isNotNull();
   }
 

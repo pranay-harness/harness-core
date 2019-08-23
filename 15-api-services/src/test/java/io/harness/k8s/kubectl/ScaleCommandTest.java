@@ -1,6 +1,6 @@
 package io.harness.k8s.kubectl;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -15,6 +15,6 @@ public class ScaleCommandTest extends CategoryTest {
 
     ScaleCommand scaleCommand = client.scale().resource("Deployment/nginx").replicas(2);
 
-    assertEquals("kubectl scale Deployment/nginx --replicas=2", scaleCommand.command());
+    assertThat(scaleCommand.command()).isEqualTo("kubectl scale Deployment/nginx --replicas=2");
   }
 }

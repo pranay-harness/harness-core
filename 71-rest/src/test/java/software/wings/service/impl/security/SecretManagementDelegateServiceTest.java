@@ -1,7 +1,7 @@
 package software.wings.service.impl.security;
 
 import static io.harness.rule.OwnerRule.MARK;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -57,9 +57,9 @@ public class SecretManagementDelegateServiceTest extends CategoryTest {
     ((EncryptedData) encryptedRecord).setUuid(UUIDGenerator.generateUuid());
     for (int i = 0; i < 10; i++) {
       char[] decryptedSecret = secretManagementDelegateService.decrypt(encryptedRecord, kmsConfig);
-      assertEquals(secret, new String(decryptedSecret));
+      assertThat(new String(decryptedSecret)).isEqualTo(secret);
     }
 
-    assertEquals(1, secretManagementDelegateService.getKmsEncryptionKeyCacheSize());
+    assertThat(secretManagementDelegateService.getKmsEncryptionKeyCacheSize()).isEqualTo(1);
   }
 }

@@ -2,7 +2,6 @@ package software.wings.service;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
@@ -261,12 +260,12 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
   }
 
   private void compare(HarnessUserGroup lhs, HarnessUserGroup rhs) {
-    assertEquals(lhs.getUuid(), rhs.getUuid());
-    assertEquals(lhs.getName(), rhs.getName());
-    assertEquals(lhs.getDescription(), rhs.getDescription());
-    assertEquals(lhs.isApplyToAllAccounts(), rhs.isApplyToAllAccounts());
-    assertEquals(lhs.getAccountIds(), rhs.getAccountIds());
-    assertEquals(lhs.getMemberIds(), rhs.getMemberIds());
-    assertEquals(lhs.getActions(), rhs.getActions());
+    assertThat(rhs.getUuid()).isEqualTo(lhs.getUuid());
+    assertThat(rhs.getName()).isEqualTo(lhs.getName());
+    assertThat(rhs.getDescription()).isEqualTo(lhs.getDescription());
+    assertThat(rhs.isApplyToAllAccounts()).isEqualTo(lhs.isApplyToAllAccounts());
+    assertThat(rhs.getAccountIds()).isEqualTo(lhs.getAccountIds());
+    assertThat(rhs.getMemberIds()).isEqualTo(lhs.getMemberIds());
+    assertThat(rhs.getActions()).isEqualTo(lhs.getActions());
   }
 }

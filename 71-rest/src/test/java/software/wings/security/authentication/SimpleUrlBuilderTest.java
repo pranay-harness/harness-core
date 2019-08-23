@@ -1,6 +1,6 @@
 package software.wings.security.authentication;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
@@ -13,6 +13,6 @@ public class SimpleUrlBuilderTest extends WingsBaseTest {
   public void testBuildUrl() {
     String url = new SimpleUrlBuilder("http://google.com").addQueryParam("a", "1").addQueryParam("b", "2").build();
 
-    assertEquals("http://google.com?a=1&b=2", url);
+    assertThat(url).isEqualTo("http://google.com?a=1&b=2");
   }
 }

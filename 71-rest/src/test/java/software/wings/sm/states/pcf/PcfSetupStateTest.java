@@ -3,8 +3,8 @@ package software.wings.sm.states.pcf;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyMap;
@@ -280,18 +280,18 @@ public class PcfSetupStateTest extends WingsBaseTest {
   public void testExecute() {
     on(context).set("serviceTemplateService", serviceTemplateService);
     ExecutionResponse executionResponse = pcfSetupState.execute(context);
-    assertEquals(ExecutionStatus.SUCCESS, executionResponse.getExecutionStatus());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
 
     PcfSetupStateExecutionData stateExecutionData =
         (PcfSetupStateExecutionData) executionResponse.getStateExecutionData();
-    assertEquals("PCF Setup", stateExecutionData.getCommandName());
+    assertThat(stateExecutionData.getCommandName()).isEqualTo("PCF Setup");
     PcfCommandSetupRequest pcfCommandSetupRequest = (PcfCommandSetupRequest) stateExecutionData.getPcfCommandRequest();
-    assertEquals("APP_NAME__SERVICE_NAME__ENV_NAME", pcfCommandSetupRequest.getReleaseNamePrefix());
-    assertEquals(PcfCommandType.SETUP, pcfCommandSetupRequest.getPcfCommandType());
-    assertEquals(URL, pcfCommandSetupRequest.getPcfConfig().getEndpointUrl());
-    assertEquals(USER_NAME, pcfCommandSetupRequest.getPcfConfig().getUsername());
-    assertEquals(ORG, pcfCommandSetupRequest.getOrganization());
-    assertEquals(SPACE, pcfCommandSetupRequest.getSpace());
+    assertThat(pcfCommandSetupRequest.getReleaseNamePrefix()).isEqualTo("APP_NAME__SERVICE_NAME__ENV_NAME");
+    assertThat(pcfCommandSetupRequest.getPcfCommandType()).isEqualTo(PcfCommandType.SETUP);
+    assertThat(pcfCommandSetupRequest.getPcfConfig().getEndpointUrl()).isEqualTo(URL);
+    assertThat(pcfCommandSetupRequest.getPcfConfig().getUsername()).isEqualTo(USER_NAME);
+    assertThat(pcfCommandSetupRequest.getOrganization()).isEqualTo(ORG);
+    assertThat(pcfCommandSetupRequest.getSpace()).isEqualTo(SPACE);
 
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());
@@ -299,11 +299,11 @@ public class PcfSetupStateTest extends WingsBaseTest {
 
     PcfCommandRequest PcfCommandRequest = (PcfCommandRequest) delegateTask.getData().getParameters()[0];
     pcfCommandSetupRequest = (PcfCommandSetupRequest) stateExecutionData.getPcfCommandRequest();
-    assertEquals("APP_NAME__SERVICE_NAME__ENV_NAME", pcfCommandSetupRequest.getReleaseNamePrefix());
-    assertEquals(PcfCommandType.SETUP, pcfCommandSetupRequest.getPcfCommandType());
-    assertEquals(URL, pcfCommandSetupRequest.getPcfConfig().getEndpointUrl());
-    assertEquals(USER_NAME, pcfCommandSetupRequest.getPcfConfig().getUsername());
-    assertEquals(ORG, pcfCommandSetupRequest.getOrganization());
-    assertEquals(SPACE, pcfCommandSetupRequest.getSpace());
+    assertThat(pcfCommandSetupRequest.getReleaseNamePrefix()).isEqualTo("APP_NAME__SERVICE_NAME__ENV_NAME");
+    assertThat(pcfCommandSetupRequest.getPcfCommandType()).isEqualTo(PcfCommandType.SETUP);
+    assertThat(pcfCommandSetupRequest.getPcfConfig().getEndpointUrl()).isEqualTo(URL);
+    assertThat(pcfCommandSetupRequest.getPcfConfig().getUsername()).isEqualTo(USER_NAME);
+    assertThat(pcfCommandSetupRequest.getOrganization()).isEqualTo(ORG);
+    assertThat(pcfCommandSetupRequest.getSpace()).isEqualTo(SPACE);
   }
 }

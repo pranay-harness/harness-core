@@ -1,6 +1,6 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -40,7 +40,7 @@ public class AzureConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandle
     String azureConfigName = "Azure" + System.currentTimeMillis();
 
     SettingAttribute settingAttributeSaved = createAzureConfigProvider(azureConfigName);
-    assertEquals(azureConfigName, settingAttributeSaved.getName());
+    assertThat(settingAttributeSaved.getName()).isEqualTo(azureConfigName);
 
     testCRUD(generateSettingValueYamlConfig(azureConfigName, settingAttributeSaved));
   }

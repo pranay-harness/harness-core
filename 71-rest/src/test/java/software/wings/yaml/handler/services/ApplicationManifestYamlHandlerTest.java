@@ -2,7 +2,6 @@ package software.wings.yaml.handler.services;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -199,18 +198,18 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
     String yamlContent = getYamlContent(yaml);
     assertThat(yamlContent).isNotNull();
     yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
-    assertEquals(yamlFileContent, yamlContent);
+    assertThat(yamlContent).isEqualTo(yamlFileContent);
   }
 
   private void compareAppManifest(ApplicationManifest lhs, ApplicationManifest rhs) {
-    assertEquals(lhs.getStoreType(), rhs.getStoreType());
-    assertEquals(lhs.getGitFileConfig(), rhs.getGitFileConfig());
+    assertThat(rhs.getStoreType()).isEqualTo(lhs.getStoreType());
+    assertThat(rhs.getGitFileConfig()).isEqualTo(lhs.getGitFileConfig());
     if (lhs.getGitFileConfig() != null) {
-      assertEquals(lhs.getGitFileConfig().getConnectorId(), rhs.getGitFileConfig().getConnectorId());
-      assertEquals(lhs.getGitFileConfig().getBranch(), rhs.getGitFileConfig().getBranch());
-      assertEquals(lhs.getGitFileConfig().getFilePath(), rhs.getGitFileConfig().getFilePath());
-      assertEquals(lhs.getGitFileConfig().isUseBranch(), rhs.getGitFileConfig().isUseBranch());
-      assertEquals(lhs.getGitFileConfig().getConnectorName(), rhs.getGitFileConfig().getConnectorName());
+      assertThat(rhs.getGitFileConfig().getConnectorId()).isEqualTo(lhs.getGitFileConfig().getConnectorId());
+      assertThat(rhs.getGitFileConfig().getBranch()).isEqualTo(lhs.getGitFileConfig().getBranch());
+      assertThat(rhs.getGitFileConfig().getFilePath()).isEqualTo(lhs.getGitFileConfig().getFilePath());
+      assertThat(rhs.getGitFileConfig().isUseBranch()).isEqualTo(lhs.getGitFileConfig().isUseBranch());
+      assertThat(rhs.getGitFileConfig().getConnectorName()).isEqualTo(lhs.getGitFileConfig().getConnectorName());
     }
   }
 

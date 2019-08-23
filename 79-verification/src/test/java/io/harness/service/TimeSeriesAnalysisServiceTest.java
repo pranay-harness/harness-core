@@ -117,7 +117,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
                                 .build());
       }
     }));
-    assertEquals(expectedRecords, metricRecords);
+    assertThat(metricRecords).isEqualTo(expectedRecords);
   }
 
   @Test
@@ -164,7 +164,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
     assertThat(savedRecord.getDeeplinkMetadata()).isNotNull();
     assertThat(savedRecord.getValuesBytes()).isNull();
 
-    assertEquals(values, savedRecord.getValues());
-    assertEquals(deeplinkMetadata, savedRecord.getDeeplinkMetadata());
+    assertThat(savedRecord.getValues()).isEqualTo(values);
+    assertThat(savedRecord.getDeeplinkMetadata()).isEqualTo(deeplinkMetadata);
   }
 }

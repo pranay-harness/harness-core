@@ -74,15 +74,15 @@ public class ArtifactStreamServiceIntegrationTest extends BaseIntegrationTest {
   //    ArtifactoryArtifactStream created =
   //        (ArtifactoryArtifactStream) artifactStreamService.get(application.getApplicationId(),
   //        artifactStream.getUuid());
-  //    assertEquals(artifactStream.getUuid(), created.getUuid());
-  //    assertEquals(artifactStream.isMetadataOnly(), created.isMetadataOnly());
-  //    assertEquals("harness-maven", created.getJobname());
+  //    assertThat( created.getUuid()).isEqualTo(artifactStream.getUuid());
+  //    assertThat( created.isMetadataOnly()).isEqualTo(artifactStream.isMetadataOnly());
+  //    assertThat( created.getJobname()).isEqualTo("harness-maven");
   //
   //    created.setMetadataOnly(true);
   //    created.setJobname("harness-rpm");
   //    ArtifactoryArtifactStream updated = (ArtifactoryArtifactStream) artifactStreamService.forceUpdate(created);
-  //    assertEquals(created.isMetadataOnly(), updated.isMetadataOnly());
-  //    assertEquals("harness-rpm", updated.getJobname());
+  //    assertThat( updated.isMetadataOnly()).isEqualTo(created.isMetadataOnly());
+  //    assertThat( updated.getJobname()).isEqualTo("harness-rpm");
   //
   //    artifactStreamService.delete(application.getUuid(), created.getUuid());
   //    ArtifactoryArtifactStream deleted =

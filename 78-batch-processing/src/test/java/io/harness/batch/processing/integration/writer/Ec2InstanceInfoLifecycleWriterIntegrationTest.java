@@ -1,6 +1,6 @@
 package io.harness.batch.processing.integration.writer;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.Timestamps;
@@ -55,9 +55,9 @@ public class Ec2InstanceInfoLifecycleWriterIntegrationTest implements EcsEventGe
     InstanceData instanceData =
         instanceDataService.fetchActiveInstanceData(TEST_ACCOUNT_ID, TEST_INSTANCE_ID, activeInstanceState);
 
-    assertEquals(io.harness.batch.processing.ccm.InstanceState.INITIALIZING, instanceData.getInstanceState());
-    assertEquals(TEST_INSTANCE_ID, instanceData.getInstanceId());
-    assertEquals(TEST_ACCOUNT_ID, instanceData.getAccountId());
+    assertThat(instanceData.getInstanceState()).isEqualTo(io.harness.batch.processing.ccm.InstanceState.INITIALIZING);
+    assertThat(instanceData.getInstanceId()).isEqualTo(TEST_INSTANCE_ID);
+    assertThat(instanceData.getAccountId()).isEqualTo(TEST_ACCOUNT_ID);
   }
 
   @Test
@@ -74,8 +74,8 @@ public class Ec2InstanceInfoLifecycleWriterIntegrationTest implements EcsEventGe
     List<io.harness.batch.processing.ccm.InstanceState> activeInstanceState = getActiveInstanceState();
     InstanceData instanceData =
         instanceDataService.fetchActiveInstanceData(TEST_ACCOUNT_ID, TEST_INSTANCE_ID, activeInstanceState);
-    assertEquals(io.harness.batch.processing.ccm.InstanceState.RUNNING, instanceData.getInstanceState());
-    assertEquals(startTimestamp.getSeconds() * 1000, instanceData.getUsageStartTime().toEpochMilli());
+    assertThat(instanceData.getInstanceState()).isEqualTo(io.harness.batch.processing.ccm.InstanceState.RUNNING);
+    assertThat(instanceData.getUsageStartTime().toEpochMilli()).isEqualTo(startTimestamp.getSeconds() * 1000);
 
     // stop instance
     Timestamp endTimestamp = Timestamps.fromMillis(System.currentTimeMillis());
@@ -87,10 +87,10 @@ public class Ec2InstanceInfoLifecycleWriterIntegrationTest implements EcsEventGe
     InstanceData stoppedInstanceData =
         instanceDataService.fetchActiveInstanceData(TEST_ACCOUNT_ID, TEST_INSTANCE_ID, stoppedInstanceState);
 
-    assertEquals(io.harness.batch.processing.ccm.InstanceState.STOPPED, stoppedInstanceData.getInstanceState());
-    assertEquals(TEST_INSTANCE_ID, stoppedInstanceData.getInstanceId());
-    assertEquals(TEST_ACCOUNT_ID, stoppedInstanceData.getAccountId());
-    assertEquals(endTimestamp.getSeconds() * 1000, stoppedInstanceData.getUsageStopTime().toEpochMilli());
+    assertThat(stoppedInstanceData.getInstanceState()).isEqualTo(io.harness.batch.processing.ccm.InstanceState.STOPPED);
+    assertThat(stoppedInstanceData.getInstanceId()).isEqualTo(TEST_INSTANCE_ID);
+    assertThat(stoppedInstanceData.getAccountId()).isEqualTo(TEST_ACCOUNT_ID);
+    assertThat(stoppedInstanceData.getUsageStopTime().toEpochMilli()).isEqualTo(endTimestamp.getSeconds() * 1000);
   }
 
   private List<PublishedMessage> getMessageList(PublishedMessage publishedMessage) {

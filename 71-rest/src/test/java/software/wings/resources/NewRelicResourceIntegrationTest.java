@@ -1,6 +1,6 @@
 package software.wings.resources;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.rest.RestResponse;
@@ -76,7 +76,7 @@ public class NewRelicResourceIntegrationTest extends BaseIntegrationTest {
       RestResponse<List<Object>> restResponse =
           getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<Object>>>() {});
       List<Object> metrics = restResponse.getResource();
-      assertEquals(metrics.size(), 4);
+      assertThat(4).isEqualTo(metrics.size());
 
       Set<String> expectedMetricNames =
           new HashSet<>(Arrays.asList("requestsPerMinute", "averageResponseTime", "error", "apdexScore"));
@@ -86,7 +86,7 @@ public class NewRelicResourceIntegrationTest extends BaseIntegrationTest {
         String metricName = (String) ((LinkedHashMap) metric).get("metricName");
         actualMetricNames.add(metricName);
       }
-      assertEquals(expectedMetricNames, actualMetricNames);
+      assertThat(actualMetricNames).isEqualTo(expectedMetricNames);
     } catch (URISyntaxException uriSyntaxException) {
       logger.error("Failure while building absolute URL for getting all metric names for NewRelic.");
     }

@@ -2,7 +2,6 @@ package io.harness.resource;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -117,15 +116,15 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
         .thenReturn(newRelicMetricDataRecords);
     RestResponse<Set<NewRelicMetricDataRecord>> resp = timeSeriesResource.getMetricData(
         accountId, applicationId, workflowExecutionId, groupName, compareCurrent, tsRequest);
-    assertEquals(Sets.newHashSet(new NewRelicMetricDataRecord()), resp.getResource());
+    assertThat(resp.getResource()).isEqualTo(Sets.newHashSet(new NewRelicMetricDataRecord()));
 
     resp = timeSeriesResource.getMetricData(accountId, applicationId, null, groupName, false, tsRequest);
-    assertEquals(new HashSet<>(), resp.getResource());
+    assertThat(resp.getResource()).isEqualTo(new HashSet<>());
 
     when(timeSeriesAnalysisService.getPreviousSuccessfulRecords(applicationId, workflowExecutionId, groupName, 0, 0))
         .thenReturn(newRelicMetricDataRecords);
     resp = timeSeriesResource.getMetricData(accountId, applicationId, workflowExecutionId, groupName, false, tsRequest);
-    assertEquals(newRelicMetricDataRecords, resp.getResource());
+    assertThat(resp.getResource()).isEqualTo(newRelicMetricDataRecords);
 
     verify(timeSeriesAnalysisService, times(1)).getRecords(applicationId, stateExecutionId, groupName, nodes, 0, 0);
 
@@ -153,7 +152,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
         .thenReturn(timeSeriesMLScores);
     RestResponse<List<TimeSeriesMLScores>> resp =
         timeSeriesResource.getScores(accountId, applicationId, workflowId, 0, 1);
-    assertEquals(timeSeriesMLScores, resp.getResource());
+    assertThat(resp.getResource()).isEqualTo(timeSeriesMLScores);
   }
 
   @Test
@@ -167,6 +166,6 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
         .thenReturn(new RestResponse<>(false));
     RestResponse<Map<String, Map<String, TimeSeriesMetricDefinition>>> resp = timeSeriesResource.getMetricTemplate(
         accountId, applicationId, stateType, stateExecutionId, serviceId, cvConfigId, groupName);
-    assertEquals(metricTemplate, resp.getResource());
+    assertThat(resp.getResource()).isEqualTo(metricTemplate);
   }
 }

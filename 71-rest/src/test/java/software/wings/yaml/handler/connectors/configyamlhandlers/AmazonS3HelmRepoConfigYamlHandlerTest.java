@@ -1,6 +1,6 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -63,7 +63,7 @@ public class AmazonS3HelmRepoConfigYamlHandlerTest extends BaseSettingValueConfi
     String amazonS3HelmRepoSettingName = AMAZONS3_HELM_CHART_SETTING_NAME + System.currentTimeMillis();
 
     SettingAttribute settingAttributeSaved = createAmazonS3HelmRepoConnector(amazonS3HelmRepoSettingName);
-    assertEquals(amazonS3HelmRepoSettingName, settingAttributeSaved.getName());
+    assertThat(settingAttributeSaved.getName()).isEqualTo(amazonS3HelmRepoSettingName);
 
     testCRUD(generateSettingValueYamlConfig(amazonS3HelmRepoSettingName, settingAttributeSaved));
   }

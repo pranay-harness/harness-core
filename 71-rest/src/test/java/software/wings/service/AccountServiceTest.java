@@ -388,7 +388,7 @@ public class AccountServiceTest extends WingsBaseTest {
     // verify results
     assertThat(cvConfigs.size() == 2).isTrue();
     assertThat(serviceId.equals(cvConfigs.get(0).getUuid()) || serviceId.equals(cvConfigs.get(1).getUuid())).isTrue();
-    assertEquals("Service name should be same", "serviceTest", cvConfigs.get(0).getName());
+    assertThat(cvConfigs.get(0).getName()).isEqualTo("serviceTest");
   }
 
   @Test
@@ -403,9 +403,9 @@ public class AccountServiceTest extends WingsBaseTest {
 
     // verify results
     assertThat(cvConfigs.getResponse().size() > 0).isTrue();
-    assertEquals("Service id should be same", serviceId, cvConfigs.getResponse().get(0).getService().getUuid());
-    assertEquals("Offset correct in the page response", cvConfigs.getOffset(), "1");
-    assertEquals("Service name should be same", "serviceTest", cvConfigs.getResponse().get(0).getService().getName());
+    assertThat(cvConfigs.getResponse().get(0).getService().getUuid()).isEqualTo(serviceId);
+    assertThat("1").isEqualTo(cvConfigs.getOffset());
+    assertThat(cvConfigs.getResponse().get(0).getService().getName()).isEqualTo("serviceTest");
     assertEquals(
         "CVConfigType name should be same", "NewRelic", cvConfigs.getResponse().get(0).getCvConfig().get(0).getName());
   }
@@ -435,9 +435,9 @@ public class AccountServiceTest extends WingsBaseTest {
     // verify results
     assertThat(cvConfigs.getResponse().size() == 1).isTrue();
     assertThat(cvConfigs.getResponse().get(0).getCvConfig().size() == 1).isTrue();
-    assertEquals("Service id should be same", serviceId, cvConfigs.getResponse().get(0).getService().getUuid());
-    assertEquals("Offset correct in the page response", cvConfigs.getOffset(), "1");
-    assertEquals("Service name should be same", "serviceTest", cvConfigs.getResponse().get(0).getService().getName());
+    assertThat(cvConfigs.getResponse().get(0).getService().getUuid()).isEqualTo(serviceId);
+    assertThat("1").isEqualTo(cvConfigs.getOffset());
+    assertThat(cvConfigs.getResponse().get(0).getService().getName()).isEqualTo("serviceTest");
     assertEquals(
         "CVConfigType name should be same", "NewRelic", cvConfigs.getResponse().get(0).getCvConfig().get(0).getName());
   }
@@ -455,9 +455,9 @@ public class AccountServiceTest extends WingsBaseTest {
 
     // verify results
     assertThat(cvConfigs.getResponse().size() == 1).isTrue();
-    assertEquals("Service id should be same", serviceId, cvConfigs.getResponse().get(0).getService().getUuid());
-    assertEquals("Offset correct in the page response", cvConfigs.getOffset(), "1");
-    assertEquals("Service name should be same", "serviceTest", cvConfigs.getResponse().get(0).getService().getName());
+    assertThat(cvConfigs.getResponse().get(0).getService().getUuid()).isEqualTo(serviceId);
+    assertThat("1").isEqualTo(cvConfigs.getOffset());
+    assertThat(cvConfigs.getResponse().get(0).getService().getName()).isEqualTo("serviceTest");
     assertEquals(
         "CVConfigType name should be same", "NewRelic", cvConfigs.getResponse().get(0).getCvConfig().get(0).getName());
   }
@@ -568,7 +568,7 @@ public class AccountServiceTest extends WingsBaseTest {
     accountService.updateWhitelistedDomains(
         account.getUuid(), Sets.newHashSet(" harness.io", "harness.io ", " harness.io \t\t\t \t \t"));
     account = accountService.get(account.getUuid());
-    assertEquals(Sets.newHashSet("harness.io"), account.getWhitelistedDomains());
+    assertThat(account.getWhitelistedDomains()).isEqualTo(Sets.newHashSet("harness.io"));
   }
 
   @Test
@@ -585,7 +585,7 @@ public class AccountServiceTest extends WingsBaseTest {
     String newAccountName = "New Account Name";
     accountService.updateAccountName(account.getUuid(), newAccountName, null);
     account = accountService.get(account.getUuid());
-    assertEquals(newAccountName, account.getAccountName());
-    assertEquals(companyName, account.getCompanyName());
+    assertThat(account.getAccountName()).isEqualTo(newAccountName);
+    assertThat(account.getCompanyName()).isEqualTo(companyName);
   }
 }

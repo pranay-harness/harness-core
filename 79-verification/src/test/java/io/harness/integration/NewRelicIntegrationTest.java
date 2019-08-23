@@ -10,7 +10,6 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -355,7 +354,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
       assertThat(metricsFromDb).hasSize((batchNum + 1) * numOfMetricsPerBatch * hosts.size() * numOfMinutes);
       Query<NewRelicMetricDataRecord> query =
           wingsPersistence.createQuery(NewRelicMetricDataRecord.class).filter("stateExecutionId", stateExecutionId);
-      assertEquals((batchNum + 1) * numOfMetricsPerBatch * hosts.size() * numOfMinutes * 2, query.count());
+      assertThat(query.count()).isEqualTo((batchNum + 1) * numOfMetricsPerBatch * hosts.size() * numOfMinutes * 2);
     }
   }
 
@@ -418,7 +417,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     savedRecords = restResponse.getResource();
     assertThat(savedRecords).hasSize(1);
     savedRecord = savedRecords.get(0);
-    assertEquals("CV-Demo", savedRecord.getWorkflowExecutionId());
+    assertThat(savedRecord.getWorkflowExecutionId()).isEqualTo("CV-Demo");
   }
 
   private void featureflagDemoFail() throws Exception {
@@ -479,7 +478,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     savedRecords = restResponse.getResource();
     assertThat(savedRecords).hasSize(1);
     savedRecord = savedRecords.get(0);
-    assertEquals("CV-Demo", savedRecord.getWorkflowExecutionId());
+    assertThat(savedRecord.getWorkflowExecutionId()).isEqualTo("CV-Demo");
   }
 
   private void analysisSorted() {
@@ -532,11 +531,11 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     final List<NewRelicMetricAnalysis> analyses = savedRecord.getMetricAnalyses();
     assertThat(analyses).hasSize(record.getMetricAnalyses().size());
 
-    assertEquals(analysis1, analyses.get(0));
-    assertEquals(analysis2, analyses.get(1));
-    assertEquals(analysis5, analyses.get(2));
-    assertEquals(analysis4, analyses.get(3));
-    assertEquals(analysis3, analyses.get(4));
+    assertThat(analyses.get(0)).isEqualTo(analysis1);
+    assertThat(analyses.get(1)).isEqualTo(analysis2);
+    assertThat(analyses.get(2)).isEqualTo(analysis5);
+    assertThat(analyses.get(3)).isEqualTo(analysis4);
+    assertThat(analyses.get(4)).isEqualTo(analysis3);
   }
 
   @Test
@@ -664,9 +663,9 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     assertThat(metricAnalysisRecords).hasSize(1);
 
     NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisRecords.iterator().next();
-    assertEquals(RiskLevel.NA, metricsAnalysis.getRiskLevel());
+    assertThat(metricsAnalysis.getRiskLevel()).isEqualTo(RiskLevel.NA);
     assertThat(metricsAnalysis.isShowTimeSeries()).isFalse();
-    assertEquals("No data available", metricsAnalysis.getMessage());
+    assertThat(metricsAnalysis.getMessage()).isEqualTo("No data available");
   }
 
   @Test
@@ -798,9 +797,9 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
     NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisRecords.iterator().next();
 
-    assertEquals(RiskLevel.NA, metricsAnalysis.getRiskLevel());
+    assertThat(metricsAnalysis.getRiskLevel()).isEqualTo(RiskLevel.NA);
     assertThat(metricsAnalysis.isShowTimeSeries()).isFalse();
-    assertEquals("No data available", metricsAnalysis.getMessage());
+    assertThat(metricsAnalysis.getMessage()).isEqualTo("No data available");
   }
 
   @Test
@@ -934,9 +933,9 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
     NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisRecords.iterator().next();
 
-    assertEquals(RiskLevel.LOW, metricsAnalysis.getRiskLevel());
+    assertThat(metricsAnalysis.getRiskLevel()).isEqualTo(RiskLevel.LOW);
     assertThat(metricsAnalysis.isShowTimeSeries()).isFalse();
-    assertEquals("No problems found", metricsAnalysis.getMessage());
+    assertThat(metricsAnalysis.getMessage()).isEqualTo("No problems found");
   }
 
   @Test
@@ -1098,9 +1097,9 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
     NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisRecords.iterator().next();
 
-    assertEquals(RiskLevel.LOW, metricsAnalysis.getRiskLevel());
+    assertThat(metricsAnalysis.getRiskLevel()).isEqualTo(RiskLevel.LOW);
     assertThat(metricsAnalysis.isShowTimeSeries()).isTrue();
-    assertEquals("No problems found", metricsAnalysis.getMessage());
+    assertThat(metricsAnalysis.getMessage()).isEqualTo("No problems found");
     assertThat(metricsAnalysis.getMetricAnalyses()).hasSize(1);
   }
 
@@ -1158,7 +1157,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
       String expectedTemplate = Resources.toString(
           APMVerificationStateTest.class.getResource("/apm/NewRelicMetricTemplate.json"), Charsets.UTF_8);
-      assertEquals(expectedTemplate, JsonUtils.asJson(restResponse.getResource()));
+      assertThat(JsonUtils.asJson(restResponse.getResource())).isEqualTo(expectedTemplate);
     } catch (URISyntaxException uriSyntaxException) {
       logger.error("Failed to build URL correctly.");
     }

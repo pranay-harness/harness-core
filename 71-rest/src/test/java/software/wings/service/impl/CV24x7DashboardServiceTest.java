@@ -283,8 +283,8 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
     assertThat(feedbackCluster).isNotNull();
     LogMLFeedbackSummary feedbackSummary = feedbackCluster.getFeedbackSummary();
     assertThat(feedbackSummary).isNotNull();
-    assertEquals(feedbackRecord.getPriority().name(), feedbackSummary.getPriority().name());
-    assertEquals(feedbackRecord.getLastUpdatedBy(), feedbackSummary.getLastUpdatedBy());
+    assertThat(feedbackSummary.getPriority().name()).isEqualTo(feedbackRecord.getPriority().name());
+    assertThat(feedbackSummary.getLastUpdatedBy()).isEqualTo(feedbackRecord.getLastUpdatedBy());
   }
 
   @Test
@@ -341,7 +341,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
     wingsPersistence.save(previousAnalysis);
 
     long currentEndTime = cv24x7DashboardService.getCurrentAnalysisWindow(cvConfigId);
-    assertEquals(TimeUnit.MINUTES.toMillis(currentTime), currentEndTime);
+    assertThat(currentEndTime).isEqualTo(TimeUnit.MINUTES.toMillis(currentTime));
   }
 
   @Test
@@ -352,7 +352,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
     createSumoConfigWithBaseline(cvConfigId, currentTime, 30);
     long currentEndTime = cv24x7DashboardService.getCurrentAnalysisWindow(cvConfigId);
     LogsCVConfiguration config = (LogsCVConfiguration) cvConfigurationService.getConfiguration(cvConfigId);
-    assertEquals(TimeUnit.MINUTES.toMillis(config.getBaselineStartMinute() + 15), currentEndTime);
+    assertThat(currentEndTime).isEqualTo(TimeUnit.MINUTES.toMillis(config.getBaselineStartMinute() + 15));
   }
 
   @Test
@@ -374,7 +374,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
       expectedCurrentWindowEnd -= Math.floorMod(expectedCurrentWindowEnd - 1, CRON_POLL_INTERVAL_IN_MINUTES);
     }
 
-    assertEquals(TimeUnit.MINUTES.toMillis(expectedCurrentWindowEnd), currentEndTime);
+    assertThat(currentEndTime).isEqualTo(TimeUnit.MINUTES.toMillis(expectedCurrentWindowEnd));
   }
 
   @Test
@@ -392,7 +392,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
     wingsPersistence.save(previousAnalysis);
     long currentEndTime = cv24x7DashboardService.getCurrentAnalysisWindow(cvConfigId);
     long expectedCurrentWindowEnd = currentTime - 200 + CRON_POLL_INTERVAL_IN_MINUTES;
-    assertEquals(TimeUnit.MINUTES.toMillis(expectedCurrentWindowEnd), currentEndTime);
+    assertThat(currentEndTime).isEqualTo(TimeUnit.MINUTES.toMillis(expectedCurrentWindowEnd));
   }
 
   @Test
@@ -408,7 +408,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
 
     long currentEndTime = cv24x7DashboardService.getCurrentAnalysisWindow(cvConfigId);
 
-    assertEquals(TimeUnit.MINUTES.toMillis(currentTime - CRON_POLL_INTERVAL_IN_MINUTES), currentEndTime);
+    assertThat(currentEndTime).isEqualTo(TimeUnit.MINUTES.toMillis(currentTime - CRON_POLL_INTERVAL_IN_MINUTES));
   }
 
   @Test
@@ -417,7 +417,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
     String cvConfigId = createNRConfig();
     long currentTime = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
     long currentEndTime = cv24x7DashboardService.getCurrentAnalysisWindow(cvConfigId);
-    assertEquals(TimeUnit.MINUTES.toMillis(currentTime), currentEndTime);
+    assertThat(currentEndTime).isEqualTo(TimeUnit.MINUTES.toMillis(currentTime));
   }
 
   @Test

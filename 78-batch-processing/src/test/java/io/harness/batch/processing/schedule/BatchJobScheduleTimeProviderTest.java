@@ -1,6 +1,6 @@
 package io.harness.batch.processing.schedule;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -28,12 +28,12 @@ public class BatchJobScheduleTimeProviderTest extends CategoryTest {
     Instant currentDayEndTime = startTime.plus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
 
     assertTrue(gcpUsageReportTimeProvider.hasNext());
-    assertEquals(currentDayEndTime, gcpUsageReportTimeProvider.next());
+    assertThat(gcpUsageReportTimeProvider.next()).isEqualTo(currentDayEndTime);
 
     Instant nextDayEndTime = startTime.plus(2, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
 
     assertTrue(gcpUsageReportTimeProvider.hasNext());
-    assertEquals(nextDayEndTime, gcpUsageReportTimeProvider.next());
+    assertThat(gcpUsageReportTimeProvider.next()).isEqualTo(nextDayEndTime);
 
     assertFalse(gcpUsageReportTimeProvider.hasNext());
     assertNull(gcpUsageReportTimeProvider.next());

@@ -16,7 +16,8 @@ public class ApplyCommandTest extends CategoryTest {
 
     ApplyCommand applyCommand = client.apply().filename("manifests.yaml").dryrun(true).record(true).output("yaml");
 
-    assertEquals("kubectl apply --filename=manifests.yaml --dry-run --record --output=yaml", applyCommand.command());
+    assertThat(applyCommand.command())
+        .isEqualTo("kubectl apply --filename=manifests.yaml --dry-run --record --output=yaml");
   }
 
   @Test
@@ -26,7 +27,7 @@ public class ApplyCommandTest extends CategoryTest {
 
     ApplyCommand applyCommand = client.apply().filename("manifests.yaml");
 
-    assertEquals("/usr/bin/kubectl apply --filename=manifests.yaml", applyCommand.command());
+    assertThat(applyCommand.command()).isEqualTo("/usr/bin/kubectl apply --filename=manifests.yaml");
 
     client = Kubectl.client("C:\\Program Files\\Docker\\Docker\\Resources\\bin\\kubectl.exe", null);
 
@@ -43,7 +44,7 @@ public class ApplyCommandTest extends CategoryTest {
 
     ApplyCommand applyCommand = client.apply().filename("manifests.yaml");
 
-    assertEquals("kubectl --kubeconfig=config apply --filename=manifests.yaml", applyCommand.command());
+    assertThat(applyCommand.command()).isEqualTo("kubectl --kubeconfig=config apply --filename=manifests.yaml");
 
     client = Kubectl.client("", "c:\\config files\\.kubeconfig");
 

@@ -1,6 +1,6 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -34,7 +34,7 @@ public class KubernetesClusterConfigYamlHandlerTest extends BaseSettingValueConf
     String kubernetesClusterConfigName = "KubernetesCluster-" + System.currentTimeMillis();
 
     SettingAttribute settingAttributeSaved = createKubernetesClusterConfigProvider(kubernetesClusterConfigName);
-    assertEquals(kubernetesClusterConfigName, settingAttributeSaved.getName());
+    assertThat(settingAttributeSaved.getName()).isEqualTo(kubernetesClusterConfigName);
 
     testCRUD(generateSettingValueYamlConfig(kubernetesClusterConfigName, settingAttributeSaved));
   }

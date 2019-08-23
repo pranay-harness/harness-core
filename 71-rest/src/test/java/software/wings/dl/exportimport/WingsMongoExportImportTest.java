@@ -2,7 +2,6 @@ package software.wings.dl.exportimport;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import com.google.inject.Inject;
 
@@ -64,6 +63,6 @@ public class WingsMongoExportImportTest extends WingsBaseTest {
 
     Application application = wingsPersistence.get(Application.class, appId);
     assertThat(application).isNotNull();
-    assertEquals(appName, application.getName());
+    assertThat(application.getName()).isEqualTo(appName);
   }
 }

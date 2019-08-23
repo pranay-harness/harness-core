@@ -1,6 +1,6 @@
 package io.harness.batch.processing.integration.schedule;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.Timestamps;
@@ -107,11 +107,13 @@ public class EcsJobIntegrationTest extends BaseIntegrationTest implements EcsEve
     InstanceData stoppedInstanceData =
         instanceDataService.fetchActiveInstanceData(TEST_ACCOUNT_ID, TEST_INSTANCE_ID, stoppedInstanceState);
 
-    assertEquals(io.harness.batch.processing.ccm.InstanceState.STOPPED, stoppedInstanceData.getInstanceState());
-    assertEquals(TEST_INSTANCE_ID, stoppedInstanceData.getInstanceId());
-    assertEquals(TEST_ACCOUNT_ID, stoppedInstanceData.getAccountId());
-    assertEquals(INSTANCE_START_TIMESTAMP.getSeconds() * 1000, stoppedInstanceData.getUsageStartTime().toEpochMilli());
-    assertEquals(INSTANCE_STOP_TIMESTAMP.getSeconds() * 1000, stoppedInstanceData.getUsageStopTime().toEpochMilli());
+    assertThat(stoppedInstanceData.getInstanceState()).isEqualTo(io.harness.batch.processing.ccm.InstanceState.STOPPED);
+    assertThat(stoppedInstanceData.getInstanceId()).isEqualTo(TEST_INSTANCE_ID);
+    assertThat(stoppedInstanceData.getAccountId()).isEqualTo(TEST_ACCOUNT_ID);
+    assertThat(stoppedInstanceData.getUsageStartTime().toEpochMilli())
+        .isEqualTo(INSTANCE_START_TIMESTAMP.getSeconds() * 1000);
+    assertThat(stoppedInstanceData.getUsageStopTime().toEpochMilli())
+        .isEqualTo(INSTANCE_STOP_TIMESTAMP.getSeconds() * 1000);
   }
 
   private List<io.harness.batch.processing.ccm.InstanceState> getStoppedInstanceState() {

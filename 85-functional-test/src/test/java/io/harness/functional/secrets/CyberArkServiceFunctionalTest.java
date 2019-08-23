@@ -1,7 +1,6 @@
 package io.harness.functional.secrets;
 
 import static io.harness.rule.OwnerRule.MARK;
-import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -94,7 +93,7 @@ public class CyberArkServiceFunctionalTest extends AbstractFunctionalTest {
       assertThat(EmptyPredicate.isNotEmpty(decrypted)).isTrue();
       String decryptedSecret = String.valueOf(decrypted);
       logger.info("Decrypted value: {}", decryptedSecret);
-      assertEquals(":m23LF6f", decryptedSecret);
+      assertThat(decryptedSecret).isEqualTo(":m23LF6f");
     } finally {
       if (secretId != null) {
         boolean deleted = SecretsRestUtils.deleteSecret(getAccount().getUuid(), bearerToken, secretId);

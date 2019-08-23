@@ -211,7 +211,7 @@ public class VaultTest extends WingsBaseTest {
       vaultService.saveVaultConfig(accountId, vaultConfig);
       fail("Saved invalid vault config");
     } catch (WingsException e) {
-      assertEquals(ErrorCode.VAULT_OPERATION_ERROR, e.getCode());
+      assertThat(e.getCode()).isEqualTo(ErrorCode.VAULT_OPERATION_ERROR);
     }
   }
 
@@ -230,10 +230,10 @@ public class VaultTest extends WingsBaseTest {
     assertThat(encryptionConfigs).hasSize(1);
     VaultConfig next = (VaultConfig) encryptionConfigs.get(0);
     assertThat(next.isDefault()).isFalse();
-    assertEquals(accountId, next.getAccountId());
-    assertEquals(SECRET_MASK, String.valueOf(next.getAuthToken()));
-    assertEquals(vaultConfig.getName(), next.getName());
-    assertEquals(vaultConfig.getVaultUrl(), next.getVaultUrl());
+    assertThat(next.getAccountId()).isEqualTo(accountId);
+    assertThat(String.valueOf(next.getAuthToken())).isEqualTo(SECRET_MASK);
+    assertThat(next.getName()).isEqualTo(vaultConfig.getName());
+    assertThat(next.getVaultUrl()).isEqualTo(vaultConfig.getVaultUrl());
     assertThat(next.isDefault()).isFalse();
 
     KmsConfig kmsConfig = getKmsConfig();
@@ -248,19 +248,19 @@ public class VaultTest extends WingsBaseTest {
     for (EncryptionConfig encryptionConfig : encryptionConfigs) {
       if (encryptionConfig.getEncryptionType() == EncryptionType.KMS) {
         assertThat(encryptionConfig.isDefault()).isTrue();
-        assertEquals(kmsId, encryptionConfig.getUuid());
+        assertThat(encryptionConfig.getUuid()).isEqualTo(kmsId);
         numOfKmsDefaults++;
       }
 
       if (encryptionConfig.getEncryptionType() == EncryptionType.VAULT) {
         assertThat(encryptionConfig.isDefault()).isFalse();
-        assertEquals(vaultConfigId, encryptionConfig.getUuid());
+        assertThat(encryptionConfig.getUuid()).isEqualTo(vaultConfigId);
         numOfVaultDefaults++;
       }
     }
 
-    assertEquals(1, numOfKmsDefaults);
-    assertEquals(1, numOfVaultDefaults);
+    assertThat(numOfKmsDefaults).isEqualTo(1);
+    assertThat(numOfVaultDefaults).isEqualTo(1);
 
     vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultConfig.setDefault(true);
@@ -275,7 +275,7 @@ public class VaultTest extends WingsBaseTest {
     for (EncryptionConfig encryptionConfig : encryptionConfigs) {
       if (encryptionConfig.getEncryptionType() == EncryptionType.KMS) {
         assertThat(encryptionConfig.isDefault()).isFalse();
-        assertEquals(kmsId, encryptionConfig.getUuid());
+        assertThat(encryptionConfig.getUuid()).isEqualTo(kmsId);
         numOfKmsDefaults++;
       }
 
@@ -289,8 +289,8 @@ public class VaultTest extends WingsBaseTest {
       }
     }
 
-    assertEquals(1, numOfKmsDefaults);
-    assertEquals(1, numOfVaultDefaults);
+    assertThat(numOfKmsDefaults).isEqualTo(1);
+    assertThat(numOfVaultDefaults).isEqualTo(1);
 
     kmsConfig = getKmsConfig();
     kmsConfig.setDefault(true);
@@ -318,8 +318,8 @@ public class VaultTest extends WingsBaseTest {
       }
     }
 
-    assertEquals(1, numOfKmsDefaults);
-    assertEquals(2, numOfVaultDefaults);
+    assertThat(numOfKmsDefaults).isEqualTo(1);
+    assertThat(numOfVaultDefaults).isEqualTo(2);
   }
 
   @Test
@@ -339,11 +339,11 @@ public class VaultTest extends WingsBaseTest {
     vaultConfig.setAuthToken(VAULT_TOKEN);
 
     VaultConfig savedConfig = (VaultConfig) secretManagerConfigService.getDefaultSecretManager(renameAccountId);
-    assertEquals(vaultConfig, savedConfig);
+    assertThat(savedConfig).isEqualTo(vaultConfig);
 
     // Testing getVaultConfigByName API is working properly
     savedConfig = vaultService.getVaultConfigByName(renameAccountId, vaultConfig.getName());
-    assertEquals(vaultConfig, savedConfig);
+    assertThat(savedConfig).isEqualTo(vaultConfig);
 
     List<EncryptedData> encryptedDataList = wingsPersistence.createQuery(EncryptedData.class)
                                                 .filter(EncryptedDataKeys.type, SettingVariableTypes.VAULT)
@@ -351,8 +351,8 @@ public class VaultTest extends WingsBaseTest {
                                                 .asList();
     assertThat(encryptedDataList).hasSize(1);
     assertThat(encryptedDataList.get(0).getParentIds()).hasSize(1);
-    assertEquals(savedConfig.getUuid(), encryptedDataList.get(0).getParentIds().iterator().next());
-    assertEquals(name + "_token", encryptedDataList.get(0).getName());
+    assertThat(encryptedDataList.get(0).getParentIds().iterator().next()).isEqualTo(savedConfig.getUuid());
+    assertThat(encryptedDataList.get(0).getName()).isEqualTo(name + "_token");
 
     name = UUID.randomUUID().toString();
     vaultConfig = getVaultConfig();
@@ -365,8 +365,8 @@ public class VaultTest extends WingsBaseTest {
                             .asList();
     assertThat(encryptedDataList).hasSize(1);
     assertThat(encryptedDataList.get(0).getParentIds()).hasSize(1);
-    assertEquals(savedConfig.getUuid(), encryptedDataList.get(0).getParentIds().iterator().next());
-    assertEquals(name + "_token", encryptedDataList.get(0).getName());
+    assertThat(encryptedDataList.get(0).getParentIds().iterator().next()).isEqualTo(savedConfig.getUuid());
+    assertThat(encryptedDataList.get(0).getName()).isEqualTo(name + "_token");
   }
 
   @Test
@@ -384,7 +384,7 @@ public class VaultTest extends WingsBaseTest {
     assertThat(encryptionConfigs).hasSize(1);
     KmsConfig savedKmsConfig = (KmsConfig) encryptionConfigs.get(0);
     assertThat(savedKmsConfig.isDefault()).isTrue();
-    assertEquals(GLOBAL_ACCOUNT_ID, savedKmsConfig.getAccountId());
+    assertThat(savedKmsConfig.getAccountId()).isEqualTo(GLOBAL_ACCOUNT_ID);
 
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
@@ -394,11 +394,11 @@ public class VaultTest extends WingsBaseTest {
 
     VaultConfig savedVaultConfig = (VaultConfig) encryptionConfigs.get(0);
     assertThat(savedVaultConfig.isDefault()).isTrue();
-    assertEquals(accountId, savedVaultConfig.getAccountId());
+    assertThat(savedVaultConfig.getAccountId()).isEqualTo(accountId);
 
     savedKmsConfig = (KmsConfig) encryptionConfigs.get(1);
     assertThat(savedKmsConfig.isDefault()).isFalse();
-    assertEquals(GLOBAL_ACCOUNT_ID, savedKmsConfig.getAccountId());
+    assertThat(savedKmsConfig.getAccountId()).isEqualTo(GLOBAL_ACCOUNT_ID);
   }
 
   @Test
@@ -436,8 +436,8 @@ public class VaultTest extends WingsBaseTest {
       }
     }
 
-    assertEquals(1, numOfDefault);
-    assertEquals(1, numOfNonDefault);
+    assertThat(numOfDefault).isEqualTo(1);
+    assertThat(numOfNonDefault).isEqualTo(1);
 
     vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultConfig.setName("config2");
@@ -488,10 +488,10 @@ public class VaultTest extends WingsBaseTest {
     VaultConfig defaultConfig = (VaultConfig) secretManagerConfigService.getDefaultSecretManager(accountId);
     assertThat(defaultConfig).isNotNull();
 
-    assertEquals(accountId, defaultConfig.getAccountId());
-    assertEquals(VAULT_TOKEN, String.valueOf(defaultConfig.getAuthToken()));
-    assertEquals("config1", defaultConfig.getName());
-    assertEquals(vaultConfig.getVaultUrl(), defaultConfig.getVaultUrl());
+    assertThat(defaultConfig.getAccountId()).isEqualTo(accountId);
+    assertThat(String.valueOf(defaultConfig.getAuthToken())).isEqualTo(VAULT_TOKEN);
+    assertThat(defaultConfig.getName()).isEqualTo("config1");
+    assertThat(defaultConfig.getVaultUrl()).isEqualTo(vaultConfig.getVaultUrl());
     assertThat(defaultConfig.isDefault()).isTrue();
   }
 
@@ -511,7 +511,7 @@ public class VaultTest extends WingsBaseTest {
       vaultService.saveVaultConfig(accountId, vaultConfig);
       fail();
     } catch (WingsException e) {
-      assertEquals(ErrorCode.INVALID_REQUEST, e.getCode());
+      assertThat(e.getCode()).isEqualTo(ErrorCode.INVALID_REQUEST);
     }
   }
 
@@ -549,7 +549,7 @@ public class VaultTest extends WingsBaseTest {
     assertThat(isBlank(encryptedData.getEncryptionKey())).isFalse();
 
     decryptedValue = vaultService.decrypt(encryptedData, accountId, vaultConfig);
-    assertEquals(password, String.valueOf(decryptedValue));
+    assertThat(String.valueOf(decryptedValue)).isEqualTo(password);
   }
 
   @Test
@@ -564,35 +564,35 @@ public class VaultTest extends WingsBaseTest {
 
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
-    assertEquals(appDynamicsConfig, savedAttribute.getValue());
+    assertThat(savedAttribute.getValue()).isEqualTo(appDynamicsConfig);
     assertThat(((AppDynamicsConfig) savedAttribute.getValue()).getPassword()).isNull();
     assertThat(isBlank(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword())).isFalse();
 
     Query<EncryptedData> query =
         wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(settingAttribute.getUuid());
-    assertEquals(1, query.count());
+    assertThat(query.count()).isEqualTo(1);
     EncryptedData encryptedData = query.get();
-    assertEquals(vaultConfig.getUuid(), encryptedData.getKmsId());
-    assertEquals(user.getUuid(), encryptedData.getCreatedBy().getUuid());
-    assertEquals(userEmail, encryptedData.getCreatedBy().getEmail());
-    assertEquals(userName, encryptedData.getCreatedBy().getName());
+    assertThat(encryptedData.getKmsId()).isEqualTo(vaultConfig.getUuid());
+    assertThat(encryptedData.getCreatedBy().getUuid()).isEqualTo(user.getUuid());
+    assertThat(encryptedData.getCreatedBy().getEmail()).isEqualTo(userEmail);
+    assertThat(encryptedData.getCreatedBy().getName()).isEqualTo(userName);
 
     List<SecretChangeLog> changeLogs =
         secretManager.getChangeLogs(accountId, savedAttributeId, SettingVariableTypes.APP_DYNAMICS);
     assertThat(changeLogs).hasSize(1);
     SecretChangeLog secretChangeLog = changeLogs.get(0);
-    assertEquals(user.getUuid(), secretChangeLog.getUser().getUuid());
-    assertEquals(user.getEmail(), secretChangeLog.getUser().getEmail());
-    assertEquals(user.getName(), secretChangeLog.getUser().getName());
+    assertThat(secretChangeLog.getUser().getUuid()).isEqualTo(user.getUuid());
+    assertThat(secretChangeLog.getUser().getEmail()).isEqualTo(user.getEmail());
+    assertThat(secretChangeLog.getUser().getName()).isEqualTo(user.getName());
 
     query = wingsPersistence.createQuery(EncryptedData.class);
-    assertEquals(numOfEncRecords + 1, query.count());
+    assertThat(query.count()).isEqualTo(numOfEncRecords + 1);
 
     encryptionService.decrypt((EncryptableSetting) savedAttribute.getValue(),
         secretManager.getEncryptionDetails((EncryptableSetting) savedAttribute.getValue(), workflowExecutionId, appId));
 
     AppDynamicsConfig value = (AppDynamicsConfig) savedAttribute.getValue();
-    assertEquals(password, String.valueOf(value.getPassword()));
+    assertThat(String.valueOf(value.getPassword())).isEqualTo(password);
   }
 
   @Test
@@ -612,27 +612,28 @@ public class VaultTest extends WingsBaseTest {
     }
     wingsPersistence.save(settingAttributes);
 
-    assertEquals(numOfSettingAttributes, wingsPersistence.createQuery(SettingAttribute.class).count());
-    assertEquals(numOfEncRecords + numOfSettingAttributes, wingsPersistence.createQuery(EncryptedData.class).count());
+    assertThat(wingsPersistence.createQuery(SettingAttribute.class).count()).isEqualTo(numOfSettingAttributes);
+    assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
+        .isEqualTo(numOfEncRecords + numOfSettingAttributes);
     for (int i = 0; i < numOfSettingAttributes; i++) {
       String id = settingAttributes.get(i).getUuid();
       SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, id);
-      assertEquals(settingAttributes.get(i), savedAttribute);
+      assertThat(savedAttribute).isEqualTo(settingAttributes.get(i));
       AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttributes.get(i).getValue();
       assertThat(appDynamicsConfig.getPassword()).isNull();
 
       encryptionService.decrypt(
           appDynamicsConfig, secretManager.getEncryptionDetails(appDynamicsConfig, workflowExecutionId, appId));
-      assertEquals("password" + i, new String(appDynamicsConfig.getPassword()));
+      assertThat(new String(appDynamicsConfig.getPassword())).isEqualTo("password" + i);
       Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(id);
-      assertEquals(1, query.count());
-      assertEquals(vaultConfig.getUuid(), query.get().getKmsId());
+      assertThat(query.count()).isEqualTo(1);
+      assertThat(query.get().getKmsId()).isEqualTo(vaultConfig.getUuid());
     }
 
     Collection<SecretManagerConfig> vaultConfigs =
         secretManagerConfigService.listSecretManagersByType(accountId, EncryptionType.VAULT, true);
     assertThat(vaultConfigs).hasSize(1);
-    assertEquals(numOfSettingAttributes, vaultConfigs.iterator().next().getNumOfEncryptedValue());
+    assertThat(vaultConfigs.iterator().next().getNumOfEncryptedValue()).isEqualTo(numOfSettingAttributes);
   }
 
   @Test
@@ -647,9 +648,9 @@ public class VaultTest extends WingsBaseTest {
 
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
-    assertEquals(settingAttribute, savedAttribute);
-    assertEquals(1, wingsPersistence.createQuery(SettingAttribute.class).count());
-    assertEquals(numOfEncRecords + 1, wingsPersistence.createQuery(EncryptedData.class).count());
+    assertThat(savedAttribute).isEqualTo(settingAttribute);
+    assertThat(wingsPersistence.createQuery(SettingAttribute.class).count()).isEqualTo(1);
+    assertThat(wingsPersistence.createQuery(EncryptedData.class).count()).isEqualTo(numOfEncRecords + 1);
 
     ((AppDynamicsConfig) savedAttribute.getValue()).setUsername(UUID.randomUUID().toString());
     ((AppDynamicsConfig) savedAttribute.getValue()).setPassword(UUID.randomUUID().toString().toCharArray());
@@ -659,30 +660,30 @@ public class VaultTest extends WingsBaseTest {
     wingsPersistence.save(savedAttribute);
 
     SettingAttribute updatedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
-    assertEquals(savedAttribute, updatedAttribute);
-    assertEquals(1, wingsPersistence.createQuery(SettingAttribute.class).count());
-    assertEquals(numOfEncRecords + 1, wingsPersistence.createQuery(EncryptedData.class).count());
+    assertThat(updatedAttribute).isEqualTo(savedAttribute);
+    assertThat(wingsPersistence.createQuery(SettingAttribute.class).count()).isEqualTo(1);
+    assertThat(wingsPersistence.createQuery(EncryptedData.class).count()).isEqualTo(numOfEncRecords + 1);
 
     Query<EncryptedData> query =
         wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedAttributeId);
-    assertEquals(1, query.count());
+    assertThat(query.count()).isEqualTo(1);
     EncryptedData encryptedData = query.get();
-    assertEquals(vaultConfig.getUuid(), encryptedData.getKmsId());
+    assertThat(encryptedData.getKmsId()).isEqualTo(vaultConfig.getUuid());
 
     List<SecretChangeLog> changeLogs =
         secretManager.getChangeLogs(accountId, savedAttributeId, SettingVariableTypes.APP_DYNAMICS);
     assertThat(changeLogs).hasSize(2);
     SecretChangeLog secretChangeLog = changeLogs.get(0);
-    assertEquals(user1.getUuid(), secretChangeLog.getUser().getUuid());
-    assertEquals(user1.getEmail(), secretChangeLog.getUser().getEmail());
-    assertEquals(user1.getName(), secretChangeLog.getUser().getName());
-    assertEquals("Changed password", secretChangeLog.getDescription());
+    assertThat(secretChangeLog.getUser().getUuid()).isEqualTo(user1.getUuid());
+    assertThat(secretChangeLog.getUser().getEmail()).isEqualTo(user1.getEmail());
+    assertThat(secretChangeLog.getUser().getName()).isEqualTo(user1.getName());
+    assertThat(secretChangeLog.getDescription()).isEqualTo("Changed password");
 
     secretChangeLog = changeLogs.get(1);
-    assertEquals(user.getUuid(), secretChangeLog.getUser().getUuid());
-    assertEquals(user.getEmail(), secretChangeLog.getUser().getEmail());
-    assertEquals(user.getName(), secretChangeLog.getUser().getName());
-    assertEquals("Created", secretChangeLog.getDescription());
+    assertThat(secretChangeLog.getUser().getUuid()).isEqualTo(user.getUuid());
+    assertThat(secretChangeLog.getUser().getEmail()).isEqualTo(user.getEmail());
+    assertThat(secretChangeLog.getUser().getName()).isEqualTo(user.getName());
+    assertThat(secretChangeLog.getDescription()).isEqualTo("Created");
 
     User user2 = User.Builder.anUser().withEmail(UUID.randomUUID().toString()).withName("user2").build();
     wingsPersistence.save(user2);
@@ -690,27 +691,27 @@ public class VaultTest extends WingsBaseTest {
     wingsPersistence.save(savedAttribute);
 
     query = wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedAttributeId);
-    assertEquals(1, query.count());
+    assertThat(query.count()).isEqualTo(1);
 
     changeLogs = secretManager.getChangeLogs(accountId, savedAttributeId, SettingVariableTypes.APP_DYNAMICS);
     assertThat(changeLogs).hasSize(3);
     secretChangeLog = changeLogs.get(0);
-    assertEquals(user2.getUuid(), secretChangeLog.getUser().getUuid());
-    assertEquals(user2.getEmail(), secretChangeLog.getUser().getEmail());
-    assertEquals(user2.getName(), secretChangeLog.getUser().getName());
-    assertEquals("Changed password", secretChangeLog.getDescription());
+    assertThat(secretChangeLog.getUser().getUuid()).isEqualTo(user2.getUuid());
+    assertThat(secretChangeLog.getUser().getEmail()).isEqualTo(user2.getEmail());
+    assertThat(secretChangeLog.getUser().getName()).isEqualTo(user2.getName());
+    assertThat(secretChangeLog.getDescription()).isEqualTo("Changed password");
 
     secretChangeLog = changeLogs.get(1);
-    assertEquals(user1.getUuid(), secretChangeLog.getUser().getUuid());
-    assertEquals(user1.getEmail(), secretChangeLog.getUser().getEmail());
-    assertEquals(user1.getName(), secretChangeLog.getUser().getName());
-    assertEquals("Changed password", secretChangeLog.getDescription());
+    assertThat(secretChangeLog.getUser().getUuid()).isEqualTo(user1.getUuid());
+    assertThat(secretChangeLog.getUser().getEmail()).isEqualTo(user1.getEmail());
+    assertThat(secretChangeLog.getUser().getName()).isEqualTo(user1.getName());
+    assertThat(secretChangeLog.getDescription()).isEqualTo("Changed password");
 
     secretChangeLog = changeLogs.get(2);
-    assertEquals(user.getUuid(), secretChangeLog.getUser().getUuid());
-    assertEquals(user.getEmail(), secretChangeLog.getUser().getEmail());
-    assertEquals(user.getName(), secretChangeLog.getUser().getName());
-    assertEquals("Created", secretChangeLog.getDescription());
+    assertThat(secretChangeLog.getUser().getUuid()).isEqualTo(user.getUuid());
+    assertThat(secretChangeLog.getUser().getEmail()).isEqualTo(user.getEmail());
+    assertThat(secretChangeLog.getUser().getName()).isEqualTo(user.getName());
+    assertThat(secretChangeLog.getDescription()).isEqualTo("Created");
   }
 
   @Test
@@ -782,7 +783,7 @@ public class VaultTest extends WingsBaseTest {
     wingsPersistence.updateField(SettingAttribute.class, savedAttributeId, "appId", updatedAppId);
 
     SettingAttribute updatedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
-    assertEquals(updatedAppId, updatedAttribute.getAppId());
+    assertThat(updatedAttribute.getAppId()).isEqualTo(updatedAppId);
     savedAttribute.setAppId(updatedAppId);
     assertEquals(savedAttribute, updatedAttribute);
     assertEquals(1, wingsPersistence.createQuery(SettingAttribute.class, excludeAuthority).count());
@@ -791,17 +792,17 @@ public class VaultTest extends WingsBaseTest {
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
                                      .field("parentIds")
                                      .hasThisOne(savedAttributeId);
-    assertEquals(1, query.count());
+    assertThat(query.count()).isEqualTo(1);
 
     List<SecretChangeLog> changeLogs =
         secretManager.getChangeLogs(accountId, savedAttributeId, SettingVariableTypes.APP_DYNAMICS);
     assertThat(changeLogs).hasSize(1);
     SecretChangeLog secretChangeLog = changeLogs.get(0);
 
-    assertEquals(user.getUuid(), secretChangeLog.getUser().getUuid());
-    assertEquals(user.getEmail(), secretChangeLog.getUser().getEmail());
-    assertEquals(user.getName(), secretChangeLog.getUser().getName());
-    assertEquals("Created", secretChangeLog.getDescription());
+    assertThat(secretChangeLog.getUser().getUuid()).isEqualTo(user.getUuid());
+    assertThat(secretChangeLog.getUser().getEmail()).isEqualTo(user.getEmail());
+    assertThat(secretChangeLog.getUser().getName()).isEqualTo(user.getName());
+    assertThat(secretChangeLog.getDescription()).isEqualTo("Created");
 
     final String newPassWord = UUID.randomUUID().toString();
     final AppDynamicsConfig newAppDynamicsConfig = getAppDynamicsConfig(accountId, newPassWord);
@@ -822,33 +823,33 @@ public class VaultTest extends WingsBaseTest {
     query = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
                 .field("parentIds")
                 .hasThisOne(savedAttributeId);
-    assertEquals(1, query.count());
+    assertThat(query.count()).isEqualTo(1);
     EncryptedData encryptedData = query.get();
 
     changeLogs = secretManager.getChangeLogs(accountId, savedAttributeId, SettingVariableTypes.APP_DYNAMICS);
     assertThat(changeLogs).hasSize(2);
     secretChangeLog = changeLogs.get(0);
-    assertEquals(user1.getUuid(), secretChangeLog.getUser().getUuid());
-    assertEquals(user1.getEmail(), secretChangeLog.getUser().getEmail());
-    assertEquals(user1.getName(), secretChangeLog.getUser().getName());
-    assertEquals("Changed password", secretChangeLog.getDescription());
+    assertThat(secretChangeLog.getUser().getUuid()).isEqualTo(user1.getUuid());
+    assertThat(secretChangeLog.getUser().getEmail()).isEqualTo(user1.getEmail());
+    assertThat(secretChangeLog.getUser().getName()).isEqualTo(user1.getName());
+    assertThat(secretChangeLog.getDescription()).isEqualTo("Changed password");
 
     secretChangeLog = changeLogs.get(1);
-    assertEquals(user.getUuid(), secretChangeLog.getUser().getUuid());
-    assertEquals(user.getEmail(), secretChangeLog.getUser().getEmail());
-    assertEquals(user.getName(), secretChangeLog.getUser().getName());
-    assertEquals("Created", secretChangeLog.getDescription());
+    assertThat(secretChangeLog.getUser().getUuid()).isEqualTo(user.getUuid());
+    assertThat(secretChangeLog.getUser().getEmail()).isEqualTo(user.getEmail());
+    assertThat(secretChangeLog.getUser().getName()).isEqualTo(user.getName());
+    assertThat(secretChangeLog.getDescription()).isEqualTo("Created");
 
-    assertEquals(user.getUuid(), encryptedData.getCreatedBy().getUuid());
-    assertEquals(userEmail, encryptedData.getCreatedBy().getEmail());
-    assertEquals(userName, encryptedData.getCreatedBy().getName());
+    assertThat(encryptedData.getCreatedBy().getUuid()).isEqualTo(user.getUuid());
+    assertThat(encryptedData.getCreatedBy().getEmail()).isEqualTo(userEmail);
+    assertThat(encryptedData.getCreatedBy().getName()).isEqualTo(userName);
 
     updatedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
-    assertEquals(updatedAppId, updatedAttribute.getAppId());
-    assertEquals(updatedName, updatedAttribute.getName());
+    assertThat(updatedAttribute.getAppId()).isEqualTo(updatedAppId);
+    assertThat(updatedAttribute.getName()).isEqualTo(updatedName);
 
     newAppDynamicsConfig.setPassword(null);
-    assertEquals(newAppDynamicsConfig, updatedAttribute.getValue());
+    assertThat(updatedAttribute.getValue()).isEqualTo(newAppDynamicsConfig);
     newAppDynamicsConfig.setPassword(newPassWord.toCharArray());
 
     assertEquals(1, wingsPersistence.createQuery(SettingAttribute.class, excludeAuthority).count());
@@ -863,35 +864,35 @@ public class VaultTest extends WingsBaseTest {
     query = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
                 .field("parentIds")
                 .hasThisOne(savedAttributeId);
-    assertEquals(1, query.count());
+    assertThat(query.count()).isEqualTo(1);
     encryptedData = query.get();
 
     changeLogs = secretManager.getChangeLogs(accountId, savedAttributeId, SettingVariableTypes.APP_DYNAMICS);
     assertThat(changeLogs).hasSize(3);
     secretChangeLog = changeLogs.get(0);
-    assertEquals(user2.getUuid(), secretChangeLog.getUser().getUuid());
-    assertEquals(user2.getEmail(), secretChangeLog.getUser().getEmail());
-    assertEquals(user2.getName(), secretChangeLog.getUser().getName());
-    assertEquals("Changed password", secretChangeLog.getDescription());
+    assertThat(secretChangeLog.getUser().getUuid()).isEqualTo(user2.getUuid());
+    assertThat(secretChangeLog.getUser().getEmail()).isEqualTo(user2.getEmail());
+    assertThat(secretChangeLog.getUser().getName()).isEqualTo(user2.getName());
+    assertThat(secretChangeLog.getDescription()).isEqualTo("Changed password");
 
     secretChangeLog = changeLogs.get(1);
-    assertEquals(user1.getUuid(), secretChangeLog.getUser().getUuid());
-    assertEquals(user1.getEmail(), secretChangeLog.getUser().getEmail());
-    assertEquals(user1.getName(), secretChangeLog.getUser().getName());
-    assertEquals("Changed password", secretChangeLog.getDescription());
+    assertThat(secretChangeLog.getUser().getUuid()).isEqualTo(user1.getUuid());
+    assertThat(secretChangeLog.getUser().getEmail()).isEqualTo(user1.getEmail());
+    assertThat(secretChangeLog.getUser().getName()).isEqualTo(user1.getName());
+    assertThat(secretChangeLog.getDescription()).isEqualTo("Changed password");
 
     secretChangeLog = changeLogs.get(2);
-    assertEquals(user.getUuid(), secretChangeLog.getUser().getUuid());
-    assertEquals(user.getEmail(), secretChangeLog.getUser().getEmail());
-    assertEquals(user.getName(), secretChangeLog.getUser().getName());
-    assertEquals("Created", secretChangeLog.getDescription());
+    assertThat(secretChangeLog.getUser().getUuid()).isEqualTo(user.getUuid());
+    assertThat(secretChangeLog.getUser().getEmail()).isEqualTo(user.getEmail());
+    assertThat(secretChangeLog.getUser().getName()).isEqualTo(user.getName());
+    assertThat(secretChangeLog.getDescription()).isEqualTo("Created");
 
     // test decryption
     savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     AppDynamicsConfig savedConfig = (AppDynamicsConfig) savedAttribute.getValue();
     assertThat(savedConfig.getPassword()).isNull();
     encryptionService.decrypt(savedConfig, secretManager.getEncryptionDetails(savedConfig, workflowExecutionId, appId));
-    assertEquals(newPassWord, String.valueOf(savedConfig.getPassword()));
+    assertThat(String.valueOf(savedConfig.getPassword())).isEqualTo(newPassWord);
   }
 
   @Test
@@ -922,9 +923,9 @@ public class VaultTest extends WingsBaseTest {
 
     String savedAttributeId = wingsPersistence.save(serviceVariable);
     ServiceVariable savedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
-    assertEquals(serviceVariable, savedAttribute);
-    assertEquals(1, wingsPersistence.createQuery(ServiceVariable.class).count());
-    assertEquals(numOfEncRecords + 1, wingsPersistence.createQuery(EncryptedData.class).count());
+    assertThat(savedAttribute).isEqualTo(serviceVariable);
+    assertThat(wingsPersistence.createQuery(ServiceVariable.class).count()).isEqualTo(1);
+    assertThat(wingsPersistence.createQuery(EncryptedData.class).count()).isEqualTo(numOfEncRecords + 1);
 
     secretName = UUID.randomUUID().toString();
     secretValue = UUID.randomUUID().toString();
@@ -935,26 +936,26 @@ public class VaultTest extends WingsBaseTest {
     keyValuePairs.put("type", Type.ENCRYPTED_TEXT);
     keyValuePairs.put("value", secretId.toCharArray());
     wingsPersistence.updateFields(ServiceVariable.class, savedAttributeId, keyValuePairs);
-    assertEquals(numOfEncRecords + 2, wingsPersistence.createQuery(EncryptedData.class).count());
+    assertThat(wingsPersistence.createQuery(EncryptedData.class).count()).isEqualTo(numOfEncRecords + 2);
 
     Query<EncryptedData> query =
         wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedAttributeId);
-    assertEquals(1, query.count());
+    assertThat(query.count()).isEqualTo(1);
 
     // decrypt and verify
     ServiceVariable savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
     encryptionService.decrypt(
         savedVariable, secretManager.getEncryptionDetails(savedVariable, workflowExecutionId, appId));
-    assertEquals(secretValue, String.valueOf(savedVariable.getValue()));
+    assertThat(String.valueOf(savedVariable.getValue())).isEqualTo(secretValue);
 
     List<SecretChangeLog> changeLogs =
         secretManager.getChangeLogs(accountId, savedAttributeId, SettingVariableTypes.SERVICE_VARIABLE);
     assertThat(changeLogs).hasSize(1);
     SecretChangeLog secretChangeLog = changeLogs.get(0);
-    assertEquals(user.getUuid(), secretChangeLog.getUser().getUuid());
-    assertEquals(user.getEmail(), secretChangeLog.getUser().getEmail());
-    assertEquals(user.getName(), secretChangeLog.getUser().getName());
-    assertEquals("Created", secretChangeLog.getDescription());
+    assertThat(secretChangeLog.getUser().getUuid()).isEqualTo(user.getUuid());
+    assertThat(secretChangeLog.getUser().getEmail()).isEqualTo(user.getEmail());
+    assertThat(secretChangeLog.getUser().getName()).isEqualTo(user.getName());
+    assertThat(secretChangeLog.getDescription()).isEqualTo("Created");
   }
 
   @Test
@@ -988,10 +989,10 @@ public class VaultTest extends WingsBaseTest {
 
     String savedAttributeId = wingsPersistence.save(serviceVariable);
     ServiceVariable savedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
-    assertEquals(serviceVariable, savedAttribute);
+    assertThat(savedAttribute).isEqualTo(serviceVariable);
     assertThat(savedAttribute.getValue()).isNull();
-    assertEquals(1, wingsPersistence.createQuery(ServiceVariable.class).count());
-    assertEquals(numOfEncRecords + 1, wingsPersistence.createQuery(EncryptedData.class).count());
+    assertThat(wingsPersistence.createQuery(ServiceVariable.class).count()).isEqualTo(1);
+    assertThat(wingsPersistence.createQuery(EncryptedData.class).count()).isEqualTo(numOfEncRecords + 1);
   }
 
   @Test
@@ -1011,11 +1012,13 @@ public class VaultTest extends WingsBaseTest {
       settingAttributes.add(settingAttribute);
     }
 
-    assertEquals(numOfSettingAttributes, wingsPersistence.createQuery(SettingAttribute.class).count());
-    assertEquals(numOfEncRecords + numOfSettingAttributes, wingsPersistence.createQuery(EncryptedData.class).count());
+    assertThat(wingsPersistence.createQuery(SettingAttribute.class).count()).isEqualTo(numOfSettingAttributes);
+    assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
+        .isEqualTo(numOfEncRecords + numOfSettingAttributes);
     for (int i = 0; i < numOfSettingAttributes; i++) {
       wingsPersistence.delete(settingAttributes.get(i));
-      assertEquals(numOfSettingAttributes - (i + 1), wingsPersistence.createQuery(SettingAttribute.class).count());
+      assertThat(wingsPersistence.createQuery(SettingAttribute.class).count())
+          .isEqualTo(numOfSettingAttributes - (i + 1));
       assertEquals(numOfEncRecords + numOfSettingAttributes - (i + 1),
           wingsPersistence.createQuery(EncryptedData.class).count());
     }
@@ -1038,24 +1041,28 @@ public class VaultTest extends WingsBaseTest {
       settingAttributes.add(settingAttribute);
     }
 
-    assertEquals(numOfSettingAttributes, wingsPersistence.createQuery(SettingAttribute.class).count());
-    assertEquals(numOfEncRecords + numOfSettingAttributes, wingsPersistence.createQuery(EncryptedData.class).count());
+    assertThat(wingsPersistence.createQuery(SettingAttribute.class).count()).isEqualTo(numOfSettingAttributes);
+    assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
+        .isEqualTo(numOfEncRecords + numOfSettingAttributes);
 
     for (int i = 0; i < numOfSettingAttributes; i++) {
       wingsPersistence.delete(accountId, SettingAttribute.class, settingAttributes.get(i).getUuid());
-      assertEquals(numOfSettingAttributes - (i + 1), wingsPersistence.createQuery(SettingAttribute.class).count());
+      assertThat(wingsPersistence.createQuery(SettingAttribute.class).count())
+          .isEqualTo(numOfSettingAttributes - (i + 1));
       assertEquals(numOfEncRecords + numOfSettingAttributes - (i + 1),
           wingsPersistence.createQuery(EncryptedData.class).count());
     }
 
     wingsPersistence.save(settingAttributes);
-    assertEquals(numOfSettingAttributes, wingsPersistence.createQuery(SettingAttribute.class).count());
-    assertEquals(numOfEncRecords + numOfSettingAttributes, wingsPersistence.createQuery(EncryptedData.class).count());
+    assertThat(wingsPersistence.createQuery(SettingAttribute.class).count()).isEqualTo(numOfSettingAttributes);
+    assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
+        .isEqualTo(numOfEncRecords + numOfSettingAttributes);
 
     for (int i = 0; i < numOfSettingAttributes; i++) {
       wingsPersistence.delete(
           SettingAttribute.class, settingAttributes.get(i).getAppId(), settingAttributes.get(i).getUuid());
-      assertEquals(numOfSettingAttributes - (i + 1), wingsPersistence.createQuery(SettingAttribute.class).count());
+      assertThat(wingsPersistence.createQuery(SettingAttribute.class).count())
+          .isEqualTo(numOfSettingAttributes - (i + 1));
       assertEquals(numOfEncRecords + numOfSettingAttributes - (i + 1),
           wingsPersistence.createQuery(EncryptedData.class).count());
     }
@@ -1085,14 +1092,14 @@ public class VaultTest extends WingsBaseTest {
       Query<EncryptedData> query =
           wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, accountId);
       List<EncryptedData> encryptedData = new ArrayList<>();
-      assertEquals(numOfEncRecords + numOfSettingAttributes, query.count());
+      assertThat(query.count()).isEqualTo(numOfEncRecords + numOfSettingAttributes);
       for (EncryptedData data : query.asList()) {
         if (data.getKmsId() == null || data.getType() == SettingVariableTypes.VAULT) {
           continue;
         }
         encryptedData.add(data);
-        assertEquals(fromConfig.getUuid(), data.getKmsId());
-        assertEquals(accountId, data.getAccountId());
+        assertThat(data.getKmsId()).isEqualTo(fromConfig.getUuid());
+        assertThat(data.getAccountId()).isEqualTo(accountId);
       }
 
       assertThat(encryptedData).hasSize(numOfSettingAttributes);
@@ -1105,15 +1112,15 @@ public class VaultTest extends WingsBaseTest {
       Thread.sleep(TimeUnit.SECONDS.toMillis(10));
       query = wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, accountId);
 
-      assertEquals(numOfEncRecords + 1 + numOfSettingAttributes, query.count());
+      assertThat(query.count()).isEqualTo(numOfEncRecords + 1 + numOfSettingAttributes);
       encryptedData = new ArrayList<>();
       for (EncryptedData data : query.asList()) {
         if (data.getKmsId() == null || data.getType() == SettingVariableTypes.VAULT) {
           continue;
         }
         encryptedData.add(data);
-        assertEquals(toConfig.getUuid(), data.getKmsId());
-        assertEquals(accountId, data.getAccountId());
+        assertThat(data.getKmsId()).isEqualTo(toConfig.getUuid());
+        assertThat(data.getAccountId()).isEqualTo(accountId);
       }
       assertThat(encryptedData).hasSize(numOfSettingAttributes);
 
@@ -1122,7 +1129,7 @@ public class VaultTest extends WingsBaseTest {
           SettingAttribute.class, aPageRequest().addFilter("accountId", Operator.EQ, accountId).build());
       assertThat(attributeQuery).hasSize(numOfSettingAttributes);
       for (SettingAttribute settingAttribute : attributeQuery) {
-        assertEquals(encryptedEntities.get(settingAttribute.getUuid()), settingAttribute);
+        assertThat(settingAttribute).isEqualTo(encryptedEntities.get(settingAttribute.getUuid()));
       }
     } finally {
       stopTransitionListener(listenerThread);
@@ -1150,14 +1157,14 @@ public class VaultTest extends WingsBaseTest {
       Query<EncryptedData> query =
           wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, accountId);
       List<EncryptedData> encryptedDataList = new ArrayList<>();
-      assertEquals(numOfEncRecords + numOfSettingAttributes, query.count());
+      assertThat(query.count()).isEqualTo(numOfEncRecords + numOfSettingAttributes);
       for (EncryptedData data : query.asList()) {
         if (data.getKmsId() == null || data.getType() == SettingVariableTypes.VAULT) {
           continue;
         }
         encryptedDataList.add(data);
-        assertEquals(fromConfig.getUuid(), data.getKmsId());
-        assertEquals(accountId, data.getAccountId());
+        assertThat(data.getKmsId()).isEqualTo(fromConfig.getUuid());
+        assertThat(data.getAccountId()).isEqualTo(accountId);
       }
 
       assertThat(encryptedDataList).hasSize(numOfSettingAttributes);
@@ -1182,7 +1189,7 @@ public class VaultTest extends WingsBaseTest {
           1, secretManagerConfigService.listSecretManagersByType(accountId, EncryptionType.VAULT, true).size());
 
       query = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority);
-      assertEquals(numOfEncRecords + numOfSettingAttributes, query.count());
+      assertThat(query.count()).isEqualTo(numOfEncRecords + numOfSettingAttributes);
 
       // Verified old secrets has been deleted from Vault
       for (EncryptedData encryptedData : encryptedDataList) {
@@ -1196,10 +1203,10 @@ public class VaultTest extends WingsBaseTest {
           continue;
         }
         encryptedDataList.add(data);
-        assertEquals(toConfig.getUuid(), data.getKmsId());
-        assertEquals(accountId, data.getAccountId());
+        assertThat(data.getKmsId()).isEqualTo(toConfig.getUuid());
+        assertThat(data.getAccountId()).isEqualTo(accountId);
       }
-      assertEquals(numOfSettingAttributes, encryptedDataList.size());
+      assertThat(encryptedDataList.size()).isEqualTo(numOfSettingAttributes);
     } finally {
       stopTransitionListener(listenerThread);
     }
@@ -1231,11 +1238,11 @@ public class VaultTest extends WingsBaseTest {
 
       Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
                                        .filter(EncryptedDataKeys.type, SettingVariableTypes.APP_DYNAMICS);
-      assertEquals(numOfSettingAttributes, query.count());
+      assertThat(query.count()).isEqualTo(numOfSettingAttributes);
       for (EncryptedData data : query.asList()) {
-        assertEquals(fromConfig.getUuid(), data.getKmsId());
-        assertEquals(accountId, data.getAccountId());
-        assertEquals(EncryptionType.KMS, data.getEncryptionType());
+        assertThat(data.getKmsId()).isEqualTo(fromConfig.getUuid());
+        assertThat(data.getAccountId()).isEqualTo(accountId);
+        assertThat(data.getEncryptionType()).isEqualTo(EncryptionType.KMS);
       }
 
       VaultConfig toConfig = getVaultConfig(VAULT_TOKEN);
@@ -1247,11 +1254,11 @@ public class VaultTest extends WingsBaseTest {
       query = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
                   .filter(EncryptedDataKeys.type, SettingVariableTypes.APP_DYNAMICS);
 
-      assertEquals(numOfSettingAttributes, query.count());
+      assertThat(query.count()).isEqualTo(numOfSettingAttributes);
       for (EncryptedData data : query.asList()) {
-        assertEquals(toConfig.getUuid(), data.getKmsId());
-        assertEquals(accountId, data.getAccountId());
-        assertEquals(EncryptionType.VAULT, data.getEncryptionType());
+        assertThat(data.getKmsId()).isEqualTo(toConfig.getUuid());
+        assertThat(data.getAccountId()).isEqualTo(accountId);
+        assertThat(data.getEncryptionType()).isEqualTo(EncryptionType.VAULT);
       }
 
       secretManager.transitionSecrets(
@@ -1260,11 +1267,11 @@ public class VaultTest extends WingsBaseTest {
       query = wingsPersistence.createQuery(EncryptedData.class)
                   .filter(EncryptedDataKeys.type, SettingVariableTypes.APP_DYNAMICS);
 
-      assertEquals(numOfSettingAttributes, query.count());
+      assertThat(query.count()).isEqualTo(numOfSettingAttributes);
       for (EncryptedData data : query.asList()) {
-        assertEquals(fromConfig.getUuid(), data.getKmsId());
-        assertEquals(accountId, data.getAccountId());
-        assertEquals(EncryptionType.KMS, data.getEncryptionType());
+        assertThat(data.getKmsId()).isEqualTo(fromConfig.getUuid());
+        assertThat(data.getAccountId()).isEqualTo(accountId);
+        assertThat(data.getEncryptionType()).isEqualTo(EncryptionType.KMS);
       }
 
       // read the values and compare
@@ -1272,7 +1279,7 @@ public class VaultTest extends WingsBaseTest {
           wingsPersistence.query(SettingAttribute.class, aPageRequest().build());
       assertThat(attributeQuery).hasSize(numOfSettingAttributes);
       for (SettingAttribute settingAttribute : attributeQuery) {
-        assertEquals(encryptedEntities.get(settingAttribute.getUuid()), settingAttribute);
+        assertThat(settingAttribute).isEqualTo(encryptedEntities.get(settingAttribute.getUuid()));
       }
     } finally {
       stopTransitionListener(listenerThread);
@@ -1373,10 +1380,10 @@ public class VaultTest extends WingsBaseTest {
     assertThat(usageLogs).hasSize(numOfAccess);
 
     for (SecretUsageLog usageLog : usageLogs) {
-      assertEquals(workflowName, usageLog.getWorkflowExecutionName());
-      assertEquals(accountId, usageLog.getAccountId());
-      assertEquals(envId, usageLog.getEnvId());
-      assertEquals(appId, usageLog.getAppId());
+      assertThat(usageLog.getWorkflowExecutionName()).isEqualTo(workflowName);
+      assertThat(usageLog.getAccountId()).isEqualTo(accountId);
+      assertThat(usageLog.getEnvId()).isEqualTo(envId);
+      assertThat(usageLog.getAppId()).isEqualTo(appId);
     }
   }
 
@@ -1409,8 +1416,8 @@ public class VaultTest extends WingsBaseTest {
       attributeIds.add(wingsPersistence.save(settingAttribute));
     }
 
-    assertEquals(numOfSettingAttributes, wingsPersistence.createQuery(SettingAttribute.class).count());
-    assertEquals(numOfEncRecords + 1, wingsPersistence.createQuery(EncryptedData.class).count());
+    assertThat(wingsPersistence.createQuery(SettingAttribute.class).count()).isEqualTo(numOfSettingAttributes);
+    assertThat(wingsPersistence.createQuery(EncryptedData.class).count()).isEqualTo(numOfEncRecords + 1);
 
     List<EncryptedData> encryptedDatas = wingsPersistence.createQuery(EncryptedData.class)
                                              .filter(EncryptedDataKeys.encryptionType, EncryptionType.VAULT)
@@ -1418,24 +1425,24 @@ public class VaultTest extends WingsBaseTest {
                                              .asList();
     assertThat(encryptedDatas).hasSize(1);
     EncryptedData encryptedData = encryptedDatas.get(0);
-    assertEquals(EncryptionType.VAULT, encryptedData.getEncryptionType());
-    assertEquals(accountId, encryptedData.getAccountId());
+    assertThat(encryptedData.getEncryptionType()).isEqualTo(EncryptionType.VAULT);
+    assertThat(encryptedData.getAccountId()).isEqualTo(accountId);
     assertThat(encryptedData.isEnabled()).isTrue();
-    assertEquals(fromConfig.getUuid(), encryptedData.getKmsId());
-    assertEquals(SettingVariableTypes.APP_DYNAMICS, encryptedData.getType());
+    assertThat(encryptedData.getKmsId()).isEqualTo(fromConfig.getUuid());
+    assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.APP_DYNAMICS);
     assertThat(encryptedData.getParentIds()).hasSize(numOfSettingAttributes);
-    assertEquals(attributeIds, encryptedData.getParentIds());
+    assertThat(encryptedData.getParentIds()).isEqualTo(attributeIds);
 
     for (String attributeId : attributeIds) {
       SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, attributeId);
       AppDynamicsConfig savedConfig = (AppDynamicsConfig) savedAttribute.getValue();
-      assertEquals(accountId, savedConfig.getAccountId());
+      assertThat(savedConfig.getAccountId()).isEqualTo(accountId);
       assertThat(savedConfig.getPassword()).isNull();
       assertThat(isBlank(savedConfig.getEncryptedPassword())).isFalse();
 
       encryptionService.decrypt(
           savedConfig, secretManager.getEncryptionDetails(savedConfig, workflowExecutionId, appId));
-      assertEquals(password, String.valueOf(savedConfig.getPassword()));
+      assertThat(String.valueOf(savedConfig.getPassword())).isEqualTo(password);
     }
 
     // delete configs and check
@@ -1453,15 +1460,15 @@ public class VaultTest extends WingsBaseTest {
       } else {
         assertThat(encryptedDatas).hasSize(1);
         encryptedData = encryptedDatas.get(0);
-        assertEquals(EncryptionType.VAULT, encryptedData.getEncryptionType());
-        assertEquals(accountId, encryptedData.getAccountId());
+        assertThat(encryptedData.getEncryptionType()).isEqualTo(EncryptionType.VAULT);
+        assertThat(encryptedData.getAccountId()).isEqualTo(accountId);
         assertThat(encryptedData.isEnabled()).isTrue();
-        assertEquals(fromConfig.getUuid(), encryptedData.getKmsId());
-        assertEquals(SettingVariableTypes.APP_DYNAMICS, encryptedData.getType());
+        assertThat(encryptedData.getKmsId()).isEqualTo(fromConfig.getUuid());
+        assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.APP_DYNAMICS);
         assertThat(encryptedData.getParentIds()).hasSize(numOfSettingAttributes - (i + 1));
 
         assertThat(encryptedData.getParentIds().contains(attributeId)).isFalse();
-        assertEquals(remainingAttrs, encryptedData.getParentIds());
+        assertThat(encryptedData.getParentIds()).isEqualTo(remainingAttrs);
       }
       i++;
     }

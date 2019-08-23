@@ -1,6 +1,6 @@
 package io.harness.k8s.kubectl;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -14,6 +14,6 @@ public class VersionCommandTest extends CategoryTest {
     Kubectl client = Kubectl.client(null, null);
     VersionCommand versionCommand = client.version();
 
-    assertEquals("kubectl version", versionCommand.command());
+    assertThat(versionCommand.command()).isEqualTo("kubectl version");
   }
 }

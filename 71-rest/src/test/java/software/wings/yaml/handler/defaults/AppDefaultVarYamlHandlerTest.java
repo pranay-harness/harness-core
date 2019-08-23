@@ -2,7 +2,6 @@ package software.wings.yaml.handler.defaults;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
@@ -140,7 +139,7 @@ public class AppDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
     String yamlContent = getYamlContent(yaml);
     assertThat(yamlContent).isNotNull();
     yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
-    assertEquals(v1_validYamlContent, yamlContent);
+    assertThat(yamlContent).isEqualTo(v1_validYamlContent);
 
     List<SettingAttribute> settingAttributesFromGet = yamlHandler.get(ACCOUNT_ID, validYamlFilePath);
     compareSettingAttributes(v1_settingAttributeList, settingAttributesFromGet);

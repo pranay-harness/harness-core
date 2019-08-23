@@ -1,6 +1,6 @@
 package software.wings.integration;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.FeatureName.LOGIN_PROMPT_WHEN_NO_USER;
 
 import io.harness.category.element.IntegrationTests;
@@ -35,7 +35,7 @@ public class UserResourceIntegrationTest extends BaseIntegrationTest {
     WebTarget target = client.target(url);
     LoginTypeResponse response =
         target.request().get(new GenericType<RestResponse<LoginTypeResponse>>() {}).getResource();
-    assertEquals(AuthenticationMechanism.USER_PASSWORD, response.getAuthenticationMechanism());
+    assertThat(response.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.USER_PASSWORD);
   }
 
   @Test
@@ -46,7 +46,7 @@ public class UserResourceIntegrationTest extends BaseIntegrationTest {
     WebTarget target = client.target(url);
     LoginTypeResponse response =
         target.request().get(new GenericType<RestResponse<LoginTypeResponse>>() {}).getResource();
-    assertEquals(AuthenticationMechanism.USER_PASSWORD, response.getAuthenticationMechanism());
+    assertThat(response.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.USER_PASSWORD);
   }
 
   private String getLoginTypeResponseUri(final String uri, final String arguments) {

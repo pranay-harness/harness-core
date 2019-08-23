@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -59,27 +58,27 @@ public class EntityNameCacheTest extends WingsBaseTest {
     doReturn(nameAccessApp).doReturn(nameAccessService).doReturn(nameAccessTrigger).when(mockQuery).get();
 
     String name = entityNameCache.getEntityName(EntityType.APPLICATION, "12345");
-    assertEquals("App1", name);
+    assertThat(name).isEqualTo("App1");
     verify(mockWingsPersistence, times(1)).createQuery(any());
 
     name = entityNameCache.getEntityName(EntityType.APPLICATION, "12345");
-    assertEquals("App1", name);
+    assertThat(name).isEqualTo("App1");
     verify(mockWingsPersistence, times(1)).createQuery(any());
 
     name = entityNameCache.getEntityName(EntityType.SERVICE, "12345");
-    assertEquals("Service1", name);
+    assertThat(name).isEqualTo("Service1");
     verify(mockWingsPersistence, times(2)).createQuery(any());
 
     name = entityNameCache.getEntityName(EntityType.SERVICE, "12345");
-    assertEquals("Service1", name);
+    assertThat(name).isEqualTo("Service1");
     verify(mockWingsPersistence, times(2)).createQuery(any());
 
     name = entityNameCache.getEntityName(EntityType.TRIGGER, "12345");
-    assertEquals("Trigger1", name);
+    assertThat(name).isEqualTo("Trigger1");
     verify(mockWingsPersistence, times(3)).createQuery(any());
 
     name = entityNameCache.getEntityName(EntityType.TRIGGER, "12345");
-    assertEquals("Trigger1", name);
+    assertThat(name).isEqualTo("Trigger1");
     verify(mockWingsPersistence, times(3)).createQuery(any());
 
     try {

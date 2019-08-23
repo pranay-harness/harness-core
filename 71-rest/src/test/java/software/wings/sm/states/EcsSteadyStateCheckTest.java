@@ -4,7 +4,6 @@ import static io.harness.context.ContextElementType.INSTANCE;
 import static io.harness.context.ContextElementType.STANDARD;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -111,19 +110,19 @@ public class EcsSteadyStateCheckTest extends WingsBaseTest {
     SettingAttribute awsConfig = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
     doReturn(awsConfig).when(mockSettingsService).get(anyString());
     ExecutionResponse response = check.execute(mockContext);
-    assertEquals(ExecutionStatus.SUCCESS, response.getExecutionStatus());
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(mockDelegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
     assertThat(delegateTask).isNotNull();
     assertThat(delegateTask.getData().getParameters()).isNotNull();
-    assertEquals(delegateTask.getData().getParameters().length, 1);
+    assertThat(1).isEqualTo(delegateTask.getData().getParameters().length);
     assertThat(delegateTask.getData().getParameters()[0] instanceof EcsSteadyStateCheckParams).isTrue();
     EcsSteadyStateCheckParams params = (EcsSteadyStateCheckParams) delegateTask.getData().getParameters()[0];
-    assertEquals(params.getCommandName(), "Ecs Steady State Check");
-    assertEquals(params.getAppId(), APP_ID);
-    assertEquals(params.getAccountId(), ACCOUNT_ID);
-    assertEquals(params.getActivityId(), ACTIVITY_ID);
+    assertThat("Ecs Steady State Check").isEqualTo(params.getCommandName());
+    assertThat(APP_ID).isEqualTo(params.getAppId());
+    assertThat(ACCOUNT_ID).isEqualTo(params.getAccountId());
+    assertThat(ACTIVITY_ID).isEqualTo(params.getActivityId());
   }
 
   @Test

@@ -95,8 +95,8 @@ public class StatsCollectorImplIntegrationTest extends BaseIntegrationTest {
     long finalCount =
         ds.getCount(ds.createQuery(InstanceStatsSnapshot.class).filter(InstanceStatsSnapshotKeys.accountId, accountId));
     Instant lastTs = statService.getLastSnapshotTime(accountId);
-    assertEquals(instant, lastTs);
-    assertEquals("new stat entry should be created in database", count + 1, finalCount);
+    assertThat(lastTs).isEqualTo(instant);
+    assertThat(finalCount).isEqualTo(count + 1);
     assertThat(success).isTrue();
 
     // delete all instances
@@ -107,10 +107,10 @@ public class StatsCollectorImplIntegrationTest extends BaseIntegrationTest {
     success = statsCollector.createStats(accountId, instant);
     assertThat(success).isTrue();
     lastTs = statService.getLastSnapshotTime(accountId);
-    assertEquals(instant, lastTs);
+    assertThat(lastTs).isEqualTo(instant);
     long countAfter =
         ds.getCount(ds.createQuery(InstanceStatsSnapshot.class).filter(InstanceStatsSnapshotKeys.accountId, accountId));
-    assertEquals("verify new stat entry created in database", finalCount + 1, countAfter);
+    assertThat(countAfter).isEqualTo(finalCount + 1);
 
     Instant end = Instant.now();
 
@@ -131,7 +131,7 @@ public class StatsCollectorImplIntegrationTest extends BaseIntegrationTest {
     DataPoint firstPoint = timeline.getPoints().get(0);
 
     // Commenting the assertions temporarily
-    //    assertEquals(instances.size(), firstPoint.getTotal());
+    //    assertThat( firstPoint.getTotal()).isEqualTo(instances.size());
 
     //    DataPoint secondPoint = timeline.getPoints().get(1);
     //    assertEquals("all the instances were deleted before second createStats call, so total should be zero", 0,

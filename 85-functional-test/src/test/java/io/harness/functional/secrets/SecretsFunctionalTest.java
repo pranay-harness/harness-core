@@ -2,7 +2,6 @@ package io.harness.functional.secrets;
 
 import static io.harness.rule.OwnerRule.SWAMY;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import com.google.inject.Inject;
 
@@ -101,7 +100,7 @@ public class SecretsFunctionalTest extends AbstractFunctionalTest {
     EncryptedData data = encryptedDataList.get(0);
     data.setEncryptionKey("SECRET_TEXT/" + secretsNewName);
     String decrypted = SecretsUtils.getValueFromName(secretManagementDelegateService, data, vaultConfig);
-    assertEquals(secretValue, decrypted);
+    assertThat(decrypted).isEqualTo(secretValue);
 
     boolean isDeletionDone = SecretsRestUtils.deleteSecret(getAccount().getUuid(), bearerToken, secretsId);
     assertThat(isDeletionDone).isTrue();

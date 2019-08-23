@@ -2,7 +2,6 @@ package software.wings.yaml.handler.inframappings;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -148,20 +147,20 @@ public class DirectKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandler
     DirectKubernetesInfrastructureMapping infraMapping =
         yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
     assertThat(infraMapping).isNotNull();
-    assertEquals(infraMapping.getName(), infraMappingName);
+    assertThat(infraMappingName).isEqualTo(infraMapping.getName());
 
     DirectKubernetesInfrastructureMapping.Yaml yaml = yamlHandler.toYaml(infraMapping, APP_ID);
     assertThat(yaml).isNotNull();
-    assertEquals("DIRECT_KUBERNETES", yaml.getType());
+    assertThat(yaml.getType()).isEqualTo("DIRECT_KUBERNETES");
 
     String yamlContent = getYamlContent(yaml);
     assertThat(yamlContent).isNotNull();
     yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
-    assertEquals(validYamlContentWithKubernetesClusterCloudProvider, yamlContent);
+    assertThat(yamlContent).isEqualTo(validYamlContentWithKubernetesClusterCloudProvider);
 
     InfrastructureMapping infraMapping1 = yamlHandler.get(ACCOUNT_ID, validYamlFilePath);
     assertThat(infraMapping1).isNotNull();
-    assertEquals(infraMapping1.getName(), infraMappingName);
+    assertThat(infraMappingName).isEqualTo(infraMapping1.getName());
 
     yamlHandler.delete(changeContext);
 

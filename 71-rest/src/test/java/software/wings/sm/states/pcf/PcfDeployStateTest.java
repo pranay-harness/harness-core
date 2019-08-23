@@ -5,7 +5,6 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyObject;
@@ -188,7 +187,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
     pcfDeployState.setInstanceCount(50);
     pcfDeployState.setInstanceUnitType(InstanceUnitType.PERCENTAGE);
     ExecutionResponse response = pcfDeployState.execute(context);
-    assertEquals(ExecutionStatus.SUCCESS, response.getExecutionStatus());
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(response).isNotNull().hasFieldOrPropertyWithValue("async", true);
     assertThat(response.getCorrelationIds()).isNotNull().hasSize(1);
     verify(activityService).save(any(Activity.class));
@@ -200,11 +199,11 @@ public class PcfDeployStateTest extends WingsBaseTest {
 
     PcfCommandDeployRequest pcfCommandRequest = (PcfCommandDeployRequest) delegateTask.getData().getParameters()[0];
     assertThat(5 == pcfCommandRequest.getUpdateCount()).isTrue();
-    assertEquals("APP_NAME_SERVICE_NAME_ENV_NAME__1", pcfCommandRequest.getNewReleaseName());
-    assertEquals(URL, pcfCommandRequest.getPcfConfig().getEndpointUrl());
-    assertEquals(USER_NAME, pcfCommandRequest.getPcfConfig().getUsername());
-    assertEquals(ORG, pcfCommandRequest.getOrganization());
-    assertEquals(SPACE, pcfCommandRequest.getSpace());
+    assertThat(pcfCommandRequest.getNewReleaseName()).isEqualTo("APP_NAME_SERVICE_NAME_ENV_NAME__1");
+    assertThat(pcfCommandRequest.getPcfConfig().getEndpointUrl()).isEqualTo(URL);
+    assertThat(pcfCommandRequest.getPcfConfig().getUsername()).isEqualTo(USER_NAME);
+    assertThat(pcfCommandRequest.getOrganization()).isEqualTo(ORG);
+    assertThat(pcfCommandRequest.getSpace()).isEqualTo(SPACE);
     assertThat(pcfCommandRequest.getRouteMaps()).hasSize(2);
     assertThat(pcfCommandRequest.getRouteMaps().contains("R1")).isTrue();
     assertThat(pcfCommandRequest.getRouteMaps().contains("R2")).isTrue();
@@ -218,36 +217,36 @@ public class PcfDeployStateTest extends WingsBaseTest {
     pcfDeployState.setDownsizeInstanceCount(30);
     Integer answer =
         pcfDeployState.getDownsizeUpdateCount(50, PcfSetupContextElement.builder().maxInstanceCount(100).build());
-    assertEquals(70, answer.intValue());
+    assertThat(answer.intValue()).isEqualTo(70);
 
     pcfDeployState.setDownsizeInstanceCount(80);
     answer = pcfDeployState.getDownsizeUpdateCount(50, PcfSetupContextElement.builder().maxInstanceCount(100).build());
-    assertEquals(20, answer.intValue());
+    assertThat(answer.intValue()).isEqualTo(20);
 
     pcfDeployState.setDownsizeInstanceCount(100);
     answer = pcfDeployState.getDownsizeUpdateCount(50, PcfSetupContextElement.builder().maxInstanceCount(100).build());
-    assertEquals(0, answer.intValue());
+    assertThat(answer.intValue()).isEqualTo(0);
 
     pcfDeployState.setDownsizeInstanceCount(0);
     answer = pcfDeployState.getDownsizeUpdateCount(50, PcfSetupContextElement.builder().maxInstanceCount(100).build());
-    assertEquals(100, answer.intValue());
+    assertThat(answer.intValue()).isEqualTo(100);
 
     // COUNT
     pcfDeployState.setDownsizeInstanceUnitType(InstanceUnitType.COUNT);
     pcfDeployState.setDownsizeInstanceCount(90);
     answer = pcfDeployState.getDownsizeUpdateCount(50, PcfSetupContextElement.builder().maxInstanceCount(100).build());
-    assertEquals(10, answer.intValue());
+    assertThat(answer.intValue()).isEqualTo(10);
 
     pcfDeployState.setDownsizeInstanceCount(60);
     answer = pcfDeployState.getDownsizeUpdateCount(50, PcfSetupContextElement.builder().maxInstanceCount(100).build());
-    assertEquals(40, answer.intValue());
+    assertThat(answer.intValue()).isEqualTo(40);
 
     pcfDeployState.setDownsizeInstanceCount(100);
     answer = pcfDeployState.getDownsizeUpdateCount(50, PcfSetupContextElement.builder().maxInstanceCount(100).build());
-    assertEquals(0, answer.intValue());
+    assertThat(answer.intValue()).isEqualTo(0);
 
     pcfDeployState.setDownsizeInstanceCount(0);
     answer = pcfDeployState.getDownsizeUpdateCount(50, PcfSetupContextElement.builder().maxInstanceCount(100).build());
-    assertEquals(100, answer.intValue());
+    assertThat(answer.intValue()).isEqualTo(100);
   }
 }

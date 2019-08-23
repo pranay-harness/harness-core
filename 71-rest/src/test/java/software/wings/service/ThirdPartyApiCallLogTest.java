@@ -1,6 +1,6 @@
 package software.wings.service;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
@@ -80,14 +80,14 @@ public class ThirdPartyApiCallLogTest extends WingsBaseTest {
   public void testStatusTag() throws IOException {
     String failedCallLogJson = JsonUtils.asJson(failedCallLog);
     ThirdPartyApiCallLog obj = JsonUtils.asObject(failedCallLogJson, ThirdPartyApiCallLog.class);
-    assertEquals(ExecutionStatus.FAILED, obj.getStatus());
+    assertThat(obj.getStatus()).isEqualTo(ExecutionStatus.FAILED);
 
     String successfulCallLogJson = JsonUtils.asJson(successfulCallLog);
     obj = JsonUtils.asObject(successfulCallLogJson, ThirdPartyApiCallLog.class);
-    assertEquals(ExecutionStatus.SUCCESS, obj.getStatus());
+    assertThat(obj.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
 
     String mixedCallLogJson = JsonUtils.asJson(mixedCallLog);
     obj = JsonUtils.asObject(mixedCallLogJson, ThirdPartyApiCallLog.class);
-    assertEquals(ExecutionStatus.FAILED, obj.getStatus());
+    assertThat(obj.getStatus()).isEqualTo(ExecutionStatus.FAILED);
   }
 }

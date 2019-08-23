@@ -90,7 +90,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   @Category(UnitTests.class)
   public void testDefaultComparsionStrategy() {
     SplunkV2State splunkState = new SplunkV2State("SplunkState");
-    assertEquals(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS, splunkState.getComparisonStrategy());
+    assertThat(splunkState.getComparisonStrategy()).isEqualTo(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS);
   }
 
   @Test
@@ -103,14 +103,14 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
 
     ExecutionResponse response = spyState.execute(executionContext);
-    assertEquals(ExecutionStatus.SUCCESS, response.getExecutionStatus());
-    assertEquals("Could not find hosts to analyze!", response.getErrorMessage());
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(response.getErrorMessage()).isEqualTo("Could not find hosts to analyze!");
 
     LogMLAnalysisSummary analysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
-    assertEquals(RiskLevel.NA, analysisSummary.getRiskLevel());
-    assertEquals(splunkState.getQuery(), analysisSummary.getQuery());
-    assertEquals(response.getErrorMessage(), analysisSummary.getAnalysisSummaryMessage());
+    assertThat(analysisSummary.getRiskLevel()).isEqualTo(RiskLevel.NA);
+    assertThat(analysisSummary.getQuery()).isEqualTo(splunkState.getQuery());
+    assertThat(analysisSummary.getAnalysisSummaryMessage()).isEqualTo(response.getErrorMessage());
     assertThat(analysisSummary.getControlClusters().isEmpty()).isTrue();
     assertThat(analysisSummary.getTestClusters().isEmpty()).isTrue();
     assertThat(analysisSummary.getUnknownClusters().isEmpty()).isTrue();
@@ -129,15 +129,15 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
 
     ExecutionResponse response = spyState.execute(executionContext);
-    assertEquals(ExecutionStatus.SUCCESS, response.getExecutionStatus());
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertEquals("Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.",
         response.getErrorMessage());
 
     LogMLAnalysisSummary analysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
-    assertEquals(RiskLevel.NA, analysisSummary.getRiskLevel());
-    assertEquals(splunkState.getQuery(), analysisSummary.getQuery());
-    assertEquals(response.getErrorMessage(), analysisSummary.getAnalysisSummaryMessage());
+    assertThat(analysisSummary.getRiskLevel()).isEqualTo(RiskLevel.NA);
+    assertThat(analysisSummary.getQuery()).isEqualTo(splunkState.getQuery());
+    assertThat(analysisSummary.getAnalysisSummaryMessage()).isEqualTo(response.getErrorMessage());
     assertThat(analysisSummary.getControlClusters().isEmpty()).isTrue();
     assertThat(analysisSummary.getTestClusters().isEmpty()).isTrue();
     assertThat(analysisSummary.getUnknownClusters().isEmpty()).isTrue();
@@ -158,15 +158,15 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
 
     ExecutionResponse response = spyState.execute(executionContext);
-    assertEquals(ExecutionStatus.SUCCESS, response.getExecutionStatus());
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertEquals("Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.",
         response.getErrorMessage());
 
     LogMLAnalysisSummary analysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
-    assertEquals(RiskLevel.NA, analysisSummary.getRiskLevel());
-    assertEquals(splunkState.getQuery(), analysisSummary.getQuery());
-    assertEquals(response.getErrorMessage(), analysisSummary.getAnalysisSummaryMessage());
+    assertThat(analysisSummary.getRiskLevel()).isEqualTo(RiskLevel.NA);
+    assertThat(analysisSummary.getQuery()).isEqualTo(splunkState.getQuery());
+    assertThat(analysisSummary.getAnalysisSummaryMessage()).isEqualTo(response.getErrorMessage());
     assertThat(analysisSummary.getControlClusters().isEmpty()).isTrue();
     assertThat(analysisSummary.getTestClusters().isEmpty()).isTrue();
     assertThat(analysisSummary.getUnknownClusters().isEmpty()).isTrue();
@@ -175,7 +175,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   @Test
   @Category(UnitTests.class)
   public void testTriggerCollection() throws ParseException, IllegalAccessException {
-    assertEquals(0, wingsPersistence.createQuery(DelegateTask.class).count());
+    assertThat(wingsPersistence.createQuery(DelegateTask.class).count()).isEqualTo(0);
     SplunkConfig splunkConfig = SplunkConfig.builder()
                                     .accountId(accountId)
                                     .splunkUrl("splunk-url")
@@ -205,7 +205,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
 
     ExecutionResponse response = spyState.execute(executionContext);
-    assertEquals(ExecutionStatus.RUNNING, response.getExecutionStatus());
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
     assertEquals(
         "No baseline was set for the workflow. Workflow running with auto baseline. No previous execution found. This will be the baseline run.",
         response.getErrorMessage());
@@ -213,7 +213,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     List<DelegateTask> tasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).asList();
     assertThat(tasks).hasSize(1);
     DelegateTask task = tasks.get(0);
-    assertEquals(TaskType.SPLUNK_COLLECT_LOG_DATA.name(), task.getData().getTaskType());
+    assertThat(task.getData().getTaskType()).isEqualTo(TaskType.SPLUNK_COLLECT_LOG_DATA.name());
     verify(activityLogger).info(contains("Triggered data collection"), anyLong(), anyLong());
     final SplunkDataCollectionInfo expectedCollectionInfo =
         SplunkDataCollectionInfo.builder()
@@ -233,10 +233,10 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
             .build();
     final SplunkDataCollectionInfo actualCollectionInfo = (SplunkDataCollectionInfo) task.getData().getParameters()[0];
     expectedCollectionInfo.setStartTime(actualCollectionInfo.getStartTime());
-    assertEquals(expectedCollectionInfo, actualCollectionInfo);
-    assertEquals(accountId, task.getAccountId());
-    assertEquals(Status.QUEUED, task.getStatus());
-    assertEquals(appId, task.getAppId());
+    assertThat(actualCollectionInfo).isEqualTo(expectedCollectionInfo);
+    assertThat(task.getAccountId()).isEqualTo(accountId);
+    assertThat(task.getStatus()).isEqualTo(Status.QUEUED);
+    assertThat(task.getAppId()).isEqualTo(appId);
     Map<Long,
         LinkedHashMap<String,
             LinkedHashMap<String,
@@ -253,9 +253,9 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
             .next()
             .get("BASIC")
             .get(0);
-    assertEquals(continuousVerificationExecutionMetaData1.getAccountId(), accountId);
-    assertEquals(continuousVerificationExecutionMetaData1.getArtifactName(), "dummy artifact");
-    assertEquals(ExecutionStatus.RUNNING, continuousVerificationExecutionMetaData1.getExecutionStatus());
+    assertThat(accountId).isEqualTo(continuousVerificationExecutionMetaData1.getAccountId());
+    assertThat("dummy artifact").isEqualTo(continuousVerificationExecutionMetaData1.getArtifactName());
+    assertThat(continuousVerificationExecutionMetaData1.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
 
     VerificationStateAnalysisExecutionData logAnalysisExecutionData =
         VerificationStateAnalysisExecutionData.builder().build();
@@ -275,7 +275,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
                                                    .next()
                                                    .get("BASIC")
                                                    .get(0);
-    assertEquals(ExecutionStatus.ERROR, continuousVerificationExecutionMetaData1.getExecutionStatus());
+    assertThat(continuousVerificationExecutionMetaData1.getExecutionStatus()).isEqualTo(ExecutionStatus.ERROR);
   }
 
   @Test
@@ -302,9 +302,9 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     responseMap.put("somekey", response);
 
     ExecutionResponse executionResponse = splunkState.handleAsyncResponse(executionContext, responseMap);
-    assertEquals(ExecutionStatus.ERROR, executionResponse.getExecutionStatus());
-    assertEquals(logAnalysisExecutionData.getErrorMsg(), executionResponse.getErrorMessage());
-    assertEquals(logAnalysisExecutionData, executionResponse.getStateExecutionData());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.ERROR);
+    assertThat(executionResponse.getErrorMessage()).isEqualTo(logAnalysisExecutionData.getErrorMsg());
+    assertThat(executionResponse.getStateExecutionData()).isEqualTo(logAnalysisExecutionData);
   }
 
   @Test
@@ -347,14 +347,14 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
                               .query(splunkState.getQuery())
                               .build());
     ExecutionResponse executionResponse = spyState.handleAsyncResponse(executionContext, responseMap);
-    assertEquals(ExecutionStatus.SUCCESS, executionResponse.getExecutionStatus());
-    assertEquals("No data found with given queries. Skipped Analysis", executionResponse.getErrorMessage());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(executionResponse.getErrorMessage()).isEqualTo("No data found with given queries. Skipped Analysis");
 
     LogMLAnalysisSummary analysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
-    assertEquals(RiskLevel.NA, analysisSummary.getRiskLevel());
-    assertEquals(splunkState.getQuery(), analysisSummary.getQuery());
-    assertEquals(executionResponse.getErrorMessage(), analysisSummary.getAnalysisSummaryMessage());
+    assertThat(analysisSummary.getRiskLevel()).isEqualTo(RiskLevel.NA);
+    assertThat(analysisSummary.getQuery()).isEqualTo(splunkState.getQuery());
+    assertThat(analysisSummary.getAnalysisSummaryMessage()).isEqualTo(executionResponse.getErrorMessage());
     assertThat(analysisSummary.getControlClusters().isEmpty()).isTrue();
     assertThat(analysisSummary.getTestClusters().isEmpty()).isTrue();
     assertThat(analysisSummary.getUnknownClusters().isEmpty()).isTrue();

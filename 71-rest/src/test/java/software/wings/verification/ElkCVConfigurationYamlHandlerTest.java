@@ -1,7 +1,7 @@
 package software.wings.verification;
 
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -140,19 +140,19 @@ public class ElkCVConfigurationYamlHandlerTest extends CategoryTest {
 
     ElkCVConfigurationYaml yaml = (ElkCVConfigurationYaml) yamlHandler.toYaml(cvServiceConfiguration, appId);
 
-    assertEquals("Name should be same", cvServiceConfiguration.getName(), yaml.getName());
-    assertEquals("AccountId should be same", cvServiceConfiguration.getAccountId(), yaml.getAccountId());
-    assertEquals("ServiceName should be same", serviceName, yaml.getServiceName());
-    assertEquals("envId should be same", envName, yaml.getEnvName());
-    assertEquals("query should be same", cvServiceConfiguration.getQuery(), yaml.getQuery());
-    assertEquals(cvServiceConfiguration.getBaselineStartMinute(), yaml.getBaselineStartMinute());
-    assertEquals(cvServiceConfiguration.getBaselineEndMinute(), yaml.getBaselineEndMinute());
-    assertEquals(cvServiceConfiguration.getQueryType(), ElkQueryType.valueOf(yaml.getQueryType()));
-    assertEquals(cvServiceConfiguration.getIndex(), yaml.getIndex());
-    assertEquals(cvServiceConfiguration.getHostnameField(), yaml.getHostnameField());
-    assertEquals(cvServiceConfiguration.getMessageField(), yaml.getMessageField());
-    assertEquals(cvServiceConfiguration.getTimestampField(), yaml.getTimestampField());
-    assertEquals(cvServiceConfiguration.getTimestampFormat(), yaml.getTimestampFormat());
+    assertThat(yaml.getName()).isEqualTo(cvServiceConfiguration.getName());
+    assertThat(yaml.getAccountId()).isEqualTo(cvServiceConfiguration.getAccountId());
+    assertThat(yaml.getServiceName()).isEqualTo(serviceName);
+    assertThat(yaml.getEnvName()).isEqualTo(envName);
+    assertThat(yaml.getQuery()).isEqualTo(cvServiceConfiguration.getQuery());
+    assertThat(yaml.getBaselineStartMinute()).isEqualTo(cvServiceConfiguration.getBaselineStartMinute());
+    assertThat(yaml.getBaselineEndMinute()).isEqualTo(cvServiceConfiguration.getBaselineEndMinute());
+    assertThat(ElkQueryType.valueOf(yaml.getQueryType())).isEqualTo(cvServiceConfiguration.getQueryType());
+    assertThat(yaml.getIndex()).isEqualTo(cvServiceConfiguration.getIndex());
+    assertThat(yaml.getHostnameField()).isEqualTo(cvServiceConfiguration.getHostnameField());
+    assertThat(yaml.getMessageField()).isEqualTo(cvServiceConfiguration.getMessageField());
+    assertThat(yaml.getTimestampField()).isEqualTo(cvServiceConfiguration.getTimestampField());
+    assertThat(yaml.getTimestampFormat()).isEqualTo(cvServiceConfiguration.getTimestampFormat());
   }
 
   @Test
@@ -168,19 +168,19 @@ public class ElkCVConfigurationYamlHandlerTest extends CategoryTest {
     changeContext.setYaml(buildYaml());
     ElkCVConfiguration bean = (ElkCVConfiguration) yamlHandler.upsertFromYaml(changeContext, null);
 
-    assertEquals("name should match", "TestAppDConfig", bean.getName());
-    assertEquals("appId should match", appId, bean.getAppId());
-    assertEquals("envId should match", envId, bean.getEnvId());
-    assertEquals("serviceId should match", serviceId, bean.getServiceId());
-    assertEquals("query1", bean.getQuery());
-    assertEquals(16, bean.getBaselineStartMinute());
-    assertEquals(30, bean.getBaselineEndMinute());
-    assertEquals(ElkQueryType.MATCH, bean.getQueryType());
-    assertEquals("index1", bean.getIndex());
-    assertEquals("hostName1", bean.getHostnameField());
-    assertEquals("message1", bean.getMessageField());
-    assertEquals("timestamp1", bean.getTimestampField());
-    assertEquals("format1", bean.getTimestampFormat());
+    assertThat(bean.getName()).isEqualTo("TestAppDConfig");
+    assertThat(bean.getAppId()).isEqualTo(appId);
+    assertThat(bean.getEnvId()).isEqualTo(envId);
+    assertThat(bean.getServiceId()).isEqualTo(serviceId);
+    assertThat(bean.getQuery()).isEqualTo("query1");
+    assertThat(bean.getBaselineStartMinute()).isEqualTo(16);
+    assertThat(bean.getBaselineEndMinute()).isEqualTo(30);
+    assertThat(bean.getQueryType()).isEqualTo(ElkQueryType.MATCH);
+    assertThat(bean.getIndex()).isEqualTo("index1");
+    assertThat(bean.getHostnameField()).isEqualTo("hostName1");
+    assertThat(bean.getMessageField()).isEqualTo("message1");
+    assertThat(bean.getTimestampField()).isEqualTo("timestamp1");
+    assertThat(bean.getTimestampFormat()).isEqualTo("format1");
   }
 
   @Test
@@ -199,7 +199,7 @@ public class ElkCVConfigurationYamlHandlerTest extends CategoryTest {
     changeContext.setYaml(buildYaml());
     ElkCVConfiguration bean = (ElkCVConfiguration) yamlHandler.upsertFromYaml(changeContext, null);
 
-    assertEquals("name should match", "TestAppDConfig", bean.getName());
-    assertEquals("UUID should match", cvConfig.getUuid(), bean.getUuid());
+    assertThat(bean.getName()).isEqualTo("TestAppDConfig");
+    assertThat(bean.getUuid()).isEqualTo(cvConfig.getUuid());
   }
 }

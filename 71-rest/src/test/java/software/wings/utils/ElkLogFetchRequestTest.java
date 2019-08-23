@@ -1,7 +1,6 @@
 package software.wings.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -75,7 +74,7 @@ public class ElkLogFetchRequestTest extends CategoryTest {
 
     String expectedJson = new JSONObject().put("query", new JSONObject().put("bool", mustArrayObjects)).toString();
 
-    //    assertEquals(expectedJson, JsonUtils.asJson(elkLogFetchRequest.toElasticSearchJsonObject()));
+    //    assertThat( JsonUtils.asJson(elkLogFetchRequest.toElasticSearchJsonObject())).isEqualTo(expectedJson);
   }
 
   @Test
@@ -132,7 +131,7 @@ public class ElkLogFetchRequestTest extends CategoryTest {
 
     String expectedJson = new JSONObject().put("query", indicesObject).toString();
 
-    //    assertEquals(expectedJson, JsonUtils.asJson(elkLogFetchRequest.toElasticSearchJsonObject()));
+    //    assertThat( JsonUtils.asJson(elkLogFetchRequest.toElasticSearchJsonObject())).isEqualTo(expectedJson);
   }
 
   @Test
@@ -144,7 +143,7 @@ public class ElkLogFetchRequestTest extends CategoryTest {
     List<LogElement> logElements = parseElkResponse(map, "info", "@timestamp", "yyyy-MM-dd'T'HH:mm:ss.SSSX",
         "kubernetes.pod.name", "rddashboard-prod-5-67d88f4657-ff7k9", "log", 0, false, -1, -1);
     assertThat(logElements.isEmpty()).isFalse();
-    assertEquals("Hostname should be correct", "rddashboard-prod-5-67d88f4657-ff7k9", logElements.get(0).getHost());
+    assertThat(logElements.get(0).getHost()).isEqualTo("rddashboard-prod-5-67d88f4657-ff7k9");
   }
 
   @Test
@@ -157,8 +156,8 @@ public class ElkLogFetchRequestTest extends CategoryTest {
     String bValue = ElkLogzDataCollectionTask.parseAndGetValue(jsonObject, "b.0");
     String cValue = ElkLogzDataCollectionTask.parseAndGetValue(jsonObject, "c.d");
 
-    assertEquals("aValue should be same", "this is a test", aValue);
-    assertEquals("bValue should be same", "test1", bValue);
-    assertEquals("cValue should be same", "another test", cValue);
+    assertThat(aValue).isEqualTo("this is a test");
+    assertThat(bValue).isEqualTo("test1");
+    assertThat(cValue).isEqualTo("another test");
   }
 }

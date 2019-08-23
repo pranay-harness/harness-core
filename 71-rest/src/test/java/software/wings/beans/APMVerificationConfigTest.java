@@ -1,7 +1,6 @@
 package software.wings.beans;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
@@ -41,9 +40,9 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     apmVerificationConfig.encryptFields(secretManager);
 
     assertThat(apmVerificationConfig.getHeadersList()).hasSize(2);
-    assertEquals("*****", apmVerificationConfig.getHeadersList().get(0).getValue());
-    assertEquals("xyz", apmVerificationConfig.getHeadersList().get(0).getEncryptedValue());
-    assertEquals("123", apmVerificationConfig.getHeadersList().get(1).getValue());
+    assertThat(apmVerificationConfig.getHeadersList().get(0).getValue()).isEqualTo("*****");
+    assertThat(apmVerificationConfig.getHeadersList().get(0).getEncryptedValue()).isEqualTo("xyz");
+    assertThat(apmVerificationConfig.getHeadersList().get(1).getValue()).isEqualTo("123");
   }
 
   @Test
@@ -82,7 +81,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     List<EncryptedDataDetail> encryptedDataDetails = apmVerificationConfig.encryptedDataDetails(secretManager);
     assertThat(encryptedDataDetails).hasSize(1);
     assertThat(encryptedDataDetails.isEmpty()).isFalse();
-    assertEquals("api_key", encryptedDataDetails.get(0).getFieldName());
+    assertThat(encryptedDataDetails.get(0).getFieldName()).isEqualTo("api_key");
   }
 
   @Test
@@ -98,10 +97,10 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     apmVerificationConfig.encryptFields(secretManager);
 
     assertThat(apmVerificationConfig.getOptionsList()).hasSize(2);
-    assertEquals("*****", apmVerificationConfig.getOptionsList().get(0).getValue());
-    assertEquals("xyz", apmVerificationConfig.getOptionsList().get(0).getEncryptedValue());
-    assertEquals("123", apmVerificationConfig.getOptionsList().get(1).getValue());
-    assertEquals(null, apmVerificationConfig.getOptionsList().get(1).getEncryptedValue());
+    assertThat(apmVerificationConfig.getOptionsList().get(0).getValue()).isEqualTo("*****");
+    assertThat(apmVerificationConfig.getOptionsList().get(0).getEncryptedValue()).isEqualTo("xyz");
+    assertThat(apmVerificationConfig.getOptionsList().get(1).getValue()).isEqualTo("123");
+    assertThat(apmVerificationConfig.getOptionsList().get(1).getEncryptedValue()).isEqualTo(null);
   }
 
   @Test
@@ -121,7 +120,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     List<EncryptedDataDetail> encryptedDataDetails = apmVerificationConfig.encryptedDataDetails(secretManager);
     assertThat(encryptedDataDetails).hasSize(1);
     assertThat(encryptedDataDetails.isEmpty()).isFalse();
-    assertEquals("api_key", encryptedDataDetails.get(0).getFieldName());
+    assertThat(encryptedDataDetails.get(0).getFieldName()).isEqualTo("api_key");
   }
 
   @Test
@@ -149,10 +148,10 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     apmVerificationConfig.setValidationUrl("suffix");
     APMValidateCollectorConfig apmValidateCollectorConfig =
         apmVerificationConfig.createAPMValidateCollectorConfig(secretManager, encryptionService);
-    assertEquals("base", apmValidateCollectorConfig.getBaseUrl());
-    assertEquals("suffix", apmValidateCollectorConfig.getUrl());
-    assertEquals(headers, apmVerificationConfig.getHeadersList());
-    assertEquals("abc", apmValidateCollectorConfig.getHeaders().get("api_key_2"));
+    assertThat(apmValidateCollectorConfig.getBaseUrl()).isEqualTo("base");
+    assertThat(apmValidateCollectorConfig.getUrl()).isEqualTo("suffix");
+    assertThat(apmVerificationConfig.getHeadersList()).isEqualTo(headers);
+    assertThat(apmValidateCollectorConfig.getHeaders().get("api_key_2")).isEqualTo("abc");
   }
 
   @Test
@@ -193,8 +192,8 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     apmVerificationConfig.setUrl("base");
     apmVerificationConfig.setValidationUrl("suffix");
     Map<String, String> collectionHeaders = apmVerificationConfig.collectionHeaders();
-    assertEquals("${api_key}", collectionHeaders.get("api_key"));
-    assertEquals("123", collectionHeaders.get("api_key_plain"));
+    assertThat(collectionHeaders.get("api_key")).isEqualTo("${api_key}");
+    assertThat(collectionHeaders.get("api_key_plain")).isEqualTo("123");
     assertThat(collectionHeaders).hasSize(2);
   }
 
@@ -210,8 +209,8 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     apmVerificationConfig.setUrl("base");
     apmVerificationConfig.setValidationUrl("suffix");
     Map<String, String> collectionParams = apmVerificationConfig.collectionParams();
-    assertEquals("${api_key}", collectionParams.get("api_key"));
-    assertEquals("123", collectionParams.get("api_key_plain"));
+    assertThat(collectionParams.get("api_key")).isEqualTo("${api_key}");
+    assertThat(collectionParams.get("api_key_plain")).isEqualTo("123");
     assertThat(collectionParams).hasSize(2);
   }
 
@@ -220,6 +219,6 @@ public class APMVerificationConfigTest extends WingsBaseTest {
   public void testGetValidationUrlEncoded() {
     APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
     apmVerificationConfig.setValidationUrl("`requestwithbacktick`");
-    assertEquals("Back tick should be encoded", "%60requestwithbacktick%60", apmVerificationConfig.getValidationUrl());
+    assertThat(apmVerificationConfig.getValidationUrl()).isEqualTo("%60requestwithbacktick%60");
   }
 }

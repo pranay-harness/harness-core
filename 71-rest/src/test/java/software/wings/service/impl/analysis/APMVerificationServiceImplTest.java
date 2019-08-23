@@ -254,8 +254,8 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
         (APMDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
     assertEquals(
         "State type in datacollectionInfo should match", dataCollectionInfo.getStateType(), StateType.DATA_DOG);
-    assertEquals("Start time should match", dataCollectionInfo.getStartTime(), 1540419553000l);
-    assertEquals("Time duration should match", dataCollectionInfo.getDataCollectionTotalTime(), 15);
+    assertThat(1540419553000l).isEqualTo(dataCollectionInfo.getStartTime());
+    assertThat(15).isEqualTo(dataCollectionInfo.getDataCollectionTotalTime());
   }
 
   @Test
@@ -292,10 +292,10 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
         TaskType.APPDYNAMICS_COLLECT_24_7_METRIC_DATA.name());
     AppdynamicsDataCollectionInfo dataCollectionInfo =
         (AppdynamicsDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
-    assertEquals(dataCollectionInfo.getAppDynamicsConfig(), appDynamicsConfig);
-    assertEquals(dataCollectionInfo.getCollectionTime(), 15);
-    assertEquals(dataCollectionInfo.getStartTime(), 1540419553000l);
-    assertEquals(dataCollectionInfo.getTimeSeriesMlAnalysisType(), TimeSeriesMlAnalysisType.PREDICTIVE);
+    assertThat(appDynamicsConfig).isEqualTo(dataCollectionInfo.getAppDynamicsConfig());
+    assertThat(15).isEqualTo(dataCollectionInfo.getCollectionTime());
+    assertThat(1540419553000l).isEqualTo(dataCollectionInfo.getStartTime());
+    assertThat(TimeSeriesMlAnalysisType.PREDICTIVE).isEqualTo(dataCollectionInfo.getTimeSeriesMlAnalysisType());
   }
 
   @Test
@@ -330,10 +330,10 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
         TaskType.NEWRELIC_COLLECT_24_7_METRIC_DATA.name());
     NewRelicDataCollectionInfo dataCollectionInfo =
         (NewRelicDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
-    assertEquals(dataCollectionInfo.getNewRelicConfig(), nrConfig);
-    assertEquals(dataCollectionInfo.getCollectionTime(), 15);
-    assertEquals(dataCollectionInfo.getStartTime(), 1540419553000l);
-    assertEquals(dataCollectionInfo.getTimeSeriesMlAnalysisType(), TimeSeriesMlAnalysisType.PREDICTIVE);
+    assertThat(nrConfig).isEqualTo(dataCollectionInfo.getNewRelicConfig());
+    assertThat(15).isEqualTo(dataCollectionInfo.getCollectionTime());
+    assertThat(1540419553000l).isEqualTo(dataCollectionInfo.getStartTime());
+    assertThat(TimeSeriesMlAnalysisType.PREDICTIVE).isEqualTo(dataCollectionInfo.getTimeSeriesMlAnalysisType());
   }
 
   @Test
@@ -380,9 +380,9 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
         TaskType.PROMETHEUS_COLLECT_24_7_METRIC_DATA.name());
     PrometheusDataCollectionInfo dataCollectionInfo =
         (PrometheusDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
-    assertEquals(dataCollectionInfo.getCollectionTime(), 15);
-    assertEquals(dataCollectionInfo.getStartTime(), 1540419553000l);
-    assertEquals(dataCollectionInfo.getTimeSeriesMlAnalysisType(), TimeSeriesMlAnalysisType.PREDICTIVE);
+    assertThat(15).isEqualTo(dataCollectionInfo.getCollectionTime());
+    assertThat(1540419553000l).isEqualTo(dataCollectionInfo.getStartTime());
+    assertThat(TimeSeriesMlAnalysisType.PREDICTIVE).isEqualTo(dataCollectionInfo.getTimeSeriesMlAnalysisType());
   }
 
   @Test
@@ -413,8 +413,8 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
         TaskType.CLOUD_WATCH_COLLECT_24_7_METRIC_DATA.name());
     CloudWatchDataCollectionInfo dataCollectionInfo =
         (CloudWatchDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
-    assertEquals(dataCollectionInfo.getCollectionTime(), 15);
-    assertEquals(dataCollectionInfo.getStartTime(), 1540419553000l);
-    assertEquals(dataCollectionInfo.getAnalysisComparisonStrategy(), AnalysisComparisonStrategy.PREDICTIVE);
+    assertThat(15).isEqualTo(dataCollectionInfo.getCollectionTime());
+    assertThat(1540419553000l).isEqualTo(dataCollectionInfo.getStartTime());
+    assertThat(AnalysisComparisonStrategy.PREDICTIVE).isEqualTo(dataCollectionInfo.getAnalysisComparisonStrategy());
   }
 }

@@ -2,7 +2,6 @@ package software.wings.delegatetasks.terraform;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
@@ -26,12 +25,12 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void getTargetsArgsTest() {
-    assertEquals("", terraformProvisionTask.getTargetArgs(null));
-    assertEquals("", terraformProvisionTask.getTargetArgs(Collections.EMPTY_LIST));
+    assertThat(terraformProvisionTask.getTargetArgs(null)).isEqualTo("");
+    assertThat(terraformProvisionTask.getTargetArgs(Collections.EMPTY_LIST)).isEqualTo("");
 
     List<String> targets = new ArrayList<>(Arrays.asList("target1", "target2"));
 
-    assertEquals("-target=target1 -target=target2 ", terraformProvisionTask.getTargetArgs(targets));
+    assertThat(terraformProvisionTask.getTargetArgs(targets)).isEqualTo("-target=target1 -target=target2 ");
   }
 
   @Test

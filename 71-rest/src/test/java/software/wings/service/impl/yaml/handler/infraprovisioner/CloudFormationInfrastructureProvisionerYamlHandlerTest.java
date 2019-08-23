@@ -2,7 +2,6 @@ package software.wings.service.impl.yaml.handler.infraprovisioner;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
@@ -81,18 +80,18 @@ public class CloudFormationInfrastructureProvisionerYamlHandlerTest extends Base
     verify(mockInfrastructureProvisionerService).save(captor.capture());
     CloudFormationInfrastructureProvisioner provisionerSaved = captor.getValue();
     assertThat(provisionerSaved).isNotNull();
-    assertEquals(provisionerSaved.getInfrastructureProvisionerType(), "CLOUD_FORMATION");
-    assertEquals(provisionerSaved.getSourceType(), "TEMPLATE_BODY");
-    assertEquals(provisionerSaved.getTemplateBody(), "Body");
-    assertEquals(provisionerSaved.getDescription(), "Desc");
-    assertEquals(provisionerSaved.getAppId(), APP_ID);
-    assertEquals(provisionerSaved.getMappingBlueprints().size(), 1);
-    assertEquals(provisionerSaved.getMappingBlueprints().get(0).getServiceId(), SERVICE_ID);
-    assertEquals(provisionerSaved.getMappingBlueprints().get(0).getCloudProviderType().name(), "AWS");
-    assertEquals(provisionerSaved.getMappingBlueprints().get(0).getDeploymentType(), SSH);
-    assertEquals(provisionerSaved.getMappingBlueprints().get(0).getProperties().size(), 1);
-    assertEquals(provisionerSaved.getMappingBlueprints().get(0).getProperties().get(0).getName(), "k1");
-    assertEquals(provisionerSaved.getMappingBlueprints().get(0).getProperties().get(0).getValue(), "v1");
+    assertThat("CLOUD_FORMATION").isEqualTo(provisionerSaved.getInfrastructureProvisionerType());
+    assertThat("TEMPLATE_BODY").isEqualTo(provisionerSaved.getSourceType());
+    assertThat("Body").isEqualTo(provisionerSaved.getTemplateBody());
+    assertThat("Desc").isEqualTo(provisionerSaved.getDescription());
+    assertThat(APP_ID).isEqualTo(provisionerSaved.getAppId());
+    assertThat(1).isEqualTo(provisionerSaved.getMappingBlueprints().size());
+    assertThat(SERVICE_ID).isEqualTo(provisionerSaved.getMappingBlueprints().get(0).getServiceId());
+    assertThat("AWS").isEqualTo(provisionerSaved.getMappingBlueprints().get(0).getCloudProviderType().name());
+    assertThat(SSH).isEqualTo(provisionerSaved.getMappingBlueprints().get(0).getDeploymentType());
+    assertThat(1).isEqualTo(provisionerSaved.getMappingBlueprints().get(0).getProperties().size());
+    assertThat("k1").isEqualTo(provisionerSaved.getMappingBlueprints().get(0).getProperties().get(0).getName());
+    assertThat("v1").isEqualTo(provisionerSaved.getMappingBlueprints().get(0).getProperties().get(0).getValue());
 
     CloudFormationInfrastructureProvisioner provisioner =
         CloudFormationInfrastructureProvisioner.builder()
@@ -114,20 +113,20 @@ public class CloudFormationInfrastructureProvisionerYamlHandlerTest extends Base
 
     Yaml yaml1 = handler.toYaml(provisioner, APP_ID);
     assertThat(yaml1).isNotNull();
-    assertEquals(yaml1.getType(), "CLOUD_FORMATION");
-    assertEquals(yaml1.getHarnessApiVersion(), "1.0");
-    assertEquals(yaml1.getSourceType(), "TEMPLATE_BODY");
-    assertEquals(yaml1.getTemplateBody(), "Body1");
-    assertEquals(yaml1.getName(), "Name1");
-    assertEquals(yaml1.getDescription(), "Desc1");
-    assertEquals(yaml1.getMappingBlueprints().size(), 1);
-    assertEquals(yaml1.getMappingBlueprints().get(0).getServiceName(), "ServiceName");
-    assertEquals(yaml1.getMappingBlueprints().get(0).getDeploymentType(), SSH);
-    assertEquals(yaml1.getMappingBlueprints().get(0).getCloudProviderType(), CloudProviderType.AWS);
-    assertEquals(yaml1.getMappingBlueprints().get(0).getNodeFilteringType(), AWS_INSTANCE_FILTER);
-    assertEquals(yaml1.getMappingBlueprints().get(0).getProperties().size(), 1);
-    assertEquals(yaml1.getMappingBlueprints().get(0).getProperties().get(0).getName(), "k2");
-    assertEquals(yaml1.getMappingBlueprints().get(0).getProperties().get(0).getValue(), "v2");
+    assertThat("CLOUD_FORMATION").isEqualTo(yaml1.getType());
+    assertThat("1.0").isEqualTo(yaml1.getHarnessApiVersion());
+    assertThat("TEMPLATE_BODY").isEqualTo(yaml1.getSourceType());
+    assertThat("Body1").isEqualTo(yaml1.getTemplateBody());
+    assertThat("Name1").isEqualTo(yaml1.getName());
+    assertThat("Desc1").isEqualTo(yaml1.getDescription());
+    assertThat(1).isEqualTo(yaml1.getMappingBlueprints().size());
+    assertThat("ServiceName").isEqualTo(yaml1.getMappingBlueprints().get(0).getServiceName());
+    assertThat(SSH).isEqualTo(yaml1.getMappingBlueprints().get(0).getDeploymentType());
+    assertThat(CloudProviderType.AWS).isEqualTo(yaml1.getMappingBlueprints().get(0).getCloudProviderType());
+    assertThat(AWS_INSTANCE_FILTER).isEqualTo(yaml1.getMappingBlueprints().get(0).getNodeFilteringType());
+    assertThat(1).isEqualTo(yaml1.getMappingBlueprints().get(0).getProperties().size());
+    assertThat("k2").isEqualTo(yaml1.getMappingBlueprints().get(0).getProperties().get(0).getName());
+    assertThat("v2").isEqualTo(yaml1.getMappingBlueprints().get(0).getProperties().get(0).getValue());
   }
 
   private ChangeContext<Yaml> getChangeContext() {

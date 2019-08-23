@@ -44,9 +44,9 @@ public class CVActivityLogServiceTest extends BaseIntegrationTest {
         .info("activity log from test");
     CVActivityLog cvActivityLog =
         wingsPersistence.createQuery(CVActivityLog.class).filter(CVActivityLogKeys.cvConfigId, cvConfigId).get();
-    assertEquals("activity log from test", cvActivityLog.getLog());
-    assertEquals(TimeUnit.MILLISECONDS.toMinutes(now), cvActivityLog.getDataCollectionMinute());
-    assertEquals(Collections.emptyList(), cvActivityLog.getTimestampParams());
+    assertThat(cvActivityLog.getLog()).isEqualTo("activity log from test");
+    assertThat(cvActivityLog.getDataCollectionMinute()).isEqualTo(TimeUnit.MILLISECONDS.toMinutes(now));
+    assertThat(cvActivityLog.getTimestampParams()).isEqualTo(Collections.emptyList());
   }
 
   @Test
@@ -60,8 +60,8 @@ public class CVActivityLogServiceTest extends BaseIntegrationTest {
     CVActivityLog cvActivityLog =
         wingsPersistence.createQuery(CVActivityLog.class).filter(CVActivityLogKeys.cvConfigId, cvConfigId).get();
     assertThat(cvActivityLog.getTimestampParams()).hasSize(2);
-    assertEquals(nextMinute, (long) cvActivityLog.getTimestampParams().get(1));
-    assertEquals(now, (long) cvActivityLog.getTimestampParams().get(0));
+    assertThat((long) cvActivityLog.getTimestampParams().get(1)).isEqualTo(nextMinute);
+    assertThat((long) cvActivityLog.getTimestampParams().get(0)).isEqualTo(now);
   }
 
   @Test
@@ -73,14 +73,14 @@ public class CVActivityLogServiceTest extends BaseIntegrationTest {
         .error("activity log from test");
     CVActivityLog cvActivityLog =
         wingsPersistence.createQuery(CVActivityLog.class).filter(CVActivityLogKeys.cvConfigId, cvConfigId).get();
-    assertEquals("\u001B[31mactivity log from test\u001B[0m", cvActivityLog.getAnsiLog());
+    assertThat(cvActivityLog.getAnsiLog()).isEqualTo("\u001B[31mactivity log from test\u001B[0m");
 
     cvConfigId = generateUUID();
     cvActivityLogService.getLoggerByCVConfigId(cvConfigId, TimeUnit.MILLISECONDS.toMinutes(now))
         .info("activity log from test");
     cvActivityLog =
         wingsPersistence.createQuery(CVActivityLog.class).filter(CVActivityLogKeys.cvConfigId, cvConfigId).get();
-    assertEquals("activity log from test", cvActivityLog.getAnsiLog());
+    assertThat(cvActivityLog.getAnsiLog()).isEqualTo("activity log from test");
   }
   @Test
   @Category(IntegrationTests.class)
@@ -117,10 +117,10 @@ public class CVActivityLogServiceTest extends BaseIntegrationTest {
             cvConfigId, TimeUnit.MINUTES.toMillis(nowMinute), TimeUnit.MINUTES.toMillis(nowMinute - 1)));
     List<CVActivityLog> activityLogs = cvActivityLogService.findByCVConfigId(cvConfigId, nowMilli, nowMilli);
     assertThat(activityLogs).hasSize(1);
-    assertEquals(cvConfigId, activityLogs.get(0).getCvConfigId());
+    assertThat(activityLogs.get(0).getCvConfigId()).isEqualTo(cvConfigId);
     assertThat(activityLogs.get(0).getStateExecutionId()).isNull();
-    assertEquals(nowMinute, activityLogs.get(0).getDataCollectionMinute());
-    assertEquals(logLine, activityLogs.get(0).getLog());
+    assertThat(activityLogs.get(0).getDataCollectionMinute()).isEqualTo(nowMinute);
+    assertThat(activityLogs.get(0).getLog()).isEqualTo(logLine);
   }
 
   @Test
@@ -131,11 +131,11 @@ public class CVActivityLogServiceTest extends BaseIntegrationTest {
     cvActivityLogService.getLoggerByStateExecutionId(stateExecutionId).info(logLine);
     List<CVActivityLog> activityLogs = cvActivityLogService.findByStateExecutionId(stateExecutionId);
     assertThat(activityLogs).hasSize(1);
-    assertEquals(stateExecutionId, activityLogs.get(0).getStateExecutionId());
+    assertThat(activityLogs.get(0).getStateExecutionId()).isEqualTo(stateExecutionId);
     assertThat(activityLogs.get(0).getCvConfigId()).isNull();
-    assertEquals(0, activityLogs.get(0).getDataCollectionMinute());
-    assertEquals(logLine, activityLogs.get(0).getLog());
-    assertEquals(LogLevel.INFO, activityLogs.get(0).getLogLevel());
+    assertThat(activityLogs.get(0).getDataCollectionMinute()).isEqualTo(0);
+    assertThat(activityLogs.get(0).getLog()).isEqualTo(logLine);
+    assertThat(activityLogs.get(0).getLogLevel()).isEqualTo(LogLevel.INFO);
   }
 
   @Test
@@ -153,12 +153,12 @@ public class CVActivityLogServiceTest extends BaseIntegrationTest {
     List<CVActivityLog> activityLogs = cvActivityLogService.findByCVConfigId(
         cvConfigId, TimeUnit.MINUTES.toMillis(nowMinute), TimeUnit.MINUTES.toMillis(nowMinute + 1));
     assertThat(activityLogs).hasSize(2);
-    assertEquals(cvConfigId, activityLogs.get(0).getCvConfigId());
-    assertEquals(nowMinute, activityLogs.get(0).getDataCollectionMinute());
-    assertEquals(logLine1, activityLogs.get(0).getLog());
-    assertEquals(cvConfigId, activityLogs.get(1).getCvConfigId());
-    assertEquals(nowMinute + 1, activityLogs.get(1).getDataCollectionMinute());
-    assertEquals(logLine2, activityLogs.get(1).getLog());
+    assertThat(activityLogs.get(0).getCvConfigId()).isEqualTo(cvConfigId);
+    assertThat(activityLogs.get(0).getDataCollectionMinute()).isEqualTo(nowMinute);
+    assertThat(activityLogs.get(0).getLog()).isEqualTo(logLine1);
+    assertThat(activityLogs.get(1).getCvConfigId()).isEqualTo(cvConfigId);
+    assertThat(activityLogs.get(1).getDataCollectionMinute()).isEqualTo(nowMinute + 1);
+    assertThat(activityLogs.get(1).getLog()).isEqualTo(logLine2);
   }
 
   private void createLog(String cvConfigId, long dataCollectionMinute, String logLine) {

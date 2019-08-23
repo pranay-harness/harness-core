@@ -7,7 +7,6 @@ import static io.harness.filesystem.FileIo.waitForDirectoryToBeAccessibleOutOfPr
 import static io.harness.filesystem.FileIo.writeFile;
 import static java.nio.file.Files.lines;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -40,7 +39,7 @@ public class FileIoTest extends CategoryTest {
 
       createDirectoryIfDoesNotExist(directoryPath);
       File testFile1 = new File(directoryPath);
-      assertEquals(lastModifiedTime, testFile1.lastModified());
+      assertThat(testFile1.lastModified()).isEqualTo(lastModifiedTime);
     } finally {
       deleteDirectoryAndItsContentIfExists(directoryPath);
     }
@@ -111,7 +110,7 @@ public class FileIoTest extends CategoryTest {
 
     try (Stream<String> stream = lines(Paths.get(testFile.getAbsolutePath()))) {
       String readOutput = stream.findFirst().get();
-      assertEquals(text, readOutput);
+      assertThat(readOutput).isEqualTo(text);
     }
 
     deleteDirectoryAndItsContentIfExists(directoryName);

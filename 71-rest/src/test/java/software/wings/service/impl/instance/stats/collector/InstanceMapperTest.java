@@ -46,9 +46,9 @@ public class InstanceMapperTest extends WingsBaseTest {
     List<Instance> instances = getSampleInstance(accountId);
     InstanceStatsSnapshot statsSnapshot = mapper.map(instances);
 
-    assertEquals(ts, statsSnapshot.getTimestamp());
-    assertEquals(accountId, statsSnapshot.getAccountId());
-    assertEquals(instances.size(), statsSnapshot.getTotal());
+    assertThat(statsSnapshot.getTimestamp()).isEqualTo(ts);
+    assertThat(statsSnapshot.getAccountId()).isEqualTo(accountId);
+    assertThat(statsSnapshot.getTotal()).isEqualTo(instances.size());
     assertThat(statsSnapshot.getAggregateCounts()).hasSize(2);
     assertEquals(2,
         statsSnapshot.getAggregateCounts().stream().filter(s -> s.getEntityType() == EntityType.APPLICATION).count());
@@ -74,9 +74,9 @@ public class InstanceMapperTest extends WingsBaseTest {
     List<Instance> instances = Collections.emptyList();
     InstanceStatsSnapshot statsSnapshot = mapper.map(instances);
 
-    assertEquals(ts, statsSnapshot.getTimestamp());
-    assertEquals(accountId, statsSnapshot.getAccountId());
-    assertEquals(instances.size(), statsSnapshot.getTotal());
+    assertThat(statsSnapshot.getTimestamp()).isEqualTo(ts);
+    assertThat(statsSnapshot.getAccountId()).isEqualTo(accountId);
+    assertThat(statsSnapshot.getTotal()).isEqualTo(instances.size());
     assertThat(statsSnapshot.getAggregateCounts()).isEmpty();
     assertEquals(0,
         statsSnapshot.getAggregateCounts().stream().filter(it -> it.getEntityType() == EntityType.APPLICATION).count());

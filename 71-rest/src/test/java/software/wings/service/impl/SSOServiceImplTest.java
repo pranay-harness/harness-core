@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static software.wings.security.authentication.AuthenticationMechanism.LDAP;
 import static software.wings.security.authentication.AuthenticationMechanism.OAUTH;
 import static software.wings.security.authentication.AuthenticationMechanism.SAML;
@@ -53,25 +52,25 @@ public class SSOServiceImplTest extends WingsBaseTest {
     ssoService.uploadOauthConfiguration(account.getUuid(), "", Sets.newHashSet(OauthProviderType.values()));
     ssoService.setAuthenticationMechanism(account.getUuid(), OAUTH);
     account = accountService.get(account.getUuid());
-    assertEquals(USER_PASSWORD, account.getAuthenticationMechanism());
+    assertThat(account.getAuthenticationMechanism()).isEqualTo(USER_PASSWORD);
     assertThat(account.isOauthEnabled()).isTrue();
 
     // UP + OA -> OA - disable user password
     ssoService.setAuthenticationMechanism(account.getUuid(), OAUTH);
     account = accountService.get(account.getUuid());
-    assertEquals(OAUTH, account.getAuthenticationMechanism());
+    assertThat(account.getAuthenticationMechanism()).isEqualTo(OAUTH);
     assertThat(account.isOauthEnabled()).isTrue();
 
     // OA -> UP + OA - enable user password
     ssoService.setAuthenticationMechanism(account.getUuid(), USER_PASSWORD);
     account = accountService.get(account.getUuid());
-    assertEquals(USER_PASSWORD, account.getAuthenticationMechanism());
+    assertThat(account.getAuthenticationMechanism()).isEqualTo(USER_PASSWORD);
     assertThat(account.isOauthEnabled()).isTrue();
 
     // UP + OA -> UP - disable oauth
     ssoService.setAuthenticationMechanism(account.getUuid(), USER_PASSWORD);
     account = accountService.get(account.getUuid());
-    assertEquals(USER_PASSWORD, account.getAuthenticationMechanism());
+    assertThat(account.getAuthenticationMechanism()).isEqualTo(USER_PASSWORD);
     assertThat(account.isOauthEnabled()).isFalse();
 
     accountService.delete(account.getUuid());
@@ -92,7 +91,7 @@ public class SSOServiceImplTest extends WingsBaseTest {
     accountService.save(account);
     ssoService.setAuthenticationMechanism(account.getUuid(), SAML);
     account = accountService.get(account.getUuid());
-    assertEquals(SAML, account.getAuthenticationMechanism());
+    assertThat(account.getAuthenticationMechanism()).isEqualTo(SAML);
     assertThat(account.isOauthEnabled()).isFalse();
     accountService.delete(account.getUuid());
   }
@@ -112,7 +111,7 @@ public class SSOServiceImplTest extends WingsBaseTest {
     accountService.save(account);
     ssoService.setAuthenticationMechanism(account.getUuid(), LDAP);
     account = accountService.get(account.getUuid());
-    assertEquals(LDAP, account.getAuthenticationMechanism());
+    assertThat(account.getAuthenticationMechanism()).isEqualTo(LDAP);
     assertThat(account.isOauthEnabled()).isFalse();
     accountService.delete(account.getUuid());
   }
@@ -137,12 +136,12 @@ public class SSOServiceImplTest extends WingsBaseTest {
                                                 .displayName("Some display name")
                                                 .build());
     account = accountService.get(account.getUuid());
-    assertEquals(USER_PASSWORD, account.getAuthenticationMechanism());
+    assertThat(account.getAuthenticationMechanism()).isEqualTo(USER_PASSWORD);
     assertThat(account.isOauthEnabled()).isFalse();
 
     ssoService.setAuthenticationMechanism(account.getUuid(), OAUTH);
     account = accountService.get(account.getUuid());
-    assertEquals(USER_PASSWORD, account.getAuthenticationMechanism());
+    assertThat(account.getAuthenticationMechanism()).isEqualTo(USER_PASSWORD);
     assertThat(account.isOauthEnabled()).isTrue();
   }
 }

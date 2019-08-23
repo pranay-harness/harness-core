@@ -103,7 +103,7 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
   @Category(UnitTests.class)
   public void testDefaultComparsionStrategy() {
     DynatraceState dynatraceState = new DynatraceState("DynatraceState");
-    assertEquals(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS, dynatraceState.getComparisonStrategy());
+    assertThat(dynatraceState.getComparisonStrategy()).isEqualTo(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS);
   }
 
   @Test
@@ -122,7 +122,7 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
   @Test
   @Category(UnitTests.class)
   public void testTriggerCollection() throws ParseException {
-    assertEquals(0, wingsPersistence.createQuery(DelegateTask.class).count());
+    assertThat(wingsPersistence.createQuery(DelegateTask.class).count()).isEqualTo(0);
     DynaTraceConfig dynaTraceConfig = DynaTraceConfig.builder()
                                           .accountId(accountId)
                                           .dynaTraceUrl("dynatrace-url")
@@ -149,7 +149,7 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
 
     ExecutionResponse response = spyState.execute(executionContext);
-    assertEquals(ExecutionStatus.RUNNING, response.getExecutionStatus());
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
     assertEquals(
         "No baseline was set for the workflow. Workflow running with auto baseline. No previous execution found. This will be the baseline run",
         response.getErrorMessage());
@@ -157,7 +157,7 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     List<DelegateTask> tasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).asList();
     assertThat(tasks).hasSize(1);
     DelegateTask task = tasks.get(0);
-    assertEquals(TaskType.DYNA_TRACE_METRIC_DATA_COLLECTION_TASK.name(), task.getData().getTaskType());
+    assertThat(task.getData().getTaskType()).isEqualTo(TaskType.DYNA_TRACE_METRIC_DATA_COLLECTION_TASK.name());
 
     DynaTraceDataCollectionInfo expectedCollectionInfo =
         DynaTraceDataCollectionInfo.builder()
@@ -180,10 +180,10 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     final DynaTraceDataCollectionInfo actualCollectionInfo =
         (DynaTraceDataCollectionInfo) task.getData().getParameters()[0];
     expectedCollectionInfo.setStartTime(actualCollectionInfo.getStartTime());
-    assertEquals(expectedCollectionInfo, actualCollectionInfo);
-    assertEquals(accountId, task.getAccountId());
-    assertEquals(Status.QUEUED, task.getStatus());
-    assertEquals(appId, task.getAppId());
+    assertThat(actualCollectionInfo).isEqualTo(expectedCollectionInfo);
+    assertThat(task.getAccountId()).isEqualTo(accountId);
+    assertThat(task.getStatus()).isEqualTo(Status.QUEUED);
+    assertThat(task.getAppId()).isEqualTo(appId);
     Map<Long,
         LinkedHashMap<String,
             LinkedHashMap<String,
@@ -200,9 +200,9 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
             .next()
             .get("BASIC")
             .get(0);
-    assertEquals(continuousVerificationExecutionMetaData1.getAccountId(), accountId);
-    assertEquals(continuousVerificationExecutionMetaData1.getArtifactName(), "dummy artifact");
-    assertEquals(ExecutionStatus.RUNNING, continuousVerificationExecutionMetaData1.getExecutionStatus());
+    assertThat(accountId).isEqualTo(continuousVerificationExecutionMetaData1.getAccountId());
+    assertThat("dummy artifact").isEqualTo(continuousVerificationExecutionMetaData1.getArtifactName());
+    assertThat(continuousVerificationExecutionMetaData1.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
 
     VerificationStateAnalysisExecutionData metricAnalysisExecutionData =
         VerificationStateAnalysisExecutionData.builder().build();
@@ -223,6 +223,6 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
                                                    .next()
                                                    .get("BASIC")
                                                    .get(0);
-    assertEquals(ExecutionStatus.FAILED, continuousVerificationExecutionMetaData1.getExecutionStatus());
+    assertThat(continuousVerificationExecutionMetaData1.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
   }
 }

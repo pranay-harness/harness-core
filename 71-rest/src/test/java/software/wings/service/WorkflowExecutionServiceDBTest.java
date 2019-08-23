@@ -157,7 +157,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
     deployedNodes.forEach(deployedNode -> {
       assertThat(hostElements.containsKey(deployedNode.getHost().getUuid())).isTrue();
       HostElement hostElement = hostElements.get(deployedNode.getHost().getUuid());
-      assertEquals(hostElement.getHostName(), deployedNode.getHost().getHostName());
+      assertThat(deployedNode.getHost().getHostName()).isEqualTo(hostElement.getHostName());
       assertEquals(hostService.get(appId, envId, hostElement.getUuid()).getEc2Instance(),
           deployedNode.getHost().getEc2Instance());
     });

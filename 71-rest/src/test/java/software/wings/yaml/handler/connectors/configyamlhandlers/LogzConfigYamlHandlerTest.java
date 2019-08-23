@@ -1,6 +1,6 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -42,7 +42,7 @@ public class LogzConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandler
 
     // 1. Create Logz verification record
     SettingAttribute settingAttributeSaved = createJenkinsVerificationProvider(logzProviderName);
-    assertEquals(logzProviderName, settingAttributeSaved.getName());
+    assertThat(settingAttributeSaved.getName()).isEqualTo(logzProviderName);
 
     testCRUD(generateSettingValueYamlConfig(logzProviderName, settingAttributeSaved));
   }

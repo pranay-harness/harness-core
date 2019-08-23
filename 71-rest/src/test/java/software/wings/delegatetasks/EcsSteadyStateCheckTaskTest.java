@@ -4,7 +4,6 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -67,10 +66,10 @@ public class EcsSteadyStateCheckTaskTest extends WingsBaseTest {
             anyString(), any(), anyList(), anyString(), anyString(), anyList(), any(), eq(false));
     EcsSteadyStateCheckResponse response = task.run(new Object[] {EcsSteadyStateCheckParams.builder().build()});
     assertThat(response).isNotNull();
-    assertEquals(ExecutionStatus.SUCCESS, response.getExecutionStatus());
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(response.getContainerInfoList()).isNotNull();
-    assertEquals(response.getContainerInfoList().size(), 1);
-    assertEquals(response.getContainerInfoList().get(0).getHostName(), "host");
-    assertEquals(response.getContainerInfoList().get(0).getContainerId(), "cid");
+    assertThat(1).isEqualTo(response.getContainerInfoList().size());
+    assertThat("host").isEqualTo(response.getContainerInfoList().get(0).getHostName());
+    assertThat("cid").isEqualTo(response.getContainerInfoList().get(0).getContainerId());
   }
 }

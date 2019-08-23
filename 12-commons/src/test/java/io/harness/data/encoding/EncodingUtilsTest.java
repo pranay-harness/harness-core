@@ -6,7 +6,7 @@ import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64ToString;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
@@ -29,7 +29,7 @@ public class EncodingUtilsTest extends CategoryTest {
 
     byte[] compressedString = compressString(stringToCompress.toString());
     String deCompressedString = deCompressString(compressedString);
-    assertEquals(stringToCompress.toString(), deCompressedString);
+    assertThat(deCompressedString).isEqualTo(stringToCompress.toString());
   }
 
   @Test
@@ -42,7 +42,7 @@ public class EncodingUtilsTest extends CategoryTest {
 
     String compressedString = encodeBase64(compressString(stringToCompress.toString()));
     String deCompressedString = deCompressString(decodeBase64(compressedString));
-    assertEquals(stringToCompress.toString(), deCompressedString);
+    assertThat(deCompressedString).isEqualTo(stringToCompress.toString());
   }
 
   @Test
@@ -50,6 +50,6 @@ public class EncodingUtilsTest extends CategoryTest {
   public void testBase64() throws Exception {
     URL url = this.getClass().getResource("/dos-config.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);
-    assertEquals(decodeBase64ToString(encodeBase64(fileContents)), fileContents);
+    assertThat(fileContents).isEqualTo(decodeBase64ToString(encodeBase64(fileContents)));
   }
 }

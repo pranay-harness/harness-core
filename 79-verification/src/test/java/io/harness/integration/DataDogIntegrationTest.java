@@ -294,14 +294,14 @@ public class DataDogIntegrationTest extends VerificationBaseIntegrationTest {
 
     NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisRecords.iterator().next();
 
-    assertEquals(RiskLevel.LOW, metricsAnalysis.getRiskLevel());
+    assertThat(metricsAnalysis.getRiskLevel()).isEqualTo(RiskLevel.LOW);
     assertThat(metricsAnalysis.isShowTimeSeries()).isTrue();
-    assertEquals("No problems found", metricsAnalysis.getMessage());
+    assertThat(metricsAnalysis.getMessage()).isEqualTo("No problems found");
     assertThat(metricsAnalysis.getMetricAnalyses()).hasSize(1);
-    assertEquals("Dummy txn1", metricsAnalysis.getMetricAnalyses().get(0).getMetricName());
+    assertThat(metricsAnalysis.getMetricAnalyses().get(0).getMetricName()).isEqualTo("Dummy txn1");
     assertThat(metricsAnalysis.getMetricAnalyses().get(0).getMetricValues()).hasSize(2);
-    assertEquals("Servlet", metricsAnalysis.getMetricAnalyses().get(0).getTag());
-    assertEquals(0, metricsAnalysis.getAnalysisMinute());
+    assertThat(metricsAnalysis.getMetricAnalyses().get(0).getTag()).isEqualTo("Servlet");
+    assertThat(metricsAnalysis.getAnalysisMinute()).isEqualTo(0);
 
     assertEquals("Hits", metricsAnalysis.getMetricAnalyses().get(0).getMetricValues().get(0).getName());
     assertEquals(RiskLevel.LOW, metricsAnalysis.getMetricAnalyses().get(0).getMetricValues().get(0).getRiskLevel());
