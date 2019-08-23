@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
+import static io.harness.beans.SortOrder.OrderType.ASC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
@@ -302,6 +303,7 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
     pageRequest.setOffset("0");
     pageRequest.setLimit(String.valueOf(Integer.MAX_VALUE));
     pageRequest.addFilter(ResourceLookupKeys.resourceType, IN, entityTypes);
+    pageRequest.addOrder(ResourceLookupKeys.resourceName, ASC);
     resourceLookupFilterHelper.addResourceLookupFiltersToPageRequest(pageRequest, filter);
 
     PageResponse<ResourceLookup> pageResponse = wingsPersistence.query(ResourceLookup.class, pageRequest);
