@@ -37,8 +37,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
         cvConfigurationService.getMetricDefinitionMap(StateType.APP_DYNAMICS, null);
     Map<String, TimeSeriesMetricDefinition> expectedDefinitions =
         NewRelicMetricValueDefinition.APP_DYNAMICS_24X7_VALUES_TO_ANALYZE;
-    assertArrayEquals(expectedDefinitions.keySet().toArray(), actualDefinitions.keySet().toArray());
-    assertArrayEquals(expectedDefinitions.entrySet().toArray(), actualDefinitions.entrySet().toArray());
+    assertThat(expectedDefinitions).isEqualTo(actualDefinitions);
   }
 
   @Test

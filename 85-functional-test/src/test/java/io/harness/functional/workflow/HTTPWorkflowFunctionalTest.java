@@ -29,7 +29,7 @@ import software.wings.beans.GraphNode;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.sm.states.HttpState;
+import software.wings.sm.states.HttpState.HttpStateKeys;
 
 public class HTTPWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
@@ -74,8 +74,8 @@ public class HTTPWorkflowFunctionalTest extends AbstractFunctionalTest {
         .type(HTTP.name())
         .name("HTTP")
         .properties(ImmutableMap.<String, Object>builder()
-                        .put(HttpState.URL_KEY, "http://www.google.com")
-                        .put(HttpState.METHOD_KEY, "GET")
+                        .put(HttpStateKeys.url, "http://www.google.com")
+                        .put(HttpStateKeys.method, "GET")
                         .build())
         .build();
   }

@@ -24,6 +24,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.annotations.Transient;
@@ -85,12 +86,10 @@ import java.util.stream.Collectors;
 /**
  * Created by brett on 9/29/17
  */
+@FieldNameConstants(innerTypeName = "ContainerServiceSetupKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Slf4j
 public abstract class ContainerServiceSetup extends State {
-  public static final String FIXED_INSTANCES = "fixedInstances";
-  public static final String DESIRED_INSTANCE_COUNT_KEY = "desiredInstanceCount";
-
   static final int DEFAULT_MAX = 2;
 
   private String desiredInstanceCount;

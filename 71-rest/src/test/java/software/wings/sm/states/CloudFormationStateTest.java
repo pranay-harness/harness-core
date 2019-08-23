@@ -120,7 +120,7 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.provision.CloudFormationCreateStackState;
 import software.wings.sm.states.provision.CloudFormationDeleteStackState;
-import software.wings.sm.states.provision.CloudFormationState;
+import software.wings.sm.states.provision.CloudFormationState.CloudFormationStateKeys;
 
 import java.util.Arrays;
 import java.util.List;
@@ -323,7 +323,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
 
     cloudFormationCreateStackState.setTemplateExpressions(
         asList(TemplateExpression.builder()
-                   .fieldName(CloudFormationState.AWS_CONFIG_ID_KEY)
+                   .fieldName(CloudFormationStateKeys.awsConfigId)
                    .expression("${CF_AWS_Config}")
                    .metadata(ImmutableMap.of("entityType", EntityType.CF_AWS_CONFIG_ID))
                    .build()));
@@ -375,7 +375,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
 
     cloudFormationDeleteStackState.setTemplateExpressions(
         asList(TemplateExpression.builder()
-                   .fieldName(CloudFormationState.AWS_CONFIG_ID_KEY)
+                   .fieldName(CloudFormationStateKeys.awsConfigId)
                    .expression("${CF_AWS_Config}")
                    .metadata(ImmutableMap.of("entityType", EntityType.CF_AWS_CONFIG_ID))
                    .build()));

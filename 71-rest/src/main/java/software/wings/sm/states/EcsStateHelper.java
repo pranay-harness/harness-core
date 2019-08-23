@@ -19,7 +19,6 @@ import static software.wings.beans.command.EcsSetupParams.EcsSetupParamsBuilder.
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.states.ContainerServiceSetup.DEFAULT_MAX;
-import static software.wings.sm.states.ContainerServiceSetup.FIXED_INSTANCES;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Singleton;
@@ -97,6 +96,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.ContainerServiceSetup.ContainerServiceSetupKeys;
 import software.wings.sm.states.EcsSetupContextVariableHolder.EcsSetupContextVariableHolderBuilder;
 import software.wings.utils.EcsConvention;
 import software.wings.utils.Misc;
@@ -371,7 +371,7 @@ public class EcsStateHelper {
         ContainerServiceElement.builder()
             .uuid(executionData.getServiceId())
             .image(imageDetails.getName() + ":" + imageDetails.getTag())
-            .useFixedInstances(FIXED_INSTANCES.equals(desiredInstanceCountStr))
+            .useFixedInstances(ContainerServiceSetupKeys.fixedInstances.equals(desiredInstanceCountStr))
             .fixedInstances(fixedInstances)
             .maxInstances(maxInstances)
             .resizeStrategy(resizeStrategy)

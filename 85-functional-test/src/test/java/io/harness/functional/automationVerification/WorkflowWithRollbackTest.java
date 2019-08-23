@@ -57,7 +57,7 @@ import software.wings.beans.WorkflowPhase;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.sm.states.HttpState;
+import software.wings.sm.states.HttpState.HttpStateKeys;
 
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
@@ -197,8 +197,8 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
         .type(HTTP.name())
         .name("HTTP")
         .properties(ImmutableMap.<String, Object>builder()
-                        .put(HttpState.URL_KEY, "failed")
-                        .put(HttpState.METHOD_KEY, "GET")
+                        .put(HttpStateKeys.url, "failed")
+                        .put(HttpStateKeys.method, "GET")
                         .build())
         .build();
   }

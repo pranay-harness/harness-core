@@ -68,7 +68,7 @@ import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
-import software.wings.sm.states.HttpState;
+import software.wings.sm.states.HttpState.HttpStateKeys;
 import software.wings.sm.states.JenkinsState;
 import software.wings.sm.states.ResourceConstraintState.HoldingScope;
 
@@ -371,8 +371,8 @@ public class WorkflowGenerator {
         .name("HTTP - " + scope)
         .properties(
             ImmutableMap.<String, Object>builder()
-                .put(HttpState.URL_KEY, format("http://www.google.com?h=${context.output(\"%s\").buildNumber}", scope))
-                .put(HttpState.METHOD_KEY, "GET")
+                .put(HttpStateKeys.url, format("http://www.google.com?h=${context.output(\"%s\").buildNumber}", scope))
+                .put(HttpStateKeys.method, "GET")
                 .build())
         .build();
   }

@@ -13,6 +13,7 @@ import software.wings.beans.PhaseStepType;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
 import software.wings.sm.states.HttpState;
+import software.wings.sm.states.HttpState.HttpStateKeys;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -65,9 +66,9 @@ public class WorkflowUtils {
         .name("HTTP")
         .properties(
             ImmutableMap.<String, Object>builder()
-                .put(HttpState.URL_KEY, "https://postman-echo.com/post")
-                .put(HttpState.METHOD_KEY, "POST")
-                .put(HttpState.HEADER,
+                .put(HttpStateKeys.url, "https://postman-echo.com/post")
+                .put(HttpStateKeys.method, "POST")
+                .put(HttpStateKeys.header,
                     "${serviceVariable.normalText}:" + values[0] + ", ${serviceVariable.overridableText}:" + values[0])
                 .build())
         .build();
@@ -79,8 +80,8 @@ public class WorkflowUtils {
         .type(HTTP.name())
         .name("HTTP")
         .properties(ImmutableMap.<String, Object>builder()
-                        .put(HttpState.URL_KEY, "https://www.google.com")
-                        .put(HttpState.METHOD_KEY, "GET")
+                        .put(HttpStateKeys.url, "https://www.google.com")
+                        .put(HttpStateKeys.method, "GET")
                         .build())
         .build();
   }
