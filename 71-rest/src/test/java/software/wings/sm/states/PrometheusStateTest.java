@@ -1,6 +1,6 @@
 package software.wings.sm.states;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -55,7 +55,7 @@ public class PrometheusStateTest extends APMStateVerificationTestBase {
   @Test
   @Category(UnitTests.class)
   public void testDefaultComparisionStrategy() {
-    assertEquals(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS, prometheusState.getComparisonStrategy());
+    assertThat(prometheusState.getComparisonStrategy()).isEqualTo(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS);
   }
 
   @Test
@@ -85,9 +85,9 @@ public class PrometheusStateTest extends APMStateVerificationTestBase {
     verify(delegateService).queueTask(argument.capture());
     TaskData taskData = argument.getValue().getData();
     Object parameters[] = taskData.getParameters();
-    assertEquals(parameters.length, 1);
-    assertEquals(taskData.getTaskType(), TaskType.PROMETHEUS_METRIC_DATA_COLLECTION_TASK.name());
+    assertThat(1).isEqualTo(parameters.length);
+    assertThat(TaskType.PROMETHEUS_METRIC_DATA_COLLECTION_TASK.name()).isEqualTo(taskData.getTaskType());
     PrometheusDataCollectionInfo prometheusDataCollectionInfo = (PrometheusDataCollectionInfo) parameters[0];
-    assertEquals(renderedUrl, prometheusDataCollectionInfo.getTimeSeriesToCollect().get(0).getUrl());
+    assertThat(prometheusDataCollectionInfo.getTimeSeriesToCollect().get(0).getUrl()).isEqualTo(renderedUrl);
   }
 }

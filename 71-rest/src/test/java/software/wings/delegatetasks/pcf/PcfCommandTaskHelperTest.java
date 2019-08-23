@@ -1,7 +1,6 @@
 package software.wings.delegatetasks.pcf;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 
@@ -91,7 +90,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
       stringBuilder.append(line).append('\n');
     }
 
-    assertEquals(MANIFEST_YAML_1, stringBuilder.toString());
+    assertThat(stringBuilder.toString()).isEqualTo(MANIFEST_YAML_1);
     pcfCommandTaskHelper.deleteCreatedFile(Arrays.asList(file));
     assertThat(file.exists()).isFalse();
   }

@@ -1,6 +1,6 @@
 package migrations.all;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotEquals;
 
 import com.google.inject.Inject;
@@ -36,7 +36,7 @@ public class InitPipelineCountersIntegrationTest extends BaseIntegrationTest {
                             .endsWith(ActionType.CREATE_PIPELINE.toString())
                             .count();
 
-    assertEquals(0, initialCount);
+    assertThat(initialCount).isEqualTo(0);
     initPipelineCounters.migrate();
 
     long finalCount = wingsPersistence.createQuery(Counter.class)

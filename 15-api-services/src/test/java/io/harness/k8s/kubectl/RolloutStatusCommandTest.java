@@ -1,6 +1,6 @@
 package io.harness.k8s.kubectl;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -15,7 +15,7 @@ public class RolloutStatusCommandTest extends CategoryTest {
 
     RolloutStatusCommand rolloutStatusCommand = client.rollout().status().resource("Deployment/nginx").watch(true);
 
-    assertEquals("kubectl rollout status Deployment/nginx --watch=true", rolloutStatusCommand.command());
+    assertThat(rolloutStatusCommand.command()).isEqualTo("kubectl rollout status Deployment/nginx --watch=true");
   }
 
   @Test
@@ -25,6 +25,6 @@ public class RolloutStatusCommandTest extends CategoryTest {
 
     RolloutStatusCommand rolloutStatusCommand = client.rollout().status().resource("Deployment/nginx").watch(false);
 
-    assertEquals("kubectl rollout status Deployment/nginx --watch=false", rolloutStatusCommand.command());
+    assertThat(rolloutStatusCommand.command()).isEqualTo("kubectl rollout status Deployment/nginx --watch=false");
   }
 }

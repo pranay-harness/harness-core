@@ -1,6 +1,6 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
@@ -60,7 +60,7 @@ public class ElasticLoadBalancerConfigYamlHandlerTest extends BaseSettingValueCo
 
     // 1. Create ELB config
     SettingAttribute settingAttributeSaved = createELBVerificationProvider(name);
-    assertEquals(name, settingAttributeSaved.getName());
+    assertThat(settingAttributeSaved.getName()).isEqualTo(name);
 
     testCRUD(generateSettingValueYamlConfig(name, settingAttributeSaved));
   }

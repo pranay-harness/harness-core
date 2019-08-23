@@ -3,7 +3,6 @@ package io.harness.data.validator;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.utils.UuidUtils.base64StrToUuid;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import io.harness.category.element.UnitTests;
 import io.harness.utils.UuidUtils;
@@ -45,7 +44,7 @@ public class UuidValidatorTest {
     // Specific Base64 encoded UUID
     String base64Str = "za7VbYcSQU2zRgGQXQAm/g"; // a base64 encoded UUID
     String decodedUUIDStr = base64StrToUuid(base64Str);
-    assertEquals("cdaed56d-8712-414d-b346-01905d0026fe", decodedUUIDStr);
+    assertThat(decodedUUIDStr).isEqualTo("cdaed56d-8712-414d-b346-01905d0026fe");
     assertThat(validator.validate(UuidValidatorTestStructure.builder().str(base64Str).build())).isEmpty();
 
     // Random Base64 encoded UUID that is URL-safe

@@ -1,6 +1,6 @@
 package software.wings.infra;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.infra.InfraDefinitionTestConstants.RELEASE_NAME;
 
 import io.harness.category.element.UnitTests;
@@ -48,13 +48,14 @@ public class InfrastructureDefinitionTest {
   @Category(UnitTests.class)
   public void testGetInfraMapping() {
     InfrastructureMapping infrastructureMapping = infrastructureDefinition.getInfraMapping();
-    assertEquals(infrastructureMapping.getClass(), infrastructureDefinition.getInfrastructure().getMappingClass());
+    assertThat(infrastructureDefinition.getInfrastructure().getMappingClass())
+        .isEqualTo(infrastructureMapping.getClass());
 
     GcpKubernetesInfrastructureMapping infraMapping = (GcpKubernetesInfrastructureMapping) infrastructureMapping;
 
-    assertEquals(infraMapping.getReleaseName(), RELEASE_NAME);
-    assertEquals(infraMapping.getNamespace(), WingsTestConstants.NAMESPACE);
-    assertEquals(infraMapping.getComputeProviderSettingId(), WingsTestConstants.COMPUTE_PROVIDER_ID);
-    assertEquals(infraMapping.getClusterName(), WingsTestConstants.CLUSTER_NAME);
+    assertThat(RELEASE_NAME).isEqualTo(infraMapping.getReleaseName());
+    assertThat(WingsTestConstants.NAMESPACE).isEqualTo(infraMapping.getNamespace());
+    assertThat(WingsTestConstants.COMPUTE_PROVIDER_ID).isEqualTo(infraMapping.getComputeProviderSettingId());
+    assertThat(WingsTestConstants.CLUSTER_NAME).isEqualTo(infraMapping.getClusterName());
   }
 }

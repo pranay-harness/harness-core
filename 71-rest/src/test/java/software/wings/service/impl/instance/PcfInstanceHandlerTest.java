@@ -2,7 +2,6 @@ package software.wings.service.impl.instance;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anySet;
@@ -273,19 +272,19 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
         PCF_APP_GUID_2 + ":" + PCF_INSTANCE_INDEX_1, PCF_APP_GUID_2 + ":" + PCF_INSTANCE_INDEX_2));
 
     assertThat(expectedKeys.contains(capturedInstances.get(0).getPcfInstanceKey().getId())).isTrue();
-    assertEquals(InstanceType.PCF_INSTANCE, capturedInstances.get(0).getInstanceType());
-    assertEquals("1", capturedInstances.get(0).getLastArtifactBuildNum());
-    assertEquals("new", capturedInstances.get(0).getLastArtifactName());
+    assertThat(capturedInstances.get(0).getInstanceType()).isEqualTo(InstanceType.PCF_INSTANCE);
+    assertThat(capturedInstances.get(0).getLastArtifactBuildNum()).isEqualTo("1");
+    assertThat(capturedInstances.get(0).getLastArtifactName()).isEqualTo("new");
 
     assertThat(expectedKeys.contains(capturedInstances.get(1).getPcfInstanceKey().getId())).isTrue();
-    assertEquals(InstanceType.PCF_INSTANCE, capturedInstances.get(1).getInstanceType());
-    assertEquals("1", capturedInstances.get(1).getLastArtifactBuildNum());
-    assertEquals("new", capturedInstances.get(0).getLastArtifactName());
+    assertThat(capturedInstances.get(1).getInstanceType()).isEqualTo(InstanceType.PCF_INSTANCE);
+    assertThat(capturedInstances.get(1).getLastArtifactBuildNum()).isEqualTo("1");
+    assertThat(capturedInstances.get(0).getLastArtifactName()).isEqualTo("new");
 
     assertThat(expectedKeys.contains(capturedInstances.get(2).getPcfInstanceKey().getId())).isTrue();
-    assertEquals(InstanceType.PCF_INSTANCE, capturedInstances.get(2).getInstanceType());
-    assertEquals("1", capturedInstances.get(2).getLastArtifactBuildNum());
-    assertEquals("new", capturedInstances.get(0).getLastArtifactName());
+    assertThat(capturedInstances.get(2).getInstanceType()).isEqualTo(InstanceType.PCF_INSTANCE);
+    assertThat(capturedInstances.get(2).getLastArtifactBuildNum()).isEqualTo("1");
+    assertThat(capturedInstances.get(0).getLastArtifactName()).isEqualTo("new");
   }
 
   @Test
@@ -361,18 +360,18 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
         PCF_APP_GUID_2 + ":" + PCF_INSTANCE_INDEX_1, PCF_APP_GUID_2 + ":" + PCF_INSTANCE_INDEX_2));
 
     assertThat(expectedKeys.contains(capturedInstances.get(0).getPcfInstanceKey().getId())).isTrue();
-    assertEquals(InstanceType.PCF_INSTANCE, capturedInstances.get(0).getInstanceType());
-    assertEquals("1", capturedInstances.get(0).getLastArtifactBuildNum());
-    assertEquals("old", capturedInstances.get(0).getLastArtifactName());
+    assertThat(capturedInstances.get(0).getInstanceType()).isEqualTo(InstanceType.PCF_INSTANCE);
+    assertThat(capturedInstances.get(0).getLastArtifactBuildNum()).isEqualTo("1");
+    assertThat(capturedInstances.get(0).getLastArtifactName()).isEqualTo("old");
 
     assertThat(expectedKeys.contains(capturedInstances.get(1).getPcfInstanceKey().getId())).isTrue();
-    assertEquals(InstanceType.PCF_INSTANCE, capturedInstances.get(1).getInstanceType());
-    assertEquals("1", capturedInstances.get(1).getLastArtifactBuildNum());
-    assertEquals("old", capturedInstances.get(1).getLastArtifactName());
+    assertThat(capturedInstances.get(1).getInstanceType()).isEqualTo(InstanceType.PCF_INSTANCE);
+    assertThat(capturedInstances.get(1).getLastArtifactBuildNum()).isEqualTo("1");
+    assertThat(capturedInstances.get(1).getLastArtifactName()).isEqualTo("old");
 
     assertThat(expectedKeys.contains(capturedInstances.get(2).getPcfInstanceKey().getId())).isTrue();
-    assertEquals(InstanceType.PCF_INSTANCE, capturedInstances.get(2).getInstanceType());
-    assertEquals("1", capturedInstances.get(2).getLastArtifactBuildNum());
-    assertEquals("old", capturedInstances.get(2).getLastArtifactName());
+    assertThat(capturedInstances.get(2).getInstanceType()).isEqualTo(InstanceType.PCF_INSTANCE);
+    assertThat(capturedInstances.get(2).getLastArtifactBuildNum()).isEqualTo("1");
+    assertThat(capturedInstances.get(2).getLastArtifactName()).isEqualTo("old");
   }
 }

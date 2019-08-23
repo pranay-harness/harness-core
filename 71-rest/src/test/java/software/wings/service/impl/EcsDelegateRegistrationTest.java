@@ -155,7 +155,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
         .upsertDelegateOperation(any(Delegate.class), any(Delegate.class));
     delegate = delegateService.handleEcsDelegateRegistration(delegate);
     assertThat(delegate).isNotNull();
-    assertEquals("12345", delegate.getUuid());
+    assertThat(delegate.getUuid()).isEqualTo("12345");
 
     verify(delegateService, times(1)).handleECSRegistrationUsingID(any(Delegate.class));
     verify(delegateService, times(0)).handleECSRegistrationUsingSeqNumAndToken(any(Delegate.class));
@@ -179,7 +179,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
       delegateService.handleEcsDelegateRegistration(delegate);
       assertThat(false).isTrue();
     } catch (Exception e) {
-      assertEquals("Received invalid token from ECS delegate", e.getMessage());
+      assertThat(e.getMessage()).isEqualTo("Received invalid token from ECS delegate");
     }
 
     try {
@@ -188,7 +188,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
       delegateService.handleEcsDelegateRegistration(delegate);
       assertThat(false).isTrue();
     } catch (Exception e) {
-      assertEquals("Received invalid token from ECS delegate", e.getMessage());
+      assertThat(e.getMessage()).isEqualTo("Received invalid token from ECS delegate");
     }
   }
 
@@ -233,7 +233,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
 
     delegate = delegateService.handleEcsDelegateRegistration(delegate);
     assertThat(delegate).isNotNull();
-    assertEquals("12345", delegate.getUuid());
+    assertThat(delegate.getUuid()).isEqualTo("12345");
 
     verify(delegateService, times(1)).handleECSRegistrationUsingSeqNumAndToken(any(Delegate.class));
     verify(delegateService, times(0)).handleECSRegistrationUsingID(any(Delegate.class));
@@ -276,8 +276,8 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
 
     delegate = delegateService.handleEcsDelegateRegistration(delegate);
     assertThat(delegate).isNotNull();
-    assertEquals(null, delegate.getUuid());
-    assertEquals("hostName_1", delegate.getHostName());
+    assertThat(delegate.getUuid()).isEqualTo(null);
+    assertThat(delegate.getHostName()).isEqualTo("hostName_1");
 
     // existing delegate should be null for upsertDelegateOperation(null, newDelegate)
     ArgumentCaptor<Delegate> captor = ArgumentCaptor.forClass(Delegate.class);
@@ -348,18 +348,18 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
     DelegateSequenceConfig config =
         delegateService.getInactiveDelegateSequenceConfigToReplace(delegate, existingDelegateSequenceConfigs);
     assertThat(config).isNotNull();
-    assertEquals(1, config.getSequenceNum().intValue());
+    assertThat(config.getSequenceNum().intValue()).isEqualTo(1);
 
     assertThat(delegate.getTags()).isNotNull();
     assertThat(delegate.getTags()).hasSize(2);
     assertThat(delegate.getTags().contains("tag1")).isTrue();
     assertThat(delegate.getTags().contains("tag2")).isTrue();
-    assertEquals("hostname_1", delegate.getHostName());
+    assertThat(delegate.getHostName()).isEqualTo("hostname_1");
 
     // existing delegate assocaited to stale sequenceConfig is deleted
     ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
     verify(delegateService).delete(anyString(), captor.capture());
-    assertEquals("12345", captor.getValue());
+    assertThat(captor.getValue()).isEqualTo("12345");
   }
 
   /**
@@ -420,20 +420,20 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
     // existing sequenceConfigs are {.. seqNum = 0 / 1 / 2}, so 3 should picked as new
     DelegateSequenceConfig config = delegateService.addNewDelegateSequenceConfigRecord(delegate);
     assertThat(config).isNotNull();
-    assertEquals(3, config.getSequenceNum().intValue());
-    assertEquals("hostname", config.getHostName());
-    assertEquals(ACCOUNT_ID, config.getAccountId());
-    assertEquals("3", delegate.getSequenceNum());
+    assertThat(config.getSequenceNum().intValue()).isEqualTo(3);
+    assertThat(config.getHostName()).isEqualTo("hostname");
+    assertThat(config.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(delegate.getSequenceNum()).isEqualTo("3");
 
     // existing sequenceConfigs are {.. seqNum = 0 / 1 / 3}, so 2 should picked as new
     existingDelegateSequenceConfigs.get(2).setSequenceNum(Integer.valueOf(3));
     delegate.setSequenceNum(null);
     config = delegateService.addNewDelegateSequenceConfigRecord(delegate);
     assertThat(config).isNotNull();
-    assertEquals(2, config.getSequenceNum().intValue());
-    assertEquals("hostname", config.getHostName());
-    assertEquals(ACCOUNT_ID, config.getAccountId());
-    assertEquals("2", delegate.getSequenceNum());
+    assertThat(config.getSequenceNum().intValue()).isEqualTo(2);
+    assertThat(config.getHostName()).isEqualTo("hostname");
+    assertThat(config.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(delegate.getSequenceNum()).isEqualTo("2");
   }
 
   /**
@@ -482,7 +482,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
         .when(delegateService)
         .upsertDelegateOperation(any(Delegate.class), any(Delegate.class));
     delegate = delegateService.registerDelegateWithNewSequenceGeneration(delegate);
-    assertEquals("hostname_5", delegate.getHostName());
+    assertThat(delegate.getHostName()).isEqualTo("hostname_5");
   }
 
   private void mockWingsPersistanceForUpdateCall() {
@@ -557,13 +557,13 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
 
     Delegate delegate = Delegate.builder().hostName("hostname_harness__delegate_1").build();
     delegateService.updateExistingDelegateWithSequenceConfigData(delegate);
-    assertEquals("1", delegate.getSequenceNum());
-    assertEquals("token", delegate.getDelegateRandomToken());
+    assertThat(delegate.getSequenceNum()).isEqualTo("1");
+    assertThat(delegate.getDelegateRandomToken()).isEqualTo("token");
 
     ArgumentCaptor<Integer> captorSeqNum = ArgumentCaptor.forClass(Integer.class);
     ArgumentCaptor<String> captorHostName = ArgumentCaptor.forClass(String.class);
     verify(delegateService).getDelegateSequenceConfig(anyString(), captorHostName.capture(), captorSeqNum.capture());
-    assertEquals("hostname_harness__delegate", captorHostName.getValue());
-    assertEquals(1, captorSeqNum.getValue().intValue());
+    assertThat(captorHostName.getValue()).isEqualTo("hostname_harness__delegate");
+    assertThat(captorSeqNum.getValue().intValue()).isEqualTo(1);
   }
 }

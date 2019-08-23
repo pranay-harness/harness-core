@@ -1,6 +1,6 @@
 package io.harness.k8s.kubectl;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -14,6 +14,6 @@ public class DescribeCommandTest extends CategoryTest {
     Kubectl client = Kubectl.client(null, null);
     DescribeCommand describeCommand = client.describe().filename("manifests.yaml");
 
-    assertEquals("kubectl describe --filename=manifests.yaml", describeCommand.command());
+    assertThat(describeCommand.command()).isEqualTo("kubectl describe --filename=manifests.yaml");
   }
 }

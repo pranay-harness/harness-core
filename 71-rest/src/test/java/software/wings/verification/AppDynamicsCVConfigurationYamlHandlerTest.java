@@ -2,7 +2,6 @@ package software.wings.verification;
 
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -142,12 +141,12 @@ public class AppDynamicsCVConfigurationYamlHandlerTest extends WingsBaseTest {
 
     AppDynamicsCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
 
-    assertEquals("Name should be same", cvServiceConfiguration.getName(), yaml.getName());
-    assertEquals("AccountId should be same", cvServiceConfiguration.getAccountId(), yaml.getAccountId());
-    assertEquals("serviceId should be same", serviceName, yaml.getServiceName());
-    assertEquals("envId should be same", envName, yaml.getEnvName());
-    assertEquals("TierId should be same", tierName, yaml.getTierName());
-    assertEquals("AppD applicationID should be same", appName, yaml.getAppDynamicsApplicationName());
+    assertThat(yaml.getName()).isEqualTo(cvServiceConfiguration.getName());
+    assertThat(yaml.getAccountId()).isEqualTo(cvServiceConfiguration.getAccountId());
+    assertThat(yaml.getServiceName()).isEqualTo(serviceName);
+    assertThat(yaml.getEnvName()).isEqualTo(envName);
+    assertThat(yaml.getTierName()).isEqualTo(tierName);
+    assertThat(yaml.getAppDynamicsApplicationName()).isEqualTo(appName);
   }
 
   @Test
@@ -163,10 +162,10 @@ public class AppDynamicsCVConfigurationYamlHandlerTest extends WingsBaseTest {
     changeContext.setYaml(buildYaml());
     AppDynamicsCVServiceConfiguration bean = yamlHandler.upsertFromYaml(changeContext, null);
 
-    assertEquals("name should match", "TestAppDConfig", bean.getName());
-    assertEquals("appId should match", appId, bean.getAppId());
-    assertEquals("envId should match", envId, bean.getEnvId());
-    assertEquals("serviceId should match", serviceId, bean.getServiceId());
+    assertThat(bean.getName()).isEqualTo("TestAppDConfig");
+    assertThat(bean.getAppId()).isEqualTo(appId);
+    assertThat(bean.getEnvId()).isEqualTo(envId);
+    assertThat(bean.getServiceId()).isEqualTo(serviceId);
     assertThat(bean.getUuid()).isNotNull();
   }
 
@@ -218,7 +217,7 @@ public class AppDynamicsCVConfigurationYamlHandlerTest extends WingsBaseTest {
     changeContext.setYaml(buildYaml());
     AppDynamicsCVServiceConfiguration bean = yamlHandler.upsertFromYaml(changeContext, null);
 
-    assertEquals("name should match", "TestAppDConfig", bean.getName());
-    assertEquals("UUID should match", cvConfig.getUuid(), bean.getUuid());
+    assertThat(bean.getName()).isEqualTo("TestAppDConfig");
+    assertThat(bean.getUuid()).isEqualTo(cvConfig.getUuid());
   }
 }

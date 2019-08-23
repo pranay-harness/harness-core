@@ -36,11 +36,12 @@ public class DatadogStateTest extends WingsBaseTest {
         DatadogState.metrics(Optional.of(Lists.newArrayList("trace.servlet.request.duration")), Optional.empty(),
             Optional.empty(), Optional.empty(), Optional.empty());
     assertThat(metrics.containsKey("trace.servlet.request.duration")).isTrue();
-    assertEquals("Servlet", metrics.get("trace.servlet.request.duration").getDatadogMetricType());
-    assertEquals(Sets.newHashSet("Servlet"), metrics.get("trace.servlet.request.duration").getTags());
-    assertEquals("trace.servlet.request.duration", metrics.get("trace.servlet.request.duration").getMetricName());
-    assertEquals("Request Duration", metrics.get("trace.servlet.request.duration").getDisplayName());
-    assertEquals(MetricType.RESP_TIME.name(), metrics.get("trace.servlet.request.duration").getMlMetricType());
+    assertThat(metrics.get("trace.servlet.request.duration").getDatadogMetricType()).isEqualTo("Servlet");
+    assertThat(metrics.get("trace.servlet.request.duration").getTags()).isEqualTo(Sets.newHashSet("Servlet"));
+    assertThat(metrics.get("trace.servlet.request.duration").getMetricName())
+        .isEqualTo("trace.servlet.request.duration");
+    assertThat(metrics.get("trace.servlet.request.duration").getDisplayName()).isEqualTo("Request Duration");
+    assertThat(metrics.get("trace.servlet.request.duration").getMlMetricType()).isEqualTo(MetricType.RESP_TIME.name());
   }
 
   @Test
@@ -87,7 +88,7 @@ public class DatadogStateTest extends WingsBaseTest {
     List<APMMetricInfo> apmMetricInfos = metricEndpointsInfo.values().iterator().next();
     String query =
         "query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=kubernetes.cpu.usage.total{pod_name:${host}}by{pod_name}.rollup(avg,60)/1000000000/kubernetes.cpu.capacity{*}.rollup(avg,60)*100";
-    assertEquals("Transformed query must be same", query, metricEndpointsInfo.keySet().iterator().next());
+    assertThat(metricEndpointsInfo.keySet().iterator().next()).isEqualTo(query);
     assertEquals(
         "[{\"metricName\":\"K8 CPU Usage\",\"responseMappers\":{\"host\":{\"fieldName\":\"host\",\"jsonPath\":\"series[*].scope\",\"regexs\":[\"((?<=pod_name:)([^,]*))\"]},\"value\":{\"fieldName\":\"value\",\"jsonPath\":\"series[*].pointlist[*].[1]\"},\"txnName\":{\"fieldName\":\"txnName\",\"jsonPath\":\"series[*].metric\",\"regexs\":[\"((?<=[(]|^)[^(]([^ /|+|-|*]*))\"]},\"timestamp\":{\"fieldName\":\"timestamp\",\"jsonPath\":\"series[*].pointlist[*].[0]\"}},\"metricType\":{},\"tag\":\"Kubernetes\"}]",
         JsonUtils.asJson(apmMetricInfos));
@@ -103,7 +104,7 @@ public class DatadogStateTest extends WingsBaseTest {
     List<APMMetricInfo> apmMetricInfos = metricEndpointsInfo.values().iterator().next();
     String query =
         "query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=docker.cpu.usage{pod_name:${host}}by{pod_name}.rollup(avg,60)";
-    assertEquals("Transformed query must be same", query, metricEndpointsInfo.keySet().iterator().next());
+    assertThat(metricEndpointsInfo.keySet().iterator().next()).isEqualTo(query);
     assertEquals(
         "[{\"metricName\":\"Docker CPU Usage\",\"responseMappers\":{\"host\":{\"fieldName\":\"host\",\"jsonPath\":\"series[*].scope\",\"regexs\":[\"((?<=pod_name:)([^,]*))\"]},\"value\":{\"fieldName\":\"value\",\"jsonPath\":\"series[*].pointlist[*].[1]\"},\"txnName\":{\"fieldName\":\"txnName\",\"jsonPath\":\"series[*].metric\",\"regexs\":[\"((?<=[(]|^)[^(]([^ /|+|-|*]*))\"]},\"timestamp\":{\"fieldName\":\"timestamp\",\"jsonPath\":\"series[*].pointlist[*].[0]\"}},\"metricType\":{},\"tag\":\"Docker\"}]",
         JsonUtils.asJson(apmMetricInfos));
@@ -119,7 +120,7 @@ public class DatadogStateTest extends WingsBaseTest {
     List<APMMetricInfo> apmMetricInfos = metricEndpointsInfo.values().iterator().next();
     String query =
         "query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=docker.cpu.usage{cluster:harness-test}.rollup(avg,60)";
-    assertEquals("Transformed query must be same", query, metricEndpointsInfo.keySet().iterator().next());
+    assertThat(metricEndpointsInfo.keySet().iterator().next()).isEqualTo(query);
     assertEquals(
         "[{\"metricName\":\"Docker CPU Usage\",\"responseMappers\":{\"host\":{\"fieldName\":\"host\",\"jsonPath\":\"series[*].scope\",\"regexs\":[\"((?<=pod_name:)([^,]*))\"]},\"value\":{\"fieldName\":\"value\",\"jsonPath\":\"series[*].pointlist[*].[1]\"},\"txnName\":{\"fieldName\":\"txnName\",\"jsonPath\":\"series[*].metric\",\"regexs\":[\"((?<=[(]|^)[^(]([^ /|+|-|*]*))\"]},\"timestamp\":{\"fieldName\":\"timestamp\",\"jsonPath\":\"series[*].pointlist[*].[0]\"}},\"metricType\":{},\"tag\":\"Docker\"}]",
         JsonUtils.asJson(apmMetricInfos));

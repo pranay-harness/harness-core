@@ -1,6 +1,6 @@
 package software.wings.scheduler.persistence;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
@@ -58,8 +58,8 @@ public class PersistentLockCleanupTest extends WingsBaseTest {
         }
       }
 
-      assertEquals(i != 0, fooBar1);
-      assertEquals(i != 0, fooBar2);
+      assertThat(fooBar1).isEqualTo(i != 0);
+      assertThat(fooBar2).isEqualTo(i != 0);
 
       // Query with after date - we should have the locks in the result
       dbObjects = job.queryOldLocks(after);

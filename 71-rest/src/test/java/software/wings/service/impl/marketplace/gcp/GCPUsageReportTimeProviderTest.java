@@ -1,7 +1,6 @@
 package software.wings.service.impl.marketplace.gcp;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -26,12 +25,12 @@ public class GCPUsageReportTimeProviderTest extends CategoryTest {
     Instant currentDayEndTime = startTime.plus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
 
     assertThat(gcpUsageReportTimeProvider.hasNext()).isTrue();
-    assertEquals(gcpUsageReportTimeProvider.next(), currentDayEndTime);
+    assertThat(currentDayEndTime).isEqualTo(gcpUsageReportTimeProvider.next());
 
     Instant nextDayEndTime = startTime.plus(2, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
 
     assertThat(gcpUsageReportTimeProvider.hasNext()).isTrue();
-    assertEquals(gcpUsageReportTimeProvider.next(), nextDayEndTime);
+    assertThat(nextDayEndTime).isEqualTo(gcpUsageReportTimeProvider.next());
 
     assertThat(gcpUsageReportTimeProvider.hasNext()).isFalse();
     assertThat(gcpUsageReportTimeProvider.next()).isNull();

@@ -2,7 +2,6 @@ package software.wings.delegatetasks.pcf.pcftaskhandler;
 
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -182,10 +181,10 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     PcfSetupCommandResponse pcfSetupCommandResponse =
         (PcfSetupCommandResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
 
-    assertEquals(pcfCommandExecutionResponse.getCommandExecutionStatus(), CommandExecutionStatus.SUCCESS);
+    assertThat(CommandExecutionStatus.SUCCESS).isEqualTo(pcfCommandExecutionResponse.getCommandExecutionStatus());
     assertThat(pcfSetupCommandResponse.getNewApplicationDetails()).isNotNull();
-    assertEquals(pcfSetupCommandResponse.getNewApplicationDetails().getApplicationName(), "a_s_e__6");
-    assertEquals(pcfSetupCommandResponse.getNewApplicationDetails().getApplicationGuid(), "10");
+    assertThat("a_s_e__6").isEqualTo(pcfSetupCommandResponse.getNewApplicationDetails().getApplicationName());
+    assertThat("10").isEqualTo(pcfSetupCommandResponse.getNewApplicationDetails().getApplicationGuid());
 
     assertThat(pcfSetupCommandResponse.getDownsizeDetails()).isNotNull();
     assertThat(pcfSetupCommandResponse.getDownsizeDetails()).hasSize(2);
@@ -301,23 +300,23 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     PcfCommandExecutionResponse pcfCommandExecutionResponse =
         pcfDeployCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
 
-    assertEquals(CommandExecutionStatus.SUCCESS, pcfCommandExecutionResponse.getCommandExecutionStatus());
+    assertThat(pcfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     PcfDeployCommandResponse pcfDeployCommandResponse =
         (PcfDeployCommandResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
 
-    assertEquals(CommandExecutionStatus.SUCCESS, pcfDeployCommandResponse.getCommandExecutionStatus());
+    assertThat(pcfDeployCommandResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     List<PcfServiceData> pcfServiceDatas = pcfDeployCommandResponse.getInstanceDataUpdated();
     assertThat(pcfServiceDatas).hasSize(3);
     for (PcfServiceData data : pcfServiceDatas) {
       if (data.getName().equals("a_s_e__4")) {
-        assertEquals(1, data.getPreviousCount());
-        assertEquals(0, data.getDesiredCount());
+        assertThat(data.getPreviousCount()).isEqualTo(1);
+        assertThat(data.getDesiredCount()).isEqualTo(0);
       } else if (data.getName().equals("a_s_e__3")) {
-        assertEquals(1, data.getPreviousCount());
-        assertEquals(0, data.getDesiredCount());
+        assertThat(data.getPreviousCount()).isEqualTo(1);
+        assertThat(data.getDesiredCount()).isEqualTo(0);
       } else if (data.getName().equals("a_s_e__6")) {
-        assertEquals(0, data.getPreviousCount());
-        assertEquals(2, data.getDesiredCount());
+        assertThat(data.getPreviousCount()).isEqualTo(0);
+        assertThat(data.getDesiredCount()).isEqualTo(2);
       }
     }
   }
@@ -430,11 +429,11 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     PcfCommandExecutionResponse pcfCommandExecutionResponse =
         pcfRollbackCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
 
-    assertEquals(CommandExecutionStatus.SUCCESS, pcfCommandExecutionResponse.getCommandExecutionStatus());
+    assertThat(pcfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     PcfDeployCommandResponse pcfDeployCommandResponse =
         (PcfDeployCommandResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
 
-    assertEquals(CommandExecutionStatus.SUCCESS, pcfDeployCommandResponse.getCommandExecutionStatus());
+    assertThat(pcfDeployCommandResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     assertThat(pcfDeployCommandResponse.getPcfInstanceElements()).isNotNull();
     assertThat(pcfDeployCommandResponse.getPcfInstanceElements()).hasSize(2);
 
@@ -467,14 +466,14 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     PcfCommandExecutionResponse pcfCommandExecutionResponse =
         pcfDataFetchCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
 
-    assertEquals(CommandExecutionStatus.SUCCESS, pcfCommandExecutionResponse.getCommandExecutionStatus());
+    assertThat(pcfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     PcfInfraMappingDataResponse pcfInfraMappingDataResponse =
         (PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
 
-    assertEquals(CommandExecutionStatus.SUCCESS, pcfInfraMappingDataResponse.getCommandExecutionStatus());
+    assertThat(pcfInfraMappingDataResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     assertThat(pcfInfraMappingDataResponse.getOrganizations()).isNotNull();
     assertThat(pcfInfraMappingDataResponse.getOrganizations()).hasSize(1);
-    assertEquals(ORG, pcfInfraMappingDataResponse.getOrganizations().get(0));
+    assertThat(pcfInfraMappingDataResponse.getOrganizations().get(0)).isEqualTo(ORG);
 
     // Fetch Spaces for org
     pcfCommandRequest.setActionType(ActionType.FETCH_SPACE);
@@ -482,12 +481,12 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     pcfCommandExecutionResponse =
         pcfDataFetchCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
 
-    assertEquals(CommandExecutionStatus.SUCCESS, pcfCommandExecutionResponse.getCommandExecutionStatus());
+    assertThat(pcfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     pcfInfraMappingDataResponse = (PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
 
     assertThat(pcfInfraMappingDataResponse.getSpaces()).isNotNull();
     assertThat(pcfInfraMappingDataResponse.getSpaces()).hasSize(1);
-    assertEquals(SPACE, pcfInfraMappingDataResponse.getSpaces().get(0));
+    assertThat(pcfInfraMappingDataResponse.getSpaces().get(0)).isEqualTo(SPACE);
 
     // Fetch Routes
     pcfCommandRequest.setActionType(ActionType.FETCH_ROUTE);
@@ -545,13 +544,13 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     PcfCommandExecutionResponse pcfCommandExecutionResponse =
         pcfApplicationDetailsCommandTaskHandler.executeTaskInternal(pcfInstanceSyncRequest, null, executionLogCallback);
 
-    assertEquals(CommandExecutionStatus.SUCCESS, pcfCommandExecutionResponse.getCommandExecutionStatus());
+    assertThat(pcfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     PcfInstanceSyncResponse pcfInstanceSyncResponse =
         (PcfInstanceSyncResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
 
-    assertEquals(CommandExecutionStatus.SUCCESS, pcfInstanceSyncResponse.getCommandExecutionStatus());
+    assertThat(pcfInstanceSyncResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     assertThat(pcfInstanceSyncResponse.getInstanceIndices()).isNotNull();
     assertThat(pcfInstanceSyncResponse.getInstanceIndices()).hasSize(1);
-    assertEquals("2", pcfInstanceSyncResponse.getInstanceIndices().get(0));
+    assertThat(pcfInstanceSyncResponse.getInstanceIndices().get(0)).isEqualTo("2");
   }
 }

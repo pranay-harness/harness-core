@@ -339,7 +339,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
 
   private void verifyCreateStackRequest() {
     ExecutionResponse executionResponse = cloudFormationCreateStackState.execute(context);
-    assertEquals(ExecutionStatus.SUCCESS, executionResponse.getExecutionStatus());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
 
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());
@@ -348,15 +348,15 @@ public class CloudFormationStateTest extends WingsBaseTest {
     CloudFormationCreateStackRequest cloudFormationCreateStackRequest =
         (CloudFormationCreateStackRequest) delegateTask.getData().getParameters()[0];
     assertThat(cloudFormationCreateStackRequest).isNotNull();
-    assertEquals(Regions.US_EAST_1.name(), cloudFormationCreateStackRequest.getRegion());
-    assertEquals(CloudFormationCommandType.CREATE_STACK, cloudFormationCreateStackRequest.getCommandType());
-    assertEquals(APP_ID, cloudFormationCreateStackRequest.getAppId());
-    assertEquals(ACCOUNT_ID, cloudFormationCreateStackRequest.getAccountId());
-    assertEquals("Create Stack", cloudFormationCreateStackRequest.getCommandName());
+    assertThat(cloudFormationCreateStackRequest.getRegion()).isEqualTo(Regions.US_EAST_1.name());
+    assertThat(cloudFormationCreateStackRequest.getCommandType()).isEqualTo(CloudFormationCommandType.CREATE_STACK);
+    assertThat(cloudFormationCreateStackRequest.getAppId()).isEqualTo(APP_ID);
+    assertThat(cloudFormationCreateStackRequest.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(cloudFormationCreateStackRequest.getCommandName()).isEqualTo("Create Stack");
     assertEquals(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY,
         cloudFormationCreateStackRequest.getCreateType());
-    assertEquals("Template Body", cloudFormationCreateStackRequest.getData());
-    assertEquals(1000, cloudFormationCreateStackRequest.getTimeoutInMs());
+    assertThat(cloudFormationCreateStackRequest.getData()).isEqualTo("Template Body");
+    assertThat(cloudFormationCreateStackRequest.getTimeoutInMs()).isEqualTo(1000);
   }
 
   @Test
@@ -392,7 +392,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
 
   private void verifyDeleteStackRequest() {
     ExecutionResponse executionResponse = cloudFormationDeleteStackState.execute(context);
-    assertEquals(ExecutionStatus.SUCCESS, executionResponse.getExecutionStatus());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
 
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());
@@ -401,12 +401,12 @@ public class CloudFormationStateTest extends WingsBaseTest {
     CloudFormationDeleteStackRequest cloudFormationDeleteStackRequest =
         (CloudFormationDeleteStackRequest) delegateTask.getData().getParameters()[0];
     assertThat(cloudFormationDeleteStackRequest).isNotNull();
-    assertEquals(Regions.US_EAST_1.name(), cloudFormationDeleteStackRequest.getRegion());
-    assertEquals(CloudFormationCommandType.DELETE_STACK, cloudFormationDeleteStackRequest.getCommandType());
-    assertEquals(APP_ID, cloudFormationDeleteStackRequest.getAppId());
-    assertEquals(ACCOUNT_ID, cloudFormationDeleteStackRequest.getAccountId());
-    assertEquals("Delete Stack", cloudFormationDeleteStackRequest.getCommandName());
-    assertEquals(EXPECTED_SUFFIX, cloudFormationDeleteStackRequest.getStackNameSuffix());
-    assertEquals(1000, cloudFormationDeleteStackRequest.getTimeoutInMs());
+    assertThat(cloudFormationDeleteStackRequest.getRegion()).isEqualTo(Regions.US_EAST_1.name());
+    assertThat(cloudFormationDeleteStackRequest.getCommandType()).isEqualTo(CloudFormationCommandType.DELETE_STACK);
+    assertThat(cloudFormationDeleteStackRequest.getAppId()).isEqualTo(APP_ID);
+    assertThat(cloudFormationDeleteStackRequest.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(cloudFormationDeleteStackRequest.getCommandName()).isEqualTo("Delete Stack");
+    assertThat(cloudFormationDeleteStackRequest.getStackNameSuffix()).isEqualTo(EXPECTED_SUFFIX);
+    assertThat(cloudFormationDeleteStackRequest.getTimeoutInMs()).isEqualTo(1000);
   }
 }

@@ -1,7 +1,6 @@
 package software.wings.metrics;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static software.wings.common.VerificationConstants.HEARTBEAT_METRIC_NAME;
 
 import com.google.common.collect.TreeBasedTable;
@@ -109,7 +108,7 @@ public class TimeSeriesDataRecordTest {
     dataRecords.sort(
         Comparator.comparing(TimeSeriesDataRecord::getDataCollectionMinute)
             .thenComparing(TimeSeriesDataRecord::getHost, Comparator.nullsFirst(Comparator.naturalOrder())));
-    assertEquals(expectedOutput, dataRecords);
+    assertThat(dataRecords).isEqualTo(expectedOutput);
   }
 
   @Test
@@ -161,6 +160,6 @@ public class TimeSeriesDataRecordTest {
         Comparator.comparing(NewRelicMetricDataRecord::getDataCollectionMinute)
             .thenComparing(NewRelicMetricDataRecord::getName)
             .thenComparing(NewRelicMetricDataRecord::getHost, Comparator.nullsFirst(Comparator.naturalOrder())));
-    assertEquals(expectedOutput, dataRecords);
+    assertThat(dataRecords).isEqualTo(expectedOutput);
   }
 }

@@ -2,7 +2,6 @@ package software.wings.service.impl.yaml.handler.infraprovisioner;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -93,10 +92,10 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
     verify(mockInfrastructureProvisionerService).save(captor.capture());
     TerraformInfrastructureProvisioner provisionerSaved = captor.getValue();
     assertThat(provisionerSaved).isNotNull();
-    assertEquals(provisionerSaved.getInfrastructureProvisionerType(), "TERRAFORM");
-    assertEquals(provisionerSaved.getAppId(), APP_ID);
-    assertEquals(provisionerSaved.getSourceRepoSettingId(), SETTING_ID);
-    assertEquals(provisionerSaved.getMappingBlueprints().size(), 1);
+    assertThat("TERRAFORM").isEqualTo(provisionerSaved.getInfrastructureProvisionerType());
+    assertThat(APP_ID).isEqualTo(provisionerSaved.getAppId());
+    assertThat(SETTING_ID).isEqualTo(provisionerSaved.getSourceRepoSettingId());
+    assertThat(1).isEqualTo(provisionerSaved.getMappingBlueprints().size());
 
     TerraformInfrastructureProvisioner provisioner =
         TerraformInfrastructureProvisioner.builder()
@@ -116,18 +115,18 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
             .build();
     TerraformInfrastructureProvisioner.Yaml yaml1 = handler.toYaml(provisioner, APP_ID);
     assertThat(yaml1).isNotNull();
-    assertEquals(yaml1.getType(), "TERRAFORM");
-    assertEquals(yaml1.getHarnessApiVersion(), "1.0");
-    assertEquals(yaml1.getName(), "Name1");
-    assertEquals(yaml1.getDescription(), "Desc1");
-    assertEquals(yaml1.getSourceRepoBranch(), "master");
-    assertEquals(yaml1.getMappingBlueprints().size(), 1);
-    assertEquals(yaml1.getMappingBlueprints().get(0).getServiceName(), "ServiceName");
-    assertEquals(yaml1.getMappingBlueprints().get(0).getDeploymentType(), SSH);
-    assertEquals(yaml1.getMappingBlueprints().get(0).getCloudProviderType(), CloudProviderType.AWS);
-    assertEquals(yaml1.getMappingBlueprints().get(0).getProperties().size(), 1);
-    assertEquals(yaml1.getMappingBlueprints().get(0).getProperties().get(0).getName(), "k2");
-    assertEquals(yaml1.getMappingBlueprints().get(0).getProperties().get(0).getValue(), "v2");
+    assertThat("TERRAFORM").isEqualTo(yaml1.getType());
+    assertThat("1.0").isEqualTo(yaml1.getHarnessApiVersion());
+    assertThat("Name1").isEqualTo(yaml1.getName());
+    assertThat("Desc1").isEqualTo(yaml1.getDescription());
+    assertThat("master").isEqualTo(yaml1.getSourceRepoBranch());
+    assertThat(1).isEqualTo(yaml1.getMappingBlueprints().size());
+    assertThat("ServiceName").isEqualTo(yaml1.getMappingBlueprints().get(0).getServiceName());
+    assertThat(SSH).isEqualTo(yaml1.getMappingBlueprints().get(0).getDeploymentType());
+    assertThat(CloudProviderType.AWS).isEqualTo(yaml1.getMappingBlueprints().get(0).getCloudProviderType());
+    assertThat(1).isEqualTo(yaml1.getMappingBlueprints().get(0).getProperties().size());
+    assertThat("k2").isEqualTo(yaml1.getMappingBlueprints().get(0).getProperties().get(0).getName());
+    assertThat("v2").isEqualTo(yaml1.getMappingBlueprints().get(0).getProperties().get(0).getValue());
   }
 
   private ChangeContext<Yaml> getChangeContext() {

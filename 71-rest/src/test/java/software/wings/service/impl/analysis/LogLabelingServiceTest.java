@@ -2,7 +2,6 @@ package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
@@ -63,7 +62,7 @@ public class LogLabelingServiceTest extends WingsBaseTest {
 
     // verify
     assertThat(labelRecord).isNotNull();
-    assertEquals(record.getLogMessage(), labelRecord.get(0).getLogMessage());
+    assertThat(labelRecord.get(0).getLogMessage()).isEqualTo(record.getLogMessage());
   }
 
   @Test
@@ -83,7 +82,7 @@ public class LogLabelingServiceTest extends WingsBaseTest {
 
     // verify
     assertThat(labelRecord).isNotNull();
-    assertEquals(record2.getLogMessage(), labelRecord.get(0).getLogMessage());
+    assertThat(labelRecord.get(0).getLogMessage()).isEqualTo(record2.getLogMessage());
   }
 
   @Test
@@ -124,9 +123,9 @@ public class LogLabelingServiceTest extends WingsBaseTest {
     assertThat(labelRecordSamples.containsKey("labelA")).isTrue();
     assertThat(labelRecordSamples.containsKey("labelB")).isTrue();
     assertThat(labelRecordSamples.containsKey("labelC")).isTrue();
-    assertEquals(record1.getLogMessage(), labelRecordSamples.get("labelA").get(0).getLogMessage());
-    assertEquals(record2.getLogMessage(), labelRecordSamples.get("labelB").get(0).getLogMessage());
-    assertEquals(record3.getLogMessage(), labelRecordSamples.get("labelC").get(0).getLogMessage());
+    assertThat(labelRecordSamples.get("labelA").get(0).getLogMessage()).isEqualTo(record1.getLogMessage());
+    assertThat(labelRecordSamples.get("labelB").get(0).getLogMessage()).isEqualTo(record2.getLogMessage());
+    assertThat(labelRecordSamples.get("labelC").get(0).getLogMessage()).isEqualTo(record3.getLogMessage());
   }
 
   @Test
@@ -142,6 +141,6 @@ public class LogLabelingServiceTest extends WingsBaseTest {
     // verify
     CVFeedbackRecord recordFromDB =
         wingsPersistence.createQuery(CVFeedbackRecord.class).filter(CVFeedbackRecordKeys.uuid, "cvuuid").get();
-    assertEquals("labelA", recordFromDB.getSupervisedLabel());
+    assertThat(recordFromDB.getSupervisedLabel()).isEqualTo("labelA");
   }
 }

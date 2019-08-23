@@ -8,7 +8,6 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
-import static net.sf.ezmorph.test.ArrayAssertions.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
@@ -2829,15 +2828,16 @@ public class WorkflowServiceTest extends WingsBaseTest {
         minAutoscaleInstances, maxAutoscaleInstances, targetCpuUtilizationPercentage);
 
     HorizontalPodAutoscaler horizontalPodAutoscaler = KubernetesHelper.loadYaml(yamlHPA);
-    assertEquals("autoscaling/v2beta1", horizontalPodAutoscaler.getApiVersion());
-    assertEquals("HorizontalPodAutoscaler", horizontalPodAutoscaler.getKind());
+    assertThat(horizontalPodAutoscaler.getApiVersion()).isEqualTo("autoscaling/v2beta1");
+    assertThat(horizontalPodAutoscaler.getKind()).isEqualTo("HorizontalPodAutoscaler");
     assertThat(horizontalPodAutoscaler.getSpec()).isNotNull();
     assertThat(horizontalPodAutoscaler.getMetadata()).isNotNull();
-    assertEquals(Integer.valueOf(2), horizontalPodAutoscaler.getSpec().getMinReplicas());
-    assertEquals(Integer.valueOf(10), horizontalPodAutoscaler.getSpec().getMaxReplicas());
+    assertThat(horizontalPodAutoscaler.getSpec().getMinReplicas()).isEqualTo(Integer.valueOf(2));
+    assertThat(horizontalPodAutoscaler.getSpec().getMaxReplicas()).isEqualTo(Integer.valueOf(10));
     assertThat(horizontalPodAutoscaler.getSpec().getAdditionalProperties()).isNotNull();
     assertThat(horizontalPodAutoscaler.getSpec().getAdditionalProperties()).hasSize(1);
-    assertEquals("metrics", horizontalPodAutoscaler.getSpec().getAdditionalProperties().keySet().iterator().next());
+    assertThat(horizontalPodAutoscaler.getSpec().getAdditionalProperties().keySet().iterator().next())
+        .isEqualTo("metrics");
   }
 
   @Test

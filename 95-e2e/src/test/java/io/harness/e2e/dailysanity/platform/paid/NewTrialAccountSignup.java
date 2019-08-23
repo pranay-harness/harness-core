@@ -2,7 +2,6 @@ package io.harness.e2e.dailysanity.platform.paid;
 
 import static io.harness.rule.OwnerRule.NATARAJA;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import io.harness.category.element.E2ETests;
 import io.harness.e2e.AbstractE2ETest;
@@ -64,11 +63,12 @@ public class NewTrialAccountSignup extends AbstractE2ETest {
     String inviteIdFromUrl = TestUtils.validateAndGetTrialUserInviteFromUrl(inviteUrl);
     User user = UserRestUtils.completeNewTrialUserSignup(bearerToken, inviteIdFromUrl);
     assertThat(user).isNotNull();
-    assertEquals("User login should be successfull after SignUp", user.getEmail(), userInvite.getEmail());
+    assertThat(userInvite.getEmail()).isEqualTo("User login should be successfull after SignUp", user.getEmail());
     Setup.signOut(user.getUuid(), user.getToken());
     User newLogedUser = Setup.loginUser(fullEmailId, testPassword);
     assertThat(newLogedUser).isNotNull();
     assertThat(user.getToken()).isNotNull();
-    assertEquals("Login should work as expected after new account signup", newLogedUser.getEmail(), fullEmailId);
+    assertThat(fullEmailId)
+        .isEqualTo("Login should work as expected after new account signup", newLogedUser.getEmail());
   }
 }

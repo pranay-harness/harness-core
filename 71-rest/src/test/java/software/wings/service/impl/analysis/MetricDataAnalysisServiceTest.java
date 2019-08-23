@@ -3,7 +3,6 @@ package software.wings.service.impl.analysis;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import com.google.inject.Inject;
 
@@ -68,7 +67,7 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
         StateType.NEW_RELIC, appId, workflowId, serviceId, infraMappingId, envId);
 
     assertThat(lastId).isNotNull();
-    assertEquals(execId, lastId);
+    assertThat(lastId).isEqualTo(execId);
   }
 
   @Test

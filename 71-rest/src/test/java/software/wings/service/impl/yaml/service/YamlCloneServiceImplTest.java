@@ -1,7 +1,6 @@
 package software.wings.service.impl.yaml.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -138,8 +137,8 @@ public class YamlCloneServiceImplTest extends WingsBaseTest {
     yamlCloneServiceImpl.traverseDirectory(gitFileChangeList, ACCOUNT_ID, workflowsFolder,
         workflowsFolder.getDirectoryPath().getPath(), false, errorMessages);
     assertThat(gitFileChangeList).hasSize(1);
-    assertEquals(ACCOUNT_ID, gitFileChangeList.get(0).getAccountId());
-    assertEquals(NEW_PATH_FOR_WORKFLOW, gitFileChangeList.get(0).getFilePath());
+    assertThat(gitFileChangeList.get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(gitFileChangeList.get(0).getFilePath()).isEqualTo(NEW_PATH_FOR_WORKFLOW);
 
     verify(yamlDirectoryService, times(1))
         .getGitFileChange(any(), anyString(), anyString(), anyBoolean(), any(), anyBoolean(), any(), anyBoolean());
@@ -206,9 +205,9 @@ public class YamlCloneServiceImplTest extends WingsBaseTest {
     assertThat(changes).hasSize(1);
     assertThat(changes.get(0) instanceof Change).isTrue();
     Change change = (Change) changes.get(0);
-    assertEquals(ChangeType.ADD, change.getChangeType());
-    assertEquals(ACCOUNT_ID, change.getAccountId());
-    assertEquals(newPathForEntity, change.getFilePath());
+    assertThat(change.getChangeType()).isEqualTo(ChangeType.ADD);
+    assertThat(change.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(change.getFilePath()).isEqualTo(newPathForEntity);
 
     verify(yamlDirectoryService, times(1))
         .getGitFileChange(any(), anyString(), anyString(), anyBoolean(), any(), anyBoolean(), any(), anyBoolean());

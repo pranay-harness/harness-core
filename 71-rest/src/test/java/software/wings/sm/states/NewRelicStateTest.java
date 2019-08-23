@@ -153,14 +153,14 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   @Category(UnitTests.class)
   public void testAnalysisType() {
     nrState.setComparisonStrategy("COMPARE_WITH_CURRENT");
-    assertEquals(TimeSeriesMlAnalysisType.COMPARATIVE, nrState.getAnalysisType());
+    assertThat(nrState.getAnalysisType()).isEqualTo(TimeSeriesMlAnalysisType.COMPARATIVE);
   }
 
   @Test
   @Category(UnitTests.class)
   public void testGetAnalysisTypePredictive() {
     nrState.setComparisonStrategy("PREDICTIVE");
-    assertEquals(TimeSeriesMlAnalysisType.PREDICTIVE, nrState.getAnalysisType());
+    assertThat(nrState.getAnalysisType()).isEqualTo(TimeSeriesMlAnalysisType.PREDICTIVE);
   }
 
   @Test
@@ -210,7 +210,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
     assertThat(metrics.containsKey("apdexScore")).isTrue();
     assertThat(metrics).hasSize(1);
     assertThat(metrics.get("apdexScore").getTags().size() >= 1).isTrue();
-    assertEquals(Sets.newHashSet("WebTransactions"), metrics.get("apdexScore").getTags());
+    assertThat(metrics.get("apdexScore").getTags()).isEqualTo(Sets.newHashSet("WebTransactions"));
 
     metricNames = Arrays.asList("apdexScore", "averageResponseTime", "requestsPerMinute");
     metrics = newRelicService.getMetricsCorrespondingToMetricNames(metricNames);
@@ -225,7 +225,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
      */
     metricNames = Arrays.asList("ApdexScore");
     metrics = newRelicService.getMetricsCorrespondingToMetricNames(metricNames);
-    assertEquals(new HashMap<>(), metrics);
+    assertThat(metrics).isEqualTo(new HashMap<>());
 
     /*
     Case 4: metricNames is null
@@ -243,7 +243,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   @Category(UnitTests.class)
   public void metricNames() {
     List<NewRelicState.Metric> actualMetrics = newRelicService.getListOfMetrics();
-    assertEquals(expectedMetrics, actualMetrics);
+    assertThat(actualMetrics).isEqualTo(expectedMetrics);
   }
 
   private TimeSeriesMetricDefinition buildTimeSeriesMetricDefinition(Metric metric) {
@@ -270,11 +270,12 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
     Map<String, TimeSeriesMetricDefinition> actualMetricDefinitions =
         newRelicService.metricDefinitions(metrics.values());
 
-    assertEquals(expectedMetricDefinitions.get("requestsPerMinute"), actualMetricDefinitions.get("requestsPerMinute"));
+    assertThat(actualMetricDefinitions.get("requestsPerMinute"))
+        .isEqualTo(expectedMetricDefinitions.get("requestsPerMinute"));
     assertEquals(
         expectedMetricDefinitions.get("averageResponseTime"), actualMetricDefinitions.get("averageResponseTime"));
-    assertEquals(expectedMetricDefinitions.get("error"), actualMetricDefinitions.get("error"));
-    assertEquals(expectedMetricDefinitions.get("apdexScore"), actualMetricDefinitions.get("apdexScore"));
+    assertThat(actualMetricDefinitions.get("error")).isEqualTo(expectedMetricDefinitions.get("error"));
+    assertThat(actualMetricDefinitions.get("apdexScore")).isEqualTo(expectedMetricDefinitions.get("apdexScore"));
   }
 
   @Test
@@ -282,13 +283,13 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   public void testGetMetricType() {
     String errType = NewRelicState.getMetricTypeForMetric(NewRelicMetricValueDefinition.ERROR);
     assertThat(errType).isNotNull();
-    assertEquals("Error Type should be", MetricType.ERROR.name(), errType);
+    assertThat(errType).isEqualTo(MetricType.ERROR.name());
     String throughput = NewRelicState.getMetricTypeForMetric(NewRelicMetricValueDefinition.REQUSET_PER_MINUTE);
     assertThat(throughput).isNotNull();
-    assertEquals("Error Type should be", MetricType.THROUGHPUT.name(), throughput);
+    assertThat(throughput).isEqualTo(MetricType.THROUGHPUT.name());
     String respTime = NewRelicState.getMetricTypeForMetric(NewRelicMetricValueDefinition.AVERAGE_RESPONSE_TIME);
     assertThat(respTime).isNotNull();
-    assertEquals("Error Type should be", MetricType.RESP_TIME.name(), respTime);
+    assertThat(respTime).isEqualTo(MetricType.RESP_TIME.name());
 
     String dummy = NewRelicState.getMetricTypeForMetric("incorrectName");
     assertThat(dummy).isNull();
@@ -363,21 +364,21 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
 
     ExecutionResponse executionResponse = spyNewRelicState.execute(executionContext);
-    assertEquals(ERROR, executionResponse.getExecutionStatus());
-    assertEquals("Can not find application by name", executionResponse.getErrorMessage());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ERROR);
+    assertThat(executionResponse.getErrorMessage()).isEqualTo("Can not find application by name");
 
     doReturn(NewRelicApplication.builder().build())
         .when(mockNewRelicService)
         .resolveApplicationId(anyString(), anyString());
     executionResponse = spyNewRelicState.execute(executionContext);
-    assertEquals(RUNNING, executionResponse.getExecutionStatus());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(RUNNING);
 
     doThrow(new RuntimeException("Can not find application by id"))
         .when(mockNewRelicService)
         .resolveApplicationId(anyString(), anyString());
 
     executionResponse = spyNewRelicState.execute(executionContext);
-    assertEquals(ERROR, executionResponse.getExecutionStatus());
-    assertEquals("RuntimeException: Can not find application by id", executionResponse.getErrorMessage());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ERROR);
+    assertThat(executionResponse.getErrorMessage()).isEqualTo("RuntimeException: Can not find application by id");
   }
 }

@@ -50,32 +50,32 @@ public class HttpTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testGetDomain() {
-    assertEquals("localhost.com", Http.getDomain("http://localhost.com/temp"));
-    assertEquals("localhost.com", Http.getDomain("https://localhost.com/temp"));
-    assertEquals("localhost.com", Http.getDomain("localhost.com:8080/temp"));
-    assertEquals("localhost.com", Http.getDomain("localhost.com:8080"));
+    assertThat(Http.getDomain("http://localhost.com/temp")).isEqualTo("localhost.com");
+    assertThat(Http.getDomain("https://localhost.com/temp")).isEqualTo("localhost.com");
+    assertThat(Http.getDomain("localhost.com:8080/temp")).isEqualTo("localhost.com");
+    assertThat(Http.getDomain("localhost.com:8080")).isEqualTo("localhost.com");
   }
 
   @Test
   @Category(UnitTests.class)
   public void testGetDomainWithPort() {
-    assertEquals("localhost.com", Http.getDomainWithPort("http://localhost.com/temp"));
-    assertEquals("localhost.com", Http.getDomainWithPort("http://localhost.com/"));
-    assertEquals("localhost.com", Http.getDomainWithPort("https://localhost.com/temp"));
-    assertEquals("localhost.com:5000", Http.getDomainWithPort("http://localhost.com:5000/temp"));
-    assertEquals("localhost.com:8080", Http.getDomainWithPort("localhost.com:8080/temp"));
-    assertEquals("localhost.com:8080", Http.getDomainWithPort("localhost.com:8080"));
+    assertThat(Http.getDomainWithPort("http://localhost.com/temp")).isEqualTo("localhost.com");
+    assertThat(Http.getDomainWithPort("http://localhost.com/")).isEqualTo("localhost.com");
+    assertThat(Http.getDomainWithPort("https://localhost.com/temp")).isEqualTo("localhost.com");
+    assertThat(Http.getDomainWithPort("http://localhost.com:5000/temp")).isEqualTo("localhost.com:5000");
+    assertThat(Http.getDomainWithPort("localhost.com:8080/temp")).isEqualTo("localhost.com:8080");
+    assertThat(Http.getDomainWithPort("localhost.com:8080")).isEqualTo("localhost.com:8080");
   }
 
   @Test
   @Category(UnitTests.class)
   public void testGetBaseUrl() {
-    assertEquals("http://localhost.com/", Http.getBaseUrl("http://localhost.com/temp"));
-    assertEquals("http://localhost.com/", Http.getBaseUrl("http://localhost.com/"));
-    assertEquals("https://localhost.com/", Http.getBaseUrl("https://localhost.com/temp"));
-    assertEquals("http://localhost.com:5000/", Http.getBaseUrl("http://localhost.com:5000/temp"));
-    assertEquals("http://localhost.com:8080/", Http.getBaseUrl("localhost.com:8080/temp"));
-    assertEquals("https://localhost.com:8443/", Http.getBaseUrl("https://localhost.com:8443"));
+    assertThat(Http.getBaseUrl("http://localhost.com/temp")).isEqualTo("http://localhost.com/");
+    assertThat(Http.getBaseUrl("http://localhost.com/")).isEqualTo("http://localhost.com/");
+    assertThat(Http.getBaseUrl("https://localhost.com/temp")).isEqualTo("https://localhost.com/");
+    assertThat(Http.getBaseUrl("http://localhost.com:5000/temp")).isEqualTo("http://localhost.com:5000/");
+    assertThat(Http.getBaseUrl("localhost.com:8080/temp")).isEqualTo("http://localhost.com:8080/");
+    assertThat(Http.getBaseUrl("https://localhost.com:8443")).isEqualTo("https://localhost.com:8443/");
   }
 
   @Test

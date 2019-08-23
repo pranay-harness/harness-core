@@ -3,7 +3,6 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
@@ -29,7 +28,7 @@ public class CloudWatchStateTest extends WingsBaseTest {
     assertThat(isEmpty(cloudWatchState.fetchEcsMetrics())).isTrue();
     assertThat(isEmpty(cloudWatchState.fetchLoadBalancerMetrics())).isTrue();
     assertThat(invalidFields.size() == 1).isTrue();
-    assertEquals("Metrics Missing", "No metrics provided", invalidFields.keySet().iterator().next());
+    assertThat(invalidFields.keySet().iterator().next()).isEqualTo("No metrics provided");
   }
 
   @Test

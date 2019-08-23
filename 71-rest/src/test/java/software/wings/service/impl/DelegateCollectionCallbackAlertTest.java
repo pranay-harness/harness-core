@@ -85,9 +85,9 @@ public class DelegateCollectionCallbackAlertTest extends WingsBaseTest {
         alertService.list(aPageRequest().addFilter("accountId", Operator.EQ, accountId).build());
     assertThat(alerts).hasSize(1);
     Alert alert = alerts.get(0);
-    assertEquals(AlertType.CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT, alert.getType());
-    assertEquals(AlertCategory.ContinuousVerification, alert.getCategory());
-    assertEquals(AlertStatus.Open, alert.getStatus());
+    assertThat(alert.getType()).isEqualTo(AlertType.CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT);
+    assertThat(alert.getCategory()).isEqualTo(AlertCategory.ContinuousVerification);
+    assertThat(alert.getStatus()).isEqualTo(AlertStatus.Open);
     assertEquals(
         cvConfigId, ((ContinuousVerificationDataCollectionAlert) alert.getAlertData()).getCvConfiguration().getUuid());
 
@@ -97,9 +97,9 @@ public class DelegateCollectionCallbackAlertTest extends WingsBaseTest {
     alerts = alertService.list(aPageRequest().addFilter("accountId", Operator.EQ, accountId).build());
     assertThat(alerts).hasSize(1);
     alert = alerts.get(0);
-    assertEquals(AlertType.CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT, alert.getType());
-    assertEquals(AlertCategory.ContinuousVerification, alert.getCategory());
-    assertEquals(AlertStatus.Closed, alert.getStatus());
+    assertThat(alert.getType()).isEqualTo(AlertType.CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT);
+    assertThat(alert.getCategory()).isEqualTo(AlertCategory.ContinuousVerification);
+    assertThat(alert.getStatus()).isEqualTo(AlertStatus.Closed);
     assertEquals(
         cvConfigId, ((ContinuousVerificationDataCollectionAlert) alert.getAlertData()).getCvConfiguration().getUuid());
 
@@ -114,9 +114,9 @@ public class DelegateCollectionCallbackAlertTest extends WingsBaseTest {
                                    .build());
     assertThat(alerts).hasSize(1);
     alert = alerts.get(0);
-    assertEquals(AlertType.CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT, alert.getType());
-    assertEquals(AlertCategory.ContinuousVerification, alert.getCategory());
-    assertEquals(AlertStatus.Open, alert.getStatus());
+    assertThat(alert.getType()).isEqualTo(AlertType.CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT);
+    assertThat(alert.getCategory()).isEqualTo(AlertCategory.ContinuousVerification);
+    assertThat(alert.getStatus()).isEqualTo(AlertStatus.Open);
     assertEquals(
         cvConfigId, ((ContinuousVerificationDataCollectionAlert) alert.getAlertData()).getCvConfiguration().getUuid());
   }

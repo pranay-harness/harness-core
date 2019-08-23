@@ -26,7 +26,7 @@ public class PivotalClientTest extends WingsBaseTest {
       assertThat( organizationList).hasSize(1);
 
       String organization = organizationList.get(0).getName();
-      assertEquals("Ad-PCF", organization);
+      assertThat( organization).isEqualTo("Ad-PCF");
 
       // get Spaces for organization
       pcfRequestConfig.setOrgName(organization);
@@ -34,7 +34,7 @@ public class PivotalClientTest extends WingsBaseTest {
       System.out.println(spaces);
       assertThat(spaces).isNotNull();
       assertThat( spaces).hasSize(1);
-      assertEquals("development", spaces.get(0).toLowerCase());
+      assertThat( spaces.get(0).toLowerCase()).isEqualTo("development");
 
       // push an application with 1 instance
       pcfRequestConfig.setSpaceName(spaces.get(0));
@@ -44,7 +44,7 @@ public class PivotalClientTest extends WingsBaseTest {
       pcfRequestConfig.setApplicationName("harness-pcf-app-deploy-version");
       ApplicationDetail applicationDetail = pcfClient.getApplicationByName(pcfRequestConfig);
       assertThat(applicationDetail).isNotNull();
-      assertEquals("harness-pcf-app-deploy-version", applicationDetail.getName());
+      assertThat( applicationDetail.getName()).isEqualTo("harness-pcf-app-deploy-version");
       assertThat(applicationDetail.getUrls().contains("wings-apps-sf.cfapps.io")).isTrue();
 
       // scale app to 2 instances
@@ -60,9 +60,9 @@ public class PivotalClientTest extends WingsBaseTest {
 
         Thread.sleep(20000);
       }
-      assertEquals(2, applicationDetail.getInstances().intValue());
-      assertEquals("RUNNING", applicationDetail.getInstanceDetails().get(0).getState());
-      assertEquals("RUNNING", applicationDetail.getInstanceDetails().get(1).getState());
+      assertThat( applicationDetail.getInstances().intValue()).isEqualTo(2);
+      assertThat( applicationDetail.getInstanceDetails().get(0).getState()).isEqualTo("RUNNING");
+      assertThat( applicationDetail.getInstanceDetails().get(1).getState()).isEqualTo("RUNNING");
 
       // scale app to 1 instance
       pcfRequestConfig.setDesiredCount(1);
@@ -77,13 +77,13 @@ public class PivotalClientTest extends WingsBaseTest {
 
         Thread.sleep(20000);
       }
-      assertEquals(1, applicationDetail.getInstances().intValue());
-      assertEquals("RUNNING", applicationDetail.getInstanceDetails().get(0).getState());
+      assertThat( applicationDetail.getInstances().intValue()).isEqualTo(1);
+      assertThat( applicationDetail.getInstanceDetails().get(0).getState()).isEqualTo("RUNNING");
 
       // stop application
       pcfClient.stopApplication(pcfRequestConfig);
       applicationDetail = pcfClient.getApplicationByName(pcfRequestConfig);
-      assertEquals(0, applicationDetail.getRunningInstances().intValue());
+      assertThat( applicationDetail.getRunningInstances().intValue()).isEqualTo(0);
       assertThat(applicationDetail.getUrls().contains("wings-apps-sf.cfapps.io")).isTrue();
 
       // unmap routeMap for application

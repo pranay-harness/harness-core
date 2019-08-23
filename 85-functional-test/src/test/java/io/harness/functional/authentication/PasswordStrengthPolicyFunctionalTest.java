@@ -54,13 +54,13 @@ public class PasswordStrengthPolicyFunctionalTest extends AbstractFunctionalTest
     LoginSettingsId = loginSettings.getUuid();
 
     PasswordStrengthPolicy passwordStrengthPolicyResponse = loginSettings.getPasswordStrengthPolicy();
-    assertEquals(passwordStrengthPolicyResponse.isEnabled(), PASSWORD_STRENGTH_POLICY_ENABLED);
-    assertEquals(passwordStrengthPolicyResponse.getMinNumberOfCharacters(), MINIMUM_NUMBER_OF_CHARACTERS);
+    assertThat(PASSWORD_STRENGTH_POLICY_ENABLED).isEqualTo(passwordStrengthPolicyResponse.isEnabled());
+    assertThat(MINIMUM_NUMBER_OF_CHARACTERS).isEqualTo(passwordStrengthPolicyResponse.getMinNumberOfCharacters());
     assertEquals(
         passwordStrengthPolicyResponse.getMinNumberOfUppercaseCharacters(), MINIMUM_NUMBER_OF_UPPERCASE_CHARACTERS);
     assertEquals(
         passwordStrengthPolicyResponse.getMinNumberOfLowercaseCharacters(), MINIMUM_NUMBER_OF_LOWERCASE_CHARACTERS);
-    assertEquals(passwordStrengthPolicyResponse.getMinNumberOfDigits(), MINIMUM_NUMBER_OF_DIGITS);
+    assertThat(MINIMUM_NUMBER_OF_DIGITS).isEqualTo(passwordStrengthPolicyResponse.getMinNumberOfDigits());
     assertEquals(
         passwordStrengthPolicyResponse.getMinNumberOfSpecialCharacters(), MINIMUM_NUMBER_OF_SPECIAL_CHARACTERS);
   }
@@ -80,11 +80,11 @@ public class PasswordStrengthPolicyFunctionalTest extends AbstractFunctionalTest
 
     LoginSettings loginSettings =
         LoginSettingsUtils.passwordStrengthPolicyUpdate(bearerToken, getAccount().getUuid(), passwordStrengthPolicy);
-    assertEquals(loginSettings.getUuid(), LoginSettingsId);
+    assertThat(LoginSettingsId).isEqualTo(loginSettings.getUuid());
 
     PasswordStrengthPolicy passwordStrengthPolicyResponse = loginSettings.getPasswordStrengthPolicy();
-    assertEquals(passwordStrengthPolicyResponse.isEnabled(), PASSWORD_STRENGTH_POLICY_ENABLED);
-    assertEquals(passwordStrengthPolicyResponse.getMinNumberOfCharacters(), UPDATED_NUMBER_OF_CHARACTERS);
+    assertThat(PASSWORD_STRENGTH_POLICY_ENABLED).isEqualTo(passwordStrengthPolicyResponse.isEnabled());
+    assertThat(UPDATED_NUMBER_OF_CHARACTERS).isEqualTo(passwordStrengthPolicyResponse.getMinNumberOfCharacters());
   }
 
   @Test
@@ -92,7 +92,7 @@ public class PasswordStrengthPolicyFunctionalTest extends AbstractFunctionalTest
   @Category(FunctionalTests.class)
   public void TC2_changePasswordSuccess() {
     final String TEST_PASSWORD = "Helloafsddsfasdsas1@";
-    assertEquals(loginSettingsService.verifyPasswordStrength(getAccount(), TEST_PASSWORD.toCharArray()), true);
+    assertThat(true).isEqualTo(loginSettingsService.verifyPasswordStrength(getAccount(), TEST_PASSWORD.toCharArray()));
   }
 
   @Test
@@ -118,9 +118,9 @@ public class PasswordStrengthPolicyFunctionalTest extends AbstractFunctionalTest
 
     LoginSettings loginSettings =
         LoginSettingsUtils.passwordStrengthPolicyUpdate(bearerToken, getAccount().getUuid(), passwordStrengthPolicy);
-    assertEquals(loginSettings.getUuid(), LoginSettingsId);
+    assertThat(LoginSettingsId).isEqualTo(loginSettings.getUuid());
 
     PasswordStrengthPolicy passwordStrengthPolicyResponse = loginSettings.getPasswordStrengthPolicy();
-    assertEquals(passwordStrengthPolicyResponse.isEnabled(), PASSWORD_STRENGTH_POLICY_DISABLED);
+    assertThat(PASSWORD_STRENGTH_POLICY_DISABLED).isEqualTo(passwordStrengthPolicyResponse.isEnabled());
   }
 }

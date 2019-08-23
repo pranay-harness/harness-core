@@ -1,7 +1,7 @@
 package software.wings.service;
 
 import static java.util.Arrays.asList;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 import io.harness.category.element.UnitTests;
@@ -46,9 +46,9 @@ public class ClusterLevelTest extends WingsBaseTest {
         // expected
       }
     } else {
-      assertEquals(heartbeatLevel, ClusterLevel.getHeartBeatLevel(level));
+      assertThat(ClusterLevel.getHeartBeatLevel(level)).isEqualTo(heartbeatLevel);
     }
 
-    assertEquals(nextLevel, level.next());
+    assertThat(level.next()).isEqualTo(nextLevel);
   }
 }

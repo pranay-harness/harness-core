@@ -1,6 +1,6 @@
 package io.harness.k8s.kubectl;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -15,6 +15,6 @@ public class RolloutHistoryCommandTest extends CategoryTest {
 
     RolloutHistoryCommand rolloutHistoryCommand = client.rollout().history().resource("Deployment/nginx");
 
-    assertEquals("kubectl rollout history Deployment/nginx", rolloutHistoryCommand.command());
+    assertThat(rolloutHistoryCommand.command()).isEqualTo("kubectl rollout history Deployment/nginx");
   }
 }

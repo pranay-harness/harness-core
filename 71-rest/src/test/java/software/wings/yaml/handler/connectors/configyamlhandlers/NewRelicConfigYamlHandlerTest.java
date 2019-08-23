@@ -1,6 +1,6 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -42,7 +42,7 @@ public class NewRelicConfigYamlHandlerTest extends BaseSettingValueConfigYamlHan
 
     // 1. Create newRelic verification record
     SettingAttribute settingAttributeSaved = createNewRelicProviderNameVerificationProvider(newRelicProviderName);
-    assertEquals(newRelicProviderName, settingAttributeSaved.getName());
+    assertThat(settingAttributeSaved.getName()).isEqualTo(newRelicProviderName);
 
     testCRUD(generateSettingValueYamlConfig(newRelicProviderName, settingAttributeSaved));
   }

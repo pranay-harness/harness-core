@@ -2,7 +2,6 @@ package software.wings.service;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -102,11 +101,11 @@ public class KmsAlertTest extends WingsBaseTest {
     PageResponse<Alert> alerts = alertService.list(pageRequest);
     assertThat(alerts).hasSize(1);
     Alert alert = alerts.get(0);
-    assertEquals(accountId, alert.getAccountId());
-    assertEquals(AlertType.InvalidKMS, alert.getType());
-    assertEquals(AlertStatus.Open, alert.getStatus());
+    assertThat(alert.getAccountId()).isEqualTo(accountId);
+    assertThat(alert.getType()).isEqualTo(AlertType.InvalidKMS);
+    assertThat(alert.getStatus()).isEqualTo(AlertStatus.Open);
     KmsSetupAlert alertData = (KmsSetupAlert) alert.getAlertData();
-    assertEquals(vaultConfig.getUuid(), alertData.getKmsId());
+    assertThat(alertData.getKmsId()).isEqualTo(vaultConfig.getUuid());
 
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
     secretManager.checkAndAlertForInvalidManagers();
@@ -139,14 +138,14 @@ public class KmsAlertTest extends WingsBaseTest {
     PageResponse<Alert> alerts = alertService.list(pageRequest);
     assertThat(alerts).hasSize(1);
     Alert alert = alerts.get(0);
-    assertEquals(accountId, alert.getAccountId());
-    assertEquals(AlertType.InvalidKMS, alert.getType());
-    assertEquals(AlertStatus.Open, alert.getStatus());
+    assertThat(alert.getAccountId()).isEqualTo(accountId);
+    assertThat(alert.getType()).isEqualTo(AlertType.InvalidKMS);
+    assertThat(alert.getStatus()).isEqualTo(AlertStatus.Open);
     KmsSetupAlert alertData = (KmsSetupAlert) alert.getAlertData();
-    assertEquals(vaultConfig.getUuid(), alertData.getKmsId());
+    assertThat(alertData.getKmsId()).isEqualTo(vaultConfig.getUuid());
 
     VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
-    assertEquals(0, savedVaultConfig.getRenewedAt());
+    assertThat(savedVaultConfig.getRenewedAt()).isEqualTo(0);
 
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
     vaultService.renewTokens(accountId);
@@ -178,11 +177,11 @@ public class KmsAlertTest extends WingsBaseTest {
     PageResponse<Alert> alerts = alertService.list(pageRequest);
     assertThat(alerts).hasSize(1);
     Alert alert = alerts.get(0);
-    assertEquals(accountId, alert.getAccountId());
-    assertEquals(AlertType.InvalidKMS, alert.getType());
-    assertEquals(AlertStatus.Open, alert.getStatus());
+    assertThat(alert.getAccountId()).isEqualTo(accountId);
+    assertThat(alert.getType()).isEqualTo(AlertType.InvalidKMS);
+    assertThat(alert.getStatus()).isEqualTo(AlertStatus.Open);
     KmsSetupAlert alertData = (KmsSetupAlert) alert.getAlertData();
-    assertEquals(kmsConfig.getUuid(), alertData.getKmsId());
+    assertThat(alertData.getKmsId()).isEqualTo(kmsConfig.getUuid());
 
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
     secretManager.checkAndAlertForInvalidManagers();

@@ -1,6 +1,6 @@
 package software.wings.service.impl.security;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -22,13 +22,13 @@ public class VaultServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testParsingVaultSysMountsResponseV1() {
     int version = VaultServiceImpl.parseSecretEngineVersionFromSysMountsJson(SYS_MOUNTS_JSON_RESPONSE_V1);
-    assertEquals(1, version);
+    assertThat(version).isEqualTo(1);
   }
 
   @Test
   @Category(UnitTests.class)
   public void testParsingVaultSysMountsResponseV2() {
     int version = VaultServiceImpl.parseSecretEngineVersionFromSysMountsJson(SYS_MOUNTS_JSON_RESPONSE_V2);
-    assertEquals(2, version);
+    assertThat(version).isEqualTo(2);
   }
 }

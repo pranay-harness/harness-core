@@ -4,7 +4,6 @@ import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
@@ -188,21 +187,21 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       UsageRestrictions expected = getUsageRestrictionsForAppIdAndEnvId(APP_ID_1, ENV_ID_1);
       UsageRestrictions defaultUsageRestrictions =
           usageRestrictionsService.getDefaultUsageRestrictions(ACCOUNT_ID, APP_ID_1, ENV_ID_1);
-      assertEquals(expected, defaultUsageRestrictions);
+      assertThat(defaultUsageRestrictions).isEqualTo(expected);
 
       defaultUsageRestrictions = usageRestrictionsService.getDefaultUsageRestrictions(ACCOUNT_ID, null, null);
-      assertEquals(expected, defaultUsageRestrictions);
+      assertThat(defaultUsageRestrictions).isEqualTo(expected);
 
       defaultUsageRestrictions = usageRestrictionsService.getDefaultUsageRestrictions(ACCOUNT_ID, APP_ID_1, null);
-      assertEquals(expected, defaultUsageRestrictions);
+      assertThat(defaultUsageRestrictions).isEqualTo(expected);
 
       expected = getUsageRestrictionsForAppIdAndEnvId(APP_ID, ENV_ID_1);
       defaultUsageRestrictions = usageRestrictionsService.getDefaultUsageRestrictions(ACCOUNT_ID, APP_ID, ENV_ID_1);
-      assertEquals(expected, defaultUsageRestrictions);
+      assertThat(defaultUsageRestrictions).isEqualTo(expected);
 
       expected = getUsageRestrictionsForAppIdAndEnvId(APP_ID_1, ENV_ID);
       defaultUsageRestrictions = usageRestrictionsService.getDefaultUsageRestrictions(ACCOUNT_ID, APP_ID_1, ENV_ID);
-      assertEquals(expected, defaultUsageRestrictions);
+      assertThat(defaultUsageRestrictions).isEqualTo(expected);
 
     } finally {
       UserThreadLocal.unset();
@@ -319,7 +318,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
                                        .build();
       UsageRestrictions defaultUsageRestrictions =
           usageRestrictionsService.getDefaultUsageRestrictions(ACCOUNT_ID, null, null);
-      assertEquals(expected, defaultUsageRestrictions);
+      assertThat(defaultUsageRestrictions).isEqualTo(expected);
     } finally {
       UserThreadLocal.unset();
     }
@@ -664,13 +663,13 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
     UsageRestrictions usageRestrictions = setupUsageRestrictionsForAppEnvReferenceTesting();
 
     int count = usageRestrictionsService.removeAppEnvReferences(ACCOUNT_ID, APP_ID, ENV_ID);
-    assertEquals(0, count);
+    assertThat(count).isEqualTo(0);
     assertThat(usageRestrictions.getAppEnvRestrictions()).hasSize(1);
     verifyZeroInteractions(settingsService);
     verifyZeroInteractions(secretManager);
 
     count = usageRestrictionsService.removeAppEnvReferences(ACCOUNT_ID, APP_ID_1, ENV_ID_1);
-    assertEquals(1, count);
+    assertThat(count).isEqualTo(1);
     assertThat(usageRestrictions.getAppEnvRestrictions()).isEmpty();
     verify(settingsService, times(1))
         .updateUsageRestrictionsInternal(eq(SETTING_ATTRIBUTE_ID), any(UsageRestrictions.class));
@@ -683,13 +682,13 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
     UsageRestrictions usageRestrictions = setupUsageRestrictionsForAppEnvReferenceTesting();
 
     int count = usageRestrictionsService.removeAppEnvReferences(ACCOUNT_ID, APP_ID, null);
-    assertEquals(0, count);
+    assertThat(count).isEqualTo(0);
     assertThat(usageRestrictions.getAppEnvRestrictions()).hasSize(1);
     verifyZeroInteractions(settingsService);
     verifyZeroInteractions(secretManager);
 
     count = usageRestrictionsService.removeAppEnvReferences(ACCOUNT_ID, APP_ID_1, null);
-    assertEquals(1, count);
+    assertThat(count).isEqualTo(1);
     assertThat(usageRestrictions.getAppEnvRestrictions()).isEmpty();
     verify(settingsService, times(1))
         .updateUsageRestrictionsInternal(eq(SETTING_ATTRIBUTE_ID), any(UsageRestrictions.class));
@@ -703,7 +702,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
     usageRestrictions.setAppEnvRestrictions(null);
 
     int count = usageRestrictionsService.removeAppEnvReferences(ACCOUNT_ID, APP_ID, null);
-    assertEquals(0, count);
+    assertThat(count).isEqualTo(0);
     verifyZeroInteractions(settingsService);
     verifyZeroInteractions(secretManager);
   }
@@ -716,7 +715,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
     when(appService.exist(APP_ID_1)).thenReturn(false);
 
     int count = usageRestrictionsService.purgeDanglingAppEnvReferences(ACCOUNT_ID);
-    assertEquals(1, count);
+    assertThat(count).isEqualTo(1);
     assertThat(usageRestrictions.getAppEnvRestrictions()).isEmpty();
     verify(settingsService, times(1)).updateUsageRestrictionsInternal(anyString(), any(UsageRestrictions.class));
   }
@@ -729,14 +728,14 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
     UsageRestrictionsReferenceSummary summary =
         usageRestrictionsService.getReferenceSummaryForApp(ACCOUNT_ID, APP_ID_1);
     assertThat(summary).isNotNull();
-    assertEquals(1, summary.getTotal());
-    assertEquals(1, summary.getNumOfSettings());
+    assertThat(summary.getTotal()).isEqualTo(1);
+    assertThat(summary.getNumOfSettings()).isEqualTo(1);
     assertThat(summary.getSettings()).hasSize(1);
 
     summary = usageRestrictionsService.getReferenceSummaryForEnv(ACCOUNT_ID, ENV_ID_1);
     assertThat(summary).isNotNull();
-    assertEquals(1, summary.getTotal());
-    assertEquals(1, summary.getNumOfSettings());
+    assertThat(summary.getTotal()).isEqualTo(1);
+    assertThat(summary.getNumOfSettings()).isEqualTo(1);
     assertThat(summary.getSettings()).hasSize(1);
   }
 
@@ -937,7 +936,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       try {
         usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions);
       } catch (WingsException ex) {
-        assertEquals(ex.getCode(), ErrorCode.INVALID_USAGE_RESTRICTION);
+        assertThat(ErrorCode.INVALID_USAGE_RESTRICTION).isEqualTo(ex.getCode());
       }
 
       appFilter = GenericEntityFilter.builder().filterType(FilterType.SELECTED).build();
@@ -949,7 +948,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       try {
         usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions);
       } catch (WingsException ex) {
-        assertEquals(ex.getCode(), ErrorCode.INVALID_USAGE_RESTRICTION);
+        assertThat(ErrorCode.INVALID_USAGE_RESTRICTION).isEqualTo(ex.getCode());
       }
 
       envFilters = newHashSet(PROD, NON_PROD);
@@ -960,7 +959,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       try {
         usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions);
       } catch (WingsException ex) {
-        assertEquals(ex.getCode(), ErrorCode.INVALID_USAGE_RESTRICTION);
+        assertThat(ErrorCode.INVALID_USAGE_RESTRICTION).isEqualTo(ex.getCode());
       }
 
       appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
@@ -971,7 +970,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       try {
         usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions);
       } catch (WingsException ex) {
-        assertEquals(ex.getCode(), ErrorCode.INVALID_USAGE_RESTRICTION);
+        assertThat(ErrorCode.INVALID_USAGE_RESTRICTION).isEqualTo(ex.getCode());
       }
 
       appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
@@ -981,7 +980,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       try {
         usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions);
       } catch (WingsException ex) {
-        assertEquals(ex.getCode(), ErrorCode.INVALID_USAGE_RESTRICTION);
+        assertThat(ErrorCode.INVALID_USAGE_RESTRICTION).isEqualTo(ex.getCode());
       }
 
       appEnvRestriction = AppEnvRestriction.builder().build();
@@ -990,14 +989,14 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       try {
         usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions);
       } catch (WingsException ex) {
-        assertEquals(ex.getCode(), ErrorCode.INVALID_USAGE_RESTRICTION);
+        assertThat(ErrorCode.INVALID_USAGE_RESTRICTION).isEqualTo(ex.getCode());
       }
 
       usageRestrictions = new UsageRestrictions();
       try {
         usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions);
       } catch (WingsException ex) {
-        assertEquals(ex.getCode(), ErrorCode.NOT_ACCOUNT_MGR_NOR_HAS_ALL_APP_ACCESS);
+        assertThat(ErrorCode.NOT_ACCOUNT_MGR_NOR_HAS_ALL_APP_ACCESS).isEqualTo(ex.getCode());
       }
     } finally {
       UserThreadLocal.unset();

@@ -225,7 +225,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
     Map<String, List<APMMetricInfo>> metricEndPoints =
         cvService.createDatadogMetricEndPointMap(dockerMetrics, ecsMetrics, null, customMetricsMap);
 
-    assertEquals(metricEndPoints.size(), 4);
+    assertThat(4).isEqualTo(metricEndPoints.size());
     assertThat(metricEndPoints.keySet().contains(expectedDockerCPUMetricURL)).isTrue();
     assertThat(metricEndPoints.keySet().contains(expectedDockerMEMMetricURL)).isTrue();
     assertThat(metricEndPoints.keySet().contains(expectedECSMetricURL)).isTrue();
@@ -239,40 +239,44 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
 
     long twelveHours = endTime - TimeUnit.HOURS.toMillis(12);
     HeatMapResolution heatMapResolution = HeatMapResolution.getResolution(twelveHours, endTime);
-    assertEquals(HeatMapResolution.TWELVE_HOURS, heatMapResolution);
+    assertThat(heatMapResolution).isEqualTo(HeatMapResolution.TWELVE_HOURS);
 
     int twelveHoursResolutionDurationInMinutes = VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
-    assertEquals(twelveHoursResolutionDurationInMinutes, heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution));
+    assertThat(heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution))
+        .isEqualTo(twelveHoursResolutionDurationInMinutes);
 
     assertEquals(twelveHoursResolutionDurationInMinutes / VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES,
         heatMapResolution.getEventsPerHeatMapUnit(heatMapResolution));
 
     long oneDay = endTime - TimeUnit.DAYS.toMillis(1);
     heatMapResolution = HeatMapResolution.getResolution(oneDay, endTime);
-    assertEquals(HeatMapResolution.ONE_DAY, heatMapResolution);
+    assertThat(heatMapResolution).isEqualTo(HeatMapResolution.ONE_DAY);
 
     int oneDayResolutionDurationInMinutes = 2 * VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
-    assertEquals(oneDayResolutionDurationInMinutes, heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution));
+    assertThat(heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution))
+        .isEqualTo(oneDayResolutionDurationInMinutes);
 
     assertEquals(oneDayResolutionDurationInMinutes / VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES,
         heatMapResolution.getEventsPerHeatMapUnit(heatMapResolution));
 
     long sevenDays = endTime - TimeUnit.DAYS.toMillis(7);
     heatMapResolution = HeatMapResolution.getResolution(sevenDays, endTime);
-    assertEquals(HeatMapResolution.SEVEN_DAYS, heatMapResolution);
+    assertThat(heatMapResolution).isEqualTo(HeatMapResolution.SEVEN_DAYS);
 
     int sevenDayResolutionDurationInMinutes = 16 * VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
-    assertEquals(sevenDayResolutionDurationInMinutes, heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution));
+    assertThat(heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution))
+        .isEqualTo(sevenDayResolutionDurationInMinutes);
 
     assertEquals(sevenDayResolutionDurationInMinutes / VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES,
         heatMapResolution.getEventsPerHeatMapUnit(heatMapResolution));
 
     long thirtyDays = endTime - TimeUnit.DAYS.toMillis(30);
     heatMapResolution = HeatMapResolution.getResolution(thirtyDays, endTime);
-    assertEquals(HeatMapResolution.THIRTY_DAYS, heatMapResolution);
+    assertThat(heatMapResolution).isEqualTo(HeatMapResolution.THIRTY_DAYS);
 
     int thirtyDayResolutionDurationInMinutes = 48 * VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
-    assertEquals(thirtyDayResolutionDurationInMinutes, heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution));
+    assertThat(heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution))
+        .isEqualTo(thirtyDayResolutionDurationInMinutes);
 
     assertEquals(thirtyDayResolutionDurationInMinutes / VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES,
         heatMapResolution.getEventsPerHeatMapUnit(heatMapResolution));

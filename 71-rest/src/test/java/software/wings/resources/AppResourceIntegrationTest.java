@@ -4,7 +4,6 @@ import static io.harness.rule.OwnerRule.JATIN;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static software.wings.beans.Application.Builder.anApplication;
 
 import com.google.common.collect.ImmutableMap;
@@ -92,11 +91,11 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
     for (int i = 0; i < maxApps - appCount; i++) {
       app = sampleApp();
       int status = getRequestBuilderWithAuthHeader(target).post(entity(app, APPLICATION_JSON)).getStatus();
-      assertEquals(Status.OK.getStatusCode(), status);
+      assertThat(status).isEqualTo(Status.OK.getStatusCode());
     }
 
     int status = getRequestBuilderWithAuthHeader(target).post(entity(sampleApp(), APPLICATION_JSON)).getStatus();
-    assertEquals("new app should NOT be created since usage limit reached", Status.FORBIDDEN.getStatusCode(), status);
+    assertThat(status).isEqualTo(Status.FORBIDDEN.getStatusCode());
 
     // delete an app
     String deleteUrl = IntegrationTestUtils.buildAbsoluteUrl("/api/apps/" + app.getAppId(), new HashMap<>());
@@ -104,11 +103,11 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
     log.debug("Delete URL to hit: {}", deleteUrl);
 
     status = getRequestBuilderWithAuthHeader(deleteTarget).delete().getStatus();
-    assertEquals(status, Status.OK.getStatusCode());
+    assertThat(Status.OK.getStatusCode()).isEqualTo(status);
 
     // user should be able to create new app now after an existing app is deleted
     status = getRequestBuilderWithAuthHeader(target).post(entity(sampleApp(), APPLICATION_JSON)).getStatus();
-    assertEquals("new app should be created after an existing app is deleted", status, Status.OK.getStatusCode());
+    assertThat(Status.OK.getStatusCode()).isEqualTo(status);
   }
 
   private long appCount(String accountId) {
@@ -137,7 +136,7 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
     concurrentConsume(target, maxApps - appCount);
 
     int status = getRequestBuilderWithAuthHeader(target).post(entity(sampleApp(), APPLICATION_JSON)).getStatus();
-    assertEquals("new app should NOT be created since usage limit reached", Status.FORBIDDEN.getStatusCode(), status);
+    assertThat(status).isEqualTo(Status.FORBIDDEN.getStatusCode());
 
     // delete an app
     Application appToDelete = fetchAppsQuery().get();
@@ -146,11 +145,11 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
     log.debug("Delete URL to hit: {}", deleteUrl);
 
     status = getRequestBuilderWithAuthHeader(deleteTarget).delete().getStatus();
-    assertEquals(status, Status.OK.getStatusCode());
+    assertThat(Status.OK.getStatusCode()).isEqualTo(status);
 
     // user should be able to create new app now after an existing app is deleted
     status = getRequestBuilderWithAuthHeader(target).post(entity(sampleApp(), APPLICATION_JSON)).getStatus();
-    assertEquals("new app should be created after an existing app is deleted", status, Status.OK.getStatusCode());
+    assertThat(Status.OK.getStatusCode()).isEqualTo(status);
   }
 
   private void concurrentConsume(WebTarget target, long times) throws Exception {
@@ -160,7 +159,7 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
       Application app = sampleApp();
       Future f = executors.submit(() -> {
         int status = getRequestBuilderWithAuthHeader(target).post(entity(app, APPLICATION_JSON)).getStatus();
-        assertEquals(Status.OK.getStatusCode(), status);
+        assertThat(status).isEqualTo(Status.OK.getStatusCode());
       });
 
       futures.add(f);

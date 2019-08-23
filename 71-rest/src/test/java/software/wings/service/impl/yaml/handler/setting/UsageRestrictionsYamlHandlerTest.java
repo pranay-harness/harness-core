@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.setting;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -76,7 +76,7 @@ public class UsageRestrictionsYamlHandlerTest extends BaseSettingValueConfigYaml
     // 1. Create jenkins verification record
     SettingAttribute settingAttributeSaved =
         createJenkinsProviderWithUsageRestrictions(jenkinsProviderName, createUsageRestrictions());
-    assertEquals(jenkinsProviderName, settingAttributeSaved.getName());
+    assertThat(settingAttributeSaved.getName()).isEqualTo(jenkinsProviderName);
 
     testCRUD(generateSettingValueYamlConfig(jenkinsProviderName, settingAttributeSaved));
   }
@@ -88,13 +88,13 @@ public class UsageRestrictionsYamlHandlerTest extends BaseSettingValueConfigYaml
 
     // 1. Create jenkins verification record
     SettingAttribute settingAttributeSaved = createJenkinsProviderWithUsageRestrictions(jenkinsProviderName, null);
-    assertEquals(jenkinsProviderName, settingAttributeSaved.getName());
+    assertThat(settingAttributeSaved.getName()).isEqualTo(jenkinsProviderName);
 
     testCRUD(generateSettingValueYamlConfig(jenkinsProviderName, settingAttributeSaved));
 
     settingAttributeSaved =
         createJenkinsProviderWithUsageRestrictions(jenkinsProviderName, UsageRestrictions.builder().build());
-    assertEquals(jenkinsProviderName, settingAttributeSaved.getName());
+    assertThat(settingAttributeSaved.getName()).isEqualTo(jenkinsProviderName);
 
     testCRUD(generateSettingValueYamlConfig(jenkinsProviderName, settingAttributeSaved));
   }

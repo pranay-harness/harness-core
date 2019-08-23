@@ -1,6 +1,6 @@
 package io.harness.k8s.kubectl;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -15,7 +15,7 @@ public class GetCommandTest extends CategoryTest {
 
     GetCommand getCommand = client.get().resources("all");
 
-    assertEquals("kubectl get all", getCommand.command());
+    assertThat(getCommand.command()).isEqualTo("kubectl get all");
   }
 
   @Test
@@ -25,7 +25,7 @@ public class GetCommandTest extends CategoryTest {
 
     GetCommand getCommand = client.get().resources(ResourceType.pods.toString()).namespace("default").output("yaml");
 
-    assertEquals("kubectl get pods --namespace=default --output=yaml", getCommand.command());
+    assertThat(getCommand.command()).isEqualTo("kubectl get pods --namespace=default --output=yaml");
   }
 
   @Test
@@ -35,7 +35,7 @@ public class GetCommandTest extends CategoryTest {
 
     GetCommand getCommand = client.get().resources("pods/web-0");
 
-    assertEquals("kubectl get pods/web-0", getCommand.command());
+    assertThat(getCommand.command()).isEqualTo("kubectl get pods/web-0");
   }
 
   @Test
@@ -45,7 +45,7 @@ public class GetCommandTest extends CategoryTest {
 
     GetCommand getCommand = client.get().resources("pods,services");
 
-    assertEquals("kubectl get pods,services", getCommand.command());
+    assertThat(getCommand.command()).isEqualTo("kubectl get pods,services");
   }
 
   @Test
@@ -55,6 +55,6 @@ public class GetCommandTest extends CategoryTest {
 
     GetCommand getCommand = client.get().resources("events").namespace("default").watchOnly(true);
 
-    assertEquals("kubectl get events --namespace=default --watch-only", getCommand.command());
+    assertThat(getCommand.command()).isEqualTo("kubectl get events --namespace=default --watch-only");
   }
 }

@@ -1,7 +1,7 @@
 package software.wings.integration.network;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 import io.harness.CategoryTest;
@@ -75,14 +75,14 @@ public class ProxyTest extends CategoryTest {
     Request request1 = new Request.Builder().url(targetUrl).build();
 
     Response response = builder.build().newCall(request1).execute();
-    assertEquals(200, response.code());
+    assertThat(response.code()).isEqualTo(200);
 
     Executor executor = Executor.newInstance();
     org.apache.http.client.fluent.Request request =
         org.apache.http.client.fluent.Request.Get(targetUrl).connectTimeout(10000).socketTimeout(10000);
 
     try {
-      assertEquals("OK", executor.execute(request).returnResponse().getStatusLine().getReasonPhrase());
+      assertThat(executor.execute(request).returnResponse().getStatusLine().getReasonPhrase()).isEqualTo("OK");
     } catch (Exception e) {
       fail("Should not reach here");
     }
@@ -109,7 +109,7 @@ public class ProxyTest extends CategoryTest {
     Request request = new Request.Builder().url(targetUrl).build();
 
     Response response = builder.build().newCall(request).execute();
-    assertEquals(200, response.code());
+    assertThat(response.code()).isEqualTo(200);
 
     Executor executor = Executor.newInstance();
     org.apache.http.client.fluent.Request requestObj =
@@ -121,7 +121,7 @@ public class ProxyTest extends CategoryTest {
 
     try {
       String responsePhrase = executor.execute(requestObj).returnResponse().getStatusLine().getReasonPhrase();
-      assertEquals("OK", responsePhrase);
+      assertThat(responsePhrase).isEqualTo("OK");
     } catch (Exception e) {
       fail("Should not reach here");
     }
@@ -164,7 +164,7 @@ public class ProxyTest extends CategoryTest {
   //    Request request = new Request.Builder().url(targetUrl).build();
   //    try {
   //      Response response = builder.build().newCall(request).execute();
-  //      assertEquals(200, response.code());
+  //      assertThat( response.code()).isEqualTo(200);
   //    } catch (Exception e) {
   //      assertThat(true).isFalse();
   //    }
@@ -180,7 +180,7 @@ public class ProxyTest extends CategoryTest {
   //    request = new Request.Builder().url(targetUrl).build();
   //    try {
   //      Response response = builder.build().newCall(request).execute();
-  //      assertEquals(200, response.code());
+  //      assertThat( response.code()).isEqualTo(200);
   //    } catch (Exception e) {
   //      assertThat(true).isFalse();
   //    }
@@ -201,7 +201,7 @@ public class ProxyTest extends CategoryTest {
     executor.auth(httpProxyHost, proxyUser, proxyPassword);
     org.apache.http.client.fluent.Response response = executor.execute(request);
     int responseCode = response.returnResponse().getStatusLine().getStatusCode();
-    assertEquals(200, responseCode);
+    assertThat(responseCode).isEqualTo(200);
   }
 
   @Test
@@ -218,7 +218,7 @@ public class ProxyTest extends CategoryTest {
     executor.auth(httpHost, proxyUser, invalidProxyPassword);
 
     String responsePhrase = executor.execute(requestObj).returnResponse().getStatusLine().getReasonPhrase();
-    assertEquals("Proxy Authentication Required", responsePhrase);
+    assertThat(responsePhrase).isEqualTo("Proxy Authentication Required");
   }
 
   //  @Test
@@ -231,7 +231,7 @@ public class ProxyTest extends CategoryTest {
   //    request.viaProxy(httpProxyHost);
   //    org.apache.http.client.fluent.Response response = executor.execute(request);
   //    int responseCode = response.returnResponse().getStatusLine().getStatusCode();
-  //    assertEquals(200, responseCode);
+  //    assertThat( responseCode).isEqualTo(200);
   //  }
 
   @Test
@@ -243,6 +243,6 @@ public class ProxyTest extends CategoryTest {
 
     org.apache.http.client.fluent.Response response = executor.execute(request);
     int responseCode = response.returnResponse().getStatusLine().getStatusCode();
-    assertEquals(200, responseCode);
+    assertThat(responseCode).isEqualTo(200);
   }
 }

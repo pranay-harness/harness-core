@@ -1,6 +1,6 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -45,7 +45,7 @@ public class SplunkConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandl
 
     // 1. Create newRelic verification record
     SettingAttribute settingAttributeSaved = createSplunkVerificationProvider(splunkProviderName);
-    assertEquals(splunkProviderName, settingAttributeSaved.getName());
+    assertThat(settingAttributeSaved.getName()).isEqualTo(splunkProviderName);
 
     testCRUD(generateSettingValueYamlConfig(splunkProviderName, settingAttributeSaved));
   }

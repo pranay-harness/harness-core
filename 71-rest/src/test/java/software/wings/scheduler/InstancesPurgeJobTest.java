@@ -1,7 +1,7 @@
 package software.wings.scheduler;
 
 import static java.util.stream.Collectors.toList;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
@@ -64,8 +64,8 @@ public class InstancesPurgeJobTest extends WingsBaseTest {
     List<InstanceStatsSnapshot> retainedInstanceStats =
         wingsPersistence.createQuery(InstanceStatsSnapshot.class).asList();
 
-    assertEquals(instancesThatShouldBeRetained, retainedInstances);
-    assertEquals(instanceStatsThatShouldBeRetained, retainedInstanceStats);
+    assertThat(retainedInstances).isEqualTo(instancesThatShouldBeRetained);
+    assertThat(retainedInstanceStats).isEqualTo(instanceStatsThatShouldBeRetained);
   }
 
   private void generateInstances() {

@@ -1,7 +1,7 @@
 package software.wings.service;
 
 import static freemarker.template.Configuration.VERSION_2_3_23;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import freemarker.template.Configuration;
 import freemarker.template.Template;
@@ -53,14 +53,14 @@ public class OutgoingEmailTest extends CategoryTest {
     String subject = subjectWriter.toString();
     String expectedSubject =
         IOUtils.toString(getClass().getResourceAsStream("/mailverification/" + action + "-subject.txt"), "UTF-8");
-    assertEquals("Subject do not match for action=" + action, expectedSubject, subject);
+    assertThat(subject).isEqualTo(expectedSubject);
 
     StringWriter bodyWriter = new StringWriter();
     plainBodyTemplate.process(emailData.getTemplateModel(), bodyWriter);
     String body = bodyWriter.toString();
     String expectedBody = IOUtils.toString(
         getClass().getResourceAsStream("/mailverification/" + action + "-body_plain_text.txt"), "UTF-8");
-    assertEquals("Body does not match for action=" + action, expectedBody, body);
+    assertThat(body).isEqualTo(expectedBody);
   }
 
   private Template getSubjectTemplate(Configuration configuration, String action) throws IOException {

@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
@@ -834,7 +833,7 @@ public class AuthHandlerTest extends WingsBaseTest {
 
     List<Environment> allEntities =
         authHandler.getAllEntities(pageRequest1, () -> environmentService.list(pageRequest1, false, false, null));
-    assertEquals(allEntities.size(), total);
+    assertThat(total).isEqualTo(allEntities.size());
     assertThat(allEntities).containsExactlyInAnyOrder(expectedEnv.toArray(new Environment[0]));
   }
 
@@ -869,7 +868,7 @@ public class AuthHandlerTest extends WingsBaseTest {
 
     List<Environment> allEntities =
         authHandler.getAllEntities(pageRequest1, () -> environmentService.list(pageRequest1, false, false, null));
-    assertEquals(allEntities.size(), total);
+    assertThat(total).isEqualTo(allEntities.size());
     assertThat(allEntities).containsExactlyInAnyOrder(expectedEnv.toArray(new Environment[0]));
   }
 
@@ -889,7 +888,7 @@ public class AuthHandlerTest extends WingsBaseTest {
 
     List<Environment> allEntities =
         authHandler.getAllEntities(pageRequest1, () -> environmentService.list(pageRequest1, false, false, null));
-    assertEquals(allEntities.size(), total);
+    assertThat(total).isEqualTo(allEntities.size());
     assertThat(allEntities).containsExactlyInAnyOrder(expectedEnv.toArray(new Environment[0]));
   }
 
@@ -908,7 +907,7 @@ public class AuthHandlerTest extends WingsBaseTest {
 
     List<Environment> allEntities =
         authHandler.getAllEntities(pageRequest1, () -> environmentService.list(pageRequest1, false, false, null));
-    assertEquals(allEntities.size(), total);
+    assertThat(total).isEqualTo(allEntities.size());
   }
 
   @Test

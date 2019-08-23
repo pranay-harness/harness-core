@@ -90,10 +90,10 @@ public class ServiceGuardAlertTest extends VerificationBaseIntegrationTest {
     alerts = wingsPersistence.createQuery(Alert.class).filter(AlertKeys.appId, appId).asList();
     assertThat(alerts).hasSize(1);
     Alert alert = alerts.get(0);
-    assertEquals(accountId, alert.getAccountId());
-    assertEquals(AlertType.CONTINUOUS_VERIFICATION_ALERT, alert.getType());
-    assertEquals(AlertStatus.Open, alert.getStatus());
-    assertEquals(AlertCategory.ContinuousVerification, alert.getCategory());
+    assertThat(alert.getAccountId()).isEqualTo(accountId);
+    assertThat(alert.getType()).isEqualTo(AlertType.CONTINUOUS_VERIFICATION_ALERT);
+    assertThat(alert.getStatus()).isEqualTo(AlertStatus.Open);
+    assertThat(alert.getCategory()).isEqualTo(AlertCategory.ContinuousVerification);
     ContinuousVerificationAlertData alertData = (ContinuousVerificationAlertData) alert.getAlertData();
     assertEquals(savedObjectUuid, alertData.getCvConfiguration().getUuid());
     assertEquals(0.6, alertData.getRiskScore(), 0.0);

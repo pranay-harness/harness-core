@@ -203,20 +203,20 @@ public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
 
     EcsInfrastructureMapping ecsInfraMapping = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
     assertThat(ecsInfraMapping).isNotNull();
-    assertEquals(ecsInfraMapping.getName(), infraMappingName);
+    assertThat(infraMappingName).isEqualTo(ecsInfraMapping.getName());
 
     Yaml yaml = yamlHandler.toYaml(ecsInfraMapping, APP_ID);
     assertThat(yaml).isNotNull();
-    assertEquals(InfrastructureMappingType.AWS_ECS.name(), yaml.getType());
+    assertThat(yaml.getType()).isEqualTo(InfrastructureMappingType.AWS_ECS.name());
 
     String yamlContent = getYamlContent(yaml);
     assertThat(yamlContent).isNotNull();
     yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
-    assertEquals(validYamlContent, yamlContent);
+    assertThat(yamlContent).isEqualTo(validYamlContent);
 
     InfrastructureMapping infraMapping = yamlHandler.get(ACCOUNT_ID, validYamlFilePath);
     assertThat(infraMapping).isNotNull();
-    assertEquals(infraMapping.getName(), infraMappingName);
+    assertThat(infraMappingName).isEqualTo(infraMapping.getName());
 
     yamlHandler.delete(changeContext);
 

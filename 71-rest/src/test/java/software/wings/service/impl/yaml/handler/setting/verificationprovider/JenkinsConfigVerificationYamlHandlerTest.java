@@ -1,7 +1,6 @@
 package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
@@ -48,7 +47,7 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
 
     // 1. Create jenkins verification record
     SettingAttribute settingAttributeSaved = createJenkinsVerificationProvider(jenkinsProviderName);
-    assertEquals(jenkinsProviderName, settingAttributeSaved.getName());
+    assertThat(settingAttributeSaved.getName()).isEqualTo(jenkinsProviderName);
 
     testCRUD(generateSettingValueYamlConfig(jenkinsProviderName, settingAttributeSaved));
   }

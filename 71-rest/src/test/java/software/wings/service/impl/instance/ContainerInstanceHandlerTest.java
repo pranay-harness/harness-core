@@ -2,7 +2,6 @@ package software.wings.service.impl.instance;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
@@ -355,8 +354,8 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
       verify(instanceService, times(1)).save(captorInstance.capture());
 
       List<Instance> capturedInstances = captorInstance.getAllValues();
-      assertEquals(containerId, capturedInstances.get(0).getContainerInstanceKey().getContainerId());
-      assertEquals(instanceType, capturedInstances.get(0).getInstanceType());
+      assertThat(capturedInstances.get(0).getContainerInstanceKey().getContainerId()).isEqualTo(containerId);
+      assertThat(capturedInstances.get(0).getInstanceType()).isEqualTo(instanceType);
     }
   }
 
@@ -660,10 +659,10 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
       verify(instanceService, times(1)).save(captorInstance.capture());
 
       List<Instance> capturedInstances = captorInstance.getAllValues();
-      assertEquals(containerId, capturedInstances.get(0).getContainerInstanceKey().getContainerId());
-      assertEquals(instanceType, capturedInstances.get(0).getInstanceType());
-      assertEquals("old", capturedInstances.get(0).getLastArtifactName());
-      assertEquals("1", capturedInstances.get(0).getLastArtifactBuildNum());
+      assertThat(capturedInstances.get(0).getContainerInstanceKey().getContainerId()).isEqualTo(containerId);
+      assertThat(capturedInstances.get(0).getInstanceType()).isEqualTo(instanceType);
+      assertThat(capturedInstances.get(0).getLastArtifactName()).isEqualTo("old");
+      assertThat(capturedInstances.get(0).getLastArtifactBuildNum()).isEqualTo("1");
     }
   }
 
@@ -672,7 +671,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     verify(instanceService, times(1)).save(captorInstance.capture());
 
     List<Instance> capturedInstances = captorInstance.getAllValues();
-    assertEquals(containerId, capturedInstances.get(0).getContainerInstanceKey().getContainerId());
-    assertEquals(instanceType, capturedInstances.get(0).getInstanceType());
+    assertThat(capturedInstances.get(0).getContainerInstanceKey().getContainerId()).isEqualTo(containerId);
+    assertThat(capturedInstances.get(0).getInstanceType()).isEqualTo(instanceType);
   }
 }

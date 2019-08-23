@@ -1,7 +1,6 @@
 package software.wings.service.impl.yaml.handler.infraDefinition;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -254,9 +253,9 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
     InfrastructureDefinition savedDefinition = captor.getValue();
 
     assertThat(savedDefinition).isNotNull();
-    assertEquals(savedDefinition.getCloudProviderType(), cloudProviderType);
-    assertEquals(savedDefinition.getDeploymentType(), deploymentType);
-    assertEquals(savedDefinition.getInfrastructure().getInfrastructureType(), cloudProviderInfrastructureType);
+    assertThat(cloudProviderType).isEqualTo(savedDefinition.getCloudProviderType());
+    assertThat(deploymentType).isEqualTo(savedDefinition.getDeploymentType());
+    assertThat(cloudProviderInfrastructureType).isEqualTo(savedDefinition.getInfrastructure().getInfrastructureType());
 
     yaml = handler.toYaml(savedDefinition, APP_ID);
 
@@ -264,7 +263,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
     String yamlContent = getYamlContent(yaml);
     assertThat(yamlContent).isNotNull();
     yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
-    assertEquals(yamlString, yamlContent);
+    assertThat(yamlContent).isEqualTo(yamlString);
 
     doReturn(savedDefinition)
         .when(infrastructureDefinitionService)
@@ -273,7 +272,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
     InfrastructureDefinition retrievedDefinition = handler.get(ACCOUNT_ID, yamlFilePath);
 
     assertThat(retrievedDefinition).isNotNull();
-    assertEquals(savedDefinition.getUuid(), retrievedDefinition.getUuid());
+    assertThat(retrievedDefinition.getUuid()).isEqualTo(savedDefinition.getUuid());
 
     doReturn(savedDefinition)
         .when(mockYamlHelper)

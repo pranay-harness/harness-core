@@ -2,7 +2,6 @@ package software.wings.integration;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import com.google.inject.Inject;
 
@@ -364,12 +363,12 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
     List<TransactionTimeSeries> fetchedObject =
         new ArrayList<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(filter));
     assertThat(fetchedObject).hasSize(2);
-    assertEquals("TRANSACTION1", fetchedObject.get(0).getTransactionName());
-    assertEquals("METRIC1", fetchedObject.get(0).getMetricTimeSeries().first().getMetricName());
-    assertEquals("METRIC2", fetchedObject.get(0).getMetricTimeSeries().last().getMetricName());
-    assertEquals("TRANSACTION2", fetchedObject.get(1).getTransactionName());
-    assertEquals("METRIC3", fetchedObject.get(1).getMetricTimeSeries().first().getMetricName());
-    assertEquals("METRIC4", fetchedObject.get(1).getMetricTimeSeries().last().getMetricName());
+    assertThat(fetchedObject.get(0).getTransactionName()).isEqualTo("TRANSACTION1");
+    assertThat(fetchedObject.get(0).getMetricTimeSeries().first().getMetricName()).isEqualTo("METRIC1");
+    assertThat(fetchedObject.get(0).getMetricTimeSeries().last().getMetricName()).isEqualTo("METRIC2");
+    assertThat(fetchedObject.get(1).getTransactionName()).isEqualTo("TRANSACTION2");
+    assertThat(fetchedObject.get(1).getMetricTimeSeries().first().getMetricName()).isEqualTo("METRIC3");
+    assertThat(fetchedObject.get(1).getMetricTimeSeries().last().getMetricName()).isEqualTo("METRIC4");
   }
 
   @Test
@@ -383,11 +382,11 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
     List<TransactionTimeSeries> fetchedObject =
         new ArrayList<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(filter));
     assertThat(fetchedObject).hasSize(2);
-    assertEquals("/exception", fetchedObject.get(0).getTransactionName());
-    assertEquals("Error Percentage", fetchedObject.get(0).getMetricTimeSeries().first().getMetricName());
-    assertEquals("/login", fetchedObject.get(1).getTransactionName());
-    assertEquals("apdexScore", fetchedObject.get(1).getMetricTimeSeries().first().getMetricName());
-    assertEquals("averageResponseTime", fetchedObject.get(1).getMetricTimeSeries().last().getMetricName());
+    assertThat(fetchedObject.get(0).getTransactionName()).isEqualTo("/exception");
+    assertThat(fetchedObject.get(0).getMetricTimeSeries().first().getMetricName()).isEqualTo("Error Percentage");
+    assertThat(fetchedObject.get(1).getTransactionName()).isEqualTo("/login");
+    assertThat(fetchedObject.get(1).getMetricTimeSeries().first().getMetricName()).isEqualTo("apdexScore");
+    assertThat(fetchedObject.get(1).getMetricTimeSeries().last().getMetricName()).isEqualTo("averageResponseTime");
   }
 
   @Test
@@ -401,10 +400,10 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
     List<TransactionTimeSeries> fetchedObject =
         new ArrayList<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(filter));
     assertThat(fetchedObject).hasSize(2);
-    assertEquals("METRIC1", fetchedObject.get(0).getTransactionName());
-    assertEquals("METRIC1", fetchedObject.get(0).getMetricTimeSeries().first().getMetricName());
-    assertEquals("METRIC2", fetchedObject.get(1).getTransactionName());
-    assertEquals("METRIC2", fetchedObject.get(1).getMetricTimeSeries().first().getMetricName());
+    assertThat(fetchedObject.get(0).getTransactionName()).isEqualTo("METRIC1");
+    assertThat(fetchedObject.get(0).getMetricTimeSeries().first().getMetricName()).isEqualTo("METRIC1");
+    assertThat(fetchedObject.get(1).getTransactionName()).isEqualTo("METRIC2");
+    assertThat(fetchedObject.get(1).getMetricTimeSeries().first().getMetricName()).isEqualTo("METRIC2");
   }
 
   @Test
@@ -418,11 +417,11 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
     List<TransactionTimeSeries> fetchedObject =
         new ArrayList<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(filter));
     assertThat(fetchedObject).hasSize(2);
-    assertEquals("/exception", fetchedObject.get(0).getTransactionName());
-    assertEquals("Error Percentage", fetchedObject.get(0).getMetricTimeSeries().first().getMetricName());
-    assertEquals("/login", fetchedObject.get(1).getTransactionName());
-    assertEquals("apdexScore", fetchedObject.get(1).getMetricTimeSeries().first().getMetricName());
-    assertEquals("averageResponseTime", fetchedObject.get(1).getMetricTimeSeries().last().getMetricName());
+    assertThat(fetchedObject.get(0).getTransactionName()).isEqualTo("/exception");
+    assertThat(fetchedObject.get(0).getMetricTimeSeries().first().getMetricName()).isEqualTo("Error Percentage");
+    assertThat(fetchedObject.get(1).getTransactionName()).isEqualTo("/login");
+    assertThat(fetchedObject.get(1).getMetricTimeSeries().first().getMetricName()).isEqualTo("apdexScore");
+    assertThat(fetchedObject.get(1).getMetricTimeSeries().last().getMetricName()).isEqualTo("averageResponseTime");
   }
 
   @Test
@@ -436,10 +435,11 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
     List<TransactionTimeSeries> fetchedObject =
         new ArrayList<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(filter));
     assertThat(fetchedObject).hasSize(2);
-    assertEquals("ECS Container CPU Usage", fetchedObject.get(0).getTransactionName());
-    assertEquals("ECS Container CPU Usage", fetchedObject.get(0).getMetricTimeSeries().first().getMetricName());
-    assertEquals("ECS Container RSS Memory", fetchedObject.get(1).getTransactionName());
-    assertEquals("ECS Container RSS Memory", fetchedObject.get(1).getMetricTimeSeries().first().getMetricName());
+    assertThat(fetchedObject.get(0).getTransactionName()).isEqualTo("ECS Container CPU Usage");
+    assertThat(fetchedObject.get(0).getMetricTimeSeries().first().getMetricName()).isEqualTo("ECS Container CPU Usage");
+    assertThat(fetchedObject.get(1).getTransactionName()).isEqualTo("ECS Container RSS Memory");
+    assertThat(fetchedObject.get(1).getMetricTimeSeries().first().getMetricName())
+        .isEqualTo("ECS Container RSS Memory");
   }
 
   @Test
@@ -453,11 +453,11 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
     List<TransactionTimeSeries> fetchedObject =
         new ArrayList<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(filter));
     assertThat(fetchedObject).hasSize(2);
-    assertEquals("/exception", fetchedObject.get(0).getTransactionName());
-    assertEquals("Error Percentage", fetchedObject.get(0).getMetricTimeSeries().first().getMetricName());
-    assertEquals("/login", fetchedObject.get(1).getTransactionName());
-    assertEquals("apdexScore", fetchedObject.get(1).getMetricTimeSeries().first().getMetricName());
-    assertEquals("averageResponseTime", fetchedObject.get(1).getMetricTimeSeries().last().getMetricName());
+    assertThat(fetchedObject.get(0).getTransactionName()).isEqualTo("/exception");
+    assertThat(fetchedObject.get(0).getMetricTimeSeries().first().getMetricName()).isEqualTo("Error Percentage");
+    assertThat(fetchedObject.get(1).getTransactionName()).isEqualTo("/login");
+    assertThat(fetchedObject.get(1).getMetricTimeSeries().first().getMetricName()).isEqualTo("apdexScore");
+    assertThat(fetchedObject.get(1).getMetricTimeSeries().last().getMetricName()).isEqualTo("averageResponseTime");
   }
 
   @Test
@@ -471,9 +471,9 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
     List<TransactionTimeSeries> fetchedObject =
         new ArrayList<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(filter));
     assertThat(fetchedObject).hasSize(2);
-    assertEquals("CPU Reservation", fetchedObject.get(0).getTransactionName());
-    assertEquals("CPU Reservation", fetchedObject.get(0).getMetricTimeSeries().first().getMetricName());
-    assertEquals("CPU Utilization", fetchedObject.get(1).getTransactionName());
-    assertEquals("CPU Utilization", fetchedObject.get(1).getMetricTimeSeries().first().getMetricName());
+    assertThat(fetchedObject.get(0).getTransactionName()).isEqualTo("CPU Reservation");
+    assertThat(fetchedObject.get(0).getMetricTimeSeries().first().getMetricName()).isEqualTo("CPU Reservation");
+    assertThat(fetchedObject.get(1).getTransactionName()).isEqualTo("CPU Utilization");
+    assertThat(fetchedObject.get(1).getMetricTimeSeries().first().getMetricName()).isEqualTo("CPU Utilization");
   }
 }

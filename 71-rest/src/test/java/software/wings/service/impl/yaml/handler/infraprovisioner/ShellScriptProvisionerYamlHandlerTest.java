@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.infraprovisioner;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -44,8 +44,8 @@ public class ShellScriptProvisionerYamlHandlerTest extends BaseYamlHandlerTest {
   public void testToYaml() {
     ShellScriptInfrastructureProvisioner provisioner = prepareProvisioner();
     Yaml yaml = handler.toYaml(provisioner, "my-app");
-    assertEquals(NAME, yaml.getName());
-    assertEquals(SCRIPT_BODY, yaml.getScriptBody());
+    assertThat(yaml.getName()).isEqualTo(NAME);
+    assertThat(yaml.getScriptBody()).isEqualTo(SCRIPT_BODY);
   }
 
   private ShellScriptInfrastructureProvisioner prepareProvisioner() {

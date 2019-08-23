@@ -3,7 +3,6 @@ package software.wings.service.impl.instance;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anySet;
@@ -400,8 +399,8 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
     List<Instance> capturedInstances = captorInstance.getAllValues();
     assertThat(capturedInstances).hasSize(1);
     Set<String> hostNames = new HashSet<>(asList(HOST_NAME_IP3));
-    assertEquals("1", capturedInstances.get(0).getLastArtifactBuildNum());
-    assertEquals("old", capturedInstances.get(0).getLastArtifactName());
+    assertThat(capturedInstances.get(0).getLastArtifactBuildNum()).isEqualTo("1");
+    assertThat(capturedInstances.get(0).getLastArtifactName()).isEqualTo("old");
     assertThat(hostNames.contains(capturedInstances.get(0).getHostInstanceKey().getHostName())).isTrue();
   }
 }

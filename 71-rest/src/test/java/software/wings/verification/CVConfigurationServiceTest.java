@@ -1,7 +1,7 @@
 package software.wings.verification;
 
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
@@ -73,7 +73,7 @@ public class CVConfigurationServiceTest extends BaseIntegrationTest {
     String updated = cvConfigurationService.updateConfiguration(
         accountId, appId, StateType.APP_DYNAMICS, cvServiceConfiguration2, uuid2);
 
-    assertEquals("Updated UUID should be same", uuid2, updated);
+    assertThat(updated).isEqualTo("Updated UUID should be same", uuid2);
   }
 
   @Test(expected = WingsException.class)

@@ -3,7 +3,6 @@ package io.harness.functional.authentication;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.testframework.restutils.UserRestUtils.loginUserOrNull;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import com.google.inject.Inject;
 
@@ -56,10 +55,10 @@ public class UserLockoutPolicyFunctionalTest extends AbstractFunctionalTest {
     LoginSettingsId = loginSettings.getUuid();
 
     UserLockoutPolicy userLockoutPolicyResponse = loginSettings.getUserLockoutPolicy();
-    assertEquals(userLockoutPolicyResponse.isEnableLockoutPolicy(), ENABLE_LOCKOUT_POLICY);
-    assertEquals(userLockoutPolicyResponse.getNumberOfFailedAttemptsBeforeLockout(), MAX_NUMBER_OF_ATTEMPTS);
-    assertEquals(userLockoutPolicyResponse.getLockOutPeriod(), LOCKOUT_CLEARING_PERIOD);
-    assertEquals(userLockoutPolicyResponse.isNotifyUser(), ENABLE_NOTIFY_USER);
+    assertThat(ENABLE_LOCKOUT_POLICY).isEqualTo(userLockoutPolicyResponse.isEnableLockoutPolicy());
+    assertThat(MAX_NUMBER_OF_ATTEMPTS).isEqualTo(userLockoutPolicyResponse.getNumberOfFailedAttemptsBeforeLockout());
+    assertThat(LOCKOUT_CLEARING_PERIOD).isEqualTo(userLockoutPolicyResponse.getLockOutPeriod());
+    assertThat(ENABLE_NOTIFY_USER).isEqualTo(userLockoutPolicyResponse.isNotifyUser());
   }
 
   @Test
@@ -75,11 +74,12 @@ public class UserLockoutPolicyFunctionalTest extends AbstractFunctionalTest {
 
     LoginSettings loginSettings =
         LoginSettingsUtils.userLockoutPolicyUpdate(bearerToken, getAccount().getUuid(), userLockoutPolicy);
-    assertEquals(loginSettings.getUuid(), LoginSettingsId);
+    assertThat(LoginSettingsId).isEqualTo(loginSettings.getUuid());
 
     UserLockoutPolicy userLockoutPolicyResponse = loginSettings.getUserLockoutPolicy();
-    assertEquals(userLockoutPolicyResponse.isEnableLockoutPolicy(), ENABLE_LOCKOUT_POLICY);
-    assertEquals(userLockoutPolicyResponse.getNumberOfFailedAttemptsBeforeLockout(), UPDATED_MAX_NUMBER_OF_ATTEMPTS);
+    assertThat(ENABLE_LOCKOUT_POLICY).isEqualTo(userLockoutPolicyResponse.isEnableLockoutPolicy());
+    assertThat(UPDATED_MAX_NUMBER_OF_ATTEMPTS)
+        .isEqualTo(userLockoutPolicyResponse.getNumberOfFailedAttemptsBeforeLockout());
   }
 
   @Test
@@ -92,9 +92,9 @@ public class UserLockoutPolicyFunctionalTest extends AbstractFunctionalTest {
     loginUserOrNull(TEST_EMAIL, WRONG_PASSWORD);
     loginUserOrNull(TEST_EMAIL, WRONG_PASSWORD);
     user = userService.getUserByEmail(TEST_EMAIL);
-    assertEquals(user.isUserLocked(), true);
+    assertThat(true).isEqualTo(user.isUserLocked());
     user = UserRestUtils.unlockUser(getAccount().getUuid(), bearerToken, TEST_EMAIL);
-    assertEquals(user.isUserLocked(), false);
+    assertThat(false).isEqualTo(user.isUserLocked());
   }
 
   @Test
@@ -105,9 +105,9 @@ public class UserLockoutPolicyFunctionalTest extends AbstractFunctionalTest {
 
     LoginSettings loginSettings =
         LoginSettingsUtils.userLockoutPolicyUpdate(bearerToken, getAccount().getUuid(), userLockoutPolicy);
-    assertEquals(loginSettings.getUuid(), LoginSettingsId);
+    assertThat(LoginSettingsId).isEqualTo(loginSettings.getUuid());
 
     UserLockoutPolicy userLockoutPolicyResponse = loginSettings.getUserLockoutPolicy();
-    assertEquals(userLockoutPolicyResponse.isEnableLockoutPolicy(), DISABLE_LOCKOUT_POLICY);
+    assertThat(DISABLE_LOCKOUT_POLICY).isEqualTo(userLockoutPolicyResponse.isEnableLockoutPolicy());
   }
 }

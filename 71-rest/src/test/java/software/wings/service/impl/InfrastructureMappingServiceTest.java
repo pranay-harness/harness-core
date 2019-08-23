@@ -8,7 +8,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -988,12 +987,12 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     // map should not contains any null values as that cause db.update to fail
     assertThat(keyValuePairs).hasSize(8);
-    assertEquals(keyValuePairs.get("clusterName"), CLUSTER_NAME);
-    assertEquals(keyValuePairs.get("region"), "us-east-1");
-    assertEquals(keyValuePairs.get("assignPublicIp"), false);
-    assertEquals(keyValuePairs.get("launchType"), LaunchType.EC2.name());
-    assertEquals(keyValuePairs.get("executionRole"), StringUtils.EMPTY);
-    assertEquals(keyValuePairs.get("vpcId"), StringUtils.EMPTY);
+    assertThat(CLUSTER_NAME).isEqualTo(keyValuePairs.get("clusterName"));
+    assertThat("us-east-1").isEqualTo(keyValuePairs.get("region"));
+    assertThat(false).isEqualTo(keyValuePairs.get("assignPublicIp"));
+    assertThat(LaunchType.EC2.name()).isEqualTo(keyValuePairs.get("launchType"));
+    assertThat(StringUtils.EMPTY).isEqualTo(keyValuePairs.get("executionRole"));
+    assertThat(StringUtils.EMPTY).isEqualTo(keyValuePairs.get("vpcId"));
 
     assertThat(keyValuePairs.get("subnetIds")).isNotNull();
     assertThat((List) keyValuePairs.get("subnetIds")).isEmpty();
@@ -1018,13 +1017,13 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
             .build());
 
     assertThat(keyValuePairs).hasSize(4);
-    assertEquals(keyValuePairs.get("organization"), ORGANIZATION);
-    assertEquals(keyValuePairs.get("space"), SPACE);
+    assertThat(ORGANIZATION).isEqualTo(keyValuePairs.get("organization"));
+    assertThat(SPACE).isEqualTo(keyValuePairs.get("space"));
     assertThat(keyValuePairs.get("tempRouteMap")).isNotNull();
     assertThat((List) keyValuePairs.get("tempRouteMap")).hasSize(1);
     assertThat((List) keyValuePairs.get("routeMaps")).hasSize(1);
-    assertEquals(ROUTE, ((List) keyValuePairs.get("tempRouteMap")).get(0));
-    assertEquals(ROUTE, ((List) keyValuePairs.get("routeMaps")).get(0));
+    assertThat(((List) keyValuePairs.get("tempRouteMap")).get(0)).isEqualTo(ROUTE);
+    assertThat(((List) keyValuePairs.get("routeMaps")).get(0)).isEqualTo(ROUTE);
   }
 
   @Test

@@ -3,7 +3,6 @@ package software.wings.integration;
 import static io.harness.rule.OwnerRule.MARK;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 import io.harness.category.element.IntegrationTests;
@@ -79,7 +78,7 @@ public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
 
     // 3. Download the config file to verify content
     String downloadedFileContent = downloadConfig(configId, appId, oldConfigFileVersion);
-    assertEquals(CONFIG_FILE1_CONTENT, downloadedFileContent);
+    assertThat(downloadedFileContent).isEqualTo(CONFIG_FILE1_CONTENT);
 
     // 4. Update the same config file with different content
     savedConfigFile.setFileName(CONFIG_FILE2);
@@ -90,7 +89,7 @@ public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
     int newConfigFileVersion = savedConfigFile.getDefaultVersion();
     assertNotEquals(oldConfigFileVersion, newConfigFileVersion);
     downloadedFileContent = downloadConfig(configId, appId, newConfigFileVersion);
-    assertEquals(CONFIG_FILE2_CONTENT, downloadedFileContent);
+    assertThat(downloadedFileContent).isEqualTo(CONFIG_FILE2_CONTENT);
 
     // 6. Delete the config file
     deleteConfig(configId, appId);
@@ -123,15 +122,15 @@ public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
     // 3. Verify 2nd config file has the latest content
     savedConfigFile2 = getConfig(appId, configId2);
     String downloadedFileContent = downloadConfig(configId2, appId, savedConfigFile2.getDefaultVersion());
-    assertEquals(CONFIG_FILE_OVERRIDE2_CONTENT, downloadedFileContent);
+    assertThat(downloadedFileContent).isEqualTo(CONFIG_FILE_OVERRIDE2_CONTENT);
     // verify again using another file content download API from ConfigService
     downloadedFileContent = new String(configService.getFileContent(appId, savedConfigFile2));
-    assertEquals(CONFIG_FILE_OVERRIDE2_CONTENT, downloadedFileContent);
+    assertThat(downloadedFileContent).isEqualTo(CONFIG_FILE_OVERRIDE2_CONTENT);
 
     // 4. Verify 1st config file content has not changed
     ConfigFile savedConfigFile1 = getConfig(appId, configId1);
     downloadedFileContent = downloadConfig(configId1, appId, savedConfigFile1.getDefaultVersion());
-    assertEquals(CONFIG_FILE1_CONTENT, downloadedFileContent);
+    assertThat(downloadedFileContent).isEqualTo(CONFIG_FILE1_CONTENT);
 
     // 5. Delete all config files
     deleteConfig(configId1, appId);
@@ -169,13 +168,13 @@ public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
     // 4. Verified the original config file content is expected
     ConfigFile savedConfigFile = getConfig(appId, configId);
     String downloadedFileContent = downloadConfig(configId, appId, savedConfigFile.getDefaultVersion());
-    assertEquals(CONFIG_FILE1_CONTENT, downloadedFileContent);
+    assertThat(downloadedFileContent).isEqualTo(CONFIG_FILE1_CONTENT);
 
     // 5. Verify the config override file content is expected
     ConfigFile savedOverrideConfigFile = getConfig(appId, configOverrideId);
     String downloadedOverrideFileContent =
         downloadConfig(configOverrideId, appId, savedOverrideConfigFile.getDefaultVersion());
-    assertEquals(CONFIG_FILE_OVERRIDE2_CONTENT, downloadedOverrideFileContent);
+    assertThat(downloadedOverrideFileContent).isEqualTo(CONFIG_FILE_OVERRIDE2_CONTENT);
 
     // 6. Delete the config file
     deleteConfig(configId, appId);

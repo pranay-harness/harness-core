@@ -21,7 +21,7 @@ public class PrometheusTest extends WingsBaseTest {
   public void testEmptyTxns() {
     final Map<String, String> invalidFields = PrometheusResource.validateTransactions(null, false);
     assertThat(invalidFields).hasSize(1);
-    assertEquals("No metrics given to analyze.", invalidFields.get("timeSeriesToAnalyze"));
+    assertThat(invalidFields.get("timeSeriesToAnalyze")).isEqualTo("No metrics given to analyze.");
   }
 
   @Test

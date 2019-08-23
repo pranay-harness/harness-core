@@ -83,15 +83,17 @@ public class ThirdPartyApiCallServiceTest extends WingsBaseTest {
     List<ThirdPartyApiCallLog> savedApiCallLogs = restResponse.getResource();
     assertThat(savedApiCallLogs).hasSize(numOfApiCallLogs);
     for (int i = 0; i < numOfApiCallLogs; i++) {
-      assertEquals(numOfApiCallLogs - i, savedApiCallLogs.get(i).getCreatedAt());
-      assertEquals(accountId, savedApiCallLogs.get(i).getAccountId());
-      assertEquals(stateExecutionId, savedApiCallLogs.get(i).getStateExecutionId());
+      assertThat(savedApiCallLogs.get(i).getCreatedAt()).isEqualTo(numOfApiCallLogs - i);
+      assertThat(savedApiCallLogs.get(i).getAccountId()).isEqualTo(accountId);
+      assertThat(savedApiCallLogs.get(i).getStateExecutionId()).isEqualTo(stateExecutionId);
       assertEquals(apiCallLogs.get(numOfApiCallLogs - i - 1).getRequestTimeStamp(),
           savedApiCallLogs.get(i).getRequestTimeStamp());
       assertEquals(apiCallLogs.get(numOfApiCallLogs - i - 1).getResponseTimeStamp(),
           savedApiCallLogs.get(i).getResponseTimeStamp());
-      assertEquals(apiCallLogs.get(numOfApiCallLogs - i - 1).getRequest(), savedApiCallLogs.get(i).getRequest());
-      assertEquals(apiCallLogs.get(numOfApiCallLogs - i - 1).getResponse(), savedApiCallLogs.get(i).getResponse());
+      assertThat(savedApiCallLogs.get(i).getRequest())
+          .isEqualTo(apiCallLogs.get(numOfApiCallLogs - i - 1).getRequest());
+      assertThat(savedApiCallLogs.get(i).getResponse())
+          .isEqualTo(apiCallLogs.get(numOfApiCallLogs - i - 1).getResponse());
     }
   }
 }

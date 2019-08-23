@@ -2,7 +2,6 @@ package software.wings.yaml.handler;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -99,7 +98,7 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
     String yamlContent = getYamlContent(yaml);
     assertThat(yamlContent).isNotNull();
     yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
-    assertEquals(validYamlContent, yamlContent);
+    assertThat(yamlContent).isEqualTo(validYamlContent);
 
     Environment envFromGet = yamlHandler.get(ACCOUNT_ID, validYamlFilePath);
     compareEnv(environment, envFromGet);
@@ -132,9 +131,9 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   private void compareEnv(Environment lhs, Environment rhs) {
-    assertEquals(lhs.getName(), rhs.getName());
-    assertEquals(lhs.getAppId(), rhs.getAppId());
-    assertEquals(lhs.getEnvironmentType(), rhs.getEnvironmentType());
-    assertEquals(lhs.getDescription(), rhs.getDescription());
+    assertThat(rhs.getName()).isEqualTo(lhs.getName());
+    assertThat(rhs.getAppId()).isEqualTo(lhs.getAppId());
+    assertThat(rhs.getEnvironmentType()).isEqualTo(lhs.getEnvironmentType());
+    assertThat(rhs.getDescription()).isEqualTo(lhs.getDescription());
   }
 }

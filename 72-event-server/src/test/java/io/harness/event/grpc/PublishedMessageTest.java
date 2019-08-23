@@ -1,6 +1,6 @@
 package io.harness.event.grpc;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.util.Timestamps;
@@ -31,6 +31,6 @@ public class PublishedMessageTest {
                                             .type(ecsTaskLifecycle.getClass().getName())
                                             .build();
     publishedMessage.postLoad();
-    assertEquals(ecsTaskLifecycle, publishedMessage.getMessage());
+    assertThat(publishedMessage.getMessage()).isEqualTo(ecsTaskLifecycle);
   }
 }

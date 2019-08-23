@@ -143,10 +143,10 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     assertEquals(TimeUnit.HOURS.toMinutes(hoursToAsk) / CRON_POLL_INTERVAL_IN_MINUTES,
         heatMapSummary.getRiskLevelSummary().size());
     heatMapSummary.getRiskLevelSummary().forEach(riskLevel -> {
-      assertEquals(0, riskLevel.getHighRisk());
-      assertEquals(0, riskLevel.getMediumRisk());
-      assertEquals(0, riskLevel.getLowRisk());
-      assertEquals(1, riskLevel.getNa());
+      assertThat(riskLevel.getHighRisk()).isEqualTo(0);
+      assertThat(riskLevel.getMediumRisk()).isEqualTo(0);
+      assertThat(riskLevel.getLowRisk()).isEqualTo(0);
+      assertThat(riskLevel.getNa()).isEqualTo(1);
     });
   }
 
@@ -208,10 +208,10 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     assertEquals(TimeUnit.HOURS.toMinutes(hoursToAsk) / CRON_POLL_INTERVAL_IN_MINUTES,
         heatMapSummary.getRiskLevelSummary().size());
     heatMapSummary.getRiskLevelSummary().forEach(riskLevel -> {
-      assertEquals(1, riskLevel.getHighRisk());
-      assertEquals(0, riskLevel.getMediumRisk());
-      assertEquals(0, riskLevel.getLowRisk());
-      assertEquals(0, riskLevel.getNa());
+      assertThat(riskLevel.getHighRisk()).isEqualTo(1);
+      assertThat(riskLevel.getMediumRisk()).isEqualTo(0);
+      assertThat(riskLevel.getLowRisk()).isEqualTo(0);
+      assertThat(riskLevel.getNa()).isEqualTo(0);
     });
 
     // ask for 35 mins before and 48 mins after
@@ -230,14 +230,14 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     AtomicInteger index = new AtomicInteger();
     heatMapSummary.getRiskLevelSummary().forEach(riskLevel -> {
       if (index.get() == 0 || index.get() >= 25) {
-        assertEquals(0, riskLevel.getHighRisk());
-        assertEquals(1, riskLevel.getNa());
+        assertThat(riskLevel.getHighRisk()).isEqualTo(0);
+        assertThat(riskLevel.getNa()).isEqualTo(1);
       } else {
-        assertEquals(1, riskLevel.getHighRisk());
-        assertEquals(0, riskLevel.getNa());
+        assertThat(riskLevel.getHighRisk()).isEqualTo(1);
+        assertThat(riskLevel.getNa()).isEqualTo(0);
       }
-      assertEquals(0, riskLevel.getMediumRisk());
-      assertEquals(0, riskLevel.getLowRisk());
+      assertThat(riskLevel.getMediumRisk()).isEqualTo(0);
+      assertThat(riskLevel.getLowRisk()).isEqualTo(0);
       index.incrementAndGet();
     });
 
@@ -263,17 +263,17 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     index.set(0);
     heatMapSummary.getRiskLevelSummary().forEach(riskLevel -> {
       if (index.get() == 0 || index.get() >= 25) {
-        assertEquals(0, riskLevel.getHighRisk());
-        assertEquals(1, riskLevel.getNa());
+        assertThat(riskLevel.getHighRisk()).isEqualTo(0);
+        assertThat(riskLevel.getNa()).isEqualTo(1);
       } else if (index.get() == 7 || index.get() == 21 || index.get() == 22) {
-        assertEquals(1, riskLevel.getHighRisk());
-        assertEquals(0, riskLevel.getNa());
+        assertThat(riskLevel.getHighRisk()).isEqualTo(1);
+        assertThat(riskLevel.getNa()).isEqualTo(0);
       } else {
-        assertEquals(1, riskLevel.getHighRisk());
-        assertEquals(0, riskLevel.getNa());
+        assertThat(riskLevel.getHighRisk()).isEqualTo(1);
+        assertThat(riskLevel.getNa()).isEqualTo(0);
       }
-      assertEquals(0, riskLevel.getMediumRisk());
-      assertEquals(0, riskLevel.getLowRisk());
+      assertThat(riskLevel.getMediumRisk()).isEqualTo(0);
+      assertThat(riskLevel.getLowRisk()).isEqualTo(0);
       index.incrementAndGet();
     });
   }
@@ -384,7 +384,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     // current ts = 15 mins => risk = 1
     // After overlap, risk of metric should be 1, not 0
     // Risk of current ts *overrides* risk of history ts
-    assertEquals(1, metricMap.get("95th Percentile Response Time (ms)").getRisk());
+    assertThat(metricMap.get("95th Percentile Response Time (ms)").getRisk()).isEqualTo(1);
   }
 
   private void saveMetricDataToDb(int analysisMinute, CVConfiguration cvConfiguration, StateType stateType) {
@@ -784,8 +784,8 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
         break;
       }
     }
-    assertEquals(2, timeSeriesRisk.getRisk());
-    assertEquals("End time should be correct", TimeUnit.MINUTES.toMillis(25685341), timeSeriesRisk.getEndTime());
+    assertThat(timeSeriesRisk.getRisk()).isEqualTo(2);
+    assertThat(timeSeriesRisk.getEndTime()).isEqualTo(TimeUnit.MINUTES.toMillis(25685341));
     assertEquals("Start time should be correct",
         TimeUnit.MINUTES.toMillis(25685341 - CRON_POLL_INTERVAL_IN_MINUTES) + 1, timeSeriesRisk.getStartTime());
   }
@@ -903,14 +903,14 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
       }
     }
 
-    assertEquals(-1, apiArtifactsRespTimeTS.getRisk());
+    assertThat(apiArtifactsRespTimeTS.getRisk()).isEqualTo(-1);
 
     List<Double> actualTimeSeries = new ArrayList<>();
     for (TimeSeriesDataPoint datapoint : apiArtifactsRespTimeTS.getTimeSeries()) {
       actualTimeSeries.add(datapoint.getValue());
     }
     assertThat(actualTimeSeries).hasSize(135);
-    assertEquals(expectedTimeSeries, actualTimeSeries);
+    assertThat(actualTimeSeries).isEqualTo(expectedTimeSeries);
   }
 
   // Test to be un-ignored as per https://harness.atlassian.net/browse/LE-1150
@@ -1037,7 +1037,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
           >= timeSeriesList.get(i + 1).getMetricTimeSeries().first().getRisk())
           .isTrue();
     }
-    assertEquals("/api/setup-as-code", timeSeriesList.get(0).getTransactionName());
+    assertThat(timeSeriesList.get(0).getTransactionName()).isEqualTo("/api/setup-as-code");
   }
 
   private void saveRiskSummaries(List<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords) {
@@ -1147,22 +1147,22 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
             .getResource();
     List<TransactionTimeSeries> timeSeriesList = new ArrayList<>(timeSeries);
     assertThat(timeSeries).hasSize(3);
-    assertEquals("/api/userGroups", timeSeriesList.get(0).getTransactionName());
+    assertThat(timeSeriesList.get(0).getTransactionName()).isEqualTo("/api/userGroups");
     assertThat(timeSeriesList.get(0).getMetricTimeSeries()).hasSize(1);
     assertEquals(
         "95th Percentile Response Time (ms)", timeSeriesList.get(0).getMetricTimeSeries().first().getMetricName());
 
-    assertEquals("/api/setup-as-code", timeSeriesList.get(1).getTransactionName());
+    assertThat(timeSeriesList.get(1).getTransactionName()).isEqualTo("/api/setup-as-code");
     assertThat(timeSeriesList.get(1).getMetricTimeSeries()).hasSize(2);
     assertEquals(
         "95th Percentile Response Time (ms)", timeSeriesList.get(1).getMetricTimeSeries().first().getMetricName());
-    assertEquals("Number of Slow Calls", timeSeriesList.get(1).getMetricTimeSeries().last().getMetricName());
+    assertThat(timeSeriesList.get(1).getMetricTimeSeries().last().getMetricName()).isEqualTo("Number of Slow Calls");
 
-    assertEquals("/api/infrastructure-mappings", timeSeriesList.get(2).getTransactionName());
+    assertThat(timeSeriesList.get(2).getTransactionName()).isEqualTo("/api/infrastructure-mappings");
     assertThat(timeSeriesList.get(2).getMetricTimeSeries()).hasSize(2);
     assertEquals(
         "95th Percentile Response Time (ms)", timeSeriesList.get(2).getMetricTimeSeries().first().getMetricName());
-    assertEquals("Number of Slow Calls", timeSeriesList.get(2).getMetricTimeSeries().last().getMetricName());
+    assertThat(timeSeriesList.get(2).getMetricTimeSeries().last().getMetricName()).isEqualTo("Number of Slow Calls");
   }
 
   @Test
@@ -1216,7 +1216,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     assertThat(timeSeries).hasSize(17);
     timeSeries.forEach(transactionTimeSeries -> {
       assertThat(transactionTimeSeries.getMetricTimeSeries()).hasSize(1);
-      assertEquals("Number of Slow Calls", transactionTimeSeries.getMetricTimeSeries().first().getMetricName());
+      assertThat(transactionTimeSeries.getMetricTimeSeries().first().getMetricName()).isEqualTo("Number of Slow Calls");
     });
   }
 
@@ -1258,13 +1258,13 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
                 Lists.newArrayList("95th Percentile Response Time (ms)", "Number of Slow Calls"), Lists.newArrayList())
             .getResource();
     assertThat(timeSeries).hasSize(2);
-    assertEquals("/api/setup-as-code", timeSeries.first().getTransactionName());
-    assertEquals("/api/infrastructure-mappings", timeSeries.last().getTransactionName());
+    assertThat(timeSeries.first().getTransactionName()).isEqualTo("/api/setup-as-code");
+    assertThat(timeSeries.last().getTransactionName()).isEqualTo("/api/infrastructure-mappings");
     timeSeries.forEach(transactionTimeSeries -> {
       assertThat(transactionTimeSeries.getMetricTimeSeries()).hasSize(2);
       assertEquals(
           "95th Percentile Response Time (ms)", transactionTimeSeries.getMetricTimeSeries().first().getMetricName());
-      assertEquals("Number of Slow Calls", transactionTimeSeries.getMetricTimeSeries().last().getMetricName());
+      assertThat(transactionTimeSeries.getMetricTimeSeries().last().getMetricName()).isEqualTo("Number of Slow Calls");
     });
 
     timeSeries = cvDashboardResource
@@ -1274,11 +1274,11 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
                      .getResource();
 
     assertThat(timeSeries).hasSize(2);
-    assertEquals("/api/setup-as-code", timeSeries.first().getTransactionName());
-    assertEquals("/api/infrastructure-mappings", timeSeries.last().getTransactionName());
+    assertThat(timeSeries.first().getTransactionName()).isEqualTo("/api/setup-as-code");
+    assertThat(timeSeries.last().getTransactionName()).isEqualTo("/api/infrastructure-mappings");
     timeSeries.forEach(transactionTimeSeries -> {
       assertThat(transactionTimeSeries.getMetricTimeSeries()).hasSize(1);
-      assertEquals("Number of Slow Calls", transactionTimeSeries.getMetricTimeSeries().first().getMetricName());
+      assertThat(transactionTimeSeries.getMetricTimeSeries().first().getMetricName()).isEqualTo("Number of Slow Calls");
     });
   }
 }

@@ -13,7 +13,6 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -165,7 +164,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
 
     String fileName = generateUuid();
     CommandExecutionStatus execute = executor.executeCommandString("pwd && whoami");
-    assertEquals("ssh command result is " + execute.toString(), SUCCESS, execute);
+    assertThat(execute).isEqualTo(SUCCESS);
   }
 
   /**

@@ -135,7 +135,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
 
     assertThat(resultList).isNotNull();
     assertThat(resultList).hasSize(numOfGroups);
-    resultList.forEach(record -> assertEquals(numOfMinutes, record.getAnalysisMinute()));
+    resultList.forEach(record -> assertThat(record.getAnalysisMinute()).isEqualTo(numOfMinutes));
   }
 
   private LearningEngineAnalysisTask getLearningEngineAnalysisTask() {
@@ -317,26 +317,27 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
           AnalysisContext.builder().stateExecutionId(stateExecutionId).serviceId("service-" + i).build());
     }
 
-    assertEquals(numOfRecords, wingsPersistence.createQuery(TimeSeriesMetricTemplates.class).count());
-    assertEquals(numOfRecords, wingsPersistence.createQuery(NewRelicMetricDataRecord.class).count());
-    assertEquals(numOfRecords, wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class).count());
-    assertEquals(numOfRecords, wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class).count());
-    assertEquals(numOfRecords, wingsPersistence.createQuery(TimeSeriesMLScores.class).count());
-    assertEquals(numOfRecords, wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class).count());
-    assertEquals(numOfRecords, wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count());
-    assertEquals(numOfRecords, wingsPersistence.createQuery(TimeSeriesMetricGroup.class).count());
-    assertEquals(numOfRecords, wingsPersistence.createQuery(AnalysisContext.class).count());
+    assertThat(wingsPersistence.createQuery(TimeSeriesMetricTemplates.class).count()).isEqualTo(numOfRecords);
+    assertThat(wingsPersistence.createQuery(NewRelicMetricDataRecord.class).count()).isEqualTo(numOfRecords);
+    assertThat(wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class).count()).isEqualTo(numOfRecords);
+    assertThat(wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class).count()).isEqualTo(numOfRecords);
+    assertThat(wingsPersistence.createQuery(TimeSeriesMLScores.class).count()).isEqualTo(numOfRecords);
+    assertThat(wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class).count())
+        .isEqualTo(numOfRecords);
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count()).isEqualTo(numOfRecords);
+    assertThat(wingsPersistence.createQuery(TimeSeriesMetricGroup.class).count()).isEqualTo(numOfRecords);
+    assertThat(wingsPersistence.createQuery(AnalysisContext.class).count()).isEqualTo(numOfRecords);
 
     managerAnalysisService.cleanUpForMetricRetry(stateExecutionId);
-    assertEquals(0, wingsPersistence.createQuery(TimeSeriesMetricTemplates.class).count());
-    assertEquals(0, wingsPersistence.createQuery(NewRelicMetricDataRecord.class).count());
-    assertEquals(0, wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class).count());
-    assertEquals(0, wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class).count());
-    assertEquals(0, wingsPersistence.createQuery(TimeSeriesMLScores.class).count());
-    assertEquals(0, wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class).count());
-    assertEquals(0, wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count());
-    assertEquals(0, wingsPersistence.createQuery(TimeSeriesMetricGroup.class).count());
-    assertEquals(0, wingsPersistence.createQuery(AnalysisContext.class).count());
+    assertThat(wingsPersistence.createQuery(TimeSeriesMetricTemplates.class).count()).isEqualTo(0);
+    assertThat(wingsPersistence.createQuery(NewRelicMetricDataRecord.class).count()).isEqualTo(0);
+    assertThat(wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class).count()).isEqualTo(0);
+    assertThat(wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class).count()).isEqualTo(0);
+    assertThat(wingsPersistence.createQuery(TimeSeriesMLScores.class).count()).isEqualTo(0);
+    assertThat(wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class).count()).isEqualTo(0);
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count()).isEqualTo(0);
+    assertThat(wingsPersistence.createQuery(TimeSeriesMetricGroup.class).count()).isEqualTo(0);
+    assertThat(wingsPersistence.createQuery(AnalysisContext.class).count()).isEqualTo(0);
   }
 
   private Application mockApplication() {

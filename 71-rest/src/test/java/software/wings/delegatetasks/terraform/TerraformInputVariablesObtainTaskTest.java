@@ -2,7 +2,6 @@ package software.wings.delegatetasks.terraform;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.when;
@@ -97,6 +96,6 @@ public class TerraformInputVariablesObtainTaskTest extends WingsBaseTest {
         .thenReturn(GitFetchFilesResult.builder().files(Collections.EMPTY_LIST).build());
 
     TerraformInputVariablesTaskResponse response = delegateRunnableTask.run(new Object[] {parameters});
-    assertEquals("No Terraform Files Found", response.getTerraformExecutionData().getErrorMessage());
+    assertThat(response.getTerraformExecutionData().getErrorMessage()).isEqualTo("No Terraform Files Found");
   }
 }

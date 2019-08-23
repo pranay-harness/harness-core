@@ -3,7 +3,6 @@ package software.wings.service.cyberark;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
@@ -184,8 +183,8 @@ public class CyberArkTest extends WingsBaseTest {
 
     CyberArkConfig savedConfig =
         (CyberArkConfig) secretManagerConfigService.getDefaultSecretManager(cyberArkConfig.getAccountId());
-    assertEquals(cyberArkConfig.getName(), savedConfig.getName());
-    assertEquals(cyberArkConfig.getAccountId(), savedConfig.getAccountId());
+    assertThat(savedConfig.getName()).isEqualTo(cyberArkConfig.getName());
+    assertThat(savedConfig.getAccountId()).isEqualTo(cyberArkConfig.getAccountId());
   }
 
   @Test
@@ -204,7 +203,7 @@ public class CyberArkTest extends WingsBaseTest {
 
     CyberArkConfig savedConfig =
         (CyberArkConfig) secretManagerConfigService.getDefaultSecretManager(cyberArkConfig.getAccountId());
-    assertEquals(name, savedConfig.getName());
+    assertThat(savedConfig.getName()).isEqualTo(name);
     List<EncryptedData> encryptedDataList =
         wingsPersistence.createQuery(EncryptedData.class, excludeAuthority).asList();
     if (isGlobalKmsEnabled) {
@@ -212,9 +211,9 @@ public class CyberArkTest extends WingsBaseTest {
     } else {
       assertThat(encryptedDataList).hasSize(numOfEncryptedValsForCyberArk);
       for (EncryptedData encryptedData : encryptedDataList) {
-        assertEquals(encryptedData.getName(), name + "_clientCertificate");
+        assertThat(name + "_clientCertificate").isEqualTo(encryptedData.getName());
         assertThat(encryptedData.getParentIds()).hasSize(1);
-        assertEquals(savedConfig.getUuid(), encryptedData.getParentIds().iterator().next());
+        assertThat(encryptedData.getParentIds().iterator().next()).isEqualTo(savedConfig.getUuid());
       }
     }
 
@@ -228,7 +227,7 @@ public class CyberArkTest extends WingsBaseTest {
     assertThat(encryptedDataList).hasSize(numOfEncryptedValsForCyberArk);
     for (EncryptedData encryptedData : encryptedDataList) {
       assertThat(encryptedData.getParentIds()).hasSize(1);
-      assertEquals(savedConfig.getUuid(), encryptedData.getParentIds().iterator().next());
+      assertThat(encryptedData.getParentIds().iterator().next()).isEqualTo(savedConfig.getUuid());
     }
   }
 
@@ -246,8 +245,8 @@ public class CyberArkTest extends WingsBaseTest {
     EncryptedData encryptedData = secretManager.encrypt(
         accountId, SettingVariableTypes.ARTIFACTORY, null, queryAsPath, null, secretName, new UsageRestrictions());
     assertThat(encryptedData).isNotNull();
-    assertEquals(EncryptionType.CYBERARK, encryptedData.getEncryptionType());
-    assertEquals(SettingVariableTypes.ARTIFACTORY, encryptedData.getType());
+    assertThat(encryptedData.getEncryptionType()).isEqualTo(EncryptionType.CYBERARK);
+    assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.ARTIFACTORY);
     assertThat(encryptedData.getEncryptedValue()).isNull();
 
     // Encrypt of real secret text will use a LOCAL Harness SecretStore to encrypt, since CyberArk doesn't support
@@ -256,12 +255,12 @@ public class CyberArkTest extends WingsBaseTest {
         null, secretName, new UsageRestrictions());
     assertThat(encryptedData).isNotNull();
     if (isGlobalKmsEnabled) {
-      assertEquals(EncryptionType.KMS, encryptedData.getEncryptionType());
-      assertEquals(kmsId, encryptedData.getKmsId());
+      assertThat(encryptedData.getEncryptionType()).isEqualTo(EncryptionType.KMS);
+      assertThat(encryptedData.getKmsId()).isEqualTo(kmsId);
     } else {
-      assertEquals(EncryptionType.LOCAL, encryptedData.getEncryptionType());
+      assertThat(encryptedData.getEncryptionType()).isEqualTo(EncryptionType.LOCAL);
     }
-    assertEquals(SettingVariableTypes.ARTIFACTORY, encryptedData.getType());
+    assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.ARTIFACTORY);
     assertThat(encryptedData.getEncryptedValue()).isNotNull();
   }
 
@@ -288,33 +287,33 @@ public class CyberArkTest extends WingsBaseTest {
     EncryptedData encryptedPasswordData =
         wingsPersistence.get(EncryptedData.class, savedJenkinsConfig.getEncryptedPassword());
     assertThat(encryptedPasswordData).isNotNull();
-    assertEquals(SettingVariableTypes.JENKINS, encryptedPasswordData.getType());
+    assertThat(encryptedPasswordData.getType()).isEqualTo(SettingVariableTypes.JENKINS);
     if (isGlobalKmsEnabled) {
-      assertEquals(EncryptionType.KMS, encryptedPasswordData.getEncryptionType());
-      assertEquals(kmsId, encryptedPasswordData.getKmsId());
+      assertThat(encryptedPasswordData.getEncryptionType()).isEqualTo(EncryptionType.KMS);
+      assertThat(encryptedPasswordData.getKmsId()).isEqualTo(kmsId);
       decryptedValue = kmsService.decrypt(encryptedPasswordData, accountId, kmsConfig);
     } else {
-      assertEquals(EncryptionType.LOCAL, encryptedPasswordData.getEncryptionType());
+      assertThat(encryptedPasswordData.getEncryptionType()).isEqualTo(EncryptionType.LOCAL);
       decryptedValue = localEncryptionService.decrypt(encryptedPasswordData, accountId, localEncryptionConfig);
     }
 
     assertThat(decryptedValue).isNotNull();
-    assertEquals(new String(jenkinsConfig.getPassword()), new String(decryptedValue));
+    assertThat(new String(decryptedValue)).isEqualTo(new String(jenkinsConfig.getPassword()));
 
     EncryptedData encryptedTokenData =
         wingsPersistence.get(EncryptedData.class, savedJenkinsConfig.getEncryptedToken());
     assertThat(encryptedTokenData).isNotNull();
-    assertEquals(SettingVariableTypes.JENKINS, encryptedTokenData.getType());
+    assertThat(encryptedTokenData.getType()).isEqualTo(SettingVariableTypes.JENKINS);
     if (isGlobalKmsEnabled) {
-      assertEquals(EncryptionType.KMS, encryptedTokenData.getEncryptionType());
-      assertEquals(kmsId, encryptedTokenData.getKmsId());
+      assertThat(encryptedTokenData.getEncryptionType()).isEqualTo(EncryptionType.KMS);
+      assertThat(encryptedTokenData.getKmsId()).isEqualTo(kmsId);
       decryptedValue = kmsService.decrypt(encryptedTokenData, accountId, kmsConfig);
     } else {
-      assertEquals(EncryptionType.LOCAL, encryptedTokenData.getEncryptionType());
+      assertThat(encryptedTokenData.getEncryptionType()).isEqualTo(EncryptionType.LOCAL);
       decryptedValue = localEncryptionService.decrypt(encryptedTokenData, accountId, localEncryptionConfig);
     }
 
-    assertEquals(null, decryptedValue);
+    assertThat(decryptedValue).isEqualTo(null);
   }
 
   private CyberArkConfig saveCyberArkConfig() {

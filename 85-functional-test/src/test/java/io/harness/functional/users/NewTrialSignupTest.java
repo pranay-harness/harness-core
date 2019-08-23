@@ -2,7 +2,6 @@ package io.harness.functional.users;
 
 import static io.harness.rule.OwnerRule.RAMA;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import com.google.inject.Inject;
 
@@ -58,7 +57,7 @@ public class NewTrialSignupTest extends AbstractFunctionalTest {
 
     User user = urUtil.completeNewTrialUserSignup(bearerToken, invite.getUuid());
     assertThat(user).isNotNull();
-    assertEquals(user.getEmail(), invite.getEmail());
+    assertThat(invite.getEmail()).isEqualTo(user.getEmail());
   }
 
   @Test()

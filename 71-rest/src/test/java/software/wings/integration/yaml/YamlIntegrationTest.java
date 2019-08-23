@@ -108,7 +108,7 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
 
     GitFetchFilesResult gitFetchFilesResult = getGitFetchFilesResult(yamlPath);
     assertThat(gitFetchFilesResult.getFiles()).hasSize(1);
-    assertEquals("Index.yaml", gitFetchFilesResult.getFiles().get(0).getFilePath());
+    assertThat(gitFetchFilesResult.getFiles().get(0).getFilePath()).isEqualTo("Index.yaml");
   }
 
   @Test
@@ -205,7 +205,8 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
 
     GitFetchFilesResult gitFetchFilesResult = getGitFetchFilesResult(yamlPath);
     assertThat(gitFetchFilesResult.getFiles()).hasSize(1);
-    assertEquals(cloudProviderName + YamlConstants.YAML_EXTENSION, gitFetchFilesResult.getFiles().get(0).getFilePath());
+    assertThat(gitFetchFilesResult.getFiles().get(0).getFilePath())
+        .isEqualTo(cloudProviderName + YamlConstants.YAML_EXTENSION);
   }
 
   @Test
@@ -247,7 +248,7 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
     String yamlPath = yamlIntegrationTestHelper.getEnvironmentYamlPath(application, environment);
     GitFetchFilesResult gitFetchFilesResult = getGitFetchFilesResult(yamlPath);
     assertThat(gitFetchFilesResult.getFiles()).hasSize(1);
-    assertEquals(YamlConstants.INDEX_YAML, gitFetchFilesResult.getFiles().get(0).getFilePath());
+    assertThat(gitFetchFilesResult.getFiles().get(0).getFilePath()).isEqualTo(YamlConstants.INDEX_YAML);
   }
 
   // Environment with Physical Service Infra

@@ -3,7 +3,6 @@ package software.wings.yaml.handler.connectors.configyamlhandlers;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
-import static org.junit.Assert.assertEquals;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
@@ -141,10 +140,10 @@ public abstract class BaseSettingValueConfigYamlHandlerTest extends BaseYamlHand
   }
 
   protected void verify(SettingAttribute settingAttributeSaved, SettingAttribute settingAttribute) {
-    assertEquals(settingAttributeSaved.getName(), settingAttribute.getName());
+    assertThat(settingAttribute.getName()).isEqualTo(settingAttributeSaved.getName());
     assertThat(settingAttributeSaved.getValue()).isNotNull();
     assertThat(settingAttribute.getValue()).isNotNull();
-    assertEquals(settingAttributeSaved.getValue().toString(), settingAttribute.getValue().toString());
+    assertThat(settingAttribute.getValue().toString()).isEqualTo(settingAttributeSaved.getValue().toString());
   }
 
   private void updateSettingAttribute(SettingValueYamlConfig settingValueYamlConfig) {

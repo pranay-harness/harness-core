@@ -127,10 +127,10 @@ public class DatadogCVConfigurationYamlHandlerTest extends CategoryTest {
 
     DatadogCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
 
-    assertEquals("Name should be same", cvServiceConfiguration.getName(), yaml.getName());
-    assertEquals("AccountId should be same", cvServiceConfiguration.getAccountId(), yaml.getAccountId());
-    assertEquals("ServiceName should be same", serviceName, yaml.getServiceName());
-    assertEquals("envId should be same", envName, yaml.getEnvName());
+    assertThat(yaml.getName()).isEqualTo(cvServiceConfiguration.getName());
+    assertThat(yaml.getAccountId()).isEqualTo(cvServiceConfiguration.getAccountId());
+    assertThat(yaml.getServiceName()).isEqualTo(serviceName);
+    assertThat(yaml.getEnvName()).isEqualTo(envName);
     assertEquals("ApplicationFilter should be same",
         cvServiceConfiguration.getDockerMetrics().keySet().iterator().next(),
         yaml.getDockerMetrics().keySet().iterator().next());
@@ -151,10 +151,10 @@ public class DatadogCVConfigurationYamlHandlerTest extends CategoryTest {
     changeContext.setYaml(buildYaml());
     DatadogCVServiceConfiguration bean = yamlHandler.upsertFromYaml(changeContext, null);
 
-    assertEquals("name should match", "TestDDConfig", bean.getName());
-    assertEquals("appId should match", appId, bean.getAppId());
-    assertEquals("envId should match", envId, bean.getEnvId());
-    assertEquals("serviceId should match", serviceId, bean.getServiceId());
+    assertThat(bean.getName()).isEqualTo("TestDDConfig");
+    assertThat(bean.getAppId()).isEqualTo(appId);
+    assertThat(bean.getEnvId()).isEqualTo(envId);
+    assertThat(bean.getServiceId()).isEqualTo(serviceId);
     assertThat(bean.getUuid()).isNotNull();
   }
 
@@ -211,7 +211,7 @@ public class DatadogCVConfigurationYamlHandlerTest extends CategoryTest {
     yaml.setDatadogServiceName("todolist");
     DatadogCVServiceConfiguration bean = yamlHandler.upsertFromYaml(changeContext, null);
 
-    assertEquals("Service name matches", "todolist", bean.getDatadogServiceName());
+    assertThat(bean.getDatadogServiceName()).isEqualTo("todolist");
   }
 
   @Test
@@ -230,7 +230,7 @@ public class DatadogCVConfigurationYamlHandlerTest extends CategoryTest {
     changeContext.setYaml(buildYaml());
     DatadogCVServiceConfiguration bean = yamlHandler.upsertFromYaml(changeContext, null);
 
-    assertEquals("name should match", "TestDDConfig", bean.getName());
-    assertEquals("UUID should match", cvConfig.getUuid(), bean.getUuid());
+    assertThat(bean.getName()).isEqualTo("TestDDConfig");
+    assertThat(bean.getUuid()).isEqualTo(cvConfig.getUuid());
   }
 }

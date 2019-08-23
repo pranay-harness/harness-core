@@ -2,7 +2,6 @@ package software.wings.integration.verification;
 
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
@@ -54,15 +53,15 @@ public class CVActivityLogIntegrationTest extends BaseIntegrationTest {
         new GenericType<RestResponse<List<CVActivityLogApiResponse>>>() {});
 
     assertThat(response.getResource().isEmpty()).isFalse();
-    assertEquals(response.getResource().size(), 1);
+    assertThat(1).isEqualTo(response.getResource().size());
     CVActivityLogApiResponse cvActivityLogApiResponse = response.getResource().get(0);
-    assertEquals(0, (long) cvActivityLogApiResponse.getDataCollectionMinute());
-    assertEquals(logLine, cvActivityLogApiResponse.getLog(), logLine);
-    assertEquals(stateExecutionId, cvActivityLogApiResponse.getStateExecutionId());
-    assertEquals("INFO", cvActivityLogApiResponse.getLogLevel());
+    assertThat((long) cvActivityLogApiResponse.getDataCollectionMinute()).isEqualTo(0);
+    assertThat(cvActivityLogApiResponse.getLog()).isEqualTo(logLine);
+    assertThat(cvActivityLogApiResponse.getStateExecutionId()).isEqualTo(stateExecutionId);
+    assertThat(cvActivityLogApiResponse.getLogLevel()).isEqualTo("INFO");
     assertThat(cvActivityLogApiResponse.getTimestamp() >= now).isTrue();
-    assertEquals(now, (long) cvActivityLogApiResponse.getTimestampParams().get(0));
-    assertEquals(logLine, cvActivityLogApiResponse.getAnsiLog());
+    assertThat((long) cvActivityLogApiResponse.getTimestampParams().get(0)).isEqualTo(now);
+    assertThat(cvActivityLogApiResponse.getAnsiLog()).isEqualTo(logLine);
   }
 
   @Test
@@ -81,14 +80,15 @@ public class CVActivityLogIntegrationTest extends BaseIntegrationTest {
         new GenericType<RestResponse<List<CVActivityLogApiResponse>>>() {});
 
     assertThat(response.getResource().isEmpty()).isFalse();
-    assertEquals(response.getResource().size(), 1);
+    assertThat(1).isEqualTo(response.getResource().size());
     CVActivityLogApiResponse cvActivityLogApiResponse = response.getResource().get(0);
-    assertEquals(TimeUnit.MILLISECONDS.toMinutes(now), (long) cvActivityLogApiResponse.getDataCollectionMinute());
-    assertEquals(logLine, cvActivityLogApiResponse.getLog(), logLine);
-    assertEquals(cvConfigId, cvActivityLogApiResponse.getCvConfigId());
-    assertEquals("ERROR", cvActivityLogApiResponse.getLogLevel());
+    assertThat((long) cvActivityLogApiResponse.getDataCollectionMinute())
+        .isEqualTo(TimeUnit.MILLISECONDS.toMinutes(now));
+    assertThat(logLine).isEqualTo(logLine, cvActivityLogApiResponse.getLog());
+    assertThat(cvActivityLogApiResponse.getCvConfigId()).isEqualTo(cvConfigId);
+    assertThat(cvActivityLogApiResponse.getLogLevel()).isEqualTo("ERROR");
     assertThat(cvActivityLogApiResponse.getTimestamp() >= now).isTrue();
-    assertEquals("\u001B[31mtest log\u001B[0m", cvActivityLogApiResponse.getAnsiLog());
+    assertThat(cvActivityLogApiResponse.getAnsiLog()).isEqualTo("\u001B[31mtest log\u001B[0m");
   }
 
   @Data

@@ -1,7 +1,7 @@
 package software.wings.verification;
 
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -128,15 +128,15 @@ public class SplunkCVConfigurationYamlHandlerTest extends CategoryTest {
 
     SplunkCVConfigurationYaml yaml = (SplunkCVConfigurationYaml) yamlHandler.toYaml(cvServiceConfiguration, appId);
 
-    assertEquals("Name should be same", cvServiceConfiguration.getName(), yaml.getName());
-    assertEquals("AccountId should be same", cvServiceConfiguration.getAccountId(), yaml.getAccountId());
-    assertEquals("ServiceName should be same", serviceName, yaml.getServiceName());
-    assertEquals("envId should be same", envName, yaml.getEnvName());
-    assertEquals("query should be same", cvServiceConfiguration.getQuery(), yaml.getQuery());
-    assertEquals(cvServiceConfiguration.getBaselineStartMinute(), yaml.getBaselineStartMinute());
-    assertEquals(cvServiceConfiguration.getBaselineEndMinute(), yaml.getBaselineEndMinute());
-    assertEquals(cvServiceConfiguration.getHostnameField(), yaml.getHostnameField());
-    assertEquals(cvServiceConfiguration.isAdvancedQuery(), yaml.isAdvancedQuery());
+    assertThat(yaml.getName()).isEqualTo(cvServiceConfiguration.getName());
+    assertThat(yaml.getAccountId()).isEqualTo(cvServiceConfiguration.getAccountId());
+    assertThat(yaml.getServiceName()).isEqualTo(serviceName);
+    assertThat(yaml.getEnvName()).isEqualTo(envName);
+    assertThat(yaml.getQuery()).isEqualTo(cvServiceConfiguration.getQuery());
+    assertThat(yaml.getBaselineStartMinute()).isEqualTo(cvServiceConfiguration.getBaselineStartMinute());
+    assertThat(yaml.getBaselineEndMinute()).isEqualTo(cvServiceConfiguration.getBaselineEndMinute());
+    assertThat(yaml.getHostnameField()).isEqualTo(cvServiceConfiguration.getHostnameField());
+    assertThat(yaml.isAdvancedQuery()).isEqualTo(cvServiceConfiguration.isAdvancedQuery());
   }
 
   @Test
@@ -152,15 +152,15 @@ public class SplunkCVConfigurationYamlHandlerTest extends CategoryTest {
     changeContext.setYaml(buildYaml());
     SplunkCVConfiguration bean = (SplunkCVConfiguration) yamlHandler.upsertFromYaml(changeContext, null);
 
-    assertEquals("name should match", "TestAppDConfig", bean.getName());
-    assertEquals("appId should match", appId, bean.getAppId());
-    assertEquals("envId should match", envId, bean.getEnvId());
-    assertEquals("serviceId should match", serviceId, bean.getServiceId());
-    assertEquals("query1", bean.getQuery());
-    assertEquals(16, bean.getBaselineStartMinute());
-    assertEquals(30, bean.getBaselineEndMinute());
-    assertEquals("hostName1", bean.getHostnameField());
-    assertEquals(true, bean.isAdvancedQuery());
+    assertThat(bean.getName()).isEqualTo("TestAppDConfig");
+    assertThat(bean.getAppId()).isEqualTo(appId);
+    assertThat(bean.getEnvId()).isEqualTo(envId);
+    assertThat(bean.getServiceId()).isEqualTo(serviceId);
+    assertThat(bean.getQuery()).isEqualTo("query1");
+    assertThat(bean.getBaselineStartMinute()).isEqualTo(16);
+    assertThat(bean.getBaselineEndMinute()).isEqualTo(30);
+    assertThat(bean.getHostnameField()).isEqualTo("hostName1");
+    assertThat(bean.isAdvancedQuery()).isEqualTo(true);
   }
 
   @Test
@@ -179,7 +179,7 @@ public class SplunkCVConfigurationYamlHandlerTest extends CategoryTest {
     changeContext.setYaml(buildYaml());
     SplunkCVConfiguration bean = (SplunkCVConfiguration) yamlHandler.upsertFromYaml(changeContext, null);
 
-    assertEquals("name should match", "TestAppDConfig", bean.getName());
-    assertEquals("UUID should match", cvConfig.getUuid(), bean.getUuid());
+    assertThat(bean.getName()).isEqualTo("TestAppDConfig");
+    assertThat(bean.getUuid()).isEqualTo(cvConfig.getUuid());
   }
 }

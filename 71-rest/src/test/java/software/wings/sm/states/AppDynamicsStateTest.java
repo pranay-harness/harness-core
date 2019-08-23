@@ -140,7 +140,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   public void shouldTestNonTemplatized() {
     AppDynamicsState spyAppDynamicsState = setupNonTemplatized(false);
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
-    assertEquals(ExecutionStatus.RUNNING, executionResponse.getExecutionStatus());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
   }
 
   private AppDynamicsState setupNonTemplatized(boolean isBadTier) {
@@ -184,7 +184,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   @Category(UnitTests.class)
   public void shouldTestNonTemplatizedBadTier() {
     ExecutionResponse executionResponse = setupNonTemplatized(true).execute(executionContext);
-    assertEquals(ERROR, executionResponse.getExecutionStatus());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ERROR);
     assertEquals(
         "Error while fetching from AppDynamics. ApplicationId : 30444 and TierId : 123aa in AppDynamics setup must be valid numbers",
         executionResponse.getErrorMessage());
@@ -246,7 +246,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
         .thenReturn(Environment.Builder.anEnvironment().uuid(UUID.randomUUID().toString()).build());
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
-    assertEquals(ExecutionStatus.RUNNING, executionResponse.getExecutionStatus());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
     Map<Long,
         LinkedHashMap<String,
             LinkedHashMap<String,
@@ -263,8 +263,8 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
             .next()
             .get("BASIC")
             .get(0);
-    assertEquals(continuousVerificationExecutionMetaData1.getAccountId(), accountId);
-    assertEquals(continuousVerificationExecutionMetaData1.getArtifactName(), "dummy artifact");
+    assertThat(accountId).isEqualTo(continuousVerificationExecutionMetaData1.getAccountId());
+    assertThat("dummy artifact").isEqualTo(continuousVerificationExecutionMetaData1.getArtifactName());
   }
 
   @Test
@@ -272,13 +272,13 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   public void testGetMetricType() {
     String errType = AppDynamicsState.getMetricTypeForMetric(AppdynamicsConstants.ERRORS_PER_MINUTE);
     assertThat(errType).isNotNull();
-    assertEquals("Error Type should be", MetricType.ERROR.name(), errType);
+    assertThat(errType).isEqualTo(MetricType.ERROR.name());
     String throughput = AppDynamicsState.getMetricTypeForMetric(AppdynamicsConstants.CALLS_PER_MINUTE);
     assertThat(throughput).isNotNull();
-    assertEquals("Error Type should be", MetricType.THROUGHPUT.name(), throughput);
+    assertThat(throughput).isEqualTo(MetricType.THROUGHPUT.name());
     String respTime = AppDynamicsState.getMetricTypeForMetric(AppdynamicsConstants.AVG_RESPONSE_TIME);
     assertThat(respTime).isNotNull();
-    assertEquals("Error Type should be", MetricType.RESP_TIME.name(), respTime);
+    assertThat(respTime).isEqualTo(MetricType.RESP_TIME.name());
 
     String dummy = AppDynamicsState.getMetricTypeForMetric("incorrectName");
     assertThat(dummy).isNull();
@@ -291,7 +291,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     // not adding any metrics for verification
     Map<String, String> invalidFields = appDynamicsState.validateFields();
     assertThat(invalidFields.size() == 1).isTrue();
-    assertEquals("Fields Missing", "Required Fields missing", invalidFields.keySet().iterator().next());
+    assertThat(invalidFields.keySet().iterator().next()).isEqualTo("Required Fields missing");
   }
 
   @Test
@@ -303,7 +303,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     // not adding any metrics for verification
     Map<String, String> invalidFields = appDynamicsState.validateFields();
     assertThat(invalidFields.size() == 1).isTrue();
-    assertEquals("Fields Missing", "Required Fields missing", invalidFields.keySet().iterator().next());
+    assertThat(invalidFields.keySet().iterator().next()).isEqualTo("Required Fields missing");
   }
 
   @Test
@@ -316,7 +316,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     // not adding any metrics for verification
     Map<String, String> invalidFields = appDynamicsState.validateFields();
     assertThat(invalidFields.size() == 1).isTrue();
-    assertEquals("Fields Missing", "Invalid Required Fields", invalidFields.keySet().iterator().next());
+    assertThat(invalidFields.keySet().iterator().next()).isEqualTo("Invalid Required Fields");
   }
 
   @Test
@@ -391,15 +391,15 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
 
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
-    assertEquals(ERROR, executionResponse.getExecutionStatus());
-    assertEquals("Can not find application by name", executionResponse.getErrorMessage());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ERROR);
+    assertThat(executionResponse.getErrorMessage()).isEqualTo("Can not find application by name");
 
     doReturn(NewRelicApplication.builder().build())
         .when(appdynamicsService)
         .getAppDynamicsApplication(anyString(), anyString());
     executionResponse = spyAppDynamicsState.execute(executionContext);
-    assertEquals(ERROR, executionResponse.getExecutionStatus());
-    assertEquals("Can not find tier by name", executionResponse.getErrorMessage());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ERROR);
+    assertThat(executionResponse.getErrorMessage()).isEqualTo("Can not find tier by name");
 
     long tierId = 30889;
     doReturn(AppdynamicsTier.builder().name(generateUuid()).id(tierId).build())
@@ -409,7 +409,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
         .when(appdynamicsService)
         .getTiers(anyString(), anyLong());
     executionResponse = spyAppDynamicsState.execute(executionContext);
-    assertEquals(RUNNING, executionResponse.getExecutionStatus());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(RUNNING);
 
     when(appdynamicsService.getTier(anyString(), anyLong(), anyString())).thenReturn(null);
     doThrow(new WingsException("No tier found"))
@@ -417,8 +417,8 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
         .getTierByName(anyString(), anyString(), anyString());
 
     executionResponse = spyAppDynamicsState.execute(executionContext);
-    assertEquals(ERROR, executionResponse.getExecutionStatus());
-    assertEquals("No tier found", executionResponse.getErrorMessage());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ERROR);
+    assertThat(executionResponse.getErrorMessage()).isEqualTo("No tier found");
 
     when(appdynamicsService.getAppDynamicsApplication(anyString(), anyString())).thenReturn(null);
     doThrow(new WingsException("No app found"))
@@ -426,7 +426,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
         .getAppDynamicsApplicationByName(anyString(), anyString());
 
     executionResponse = spyAppDynamicsState.execute(executionContext);
-    assertEquals(ERROR, executionResponse.getExecutionStatus());
-    assertEquals("No app found", executionResponse.getErrorMessage());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ERROR);
+    assertThat(executionResponse.getErrorMessage()).isEqualTo("No app found");
   }
 }

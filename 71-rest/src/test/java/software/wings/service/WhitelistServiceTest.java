@@ -1,7 +1,6 @@
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -391,9 +390,9 @@ public class WhitelistServiceTest extends WingsBaseTest {
   }
 
   private void compare(Whitelist lhs, Whitelist rhs) {
-    assertEquals(lhs.getUuid(), rhs.getUuid());
-    assertEquals(lhs.getDescription(), rhs.getDescription());
-    assertEquals(lhs.getFilter(), rhs.getFilter());
-    assertEquals(lhs.getAccountId(), rhs.getAccountId());
+    assertThat(rhs.getUuid()).isEqualTo(lhs.getUuid());
+    assertThat(rhs.getDescription()).isEqualTo(lhs.getDescription());
+    assertThat(rhs.getFilter()).isEqualTo(lhs.getFilter());
+    assertThat(rhs.getAccountId()).isEqualTo(lhs.getAccountId());
   }
 }

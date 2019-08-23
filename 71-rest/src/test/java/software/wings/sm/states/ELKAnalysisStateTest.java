@@ -95,7 +95,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
   @Category(UnitTests.class)
   public void testDefaultComparsionStrategy() {
     ElkAnalysisState elkAnalysisState = new ElkAnalysisState("ElkAnalysisState");
-    assertEquals(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS, elkAnalysisState.getComparisonStrategy());
+    assertThat(elkAnalysisState.getComparisonStrategy()).isEqualTo(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS);
   }
 
   @Test
@@ -108,13 +108,13 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
 
     ExecutionResponse response = spyState.execute(executionContext);
-    assertEquals(ExecutionStatus.SUCCESS, response.getExecutionStatus());
-    assertEquals("Could not find hosts to analyze!", response.getErrorMessage());
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(response.getErrorMessage()).isEqualTo("Could not find hosts to analyze!");
 
     LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.ELK);
-    assertEquals(RiskLevel.NA, analysisSummary.getRiskLevel());
-    assertEquals(elkAnalysisState.getQuery(), analysisSummary.getQuery());
-    assertEquals(response.getErrorMessage(), analysisSummary.getAnalysisSummaryMessage());
+    assertThat(analysisSummary.getRiskLevel()).isEqualTo(RiskLevel.NA);
+    assertThat(analysisSummary.getQuery()).isEqualTo(elkAnalysisState.getQuery());
+    assertThat(analysisSummary.getAnalysisSummaryMessage()).isEqualTo(response.getErrorMessage());
     assertThat(analysisSummary.getControlClusters().isEmpty()).isTrue();
     assertThat(analysisSummary.getTestClusters().isEmpty()).isTrue();
     assertThat(analysisSummary.getUnknownClusters().isEmpty()).isTrue();
@@ -133,14 +133,14 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
 
     ExecutionResponse response = spyState.execute(executionContext);
-    assertEquals(ExecutionStatus.SUCCESS, response.getExecutionStatus());
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertEquals("Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.",
         response.getErrorMessage());
 
     LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.ELK);
-    assertEquals(RiskLevel.NA, analysisSummary.getRiskLevel());
-    assertEquals(elkAnalysisState.getQuery(), analysisSummary.getQuery());
-    assertEquals(response.getErrorMessage(), analysisSummary.getAnalysisSummaryMessage());
+    assertThat(analysisSummary.getRiskLevel()).isEqualTo(RiskLevel.NA);
+    assertThat(analysisSummary.getQuery()).isEqualTo(elkAnalysisState.getQuery());
+    assertThat(analysisSummary.getAnalysisSummaryMessage()).isEqualTo(response.getErrorMessage());
     assertThat(analysisSummary.getControlClusters().isEmpty()).isTrue();
     assertThat(analysisSummary.getTestClusters().isEmpty()).isTrue();
     assertThat(analysisSummary.getUnknownClusters().isEmpty()).isTrue();
@@ -161,14 +161,14 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
 
     ExecutionResponse response = spyState.execute(executionContext);
-    assertEquals(ExecutionStatus.SUCCESS, response.getExecutionStatus());
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertEquals("Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.",
         response.getErrorMessage());
 
     LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.ELK);
-    assertEquals(RiskLevel.NA, analysisSummary.getRiskLevel());
-    assertEquals(elkAnalysisState.getQuery(), analysisSummary.getQuery());
-    assertEquals(response.getErrorMessage(), analysisSummary.getAnalysisSummaryMessage());
+    assertThat(analysisSummary.getRiskLevel()).isEqualTo(RiskLevel.NA);
+    assertThat(analysisSummary.getQuery()).isEqualTo(elkAnalysisState.getQuery());
+    assertThat(analysisSummary.getAnalysisSummaryMessage()).isEqualTo(response.getErrorMessage());
     assertThat(analysisSummary.getControlClusters().isEmpty()).isTrue();
     assertThat(analysisSummary.getTestClusters().isEmpty()).isTrue();
     assertThat(analysisSummary.getUnknownClusters().isEmpty()).isTrue();
@@ -177,7 +177,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
   @Test
   @Category(UnitTests.class)
   public void testTriggerCollection() throws ParseException {
-    assertEquals(0, wingsPersistence.createQuery(DelegateTask.class).count());
+    assertThat(wingsPersistence.createQuery(DelegateTask.class).count()).isEqualTo(0);
     ElkConfig elkConfig = ElkConfig.builder()
                               .accountId(accountId)
                               .elkConnector(ElkConnector.ELASTIC_SEARCH_SERVER)
@@ -226,13 +226,13 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
     Logger activityLogger = mock(Logger.class);
     when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(activityLogger);
     ExecutionResponse response = spyState.execute(executionContext);
-    assertEquals(ExecutionStatus.RUNNING, response.getExecutionStatus());
-    assertEquals("Log Verification running.", response.getErrorMessage());
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
+    assertThat(response.getErrorMessage()).isEqualTo("Log Verification running.");
 
     List<DelegateTask> tasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).asList();
     assertThat(tasks).hasSize(1);
     DelegateTask task = tasks.get(0);
-    assertEquals(TaskType.ELK_COLLECT_LOG_DATA.name(), task.getData().getTaskType());
+    assertThat(task.getData().getTaskType()).isEqualTo(TaskType.ELK_COLLECT_LOG_DATA.name());
     verify(activityLogger).info(contains("Triggered data collection"), anyLong(), anyLong());
     final ElkDataCollectionInfo expectedCollectionInfo =
         ElkDataCollectionInfo.builder()
@@ -257,10 +257,10 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
             .build();
     final ElkDataCollectionInfo actualCollectionInfo = (ElkDataCollectionInfo) task.getData().getParameters()[0];
     expectedCollectionInfo.setStartTime(actualCollectionInfo.getStartTime());
-    assertEquals(expectedCollectionInfo, actualCollectionInfo);
-    assertEquals(accountId, task.getAccountId());
-    assertEquals(Status.QUEUED, task.getStatus());
-    assertEquals(appId, task.getAppId());
+    assertThat(actualCollectionInfo).isEqualTo(expectedCollectionInfo);
+    assertThat(task.getAccountId()).isEqualTo(accountId);
+    assertThat(task.getStatus()).isEqualTo(Status.QUEUED);
+    assertThat(task.getAppId()).isEqualTo(appId);
     Map<Long,
         LinkedHashMap<String,
             LinkedHashMap<String,
@@ -277,9 +277,9 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
             .next()
             .get("BASIC")
             .get(0);
-    assertEquals(continuousVerificationExecutionMetaData1.getAccountId(), accountId);
-    assertEquals(continuousVerificationExecutionMetaData1.getArtifactName(), "dummy artifact");
-    assertEquals(ExecutionStatus.RUNNING, continuousVerificationExecutionMetaData1.getExecutionStatus());
+    assertThat(accountId).isEqualTo(continuousVerificationExecutionMetaData1.getAccountId());
+    assertThat("dummy artifact").isEqualTo(continuousVerificationExecutionMetaData1.getArtifactName());
+    assertThat(continuousVerificationExecutionMetaData1.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
 
     VerificationStateAnalysisExecutionData logAnalysisExecutionData =
         VerificationStateAnalysisExecutionData.builder().build();
@@ -300,6 +300,6 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
                                                    .next()
                                                    .get("BASIC")
                                                    .get(0);
-    assertEquals(ExecutionStatus.ERROR, continuousVerificationExecutionMetaData1.getExecutionStatus());
+    assertThat(continuousVerificationExecutionMetaData1.getExecutionStatus()).isEqualTo(ExecutionStatus.ERROR);
   }
 }

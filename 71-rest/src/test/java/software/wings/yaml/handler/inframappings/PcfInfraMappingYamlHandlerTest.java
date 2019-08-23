@@ -2,7 +2,6 @@ package software.wings.yaml.handler.inframappings;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -147,20 +146,20 @@ public class PcfInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
 
     PcfInfrastructureMapping ecsInfraMapping = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
     assertThat(ecsInfraMapping).isNotNull();
-    assertEquals(ecsInfraMapping.getName(), infraMappingName);
+    assertThat(infraMappingName).isEqualTo(ecsInfraMapping.getName());
 
     Yaml yaml = yamlHandler.toYaml(ecsInfraMapping, APP_ID);
     assertThat(yaml).isNotNull();
-    assertEquals(InfrastructureMappingType.PCF_PCF.name(), yaml.getType());
+    assertThat(yaml.getType()).isEqualTo(InfrastructureMappingType.PCF_PCF.name());
 
     String yamlContent = getYamlContent(yaml);
     assertThat(yamlContent).isNotNull();
     yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
-    assertEquals(validYamlContent, yamlContent);
+    assertThat(yamlContent).isEqualTo(validYamlContent);
 
     InfrastructureMapping infraMapping = yamlHandler.get(ACCOUNT_ID, validYamlFilePath);
     assertThat(infraMapping).isNotNull();
-    assertEquals(infraMapping.getName(), infraMappingName);
+    assertThat(infraMappingName).isEqualTo(infraMapping.getName());
 
     yamlHandler.delete(changeContext);
 

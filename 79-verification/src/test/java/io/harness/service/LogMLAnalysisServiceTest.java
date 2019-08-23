@@ -285,11 +285,11 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
         logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2, accountId);
     assertThat(logDataRecords).hasSize(1);
     final LogDataRecord logDataRecord = logDataRecords.iterator().next();
-    assertEquals(logElement.getLogMessage(), logDataRecord.getLogMessage());
-    assertEquals(logElement.getQuery(), logDataRecord.getQuery());
-    assertEquals(logElement.getClusterLabel(), logDataRecord.getClusterLabel());
-    assertEquals(ClusterLevel.L1, logDataRecord.getClusterLevel());
-    assertEquals(logElement.getLogCollectionMinute(), logDataRecord.getLogCollectionMinute());
+    assertThat(logDataRecord.getLogMessage()).isEqualTo(logElement.getLogMessage());
+    assertThat(logDataRecord.getQuery()).isEqualTo(logElement.getQuery());
+    assertThat(logDataRecord.getClusterLabel()).isEqualTo(logElement.getClusterLabel());
+    assertThat(logDataRecord.getClusterLevel()).isEqualTo(ClusterLevel.L1);
+    assertThat(logDataRecord.getLogCollectionMinute()).isEqualTo(logElement.getLogCollectionMinute());
   }
 
   @Test
@@ -358,7 +358,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
       });
     });
 
-    assertEquals(expectedLogs, logData);
+    assertThat(logData).isEqualTo(expectedLogs);
   }
 
   @Test
@@ -409,11 +409,11 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
         logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2, accountId);
     assertThat(logDataRecords).hasSize(1);
     final LogDataRecord logDataRecord = logDataRecords.iterator().next();
-    assertEquals(logElement.getLogMessage(), logDataRecord.getLogMessage());
-    assertEquals(logElement.getQuery(), logDataRecord.getQuery());
-    assertEquals(logElement.getClusterLabel(), logDataRecord.getClusterLabel());
-    assertEquals(ClusterLevel.L1, logDataRecord.getClusterLevel());
-    assertEquals(logElement.getLogCollectionMinute(), logDataRecord.getLogCollectionMinute());
+    assertThat(logDataRecord.getLogMessage()).isEqualTo(logElement.getLogMessage());
+    assertThat(logDataRecord.getQuery()).isEqualTo(logElement.getQuery());
+    assertThat(logDataRecord.getClusterLabel()).isEqualTo(logElement.getClusterLabel());
+    assertThat(logDataRecord.getClusterLevel()).isEqualTo(ClusterLevel.L1);
+    assertThat(logDataRecord.getLogCollectionMinute()).isEqualTo(logElement.getLogCollectionMinute());
   }
 
   @Test
@@ -456,11 +456,11 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
         logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2, accountId);
     assertThat(logDataRecords).hasSize(1);
     LogDataRecord logDataRecord = logDataRecords.iterator().next();
-    assertEquals(logElement.getLogMessage(), logDataRecord.getLogMessage());
-    assertEquals(logElement.getQuery(), logDataRecord.getQuery());
-    assertEquals(logElement.getClusterLabel(), logDataRecord.getClusterLabel());
-    assertEquals(ClusterLevel.L1, logDataRecord.getClusterLevel());
-    assertEquals(logElement.getLogCollectionMinute(), logDataRecord.getLogCollectionMinute());
+    assertThat(logDataRecord.getLogMessage()).isEqualTo(logElement.getLogMessage());
+    assertThat(logDataRecord.getQuery()).isEqualTo(logElement.getQuery());
+    assertThat(logDataRecord.getClusterLabel()).isEqualTo(logElement.getClusterLabel());
+    assertThat(logDataRecord.getClusterLevel()).isEqualTo(ClusterLevel.L1);
+    assertThat(logDataRecord.getLogCollectionMinute()).isEqualTo(logElement.getLogCollectionMinute());
 
     analysisService.bumpClusterLevel(StateType.SPLUNKV2, stateExecutionId, appId, query, Collections.singleton(host),
         logCollectionMinute, ClusterLevel.L1, ClusterLevel.L2);
@@ -473,11 +473,11 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
         logRequest, true, workflowExecutionId, ClusterLevel.L2, StateType.SPLUNKV2, accountId);
     assertThat(logDataRecords).hasSize(1);
     logDataRecord = logDataRecords.iterator().next();
-    assertEquals(logElement.getLogMessage(), logDataRecord.getLogMessage());
-    assertEquals(logElement.getQuery(), logDataRecord.getQuery());
-    assertEquals(logElement.getClusterLabel(), logDataRecord.getClusterLabel());
-    assertEquals(ClusterLevel.L2, logDataRecord.getClusterLevel());
-    assertEquals(logElement.getLogCollectionMinute(), logDataRecord.getLogCollectionMinute());
+    assertThat(logDataRecord.getLogMessage()).isEqualTo(logElement.getLogMessage());
+    assertThat(logDataRecord.getQuery()).isEqualTo(logElement.getQuery());
+    assertThat(logDataRecord.getClusterLabel()).isEqualTo(logElement.getClusterLabel());
+    assertThat(logDataRecord.getClusterLevel()).isEqualTo(ClusterLevel.L2);
+    assertThat(logDataRecord.getLogCollectionMinute()).isEqualTo(logElement.getLogCollectionMinute());
   }
 
   @Test
@@ -551,7 +551,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     LogMLAnalysisSummary analysisSummary =
         managerAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
     assertThat(analysisSummary).isNotNull();
-    assertEquals("This is a -1 test", analysisSummary.getAnalysisSummaryMessage());
+    assertThat(analysisSummary.getAnalysisSummaryMessage()).isEqualTo("This is a -1 test");
   }
 
   @Test
@@ -617,11 +617,12 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     LogMLAnalysisSummary analysisSummary =
         managerAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
     assertThat(analysisSummary).isNotNull();
-    assertEquals(RiskLevel.HIGH, analysisSummary.getRiskLevel());
+    assertThat(analysisSummary.getRiskLevel()).isEqualTo(RiskLevel.HIGH);
     assertThat(analysisSummary.getUnknownClusters()).hasSize(numOfUnknownClusters);
     assertThat(analysisSummary.getTestClusters().isEmpty()).isTrue();
     assertThat(analysisSummary.getControlClusters().isEmpty()).isTrue();
-    assertEquals(numOfUnknownClusters + " anomalous clusters found", analysisSummary.getAnalysisSummaryMessage());
+    assertThat(analysisSummary.getAnalysisSummaryMessage())
+        .isEqualTo(numOfUnknownClusters + " anomalous clusters found");
     for (LogMLClusterSummary logMLClusterSummary : analysisSummary.getUnknownClusters()) {
       for (String hostname : logMLClusterSummary.getHostSummary().keySet()) {
         assert hosts.contains(hostname);
@@ -677,13 +678,13 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     LogMLAnalysisRecord logAnalysisRecord = analysisService.getLogAnalysisRecords(
         LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId, record.getLogCollectionMinute(), false);
 
-    assertEquals(unknownEvents, logAnalysisRecord.getUnknown_events());
-    assertEquals(testEvents, logAnalysisRecord.getTest_events());
-    assertEquals(controlEvents, logAnalysisRecord.getControl_events());
-    assertEquals(controlClusters, logAnalysisRecord.getControl_clusters());
-    assertEquals(unknownClusters, logAnalysisRecord.getUnknown_clusters());
-    assertEquals(testClusters, logAnalysisRecord.getTest_clusters());
-    assertEquals(ignoreClusters, logAnalysisRecord.getIgnore_clusters());
+    assertThat(logAnalysisRecord.getUnknown_events()).isEqualTo(unknownEvents);
+    assertThat(logAnalysisRecord.getTest_events()).isEqualTo(testEvents);
+    assertThat(logAnalysisRecord.getControl_events()).isEqualTo(controlEvents);
+    assertThat(logAnalysisRecord.getControl_clusters()).isEqualTo(controlClusters);
+    assertThat(logAnalysisRecord.getUnknown_clusters()).isEqualTo(unknownClusters);
+    assertThat(logAnalysisRecord.getTest_clusters()).isEqualTo(testClusters);
+    assertThat(logAnalysisRecord.getIgnore_clusters()).isEqualTo(ignoreClusters);
   }
 
   @Test
@@ -724,7 +725,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     LogMLAnalysisSummary analysisSummary =
         managerAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
     assertThat(analysisSummary).isNotNull();
-    assertEquals(numOfUnexpectedFreq > 0 ? RiskLevel.HIGH : RiskLevel.NA, analysisSummary.getRiskLevel());
+    assertThat(analysisSummary.getRiskLevel()).isEqualTo(numOfUnexpectedFreq > 0 ? RiskLevel.HIGH : RiskLevel.NA);
     assertThat(analysisSummary.getTestClusters()).hasSize(numOfTestClusters);
     assertThat(analysisSummary.getUnknownClusters().isEmpty()).isTrue();
     assertThat(analysisSummary.getControlClusters().isEmpty()).isTrue();
@@ -736,7 +737,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     } else {
       message = numOfUnexpectedFreq + " anomalous clusters found";
     }
-    assertEquals(message, analysisSummary.getAnalysisSummaryMessage());
+    assertThat(analysisSummary.getAnalysisSummaryMessage()).isEqualTo(message);
 
     for (LogMLClusterSummary logMLClusterSummary : analysisSummary.getTestClusters()) {
       for (String hostname : logMLClusterSummary.getHostSummary().keySet()) {
@@ -791,13 +792,13 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     LogMLAnalysisSummary analysisSummary =
         managerAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
     assertThat(analysisSummary).isNotNull();
-    assertEquals(RiskLevel.NA, analysisSummary.getRiskLevel());
+    assertThat(analysisSummary.getRiskLevel()).isEqualTo(RiskLevel.NA);
     assertThat(analysisSummary.getControlClusters()).hasSize(numOfControlClusters);
     assertThat(analysisSummary.getUnknownClusters().isEmpty()).isTrue();
     assertThat(analysisSummary.getTestClusters().isEmpty()).isTrue();
     String message = "No new data for the given queries. Showing baseline data if any.";
 
-    assertEquals(message, analysisSummary.getAnalysisSummaryMessage());
+    assertThat(analysisSummary.getAnalysisSummaryMessage()).isEqualTo(message);
 
     for (LogMLClusterSummary logMLClusterSummary : analysisSummary.getControlClusters()) {
       for (String hostname : logMLClusterSummary.getHostSummary().keySet()) {
@@ -1105,7 +1106,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   public void logQueryTrim() {
     ElkAnalysisState elkAnalysisState = new ElkAnalysisState("some name");
     elkAnalysisState.setQuery(" er ror ");
-    assertEquals("er ror", elkAnalysisState.getQuery());
+    assertThat(elkAnalysisState.getQuery()).isEqualTo("er ror");
   }
 
   @Test
@@ -1155,13 +1156,13 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     String logAnalysisRecordId = wingsPersistence.save(record);
     LogMLAnalysisRecord savedRecord = wingsPersistence.get(LogMLAnalysisRecord.class, logAnalysisRecordId);
 
-    assertEquals(unknownEvents, savedRecord.getUnknown_events());
-    assertEquals(testEvents, savedRecord.getTest_events());
-    assertEquals(controlEvents, savedRecord.getControl_events());
-    assertEquals(controlClusters, savedRecord.getControl_clusters());
-    assertEquals(unknownClusters, savedRecord.getUnknown_clusters());
-    assertEquals(testClusters, savedRecord.getTest_clusters());
-    assertEquals(ignoreClusters, savedRecord.getIgnore_clusters());
+    assertThat(savedRecord.getUnknown_events()).isEqualTo(unknownEvents);
+    assertThat(savedRecord.getTest_events()).isEqualTo(testEvents);
+    assertThat(savedRecord.getControl_events()).isEqualTo(controlEvents);
+    assertThat(savedRecord.getControl_clusters()).isEqualTo(controlClusters);
+    assertThat(savedRecord.getUnknown_clusters()).isEqualTo(unknownClusters);
+    assertThat(savedRecord.getTest_clusters()).isEqualTo(testClusters);
+    assertThat(savedRecord.getIgnore_clusters()).isEqualTo(ignoreClusters);
   }
 
   @Test
@@ -1194,22 +1195,24 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
           AnalysisContext.builder().stateExecutionId(stateExecutionId).serviceId("service-" + i).build());
     }
 
-    assertEquals(numOfRecords, wingsPersistence.createQuery(LogDataRecord.class).count());
-    assertEquals(numOfRecords, wingsPersistence.createQuery(LogMLAnalysisRecord.class).count());
-    assertEquals(numOfRecords, wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class).count());
-    assertEquals(numOfRecords, wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count());
-    assertEquals(numOfRecords, wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class).count());
-    assertEquals(numOfRecords, wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class).count());
-    assertEquals(numOfRecords, wingsPersistence.createQuery(AnalysisContext.class).count());
+    assertThat(wingsPersistence.createQuery(LogDataRecord.class).count()).isEqualTo(numOfRecords);
+    assertThat(wingsPersistence.createQuery(LogMLAnalysisRecord.class).count()).isEqualTo(numOfRecords);
+    assertThat(wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class).count())
+        .isEqualTo(numOfRecords);
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count()).isEqualTo(numOfRecords);
+    assertThat(wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class).count())
+        .isEqualTo(numOfRecords);
+    assertThat(wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class).count()).isEqualTo(numOfRecords);
+    assertThat(wingsPersistence.createQuery(AnalysisContext.class).count()).isEqualTo(numOfRecords);
 
     managerAnalysisService.cleanUpForLogRetry(stateExecutionId);
-    assertEquals(0, wingsPersistence.createQuery(LogDataRecord.class).count());
-    assertEquals(0, wingsPersistence.createQuery(LogMLAnalysisRecord.class).count());
-    assertEquals(0, wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class).count());
-    assertEquals(0, wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count());
-    assertEquals(0, wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class).count());
-    assertEquals(0, wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class).count());
-    assertEquals(0, wingsPersistence.createQuery(AnalysisContext.class).count());
+    assertThat(wingsPersistence.createQuery(LogDataRecord.class).count()).isEqualTo(0);
+    assertThat(wingsPersistence.createQuery(LogMLAnalysisRecord.class).count()).isEqualTo(0);
+    assertThat(wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class).count()).isEqualTo(0);
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count()).isEqualTo(0);
+    assertThat(wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class).count()).isEqualTo(0);
+    assertThat(wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class).count()).isEqualTo(0);
+    assertThat(wingsPersistence.createQuery(AnalysisContext.class).count()).isEqualTo(0);
   }
 
   private Map<String, Map<String, SplunkAnalysisCluster>> createClusters(int numOfClusters) {
@@ -1297,14 +1300,16 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertThat(compressedLogMLAnalysisRecord.getUnknown_clusters()).isNotNull();
     assertThat(compressedLogMLAnalysisRecord.getIgnore_clusters()).isNotNull();
 
-    assertEquals(logMLAnalysisRecord.getAnalysisStatus(), compressedLogMLAnalysisRecord.getAnalysisStatus());
-    assertEquals(logMLAnalysisRecord.getUnknown_events(), compressedLogMLAnalysisRecord.getUnknown_events());
-    assertEquals(logMLAnalysisRecord.getTest_events(), compressedLogMLAnalysisRecord.getTest_events());
-    assertEquals(logMLAnalysisRecord.getControl_events(), compressedLogMLAnalysisRecord.getControl_events());
-    assertEquals(logMLAnalysisRecord.getTest_clusters(), compressedLogMLAnalysisRecord.getTest_clusters());
-    assertEquals(logMLAnalysisRecord.getControl_clusters(), compressedLogMLAnalysisRecord.getControl_clusters());
-    assertEquals(logMLAnalysisRecord.getUnknown_clusters(), compressedLogMLAnalysisRecord.getUnknown_clusters());
-    assertEquals(logMLAnalysisRecord.getIgnore_clusters(), compressedLogMLAnalysisRecord.getIgnore_clusters());
+    assertThat(compressedLogMLAnalysisRecord.getAnalysisStatus()).isEqualTo(logMLAnalysisRecord.getAnalysisStatus());
+    assertThat(compressedLogMLAnalysisRecord.getUnknown_events()).isEqualTo(logMLAnalysisRecord.getUnknown_events());
+    assertThat(compressedLogMLAnalysisRecord.getTest_events()).isEqualTo(logMLAnalysisRecord.getTest_events());
+    assertThat(compressedLogMLAnalysisRecord.getControl_events()).isEqualTo(logMLAnalysisRecord.getControl_events());
+    assertThat(compressedLogMLAnalysisRecord.getTest_clusters()).isEqualTo(logMLAnalysisRecord.getTest_clusters());
+    assertThat(compressedLogMLAnalysisRecord.getControl_clusters())
+        .isEqualTo(logMLAnalysisRecord.getControl_clusters());
+    assertThat(compressedLogMLAnalysisRecord.getUnknown_clusters())
+        .isEqualTo(logMLAnalysisRecord.getUnknown_clusters());
+    assertThat(compressedLogMLAnalysisRecord.getIgnore_clusters()).isEqualTo(logMLAnalysisRecord.getIgnore_clusters());
   }
 
   @Test
@@ -1405,14 +1410,14 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertThat(logMLAnalysisRecord.getProtoSerializedAnalyisDetails()).isNotNull();
 
     logMLAnalysisRecord.decompressLogAnalysisRecord();
-    assertEquals(logMLAnalysisRecord.getAnalysisStatus(), logMLAnalysisRecordToCompare.getAnalysisStatus());
-    assertEquals(logMLAnalysisRecord.getUnknown_events(), logMLAnalysisRecordToCompare.getUnknown_events());
-    assertEquals(logMLAnalysisRecord.getTest_events(), logMLAnalysisRecordToCompare.getTest_events());
-    assertEquals(logMLAnalysisRecord.getControl_events(), logMLAnalysisRecordToCompare.getControl_events());
-    assertEquals(logMLAnalysisRecord.getTest_clusters(), logMLAnalysisRecordToCompare.getTest_clusters());
-    assertEquals(logMLAnalysisRecord.getControl_clusters(), logMLAnalysisRecordToCompare.getControl_clusters());
-    assertEquals(logMLAnalysisRecord.getUnknown_clusters(), logMLAnalysisRecordToCompare.getUnknown_clusters());
-    assertEquals(logMLAnalysisRecord.getIgnore_clusters(), logMLAnalysisRecordToCompare.getIgnore_clusters());
+    assertThat(logMLAnalysisRecordToCompare.getAnalysisStatus()).isEqualTo(logMLAnalysisRecord.getAnalysisStatus());
+    assertThat(logMLAnalysisRecordToCompare.getUnknown_events()).isEqualTo(logMLAnalysisRecord.getUnknown_events());
+    assertThat(logMLAnalysisRecordToCompare.getTest_events()).isEqualTo(logMLAnalysisRecord.getTest_events());
+    assertThat(logMLAnalysisRecordToCompare.getControl_events()).isEqualTo(logMLAnalysisRecord.getControl_events());
+    assertThat(logMLAnalysisRecordToCompare.getTest_clusters()).isEqualTo(logMLAnalysisRecord.getTest_clusters());
+    assertThat(logMLAnalysisRecordToCompare.getControl_clusters()).isEqualTo(logMLAnalysisRecord.getControl_clusters());
+    assertThat(logMLAnalysisRecordToCompare.getUnknown_clusters()).isEqualTo(logMLAnalysisRecord.getUnknown_clusters());
+    assertThat(logMLAnalysisRecordToCompare.getIgnore_clusters()).isEqualTo(logMLAnalysisRecord.getIgnore_clusters());
 
     logMLAnalysisRecord = analysisService.getLogAnalysisRecords(LogMLAnalysisRecordKeys.cvConfigId,
         logMLAnalysisRecord.getCvConfigId(), logMLAnalysisRecord.getLogCollectionMinute(), false);
@@ -1426,14 +1431,14 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertThat(logMLAnalysisRecord.getAnalysisDetailsCompressedJson()).isNull();
     assertThat(logMLAnalysisRecord.getProtoSerializedAnalyisDetails()).isNull();
 
-    assertEquals(logMLAnalysisRecord.getAnalysisStatus(), logMLAnalysisRecordToCompare.getAnalysisStatus());
-    assertEquals(logMLAnalysisRecord.getUnknown_events(), logMLAnalysisRecordToCompare.getUnknown_events());
-    assertEquals(logMLAnalysisRecord.getTest_events(), logMLAnalysisRecordToCompare.getTest_events());
-    assertEquals(logMLAnalysisRecord.getControl_events(), logMLAnalysisRecordToCompare.getControl_events());
-    assertEquals(logMLAnalysisRecord.getTest_clusters(), logMLAnalysisRecordToCompare.getTest_clusters());
-    assertEquals(logMLAnalysisRecord.getControl_clusters(), logMLAnalysisRecordToCompare.getControl_clusters());
-    assertEquals(logMLAnalysisRecord.getUnknown_clusters(), logMLAnalysisRecordToCompare.getUnknown_clusters());
-    assertEquals(logMLAnalysisRecord.getIgnore_clusters(), logMLAnalysisRecordToCompare.getIgnore_clusters());
+    assertThat(logMLAnalysisRecordToCompare.getAnalysisStatus()).isEqualTo(logMLAnalysisRecord.getAnalysisStatus());
+    assertThat(logMLAnalysisRecordToCompare.getUnknown_events()).isEqualTo(logMLAnalysisRecord.getUnknown_events());
+    assertThat(logMLAnalysisRecordToCompare.getTest_events()).isEqualTo(logMLAnalysisRecord.getTest_events());
+    assertThat(logMLAnalysisRecordToCompare.getControl_events()).isEqualTo(logMLAnalysisRecord.getControl_events());
+    assertThat(logMLAnalysisRecordToCompare.getTest_clusters()).isEqualTo(logMLAnalysisRecord.getTest_clusters());
+    assertThat(logMLAnalysisRecordToCompare.getControl_clusters()).isEqualTo(logMLAnalysisRecord.getControl_clusters());
+    assertThat(logMLAnalysisRecordToCompare.getUnknown_clusters()).isEqualTo(logMLAnalysisRecord.getUnknown_clusters());
+    assertThat(logMLAnalysisRecordToCompare.getIgnore_clusters()).isEqualTo(logMLAnalysisRecord.getIgnore_clusters());
   }
 
   @Test
@@ -1465,7 +1470,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     final LogMLAnalysisRecord logAnalysisRecord = analysisService.getLogAnalysisRecords(
         LogMLAnalysisRecordKeys.cvConfigId, logMLAnalysisRecord.getCvConfigId(), numOfRecords, false);
 
-    assertEquals(numOfRecords, logAnalysisRecord.getLogCollectionMinute());
+    assertThat(logAnalysisRecord.getLogCollectionMinute()).isEqualTo(numOfRecords);
   }
 
   @Test
@@ -1507,7 +1512,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertThat(isEligible).isTrue();
     int nextCount = learningEngineService.getNextServiceGuardBackoffCount(
         stateExecutionId, "", analysisMinute, MLAnalysisType.LOG_ML);
-    assertEquals(1, nextCount);
+    assertThat(nextCount).isEqualTo(1);
   }
 
   @Test
@@ -1549,7 +1554,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
         stateExecutionId, "", analysisMinute, MLAnalysisType.LOG_ML);
 
     // verify
-    assertEquals(BACKOFF_LIMIT, nextCount);
+    assertThat(nextCount).isEqualTo(BACKOFF_LIMIT);
   }
 
   @Test

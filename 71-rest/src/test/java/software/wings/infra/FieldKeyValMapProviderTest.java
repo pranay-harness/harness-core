@@ -1,7 +1,6 @@
 package software.wings.infra;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
@@ -21,7 +20,7 @@ public class FieldKeyValMapProviderTest {
   public void getQueryMapForClass() {
     DummyPerson person = new DummyPerson(ID, NAME, OCCUPATION);
     Map<String, Object> queryMap = person.getFieldMapForClass();
-    assertEquals(queryMap.size(), 2);
+    assertThat(2).isEqualTo(queryMap.size());
     assertThat(queryMap.containsKey(CUSTOM_KEY)).isTrue();
     assertThat(queryMap.containsKey(NAME)).isTrue();
     assertThat(queryMap.containsKey(OCCUPATION)).isFalse();

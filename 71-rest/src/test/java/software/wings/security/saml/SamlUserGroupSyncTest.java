@@ -1,6 +1,6 @@
 package software.wings.security.saml;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.anyList;
@@ -64,13 +64,13 @@ public class SamlUserGroupSyncTest extends WingsBaseTest {
     // verify that the user has been removed from qaUserGroup since `qa` group was not in samlUserAuthorization and
     // user was in this group previously.
     UserGroup value = userGroupArgumentCaptor.getValue();
-    assertEquals(userGroupArgumentCaptor.getValue().getSsoGroupId(), "qa");
+    assertThat("qa").isEqualTo(userGroupArgumentCaptor.getValue().getSsoGroupId());
     verify(userGroupService, times(1)).removeMembers(any(UserGroup.class), anyList(), anyBoolean());
 
     // verify that the user has been added in the adminUserGroup since `admin` group was in samlUserAuthorization and
     // user was not this group previously.
-    assertEquals(userInviteArgumentCaptor.getValue().getUserGroups().size(), 1);
-    assertEquals(userInviteArgumentCaptor.getValue().getUserGroups().get(0).getSsoGroupId(), "admin");
+    assertThat(1).isEqualTo(userInviteArgumentCaptor.getValue().getUserGroups().size());
+    assertThat("admin").isEqualTo(userInviteArgumentCaptor.getValue().getUserGroups().get(0).getSsoGroupId());
   }
 
   private List<UserGroup> createTestUserGroups() {

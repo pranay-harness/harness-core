@@ -369,9 +369,9 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     LogsCVConfiguration logsCVConfiguration =
         (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
 
-    assertEquals(appId, delegateTask.getAppId());
-    assertEquals(accountId, delegateTask.getAccountId());
-    assertEquals(TaskType.SUMO_COLLECT_24_7_LOG_DATA, TaskType.valueOf(delegateTask.getData().getTaskType()));
+    assertThat(delegateTask.getAppId()).isEqualTo(appId);
+    assertThat(delegateTask.getAccountId()).isEqualTo(accountId);
+    assertThat(TaskType.valueOf(delegateTask.getData().getTaskType())).isEqualTo(TaskType.SUMO_COLLECT_24_7_LOG_DATA);
 
     SumoDataCollectionInfo sumoDataCollectionInfo = (SumoDataCollectionInfo) delegateTask.getData().getParameters()[0];
 
@@ -381,11 +381,11 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1),
         sumoDataCollectionInfo.getEndTime());
 
-    assertEquals(sumoConfig, sumoDataCollectionInfo.getSumoConfig());
-    assertEquals(cvConfigId, sumoDataCollectionInfo.getCvConfigId());
-    assertEquals(accountId, sumoDataCollectionInfo.getAccountId());
-    assertEquals(serviceId, sumoDataCollectionInfo.getServiceId());
-    assertEquals(appId, sumoDataCollectionInfo.getApplicationId());
+    assertThat(sumoDataCollectionInfo.getSumoConfig()).isEqualTo(sumoConfig);
+    assertThat(sumoDataCollectionInfo.getCvConfigId()).isEqualTo(cvConfigId);
+    assertThat(sumoDataCollectionInfo.getAccountId()).isEqualTo(accountId);
+    assertThat(sumoDataCollectionInfo.getServiceId()).isEqualTo(serviceId);
+    assertThat(sumoDataCollectionInfo.getApplicationId()).isEqualTo(appId);
   }
 
   @Test
@@ -411,13 +411,13 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1),
         customLogDataCollectionInfo.getEndTime());
 
-    assertEquals(accountId, delegateTask.getAccountId());
-    assertEquals(appId, delegateTask.getAppId());
-    assertEquals(TaskType.CUSTOM_COLLECT_24_7_LOG_DATA, TaskType.valueOf(delegateTask.getData().getTaskType()));
-    assertEquals(datadogCvConfigId, customLogDataCollectionInfo.getCvConfigId());
-    assertEquals(appId, customLogDataCollectionInfo.getApplicationId());
-    assertEquals(serviceId, customLogDataCollectionInfo.getServiceId());
-    assertEquals(accountId, customLogDataCollectionInfo.getAccountId());
+    assertThat(delegateTask.getAccountId()).isEqualTo(accountId);
+    assertThat(delegateTask.getAppId()).isEqualTo(appId);
+    assertThat(TaskType.valueOf(delegateTask.getData().getTaskType())).isEqualTo(TaskType.CUSTOM_COLLECT_24_7_LOG_DATA);
+    assertThat(customLogDataCollectionInfo.getCvConfigId()).isEqualTo(datadogCvConfigId);
+    assertThat(customLogDataCollectionInfo.getApplicationId()).isEqualTo(appId);
+    assertThat(customLogDataCollectionInfo.getServiceId()).isEqualTo(serviceId);
+    assertThat(customLogDataCollectionInfo.getAccountId()).isEqualTo(accountId);
   }
 
   @Test
@@ -466,14 +466,14 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     DelegateTask delegateTask = delegateTasks.get(0);
     SumoDataCollectionInfo sumoDataCollectionInfo = (SumoDataCollectionInfo) delegateTask.getData().getParameters()[0];
 
-    assertEquals(accountId, delegateTask.getAccountId());
-    assertEquals(appId, delegateTask.getAppId());
-    assertEquals(TaskType.SUMO_COLLECT_24_7_LOG_DATA, TaskType.valueOf(delegateTask.getData().getTaskType()));
-    assertEquals(cvConfigId, sumoDataCollectionInfo.getCvConfigId());
-    assertEquals(appId, sumoDataCollectionInfo.getApplicationId());
-    assertEquals(accountId, sumoDataCollectionInfo.getAccountId());
-    assertEquals(serviceId, sumoDataCollectionInfo.getServiceId());
-    assertEquals(sumoConfig, sumoDataCollectionInfo.getSumoConfig());
+    assertThat(delegateTask.getAccountId()).isEqualTo(accountId);
+    assertThat(delegateTask.getAppId()).isEqualTo(appId);
+    assertThat(TaskType.valueOf(delegateTask.getData().getTaskType())).isEqualTo(TaskType.SUMO_COLLECT_24_7_LOG_DATA);
+    assertThat(sumoDataCollectionInfo.getCvConfigId()).isEqualTo(cvConfigId);
+    assertThat(sumoDataCollectionInfo.getApplicationId()).isEqualTo(appId);
+    assertThat(sumoDataCollectionInfo.getAccountId()).isEqualTo(accountId);
+    assertThat(sumoDataCollectionInfo.getServiceId()).isEqualTo(serviceId);
+    assertThat(sumoDataCollectionInfo.getSumoConfig()).isEqualTo(sumoConfig);
 
     LogsCVConfiguration logsCVConfiguration =
         (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
@@ -501,15 +501,15 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(delegateTasks).hasSize(4);
 
     delegateTask = delegateTasks.get(2);
-    assertEquals(accountId, delegateTask.getAccountId());
-    assertEquals(appId, delegateTask.getAppId());
-    assertEquals(TaskType.SUMO_COLLECT_24_7_LOG_DATA, TaskType.valueOf(delegateTask.getData().getTaskType()));
+    assertThat(delegateTask.getAccountId()).isEqualTo(accountId);
+    assertThat(delegateTask.getAppId()).isEqualTo(appId);
+    assertThat(TaskType.valueOf(delegateTask.getData().getTaskType())).isEqualTo(TaskType.SUMO_COLLECT_24_7_LOG_DATA);
     sumoDataCollectionInfo = (SumoDataCollectionInfo) delegateTask.getData().getParameters()[0];
-    assertEquals(sumoConfig, sumoDataCollectionInfo.getSumoConfig());
-    assertEquals(cvConfigId, sumoDataCollectionInfo.getCvConfigId());
-    assertEquals(appId, sumoDataCollectionInfo.getApplicationId());
-    assertEquals(accountId, sumoDataCollectionInfo.getAccountId());
-    assertEquals(serviceId, sumoDataCollectionInfo.getServiceId());
+    assertThat(sumoDataCollectionInfo.getSumoConfig()).isEqualTo(sumoConfig);
+    assertThat(sumoDataCollectionInfo.getCvConfigId()).isEqualTo(cvConfigId);
+    assertThat(sumoDataCollectionInfo.getApplicationId()).isEqualTo(appId);
+    assertThat(sumoDataCollectionInfo.getAccountId()).isEqualTo(accountId);
+    assertThat(sumoDataCollectionInfo.getServiceId()).isEqualTo(serviceId);
 
     assertEquals(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + numOfMinutesSaved + 1),
         sumoDataCollectionInfo.getStartTime());
@@ -530,15 +530,15 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
     assertThat(delegateTasks).hasSize(2);
     DelegateTask delegateTask = delegateTasks.get(1);
-    assertEquals(accountId, delegateTask.getAccountId());
-    assertEquals(appId, delegateTask.getAppId());
-    assertEquals(TaskType.CUSTOM_COLLECT_24_7_LOG_DATA, TaskType.valueOf(delegateTask.getData().getTaskType()));
+    assertThat(delegateTask.getAccountId()).isEqualTo(accountId);
+    assertThat(delegateTask.getAppId()).isEqualTo(appId);
+    assertThat(TaskType.valueOf(delegateTask.getData().getTaskType())).isEqualTo(TaskType.CUSTOM_COLLECT_24_7_LOG_DATA);
     CustomLogDataCollectionInfo customLogDataCollectionInfo =
         (CustomLogDataCollectionInfo) delegateTask.getData().getParameters()[0];
-    assertEquals(datadogCvConfigId, customLogDataCollectionInfo.getCvConfigId());
-    assertEquals(appId, customLogDataCollectionInfo.getApplicationId());
-    assertEquals(accountId, customLogDataCollectionInfo.getAccountId());
-    assertEquals(serviceId, customLogDataCollectionInfo.getServiceId());
+    assertThat(customLogDataCollectionInfo.getCvConfigId()).isEqualTo(datadogCvConfigId);
+    assertThat(customLogDataCollectionInfo.getApplicationId()).isEqualTo(appId);
+    assertThat(customLogDataCollectionInfo.getAccountId()).isEqualTo(accountId);
+    assertThat(customLogDataCollectionInfo.getServiceId()).isEqualTo(serviceId);
 
     LogsCVConfiguration logsCVConfiguration =
         (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, datadogCvConfigId);
@@ -565,14 +565,14 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(delegateTasks).hasSize(4);
 
     delegateTask = delegateTasks.get(3);
-    assertEquals(accountId, delegateTask.getAccountId());
-    assertEquals(appId, delegateTask.getAppId());
-    assertEquals(TaskType.CUSTOM_COLLECT_24_7_LOG_DATA, TaskType.valueOf(delegateTask.getData().getTaskType()));
+    assertThat(delegateTask.getAccountId()).isEqualTo(accountId);
+    assertThat(delegateTask.getAppId()).isEqualTo(appId);
+    assertThat(TaskType.valueOf(delegateTask.getData().getTaskType())).isEqualTo(TaskType.CUSTOM_COLLECT_24_7_LOG_DATA);
     customLogDataCollectionInfo = (CustomLogDataCollectionInfo) delegateTask.getData().getParameters()[0];
-    assertEquals(datadogCvConfigId, customLogDataCollectionInfo.getCvConfigId());
-    assertEquals(appId, customLogDataCollectionInfo.getApplicationId());
-    assertEquals(accountId, customLogDataCollectionInfo.getAccountId());
-    assertEquals(serviceId, customLogDataCollectionInfo.getServiceId());
+    assertThat(customLogDataCollectionInfo.getCvConfigId()).isEqualTo(datadogCvConfigId);
+    assertThat(customLogDataCollectionInfo.getApplicationId()).isEqualTo(appId);
+    assertThat(customLogDataCollectionInfo.getAccountId()).isEqualTo(accountId);
+    assertThat(customLogDataCollectionInfo.getServiceId()).isEqualTo(serviceId);
 
     assertEquals(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + numOfMinutesSaved + 1),
         customLogDataCollectionInfo.getStartTime());
@@ -597,14 +597,14 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(delegateTasks).hasSize(1);
     DelegateTask delegateTask = delegateTasks.get(0);
 
-    assertEquals(accountId, delegateTask.getAccountId());
-    assertEquals(appId, delegateTask.getAppId());
-    assertEquals(TaskType.SUMO_COLLECT_LOG_DATA, TaskType.valueOf(delegateTask.getData().getTaskType()));
+    assertThat(delegateTask.getAccountId()).isEqualTo(accountId);
+    assertThat(delegateTask.getAppId()).isEqualTo(appId);
+    assertThat(TaskType.valueOf(delegateTask.getData().getTaskType())).isEqualTo(TaskType.SUMO_COLLECT_LOG_DATA);
     SumoDataCollectionInfo sumoDataCollectionInfo = (SumoDataCollectionInfo) delegateTask.getData().getParameters()[0];
-    assertEquals(sumoConfig, sumoDataCollectionInfo.getSumoConfig());
-    assertEquals(appId, sumoDataCollectionInfo.getApplicationId());
-    assertEquals(accountId, sumoDataCollectionInfo.getAccountId());
-    assertEquals(serviceId, sumoDataCollectionInfo.getServiceId());
+    assertThat(sumoDataCollectionInfo.getSumoConfig()).isEqualTo(sumoConfig);
+    assertThat(sumoDataCollectionInfo.getApplicationId()).isEqualTo(appId);
+    assertThat(sumoDataCollectionInfo.getAccountId()).isEqualTo(accountId);
+    assertThat(sumoDataCollectionInfo.getServiceId()).isEqualTo(serviceId);
   }
 
   @Test
@@ -622,14 +622,14 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(delegateTasks).hasSize(1);
     DelegateTask delegateTask = delegateTasks.get(0);
 
-    assertEquals(accountId, delegateTask.getAccountId());
-    assertEquals(appId, delegateTask.getAppId());
-    assertEquals(TaskType.CUSTOM_LOG_COLLECTION_TASK, TaskType.valueOf(delegateTask.getData().getTaskType()));
+    assertThat(delegateTask.getAccountId()).isEqualTo(accountId);
+    assertThat(delegateTask.getAppId()).isEqualTo(appId);
+    assertThat(TaskType.valueOf(delegateTask.getData().getTaskType())).isEqualTo(TaskType.CUSTOM_LOG_COLLECTION_TASK);
     CustomLogDataCollectionInfo customLogDataCollectionInfo =
         (CustomLogDataCollectionInfo) delegateTask.getData().getParameters()[0];
-    assertEquals(appId, customLogDataCollectionInfo.getApplicationId());
-    assertEquals(accountId, customLogDataCollectionInfo.getAccountId());
-    assertEquals(serviceId, customLogDataCollectionInfo.getServiceId());
+    assertThat(customLogDataCollectionInfo.getApplicationId()).isEqualTo(appId);
+    assertThat(customLogDataCollectionInfo.getAccountId()).isEqualTo(accountId);
+    assertThat(customLogDataCollectionInfo.getServiceId()).isEqualTo(serviceId);
   }
 
   @Test
@@ -789,8 +789,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
       assertThat(learningEngineAnalysisTask.getWorkflow_execution_id()).isNull();
       assertEquals(
           "LOGS_CLUSTER_L1_" + cvConfigId + "_" + (100 + i * 2), learningEngineAnalysisTask.getState_execution_id());
-      assertEquals(serviceId, learningEngineAnalysisTask.getService_id());
-      assertEquals(100 + i * 2, learningEngineAnalysisTask.getAnalysis_minute());
+      assertThat(learningEngineAnalysisTask.getService_id()).isEqualTo(serviceId);
+      assertThat(learningEngineAnalysisTask.getAnalysis_minute()).isEqualTo(100 + i * 2);
       assertEquals(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_GET_24X7_LOG_URL + "?cvConfigId="
               + cvConfigId + "&appId=" + appId + "&clusterLevel=L0&logCollectionMinute=" + (100 + i * 2),
           learningEngineAnalysisTask.getControl_input_url());
@@ -799,7 +799,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
               + "?cvConfigId=" + cvConfigId + "&appId=" + appId
               + "&clusterLevel=L1&logCollectionMinute=" + (100 + i * 2),
           learningEngineAnalysisTask.getAnalysis_save_url());
-      assertEquals(hosts, learningEngineAnalysisTask.getControl_nodes());
+      assertThat(learningEngineAnalysisTask.getControl_nodes()).isEqualTo(hosts);
       assertThat(learningEngineAnalysisTask.getTest_nodes()).isNull();
     }
   }
@@ -946,8 +946,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(learningEngineAnalysisTask.getWorkflow_execution_id()).isNull();
     assertEquals(
         "LOGS_CLUSTER_L2_" + cvConfigId + "_" + clusterMinute, learningEngineAnalysisTask.getState_execution_id());
-    assertEquals(serviceId, learningEngineAnalysisTask.getService_id());
-    assertEquals(clusterMinute, learningEngineAnalysisTask.getAnalysis_minute());
+    assertThat(learningEngineAnalysisTask.getService_id()).isEqualTo(serviceId);
+    assertThat(learningEngineAnalysisTask.getAnalysis_minute()).isEqualTo(clusterMinute);
     assertEquals(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_GET_24X7_ALL_LOGS_URL + "?cvConfigId="
             + cvConfigId + "&appId=" + appId + "&clusterLevel=L1&startMinute=100&endMinute=" + clusterMinute,
         learningEngineAnalysisTask.getControl_input_url());
@@ -1018,12 +1018,12 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     assertThat(alerts).hasSize(1);
     final Alert alert = alerts.get(0);
-    assertEquals(appId, alert.getAppId());
-    assertEquals(accountId, alert.getAccountId());
-    assertEquals(AlertType.CONTINUOUS_VERIFICATION_ALERT, alert.getType());
-    assertEquals(AlertStatus.Open, alert.getStatus());
-    assertEquals(AlertCategory.ContinuousVerification, alert.getCategory());
-    assertEquals(AlertSeverity.Error, alert.getSeverity());
+    assertThat(alert.getAppId()).isEqualTo(appId);
+    assertThat(alert.getAccountId()).isEqualTo(accountId);
+    assertThat(alert.getType()).isEqualTo(AlertType.CONTINUOUS_VERIFICATION_ALERT);
+    assertThat(alert.getStatus()).isEqualTo(AlertStatus.Open);
+    assertThat(alert.getCategory()).isEqualTo(AlertCategory.ContinuousVerification);
+    assertThat(alert.getSeverity()).isEqualTo(AlertSeverity.Error);
 
     final ContinuousVerificationAlertData alertData = (ContinuousVerificationAlertData) alert.getAlertData();
     assertEquals(MLAnalysisType.TIME_SERIES, alertData.getMlAnalysisType());
@@ -1095,29 +1095,29 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(alerts).hasSize(2);
     Set<String> alertAnomalies = new HashSet<>();
     alerts.forEach(alert -> {
-      assertEquals(appId, alert.getAppId());
-      assertEquals(accountId, alert.getAccountId());
-      assertEquals(AlertType.CONTINUOUS_VERIFICATION_ALERT, alert.getType());
-      assertEquals(AlertStatus.Open, alert.getStatus());
-      assertEquals(AlertCategory.ContinuousVerification, alert.getCategory());
-      assertEquals(AlertSeverity.Error, alert.getSeverity());
+      assertThat(alert.getAppId()).isEqualTo(appId);
+      assertThat(alert.getAccountId()).isEqualTo(accountId);
+      assertThat(alert.getType()).isEqualTo(AlertType.CONTINUOUS_VERIFICATION_ALERT);
+      assertThat(alert.getStatus()).isEqualTo(AlertStatus.Open);
+      assertThat(alert.getCategory()).isEqualTo(AlertCategory.ContinuousVerification);
+      assertThat(alert.getSeverity()).isEqualTo(AlertSeverity.Error);
 
       final ContinuousVerificationAlertData alertData = (ContinuousVerificationAlertData) alert.getAlertData();
-      assertEquals(MLAnalysisType.LOG_ML, alertData.getMlAnalysisType());
-      assertEquals(configId, alertData.getCvConfiguration().getUuid());
+      assertThat(alertData.getMlAnalysisType()).isEqualTo(MLAnalysisType.LOG_ML);
+      assertThat(alertData.getCvConfiguration().getUuid()).isEqualTo(configId);
       assertThat(alertData.getLogAnomaly()).isNotNull();
 
       if (alertData.getLogAnomaly().equals("msg1")) {
-        assertEquals(Sets.newHashSet("host1"), alertData.getHosts());
+        assertThat(alertData.getHosts()).isEqualTo(Sets.newHashSet("host1"));
       }
 
       if (alertData.getLogAnomaly().equals("msg2")) {
-        assertEquals(Sets.newHashSet("host1", "host2", "host3"), alertData.getHosts());
+        assertThat(alertData.getHosts()).isEqualTo(Sets.newHashSet("host1", "host2", "host3"));
       }
       alertAnomalies.add(alertData.getLogAnomaly());
     });
 
-    assertEquals(Sets.newHashSet("msg1", "msg2"), alertAnomalies);
+    assertThat(alertAnomalies).isEqualTo(Sets.newHashSet("msg1", "msg2"));
     // same minute should not throw another alert
     continuousVerificationService.triggerLogAnalysisAlertIfNecessary(configId, logMLAnalysisRecord, 10);
     sleep(ofMillis(2000));
@@ -1206,7 +1206,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
             .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, MLAnalysisType.FEEDBACK_ANALYSIS)
             .asList();
     assertThat(learningEngineAnalysisTasks).hasSize(1);
-    assertEquals(oldMinute, learningEngineAnalysisTasks.get(0).getAnalysis_minute());
+    assertThat(learningEngineAnalysisTasks.get(0).getAnalysis_minute()).isEqualTo(oldMinute);
   }
 
   @Test
@@ -1308,7 +1308,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
             .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, MLAnalysisType.FEEDBACK_ANALYSIS)
             .asList();
     assertThat(learningEngineAnalysisTasks).hasSize(1);
-    assertEquals(oldMinute, learningEngineAnalysisTasks.get(0).getAnalysis_minute());
+    assertThat(learningEngineAnalysisTasks.get(0).getAnalysis_minute()).isEqualTo(oldMinute);
   }
 
   @Test
@@ -1329,11 +1329,11 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     List<DelegateTask> delegateTasks =
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
     assertThat(delegateTasks).hasSize(1);
-    assertEquals(delegateTasks.get(0).getData().getTaskType(), ELK_COLLECT_LOG_DATA.name());
+    assertThat(ELK_COLLECT_LOG_DATA.name()).isEqualTo(delegateTasks.get(0).getData().getTaskType());
 
     ElkDataCollectionInfo elkDataCollectionInfo =
         (ElkDataCollectionInfo) delegateTasks.get(0).getData().getParameters()[0];
-    assertEquals(elkDataCollectionInfo.getStartTime(), startTime);
+    assertThat(startTime).isEqualTo(elkDataCollectionInfo.getStartTime());
     assertThat(elkDataCollectionInfo.getHosts().contains("host1")).isTrue();
   }
 
@@ -1512,7 +1512,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     continuousVerificationService.triggerAPMDataCollection(accountId);
     verify(delegateService).queueTask(taskCaptor.capture());
     APMDataCollectionInfo info = (APMDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
-    assertEquals(expectedStart, info.getStartTime());
+    assertThat(info.getStartTime()).isEqualTo(expectedStart);
   }
 
   @Test
@@ -1544,7 +1544,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     continuousVerificationService.triggerAPMDataCollection(accountId);
     verify(delegateService).queueTask(taskCaptor.capture());
     APMDataCollectionInfo info = (APMDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
-    assertEquals(expectedStart, info.getStartTime());
+    assertThat(info.getStartTime()).isEqualTo(expectedStart);
   }
 
   @Test
@@ -1567,6 +1567,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     continuousVerificationService.triggerAPMDataCollection(accountId);
     verify(delegateService).queueTask(taskCaptor.capture());
     APMDataCollectionInfo info = (APMDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
-    assertEquals(expectedStart, info.getStartTime());
+    assertThat(info.getStartTime()).isEqualTo(expectedStart);
   }
 }

@@ -1,7 +1,7 @@
 package software.wings.service;
 
 import static io.harness.rule.OwnerRule.RAGHU;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyObject;
 import static org.mockito.Mockito.when;
@@ -70,7 +70,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
       analysisService.validateConfig(settingAttribute, StateType.ELK, Collections.emptyList());
       Assert.fail("validated invalid config");
     } catch (WingsException e) {
-      assertEquals("WingsException: User name is given but password is empty", e.getParams().get("reason"));
+      assertThat(e.getParams().get("reason")).isEqualTo("WingsException: User name is given but password is empty");
     }
   }
 
@@ -89,7 +89,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
       analysisService.validateConfig(settingAttribute, StateType.ELK, Collections.emptyList());
       Assert.fail("validated invalid config");
     } catch (WingsException e) {
-      assertEquals("WingsException: User name is empty but password is given", e.getParams().get("reason"));
+      assertThat(e.getParams().get("reason")).isEqualTo("WingsException: User name is empty but password is given");
     }
   }
 
@@ -106,7 +106,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
       analysisService.validateConfig(settingAttribute, StateType.ELK, Collections.emptyList());
       Assert.fail("validated invalid config");
     } catch (WingsException e) {
-      assertEquals("IllegalArgumentException: Illegal URL: some url/", e.getParams().get("reason"));
+      assertThat(e.getParams().get("reason")).isEqualTo("IllegalArgumentException: Illegal URL: some url/");
     }
   }
 

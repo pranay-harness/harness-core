@@ -2,7 +2,6 @@ package software.wings.yaml.handler.workflow;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -61,22 +60,22 @@ public class MultiServiceWorkflowYamlHandlerTest extends BaseWorkflowYamlHandler
 
     Workflow workflow = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
     assertThat(workflow).isNotNull();
-    assertEquals(workflow.getName(), workflowName);
+    assertThat(workflowName).isEqualTo(workflow.getName());
 
     MultiServiceWorkflowYaml yaml = yamlHandler.toYaml(workflow, APP_ID);
     assertThat(yaml).isNotNull();
-    assertEquals("MULTI_SERVICE", yaml.getType());
+    assertThat(yaml.getType()).isEqualTo("MULTI_SERVICE");
 
     String yamlContent = getYamlContent(yaml);
     assertThat(yamlContent).isNotNull();
     yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
-    assertEquals(MULTI_SERVICE_VALID_YAML_CONTENT, yamlContent);
+    assertThat(yamlContent).isEqualTo(MULTI_SERVICE_VALID_YAML_CONTENT);
 
     Workflow savedWorkflow = workflowService.readWorkflowByName(APP_ID, workflowName);
     // TODO find out why this couldn't be called
     //    Workflow savedWorkflow = yamlHandler.get(ACCOUNT_ID, validYamlFilePath);
     assertThat(savedWorkflow).isNotNull();
-    assertEquals(savedWorkflow.getName(), workflowName);
+    assertThat(workflowName).isEqualTo(savedWorkflow.getName());
 
     yamlHandler.delete(changeContext);
 

@@ -1,7 +1,7 @@
 package io.harness.batch.processing.integration.service;
 
 import static io.harness.rule.OwnerRule.HITESH;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import io.harness.batch.processing.ccm.BatchJobType;
@@ -46,7 +46,7 @@ public class BatchJobScheduled {
     assertTrue(save);
 
     Instant instant = batchJobScheduledDataService.fetchLastBatchJobScheduledTime(BatchJobType.ECS_EVENT);
-    assertEquals(firstEndAt, instant);
+    assertThat(instant).isEqualTo(firstEndAt);
 
     Instant secondStartAt = firstEndAt;
     Instant secondEndAt = Instant.now();
@@ -55,7 +55,7 @@ public class BatchJobScheduled {
     assertTrue(save);
 
     instant = batchJobScheduledDataService.fetchLastBatchJobScheduledTime(BatchJobType.ECS_EVENT);
-    assertEquals(secondEndAt, instant);
+    assertThat(instant).isEqualTo(secondEndAt);
   }
 
   @After

@@ -1,6 +1,6 @@
 package io.harness.observer;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -38,13 +38,13 @@ public class SubjectTest extends CategoryTest {
     subject.register(OBSERVER_KEY);
     subject.register(OBSERVER_1_KEY);
 
-    assertEquals(subject.fireApproveFromAll(testFunc, OBSERVER_1_KEY).size(), 1);
+    assertThat(1).isEqualTo(subject.fireApproveFromAll(testFunc, OBSERVER_1_KEY).size());
 
     subject.unregister(OBSERVER_1_KEY);
-    assertEquals(subject.fireApproveFromAll(testFunc, OBSERVER_1_KEY).size(), 1);
+    assertThat(1).isEqualTo(subject.fireApproveFromAll(testFunc, OBSERVER_1_KEY).size());
 
     subject.unregister(OBSERVER_KEY);
-    assertEquals(subject.fireApproveFromAll(testFunc, OBSERVER_1_KEY).size(), 0);
+    assertThat(0).isEqualTo(subject.fireApproveFromAll(testFunc, OBSERVER_1_KEY).size());
   }
 
   @Test
@@ -52,10 +52,10 @@ public class SubjectTest extends CategoryTest {
   public void testFireApproveFromAllWithArg() {
     subject.register(OBSERVER_KEY);
 
-    assertEquals(subject.fireApproveFromAll(testFunc, OBSERVER_KEY).size(), 0);
-    assertEquals(subject.fireApproveFromAll(testFunc, OBSERVER_1_KEY).size(), 1);
+    assertThat(0).isEqualTo(subject.fireApproveFromAll(testFunc, OBSERVER_KEY).size());
+    assertThat(1).isEqualTo(subject.fireApproveFromAll(testFunc, OBSERVER_1_KEY).size());
 
     subject.register(OBSERVER_1_KEY);
-    assertEquals(subject.fireApproveFromAll(testFunc, OBSERVER_1_KEY).size(), 1);
+    assertThat(1).isEqualTo(subject.fireApproveFromAll(testFunc, OBSERVER_1_KEY).size());
   }
 }

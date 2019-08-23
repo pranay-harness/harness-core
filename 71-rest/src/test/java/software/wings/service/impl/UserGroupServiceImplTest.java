@@ -174,12 +174,12 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   private void compare(UserGroup lhs, UserGroup rhs) {
-    assertEquals(lhs.getUuid(), rhs.getUuid());
-    assertEquals(lhs.getDescription(), rhs.getDescription());
-    assertEquals(lhs.getAccountId(), rhs.getAccountId());
-    assertEquals(lhs.getName(), rhs.getName());
-    assertEquals(lhs.getMemberIds(), rhs.getMemberIds());
-    assertEquals(lhs.getAppPermissions(), rhs.getAppPermissions());
+    assertThat(rhs.getUuid()).isEqualTo(lhs.getUuid());
+    assertThat(rhs.getDescription()).isEqualTo(lhs.getDescription());
+    assertThat(rhs.getAccountId()).isEqualTo(lhs.getAccountId());
+    assertThat(rhs.getName()).isEqualTo(lhs.getName());
+    assertThat(rhs.getMemberIds()).isEqualTo(lhs.getMemberIds());
+    assertThat(rhs.getAppPermissions()).isEqualTo(lhs.getAppPermissions());
   }
 
   @Test
@@ -363,7 +363,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     userGroupService.updateNotificationSettings(accountId, fetchedGroup.getUuid(), settings);
     fetchedGroup = userGroupService.get(accountId, fetchedGroup.getUuid(), false);
     assertThat(fetchedGroup.getNotificationSettings()).isNotNull();
-    assertEquals(settings, fetchedGroup.getNotificationSettings());
+    assertThat(fetchedGroup.getNotificationSettings()).isEqualTo(settings);
   }
 
   @Test

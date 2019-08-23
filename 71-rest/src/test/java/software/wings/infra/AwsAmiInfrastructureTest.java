@@ -1,7 +1,6 @@
 package software.wings.infra;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static software.wings.infra.InfraDefinitionTestConstants.CLASSIC_LOAD_BALANCERS;
 import static software.wings.infra.InfraDefinitionTestConstants.HOSTNAME_CONVENTION;
 import static software.wings.infra.InfraDefinitionTestConstants.REGION;
@@ -36,19 +35,19 @@ public class AwsAmiInfrastructureTest {
   public void testGetInfraMapping() {
     InfrastructureMapping infrastructureMapping = awsAmiInfrastructure.getInfraMapping();
 
-    assertEquals(infrastructureMapping.getClass(), AwsAmiInfrastructureMapping.class);
+    assertThat(AwsAmiInfrastructureMapping.class).isEqualTo(infrastructureMapping.getClass());
 
     AwsAmiInfrastructureMapping infraMapping = (AwsAmiInfrastructureMapping) infrastructureMapping;
 
-    assertEquals(infraMapping.getRegion(), REGION);
-    assertEquals(infraMapping.getClassicLoadBalancers(), CLASSIC_LOAD_BALANCERS);
-    assertEquals(infraMapping.getHostNameConvention(), HOSTNAME_CONVENTION);
-    assertEquals(infraMapping.getAutoScalingGroupName(), WingsTestConstants.AUTO_SCALING_GROUP_NAME);
-    assertEquals(infraMapping.getComputeProviderSettingId(), WingsTestConstants.COMPUTE_PROVIDER_ID);
-    assertEquals(infraMapping.getStageClassicLoadBalancers(), STAGE_CLASSIC_LOAD_BALANCERS);
-    assertEquals(infraMapping.getTargetGroupArns(), TARGET_GROUP_ARNS);
-    assertEquals(infraMapping.getStageTargetGroupArns(), STAGE_TARGET_GROUP_ARNS);
-    assertEquals(infraMapping.getRegion(), REGION);
+    assertThat(REGION).isEqualTo(infraMapping.getRegion());
+    assertThat(CLASSIC_LOAD_BALANCERS).isEqualTo(infraMapping.getClassicLoadBalancers());
+    assertThat(HOSTNAME_CONVENTION).isEqualTo(infraMapping.getHostNameConvention());
+    assertThat(WingsTestConstants.AUTO_SCALING_GROUP_NAME).isEqualTo(infraMapping.getAutoScalingGroupName());
+    assertThat(WingsTestConstants.COMPUTE_PROVIDER_ID).isEqualTo(infraMapping.getComputeProviderSettingId());
+    assertThat(STAGE_CLASSIC_LOAD_BALANCERS).isEqualTo(infraMapping.getStageClassicLoadBalancers());
+    assertThat(TARGET_GROUP_ARNS).isEqualTo(infraMapping.getTargetGroupArns());
+    assertThat(STAGE_TARGET_GROUP_ARNS).isEqualTo(infraMapping.getStageTargetGroupArns());
+    assertThat(REGION).isEqualTo(infraMapping.getRegion());
   }
 
   @Test
@@ -57,7 +56,7 @@ public class AwsAmiInfrastructureTest {
     Class<? extends InfrastructureMapping> mappingClass = awsAmiInfrastructure.getMappingClass();
 
     assertThat(mappingClass).isNotNull();
-    assertEquals(mappingClass, AwsAmiInfrastructureMapping.class);
+    assertThat(AwsAmiInfrastructureMapping.class).isEqualTo(mappingClass);
   }
 
   @Test
@@ -69,27 +68,27 @@ public class AwsAmiInfrastructureTest {
     assertThat(fieldMap.containsKey("cloudProviderId")).isFalse();
 
     assertThat(fieldMap.containsKey("region")).isTrue();
-    assertEquals(fieldMap.get("region"), REGION);
+    assertThat(REGION).isEqualTo(fieldMap.get("region"));
 
     assertThat(fieldMap.containsKey("hostNameConvention")).isTrue();
-    assertEquals(fieldMap.get("hostNameConvention"), HOSTNAME_CONVENTION);
+    assertThat(HOSTNAME_CONVENTION).isEqualTo(fieldMap.get("hostNameConvention"));
 
     assertThat(fieldMap.containsKey("autoScalingGroupName")).isTrue();
-    assertEquals(fieldMap.get("autoScalingGroupName"), WingsTestConstants.AUTO_SCALING_GROUP_NAME);
+    assertThat(WingsTestConstants.AUTO_SCALING_GROUP_NAME).isEqualTo(fieldMap.get("autoScalingGroupName"));
 
     assertThat(fieldMap.containsKey("region")).isTrue();
-    assertEquals(fieldMap.get("region"), REGION);
+    assertThat(REGION).isEqualTo(fieldMap.get("region"));
 
     assertThat(fieldMap.containsKey("classicLoadBalancers")).isTrue();
-    assertEquals(fieldMap.get("classicLoadBalancers"), CLASSIC_LOAD_BALANCERS);
+    assertThat(CLASSIC_LOAD_BALANCERS).isEqualTo(fieldMap.get("classicLoadBalancers"));
 
     assertThat(fieldMap.containsKey("stageClassicLoadBalancers")).isTrue();
-    assertEquals(fieldMap.get("stageClassicLoadBalancers"), STAGE_CLASSIC_LOAD_BALANCERS);
+    assertThat(STAGE_CLASSIC_LOAD_BALANCERS).isEqualTo(fieldMap.get("stageClassicLoadBalancers"));
 
     assertThat(fieldMap.containsKey("targetGroupArns")).isTrue();
-    assertEquals(fieldMap.get("targetGroupArns"), TARGET_GROUP_ARNS);
+    assertThat(TARGET_GROUP_ARNS).isEqualTo(fieldMap.get("targetGroupArns"));
 
     assertThat(fieldMap.containsKey("stageTargetGroupArns")).isTrue();
-    assertEquals(fieldMap.get("stageTargetGroupArns"), STAGE_TARGET_GROUP_ARNS);
+    assertThat(STAGE_TARGET_GROUP_ARNS).isEqualTo(fieldMap.get("stageTargetGroupArns"));
   }
 }

@@ -6,7 +6,6 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.google.common.base.Preconditions;
@@ -139,14 +138,14 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     EncryptedData encryptedData =
         localEncryptionService.encrypt(secretValue.toCharArray(), accountId, localEncryptionConfig);
     char[] decrypted = localEncryptionService.decrypt(encryptedData, accountId, localEncryptionConfig);
-    assertEquals(secretValue, new String(decrypted));
+    assertThat(new String(decrypted)).isEqualTo(secretValue);
 
     String fileContent = "This file is to be encrypted";
     EncryptedData encryptedFileData = localEncryptionService.encryptFile(
         accountId, localEncryptionConfig, "TestEncryptedFile", fileContent.getBytes());
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     localEncryptionService.decryptToStream(accountId, encryptedFileData, outputStream);
-    assertEquals(fileContent, new String(outputStream.toByteArray()));
+    assertThat(new String(outputStream.toByteArray())).isEqualTo(fileContent);
   }
 
   @Test
@@ -160,7 +159,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
 
     // 3. account encryption type is LOCAL
     EncryptionType encryptionType = secretManager.getEncryptionType(accountId);
-    assertEquals(EncryptionType.LOCAL, encryptionType);
+    assertThat(encryptionType).isEqualTo(EncryptionType.LOCAL);
 
     // 4. No secret manager will be returned
     List<SecretManagerConfig> secretManagers = secretManager.listSecretManagers(accountId);
@@ -353,7 +352,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     updateVaultConfig(savedVaultConfig);
 
     savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
-    assertEquals(VAULT_BASE_PATH, savedVaultConfig.getBasePath());
+    assertThat(savedVaultConfig.getBasePath()).isEqualTo(VAULT_BASE_PATH);
 
     deleteVaultConfig(vaultConfigId);
   }
@@ -854,7 +853,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, secretUuid);
     assertThat(encryptedData).isNotNull();
 
-    assertEquals(expectedName, encryptedData.getName());
+    assertThat(encryptedData.getName()).isEqualTo(expectedName);
 
     final char[] decrypted;
     if (secretManagerConfig instanceof VaultConfig) {
@@ -867,7 +866,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
       decrypted = secretManagementDelegateService.decrypt(encryptedData, kmsConfig);
     }
     assertThat(isNotEmpty(decrypted)).isTrue();
-    assertEquals(expectedValue, new String(decrypted));
+    assertThat(new String(decrypted)).isEqualTo(expectedValue);
   }
 
   private void verifyEncryptedFileValue(String encryptedFileUuid, String expectedValue, VaultConfig savedVaultConfig) {
@@ -881,7 +880,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
         ? new String(Base64.getDecoder().decode(new String(decrypted)))
         : new String(decrypted);
     assertThat(isNotEmpty(decrypted)).isTrue();
-    assertEquals(expectedValue, retrievedFileValue);
+    assertThat(retrievedFileValue).isEqualTo(expectedValue);
   }
 
   private void verifyEncryptedFileValue(String encryptedFileUuid, String expectedValue, KmsConfig savedKmsConfig)
@@ -903,14 +902,14 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
         ? new String(Base64.getDecoder().decode(new String(decrypted)))
         : new String(decrypted);
     assertThat(isNotEmpty(decrypted)).isTrue();
-    assertEquals(expectedValue, retrievedFileValue);
+    assertThat(retrievedFileValue).isEqualTo(expectedValue);
   }
 
   private void verifySecretTextExists(String secretName) {
     EncryptedData encryptedData = secretManager.getSecretMappedToAccountByName(accountId, secretName);
     assertThat(encryptedData).isNotNull();
     assertThat(encryptedData.getPath()).isNull();
-    assertEquals(SettingVariableTypes.SECRET_TEXT, encryptedData.getType());
+    assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.SECRET_TEXT);
   }
 
   private List<SettingAttribute> listSettingAttributes() {

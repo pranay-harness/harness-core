@@ -1,7 +1,6 @@
 package software.wings.integration.verification;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import com.google.inject.Inject;
 
@@ -79,7 +78,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
 
     Object r = method.invoke(splunkDelegateService, "testQuery", "myHostNameField", "harness.test.host.name", false);
     String formedQuery = (String) r;
-    assertEquals(expectedQuery, formedQuery);
+    assertThat(formedQuery).isEqualTo(expectedQuery);
   }
 
   @Test
@@ -95,6 +94,6 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
 
     Object r = method.invoke(splunkDelegateService, advancedQuery, "myHostNameField", "harness.test.host.name", true);
     String formedQuery = (String) r;
-    assertEquals(expectedQuery, formedQuery);
+    assertThat(formedQuery).isEqualTo(expectedQuery);
   }
 }

@@ -247,7 +247,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
         + appId + "&stateExecutionId=" + stateExecutionId + "&logCollectionMinute=" + 0 + "&isBaselineCreated=" + true
         + "&taskId=" + learningEngineAnalysisTask.getUuid() + "&stateType=" + StateType.SPLUNKV2);
     Response restResponse = getRequestBuilderWithLearningAuthHeader(target).post(entity(record, APPLICATION_JSON));
-    assertEquals(HttpStatus.SC_OK, restResponse.getStatus());
+    assertThat(restResponse.getStatus()).isEqualTo(HttpStatus.SC_OK);
 
     target = client.target(API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS
         + LogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_SUMMARY_URL + "?accountId=" + accountId
@@ -322,7 +322,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     assertThat(restResponse.getResource()).isNotNull();
 
     LogMLAnalysisSummary summary = restResponse.getResource();
-    assertEquals("cv-demo-query", summary.getQuery());
+    assertThat(summary.getQuery()).isEqualTo("cv-demo-query");
   }
 
   @Test
@@ -384,7 +384,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     assertThat(restResponse.getResource()).isNotNull();
 
     LogMLAnalysisSummary summary = restResponse.getResource();
-    assertEquals("cv-demo-query", summary.getQuery());
+    assertThat(summary.getQuery()).isEqualTo("cv-demo-query");
   }
 
   private void initDemoSetup(String serverName) {
@@ -766,7 +766,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
         .call();
     LogMLAnalysisSummary logMLAnalysisSummary =
         mgrAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SUMO);
-    assertEquals("No baseline data for the given query was found.", logMLAnalysisSummary.getAnalysisSummaryMessage());
+    assertThat(logMLAnalysisSummary.getAnalysisSummaryMessage())
+        .isEqualTo("No baseline data for the given query was found.");
     LogMLAnalysisRecord logAnalysisRecord =
         analysisService.getLogAnalysisRecords(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId, 0, false);
     assertThat(logAnalysisRecord.isBaseLineCreated()).isFalse();
@@ -962,7 +963,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
         .call();
     LogMLAnalysisSummary logMLAnalysisSummary =
         mgrAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.ELK);
-    assertEquals("No data found for the given queries.", logMLAnalysisSummary.getAnalysisSummaryMessage());
+    assertThat(logMLAnalysisSummary.getAnalysisSummaryMessage()).isEqualTo("No data found for the given queries.");
     LogMLAnalysisRecord logAnalysisRecord = analysisService.getLogAnalysisRecords(
         LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId, logCollectionMinute, false);
     assertThat(logAnalysisRecord).isNotNull();
@@ -1120,7 +1121,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     String workflow2 = addWorkflowDataForLogs(false, query);
     final String lastWorkflowExecutionId = analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
         StateType.SPLUNKV2, appId, serviceId, workflowId, query);
-    assertEquals("The baseline workflow should be first one", workflow1, lastWorkflowExecutionId);
+    assertThat(lastWorkflowExecutionId).isEqualTo("The baseline workflow should be first one", workflow1);
   }
 
   @Test
@@ -1131,7 +1132,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     String workflow2 = addWorkflowDataForLogs(true, query);
     final String lastWorkflowExecutionId = analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
         StateType.SPLUNKV2, appId, serviceId, workflowId, query);
-    assertEquals("The baseline workflow should be second one", workflow2, lastWorkflowExecutionId);
+    assertThat(lastWorkflowExecutionId).isEqualTo("The baseline workflow should be second one", workflow2);
   }
 
   @Test
@@ -1140,7 +1141,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     final String query = UUID.randomUUID().toString();
     final String lastWorkflowExecutionId = analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
         StateType.SPLUNKV2, appId, serviceId, workflowId, query);
-    assertEquals("The baseline workflow should be null", null, lastWorkflowExecutionId);
+    assertThat(lastWorkflowExecutionId).isEqualTo("The baseline workflow should be null", null);
   }
 
   @Test
@@ -1151,7 +1152,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     String workflow2 = addWorkflowDataForLogs(false, query);
     final String lastWorkflowExecutionId = analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
         StateType.SPLUNKV2, appId, serviceId, workflowId, query);
-    assertEquals("The baseline workflow should be workflow2", workflow2, lastWorkflowExecutionId);
+    assertThat(lastWorkflowExecutionId).isEqualTo("The baseline workflow should be workflow2", workflow2);
   }
 
   private String addWorkflowDataForLogs(boolean withLogData, String query) {
@@ -1358,7 +1359,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
         new LogRequest(query, appId, UUID.randomUUID().toString(), workflowId, serviceId, hosts, 10, false);
     RestResponse<Set<LogDataRecord>> restResponse = getRequestBuilderWithLearningAuthHeader(target).post(
         entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<Set<LogDataRecord>>>() {});
-    assertEquals(expected, restResponse.getResource());
+    assertThat(restResponse.getResource()).isEqualTo(expected);
   }
 
   private class LogAnalysisTestJob extends LogAnalysisTask {
@@ -1540,7 +1541,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     LogMLAnalysisRecord logAnalysisRecord =
         analysisService.getLogAnalysisRecords(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId, 0, false);
     assertThat(logAnalysisRecord.getControl_events()).hasSize(1);
-    assertEquals("ignore", logAnalysisRecord.getControl_events().get("20000").get(0).getText());
+    assertThat(logAnalysisRecord.getControl_events().get("20000").get(0).getText()).isEqualTo("ignore");
     assertThat(isEmpty(logAnalysisRecord.getTest_events())).isTrue();
   }
 }

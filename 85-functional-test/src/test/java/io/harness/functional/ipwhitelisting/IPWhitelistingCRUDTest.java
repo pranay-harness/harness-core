@@ -1,7 +1,6 @@
 package io.harness.functional.ipwhitelisting;
 
 import static io.harness.rule.OwnerRule.SWAMY;
-import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
@@ -34,29 +33,29 @@ public class IPWhitelistingCRUDTest extends AbstractFunctionalTest {
     Whitelist ipAdded = IPWhitelistingRestUtils.addWhiteListing(getAccount().getUuid(), bearerToken, ipToWhiteList);
     assertThat(ipAdded).isNotNull();
     logger.info("Verifying the added values");
-    assertEquals(ipAdded.getAccountId(), ipToWhiteList.getAccountId());
-    assertEquals(ipAdded.getFilter(), ipToWhiteList.getFilter());
-    assertEquals(ipAdded.getDescription(), ipToWhiteList.getDescription());
-    assertEquals(ipAdded.getStatus(), ipToWhiteList.getStatus());
+    assertThat(ipToWhiteList.getAccountId()).isEqualTo(ipAdded.getAccountId());
+    assertThat(ipToWhiteList.getFilter()).isEqualTo(ipAdded.getFilter());
+    assertThat(ipToWhiteList.getDescription()).isEqualTo(ipAdded.getDescription());
+    assertThat(ipToWhiteList.getStatus()).isEqualTo(ipAdded.getStatus());
     String uuid = ipAdded.getUuid();
     logger.info("Verifying if getting the whitelisted IP works");
     ipAdded = IPWhitelistingRestUtils.getWhitelistedIP(getAccount().getUuid(), bearerToken, ipAdded.getUuid());
-    assertEquals(ipAdded.getAccountId(), ipToWhiteList.getAccountId());
-    assertEquals(ipAdded.getFilter(), ipToWhiteList.getFilter());
-    assertEquals(ipAdded.getDescription(), ipToWhiteList.getDescription());
-    assertEquals(ipAdded.getStatus(), ipToWhiteList.getStatus());
-    assertEquals(ipAdded.getUuid(), uuid);
+    assertThat(ipToWhiteList.getAccountId()).isEqualTo(ipAdded.getAccountId());
+    assertThat(ipToWhiteList.getFilter()).isEqualTo(ipAdded.getFilter());
+    assertThat(ipToWhiteList.getDescription()).isEqualTo(ipAdded.getDescription());
+    assertThat(ipToWhiteList.getStatus()).isEqualTo(ipAdded.getStatus());
+    assertThat(uuid).isEqualTo(ipAdded.getUuid());
     logger.info("Updating and verifying the whitelisted IP");
     ipToWhiteList.setUuid(ipAdded.getUuid());
     ipToWhiteList.setFilter("127.0.0.1");
     ipToWhiteList.setDescription("Modified description");
     Whitelist updatedWhitelist =
         IPWhitelistingRestUtils.updateWhiteListing(getAccount().getUuid(), bearerToken, ipToWhiteList);
-    assertEquals(updatedWhitelist.getAccountId(), ipToWhiteList.getAccountId());
-    assertEquals(updatedWhitelist.getFilter(), ipToWhiteList.getFilter());
-    assertEquals(updatedWhitelist.getDescription(), ipToWhiteList.getDescription());
-    assertEquals(updatedWhitelist.getStatus(), ipToWhiteList.getStatus());
-    assertEquals(updatedWhitelist.getUuid(), ipToWhiteList.getUuid());
+    assertThat(ipToWhiteList.getAccountId()).isEqualTo(updatedWhitelist.getAccountId());
+    assertThat(ipToWhiteList.getFilter()).isEqualTo(updatedWhitelist.getFilter());
+    assertThat(ipToWhiteList.getDescription()).isEqualTo(updatedWhitelist.getDescription());
+    assertThat(ipToWhiteList.getStatus()).isEqualTo(updatedWhitelist.getStatus());
+    assertThat(ipToWhiteList.getUuid()).isEqualTo(updatedWhitelist.getUuid());
     logger.info("IPWhitelisting test completed");
     logger.info("Deleting the test created through entries");
     assertThat(

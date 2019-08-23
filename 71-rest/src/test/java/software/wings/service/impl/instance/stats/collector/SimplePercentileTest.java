@@ -1,6 +1,6 @@
 package software.wings.service.impl.instance.stats.collector;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -22,16 +22,16 @@ public class SimplePercentileTest extends CategoryTest {
     Collections.shuffle(numbers);
 
     Integer percentile = new SimplePercentile(numbers).evaluate(95);
-    assertEquals(sorted(numbers).get(95), percentile);
+    assertThat(percentile).isEqualTo(sorted(numbers).get(95));
 
     percentile = new SimplePercentile(numbers).evaluate(20);
-    assertEquals(sorted(numbers).get(20), percentile);
+    assertThat(percentile).isEqualTo(sorted(numbers).get(20));
 
     numbers = new ArrayList<>(20);
     IntStream.range(1, 21).forEach(numbers::add);
     Collections.shuffle(numbers);
     percentile = new SimplePercentile(numbers).evaluate(95);
-    assertEquals(sorted(numbers).get(19), percentile);
+    assertThat(percentile).isEqualTo(sorted(numbers).get(19));
   }
 
   private static List<Integer> sorted(List<Integer> list) {

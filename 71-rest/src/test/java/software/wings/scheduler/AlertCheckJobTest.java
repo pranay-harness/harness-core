@@ -1,6 +1,6 @@
 package software.wings.scheduler;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -78,7 +78,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
     ArgumentCaptor<AlertType> captor = ArgumentCaptor.forClass(AlertType.class);
     verify(alertService).openAlert(any(), any(), captor.capture(), any());
     AlertType alertType = captor.getValue();
-    assertEquals(AlertType.NoActiveDelegates, alertType);
+    assertThat(alertType).isEqualTo(AlertType.NoActiveDelegates);
   }
 
   /**
@@ -123,6 +123,6 @@ public class AlertCheckJobTest extends WingsBaseTest {
     ArgumentCaptor<AlertType> captor = ArgumentCaptor.forClass(AlertType.class);
     verify(alertService).openAlert(any(), any(), captor.capture(), any());
     AlertType alertType = captor.getValue();
-    assertEquals(AlertType.INVALID_SMTP_CONFIGURATION, alertType);
+    assertThat(alertType).isEqualTo(AlertType.INVALID_SMTP_CONFIGURATION);
   }
 }

@@ -1,7 +1,6 @@
 package software.wings.yaml.gitSync;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -63,6 +62,6 @@ public class GitChangeSetRunnableTest extends WingsBaseTest {
     List stuckChangeSetIds = captor.getValue();
     assertThat(stuckChangeSetIds).isNotNull();
     assertThat(stuckChangeSetIds).hasSize(1);
-    assertEquals("12345", stuckChangeSetIds.get(0));
+    assertThat(stuckChangeSetIds.get(0)).isEqualTo("12345");
   }
 }

@@ -2,7 +2,6 @@ package software.wings.yaml.handler.pipeline;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -237,7 +236,7 @@ public class PipelineYamlHandlerTest extends BaseYamlHandlerTest {
     String yamlContent = getYamlContent(yaml);
     assertThat(yamlContent).isNotNull();
     yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
-    //    assertEquals(validYamlContent, yamlContent);
+    //    assertThat( yamlContent).isEqualTo(validYamlContent);
 
     Pipeline pipelineFromGet = yamlHandler.get(ACCOUNT_ID, validYamlFilePath);
     comparePipeline(pipeline, pipelineFromGet);
@@ -287,8 +286,8 @@ public class PipelineYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   private void comparePipeline(Pipeline lhs, Pipeline rhs) {
-    assertEquals(lhs.getName(), rhs.getName());
-    //    assertEquals(lhs.getAccountId(), rhs.getAccountId());
-    assertEquals(lhs.getDescription(), rhs.getDescription());
+    assertThat(rhs.getName()).isEqualTo(lhs.getName());
+    //    assertThat( rhs.getAccountId()).isEqualTo(lhs.getAccountId());
+    assertThat(rhs.getDescription()).isEqualTo(lhs.getDescription());
   }
 }

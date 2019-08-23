@@ -2,7 +2,6 @@ package software.wings.service.impl.yaml.service;
 
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static software.wings.beans.yaml.GitFileChange.Builder.aGitFileChange;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
@@ -71,13 +70,13 @@ public class YamlServiceImplTest extends WingsBaseTest {
     filteredGitFileChange = yamlService.filterInvalidFilePaths(gitFileChange);
     assertThat(filteredGitFileChange).isNotNull();
     assertThat(filteredGitFileChange).hasSize(1);
-    assertEquals(validFilePath, filteredGitFileChange.get(0).getFilePath());
+    assertThat(filteredGitFileChange.get(0).getFilePath()).isEqualTo(validFilePath);
 
     gitFileChange.clear();
     gitFileChange.add(aGitFileChange().withAccountId(ACCOUNT_ID).withFilePath(validFilePath).build());
     filteredGitFileChange = yamlService.filterInvalidFilePaths(gitFileChange);
     assertThat(filteredGitFileChange).isNotNull();
     assertThat(filteredGitFileChange).hasSize(1);
-    assertEquals(validFilePath, filteredGitFileChange.get(0).getFilePath());
+    assertThat(filteredGitFileChange.get(0).getFilePath()).isEqualTo(validFilePath);
   }
 }

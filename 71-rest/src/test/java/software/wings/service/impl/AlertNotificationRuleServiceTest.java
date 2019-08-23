@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import com.google.inject.Inject;
 
@@ -47,7 +46,7 @@ public class AlertNotificationRuleServiceTest extends WingsBaseTest {
 
     rules.forEach(alertNotificationRuleService::create);
 
-    assertEquals(rules, alertNotificationRuleService.getAll(ACCOUNT_1_ID));
+    assertThat(alertNotificationRuleService.getAll(ACCOUNT_1_ID)).isEqualTo(rules);
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -77,7 +76,7 @@ public class AlertNotificationRuleServiceTest extends WingsBaseTest {
     alertNotificationRuleService.deleteByAccountId(ACCOUNT_1_ID);
 
     assertThat(alertNotificationRuleService.getAll(ACCOUNT_1_ID)).isEmpty();
-    assertEquals(rulesOfAccount2, alertNotificationRuleService.getAll(ACCOUNT_2_ID));
+    assertThat(alertNotificationRuleService.getAll(ACCOUNT_2_ID)).isEqualTo(rulesOfAccount2);
   }
 
   @Test
@@ -95,7 +94,7 @@ public class AlertNotificationRuleServiceTest extends WingsBaseTest {
 
     assertThat(alertNotificationRuleService.getAll(ACCOUNT_1_ID)).isEmpty();
     assertThat(alertNotificationRuleService.getAll(ACCOUNT_2_ID)).hasSize(1);
-    assertEquals(savedRuleInAccount2, alertNotificationRuleService.getAll(ACCOUNT_2_ID).get(0));
+    assertThat(alertNotificationRuleService.getAll(ACCOUNT_2_ID).get(0)).isEqualTo(savedRuleInAccount2);
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -126,7 +125,7 @@ public class AlertNotificationRuleServiceTest extends WingsBaseTest {
     alertNotificationRuleService.update(updatedAlertNotificationRule);
 
     assertThat(alertNotificationRuleService.getAll(ACCOUNT_1_ID)).hasSize(1);
-    assertEquals(updatedAlertNotificationRule, alertNotificationRuleService.getAll(ACCOUNT_1_ID).get(0));
+    assertThat(alertNotificationRuleService.getAll(ACCOUNT_1_ID).get(0)).isEqualTo(updatedAlertNotificationRule);
   }
 
   @Test
@@ -143,6 +142,6 @@ public class AlertNotificationRuleServiceTest extends WingsBaseTest {
     alertNotificationRuleService.update(updatedAlertNotificationRule);
 
     assertThat(alertNotificationRuleService.getAll(ACCOUNT_1_ID)).hasSize(1);
-    assertEquals(updatedAlertNotificationRule, alertNotificationRuleService.getAll(ACCOUNT_1_ID).get(0));
+    assertThat(alertNotificationRuleService.getAll(ACCOUNT_1_ID).get(0)).isEqualTo(updatedAlertNotificationRule);
   }
 }

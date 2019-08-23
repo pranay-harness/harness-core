@@ -1,7 +1,6 @@
 package software.wings.sm.states;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.when;
@@ -59,7 +58,7 @@ public class ArtifactCheckStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void emptyArtifacts() {
     ExecutionResponse executionResponse = artifactCheckState.execute(context);
-    assertEquals("Artifacts are not required.", executionResponse.getErrorMessage());
+    assertThat(executionResponse.getErrorMessage()).isEqualTo("Artifacts are not required.");
   }
 
   @Test
@@ -70,7 +69,7 @@ public class ArtifactCheckStateTest extends WingsBaseTest {
     workflowStandardParams.setArtifactIds(Lists.newArrayList(failedArtifactId, errorArtifactId));
 
     ExecutionResponse executionResponse = artifactCheckState.execute(context);
-    assertEquals(ExecutionStatus.FAILED, executionResponse.getExecutionStatus());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
   }
 
   @Test
@@ -91,8 +90,8 @@ public class ArtifactCheckStateTest extends WingsBaseTest {
     workflowStandardParams.setArtifactIds(Lists.newArrayList(artifactId1, artifactId2));
 
     ExecutionResponse executionResponse = artifactCheckState.execute(context);
-    assertEquals(ExecutionStatus.SUCCESS, executionResponse.getExecutionStatus());
-    assertEquals("All artifacts: [artifact1, artifact2] are available.", executionResponse.getErrorMessage());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(executionResponse.getErrorMessage()).isEqualTo("All artifacts: [artifact1, artifact2] are available.");
   }
 
   @Test
@@ -124,8 +123,9 @@ public class ArtifactCheckStateTest extends WingsBaseTest {
     workflowStandardParams.setArtifactIds(Lists.newArrayList(artifactId1, artifactId2));
 
     ExecutionResponse executionResponse = artifactCheckState.execute(context);
-    assertEquals(ExecutionStatus.SUCCESS, executionResponse.getExecutionStatus());
-    assertEquals("Waiting for artifacts:[artifact1, artifact2] to be downloaded", executionResponse.getErrorMessage());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(executionResponse.getErrorMessage())
+        .isEqualTo("Waiting for artifacts:[artifact1, artifact2] to be downloaded");
     assertThat(executionResponse.getCorrelationIds()).hasSize(2);
   }
 }

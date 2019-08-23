@@ -2,7 +2,6 @@ package software.wings.yaml.handler.inframappings;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -75,16 +74,16 @@ public class AwsInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerT
 
     AwsInfrastructureMapping infrastructureMapping = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
     assertThat(infrastructureMapping).isNotNull();
-    assertEquals(infrastructureMapping.getName(), infraMappingName);
+    assertThat(infraMappingName).isEqualTo(infrastructureMapping.getName());
 
     Yaml yaml = yamlHandler.toYaml(infrastructureMapping, APP_ID);
     assertThat(yaml).isNotNull();
-    assertEquals(InfrastructureMappingType.AWS_SSH.name(), yaml.getType());
+    assertThat(yaml.getType()).isEqualTo(InfrastructureMappingType.AWS_SSH.name());
 
     String yamlContent = getYamlContent(yaml);
     assertThat(yamlContent).isNotNull();
     yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
-    assertEquals(validYamlContent, yamlContent);
+    assertThat(yamlContent).isEqualTo(validYamlContent);
 
     InfrastructureMapping infrastructureMapping2 =
         infrastructureMappingService.getInfraMappingByName(APP_ID, ENV_ID, infraMappingName);

@@ -1,7 +1,6 @@
 package software.wings.delegatetasks;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import com.google.inject.Inject;
 
@@ -31,9 +30,9 @@ public class HelmCommandTaskHelperTest extends WingsBaseTest {
 
     assertThat(optional.isPresent()).isTrue();
     HelmDeployChartSpec helmDeployChartSpec = optional.get().getHelmDeployChartSpec();
-    assertEquals("http://storage.googleapis.com/kubernetes-charts", helmDeployChartSpec.getUrl());
-    assertEquals("ABC", helmDeployChartSpec.getName());
-    assertEquals("0.1.0", helmDeployChartSpec.getVersion());
+    assertThat(helmDeployChartSpec.getUrl()).isEqualTo("http://storage.googleapis.com/kubernetes-charts");
+    assertThat(helmDeployChartSpec.getName()).isEqualTo("ABC");
+    assertThat(helmDeployChartSpec.getVersion()).isEqualTo("0.1.0");
   }
 
   @Test
@@ -45,7 +44,7 @@ public class HelmCommandTaskHelperTest extends WingsBaseTest {
         + "          url: http://storage.googleapis.com/kubernetes-charts\n");
     assertThat(optional.isPresent()).isTrue();
     HelmDeployChartSpec helmDeployChartSpec = optional.get().getHelmDeployChartSpec();
-    assertEquals("http://storage.googleapis.com/kubernetes-charts", helmDeployChartSpec.getUrl());
+    assertThat(helmDeployChartSpec.getUrl()).isEqualTo("http://storage.googleapis.com/kubernetes-charts");
     assertThat(helmDeployChartSpec.getName()).isNull();
     assertThat(helmDeployChartSpec.getVersion()).isNull();
   }
@@ -60,7 +59,7 @@ public class HelmCommandTaskHelperTest extends WingsBaseTest {
       assertThat(true).isFalse();
     } catch (Exception e) {
       assertThat(e instanceof WingsException).isTrue();
-      assertEquals("Invalid Yaml, Failed while parsing yamlString", e.getMessage());
+      assertThat(e.getMessage()).isEqualTo("Invalid Yaml, Failed while parsing yamlString");
       assertThat(true).isTrue();
     }
   }
@@ -80,8 +79,8 @@ public class HelmCommandTaskHelperTest extends WingsBaseTest {
 
     assertThat(optional.isPresent()).isTrue();
     HelmDeployChartSpec helmDeployChartSpec = optional.get().getHelmDeployChartSpec();
-    assertEquals("http://storage.googleapis.com/kubernetes-charts", helmDeployChartSpec.getUrl());
-    assertEquals("ABC", helmDeployChartSpec.getName());
-    assertEquals("0.1.0", helmDeployChartSpec.getVersion());
+    assertThat(helmDeployChartSpec.getUrl()).isEqualTo("http://storage.googleapis.com/kubernetes-charts");
+    assertThat(helmDeployChartSpec.getName()).isEqualTo("ABC");
+    assertThat(helmDeployChartSpec.getVersion()).isEqualTo("0.1.0");
   }
 }

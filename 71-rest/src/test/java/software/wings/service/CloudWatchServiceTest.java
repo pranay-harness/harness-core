@@ -152,9 +152,9 @@ public class CloudWatchServiceTest extends WingsBaseTest {
 
     cloudWatchService.setStatisticsAndUnit(AwsNameSpace.ELB, cloudWatchMetrics);
 
-    assertEquals("Average", cloudWatchMetrics.get(0).getStatistics());
-    assertEquals(StandardUnit.Milliseconds, cloudWatchMetrics.get(0).getUnit());
-    assertEquals("Sum", cloudWatchMetrics.get(1).getStatistics());
-    assertEquals(StandardUnit.Count, cloudWatchMetrics.get(1).getUnit());
+    assertThat(cloudWatchMetrics.get(0).getStatistics()).isEqualTo("Average");
+    assertThat(cloudWatchMetrics.get(0).getUnit()).isEqualTo(StandardUnit.Milliseconds);
+    assertThat(cloudWatchMetrics.get(1).getStatistics()).isEqualTo("Sum");
+    assertThat(cloudWatchMetrics.get(1).getUnit()).isEqualTo(StandardUnit.Count);
   }
 }

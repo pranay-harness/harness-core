@@ -63,7 +63,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
     assertThat(saved).isTrue();
 
     val finalCount = ds.getCount(fetchQuery());
-    assertEquals("since one item was saved, count should be incremented by one", initialCount + 1, finalCount);
+    assertThat(finalCount).isEqualTo(initialCount + 1);
   }
 
   private Query<InstanceStatsSnapshot> fetchQuery() {
@@ -94,8 +94,8 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
     for (int i = 0; i < timelineFromDb.size(); i++) {
       val savedValue = statsToSave.get(i);
       val snapshotFromDb = timelineFromDb.get(i);
-      assertEquals("saved accountID should be same as fetched accountId", accountId, snapshotFromDb.getAccountId());
-      assertEquals(savedValue, snapshotFromDb);
+      assertThat(snapshotFromDb.getAccountId()).isEqualTo(accountId);
+      assertThat(snapshotFromDb).isEqualTo(savedValue);
     }
   }
 

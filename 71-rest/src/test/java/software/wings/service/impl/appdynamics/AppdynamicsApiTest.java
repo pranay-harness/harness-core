@@ -118,7 +118,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
       appdynamicsService.validateConfig(settingAttribute, Collections.emptyList());
       fail("Validated invalid config");
     } catch (WingsException e) {
-      assertEquals(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR, e.getCode());
+      assertThat(e.getCode()).isEqualTo(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR);
       logger.info("got exception", e);
       assertEquals("got exception: " + e + " params: " + e.getParams(),
           "Could not reach AppDynamics server. " + ExceptionUtils.getMessage(runtimeException),
@@ -165,7 +165,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
       appdynamicsService.validateConfig(settingAttribute, Collections.emptyList());
       fail("Validated invalid config");
     } catch (WingsException e) {
-      assertEquals(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR, e.getCode());
+      assertThat(e.getCode()).isEqualTo(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR);
       logger.info("got exception", e);
       assertEquals("got exception: " + e + " params: " + e.getParams(),
           "Could not login to AppDynamics server with the given credentials", e.getParams().get("reason"));
@@ -206,7 +206,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     RestResponse<List<NewRelicApplication>> allApplications =
         appdynamicsResource.getAllApplications(accountId, savedAttributeId);
     assertThat(allApplications.getResponseMessages().isEmpty()).isTrue();
-    assertEquals(sortedApplicationsByName, allApplications.getResource());
+    assertThat(allApplications.getResource()).isEqualTo(sortedApplicationsByName);
   }
 
   @Test
@@ -224,7 +224,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     RestResponse<Set<AppdynamicsTier>> allTiers =
         appdynamicsResource.getAllTiers(accountId, savedAttributeId, new Random().nextLong());
     assertThat(allTiers.getResponseMessages().isEmpty()).isTrue();
-    assertEquals(tiers, allTiers.getResource());
+    assertThat(allTiers.getResource()).isEqualTo(tiers);
   }
 
   @Test
@@ -305,7 +305,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     List<AppdynamicsMetric> tierBTMetrics = delegateService.getTierBTMetrics(appDynamicsConfig, new Random().nextLong(),
         new Random().nextLong(), Collections.emptyList(), createApiCallLog(accountId, null));
     assertThat(tierBTMetrics).hasSize(2);
-    assertEquals(bts, tierBTMetrics);
+    assertThat(tierBTMetrics).isEqualTo(bts);
   }
 
   @Test
@@ -397,7 +397,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
             generateUuid(), System.currentTimeMillis() - new Random().nextInt(), System.currentTimeMillis(),
             Collections.emptyList(), createApiCallLog(accountId, null));
     assertThat(tierBTMetricData).hasSize(2);
-    assertEquals(btData, tierBTMetricData);
+    assertThat(tierBTMetricData).isEqualTo(btData);
   }
 
   private String saveAppdynamicsConfig() {

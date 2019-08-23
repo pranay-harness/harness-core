@@ -7,7 +7,6 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.joor.Reflect.on;
-import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FakeTimeLimiter;
@@ -214,8 +213,8 @@ public class JenkinsTest extends CategoryTest {
   public void shouldGetLastSuccessfulBuildForGitJob() throws IOException {
     BuildDetails buildDetails = jenkins.getLastSuccessfulBuildForJob("scheduler");
     assertThat(buildDetails).isNotNull();
-    assertEquals("67", buildDetails.getNumber());
-    assertEquals("1bfdd1174d41e1f32cbfc287f18c3cc040ca90e3", buildDetails.getRevision());
+    assertThat(buildDetails.getNumber()).isEqualTo("67");
+    assertThat(buildDetails.getRevision()).isEqualTo("1bfdd1174d41e1f32cbfc287f18c3cc040ca90e3");
   }
 
   @Test
@@ -260,9 +259,9 @@ public class JenkinsTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testJobNormalizedNames() throws Exception {
     JenkinsImpl jenkins = new JenkinsImpl("http://localhost:8080");
-    assertEquals("TestJob", jenkins.getNormalizedName("TestJob"));
+    assertThat(jenkins.getNormalizedName("TestJob")).isEqualTo("TestJob");
     assertThat(jenkins.getNormalizedName(null)).isNull();
-    assertEquals("Test Job", jenkins.getNormalizedName("Test%20Job"));
+    assertThat(jenkins.getNormalizedName("Test%20Job")).isEqualTo("Test Job");
   }
 
   @Test

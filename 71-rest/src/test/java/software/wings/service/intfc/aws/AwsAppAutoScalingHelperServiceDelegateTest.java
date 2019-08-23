@@ -1,7 +1,6 @@
 package software.wings.service.intfc.aws;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import com.google.inject.Inject;
 
@@ -33,11 +32,11 @@ public class AwsAppAutoScalingHelperServiceDelegateTest extends WingsBaseTest {
 
     ScalableTarget scalableTarget = scalingHelperServiceDelegate.getScalableTargetFromJson(json);
     assertThat(scalableTarget).isNotNull();
-    assertEquals("ecs", scalableTarget.getServiceNamespace());
-    assertEquals("ecs:service:DesiredCount", scalableTarget.getScalableDimension());
-    assertEquals(2, scalableTarget.getMinCapacity().intValue());
-    assertEquals(5, scalableTarget.getMaxCapacity().intValue());
-    assertEquals("RollARN", scalableTarget.getRoleARN());
+    assertThat(scalableTarget.getServiceNamespace()).isEqualTo("ecs");
+    assertThat(scalableTarget.getScalableDimension()).isEqualTo("ecs:service:DesiredCount");
+    assertThat(scalableTarget.getMinCapacity().intValue()).isEqualTo(2);
+    assertThat(scalableTarget.getMaxCapacity().intValue()).isEqualTo(5);
+    assertThat(scalableTarget.getRoleARN()).isEqualTo("RollARN");
   }
 
   @Test
@@ -109,20 +108,20 @@ public class AwsAppAutoScalingHelperServiceDelegateTest extends WingsBaseTest {
   }
 
   private void validateScalingPolicy(String name, String predefinedMetricType, ScalingPolicy scalingPolicy) {
-    assertEquals(name, scalingPolicy.getPolicyName());
-    assertEquals("ecs", scalingPolicy.getServiceNamespace());
-    assertEquals("ecs:service:DesiredCount", scalingPolicy.getScalableDimension());
+    assertThat(scalingPolicy.getPolicyName()).isEqualTo(name);
+    assertThat(scalingPolicy.getServiceNamespace()).isEqualTo("ecs");
+    assertThat(scalingPolicy.getScalableDimension()).isEqualTo("ecs:service:DesiredCount");
 
     assertThat(scalingPolicy.getTargetTrackingScalingPolicyConfiguration()).isNotNull();
     TargetTrackingScalingPolicyConfiguration configuration =
         scalingPolicy.getTargetTrackingScalingPolicyConfiguration();
 
-    assertEquals(60, configuration.getTargetValue().intValue());
-    assertEquals(300, configuration.getScaleInCooldown().intValue());
-    assertEquals(300, configuration.getScaleOutCooldown().intValue());
+    assertThat(configuration.getTargetValue().intValue()).isEqualTo(60);
+    assertThat(configuration.getScaleInCooldown().intValue()).isEqualTo(300);
+    assertThat(configuration.getScaleOutCooldown().intValue()).isEqualTo(300);
 
     assertThat(configuration.getPredefinedMetricSpecification()).isNotNull();
     PredefinedMetricSpecification metricSpecification = configuration.getPredefinedMetricSpecification();
-    assertEquals(predefinedMetricType, metricSpecification.getPredefinedMetricType());
+    assertThat(metricSpecification.getPredefinedMetricType()).isEqualTo(predefinedMetricType);
   }
 }

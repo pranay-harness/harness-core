@@ -2,7 +2,6 @@ package software.wings.yaml.handler;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -89,7 +88,7 @@ public class ApplicationYamlHandlerTest extends BaseYamlHandlerTest {
     String yamlContent = getYamlContent(yaml);
     assertThat(yamlContent).isNotNull();
     yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
-    assertEquals(validYamlContent, yamlContent);
+    assertThat(yamlContent).isEqualTo(validYamlContent);
 
     Application applicationFromGet = yamlHandler.get(ACCOUNT_ID, validYamlFilePath);
     compareApp(application, applicationFromGet);
@@ -122,8 +121,8 @@ public class ApplicationYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   private void compareApp(Application lhs, Application rhs) {
-    assertEquals(lhs.getName(), rhs.getName());
-    assertEquals(lhs.getAccountId(), rhs.getAccountId());
-    assertEquals(lhs.getDescription(), rhs.getDescription());
+    assertThat(rhs.getName()).isEqualTo(lhs.getName());
+    assertThat(rhs.getAccountId()).isEqualTo(lhs.getAccountId());
+    assertThat(rhs.getDescription()).isEqualTo(lhs.getDescription());
   }
 }

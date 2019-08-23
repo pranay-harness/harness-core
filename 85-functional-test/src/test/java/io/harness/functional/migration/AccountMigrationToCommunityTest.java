@@ -1,7 +1,7 @@
 package io.harness.functional.migration;
 
 import static io.harness.rule.OwnerRule.ANKIT;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotEquals;
 
 import io.harness.category.element.FunctionalTests;
@@ -23,7 +23,7 @@ public class AccountMigrationToCommunityTest extends AbstractAccountMigrationTes
   public void testMigrateAlreadyCompliantTrialAccountToCommunity() {
     updateAccountLicense(AccountType.COMMUNITY);
 
-    assertEquals(AccountType.COMMUNITY, getAccountType());
+    assertThat(getAccountType()).isEqualTo(AccountType.COMMUNITY);
   }
 
   @Test
@@ -44,7 +44,7 @@ public class AccountMigrationToCommunityTest extends AbstractAccountMigrationTes
 
     updateAccountLicense(AccountType.COMMUNITY, requiredInfoToComply);
 
-    assertEquals(AccountType.COMMUNITY, getAccountType());
+    assertThat(getAccountType()).isEqualTo(AccountType.COMMUNITY);
   }
 
   private void makeAccountNonCompliant() {

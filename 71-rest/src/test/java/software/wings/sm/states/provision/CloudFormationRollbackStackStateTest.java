@@ -3,7 +3,6 @@ package software.wings.sm.states.provision;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -113,23 +112,23 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
     state.setProvisionerId(PROVISIONER_ID);
     state.setTimeoutMillis(1000);
     ExecutionResponse response = state.execute(mockContext);
-    assertEquals(ExecutionStatus.SUCCESS, response.getExecutionStatus());
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(mockDelegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
     assertThat(delegateTask).isNotNull();
     assertThat(delegateTask.getData().getParameters()).isNotNull();
-    assertEquals(delegateTask.getData().getParameters().length, 2);
+    assertThat(2).isEqualTo(delegateTask.getData().getParameters().length);
     assertThat(delegateTask.getData().getParameters()[0] instanceof CloudFormationCreateStackRequest).isTrue();
     CloudFormationCreateStackRequest createStackRequest =
         (CloudFormationCreateStackRequest) delegateTask.getData().getParameters()[0];
-    assertEquals(createStackRequest.getCommandType(), CREATE_STACK);
-    assertEquals(createStackRequest.getData(), "oldBody");
-    assertEquals(createStackRequest.getTimeoutInMs(), 1000);
+    assertThat(CREATE_STACK).isEqualTo(createStackRequest.getCommandType());
+    assertThat("oldBody").isEqualTo(createStackRequest.getData());
+    assertThat(1000).isEqualTo(createStackRequest.getTimeoutInMs());
     Map<String, String> stackParam = createStackRequest.getVariables();
     assertThat(stackParam).isNotNull();
-    assertEquals(stackParam.size(), 1);
-    assertEquals(stackParam.get("oldKey"), "oldVal");
+    assertThat(1).isEqualTo(stackParam.size());
+    assertThat("oldVal").isEqualTo(stackParam.get("oldKey"));
   }
 
   @Test
@@ -156,13 +155,13 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
     doReturn(env).when(mockParams).getEnv();
 
     ExecutionResponse response = state.handleAsyncResponse(mockContext, delegateResponse);
-    assertEquals(ExecutionStatus.SUCCESS, response.getExecutionStatus());
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     verify(mockActivityService).updateStatus(eq(ACTIVITY_ID), eq(APP_ID), eq(ExecutionStatus.SUCCESS));
     ArgumentCaptor<Map> captor = ArgumentCaptor.forClass(Map.class);
     verify(mockInfrastructureProvisionerService)
         .regenerateInfrastructureMappings(anyString(), any(), captor.capture(), any(), any());
     Map<String, Object> map = captor.getValue();
-    assertEquals(map.size(), 1);
-    assertEquals(map.get("k1"), "v1");
+    assertThat(1).isEqualTo(map.size());
+    assertThat("v1").isEqualTo(map.get("k1"));
   }
 }
