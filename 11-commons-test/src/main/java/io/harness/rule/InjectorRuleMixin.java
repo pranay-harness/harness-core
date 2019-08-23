@@ -18,6 +18,8 @@ public interface InjectorRuleMixin {
 
   default void initialize(Injector injector, List<Module> modules) {}
 
+  default void destroy(Injector injector, List<Module> modules) throws Exception {}
+
   default Statement applyInjector(Statement statement, FrameworkMethod frameworkMethod, Object target) {
     return new Statement() {
       @Override
@@ -34,6 +36,8 @@ public interface InjectorRuleMixin {
         } catch (RuntimeException exception) {
           LoggerFactory.getLogger(InjectorRuleMixin.class).error("Test exception", exception);
           throw exception;
+        } finally {
+          destroy(injector, modules);
         }
       }
     };

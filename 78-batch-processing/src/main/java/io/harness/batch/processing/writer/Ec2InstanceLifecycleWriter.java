@@ -22,7 +22,6 @@ public class Ec2InstanceLifecycleWriter extends EventWriter implements ItemWrite
     publishedMessages.stream()
         .filter(publishedMessage -> publishedMessage.getType().equals(EventTypeConstants.EC2_INSTANCE_LIFECYCLE))
         .forEach(publishedMessage -> {
-          publishedMessage.postLoad();
           Ec2Lifecycle ec2Lifecycle = (Ec2Lifecycle) publishedMessage.getMessage();
           logger.debug("Ec2 lifecycle {} ", ec2Lifecycle);
           String accountId = publishedMessage.getAccountId();

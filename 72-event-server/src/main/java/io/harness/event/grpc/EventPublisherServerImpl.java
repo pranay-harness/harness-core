@@ -5,6 +5,7 @@ import static java.util.Objects.requireNonNull;
 import com.google.inject.Inject;
 
 import io.grpc.Context;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import io.harness.event.EventPublisherGrpc;
 import io.harness.event.PublishRequest;
@@ -42,13 +43,13 @@ public class EventPublisherServerImpl extends EventPublisherGrpc.EventPublisherI
             .collect(Collectors.toList());
     try {
       hPersistence.save(publishedMessages);
-      logger.info("Published messages persisted");
-      responseObserver.onNext(PublishResponse.newBuilder().build());
     } catch (Exception e) {
       logger.warn("Encountered error while persisting messages", e);
-      responseObserver.onError(e);
+      responseObserver.onError(Status.INTERNAL.withCause(e).asException());
       return;
     }
+    logger.info("Published messages persisted");
+    responseObserver.onNext(PublishResponse.newBuilder().build());
     responseObserver.onCompleted();
   }
 

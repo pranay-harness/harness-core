@@ -1,6 +1,8 @@
 package io.harness.event.client;
 
+import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -15,13 +17,14 @@ import com.google.protobuf.util.Timestamps;
 import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
-import io.harness.category.element.FunctionalTests;
+import io.harness.category.element.UnitTests;
 import io.harness.event.EventPublisherGrpc;
 import io.harness.event.EventPublisherGrpc.EventPublisherBlockingStub;
 import io.harness.event.PublishMessage;
 import io.harness.event.payloads.Lifecycle;
 import io.harness.event.payloads.Lifecycle.EventType;
 import io.harness.grpc.auth.EventServiceTokenGenerator;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.threading.Concurrent;
 import net.openhft.chronicle.queue.impl.RollingChronicleQueue;
 import org.apache.commons.io.FileUtils;
@@ -34,12 +37,14 @@ import org.junit.experimental.categories.Category;
 import java.io.File;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class EventPublisherTest {
-  private static final String QUEUE_FILE_PATH = "target/test-queue";
+  private static final String QUEUE_FILE_PATH = FileUtils.getTempDirectoryPath() + "/" + UUID.randomUUID().toString();
+  private static final String SERVER_NAME = InProcessServerBuilder.generateName();
   private final AtomicInteger messagesPublished = new AtomicInteger();
 
   private Injector injector = Guice.createInjector(
@@ -50,7 +55,7 @@ public class EventPublisherTest {
         @Provides
         @Singleton
         EventPublisherBlockingStub eventPublisherBlockingStub() {
-          return EventPublisherGrpc.newBlockingStub(InProcessChannelBuilder.forName("inprocess").build());
+          return EventPublisherGrpc.newBlockingStub(InProcessChannelBuilder.forName(SERVER_NAME).build());
         }
         @Provides
         EventServiceTokenGenerator fakeTokenGenerator() {
@@ -73,7 +78,7 @@ public class EventPublisherTest {
     messagesPublished.set(0);
     fakeService = new FakeService();
     eventPublisher = new EventPublisherChronicleImpl(blockingStub, chronicleQueue, fileDeletionManager);
-    server = InProcessServerBuilder.forName("inprocess").addService(fakeService).build();
+    server = InProcessServerBuilder.forName(SERVER_NAME).addService(fakeService).build();
     server.start();
   }
 
@@ -85,13 +90,23 @@ public class EventPublisherTest {
   }
 
   @Test
-  @Category(FunctionalTests.class)
+  @Owner(emails = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldThrowIaeIfWrongMethodIsCalled() {
+    assertThatIllegalArgumentException().isThrownBy(
+        () -> eventPublisher.publishMessage(PublishMessage.newBuilder().build()));
+  }
+
+  @Test
+  @Owner(emails = AVMOHAN)
+  @Category(UnitTests.class)
   public void testNoMessageLoss() throws Exception {
     concurrentPublish(eventPublisher);
   }
 
   @Test
-  @Category(FunctionalTests.class)
+  @Owner(emails = AVMOHAN)
+  @Category(UnitTests.class)
   public void testNoMessageLossWithErrorProneServer() throws Exception {
     fakeService.setErrorProne(true);
     concurrentPublish(eventPublisher);
@@ -123,7 +138,8 @@ public class EventPublisherTest {
   }
 
   @Test
-  @Category(FunctionalTests.class)
+  @Owner(emails = AVMOHAN)
+  @Category(UnitTests.class)
   public void testMessageReceived() {
     fakeService.setRecordMessages(true);
     Instant instant = Instant.now().minus(3, ChronoUnit.MINUTES);
@@ -140,7 +156,8 @@ public class EventPublisherTest {
   }
 
   @Test
-  @Category(FunctionalTests.class)
+  @Owner(emails = AVMOHAN)
+  @Category(UnitTests.class)
   public void testMessageReceivedIfServerCallFails() {
     fakeService.setRecordMessages(true);
     fakeService.failNext();

@@ -1,5 +1,7 @@
 package io.harness.event.client;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.protobuf.Any;
 import com.google.protobuf.Message;
 
@@ -16,6 +18,7 @@ public interface EventPublisher {
   }
 
   default void publishMessageWithAttributes(Message message, Map<String, String> attributes) {
+    checkArgument(!(message instanceof PublishMessage)); // call publish() directly.
     publish(PublishMessage.newBuilder().setPayload(Any.pack(message)).putAllAttributes(attributes).build());
   }
 

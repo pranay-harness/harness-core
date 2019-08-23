@@ -30,7 +30,6 @@ public class PublishedMessageTest {
                                             .data(payload.toByteArray())
                                             .type(ecsTaskLifecycle.getClass().getName())
                                             .build();
-    publishedMessage.postLoad();
     assertThat(publishedMessage.getMessage()).isEqualTo(ecsTaskLifecycle);
   }
 }
