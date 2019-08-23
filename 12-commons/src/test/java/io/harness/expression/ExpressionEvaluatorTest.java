@@ -1,5 +1,6 @@
 package io.harness.expression;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -320,6 +321,18 @@ public class ExpressionEvaluatorTest extends CategoryTest {
 
     assertThat(expressionEvaluator.substitute("${json.list(\"store.book\", body).get(2).isbn}", context))
         .isEqualTo("0-553-21311-3");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldFormatAsJson() throws IOException {
+    Map<String, Object> context =
+        ImmutableMap.<String, Object>builder().put("list", asList("foo", "bar", "baz")).build();
+
+    ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
+    expressionEvaluator.addFunctor("json", new JsonFunctor());
+
+    assertThat(expressionEvaluator.substitute("${json.format(list)}", context)).isEqualTo("[\"foo\",\"bar\",\"baz\"]");
   }
 
   @Test
