@@ -101,7 +101,11 @@ public class PipelineResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Pipeline> read(@QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId,
-      @QueryParam("withServices") boolean withServices) {
+      @QueryParam("withServices") boolean withServices,
+      @QueryParam("withVariables") @DefaultValue("false") boolean withVariables) {
+    if (withVariables) {
+      return new RestResponse<>(pipelineService.readPipelineWithVariables(appId, pipelineId));
+    }
     return new RestResponse<>(pipelineService.readPipeline(appId, pipelineId, withServices));
   }
 
