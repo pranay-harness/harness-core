@@ -58,6 +58,7 @@ import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FailureStrategy;
+import software.wings.beans.FeatureName;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.PipelineKeys;
@@ -77,6 +78,7 @@ import software.wings.prune.PruneEvent;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ResourceLookupService;
@@ -85,6 +87,7 @@ import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.ownership.OwnedByPipeline;
+import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.StateMachine;
 import software.wings.utils.Validator;
@@ -112,6 +115,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private AppService appService;
   @Inject private ExecutorService executorService;
   @Inject private TriggerService triggerService;
+  @Inject private DeploymentTriggerService deploymentTriggerService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowService workflowService;
   @Inject private WorkflowExecutionService workflowExecutionService;
@@ -127,6 +131,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private Queue<PruneEvent> pruneQueue;
   @Inject private HarnessTagService harnessTagService;
   @Inject private ResourceLookupService resourceLookupService;
+  @Inject FeatureFlagService featureFlagService;
 
   /**
    * {@inheritDoc}
@@ -297,11 +302,16 @@ public class PipelineServiceImpl implements PipelineService {
     if (pageResponse == null || isEmpty(pageResponse.getResponse())
         || pageResponse.getResponse().stream().allMatch(
                pipelineExecution -> ExecutionStatus.isFinalStatus(pipelineExecution.getStatus()))) {
-      List<Trigger> triggers = triggerService.getTriggersHasPipelineAction(pipeline.getAppId(), pipeline.getUuid());
-      if (isEmpty(triggers)) {
-        return;
+      List<String> triggerNames;
+      if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, pipeline.getAccountId())) {
+        triggerNames = deploymentTriggerService.getTriggersHasPipelineAction(pipeline.getAppId(), pipeline.getUuid());
+      } else {
+        List<Trigger> triggers = triggerService.getTriggersHasPipelineAction(pipeline.getAppId(), pipeline.getUuid());
+        if (isEmpty(triggers)) {
+          return;
+        }
+        triggerNames = triggers.stream().map(Trigger::getName).collect(toList());
       }
-      List<String> triggerNames = triggers.stream().map(Trigger::getName).collect(toList());
       throw new InvalidRequestException(
           format("Pipeline associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)), USER);
     }

@@ -11,15 +11,22 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.TriggerArtifactVariable;
 import software.wings.beans.trigger.TriggerExecution;
+import software.wings.service.intfc.ownership.OwnedByApplication;
+import software.wings.service.intfc.ownership.OwnedByArtifactStream;
+import software.wings.service.intfc.ownership.OwnedByPipeline;
+import software.wings.service.intfc.ownership.OwnedByWorkflow;
 
 import java.util.List;
 import java.util.Map;
 import javax.validation.Valid;
 
-public interface DeploymentTriggerService {
+public interface DeploymentTriggerService
+    extends OwnedByApplication, OwnedByPipeline, OwnedByArtifactStream, OwnedByWorkflow {
   @ValidationGroups(Create.class) DeploymentTrigger save(@Valid DeploymentTrigger deploymentTrigger);
 
   @ValidationGroups(Update.class) DeploymentTrigger update(@Valid DeploymentTrigger trigger);
+
+  PageResponse<DeploymentTrigger> list(PageRequest<DeploymentTrigger> pageRequest, boolean withTags, String tagFilter);
 
   void delete(@NotEmpty String appId, @NotEmpty String triggerId);
 
@@ -43,6 +50,12 @@ public interface DeploymentTriggerService {
   void triggerScheduledExecutionAsync(DeploymentTrigger trigger);
 
   void triggerExecutionPostPipelineCompletionAsync(String appId, String pipelineId);
+
+  List<String> getTriggersHasPipelineAction(String appId, String pipelineId);
+
+  List<String> getTriggersHasWorkflowAction(String appId, String workflowId);
+
+  List<String> getTriggersHasArtifactStreamAction(String appId, String artifactStreamId);
 
   WorkflowExecution triggerExecutionByWebHook(DeploymentTrigger deploymentTrigger, Map<String, String> parameters,
       List<TriggerArtifactVariable> artifactVariables, TriggerExecution triggerExecution);

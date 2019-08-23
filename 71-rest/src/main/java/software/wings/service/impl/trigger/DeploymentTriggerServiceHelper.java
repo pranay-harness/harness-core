@@ -22,6 +22,7 @@ import software.wings.beans.trigger.Action.ActionType;
 import software.wings.beans.trigger.Condition.Type;
 import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.PipelineAction;
+import software.wings.beans.trigger.PipelineCondition;
 import software.wings.beans.trigger.TriggerArgs;
 import software.wings.beans.trigger.TriggerArtifactVariable;
 import software.wings.beans.trigger.WorkflowAction;
@@ -127,7 +128,7 @@ public class DeploymentTriggerServiceHelper {
   public Stream<DeploymentTrigger> getTriggersMatchesWorkflow(String appId, String sourcePipelineId) {
     return getTriggersByApp(appId, PIPELINE_COMPLETION)
         .stream()
-        .filter(trigger -> ((PipelineAction) trigger.getAction()).getPipelineId().equals(sourcePipelineId));
+        .filter(trigger -> ((PipelineCondition) trigger.getCondition()).getPipelineId().equals(sourcePipelineId));
   }
 
   private void validateTriggerArgs(String appId, TriggerArgs triggerArgs) {

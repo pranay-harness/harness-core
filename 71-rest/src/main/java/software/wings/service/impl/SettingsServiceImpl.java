@@ -266,7 +266,8 @@ public class SettingsServiceImpl implements SettingsService {
                                                       .filter(ArtifactStreamKeys.settingId, settingId)
                                                       .filter(ArtifactStreamKeys.accountId, accountId)
                                                       .project(ArtifactStreamKeys.settingId, true)
-                                                      .project(ArtifactStreamKeys.name, true);
+                                                      .project(ArtifactStreamKeys.name, true)
+                                                      .project(ArtifactStreamKeys.sourceName, true);
       if (isNotEmpty(artifactStreamSearchString)) {
         artifactStreamQuery.field(ArtifactStreamKeys.name).contains(artifactStreamSearchString);
       }

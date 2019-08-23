@@ -229,6 +229,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.ownership.OwnedByWorkflow;
 import software.wings.service.intfc.personalization.PersonalizationService;
 import software.wings.service.intfc.template.TemplateService;
+import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
@@ -343,6 +344,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private Queue<PruneEvent> pruneQueue;
   @Inject private HarnessTagService harnessTagService;
   @Inject private ResourceLookupService resourceLookupService;
+  @Inject private DeploymentTriggerService deploymentTriggerService;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
@@ -1374,11 +1376,21 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           .addParam("message", format("Workflow: [%s] couldn't be deleted", workflow.getName()));
     }
 
+    List<String> triggerNames;
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, workflow.getAccountId())) {
+      triggerNames = deploymentTriggerService.getTriggersHasWorkflowAction(workflow.getAppId(), workflow.getUuid());
+    } else {
+      List<Trigger> triggers = triggerService.getTriggersHasWorkflowAction(workflow.getAppId(), workflow.getUuid());
+      if (isEmpty(triggers)) {
+        return;
+      }
+      triggerNames = triggers.stream().map(Trigger::getName).collect(toList());
+    }
+
     List<Trigger> triggers = triggerService.getTriggersHasWorkflowAction(workflow.getAppId(), workflow.getUuid());
     if (isEmpty(triggers)) {
       return;
     }
-    List<String> triggerNames = triggers.stream().map(Trigger::getName).collect(toList());
 
     throw new InvalidRequestException(
         format("Workflow associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)), USER);

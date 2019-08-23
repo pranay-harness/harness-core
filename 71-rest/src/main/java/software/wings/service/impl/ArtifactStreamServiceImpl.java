@@ -63,6 +63,7 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceKeys;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.Variable;
 import software.wings.beans.artifact.AcrArtifactStream;
 import software.wings.beans.artifact.Artifact;
@@ -95,6 +96,7 @@ import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.ownership.OwnedByArtifactStream;
 import software.wings.service.intfc.template.TemplateService;
+import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingValue;
 import software.wings.stencils.DataProvider;
@@ -144,6 +146,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private TriggerService triggerService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private EventPublishHelper eventPublishHelper;
+  @Inject private DeploymentTriggerService deploymentTriggerService;
 
   @Override
   public PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req) {
@@ -214,6 +217,13 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
         filteredArtifactStreams = newArtifactStreams;
       }
+
+      filteredArtifactStreams.forEach(artifactStream -> {
+        SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
+        if (settingAttribute != null) {
+          artifactStream.setArtifactServerName(settingAttribute.getName());
+        }
+      });
 
       List<ArtifactStream> resp;
       int total = filteredArtifactStreams.size();
@@ -595,12 +605,19 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   private void validateTriggerUsages(String appId, String artifactStreamId) {
-    List<Trigger> triggers = triggerService.getTriggersHasArtifactStreamAction(appId, artifactStreamId);
-    if (isEmpty(triggers)) {
-      return;
+    List<String> triggerNames;
+    String accountId = appService.getAccountIdByAppId(appId);
+
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+      triggerNames = deploymentTriggerService.getTriggersHasArtifactStreamAction(appId, artifactStreamId);
+    } else {
+      List<Trigger> triggers = triggerService.getTriggersHasArtifactStreamAction(appId, artifactStreamId);
+      if (isEmpty(triggers)) {
+        return;
+      }
+      triggerNames = triggers.stream().map(Trigger::getName).collect(toList());
     }
 
-    List<String> triggerNames = triggers.stream().map(Trigger::getName).collect(toList());
     throw new InvalidRequestException(
         format("Artifact Stream associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)),
         USER);
