@@ -1,6 +1,6 @@
 package software.wings.service;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
@@ -35,15 +35,14 @@ public class ServiceHelperTest extends WingsBaseTest {
     serviceHelper.addPlaceholderTexts(pcfServiceSpecification);
     String manifest = pcfServiceSpecification.getManifestYaml();
 
-    assertEquals("  applications:\n"
-            + "  - name : ${APPLICATION_NAME}\n"
-            + "    memory: 850M\n"
-            + "    instances : ${INSTANCE_COUNT}\n"
-            + "    buildpack: https://github.com/cloudfoundry/java-buildpack.git\n"
-            + "    path: ${FILE_LOCATION}\n"
-            + "    routes:\n"
-            + "      - route: ${ROUTE_MAP}\n"
-            + "serviceName: SERV\n",
-        manifest);
+    assertThat(manifest).isEqualTo("  applications:\n"
+        + "  - name : ${APPLICATION_NAME}\n"
+        + "    memory: 850M\n"
+        + "    instances : ${INSTANCE_COUNT}\n"
+        + "    buildpack: https://github.com/cloudfoundry/java-buildpack.git\n"
+        + "    path: ${FILE_LOCATION}\n"
+        + "    routes:\n"
+        + "      - route: ${ROUTE_MAP}\n"
+        + "serviceName: SERV\n");
   }
 }

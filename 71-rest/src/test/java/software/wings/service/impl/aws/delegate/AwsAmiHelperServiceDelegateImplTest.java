@@ -5,6 +5,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
@@ -313,15 +314,12 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(null)
         .when(mockAwsAsgHelperServiceDelegate)
         .getLaunchConfiguration(any(), anyList(), anyString(), anyString());
-    try {
+
+    Throwable thrown = catchThrowable(() -> {
       awsAmiHelperServiceDelegate.ensureAndGetBaseLaunchConfiguration(
           AwsConfig.builder().build(), emptyList(), "us-east-1", "asgName", new AutoScalingGroup(), mockLogCallback);
-      fail("Exception should have been thrown");
-    } catch (InvalidRequestException ex) {
-      // Expected
-    } catch (Exception ex) {
-      fail(format("Exception: [%s]", ex.getMessage()));
-    }
+    });
+    assertThat(thrown).isInstanceOf(InvalidRequestException.class);
   }
 
   @Test

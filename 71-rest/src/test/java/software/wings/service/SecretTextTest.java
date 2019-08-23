@@ -255,12 +255,12 @@ public class SecretTextTest extends WingsBaseTest {
         secretManagementResource.getChangeLogs(accountId, secretId, SECRET_TEXT).getResource();
     assertThat(changeLogs).hasSize(1);
     SecretChangeLog secretChangeLog = changeLogs.get(0);
-    assertEquals(accountId, secretChangeLog.getAccountId());
-    assertEquals("Created", secretChangeLog.getDescription());
-    assertEquals(secretId, secretChangeLog.getEncryptedDataId());
-    assertEquals(userName, secretChangeLog.getUser().getName());
-    assertEquals(userEmail, secretChangeLog.getUser().getEmail());
-    assertEquals(usageRestrictions, wingsPersistence.get(EncryptedData.class, secretId).getUsageRestrictions());
+    assertThat(secretChangeLog.getAccountId()).isEqualTo(accountId);
+    assertThat(secretChangeLog.getDescription()).isEqualTo("Created");
+    assertThat(secretChangeLog.getEncryptedDataId()).isEqualTo(secretId);
+    assertThat(secretChangeLog.getUser().getName()).isEqualTo(userName);
+    assertThat(secretChangeLog.getUser().getEmail()).isEqualTo(userEmail);
+    assertThat(wingsPersistence.get(EncryptedData.class, secretId).getUsageRestrictions()).isEqualTo(usageRestrictions);
 
     final ServiceVariable serviceVariable = ServiceVariable.builder()
                                                 .templateId(generateUuid())
@@ -1589,14 +1589,14 @@ public class SecretTextTest extends WingsBaseTest {
         if (serviceVariableIndex == numOfServices * numOfServiceVariables) {
           assertThat(isEmpty(oldEncryptedData.getAppIds())).isTrue();
         } else {
-          assertEquals(
-              numOfServices * numOfServiceVariables - serviceVariableIndex, oldEncryptedData.getAppIds().size());
+          assertThat(oldEncryptedData.getAppIds().size())
+              .isEqualTo(numOfServices * numOfServiceVariables - serviceVariableIndex);
         }
         assertThat(newEncryptedData.getAppIds()).hasSize(serviceVariableIndex);
 
         if (serviceVariableIndex != numOfServices * numOfServiceVariables) {
-          assertEquals(numOfServices * numOfServiceVariables - serviceVariableIndex,
-              oldEncryptedData.getSearchTags().get(appName).get());
+          assertThat(oldEncryptedData.getSearchTags().get(appName).get())
+              .isEqualTo(numOfServices * numOfServiceVariables - serviceVariableIndex);
           assertThat(newEncryptedData.getSearchTags().get(appName).get()).isEqualTo(serviceVariableIndex);
           String serviceId = serviceVariable.getEntityId();
           String serviceName = serviceResourceService.get(appId, serviceId).getName();
@@ -1634,12 +1634,12 @@ public class SecretTextTest extends WingsBaseTest {
         if (serviceVariableIndex == numOfServices * numOfServiceVariables) {
           assertThat(isEmpty(newEncryptedData.getAppIds())).isTrue();
         } else {
-          assertEquals(
-              numOfServices * numOfServiceVariables - serviceVariableIndex, newEncryptedData.getAppIds().size());
+          assertThat(newEncryptedData.getAppIds().size())
+              .isEqualTo(numOfServices * numOfServiceVariables - serviceVariableIndex);
         }
         if (serviceVariableIndex != numOfServices * numOfServiceVariables) {
-          assertEquals(numOfServices * numOfServiceVariables - serviceVariableIndex,
-              newEncryptedData.getSearchTags().get(appName).get());
+          assertThat(newEncryptedData.getSearchTags().get(appName).get())
+              .isEqualTo(numOfServices * numOfServiceVariables - serviceVariableIndex);
           String serviceId = serviceVariable.getEntityId();
           String serviceName = serviceResourceService.get(appId, serviceId).getName();
 
@@ -1773,10 +1773,10 @@ public class SecretTextTest extends WingsBaseTest {
           assertThat(newEncryptedData.getAppIds()).hasSize(serviceVariableIndex);
 
           if (serviceVariableIndex != numOfServices * numOfEnvs * numOfServiceVariables) {
-            assertEquals(numOfServices * numOfEnvs * numOfServiceVariables - serviceVariableIndex,
-                oldEncryptedData.getAppIds().size());
-            assertEquals(numOfServices * numOfEnvs * numOfServiceVariables - serviceVariableIndex,
-                oldEncryptedData.getSearchTags().get(appName).get());
+            assertThat(oldEncryptedData.getAppIds().size())
+                .isEqualTo(numOfServices * numOfEnvs * numOfServiceVariables - serviceVariableIndex);
+            assertThat(oldEncryptedData.getSearchTags().get(appName).get())
+                .isEqualTo(numOfServices * numOfEnvs * numOfServiceVariables - serviceVariableIndex);
             assertThat(newEncryptedData.getSearchTags().get(appName).get()).isEqualTo(serviceVariableIndex);
             String serviceTemplateId = serviceVariable.getEntityId();
             ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
@@ -1785,8 +1785,8 @@ public class SecretTextTest extends WingsBaseTest {
             if (j == numOfEnvs - 1 && k == numOfServiceVariables - 1) {
               assertThat(oldEncryptedData.getSearchTags().get(serviceName)).isNull();
             } else {
-              assertEquals(numOfEnvs * numOfServiceVariables - j * numOfServiceVariables - k - 1,
-                  oldEncryptedData.getSearchTags().get(serviceName).get());
+              assertThat(oldEncryptedData.getSearchTags().get(serviceName).get())
+                  .isEqualTo(numOfEnvs * numOfServiceVariables - j * numOfServiceVariables - k - 1);
             }
             assertThat(newEncryptedData.getSearchTags().get(serviceName).get())
                 .isEqualTo(j * numOfServiceVariables + k + 1);
@@ -1817,10 +1817,10 @@ public class SecretTextTest extends WingsBaseTest {
           EncryptedData newEncryptedData = wingsPersistence.get(EncryptedData.class, newSecretId);
 
           if (serviceVariableIndex != numOfServices * numOfEnvs * numOfServiceVariables) {
-            assertEquals(numOfServices * numOfEnvs * numOfServiceVariables - serviceVariableIndex,
-                newEncryptedData.getAppIds().size());
-            assertEquals(numOfServices * numOfEnvs * numOfServiceVariables - serviceVariableIndex,
-                newEncryptedData.getSearchTags().get(appName).get());
+            assertThat(newEncryptedData.getAppIds().size())
+                .isEqualTo(numOfServices * numOfEnvs * numOfServiceVariables - serviceVariableIndex);
+            assertThat(newEncryptedData.getSearchTags().get(appName).get())
+                .isEqualTo(numOfServices * numOfEnvs * numOfServiceVariables - serviceVariableIndex);
             String serviceTemplateId = serviceVariable.getEntityId();
             ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
             String serviceId = serviceTemplate.getServiceId();
@@ -1829,8 +1829,8 @@ public class SecretTextTest extends WingsBaseTest {
             if (j == numOfEnvs - 1 && k == numOfServiceVariables - 1) {
               assertThat(newEncryptedData.getSearchTags().get(serviceName)).isNull();
             } else {
-              assertEquals(numOfEnvs * numOfServiceVariables - j * numOfServiceVariables - k - 1,
-                  newEncryptedData.getSearchTags().get(serviceName).get());
+              assertThat(newEncryptedData.getSearchTags().get(serviceName).get())
+                  .isEqualTo(numOfEnvs * numOfServiceVariables - j * numOfServiceVariables - k - 1);
             }
 
             assertThat(newEncryptedData.getSearchTags().get(serviceVariable.getName())).isNull();
@@ -1929,8 +1929,8 @@ public class SecretTextTest extends WingsBaseTest {
 
         if (serviceVariableIndex != numOfEnvs * numOfServiceVariables) {
           assertThat(oldEncryptedData.getAppIds()).hasSize(numOfEnvs * numOfServiceVariables - serviceVariableIndex);
-          assertEquals(numOfEnvs * numOfServiceVariables - serviceVariableIndex,
-              oldEncryptedData.getSearchTags().get(appName).get());
+          assertThat(oldEncryptedData.getSearchTags().get(appName).get())
+              .isEqualTo(numOfEnvs * numOfServiceVariables - serviceVariableIndex);
           assertThat(newEncryptedData.getSearchTags().get(appName).get()).isEqualTo(serviceVariableIndex);
           String envId = serviceVariable.getEntityId();
           String envName = environmentService.get(appId, envId).getName();
@@ -1965,8 +1965,8 @@ public class SecretTextTest extends WingsBaseTest {
 
         if (serviceVariableIndex != numOfEnvs * numOfServiceVariables) {
           assertThat(newEncryptedData.getAppIds()).hasSize(numOfEnvs * numOfServiceVariables - serviceVariableIndex);
-          assertEquals(numOfEnvs * numOfServiceVariables - serviceVariableIndex,
-              newEncryptedData.getSearchTags().get(appName).get());
+          assertThat(newEncryptedData.getSearchTags().get(appName).get())
+              .isEqualTo(numOfEnvs * numOfServiceVariables - serviceVariableIndex);
           String envId = serviceVariable.getEntityId();
           String envName = environmentService.get(appId, envId).getName();
 

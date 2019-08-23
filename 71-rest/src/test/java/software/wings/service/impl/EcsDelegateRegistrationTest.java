@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.AdditionalAnswers.returnsSecondArg;
 import static org.mockito.Matchers.any;
@@ -529,18 +528,18 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetDelegateHostNameByRemovingSeqNum() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
-    assertEquals("hostname_harness__delegate",
-        delegateService.getDelegateHostNameByRemovingSeqNum(
-            Delegate.builder().hostName("hostname_harness__delegate_1").build()));
+    assertThat(delegateService.getDelegateHostNameByRemovingSeqNum(
+                   Delegate.builder().hostName("hostname_harness__delegate_1").build()))
+        .isEqualTo("hostname_harness__delegate");
   }
 
   @Test
   @Category(UnitTests.class)
   public void testGetDelegateSeqNumFromHostName() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
-    assertEquals("1",
-        delegateService.getDelegateSeqNumFromHostName(
-            Delegate.builder().hostName("hostname_harness__delegate_1").build()));
+    assertThat(delegateService.getDelegateSeqNumFromHostName(
+                   Delegate.builder().hostName("hostname_harness__delegate_1").build()))
+        .isEqualTo("1");
   }
 
   @Test

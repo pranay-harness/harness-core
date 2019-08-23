@@ -50,8 +50,9 @@ public class InstanceMapperTest extends WingsBaseTest {
     assertThat(statsSnapshot.getAccountId()).isEqualTo(accountId);
     assertThat(statsSnapshot.getTotal()).isEqualTo(instances.size());
     assertThat(statsSnapshot.getAggregateCounts()).hasSize(2);
-    assertEquals(2,
-        statsSnapshot.getAggregateCounts().stream().filter(s -> s.getEntityType() == EntityType.APPLICATION).count());
+    assertThat(
+        statsSnapshot.getAggregateCounts().stream().filter(s -> s.getEntityType() == EntityType.APPLICATION).count())
+        .isEqualTo(2);
 
     List<App> apps = statsSnapshot.getAggregateCounts()
                          .stream()
@@ -78,8 +79,9 @@ public class InstanceMapperTest extends WingsBaseTest {
     assertThat(statsSnapshot.getAccountId()).isEqualTo(accountId);
     assertThat(statsSnapshot.getTotal()).isEqualTo(instances.size());
     assertThat(statsSnapshot.getAggregateCounts()).isEmpty();
-    assertEquals(0,
-        statsSnapshot.getAggregateCounts().stream().filter(it -> it.getEntityType() == EntityType.APPLICATION).count());
+    assertThat(
+        statsSnapshot.getAggregateCounts().stream().filter(it -> it.getEntityType() == EntityType.APPLICATION).count())
+        .isEqualTo(0);
 
     List<App> apps = statsSnapshot.getAggregateCounts()
                          .stream()
@@ -88,8 +90,8 @@ public class InstanceMapperTest extends WingsBaseTest {
                          .collect(Collectors.toList());
 
     assertThat(apps.isEmpty()).isTrue();
-    assertEquals("no aggregation by service should be present", 0,
-        statsSnapshot.getAggregateCounts().stream().filter(it -> it.getEntityType() == EntityType.SERVICE).count());
+    assertEquals(
+        0, statsSnapshot.getAggregateCounts().stream().filter(it -> it.getEntityType() == EntityType.SERVICE).count());
   }
 
   private List<Instance> getSampleInstance(String accountId) {

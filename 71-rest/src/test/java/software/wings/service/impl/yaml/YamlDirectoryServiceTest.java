@@ -2,7 +2,6 @@ package software.wings.service.impl.yaml;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -158,8 +157,8 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     assertThat(workflowNode.getChildren()).isNotNull();
     assertThat(workflowNode.getChildren()).hasSize(1);
     AppLevelYamlNode workflowYamlNode = (AppLevelYamlNode) workflowNode.getChildren().get(0);
-    assertEquals(
-        "Setup/Applications/APP_NAME/Workflows/WORKFLOW_NAME.yaml", workflowYamlNode.getDirectoryPath().getPath());
+    assertThat(workflowYamlNode.getDirectoryPath().getPath())
+        .isEqualTo("Setup/Applications/APP_NAME/Workflows/WORKFLOW_NAME.yaml");
     assertThat(workflowYamlNode.getAppId()).isEqualTo(APP_ID);
     assertThat(workflowYamlNode.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(workflowYamlNode.getUuid()).isEqualTo(WORKFLOW_ID);
@@ -170,8 +169,8 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     assertThat(pipelineNode.getChildren()).isNotNull();
     assertThat(pipelineNode.getChildren()).hasSize(1);
     AppLevelYamlNode pipelineYamlNode = (AppLevelYamlNode) pipelineNode.getChildren().get(0);
-    assertEquals(
-        "Setup/Applications/APP_NAME/Pipelines/PIPELINE_NAME.yaml", pipelineYamlNode.getDirectoryPath().getPath());
+    assertThat(pipelineYamlNode.getDirectoryPath().getPath())
+        .isEqualTo("Setup/Applications/APP_NAME/Pipelines/PIPELINE_NAME.yaml");
     assertThat(pipelineYamlNode.getAppId()).isEqualTo(APP_ID);
     assertThat(pipelineYamlNode.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(pipelineYamlNode.getUuid()).isEqualTo(PIPELINE_ID);
@@ -182,8 +181,8 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     assertThat(provisionerFolderNode.getChildren()).isNotNull();
     assertThat(provisionerFolderNode.getChildren()).hasSize(1);
     AppLevelYamlNode provisionerYamlNode = (AppLevelYamlNode) provisionerFolderNode.getChildren().get(0);
-    assertEquals("Setup/Applications/APP_NAME/Provisioners/PROVISIONER_NAME.yaml",
-        provisionerYamlNode.getDirectoryPath().getPath());
+    assertThat(provisionerYamlNode.getDirectoryPath().getPath())
+        .isEqualTo("Setup/Applications/APP_NAME/Provisioners/PROVISIONER_NAME.yaml");
     assertThat(provisionerYamlNode.getAppId()).isEqualTo(APP_ID);
     assertThat(provisionerYamlNode.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(provisionerYamlNode.getUuid()).isEqualTo(PROVISIONER_ID);
@@ -193,8 +192,8 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     assertThat(triggerFolderNode.getChildren()).isNotNull();
     assertThat(triggerFolderNode.getChildren()).hasSize(1);
     AppLevelYamlNode triggerYamlNode = (AppLevelYamlNode) triggerFolderNode.getChildren().get(0);
-    assertEquals(
-        "Setup/Applications/APP_NAME/Triggers/TRIGGER_NAME.yaml", triggerYamlNode.getDirectoryPath().getPath());
+    assertThat(triggerYamlNode.getDirectoryPath().getPath())
+        .isEqualTo("Setup/Applications/APP_NAME/Triggers/TRIGGER_NAME.yaml");
     assertThat(triggerYamlNode.getAppId()).isEqualTo(APP_ID);
     assertThat(triggerYamlNode.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(triggerYamlNode.getUuid()).isEqualTo(TRIGGER_ID);

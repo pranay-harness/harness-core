@@ -1,7 +1,6 @@
 package software.wings.delegatetasks;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.ImmutableMap;
@@ -87,8 +86,7 @@ public class APMDataCollectionTaskTest extends CategoryTest {
     List<String> batchedHosts =
         (List<String>) useReflectionToMakeInnerClassVisible().invoke(dataCollectionTask.getDataCollector(tr), batchUrl);
     assertThat(batchedHosts).hasSize(1);
-    assertEquals(
-        "Batched string should be", "urlData{pod_name:test.host.node1|pod_name:test.host.node2}", batchedHosts.get(0));
+    assertThat(batchedHosts.get(0)).isEqualTo("urlData{pod_name:test.host.node1|pod_name:test.host.node2}");
   }
 
   @Test

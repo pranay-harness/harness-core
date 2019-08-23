@@ -644,8 +644,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
         mgrAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
     assertThat(logMLAnalysisSummary.getControlClusters()).hasSize(1);
     assertThat(logMLAnalysisSummary.getTestClusters()).isEmpty();
-    assertEquals("No new data for the given queries. Showing baseline data if any.",
-        logMLAnalysisSummary.getAnalysisSummaryMessage());
+    assertThat(logMLAnalysisSummary.getAnalysisSummaryMessage())
+        .isEqualTo("No new data for the given queries. Showing baseline data if any.");
   }
 
   private String setupNoControlTest(String query, String host) {
@@ -791,8 +791,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     LogMLAnalysisSummary analysisSummary =
         mgrAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SUMO);
 
-    assertEquals(AnalysisServiceImpl.LogMLFeedbackType.IGNORE_ALWAYS,
-        analysisSummary.getTestClusters().get(0).getLogMLFeedbackType());
+    assertThat(analysisSummary.getTestClusters().get(0).getLogMLFeedbackType())
+        .isEqualTo(AnalysisServiceImpl.LogMLFeedbackType.IGNORE_ALWAYS);
 
     assertThat(restResponse.getResource()).isTrue();
   }
@@ -849,8 +849,9 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
     LogMLAnalysisSummary logMLAnalysisSummary =
         mgrAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SUMO);
-    //    assertEquals("No baseline data for the given query was found.",
-    //    logMLAnalysisSummary.getAnalysisSummaryMessage());
+    //    assertThat(
+    //    logMLAnalysisSummary.getAnalysisSummaryMessage()).isEqualTo("No baseline data for the given query was
+    //    found.");
     LogMLAnalysisRecord logAnalysisRecord =
         analysisService.getLogAnalysisRecords(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId, 0, false);
     assertThat(logAnalysisRecord.isBaseLineCreated()).isTrue();
@@ -1109,8 +1110,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     assertThat(logMLAnalysisSummary.getUnknownClusters()).isEmpty();
     assertThat(logMLAnalysisSummary.getControlClusters().get(0).getHostSummary()).hasSize(5);
     assertThat(logMLAnalysisSummary.getTestClusters().get(0).getHostSummary()).hasSize(5);
-    assertEquals(numOfNodes * messageCount,
-        logMLAnalysisSummary.getControlClusters().get(0).getHostSummary().values().iterator().next().getCount());
+    assertThat(logMLAnalysisSummary.getControlClusters().get(0).getHostSummary().values().iterator().next().getCount())
+        .isEqualTo(numOfNodes * messageCount);
   }
 
   @Test
@@ -1281,8 +1282,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
           new LogRequest(query, appId, "se2", workflowId, serviceId, hosts, collectionMinute, false);
       RestResponse<Set<LogDataRecord>> restResponse = getRequestBuilderWithLearningAuthHeader(target).post(
           entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<Set<LogDataRecord>>>() {});
-      assertEquals(
-          "failed for minute " + collectionMinute, addedMessages.get(2, collectionMinute), restResponse.getResource());
+      assertEquals(addedMessages.get(2, collectionMinute), restResponse.getResource());
     }
   }
 

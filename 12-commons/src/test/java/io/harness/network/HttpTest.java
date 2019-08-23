@@ -1,7 +1,6 @@
 package io.harness.network;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -81,10 +80,10 @@ public class HttpTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testJoinHostPort() {
-    assertEquals("localhost:443", Http.joinHostPort("localhost", "443"));
-    assertEquals("127.0.0.1:443", Http.joinHostPort("127.0.0.1", "443"));
-    assertEquals("[2001:0db8:85a3:0000:0000:8a2e:0370:7334]:443",
-        Http.joinHostPort("2001:0db8:85a3:0000:0000:8a2e:0370:7334", "443"));
+    assertThat(Http.joinHostPort("localhost", "443")).isEqualTo("localhost:443");
+    assertThat(Http.joinHostPort("127.0.0.1", "443")).isEqualTo("127.0.0.1:443");
+    assertThat(Http.joinHostPort("2001:0db8:85a3:0000:0000:8a2e:0370:7334", "443"))
+        .isEqualTo("[2001:0db8:85a3:0000:0000:8a2e:0370:7334]:443");
   }
 
   @Test

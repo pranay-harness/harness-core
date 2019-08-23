@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -433,7 +432,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
 
     long currentEndTime = cv24x7DashboardService.getCurrentAnalysisWindow(cvConfigId);
 
-    assertEquals(TimeUnit.MINUTES.toMillis(currentTime - PREDECTIVE_HISTORY_MINUTES + CRON_POLL_INTERVAL_IN_MINUTES),
-        currentEndTime);
+    assertThat(currentEndTime)
+        .isEqualTo(TimeUnit.MINUTES.toMillis(currentTime - PREDECTIVE_HISTORY_MINUTES + CRON_POLL_INTERVAL_IN_MINUTES));
   }
 }

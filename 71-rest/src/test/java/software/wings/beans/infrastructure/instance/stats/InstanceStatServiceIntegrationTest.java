@@ -1,7 +1,7 @@
 package software.wings.beans.infrastructure.instance.stats;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.offset;
 
 import com.google.inject.Inject;
 
@@ -127,7 +127,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
     double expected =
         statsToSave.stream().map(InstanceStatsSnapshot::getTotal).sorted().collect(Collectors.toList()).get(95);
 
-    assertEquals(expected, percentile, 0.01);
+    assertThat(expected).isCloseTo(percentile, offset(0.01));
   }
 
   private InstanceStatsSnapshot sampleSnapshot() {

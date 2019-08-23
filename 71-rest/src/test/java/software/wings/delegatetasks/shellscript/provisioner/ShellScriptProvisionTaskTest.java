@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.shellscript.provisioner;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 
 import io.harness.beans.DelegateTask;
@@ -38,14 +38,14 @@ public class ShellScriptProvisionTaskTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testGetCombinedVariablesMap() throws IOException {
-    assertEquals(Collections.emptyMap(), shellScriptProvisionTask.getCombinedVariablesMap(null, null));
-    assertEquals(Collections.emptyMap(),
-        shellScriptProvisionTask.getCombinedVariablesMap(Collections.emptyMap(), Collections.emptyMap()));
+    assertThat(shellScriptProvisionTask.getCombinedVariablesMap(null, null)).isEmpty();
+    assertThat(shellScriptProvisionTask.getCombinedVariablesMap(Collections.emptyMap(), Collections.emptyMap()))
+        .isEmpty();
 
     Map<String, String> textVariables = new HashMap<>();
     textVariables.put("var1", "val1");
-    assertEquals(
-        textVariables, shellScriptProvisionTask.getCombinedVariablesMap(textVariables, Collections.emptyMap()));
+    assertThat(shellScriptProvisionTask.getCombinedVariablesMap(textVariables, Collections.emptyMap()))
+        .isEqualTo(textVariables);
 
     Map<String, EncryptedDataDetail> encryptedVariables = new HashMap<>();
     encryptedVariables.put("var2", EncryptedDataDetail.builder().build());
@@ -55,7 +55,7 @@ public class ShellScriptProvisionTaskTest extends WingsBaseTest {
     expectedCombinedMap.put("var1", "val1");
     expectedCombinedMap.put("var2", "ab");
 
-    assertEquals(
-        expectedCombinedMap, shellScriptProvisionTask.getCombinedVariablesMap(textVariables, encryptedVariables));
+    assertThat(shellScriptProvisionTask.getCombinedVariablesMap(textVariables, encryptedVariables))
+        .isEqualTo(expectedCombinedMap);
   }
 }

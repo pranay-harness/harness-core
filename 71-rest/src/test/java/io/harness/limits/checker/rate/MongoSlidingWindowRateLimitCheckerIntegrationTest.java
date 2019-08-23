@@ -1,7 +1,7 @@
 package io.harness.limits.checker.rate;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.offset;
 
 import com.google.inject.Inject;
 
@@ -144,8 +144,9 @@ public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseInteg
     long disallowedCount = requests.stream().filter(request -> !request.allowed).count();
 
     // verify that rate limit is within 1 percent accuracy of expected count
-    assertEquals(allowedCount, maxAllowedReq, totalRequests / 100.0);
-    assertEquals(disallowedCount, totalRequests - maxAllowedReq, totalRequests / 100.0);
+    assertThat((double) allowedCount).isCloseTo((double) maxAllowedReq, offset(totalRequests / 100.0));
+    assertThat((double) disallowedCount)
+        .isCloseTo((double) (totalRequests - maxAllowedReq), offset(totalRequests / 100.0));
 
     assertThat(limitChecker.checkAndConsume()).isFalse();
 

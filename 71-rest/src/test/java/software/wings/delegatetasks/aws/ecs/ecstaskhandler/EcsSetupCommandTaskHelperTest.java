@@ -3,7 +3,6 @@ package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 import static java.util.Collections.emptyList;
 import static java.util.Optional.of;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -263,8 +262,8 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     assertThat(createServiceRequest.getDeploymentConfiguration().getMinimumHealthyPercent().intValue()).isEqualTo(100);
     assertThat(createServiceRequest.getDeploymentConfiguration().getMaximumPercent().intValue()).isEqualTo(200);
 
-    assertEquals(
-        taskDefinition.getFamily() + ":" + taskDefinition.getRevision(), createServiceRequest.getTaskDefinition());
+    assertThat(createServiceRequest.getTaskDefinition())
+        .isEqualTo(taskDefinition.getFamily() + ":" + taskDefinition.getRevision());
 
     assertThat(createServiceRequest.getLoadBalancers()).isNotNull();
     assertThat(createServiceRequest.getLoadBalancers()).hasSize(1);
@@ -321,8 +320,8 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     assertThat(serviceRegistries).hasSize(1);
     ServiceRegistry serviceRegistry = createServiceRequest.getServiceRegistries().get(0);
     assertThat(serviceRegistry).isNotNull();
-    assertEquals("arn:aws:servicediscovery:us-east-1:448640225317:service/srv-v43my342legaqd3r",
-        serviceRegistry.getRegistryArn());
+    assertThat(serviceRegistry.getRegistryArn())
+        .isEqualTo("arn:aws:servicediscovery:us-east-1:448640225317:service/srv-v43my342legaqd3r");
     assertThat(serviceRegistry.getContainerName()).isEqualTo(CONTAINER_NAME);
     assertThat(serviceRegistry.getContainerPort().intValue()).isEqualTo(80);
   }
@@ -448,8 +447,8 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     assertThat(createServiceRequest.getDeploymentConfiguration()).isNotNull();
     assertThat(createServiceRequest.getDeploymentConfiguration().getMinimumHealthyPercent().intValue()).isEqualTo(100);
     assertThat(createServiceRequest.getDeploymentConfiguration().getMaximumPercent().intValue()).isEqualTo(200);
-    assertEquals(
-        taskDefinition.getFamily() + ":" + taskDefinition.getRevision(), createServiceRequest.getTaskDefinition());
+    assertThat(createServiceRequest.getTaskDefinition())
+        .isEqualTo(taskDefinition.getFamily() + ":" + taskDefinition.getRevision());
     assertThat(createServiceRequest.getLoadBalancers()).isNotNull();
     assertThat(createServiceRequest.getLoadBalancers()).hasSize(1);
 
@@ -500,8 +499,8 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     assertThat(containerDefinition.getSecrets()).isNotNull();
     assertThat(containerDefinition.getSecrets()).hasSize(1);
     assertThat(containerDefinition.getSecrets().get(0).getName()).isEqualTo("environment_variable_name");
-    assertEquals("arn:aws:ssm:region:aws_account_id:parameter/parameter_name",
-        containerDefinition.getSecrets().get(0).getValueFrom());
+    assertThat(containerDefinition.getSecrets().get(0).getValueFrom())
+        .isEqualTo("arn:aws:ssm:region:aws_account_id:parameter/parameter_name");
   }
 
   @Test
@@ -560,51 +559,51 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
                                         .withLaunchType(LaunchType.FARGATE.name())
                                         .build();
 
-    assertEquals(
-        StringUtils.EMPTY, ecsSetupCommandTaskHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams));
+    assertThat(ecsSetupCommandTaskHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams))
+        .isEqualTo(StringUtils.EMPTY);
 
     ecsSetupParams.setSubnetIds(new String[] {"subnet_1", "subnet_2"});
-    assertEquals(
-        StringUtils.EMPTY, ecsSetupCommandTaskHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams));
+    assertThat(ecsSetupCommandTaskHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams))
+        .isEqualTo(StringUtils.EMPTY);
 
     ecsSetupParams.setVpcId(null);
-    assertEquals("VPC Id is required for fargate task",
-        ecsSetupCommandTaskHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams));
+    assertThat(ecsSetupCommandTaskHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams))
+        .isEqualTo("VPC Id is required for fargate task");
 
     ecsSetupParams.setVpcId("");
-    assertEquals("VPC Id is required for fargate task",
-        ecsSetupCommandTaskHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams));
+    assertThat(ecsSetupCommandTaskHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams))
+        .isEqualTo("VPC Id is required for fargate task");
 
     ecsSetupParams.setVpcId("vpc_id");
     ecsSetupParams.setSubnetIds(null);
-    assertEquals("At least 1 subnetId is required for mentioned VPC",
-        ecsSetupCommandTaskHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams));
+    assertThat(ecsSetupCommandTaskHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams))
+        .isEqualTo("At least 1 subnetId is required for mentioned VPC");
 
     ecsSetupParams.setSubnetIds(new String[] {null});
-    assertEquals("At least 1 subnetId is required for mentioned VPC",
-        ecsSetupCommandTaskHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams));
+    assertThat(ecsSetupCommandTaskHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams))
+        .isEqualTo("At least 1 subnetId is required for mentioned VPC");
 
     ecsSetupParams.setSubnetIds(new String[] {"subnet_id"});
     ecsSetupParams.setSecurityGroupIds(new String[0]);
-    assertEquals("At least 1 security Group is required for mentioned VPC",
-        ecsSetupCommandTaskHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams));
+    assertThat(ecsSetupCommandTaskHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams))
+        .isEqualTo("At least 1 security Group is required for mentioned VPC");
 
     ecsSetupParams.setSecurityGroupIds(null);
-    assertEquals("At least 1 security Group is required for mentioned VPC",
-        ecsSetupCommandTaskHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams));
+    assertThat(ecsSetupCommandTaskHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams))
+        .isEqualTo("At least 1 security Group is required for mentioned VPC");
 
     ecsSetupParams.setSecurityGroupIds(new String[] {null});
-    assertEquals("At least 1 security Group is required for mentioned VPC",
-        ecsSetupCommandTaskHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams));
+    assertThat(ecsSetupCommandTaskHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams))
+        .isEqualTo("At least 1 security Group is required for mentioned VPC");
 
     ecsSetupParams.setSecurityGroupIds(new String[] {"sg_id"});
     taskDefinition.setExecutionRoleArn(null);
-    assertEquals("Execution Role ARN is required for Fargate tasks",
-        ecsSetupCommandTaskHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams));
+    assertThat(ecsSetupCommandTaskHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams))
+        .isEqualTo("Execution Role ARN is required for Fargate tasks");
 
     taskDefinition.setExecutionRoleArn("");
-    assertEquals("Execution Role ARN is required for Fargate tasks",
-        ecsSetupCommandTaskHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams));
+    assertThat(ecsSetupCommandTaskHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams))
+        .isEqualTo("Execution Role ARN is required for Fargate tasks");
   }
 
   @Test
@@ -644,12 +643,12 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   public void testGetServicePrefixByRemovingNumber() throws Exception {
     assertThat(ecsSetupCommandTaskHelper.getServicePrefixByRemovingNumber("App_Service_Env__2"))
         .isEqualTo("App_Service_Env__");
-    assertEquals(
-        "App_Service_Env__", ecsSetupCommandTaskHelper.getServicePrefixByRemovingNumber("App_Service_Env__21"));
-    assertEquals(
-        "App1_Service1_Env1__", ecsSetupCommandTaskHelper.getServicePrefixByRemovingNumber("App1_Service1_Env1__2"));
-    assertEquals(
-        "App1_Service1_Env1__", ecsSetupCommandTaskHelper.getServicePrefixByRemovingNumber("App1_Service1_Env1__21"));
+    assertThat(ecsSetupCommandTaskHelper.getServicePrefixByRemovingNumber("App_Service_Env__21"))
+        .isEqualTo("App_Service_Env__");
+    assertThat(ecsSetupCommandTaskHelper.getServicePrefixByRemovingNumber("App1_Service1_Env1__2"))
+        .isEqualTo("App1_Service1_Env1__");
+    assertThat(ecsSetupCommandTaskHelper.getServicePrefixByRemovingNumber("App1_Service1_Env1__21"))
+        .isEqualTo("App1_Service1_Env1__");
   }
 
   @Test

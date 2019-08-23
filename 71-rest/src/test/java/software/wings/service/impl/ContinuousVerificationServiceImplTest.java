@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
@@ -245,8 +244,8 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
     assertThat(heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution))
         .isEqualTo(twelveHoursResolutionDurationInMinutes);
 
-    assertEquals(twelveHoursResolutionDurationInMinutes / VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES,
-        heatMapResolution.getEventsPerHeatMapUnit(heatMapResolution));
+    assertThat(heatMapResolution.getEventsPerHeatMapUnit(heatMapResolution))
+        .isEqualTo(twelveHoursResolutionDurationInMinutes / VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES);
 
     long oneDay = endTime - TimeUnit.DAYS.toMillis(1);
     heatMapResolution = HeatMapResolution.getResolution(oneDay, endTime);
@@ -256,8 +255,8 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
     assertThat(heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution))
         .isEqualTo(oneDayResolutionDurationInMinutes);
 
-    assertEquals(oneDayResolutionDurationInMinutes / VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES,
-        heatMapResolution.getEventsPerHeatMapUnit(heatMapResolution));
+    assertThat(heatMapResolution.getEventsPerHeatMapUnit(heatMapResolution))
+        .isEqualTo(oneDayResolutionDurationInMinutes / VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES);
 
     long sevenDays = endTime - TimeUnit.DAYS.toMillis(7);
     heatMapResolution = HeatMapResolution.getResolution(sevenDays, endTime);
@@ -267,8 +266,8 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
     assertThat(heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution))
         .isEqualTo(sevenDayResolutionDurationInMinutes);
 
-    assertEquals(sevenDayResolutionDurationInMinutes / VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES,
-        heatMapResolution.getEventsPerHeatMapUnit(heatMapResolution));
+    assertThat(heatMapResolution.getEventsPerHeatMapUnit(heatMapResolution))
+        .isEqualTo(sevenDayResolutionDurationInMinutes / VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES);
 
     long thirtyDays = endTime - TimeUnit.DAYS.toMillis(30);
     heatMapResolution = HeatMapResolution.getResolution(thirtyDays, endTime);
@@ -278,7 +277,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
     assertThat(heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution))
         .isEqualTo(thirtyDayResolutionDurationInMinutes);
 
-    assertEquals(thirtyDayResolutionDurationInMinutes / VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES,
-        heatMapResolution.getEventsPerHeatMapUnit(heatMapResolution));
+    assertThat(heatMapResolution.getEventsPerHeatMapUnit(heatMapResolution))
+        .isEqualTo(thirtyDayResolutionDurationInMinutes / VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES);
   }
 }

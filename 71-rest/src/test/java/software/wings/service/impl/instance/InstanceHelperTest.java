@@ -2,7 +2,6 @@ package software.wings.service.impl.instance;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyLong;
@@ -442,8 +441,9 @@ public class InstanceHelperTest extends WingsBaseTest {
     assertThat(event.getDeploymentSummaries().get(0).getDeploymentInfo() instanceof AwsCodeDeployDeploymentInfo)
         .isTrue();
     assertDeploymentSummaryObject(event.getDeploymentSummaries().get(0));
-    assertEquals(CODE_DEPLOY_key,
-        ((AwsCodeDeployDeploymentKey) event.getDeploymentSummaries().get(0).getAwsCodeDeployDeploymentKey()).getKey());
+    assertThat(
+        ((AwsCodeDeployDeploymentKey) event.getDeploymentSummaries().get(0).getAwsCodeDeployDeploymentKey()).getKey())
+        .isEqualTo(CODE_DEPLOY_key);
   }
 
   @Test
@@ -487,12 +487,12 @@ public class InstanceHelperTest extends WingsBaseTest {
     assertThat(deploymentInfo1 instanceof ContainerDeploymentInfoWithNames).isTrue();
     assertThat(deploymentInfo2 instanceof ContainerDeploymentInfoWithNames).isTrue();
 
-    assertEquals(CLUSTER_NAME,
-        ((ContainerDeploymentInfoWithNames) event.getDeploymentSummaries().get(0).getDeploymentInfo())
-            .getClusterName());
-    assertEquals(CLUSTER_NAME,
-        ((ContainerDeploymentInfoWithNames) event.getDeploymentSummaries().get(1).getDeploymentInfo())
-            .getClusterName());
+    assertThat(
+        ((ContainerDeploymentInfoWithNames) event.getDeploymentSummaries().get(0).getDeploymentInfo()).getClusterName())
+        .isEqualTo(CLUSTER_NAME);
+    assertThat(
+        ((ContainerDeploymentInfoWithNames) event.getDeploymentSummaries().get(1).getDeploymentInfo()).getClusterName())
+        .isEqualTo(CLUSTER_NAME);
 
     Set<String> serviceNames = new HashSet<>();
     serviceNames.add("ecsNew");
@@ -553,12 +553,12 @@ public class InstanceHelperTest extends WingsBaseTest {
     assertDeploymentSummaryObject(event.getDeploymentSummaries().get(0));
     assertDeploymentSummaryObject(event.getDeploymentSummaries().get(1));
 
-    assertEquals(CLUSTER_NAME,
-        ((ContainerDeploymentInfoWithNames) event.getDeploymentSummaries().get(0).getDeploymentInfo())
-            .getClusterName());
-    assertEquals(CLUSTER_NAME,
-        ((ContainerDeploymentInfoWithNames) event.getDeploymentSummaries().get(1).getDeploymentInfo())
-            .getClusterName());
+    assertThat(
+        ((ContainerDeploymentInfoWithNames) event.getDeploymentSummaries().get(0).getDeploymentInfo()).getClusterName())
+        .isEqualTo(CLUSTER_NAME);
+    assertThat(
+        ((ContainerDeploymentInfoWithNames) event.getDeploymentSummaries().get(1).getDeploymentInfo()).getClusterName())
+        .isEqualTo(CLUSTER_NAME);
 
     Set<String> serviceNames = new HashSet<>();
     serviceNames.add("kubernetesNew");

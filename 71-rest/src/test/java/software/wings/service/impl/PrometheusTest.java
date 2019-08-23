@@ -34,23 +34,26 @@ public class PrometheusTest extends WingsBaseTest {
     Map<String, String> invalidFields =
         PrometheusResource.validateTransactions(Lists.newArrayList(timeSeries1, timeSeries2), false);
     assertThat(invalidFields).hasSize(4);
-    assertEquals("$hostName is not present in the url.", invalidFields.get("Invalid query for group: t1, metric : m1"));
-    assertEquals("$hostName is not present in the url.", invalidFields.get("Invalid query for group: t1, metric : m2"));
-    assertEquals("Expected format example jvm_memory_max_bytes{pod_name=\"$hostName\"}",
-        invalidFields.get("Invalid query format for group: t1, metric: m1"));
-    assertEquals("Expected format example jvm_memory_max_bytes{pod_name=\"$hostName\"}",
-        invalidFields.get("Invalid query format for group: t1, metric: m2"));
+    assertThat(invalidFields.get("Invalid query for group: t1, metric : m1"))
+        .isEqualTo("$hostName is not present in the url.");
+    assertThat(invalidFields.get("Invalid query for group: t1, metric : m2"))
+        .isEqualTo("$hostName is not present in the url.");
+    assertThat(invalidFields.get("Invalid query format for group: t1, metric: m1"))
+        .isEqualTo("Expected format example jvm_memory_max_bytes{pod_name=\"$hostName\"}");
+    assertThat(invalidFields.get("Invalid query format for group: t1, metric: m2"))
+        .isEqualTo("Expected format example jvm_memory_max_bytes{pod_name=\"$hostName\"}");
 
     // fix and validate
     timeSeries2.setUrl("$hostName");
 
     invalidFields = PrometheusResource.validateTransactions(Lists.newArrayList(timeSeries1, timeSeries2), false);
     assertThat(invalidFields).hasSize(3);
-    assertEquals("$hostName is not present in the url.", invalidFields.get("Invalid query for group: t1, metric : m1"));
-    assertEquals("Expected format example jvm_memory_max_bytes{pod_name=\"$hostName\"}",
-        invalidFields.get("Invalid query format for group: t1, metric: m1"));
-    assertEquals("Expected format example jvm_memory_max_bytes{pod_name=\"$hostName\"}",
-        invalidFields.get("Invalid query format for group: t1, metric: m2"));
+    assertThat(invalidFields.get("Invalid query for group: t1, metric : m1"))
+        .isEqualTo("$hostName is not present in the url.");
+    assertThat(invalidFields.get("Invalid query format for group: t1, metric: m1"))
+        .isEqualTo("Expected format example jvm_memory_max_bytes{pod_name=\"$hostName\"}");
+    assertThat(invalidFields.get("Invalid query format for group: t1, metric: m2"))
+        .isEqualTo("Expected format example jvm_memory_max_bytes{pod_name=\"$hostName\"}");
 
     // fix and validate
     timeSeries1.setUrl("jvm_memory_max_bytes{pod_name=\"$hostName\"}");
@@ -69,14 +72,15 @@ public class PrometheusTest extends WingsBaseTest {
     Map<String, String> invalidFields =
         PrometheusResource.validateTransactions(Lists.newArrayList(timeSeries1, timeSeries2), false);
     assertThat(invalidFields).hasSize(4);
-    assertEquals("$hostName is not present in the url.", invalidFields.get("Invalid query for group: t1, metric : m1"));
-    assertEquals(
-        "m1 has been configured as RESP_TIME in previous transactions. Same metric name can not have different metric types.",
-        invalidFields.get("Invalid metric type for group: t1, metric : m1"));
-    assertEquals("t1 has error metrics [] and/or response time metrics [m1] but no throughput metrics.",
-        invalidFields.get("Invalid metrics for group: t1"));
-    assertEquals("Expected format example jvm_memory_max_bytes{pod_name=\"$hostName\"}",
-        invalidFields.get("Invalid query format for group: t1, metric: m1"));
+    assertThat(invalidFields.get("Invalid query for group: t1, metric : m1"))
+        .isEqualTo("$hostName is not present in the url.");
+    assertThat(invalidFields.get("Invalid metric type for group: t1, metric : m1"))
+        .isEqualTo("m1 has been configured as RESP_TIME in previous transactions. "
+            + "Same metric name can not have different metric types.");
+    assertThat(invalidFields.get("Invalid metrics for group: t1"))
+        .isEqualTo("t1 has error metrics [] and/or response time metrics [m1] but no throughput metrics.");
+    assertThat(invalidFields.get("Invalid query format for group: t1, metric: m1"))
+        .isEqualTo("Expected format example jvm_memory_max_bytes{pod_name=\"$hostName\"}");
 
     // fix and validate
     timeSeries1.setUrl("jvm_memory_max_bytes{pod_name=\"$hostName\"}");
@@ -84,11 +88,11 @@ public class PrometheusTest extends WingsBaseTest {
 
     invalidFields = PrometheusResource.validateTransactions(Lists.newArrayList(timeSeries1, timeSeries2), false);
     assertThat(invalidFields).hasSize(2);
-    assertEquals(
-        "m1 has been configured as RESP_TIME in previous transactions. Same metric name can not have different metric types.",
-        invalidFields.get("Invalid metric type for group: t1, metric : m1"));
-    assertEquals("t1 has error metrics [] and/or response time metrics [m1] but no throughput metrics.",
-        invalidFields.get("Invalid metrics for group: t1"));
+    assertThat(invalidFields.get("Invalid metric type for group: t1, metric : m1"))
+        .isEqualTo("m1 has been configured as RESP_TIME in previous transactions. "
+            + "Same metric name can not have different metric types.");
+    assertThat(invalidFields.get("Invalid metrics for group: t1"))
+        .isEqualTo("t1 has error metrics [] and/or response time metrics [m1] but no throughput metrics.");
 
     // fix and validate
     timeSeries1.setMetricType(MetricType.INFRA.name());
@@ -107,9 +111,9 @@ public class PrometheusTest extends WingsBaseTest {
                                       .build();
     Map<String, String> invalidFields = PrometheusResource.validateTransactions(Lists.newArrayList(timeSeries), false);
     assertThat(invalidFields).hasSize(1);
-    assertEquals(
-        "t1 has only throughput metrics [m1]. Throughput metrics is used to analyze other metrics and is not analyzed.",
-        invalidFields.get("Invalid metrics for group: t1"));
+    assertThat(invalidFields.get("Invalid metrics for group: t1"))
+        .isEqualTo(
+            "t1 has only throughput metrics [m1]. Throughput metrics is used to analyze other metrics and is not analyzed.");
   }
 
   @Test

@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.threading.Morpheus.sleep;
-import static net.sf.ezmorph.test.ArrayAssertions.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -88,8 +87,8 @@ public class DelegateCollectionCallbackAlertTest extends WingsBaseTest {
     assertThat(alert.getType()).isEqualTo(AlertType.CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT);
     assertThat(alert.getCategory()).isEqualTo(AlertCategory.ContinuousVerification);
     assertThat(alert.getStatus()).isEqualTo(AlertStatus.Open);
-    assertEquals(
-        cvConfigId, ((ContinuousVerificationDataCollectionAlert) alert.getAlertData()).getCvConfiguration().getUuid());
+    assertThat(((ContinuousVerificationDataCollectionAlert) alert.getAlertData()).getCvConfiguration().getUuid())
+        .isEqualTo(cvConfigId);
 
     response.put("error", DataCollectionTaskResult.builder().status(DataCollectionTaskStatus.SUCCESS).build());
     dataCollectionCallback.notify(response);
@@ -100,8 +99,8 @@ public class DelegateCollectionCallbackAlertTest extends WingsBaseTest {
     assertThat(alert.getType()).isEqualTo(AlertType.CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT);
     assertThat(alert.getCategory()).isEqualTo(AlertCategory.ContinuousVerification);
     assertThat(alert.getStatus()).isEqualTo(AlertStatus.Closed);
-    assertEquals(
-        cvConfigId, ((ContinuousVerificationDataCollectionAlert) alert.getAlertData()).getCvConfiguration().getUuid());
+    assertThat(((ContinuousVerificationDataCollectionAlert) alert.getAlertData()).getCvConfiguration().getUuid())
+        .isEqualTo(cvConfigId);
 
     // reopen alert
     response.put("error", ErrorNotifyResponseData.builder().errorMessage("some error message").build());
@@ -117,7 +116,7 @@ public class DelegateCollectionCallbackAlertTest extends WingsBaseTest {
     assertThat(alert.getType()).isEqualTo(AlertType.CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT);
     assertThat(alert.getCategory()).isEqualTo(AlertCategory.ContinuousVerification);
     assertThat(alert.getStatus()).isEqualTo(AlertStatus.Open);
-    assertEquals(
-        cvConfigId, ((ContinuousVerificationDataCollectionAlert) alert.getAlertData()).getCvConfiguration().getUuid());
+    assertThat(((ContinuousVerificationDataCollectionAlert) alert.getAlertData()).getCvConfiguration().getUuid())
+        .isEqualTo(cvConfigId);
   }
 }

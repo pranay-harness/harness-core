@@ -3,7 +3,6 @@ package software.wings.sm.states;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.contains;
@@ -134,8 +133,8 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
 
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
-    assertEquals("Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.",
-        response.getErrorMessage());
+    assertThat(response.getErrorMessage())
+        .isEqualTo("Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.");
 
     LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.ELK);
     assertThat(analysisSummary.getRiskLevel()).isEqualTo(RiskLevel.NA);
@@ -162,8 +161,8 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
 
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
-    assertEquals("Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.",
-        response.getErrorMessage());
+    assertThat(response.getErrorMessage())
+        .isEqualTo("Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.");
 
     LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.ELK);
     assertThat(analysisSummary.getRiskLevel()).isEqualTo(RiskLevel.NA);

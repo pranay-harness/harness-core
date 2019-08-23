@@ -5,7 +5,6 @@ import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.assertEquals;
 import static software.wings.beans.Idempotent.SUCCEEDED;
 import static software.wings.beans.Idempotent.TENTATIVE;
 
@@ -84,8 +83,8 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
     Idempotent previousIdempotent = wingsPersistence.findAndModify(idempotentRegistry.query(id),
         idempotentRegistry.registerUpdateOperation(IdempotentLock.defaultTTL), MongoIdempotentRegistry.registerOptions);
 
-    assertEquals(null, previousIdempotent);
-    assertEquals(TENTATIVE, wingsPersistence.get(Idempotent.class, id.getValue()).getState());
+    assertThat(previousIdempotent).isNull();
+    assertThat(wingsPersistence.get(Idempotent.class, id.getValue()).getState()).isEqualTo(TENTATIVE);
   }
 
   @Test
@@ -97,8 +96,8 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
     Idempotent previousIdempotent = wingsPersistence.findAndModify(idempotentRegistry.query(id),
         idempotentRegistry.registerUpdateOperation(IdempotentLock.defaultTTL), MongoIdempotentRegistry.registerOptions);
 
-    assertEquals(TENTATIVE, previousIdempotent.getState());
-    assertEquals(TENTATIVE, wingsPersistence.get(Idempotent.class, id.getValue()).getState());
+    assertThat(previousIdempotent.getState()).isEqualTo(TENTATIVE);
+    assertThat(wingsPersistence.get(Idempotent.class, id.getValue()).getState()).isEqualTo(TENTATIVE);
   }
 
   @Test
@@ -115,7 +114,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
         .isInstanceOf(MongoCommandException.class)
         .hasMessageContaining("E" + DUPLICATE_KEY.getErrorCode() + " ");
 
-    assertEquals(SUCCEEDED, wingsPersistence.get(Idempotent.class, id.getValue()).getState());
+    assertThat(wingsPersistence.get(Idempotent.class, id.getValue()).getState()).isEqualTo(SUCCEEDED);
   }
 
   @Test
@@ -147,7 +146,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
     wingsPersistence.findAndModify(idempotentRegistry.query(id), idempotentRegistry.unregisterUpdateOperation(),
         MongoIdempotentRegistry.unregisterOptions);
 
-    assertEquals(SUCCEEDED, wingsPersistence.get(Idempotent.class, id.getValue()).getState());
+    assertThat(wingsPersistence.get(Idempotent.class, id.getValue()).getState()).isEqualTo(SUCCEEDED);
   }
 
   @Test

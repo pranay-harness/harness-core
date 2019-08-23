@@ -3,7 +3,6 @@ package io.harness.k8s.kubectl;
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static io.harness.k8s.kubectl.Utils.parseLatestRevisionNumberFromRolloutHistory;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -38,7 +37,7 @@ public class UtilsTest extends CategoryTest {
     assertThat(encloseWithQuotesIfNeeded("kubectl")).isEqualTo("kubectl");
     assertThat(encloseWithQuotesIfNeeded("kubectl ")).isEqualTo("kubectl");
     assertThat(encloseWithQuotesIfNeeded("config")).isEqualTo("config");
-    assertEquals("\"C:\\Program Files\\Docker\\Docker\\Resources\\bin\\kubectl.exe\"",
-        encloseWithQuotesIfNeeded("C:\\Program Files\\Docker\\Docker\\Resources\\bin\\kubectl.exe"));
+    assertThat(encloseWithQuotesIfNeeded("C:\\Program Files\\Docker\\Docker\\Resources\\bin\\kubectl.exe"))
+        .isEqualTo("\"C:\\Program Files\\Docker\\Docker\\Resources\\bin\\kubectl.exe\"");
   }
 }

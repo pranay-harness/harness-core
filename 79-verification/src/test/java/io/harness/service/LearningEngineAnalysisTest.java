@@ -7,7 +7,6 @@ import static io.harness.rest.RestResponse.Builder.aRestResponse;
 import static io.harness.rule.OwnerRule.PARNIAN;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
@@ -136,18 +135,18 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
           ServiceApiVersion.V1, Optional.of(false), Optional.empty());
       assertThat(leTask.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
 
-      assertEquals(numOfTasks - i,
-          wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
-              .filter("executionStatus", ExecutionStatus.QUEUED)
-              .filter("retry", 0)
-              .asList()
-              .size());
-      assertEquals(i,
-          wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
-              .filter("executionStatus", ExecutionStatus.RUNNING)
-              .filter("retry", 1)
-              .asList()
-              .size());
+      assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
+                     .filter("executionStatus", ExecutionStatus.QUEUED)
+                     .filter("retry", 0)
+                     .asList()
+                     .size())
+          .isEqualTo(numOfTasks - i);
+      assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
+                     .filter("executionStatus", ExecutionStatus.RUNNING)
+                     .filter("retry", 1)
+                     .asList()
+                     .size())
+          .isEqualTo(i);
     }
 
     assertNull(learningEngineService.getNextLearningEngineAnalysisTask(
@@ -177,12 +176,12 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
           ServiceApiVersion.V1, Optional.of(true), Optional.empty());
       assertThat(task.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
 
-      assertEquals(numOfTasks - i,
-          wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
-              .filter("executionStatus", ExecutionStatus.QUEUED)
-              .filter("retry", 0)
-              .asList()
-              .size());
+      assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
+                     .filter("executionStatus", ExecutionStatus.QUEUED)
+                     .filter("retry", 0)
+                     .asList()
+                     .size())
+          .isEqualTo(numOfTasks - i);
     }
 
     assertNull(learningEngineService.getNextLearningEngineAnalysisTask(
@@ -216,28 +215,28 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
         Optional.of(Lists.newArrayList(MLAnalysisType.TIME_SERIES, MLAnalysisType.LOG_CLUSTER, MLAnalysisType.LOG_ML)));
     assertThat(task).isNotNull();
     assertThat(task.getMl_analysis_type()).isEqualTo(MLAnalysisType.LOG_CLUSTER);
-    assertEquals(numOfTasks - 1,
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.QUEUED)
-            .count());
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                   .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.QUEUED)
+                   .count())
+        .isEqualTo(numOfTasks - 1);
 
     task = learningEngineService.getNextLearningEngineAnalysisTask(
         ServiceApiVersion.V1, Optional.of(true), Optional.empty());
     assertThat(task).isNotNull();
     assertThat(task.getMl_analysis_type()).isEqualTo(MLAnalysisType.LOG_CLUSTER);
-    assertEquals(numOfTasks - 2,
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.QUEUED)
-            .count());
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                   .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.QUEUED)
+                   .count())
+        .isEqualTo(numOfTasks - 2);
 
     task = learningEngineService.getNextLearningEngineAnalysisTask(
         ServiceApiVersion.V1, Optional.of(true), Optional.of(Lists.newArrayList()));
     assertThat(task).isNotNull();
     assertThat(task.getMl_analysis_type()).isEqualTo(MLAnalysisType.LOG_CLUSTER);
-    assertEquals(numOfTasks - 3,
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.QUEUED)
-            .count());
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                   .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.QUEUED)
+                   .count())
+        .isEqualTo(numOfTasks - 3);
   }
 
   @Test
@@ -262,12 +261,12 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
           ServiceApiVersion.V1, Optional.of(true), Optional.empty());
       assertThat(analysisTask).isNull();
 
-      assertEquals(numOfTasks,
-          wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
-              .filter("executionStatus", ExecutionStatus.QUEUED)
-              .filter("retry", 0)
-              .asList()
-              .size());
+      assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
+                     .filter("executionStatus", ExecutionStatus.QUEUED)
+                     .filter("retry", 0)
+                     .asList()
+                     .size())
+          .isEqualTo(numOfTasks);
     }
 
     assertNull(learningEngineService.getNextLearningEngineAnalysisTask(
@@ -359,20 +358,20 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
           ServiceApiVersion.V1, Optional.empty(), Optional.empty());
       assertThat(analysisTask.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
 
-      assertEquals(numOfTasks - i,
-          wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
-              .field(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY)
-              .greaterThan(startTime)
-              .filter("retry", 0)
-              .asList()
-              .size());
-      assertEquals(i,
-          wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
-              .field(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY)
-              .greaterThan(startTime)
-              .filter("retry", 1)
-              .asList()
-              .size());
+      assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
+                     .field(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY)
+                     .greaterThan(startTime)
+                     .filter("retry", 0)
+                     .asList()
+                     .size())
+          .isEqualTo(numOfTasks - i);
+      assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
+                     .field(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY)
+                     .greaterThan(startTime)
+                     .filter("retry", 1)
+                     .asList()
+                     .size())
+          .isEqualTo(i);
     }
 
     assertNull(learningEngineService.getNextLearningEngineAnalysisTask(
@@ -491,11 +490,11 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
     LearningEngineAnalysisTask analysisTask = analysisTasks.get(0);
     // this is beyond 2 hours, so analysis start minute should be currentTime - 2 hours. analysisMin should be
     // currentTime - 1h45m
-    assertEquals(
-        currentMinute - PREDECTIVE_HISTORY_MINUTES + CRON_POLL_INTERVAL_IN_MINUTES, analysisTask.getAnalysis_minute());
+    assertThat(analysisTask.getAnalysis_minute())
+        .isEqualTo(currentMinute - PREDECTIVE_HISTORY_MINUTES + CRON_POLL_INTERVAL_IN_MINUTES);
     assertThat(analysisTask.getAnalysis_start_min()).isEqualTo(currentMinute - PREDECTIVE_HISTORY_MINUTES * 2 + 1);
-    assertEquals(
-        analysisTask.getAnalysis_start_min() + PREDECTIVE_HISTORY_MINUTES - 1, analysisTask.getPrediction_start_time());
+    assertThat(analysisTask.getPrediction_start_time())
+        .isEqualTo(analysisTask.getAnalysis_start_min() + PREDECTIVE_HISTORY_MINUTES - 1);
 
     continuousVerificationService.triggerServiceGuardTimeSeriesAnalysis(accountId);
     analysisTasks = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
@@ -505,11 +504,11 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
     assertThat(analysisTasks).hasSize(1);
 
     // there has been no new analysis saved since the previous trigger, so no new task should be created
-    assertEquals(
-        currentMinute - PREDECTIVE_HISTORY_MINUTES + CRON_POLL_INTERVAL_IN_MINUTES, analysisTask.getAnalysis_minute());
+    assertThat(analysisTask.getAnalysis_minute())
+        .isEqualTo(currentMinute - PREDECTIVE_HISTORY_MINUTES + CRON_POLL_INTERVAL_IN_MINUTES);
     assertThat(analysisTask.getAnalysis_start_min()).isEqualTo(currentMinute - PREDECTIVE_HISTORY_MINUTES * 2 + 1);
-    assertEquals(
-        analysisTask.getAnalysis_start_min() + PREDECTIVE_HISTORY_MINUTES - 1, analysisTask.getPrediction_start_time());
+    assertThat(analysisTask.getPrediction_start_time())
+        .isEqualTo(analysisTask.getAnalysis_start_min() + PREDECTIVE_HISTORY_MINUTES - 1);
 
     timeSeriesMLAnalysisRecord = TimeSeriesMLAnalysisRecord.builder().build();
     timeSeriesMLAnalysisRecord.setAppId(appId);
@@ -528,12 +527,12 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
     assertThat(analysisTasks).hasSize(2);
 
     analysisTask = analysisTasks.get(0);
-    assertEquals(timeSeriesMLAnalysisRecord.getAnalysisMinute() + CRON_POLL_INTERVAL_IN_MINUTES,
-        analysisTask.getAnalysis_minute());
-    assertEquals(analysisTask.getAnalysis_minute() - PREDECTIVE_HISTORY_MINUTES - CRON_POLL_INTERVAL_IN_MINUTES + 1,
-        analysisTask.getAnalysis_start_min());
-    assertEquals(
-        analysisTask.getAnalysis_minute() - CRON_POLL_INTERVAL_IN_MINUTES, analysisTask.getPrediction_start_time());
+    assertThat(analysisTask.getAnalysis_minute())
+        .isEqualTo(timeSeriesMLAnalysisRecord.getAnalysisMinute() + CRON_POLL_INTERVAL_IN_MINUTES);
+    assertThat(analysisTask.getAnalysis_start_min())
+        .isEqualTo(analysisTask.getAnalysis_minute() - PREDECTIVE_HISTORY_MINUTES - CRON_POLL_INTERVAL_IN_MINUTES + 1);
+    assertThat(analysisTask.getPrediction_start_time())
+        .isEqualTo(analysisTask.getAnalysis_minute() - CRON_POLL_INTERVAL_IN_MINUTES);
   }
 
   @Test
@@ -577,67 +576,67 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
     learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
     wingsPersistence.save(AnalysisContext.builder().stateExecutionId(stateExecutionId).build());
 
-    assertEquals(1,
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.QUEUED)
-            .count());
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                   .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.QUEUED)
+                   .count())
+        .isEqualTo(1);
 
     for (int i = 0; i < LearningEngineAnalysisTask.RETRIES - 1; i++) {
       LearningEngineAnalysisTask leTask = learningEngineService.getNextLearningEngineAnalysisTask(
           ServiceApiVersion.V1, Optional.of(false), Optional.empty());
       assertThat(leTask.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
 
-      assertEquals(0,
-          wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-              .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.QUEUED)
-              .count());
+      assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                     .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.QUEUED)
+                     .count())
+          .isEqualTo(0);
 
-      assertEquals(1,
-          wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-              .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.RUNNING)
-              .count());
+      assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                     .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.RUNNING)
+                     .count())
+          .isEqualTo(1);
 
       learningEngineService.notifyFailure(leTask.getUuid(), LearningEngineError.builder().build());
-      assertEquals(1,
-          wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-              .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.QUEUED)
-              .count());
+      assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                     .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.QUEUED)
+                     .count())
+          .isEqualTo(1);
 
-      assertEquals(0,
-          wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-              .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.RUNNING)
-              .count());
+      assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                     .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.RUNNING)
+                     .count())
+          .isEqualTo(0);
     }
 
     LearningEngineAnalysisTask leTask = learningEngineService.getNextLearningEngineAnalysisTask(
         ServiceApiVersion.V1, Optional.of(false), Optional.empty());
     assertThat(leTask.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
 
-    assertEquals(0,
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.QUEUED)
-            .count());
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                   .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.QUEUED)
+                   .count())
+        .isEqualTo(0);
 
-    assertEquals(1,
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.RUNNING)
-            .count());
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                   .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.RUNNING)
+                   .count())
+        .isEqualTo(1);
 
     learningEngineService.notifyFailure(leTask.getUuid(), LearningEngineError.builder().build());
-    assertEquals(0,
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.QUEUED)
-            .count());
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                   .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.QUEUED)
+                   .count())
+        .isEqualTo(0);
 
-    assertEquals(0,
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.RUNNING)
-            .count());
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                   .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.RUNNING)
+                   .count())
+        .isEqualTo(0);
 
-    assertEquals(1,
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.FAILED)
-            .count());
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                   .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.FAILED)
+                   .count())
+        .isEqualTo(1);
 
     assertNull(learningEngineService.getNextLearningEngineAnalysisTask(
         ServiceApiVersion.V1, Optional.of(false), Optional.empty()));

@@ -5,7 +5,6 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static java.util.Arrays.asList;
 import static java.util.Objects.deepEquals;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -450,8 +449,8 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
       serviceInstances = dashboardService.getServiceInstances(ACCOUNT_1_ID, SERVICE_7_ID, currentTime - 100000);
       assertThat(serviceInstances).hasSize(1);
       assertThat(serviceInstances.get(0).getInstanceStatsByArtifactList()).hasSize(1);
-      assertEquals(
-          2, serviceInstances.get(0).getInstanceStatsByArtifactList().get(0).getInstanceStats().getTotalCount());
+      assertThat(serviceInstances.get(0).getInstanceStatsByArtifactList().get(0).getInstanceStats().getTotalCount())
+          .isEqualTo(2);
     } finally {
       UserThreadLocal.unset();
     }
