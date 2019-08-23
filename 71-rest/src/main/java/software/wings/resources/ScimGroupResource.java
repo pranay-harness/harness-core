@@ -1,19 +1,17 @@
 package software.wings.resources;
 
-import static com.unboundid.scim2.common.utils.ApiConstants.MEDIA_TYPE_SCIM;
-
 import com.google.inject.Inject;
 
-import com.unboundid.scim2.common.messages.ListResponse;
 import io.dropwizard.jersey.PATCH;
 import io.harness.exception.WingsException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.FeatureName;
-import software.wings.scim.GroupResource;
 import software.wings.scim.PatchRequest;
+import software.wings.scim.ScimGroup;
 import software.wings.scim.ScimGroupService;
+import software.wings.scim.ScimListResponse;
 import software.wings.security.annotations.ScimAPI;
 import software.wings.service.intfc.FeatureFlagService;
 
@@ -31,8 +29,8 @@ import javax.ws.rs.core.Response.Status;
 
 @Api("scim")
 @Path("/scim/account/{accountId}/")
-@Consumes(MEDIA_TYPE_SCIM)
-@Produces(MEDIA_TYPE_SCIM)
+@Consumes("application/scim+json")
+@Produces("application/scim+json")
 @Slf4j
 @ScimAPI
 public class ScimGroupResource extends ScimResource {
@@ -42,7 +40,7 @@ public class ScimGroupResource extends ScimResource {
   @POST
   @Path("Groups")
   @ApiOperation(value = "Create a new group and return uuid in response")
-  public Response createGroup(GroupResource groupQuery, @PathParam("accountId") String accountId) {
+  public Response createGroup(ScimGroup groupQuery, @PathParam("accountId") String accountId) {
     if (!featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
       throw new WingsException(String.format("Feature not allowed for account: %s ", accountId));
     }
@@ -90,8 +88,11 @@ public class ScimGroupResource extends ScimResource {
   searchGroup(@PathParam("accountId") String accountId, @QueryParam("filter") String filter,
       @QueryParam("count") Integer count, @QueryParam("startIndex") Integer startIndex) {
     // there could be fields related to exclude fields.
+    if (!featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
+      throw new WingsException(String.format("Feature not allowed for account: %s ", accountId));
+    }
     try {
-      ListResponse<GroupResource> groupResources = scimGroupService.searchGroup(filter, accountId, count, startIndex);
+      ScimListResponse<ScimGroup> groupResources = scimGroupService.searchGroup(filter, accountId, count, startIndex);
       return Response.status(Response.Status.OK).entity(groupResources).build();
     } catch (Exception ex) {
       logger.error("SCIM: Search group call failed. AccountId: {}, filter: {}, count: {}, startIndex{}", accountId,
@@ -116,7 +117,7 @@ public class ScimGroupResource extends ScimResource {
   @Path("Groups/{groupId}")
   @ApiOperation(value = "Update a group")
   public Response updateGroup(
-      @PathParam("accountId") String accountId, @PathParam("groupId") String groupId, GroupResource groupQuery) {
+      @PathParam("accountId") String accountId, @PathParam("groupId") String groupId, ScimGroup groupQuery) {
     if (!featureFlagService.isEnabled(FeatureName.SCIM_INTEGRATION, accountId)) {
       throw new WingsException(String.format("Feature not allowed for account: %s ", accountId));
     }
