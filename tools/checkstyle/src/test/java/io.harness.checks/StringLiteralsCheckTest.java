@@ -23,7 +23,7 @@ public class StringLiteralsCheckTest extends AbstractModuleTestSupport {
 
   @Test
   public void testIssues() throws Exception {
-    final String[] expected = {"5:54: Unallowed string literal as a parameter."};
+    final String[] expected = {"5:49: Unallowed string literal as a parameter."};
 
     verify(config(), getPath("StringLiteralsCheckIssues.jv"), expected);
   }
