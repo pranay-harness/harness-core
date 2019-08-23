@@ -1764,7 +1764,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)
         || orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-      boolean serviceRepeat = canaryOrchestrationWorkflow.serviceRepeat(workflowPhase);
+      boolean serviceRepeat = canaryOrchestrationWorkflow.serviceRepeat(workflowPhase, infraRefactor);
       boolean createCanaryPhase = !serviceRepeat;
       boolean createPrimaryPhase =
           serviceRepeat && !canaryOrchestrationWorkflow.containsPhaseWithName(K8S_PRIMARY_PHASE_NAME);
