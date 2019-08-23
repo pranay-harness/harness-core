@@ -25,6 +25,7 @@ public class OwnerRule extends RepeatRule {
   public static final String ANKIT = "ankit.singhal@harness.io";
   public static final String ANSHUL = "anshul@harness.io";
   public static final String ANUBHAW = "anubhaw@harness.io";
+  public static final String AVMOHAN = "abhijith.mohan@harness.io";
   public static final String BRETT = "brett@harness.io";
   public static final String DEEPAK = "deepak.patankar@harness.io";
   public static final String GARVIT = "garvit.pahal@harness.io";
@@ -64,6 +65,7 @@ public class OwnerRule extends RepeatRule {
                                            .add(ANKIT)
                                            .add(ANSHUL)
                                            .add(ANUBHAW)
+                                           .add(AVMOHAN)
                                            .add(BRETT)
                                            .add(DEEPAK)
                                            .add(GARVIT)
@@ -130,7 +132,7 @@ public class OwnerRule extends RepeatRule {
 
     logger.info("ghprbPullAuthorEmail = {}", prEmail);
 
-    final boolean match = Arrays.stream(owner.emails()).anyMatch(email -> email.equals(prEmail));
+    final boolean match = Arrays.asList(owner.emails()).contains(prEmail);
     if (!match) {
       if (owner.intermittent()) {
         return RepeatRule.RepeatStatement.builder().build();

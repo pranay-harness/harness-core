@@ -70,6 +70,7 @@ public class EventServiceApplication {
     Injector injector = Guice.createInjector(modules);
 
     GrpcEventServer server = injector.getInstance(GrpcEventServer.class);
+    server.initialize();
     logger.info("Server startup complete");
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       logger.info("Shutting down server...");

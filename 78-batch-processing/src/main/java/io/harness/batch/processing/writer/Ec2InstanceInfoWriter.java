@@ -26,7 +26,6 @@ public class Ec2InstanceInfoWriter extends EventWriter implements ItemWriter<Pub
     publishedMessages.stream()
         .filter(publishedMessage -> publishedMessage.getType().equals(EventTypeConstants.EC2_INSTANCE_INFO))
         .forEach(publishedMessage -> {
-          publishedMessage.postLoad();
           Ec2InstanceInfo ec2InstanceInfo = (Ec2InstanceInfo) publishedMessage.getMessage();
           logger.debug("Message {} ", ec2InstanceInfo);
           String accountId = publishedMessage.getAccountId();

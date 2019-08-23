@@ -8,8 +8,11 @@ import io.harness.event.grpc.PublishedMessage.PublishedMessageKeys;
 import io.harness.exception.WingsException;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UuidAware;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -22,7 +25,6 @@ import org.mongodb.morphia.annotations.PostLoad;
 import java.util.Map;
 
 @Data
-@Builder
 @Entity(value = "publishedMessages", noClassnameStored = true)
 @Indexes({
   @Index(options = @IndexOptions(name = "type_CreatedAt"), fields = {
@@ -30,18 +32,34 @@ import java.util.Map;
   })
 })
 @FieldNameConstants(innerTypeName = "PublishedMessageKeys")
-public class PublishedMessage implements PersistentEntity, CreatedAtAware {
-  @Id private final String messageId;
+public class PublishedMessage implements PersistentEntity, CreatedAtAware, UuidAware {
+  @Id private String uuid;
+  private long createdAt;
+
   private final String accountId;
   private final String type;
   private final byte[] data;
   private final Map<String, String> attributes;
 
-  private transient Message message;
-  private long createdAt;
+  @Setter(AccessLevel.NONE) private transient Message message;
+
+  @Builder
+  private PublishedMessage(String accountId, String type, byte[] data, Map<String, String> attributes) {
+    this.accountId = accountId;
+    this.type = type;
+    this.data = data;
+    this.attributes = attributes;
+  }
+
+  public Message getMessage() {
+    if (message == null) {
+      postLoad();
+    }
+    return message;
+  }
 
   @PostLoad
-  public void postLoad() {
+  private void postLoad() {
     try {
       Any any = Any.parseFrom(data);
       @SuppressWarnings("unchecked") Class<? extends Message> clazz = (Class<? extends Message>) Class.forName(type);
