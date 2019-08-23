@@ -1,4 +1,4 @@
-package software.wings.delegatetasks.k8s.watch;
+package io.harness.perpetualtask.k8s.watch;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

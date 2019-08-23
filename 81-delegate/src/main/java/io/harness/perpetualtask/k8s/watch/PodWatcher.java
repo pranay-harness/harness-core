@@ -1,6 +1,10 @@
-package software.wings.delegatetasks.k8s.watch;
+package io.harness.perpetualtask.k8s.watch;
 
+import com.google.inject.Inject;
 import com.google.protobuf.Any;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.util.JsonFormat;
+import com.google.protobuf.util.JsonFormat.TypeRegistry;
 
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodCondition;
@@ -9,6 +13,7 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.harness.event.PublishMessage;
+import io.harness.event.client.EventPublisher;
 import io.harness.event.payloads.Container;
 import io.harness.event.payloads.Container.Resource;
 import io.harness.event.payloads.Container.Resource.Quantity;
@@ -30,10 +35,16 @@ public class PodWatcher implements Watcher<Pod> {
   private Watch watch;
   private static final int POD_MAP_MAX_SIZE = 5000;
   private LRUMap podMap;
+  TypeRegistry typeRegistry;
 
-  public PodWatcher(KubernetesClient client, String namespace) {
-    watch = client.pods().inNamespace(namespace).watch(this);
+  private EventPublisher eventPublisher;
+
+  @Inject
+  public PodWatcher(KubernetesClient client, EventPublisher eventPublisher) {
+    watch = client.pods().inAnyNamespace().watch(this);
     podMap = new LRUMap<String, Boolean>(POD_MAP_MAX_SIZE);
+    typeRegistry = TypeRegistry.newBuilder().add(PodInfo.getDescriptor()).add(PodEvent.getDescriptor()).build();
+    this.eventPublisher = eventPublisher;
   }
 
   @Override
@@ -63,8 +74,12 @@ public class PodWatcher implements Watcher<Pod> {
                             .addAllOwner(getAllOwners(pod.getMetadata().getOwnerReferences()))
                             .build();
       PublishMessage publishMessage = PublishMessage.newBuilder().setPayload(Any.pack(podInfo)).build();
-      logger.info(publishMessage.toString());
-      // eventPublisher.publish(publishMessage);
+      try {
+        logger.debug(JsonFormat.printer().usingTypeRegistry(typeRegistry).print(publishMessage));
+      } catch (InvalidProtocolBufferException e) {
+        logger.error(e.getMessage());
+      }
+      eventPublisher.publish(publishMessage);
     }
 
     if (podScheduledCondition != null) {
@@ -72,7 +87,11 @@ public class PodWatcher implements Watcher<Pod> {
       PodEvent podEvent =
           PodEvent.newBuilder().setUid(uid).setType(EventType.SCHEDULED).setTimestamp(timestamp).build();
       PublishMessage publishMessage = PublishMessage.newBuilder().setPayload(Any.pack(podEvent)).build();
-      logger.info(publishMessage.toString());
+      try {
+        logger.debug(JsonFormat.printer().usingTypeRegistry(typeRegistry).print(publishMessage));
+      } catch (InvalidProtocolBufferException e) {
+        logger.error(e.getMessage());
+      }
       // eventPublisher.publish(publishMessage);
     }
 
@@ -80,7 +99,11 @@ public class PodWatcher implements Watcher<Pod> {
       String timestamp = deletionTimestamp;
       PodEvent podEvent = PodEvent.newBuilder().setUid(uid).setType(EventType.DELETED).setTimestamp(timestamp).build();
       PublishMessage publishMessage = PublishMessage.newBuilder().setPayload(Any.pack(podEvent)).build();
-      logger.info(publishMessage.toString());
+      try {
+        logger.debug(JsonFormat.printer().usingTypeRegistry(typeRegistry).print(publishMessage));
+      } catch (InvalidProtocolBufferException e) {
+        logger.error(e.getMessage());
+      }
       // eventPublisher.publish(publishMessage);
     }
 
@@ -90,6 +113,7 @@ public class PodWatcher implements Watcher<Pod> {
   @Override
   public void onClose(KubernetesClientException e) {
     logger.info("Watcher onClose");
+    watch.close();
     if (e != null) {
       logger.error(e.getMessage(), e);
     }
@@ -108,11 +132,11 @@ public class PodWatcher implements Watcher<Pod> {
         Builder cpuLimitBuilder = Quantity.newBuilder();
         if (resourceLimitsMap.get("cpu") != null) {
           String cpuLimitAmount = resourceLimitsMap.get("cpu").getAmount();
-          if (StringUtils.isBlank(cpuLimitAmount)) {
+          if (!StringUtils.isBlank(cpuLimitAmount)) {
             cpuLimitBuilder.setAmount(cpuLimitAmount);
           }
           String cpuLimitFormat = resourceLimitsMap.get("cpu").getFormat();
-          if (StringUtils.isBlank(cpuLimitFormat)) {
+          if (!StringUtils.isBlank(cpuLimitFormat)) {
             cpuLimitBuilder.setFormat(cpuLimitFormat);
           }
         }
@@ -120,11 +144,11 @@ public class PodWatcher implements Watcher<Pod> {
         Builder memLimitBuilder = Quantity.newBuilder();
         if (resourceLimitsMap.get("memory") != null) {
           String memLimitAmount = resourceLimitsMap.get("memory").getAmount();
-          if (StringUtils.isBlank(memLimitAmount)) {
+          if (!StringUtils.isBlank(memLimitAmount)) {
             memLimitBuilder.setAmount(memLimitAmount);
           }
           String memLimitFormat = resourceLimitsMap.get("memory").getFormat();
-          if (StringUtils.isBlank(memLimitFormat)) {
+          if (!StringUtils.isBlank(memLimitFormat)) {
             memLimitBuilder.setAmount(memLimitFormat);
           }
         }
@@ -135,11 +159,11 @@ public class PodWatcher implements Watcher<Pod> {
         Builder cpuRequestBuilder = Quantity.newBuilder();
         if (resourceRequestsMap.get("cpu") != null) {
           String cpuRequestAmount = resourceRequestsMap.get("cpu").getAmount();
-          if (StringUtils.isBlank(cpuRequestAmount)) {
+          if (!StringUtils.isBlank(cpuRequestAmount)) {
             cpuRequestBuilder.setAmount(cpuRequestAmount);
           }
           String cpuRequestFormat = resourceRequestsMap.get("cpu").getFormat();
-          if (StringUtils.isBlank(cpuRequestFormat)) {
+          if (!StringUtils.isBlank(cpuRequestFormat)) {
             cpuRequestBuilder.setFormat(cpuRequestAmount);
           }
         }
@@ -147,11 +171,11 @@ public class PodWatcher implements Watcher<Pod> {
         Builder memRequestBuilder = Quantity.newBuilder();
         if (resourceRequestsMap.get("memory") != null) {
           String memRequestAmount = resourceRequestsMap.get("memory").getAmount();
-          if (StringUtils.isBlank(memRequestAmount)) {
+          if (!StringUtils.isBlank(memRequestAmount)) {
             memRequestBuilder.setAmount(memRequestAmount);
           }
           String memRequestFormat = resourceRequestsMap.get("memory").getFormat();
-          if (StringUtils.isBlank(memRequestFormat)) {
+          if (!StringUtils.isBlank(memRequestFormat)) {
             memRequestBuilder.setFormat(memRequestFormat);
           }
         }

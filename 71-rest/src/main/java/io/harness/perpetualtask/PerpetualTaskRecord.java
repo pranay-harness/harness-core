@@ -1,10 +1,16 @@
 package io.harness.perpetualtask;
 
+import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UpdatedAtAware;
+import io.harness.persistence.UuidAware;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
@@ -12,12 +18,17 @@ import org.mongodb.morphia.annotations.Id;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldNameConstants(innerTypeName = "PerpetualTaskRecordKeys")
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(value = "perpetualTask", noClassnameStored = true)
-public class PerpetualTaskRecord implements PersistentEntity {
-  @Id private String taskId;
-  private String clientName;
-  private String clientHandle; // unique identifier known to client
-  private long interval; // unit: second
-  private long timeout; // unit: millisecond
-  private String delegateId;
+public class PerpetualTaskRecord implements PersistentEntity, CreatedAtAware, UpdatedAtAware, UuidAware {
+  @Id String uuid;
+  String accountId;
+  String clientName;
+  String clientHandle; // unique identifier known to client
+  long interval; // unit: second
+  long timeout; // unit: millisecond
+  String delegateId;
+  long createdAt;
+  long lastUpdatedAt;
 }

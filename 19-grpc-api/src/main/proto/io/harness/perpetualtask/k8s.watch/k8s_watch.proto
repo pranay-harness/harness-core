@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package io.harness.perpetualtask.k8s.watch;
+
+message K8sWatchTaskParams {
+    string cloudProviderId = 1;
+    bytes k8sClusterConfig = 2;
+    string k8sResourceKind = 3;
+}

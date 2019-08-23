@@ -10,11 +10,14 @@ import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.FeatureName.PERPETUAL_TASK_SERVICE;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.SettingAttribute.SettingCategory.CLOUD_PROVIDER;
 import static software.wings.service.impl.security.SecretManagerImpl.ENCRYPTED_FIELD_MASK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 
 import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
@@ -24,7 +27,11 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.perpetualtask.k8s.watch.K8SWatch.K8sWatchTaskParams;
+import io.harness.perpetualtask.k8s.watch.K8sClusterConfigFactory;
+import io.harness.perpetualtask.k8s.watch.K8sWatchService;
 import io.harness.rest.RestResponse;
+import io.harness.serializer.KryoUtils;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -45,6 +52,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.common.BuildDetailsComparator;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
+import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AccountService;
@@ -53,6 +61,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.AwsHelperResourceService;
 import software.wings.service.intfc.AzureResourceService;
 import software.wings.service.intfc.BuildSourceService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
@@ -72,6 +81,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -106,7 +116,9 @@ public class SettingResource {
   @Inject private YamlGitService yamlGitService;
   @Inject private AccountService accountService;
   @Inject private ServiceResourceService serviceResourceService;
-
+  @Inject private K8sWatchService k8SWatchService;
+  @Inject private K8sClusterConfigFactory k8sClusterConfigFactory;
+  @Inject private FeatureFlagService featureFlagService;
   /**
    * List.
    *
@@ -195,7 +207,24 @@ public class SettingResource {
   public RestResponse<SettingAttribute> save(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, SettingAttribute variable) {
     prePruneSettingAttribute(appId, accountId, variable);
-    return new RestResponse<>(settingsService.save(variable));
+    SettingAttribute savedSettingAttribute = settingsService.save(variable);
+
+    if (featureFlagService.isGlobalEnabled(PERPETUAL_TASK_SERVICE)) {
+      // TODO: test this check on cloud provider type..and only k8s cluster
+      if (CLOUD_PROVIDER == savedSettingAttribute.getCategory()
+          && "KUBERNETES_CLUSTER".equals(savedSettingAttribute.getValue().getType())) {
+        K8sClusterConfig config = k8sClusterConfigFactory.getK8sClusterConfig(savedSettingAttribute);
+        ByteString bytes = ByteString.copyFrom(KryoUtils.asBytes(config));
+        // prepare the params for the Watch Task
+        K8sWatchTaskParams params = K8sWatchTaskParams.newBuilder()
+                                        .setCloudProviderId(savedSettingAttribute.getUuid())
+                                        .setK8SClusterConfig(bytes)
+                                        .setK8SResourceKind("Pod")
+                                        .build();
+        k8SWatchService.create(params);
+      }
+    }
+    return new RestResponse<>(savedSettingAttribute);
   }
 
   /**
@@ -371,6 +400,12 @@ public class SettingResource {
   @ExceptionMetered
   public RestResponse delete(
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @PathParam("attrId") String attrId) {
+    if (featureFlagService.isGlobalEnabled(PERPETUAL_TASK_SERVICE)) {
+      // for pod watcher
+      k8SWatchService.delete(new StringJoiner(",").add(attrId).add("Pod").toString());
+      // for node watcher
+      // k8sWatchServiceManager.delete(clientHandle);
+    }
     settingsService.delete(appId, attrId);
     return new RestResponse();
   }

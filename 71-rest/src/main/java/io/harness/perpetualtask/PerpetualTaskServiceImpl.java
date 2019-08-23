@@ -1,8 +1,10 @@
 package io.harness.perpetualtask;
 
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
+
 import com.google.inject.Inject;
 
-import io.grpc.stub.StreamObserver;
+import io.harness.perpetualtask.PerpetualTaskRecord.PerpetualTaskRecordKeys;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import software.wings.dl.WingsPersistence;
@@ -13,8 +15,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
-public class PerpetualTaskServiceImpl
-    extends PerpetualTaskServiceGrpc.PerpetualTaskServiceImplBase implements PerpetualTaskService {
+public class PerpetualTaskServiceImpl implements PerpetualTaskService {
   private static Map<String, PerpetualTaskServiceClient> clientMap; // <clientName, client>
   private WingsPersistence persistence;
 
@@ -25,57 +26,51 @@ public class PerpetualTaskServiceImpl
   }
 
   @Override
-  public String createTask(String clientName, String clientHandle, PerpetualTaskSchedule schedule) {
-    String recordId = generateId(clientName, clientHandle);
+  public void createTask(String clientName, String clientHandle, PerpetualTaskSchedule schedule) {
+    // TODO: validate if the pair of clientName and clientHandle already exists
+    String recordId = UUID.randomUUID().toString();
     PerpetualTaskRecord record = PerpetualTaskRecord.builder()
-                                     .taskId(recordId)
+                                     .uuid(recordId)
+                                     .accountId(GLOBAL_ACCOUNT_ID)
                                      .clientName(clientName)
                                      .clientHandle(clientHandle)
+                                     .timeout(schedule.getTimeout())
                                      .interval(schedule.getInterval())
                                      .delegateId("")
                                      .build();
     persistence.save(record);
-    return recordId;
   }
 
   @Override
   public void deleteTask(String clientName, String clientHandle) {
     Query<PerpetualTaskRecord> query = persistence.createQuery(PerpetualTaskRecord.class)
-                                           .field("clientName")
+                                           .field(PerpetualTaskRecordKeys.accountId)
+                                           .equal(GLOBAL_ACCOUNT_ID)
+                                           .field(PerpetualTaskRecordKeys.clientName)
                                            .equal(clientName)
-                                           .field("clientHandle")
+                                           .field(PerpetualTaskRecordKeys.clientHandle)
                                            .equal(clientHandle);
     persistence.delete(query);
   }
 
-  @Override
-  public void listTaskIds(DelegateId request, StreamObserver<PerpetualTaskIdList> responseObserver) {
-    PerpetualTaskIdList taskIdList =
-        PerpetualTaskIdList.newBuilder().addAllTaskIdList(listTaskIds(request.getId())).build();
-    responseObserver.onNext(taskIdList);
-    responseObserver.onCompleted();
-  }
-
-  protected List<PerpetualTaskId> listTaskIds(String delegateId) {
-    List<PerpetualTaskId> list = null;
-    List<PerpetualTaskRecord> records =
-        persistence.createQuery(PerpetualTaskRecord.class).field("delegateId").equal(delegateId).asList();
+  public List<PerpetualTaskId> listTaskIds(String delegateId) {
+    List<PerpetualTaskRecord> records = persistence.createQuery(PerpetualTaskRecord.class)
+                                            .field(PerpetualTaskRecordKeys.accountId)
+                                            .equal(GLOBAL_ACCOUNT_ID)
+                                            .field(PerpetualTaskRecordKeys.delegateId)
+                                            .equal(delegateId)
+                                            .asList();
 
     List<PerpetualTaskId> taskIds = new ArrayList<>();
     for (PerpetualTaskRecord record : records) {
-      taskIds.add(PerpetualTaskId.newBuilder().setId(record.getTaskId()).build());
+      taskIds.add(PerpetualTaskId.newBuilder().setId(record.getUuid()).build());
     }
     return taskIds;
   }
 
-  @Override
-  public void getTaskContext(PerpetualTaskId request, StreamObserver<PerpetualTaskContext> responseObserver) {
-    responseObserver.onNext(this.getTaskContext(request.getId()));
-    responseObserver.onCompleted();
-  }
-
-  protected PerpetualTaskContext getTaskContext(String taskId) {
-    PerpetualTaskRecord record = persistence.createQuery(PerpetualTaskRecord.class).field("_id").equal(taskId).get();
+  public PerpetualTaskContext getTaskContext(String taskId) {
+    PerpetualTaskRecord record =
+        persistence.createQuery(PerpetualTaskRecord.class).field(PerpetualTaskRecordKeys.uuid).equal(taskId).get();
 
     PerpetualTaskServiceClient client = clientMap.get(record.getClientName());
     PerpetualTaskParams params = client.getTaskParams(record.getClientHandle());
@@ -84,10 +79,5 @@ public class PerpetualTaskServiceImpl
         PerpetualTaskSchedule.newBuilder().setInterval(record.getInterval()).setTimeout(record.getTimeout()).build();
 
     return PerpetualTaskContext.newBuilder().setTaskParams(params).setTaskSchedule(schedule).build();
-  }
-
-  private String generateId(String clientName, String id) {
-    // TODO: validate if the pair of clientName and clientHandle already exists
-    return UUID.randomUUID().toString();
   }
 }

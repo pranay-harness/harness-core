@@ -316,6 +316,10 @@ public class SecretManagerImpl implements SecretManager {
                            .build());
   }
 
+  public List<EncryptedDataDetail> getEncryptionDetails(EncryptableSetting object) {
+    return getEncryptionDetails(object, null, null);
+  }
+
   @Override
   public List<EncryptedDataDetail> getEncryptionDetails(
       EncryptableSetting object, String appId, String workflowExecutionId) {

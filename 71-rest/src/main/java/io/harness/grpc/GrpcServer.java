@@ -9,6 +9,7 @@ import io.grpc.ServerBuilder;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.util.Set;
 
 /**
  * This class is currently for testing purpose only.
@@ -17,18 +18,22 @@ import java.io.IOException;
 @Singleton
 public class GrpcServer {
   private final GrpcServerConfig grpcServerConfig;
-  private final BindableService service;
+  private final Set<BindableService> services;
   private Server plainServer;
   private Server tlsServer;
 
   @Inject
-  public GrpcServer(GrpcServerConfig grpcServerConfig, BindableService service) {
+  public GrpcServer(GrpcServerConfig grpcServerConfig, Set<BindableService> services) {
     this.grpcServerConfig = grpcServerConfig;
-    this.service = service;
+    this.services = services;
   }
 
   public void initialize() throws IOException {
-    plainServer = ServerBuilder.forPort(grpcServerConfig.getPlainTextPort()).addService(service).build();
+    ServerBuilder serverBuilder = ServerBuilder.forPort(grpcServerConfig.getPlainTextPort());
+    for (BindableService service : services) {
+      serverBuilder.addService(service);
+    }
+    plainServer = serverBuilder.build();
     plainServer.start();
 
     /*File certChain = new File(grpcServerConfig.getCertFile());
