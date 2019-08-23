@@ -2,7 +2,6 @@ package software.wings.verification;
 
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -149,8 +148,7 @@ public class APMCVConfigurationYamlHandlerTest extends CategoryTest {
     assertThat(yaml.getAccountId()).isEqualTo(cvServiceConfiguration.getAccountId());
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
     assertThat(yaml.getEnvName()).isEqualTo(envName);
-    assertEquals("Metric values should be same", cvServiceConfiguration.getMetricCollectionInfos(),
-        yaml.getMetricCollectionInfos());
+    assertThat(yaml.getMetricCollectionInfos()).isEqualTo(cvServiceConfiguration.getMetricCollectionInfos());
   }
 
   @Test

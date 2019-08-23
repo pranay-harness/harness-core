@@ -3,7 +3,6 @@ package software.wings.sm.states;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.contains;
@@ -130,8 +129,8 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
 
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
-    assertEquals("Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.",
-        response.getErrorMessage());
+    assertThat(response.getErrorMessage())
+        .isEqualTo("Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.");
 
     LogMLAnalysisSummary analysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
@@ -159,8 +158,8 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
 
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
-    assertEquals("Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.",
-        response.getErrorMessage());
+    assertThat(response.getErrorMessage())
+        .isEqualTo("Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.");
 
     LogMLAnalysisSummary analysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
@@ -206,9 +205,9 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
 
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
-    assertEquals(
-        "No baseline was set for the workflow. Workflow running with auto baseline. No previous execution found. This will be the baseline run.",
-        response.getErrorMessage());
+    assertThat(response.getErrorMessage())
+        .isEqualTo(
+            "No baseline was set for the workflow. Workflow running with auto baseline. No previous execution found. This will be the baseline run.");
 
     List<DelegateTask> tasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).asList();
     assertThat(tasks).hasSize(1);

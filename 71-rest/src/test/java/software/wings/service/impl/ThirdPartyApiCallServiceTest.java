@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -86,10 +85,10 @@ public class ThirdPartyApiCallServiceTest extends WingsBaseTest {
       assertThat(savedApiCallLogs.get(i).getCreatedAt()).isEqualTo(numOfApiCallLogs - i);
       assertThat(savedApiCallLogs.get(i).getAccountId()).isEqualTo(accountId);
       assertThat(savedApiCallLogs.get(i).getStateExecutionId()).isEqualTo(stateExecutionId);
-      assertEquals(apiCallLogs.get(numOfApiCallLogs - i - 1).getRequestTimeStamp(),
-          savedApiCallLogs.get(i).getRequestTimeStamp());
-      assertEquals(apiCallLogs.get(numOfApiCallLogs - i - 1).getResponseTimeStamp(),
-          savedApiCallLogs.get(i).getResponseTimeStamp());
+      assertThat(savedApiCallLogs.get(i).getRequestTimeStamp())
+          .isEqualTo(apiCallLogs.get(numOfApiCallLogs - i - 1).getRequestTimeStamp());
+      assertThat(savedApiCallLogs.get(i).getResponseTimeStamp())
+          .isEqualTo(apiCallLogs.get(numOfApiCallLogs - i - 1).getResponseTimeStamp());
       assertThat(savedApiCallLogs.get(i).getRequest())
           .isEqualTo(apiCallLogs.get(numOfApiCallLogs - i - 1).getRequest());
       assertThat(savedApiCallLogs.get(i).getResponse())

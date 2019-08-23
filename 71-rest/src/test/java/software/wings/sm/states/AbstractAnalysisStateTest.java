@@ -2,7 +2,6 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
@@ -163,19 +162,12 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     Map<String, String> nodes = splunkV2State.getLastExecutionNodes(context);
     assertThat(nodes).hasSize(5);
     for (int i = 0; i < 5; ++i) {
-      assertThat(nodes.keySet().contains("serviceA"
-                     + "-" + i + ".harness.com"))
-          .isTrue();
-      assertEquals(DEFAULT_GROUP_NAME,
-          nodes.get("serviceA"
-              + "-" + i + ".harness.com"));
-      nodes.remove("serviceA"
-          + "-" + i + ".harness.com");
-      assertThat(nodes.keySet().contains("serviceA"
-                     + "-" + i))
-          .isFalse();
-      nodes.remove("serviceA"
-          + "-" + i);
+      final String serviceNAme = "serviceA-" + i + ".harness.com";
+      assertThat(nodes.keySet().contains(serviceNAme)).isTrue();
+      assertThat(nodes.get(serviceNAme)).isEqualTo(DEFAULT_GROUP_NAME);
+      nodes.remove(serviceNAme);
+      assertThat(nodes.keySet().contains("serviceA-" + i)).isFalse();
+      nodes.remove("serviceA-" + i);
     }
     assertThat(nodes).isEmpty();
   }
@@ -270,19 +262,11 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     assertThat(nodes.keySet().contains("serviceA-0.harness.com")).isFalse();
     assertThat(nodes.keySet().contains("serviceA-1.harness.com")).isFalse();
     for (int i = 2; i < 5; ++i) {
-      assertThat(nodes.keySet().contains("serviceA"
-                     + "-" + i + ".harness.com"))
-          .isTrue();
-      assertEquals(DEFAULT_GROUP_NAME,
-          nodes.get("serviceA"
-              + "-" + i + ".harness.com"));
-      nodes.remove("serviceA"
-          + "-" + i + ".harness.com");
-      assertThat(nodes.keySet().contains("serviceA"
-                     + "-" + i))
-          .isFalse();
-      nodes.remove("serviceA"
-          + "-" + i);
+      assertThat(nodes.keySet().contains("serviceA-" + i + ".harness.com")).isTrue();
+      assertThat(nodes.get("serviceA-" + i + ".harness.com")).isEqualTo(DEFAULT_GROUP_NAME);
+      nodes.remove("serviceA-" + i + ".harness.com");
+      assertThat(nodes.keySet().contains("serviceA-" + i)).isFalse();
+      nodes.remove("serviceA-" + i);
     }
     assertThat(nodes).isEmpty();
   }
@@ -316,9 +300,9 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
       assertThat(nodes.keySet().contains("serviceA"
                      + "-" + i + ".harness.com"))
           .isTrue();
-      assertEquals(DEFAULT_GROUP_NAME,
-          nodes.get("serviceA"
-              + "-" + i + ".harness.com"));
+      assertThat(nodes.get("serviceA"
+                     + "-" + i + ".harness.com"))
+          .isEqualTo(DEFAULT_GROUP_NAME);
       nodes.remove("serviceA"
           + "-" + i + ".harness.com");
     }
@@ -360,9 +344,9 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
       assertThat(nodes.keySet().contains("serviceA"
                      + "-" + i + ".harness.com"))
           .isTrue();
-      assertEquals("workload-" + i,
-          nodes.get("serviceA"
-              + "-" + i + ".harness.com"));
+      assertThat(nodes.get("serviceA"
+                     + "-" + i + ".harness.com"))
+          .isEqualTo("workload-" + i);
       nodes.remove("serviceA"
           + "-" + i + ".harness.com");
     }

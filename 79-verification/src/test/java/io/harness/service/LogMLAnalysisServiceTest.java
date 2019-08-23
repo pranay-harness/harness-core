@@ -7,7 +7,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.service.LearningEngineAnalysisServiceImpl.BACKOFF_LIMIT;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -812,9 +811,9 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Test
   @Category(UnitTests.class)
   public void getCollectionMinuteForL1NoRecords() throws Exception {
-    assertEquals(-1,
-        analysisService.getCollectionMinuteForLevel(UUID.randomUUID().toString(), appId, stateExecutionId,
-            StateType.SPLUNKV2, ClusterLevel.L1, Collections.emptySet()));
+    assertThat(analysisService.getCollectionMinuteForLevel(UUID.randomUUID().toString(), appId, stateExecutionId,
+                   StateType.SPLUNKV2, ClusterLevel.L1, Collections.emptySet()))
+        .isEqualTo(-1);
   }
 
   @Test
@@ -849,9 +848,9 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
       wingsPersistence.save(logDataRecords.get(i));
     }
 
-    assertEquals(-1,
-        analysisService.getCollectionMinuteForLevel(
-            query, appId, stateExecutionId, StateType.SPLUNKV2, ClusterLevel.L1, hosts));
+    assertThat(analysisService.getCollectionMinuteForLevel(
+                   query, appId, stateExecutionId, StateType.SPLUNKV2, ClusterLevel.L1, hosts))
+        .isEqualTo(-1);
   }
 
   @Test
@@ -882,9 +881,9 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     wingsPersistence.save(Lists.newArrayList(logDataRecords));
 
-    assertEquals(logCollectionMinute,
-        analysisService.getCollectionMinuteForLevel(
-            query, appId, stateExecutionId, StateType.SPLUNKV2, ClusterLevel.L1, hosts));
+    assertThat(analysisService.getCollectionMinuteForLevel(
+                   query, appId, stateExecutionId, StateType.SPLUNKV2, ClusterLevel.L1, hosts))
+        .isEqualTo(logCollectionMinute);
   }
 
   @Test
@@ -986,16 +985,16 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     }
 
     wingsPersistence.save(logDataRecords);
-    assertEquals(numOfHosts,
-        wingsPersistence.createQuery(LogDataRecord.class)
-            .filter(LogDataRecordKeys.stateExecutionId, stateExecutionId)
-            .count());
+    assertThat(wingsPersistence.createQuery(LogDataRecord.class)
+                   .filter(LogDataRecordKeys.stateExecutionId, stateExecutionId)
+                   .count())
+        .isEqualTo(numOfHosts);
     analysisService.deleteClusterLevel(
         StateType.SPLUNKV2, stateExecutionId, appId, query, hosts, logCollectionMinute, ClusterLevel.H0);
-    assertEquals(0,
-        wingsPersistence.createQuery(LogDataRecord.class)
-            .filter(LogDataRecordKeys.stateExecutionId, stateExecutionId)
-            .count());
+    assertThat(wingsPersistence.createQuery(LogDataRecord.class)
+                   .filter(LogDataRecordKeys.stateExecutionId, stateExecutionId)
+                   .count())
+        .isEqualTo(0);
   }
 
   private SplunkAnalysisCluster getRandomClusterEvent() {
@@ -1052,7 +1051,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     analysisService.saveLogAnalysisRecords(records, StateType.SPLUNKV2, Optional.empty(), Optional.empty());
     LogMLAnalysisSummary analysisSummary =
         managerAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
-    assertEquals(0, Double.compare(analysisSummary.getScore(), 0.23477964144180682 * 100));
+    assertThat(Double.compare(analysisSummary.getScore(), 0.23477964144180682 * 100)).isEqualTo(0);
     for (LogMLClusterSummary clusterSummary : analysisSummary.getUnknownClusters()) {
       assert clusterSummary.getScore() > 0;
     }
@@ -1464,8 +1463,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
       wingsPersistence.save(logMLAnalysisRecord);
     }
 
-    assertEquals(
-        numOfRecords, wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList().size());
+    assertThat(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList().size())
+        .isEqualTo(numOfRecords);
 
     final LogMLAnalysisRecord logAnalysisRecord = analysisService.getLogAnalysisRecords(
         LogMLAnalysisRecordKeys.cvConfigId, logMLAnalysisRecord.getCvConfigId(), numOfRecords, false);

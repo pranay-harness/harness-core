@@ -2,7 +2,6 @@ package software.wings.integration.yaml;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
-import static net.sf.ezmorph.test.ArrayAssertions.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 
@@ -227,8 +226,8 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
 
     GitFetchFilesResult gitFetchFilesResult = getGitFetchFilesResult(yamlPath);
     assertThat(gitFetchFilesResult.getFiles()).hasSize(1);
-    assertEquals(
-        infraProvisionerName + YamlConstants.YAML_EXTENSION, gitFetchFilesResult.getFiles().get(0).getFilePath());
+    assertThat(gitFetchFilesResult.getFiles().get(0).getFilePath())
+        .isEqualTo(infraProvisionerName + YamlConstants.YAML_EXTENSION);
   }
 
   @Test

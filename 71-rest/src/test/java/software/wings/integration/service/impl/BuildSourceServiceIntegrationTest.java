@@ -3,7 +3,7 @@ package software.wings.integration.service.impl;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.when;
@@ -427,19 +427,14 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void getGroupIds() {
-    Set<String> groupIds;
+    Set<String> groupIds = null;
     switch (type) {
       case JENKINS:
       case BAMBOO:
       case DOCKER:
       case ECR:
-        try {
-          groupIds = buildSourceService.getGroupIds(appId, jobName, settingAttribute.getUuid());
-          fail("should throw excpetion");
-        } catch (WingsException e) {
-          // expected
-          return;
-        }
+        assertThatExceptionOfType(WingsException.class)
+            .isThrownBy(() -> buildSourceService.getGroupIds(appId, jobName, settingAttribute.getUuid()));
         break;
       case ARTIFACTORY:
         switch (repositoryType) {
@@ -459,7 +454,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
       default:
         throw new IllegalArgumentException("invalid type: " + type);
     }
-    assertThat(groupIds.isEmpty()).isFalse();
+    assertThat(groupIds).isNullOrEmpty();
   }
 
   @Test

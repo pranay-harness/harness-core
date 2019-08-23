@@ -1,7 +1,6 @@
 package software.wings.sm.states;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -84,10 +83,9 @@ public class APMVerificationStateTest extends WingsBaseTest {
     assertThat(apmMetricInfos.get("query").get(1).getResponseMappers().get("txnName").getJsonPath()).isNotNull();
     String body = "this is a dummy collection body";
     assertThat(apmMetricInfos.get("queryWithHost" + URL_BODY_APPENDER + body)).hasSize(1);
-    assertEquals("Body should be present", body,
-        apmMetricInfos.get("queryWithHost" + URL_BODY_APPENDER + body).get(0).getBody());
-    assertEquals("Method should be post", Method.POST,
-        apmMetricInfos.get("queryWithHost" + URL_BODY_APPENDER + body).get(0).getMethod());
+    assertThat(apmMetricInfos.get("queryWithHost" + URL_BODY_APPENDER + body).get(0).getBody()).isEqualTo(body);
+    assertThat(apmMetricInfos.get("queryWithHost" + URL_BODY_APPENDER + body).get(0).getMethod())
+        .isEqualTo(Method.POST);
 
     assertThat(apmMetricInfos.get("queryWithHost")).hasSize(1);
     APMMetricInfo metricWithHost = apmMetricInfos.get("queryWithHost").get(0);
@@ -102,8 +100,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
     apmVerificationState.setMetricCollectionInfos(null);
     Map<String, String> invalidFields = apmVerificationState.validateFields();
     assertThat(invalidFields.size() == 1).isTrue();
-    assertEquals(
-        "Metric Collection Info should be missing", "Metric Collection Info", invalidFields.keySet().iterator().next());
+    assertThat(invalidFields.keySet().iterator().next()).isEqualTo("Metric Collection Info");
   }
 
   @Test

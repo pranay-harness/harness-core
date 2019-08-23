@@ -2,7 +2,6 @@ package software.wings.service.impl.elk;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
@@ -77,8 +76,8 @@ public class ElkAnalysisServiceImplTest extends WingsBaseTest {
     VerificationNodeDataSetupResponse verificationNodeDataSetupResponse =
         service.getLogDataByHost(accountId, elkSetupTestNodeData);
     assertThat((long) verificationNodeDataSetupResponse.getLoadResponse().getTotalHits()).isEqualTo(201);
-    assertEquals(VerificationConstants.TOTAL_HITS_PER_MIN_THRESHOLD,
-        (long) verificationNodeDataSetupResponse.getLoadResponse().getTotalHitsThreshold());
+    assertThat((long) verificationNodeDataSetupResponse.getLoadResponse().getTotalHitsThreshold())
+        .isEqualTo(VerificationConstants.TOTAL_HITS_PER_MIN_THRESHOLD);
   }
 
   @Test
@@ -99,8 +98,8 @@ public class ElkAnalysisServiceImplTest extends WingsBaseTest {
     Object responseWithoutHost = getELKResponse(15 * 20);
     when(elkDelegateService.search(any(), any(), any(), any(), anyInt())).thenReturn(responseWithoutHost);
 
-    assertEquals(
-        true, service.validateQuery(accountId, appId, settingId, query, "test", null, "hostname", "log", "@timestamp"));
+    assertThat(service.validateQuery(accountId, appId, settingId, query, "test", null, "hostname", "log", "@timestamp"))
+        .isEqualTo(true);
   }
 
   @Test
@@ -125,9 +124,9 @@ public class ElkAnalysisServiceImplTest extends WingsBaseTest {
       service.validateQuery(accountId, appId, settingId, query, "test", null, "hostname", "log", "@timestamp");
       fail("validate query should throw wings exception..");
     } catch (WingsException e) {
-      assertEquals(e.getParams().get("reason"),
-          "Error in Elasticsearch configuration. Too many logs returned using query: '" + query
-              + "'. Please refine your query.");
+      assertThat("Error in Elasticsearch configuration. Too many logs returned using query: '" + query
+          + "'. Please refine your query.")
+          .isEqualTo(e.getParams().get("reason"));
       assertThat(e.getCode()).isEqualTo(ErrorCode.ELK_CONFIGURATION_ERROR);
     }
   }

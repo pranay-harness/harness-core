@@ -31,6 +31,11 @@
 
     <module name="TreeWalker">
         <module name="io.harness.checks.StringLiteralsCheck"/>
+
+        <module name="IllegalImport">
+            <!-- use org.org.assertj.core.api.Assertions.assertThat instead -->
+            <property name="illegalPkgs" value="org.junit.Assert"/>
+        </module>
     </module>
 
 </module>

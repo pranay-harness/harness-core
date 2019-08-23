@@ -1,6 +1,6 @@
 package software.wings.inframapping;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
@@ -33,9 +33,9 @@ public class AwsLambdaInfraMappingTest extends WingsBaseTest {
 
     awsLambdaInfraStructureMapping.applyProvisionerVariables(
         outputVariablesMap, NodeFilteringType.AWS_AUTOSCALING_GROUP, false);
-    assertEquals("testRegion", awsLambdaInfraStructureMapping.getRegion());
-    assertEquals("testRole", awsLambdaInfraStructureMapping.getRole());
-    assertEquals("testVpc", awsLambdaInfraStructureMapping.getVpcId());
+    assertThat(awsLambdaInfraStructureMapping.getRegion()).isEqualTo("testRegion");
+    assertThat(awsLambdaInfraStructureMapping.getRole()).isEqualTo("testRole");
+    assertThat(awsLambdaInfraStructureMapping.getVpcId()).isEqualTo("testVpc");
   }
 
   @Test(expected = InvalidRequestException.class)

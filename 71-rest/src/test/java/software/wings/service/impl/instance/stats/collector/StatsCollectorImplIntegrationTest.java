@@ -125,8 +125,7 @@ public class StatsCollectorImplIntegrationTest extends BaseIntegrationTest {
     RestResponse<InstanceTimeline> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<InstanceTimeline>>() {});
     InstanceTimeline timeline = restResponse.getResource();
-    assertEquals(
-        "number of data points is equal to the number of times createStats is called", 2, timeline.getPoints().size());
+    assertEquals(2, timeline.getPoints().size());
 
     DataPoint firstPoint = timeline.getPoints().get(0);
 

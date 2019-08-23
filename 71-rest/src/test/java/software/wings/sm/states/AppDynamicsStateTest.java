@@ -5,7 +5,6 @@ import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -185,9 +184,9 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   public void shouldTestNonTemplatizedBadTier() {
     ExecutionResponse executionResponse = setupNonTemplatized(true).execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ERROR);
-    assertEquals(
-        "Error while fetching from AppDynamics. ApplicationId : 30444 and TierId : 123aa in AppDynamics setup must be valid numbers",
-        executionResponse.getErrorMessage());
+    assertThat(executionResponse.getErrorMessage())
+        .isEqualTo("Error while fetching from AppDynamics. ApplicationId : 30444 and "
+            + "TierId : 123aa in AppDynamics setup must be valid numbers");
   }
 
   @Test

@@ -3,7 +3,7 @@ package software.wings.integration;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.rest.RestResponse;
@@ -173,14 +173,11 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
   @Test
   @Category(IntegrationTests.class)
   public void testSpecificExport_noEntityTypes_shouldFail() {
-    try {
+    assertThatExceptionOfType(Exception.class).isThrownBy(() -> {
       WebTarget target =
           client.target(API_BASE + "/account/export?accountId=" + accountId + "&mode=" + ExportMode.SPECIFIC);
       getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<String>>() {});
-      fail("Should not reach here, exception is expected");
-    } catch (Exception e) {
-      // Exception is expected
-    }
+    });
   }
 
   private byte[] exportAccountData(String accountId) {

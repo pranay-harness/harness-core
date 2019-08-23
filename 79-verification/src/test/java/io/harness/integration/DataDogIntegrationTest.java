@@ -5,7 +5,7 @@ import static io.harness.rule.OwnerRule.SOWMYA;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.data.Offset.offset;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -28,6 +28,7 @@ import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.assertj.core.data.Offset;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -303,14 +304,23 @@ public class DataDogIntegrationTest extends VerificationBaseIntegrationTest {
     assertThat(metricsAnalysis.getMetricAnalyses().get(0).getTag()).isEqualTo("Servlet");
     assertThat(metricsAnalysis.getAnalysisMinute()).isEqualTo(0);
 
-    assertEquals("Hits", metricsAnalysis.getMetricAnalyses().get(0).getMetricValues().get(0).getName());
-    assertEquals(RiskLevel.LOW, metricsAnalysis.getMetricAnalyses().get(0).getMetricValues().get(0).getRiskLevel());
-    assertEquals(20.0, metricsAnalysis.getMetricAnalyses().get(0).getMetricValues().get(0).getTestValue(), 0.001);
-    assertEquals(20.0, metricsAnalysis.getMetricAnalyses().get(0).getMetricValues().get(0).getControlValue(), 0.001);
+    final Offset<Double> offset = offset(0.001);
 
-    assertEquals("Request Duration", metricsAnalysis.getMetricAnalyses().get(0).getMetricValues().get(1).getName());
-    assertEquals(RiskLevel.LOW, metricsAnalysis.getMetricAnalyses().get(0).getMetricValues().get(1).getRiskLevel());
-    assertEquals(2.0, metricsAnalysis.getMetricAnalyses().get(0).getMetricValues().get(1).getTestValue(), 0.001);
-    assertEquals(2.0, metricsAnalysis.getMetricAnalyses().get(0).getMetricValues().get(1).getControlValue(), 0.001);
+    assertThat(metricsAnalysis.getMetricAnalyses().get(0).getMetricValues().get(0).getName()).isEqualTo("Hits");
+    assertThat(metricsAnalysis.getMetricAnalyses().get(0).getMetricValues().get(0).getRiskLevel())
+        .isEqualTo(RiskLevel.LOW);
+    assertThat(metricsAnalysis.getMetricAnalyses().get(0).getMetricValues().get(0).getTestValue())
+        .isCloseTo(20.0, offset);
+    assertThat(metricsAnalysis.getMetricAnalyses().get(0).getMetricValues().get(0).getControlValue())
+        .isCloseTo(20.0, offset);
+
+    assertThat(metricsAnalysis.getMetricAnalyses().get(0).getMetricValues().get(1).getName())
+        .isEqualTo("Request Duration");
+    assertThat(metricsAnalysis.getMetricAnalyses().get(0).getMetricValues().get(1).getRiskLevel())
+        .isEqualTo(RiskLevel.LOW);
+    assertThat(metricsAnalysis.getMetricAnalyses().get(0).getMetricValues().get(1).getTestValue())
+        .isCloseTo(2.0, offset);
+    assertThat(metricsAnalysis.getMetricAnalyses().get(0).getMetricValues().get(1).getControlValue())
+        .isCloseTo(2.0, offset);
   }
 }

@@ -1400,26 +1400,26 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
                                 .build());
     }
 
-    assertEquals(100,
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter(LearningEngineAnalysisTaskKeys.cvConfigId, savedObjectUuid)
-            .filter("appId", appId)
-            .asList()
-            .size());
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                   .filter(LearningEngineAnalysisTaskKeys.cvConfigId, savedObjectUuid)
+                   .filter("appId", appId)
+                   .asList()
+                   .size())
+        .isEqualTo(100);
 
-    assertEquals(100,
-        wingsPersistence.createQuery(LogDataRecord.class)
-            .filter(LogDataRecordKeys.cvConfigId, savedObjectUuid)
-            .filter("appId", appId)
-            .asList()
-            .size());
+    assertThat(wingsPersistence.createQuery(LogDataRecord.class)
+                   .filter(LogDataRecordKeys.cvConfigId, savedObjectUuid)
+                   .filter("appId", appId)
+                   .asList()
+                   .size())
+        .isEqualTo(100);
 
-    assertEquals(100,
-        wingsPersistence.createQuery(LogMLAnalysisRecord.class)
-            .filter(LogMLAnalysisRecordKeys.cvConfigId, savedObjectUuid)
-            .filter("appId", appId)
-            .asList()
-            .size());
+    assertThat(wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+                   .filter(LogMLAnalysisRecordKeys.cvConfigId, savedObjectUuid)
+                   .filter("appId", appId)
+                   .asList()
+                   .size())
+        .isEqualTo(100);
 
     updateBaseline.setBaselineEndMinute(38);
     target = client.target(url);
@@ -1440,26 +1440,26 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertThat(getRequestResponse.getResource().getBaselineEndMinute())
         .isEqualTo(updateBaseline.getBaselineEndMinute());
 
-    assertEquals(0,
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter(LearningEngineAnalysisTaskKeys.cvConfigId, savedObjectUuid)
-            .filter("appId", appId)
-            .asList()
-            .size());
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                   .filter(LearningEngineAnalysisTaskKeys.cvConfigId, savedObjectUuid)
+                   .filter("appId", appId)
+                   .asList()
+                   .size())
+        .isEqualTo(0);
 
-    assertEquals(0,
-        wingsPersistence.createQuery(LogDataRecord.class)
-            .filter(LogDataRecordKeys.cvConfigId, savedObjectUuid)
-            .filter("appId", appId)
-            .asList()
-            .size());
+    assertThat(wingsPersistence.createQuery(LogDataRecord.class)
+                   .filter(LogDataRecordKeys.cvConfigId, savedObjectUuid)
+                   .filter("appId", appId)
+                   .asList()
+                   .size())
+        .isEqualTo(0);
 
-    assertEquals(16,
-        wingsPersistence.createQuery(LogMLAnalysisRecord.class)
-            .filter(LogMLAnalysisRecordKeys.cvConfigId, savedObjectUuid)
-            .filter("appId", appId)
-            .asList()
-            .size());
+    assertThat(wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+                   .filter(LogMLAnalysisRecordKeys.cvConfigId, savedObjectUuid)
+                   .filter("appId", appId)
+                   .asList()
+                   .size())
+        .isEqualTo(16);
     wingsPersistence.createQuery(LogMLAnalysisRecord.class)
         .filter(LogMLAnalysisRecordKeys.cvConfigId, savedObjectUuid)
         .filter("appId", appId)
@@ -1476,22 +1476,22 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     logsCVConfiguration.setAccountId(accountId);
     logsCVConfiguration.setStateType(StateType.SUMO);
 
-    assertEquals(logsCVConfiguration.getName(), fetchedObject.getName());
-    assertEquals(logsCVConfiguration.getAccountId(), fetchedObject.getAccountId());
-    assertEquals(logsCVConfiguration.getConnectorId(), fetchedObject.getConnectorId());
-    assertEquals(logsCVConfiguration.getEnvId(), fetchedObject.getEnvId());
-    assertEquals(logsCVConfiguration.getServiceId(), fetchedObject.getServiceId());
-    assertEquals(logsCVConfiguration.getStateType(), fetchedObject.getStateType());
-    assertEquals(logsCVConfiguration.getAnalysisTolerance(), fetchedObject.getAnalysisTolerance());
-    assertEquals(logsCVConfiguration.isEnabled24x7(), fetchedObject.isEnabled24x7());
-    assertEquals(logsCVConfiguration.getComparisonStrategy(), fetchedObject.getComparisonStrategy());
-    assertEquals(logsCVConfiguration.getContextId(), fetchedObject.getContextId());
-    assertEquals(logsCVConfiguration.isWorkflowConfig(), fetchedObject.isWorkflowConfig());
-    assertEquals(logsCVConfiguration.isAlertEnabled(), fetchedObject.isAlertEnabled());
-    assertEquals(logsCVConfiguration.getAlertThreshold(), fetchedObject.getAlertThreshold(), 0.0);
-    assertEquals(logsCVConfiguration.getSnoozeStartTime(), fetchedObject.getSnoozeStartTime());
-    assertEquals(logsCVConfiguration.getSnoozeEndTime(), fetchedObject.getSnoozeEndTime());
-    assertEquals(logsCVConfiguration.getQuery(), fetchedObject.getQuery());
+    assertThat(fetchedObject.getName()).isEqualTo(logsCVConfiguration.getName());
+    assertThat(fetchedObject.getAccountId()).isEqualTo(logsCVConfiguration.getAccountId());
+    assertThat(fetchedObject.getConnectorId()).isEqualTo(logsCVConfiguration.getConnectorId());
+    assertThat(fetchedObject.getEnvId()).isEqualTo(logsCVConfiguration.getEnvId());
+    assertThat(fetchedObject.getServiceId()).isEqualTo(logsCVConfiguration.getServiceId());
+    assertThat(fetchedObject.getStateType()).isEqualTo(logsCVConfiguration.getStateType());
+    assertThat(fetchedObject.getAnalysisTolerance()).isEqualTo(logsCVConfiguration.getAnalysisTolerance());
+    assertThat(fetchedObject.isEnabled24x7()).isEqualTo(logsCVConfiguration.isEnabled24x7());
+    assertThat(fetchedObject.getComparisonStrategy()).isEqualTo(logsCVConfiguration.getComparisonStrategy());
+    assertThat(fetchedObject.getContextId()).isEqualTo(logsCVConfiguration.getContextId());
+    assertThat(fetchedObject.isWorkflowConfig()).isEqualTo(logsCVConfiguration.isWorkflowConfig());
+    assertThat(fetchedObject.isAlertEnabled()).isEqualTo(logsCVConfiguration.isAlertEnabled());
+    assertThat(fetchedObject.getAlertThreshold()).isEqualTo(logsCVConfiguration.getAlertThreshold());
+    assertThat(fetchedObject.getSnoozeStartTime()).isEqualTo(logsCVConfiguration.getSnoozeStartTime());
+    assertThat(fetchedObject.getSnoozeEndTime()).isEqualTo(logsCVConfiguration.getSnoozeEndTime());
+    assertThat(fetchedObject.getQuery()).isEqualTo(logsCVConfiguration.getQuery());
   }
 
   @Test
@@ -1513,9 +1513,9 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<LogsCVConfiguration>>() {});
     LogsCVConfiguration fetchedObject = getRequestResponse.getResource();
     assertThat(fetchedObject.isAlertEnabled()).isFalse();
-    assertEquals(0.1, fetchedObject.getAlertThreshold(), 0.0);
-    assertEquals(0, fetchedObject.getSnoozeStartTime());
-    assertEquals(0, fetchedObject.getSnoozeEndTime());
+    assertThat(fetchedObject.getAlertThreshold()).isEqualTo(0.1);
+    assertThat(fetchedObject.getSnoozeStartTime()).isEqualTo(0);
+    assertThat(fetchedObject.getSnoozeEndTime()).isEqualTo(0);
 
     CVConfiguration cvConfiguration = new CVConfiguration();
     cvConfiguration.setAlertThreshold(0.5);
@@ -1536,9 +1536,9 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<LogsCVConfiguration>>() {});
     fetchedObject = getRequestResponse.getResource();
     assertThat(fetchedObject.isAlertEnabled()).isTrue();
-    assertEquals(0.5, fetchedObject.getAlertThreshold(), 0.0);
-    assertEquals(0, fetchedObject.getSnoozeStartTime());
-    assertEquals(0, fetchedObject.getSnoozeEndTime());
+    assertThat(fetchedObject.getAlertThreshold()).isEqualTo(0.5);
+    assertThat(fetchedObject.getSnoozeStartTime()).isEqualTo(0);
+    assertThat(fetchedObject.getSnoozeEndTime()).isEqualTo(0);
 
     url = API_BASE + "/cv-configuration/update-snooze?accountId=" + accountId + "&cvConfigId=" + savedObjectUuid;
     target = client.target(url);
@@ -1553,9 +1553,9 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<LogsCVConfiguration>>() {});
     fetchedObject = getRequestResponse.getResource();
     assertThat(fetchedObject.isAlertEnabled()).isTrue();
-    assertEquals(0.5, fetchedObject.getAlertThreshold(), 0.0);
-    assertEquals(cvConfiguration.getSnoozeStartTime(), fetchedObject.getSnoozeStartTime());
-    assertEquals(cvConfiguration.getSnoozeEndTime(), fetchedObject.getSnoozeEndTime());
+    assertThat(fetchedObject.getAlertThreshold()).isEqualTo(0.5);
+    assertThat(fetchedObject.getSnoozeStartTime()).isEqualTo(cvConfiguration.getSnoozeStartTime());
+    assertThat(fetchedObject.getSnoozeEndTime()).isEqualTo(cvConfiguration.getSnoozeEndTime());
   }
 
   @Test
@@ -1587,18 +1587,18 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
             entity(logsCVConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
       }
     }
-    assertEquals(numOfApplications * numOfEnvs,
-        wingsPersistence.createQuery(CVConfiguration.class)
-            .filter(CVConfigurationKeys.accountId, accountId)
-            .filter(CVConfigurationKeys.name, "NRTestConfig" + testUuid)
-            .asList()
-            .size());
-    assertEquals(numOfApplications * numOfEnvs,
-        wingsPersistence.createQuery(CVConfiguration.class)
-            .filter(CVConfigurationKeys.accountId, accountId)
-            .filter(CVConfigurationKeys.name, "SumoTestConfig" + testUuid)
-            .asList()
-            .size());
+    assertThat(wingsPersistence.createQuery(CVConfiguration.class)
+                   .filter(CVConfigurationKeys.accountId, accountId)
+                   .filter(CVConfigurationKeys.name, "NRTestConfig" + testUuid)
+                   .asList()
+                   .size())
+        .isEqualTo(numOfApplications * numOfEnvs);
+    assertThat(wingsPersistence.createQuery(CVConfiguration.class)
+                   .filter(CVConfigurationKeys.accountId, accountId)
+                   .filter(CVConfigurationKeys.name, "SumoTestConfig" + testUuid)
+                   .asList()
+                   .size())
+        .isEqualTo(numOfApplications * numOfEnvs);
 
     // ask for all the cvConfigs for 1 app
     String url =

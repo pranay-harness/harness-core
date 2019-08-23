@@ -2,7 +2,6 @@ package software.wings.service.impl.verification;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.Lists;
@@ -99,11 +98,11 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
       assertThat(threshold.getThresholds().getMetricName()).isEqualTo("metric-" + i);
       assertThat(threshold.getThresholds().getMetricType()).isEqualTo(MetricType.THROUGHPUT);
       assertThat(threshold.getThresholds().getCustomThresholds()).hasSize(1);
-      assertEquals(
-          ThresholdType.ALERT_WHEN_HIGHER, threshold.getThresholds().getCustomThresholds().get(0).getThresholdType());
-      assertEquals(
-          ThresholdComparisonType.DELTA, threshold.getThresholds().getCustomThresholds().get(0).getComparisonType());
-      assertEquals(i, threshold.getThresholds().getCustomThresholds().get(0).getMl(), 0.0);
+      assertThat(threshold.getThresholds().getCustomThresholds().get(0).getThresholdType())
+          .isEqualTo(ThresholdType.ALERT_WHEN_HIGHER);
+      assertThat(threshold.getThresholds().getCustomThresholds().get(0).getComparisonType())
+          .isEqualTo(ThresholdComparisonType.DELTA);
+      assertThat(threshold.getThresholds().getCustomThresholds().get(0).getMl()).isEqualTo(i);
     }
 
     // change a few thresholds
@@ -151,20 +150,20 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
       assertThat(threshold.getThresholds().getMetricName()).isEqualTo("metric-" + i);
       assertThat(threshold.getThresholds().getMetricType()).isEqualTo(MetricType.THROUGHPUT);
       assertThat(threshold.getThresholds().getCustomThresholds()).hasSize(1);
-      assertEquals(
-          ThresholdType.ALERT_WHEN_HIGHER, threshold.getThresholds().getCustomThresholds().get(0).getThresholdType());
-      assertEquals(
-          ThresholdComparisonType.DELTA, threshold.getThresholds().getCustomThresholds().get(0).getComparisonType());
+      assertThat(threshold.getThresholds().getCustomThresholds().get(0).getThresholdType())
+          .isEqualTo(ThresholdType.ALERT_WHEN_HIGHER);
+      assertThat(threshold.getThresholds().getCustomThresholds().get(0).getComparisonType())
+          .isEqualTo(ThresholdComparisonType.DELTA);
 
       if (i == 21) {
-        assertEquals(10, threshold.getVersion());
-        assertEquals(2100, threshold.getThresholds().getCustomThresholds().get(0).getMl(), 0.0);
+        assertThat(threshold.getVersion()).isEqualTo(10);
+        assertThat(threshold.getThresholds().getCustomThresholds().get(0).getMl()).isEqualTo(2100);
       } else if (i == 37) {
-        assertEquals(7, threshold.getVersion());
-        assertEquals(3700, threshold.getThresholds().getCustomThresholds().get(0).getMl(), 0.0);
+        assertThat(threshold.getVersion()).isEqualTo(7);
+        assertThat(threshold.getThresholds().getCustomThresholds().get(0).getMl()).isEqualTo(3700);
       } else {
-        assertEquals(0, threshold.getVersion());
-        assertEquals(i, threshold.getThresholds().getCustomThresholds().get(0).getMl(), 0.0);
+        assertThat(threshold.getVersion()).isEqualTo(0);
+        assertThat(threshold.getThresholds().getCustomThresholds().get(0).getMl()).isEqualTo(i);
       }
     }
   }

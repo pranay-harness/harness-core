@@ -2,7 +2,6 @@ package software.wings.service.impl.analysis;
 
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyLong;
@@ -248,12 +247,11 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
 
     verify(mockWaitNotifyEngine).waitForAll(anyObject(), anyString());
     verify(mockDelegateService).queueTask(taskCaptor.capture());
-    assertEquals("Task type should match", taskCaptor.getValue().getData().getTaskType(),
-        TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK.name());
+    assertThat(TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK.name())
+        .isEqualTo(taskCaptor.getValue().getData().getTaskType());
     APMDataCollectionInfo dataCollectionInfo =
         (APMDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
-    assertEquals(
-        "State type in datacollectionInfo should match", dataCollectionInfo.getStateType(), StateType.DATA_DOG);
+    assertThat(StateType.DATA_DOG).isEqualTo(dataCollectionInfo.getStateType());
     assertThat(1540419553000l).isEqualTo(dataCollectionInfo.getStartTime());
     assertThat(15).isEqualTo(dataCollectionInfo.getDataCollectionTotalTime());
   }
@@ -288,8 +286,8 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
 
     verify(mockWaitNotifyEngine).waitForAll(anyObject(), anyString());
     verify(mockDelegateService).queueTask(taskCaptor.capture());
-    assertEquals("Task type should match", taskCaptor.getValue().getData().getTaskType(),
-        TaskType.APPDYNAMICS_COLLECT_24_7_METRIC_DATA.name());
+    assertThat(TaskType.APPDYNAMICS_COLLECT_24_7_METRIC_DATA.name())
+        .isEqualTo(taskCaptor.getValue().getData().getTaskType());
     AppdynamicsDataCollectionInfo dataCollectionInfo =
         (AppdynamicsDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
     assertThat(appDynamicsConfig).isEqualTo(dataCollectionInfo.getAppDynamicsConfig());
@@ -326,8 +324,8 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
 
     verify(mockWaitNotifyEngine).waitForAll(anyObject(), anyString());
     verify(mockDelegateService).queueTask(taskCaptor.capture());
-    assertEquals("Task type should match", taskCaptor.getValue().getData().getTaskType(),
-        TaskType.NEWRELIC_COLLECT_24_7_METRIC_DATA.name());
+    assertThat(TaskType.NEWRELIC_COLLECT_24_7_METRIC_DATA.name())
+        .isEqualTo(taskCaptor.getValue().getData().getTaskType());
     NewRelicDataCollectionInfo dataCollectionInfo =
         (NewRelicDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
     assertThat(nrConfig).isEqualTo(dataCollectionInfo.getNewRelicConfig());
@@ -376,8 +374,8 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
 
     verify(mockWaitNotifyEngine).waitForAll(anyObject(), anyString());
     verify(mockDelegateService).queueTask(taskCaptor.capture());
-    assertEquals("Task type should match", taskCaptor.getValue().getData().getTaskType(),
-        TaskType.PROMETHEUS_COLLECT_24_7_METRIC_DATA.name());
+    assertThat(TaskType.PROMETHEUS_COLLECT_24_7_METRIC_DATA.name())
+        .isEqualTo(taskCaptor.getValue().getData().getTaskType());
     PrometheusDataCollectionInfo dataCollectionInfo =
         (PrometheusDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
     assertThat(15).isEqualTo(dataCollectionInfo.getCollectionTime());
@@ -409,8 +407,8 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(mockWaitNotifyEngine).waitForAll(anyObject(), anyString());
     verify(mockDelegateService).queueTask(taskCaptor.capture());
-    assertEquals("Task type should match", taskCaptor.getValue().getData().getTaskType(),
-        TaskType.CLOUD_WATCH_COLLECT_24_7_METRIC_DATA.name());
+    assertThat(TaskType.CLOUD_WATCH_COLLECT_24_7_METRIC_DATA.name())
+        .isEqualTo(taskCaptor.getValue().getData().getTaskType());
     CloudWatchDataCollectionInfo dataCollectionInfo =
         (CloudWatchDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
     assertThat(15).isEqualTo(dataCollectionInfo.getCollectionTime());

@@ -6,7 +6,6 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anySet;
@@ -353,8 +352,8 @@ public class CloudFormationStateTest extends WingsBaseTest {
     assertThat(cloudFormationCreateStackRequest.getAppId()).isEqualTo(APP_ID);
     assertThat(cloudFormationCreateStackRequest.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(cloudFormationCreateStackRequest.getCommandName()).isEqualTo("Create Stack");
-    assertEquals(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY,
-        cloudFormationCreateStackRequest.getCreateType());
+    assertThat(cloudFormationCreateStackRequest.getCreateType())
+        .isEqualTo(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY);
     assertThat(cloudFormationCreateStackRequest.getData()).isEqualTo("Template Body");
     assertThat(cloudFormationCreateStackRequest.getTimeoutInMs()).isEqualTo(1000);
   }

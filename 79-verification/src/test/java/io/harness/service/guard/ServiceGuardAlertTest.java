@@ -6,7 +6,6 @@ import static java.time.Duration.ofMillis;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL;
 import static software.wings.sm.StateType.SUMO;
@@ -95,8 +94,8 @@ public class ServiceGuardAlertTest extends VerificationBaseIntegrationTest {
     assertThat(alert.getStatus()).isEqualTo(AlertStatus.Open);
     assertThat(alert.getCategory()).isEqualTo(AlertCategory.ContinuousVerification);
     ContinuousVerificationAlertData alertData = (ContinuousVerificationAlertData) alert.getAlertData();
-    assertEquals(savedObjectUuid, alertData.getCvConfiguration().getUuid());
-    assertEquals(0.6, alertData.getRiskScore(), 0.0);
+    assertThat(alertData.getCvConfiguration().getUuid()).isEqualTo(savedObjectUuid);
+    assertThat(alertData.getRiskScore()).isEqualTo(0.6);
 
     // send another alert
     url = VERIFICATION_API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS

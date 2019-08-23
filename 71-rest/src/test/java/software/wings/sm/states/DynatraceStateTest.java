@@ -111,8 +111,8 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
   public void compareTestAndControl() {
     DynatraceState dynatraceState = new DynatraceState("DynatraceState");
     for (int i = 1; i <= 7; i++) {
-      assertEquals(DEFAULT_GROUP_NAME,
-          dynatraceState.getLastExecutionNodes(executionContext).get(DynatraceState.CONTROL_HOST_NAME + i));
+      assertThat(dynatraceState.getLastExecutionNodes(executionContext).get(DynatraceState.CONTROL_HOST_NAME + i))
+          .isEqualTo(DEFAULT_GROUP_NAME);
     }
 
     assertEquals(Collections.singletonMap(DynatraceState.TEST_HOST_NAME, DEFAULT_GROUP_NAME),
@@ -150,9 +150,9 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
 
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
-    assertEquals(
-        "No baseline was set for the workflow. Workflow running with auto baseline. No previous execution found. This will be the baseline run",
-        response.getErrorMessage());
+    assertThat(response.getErrorMessage())
+        .isEqualTo(
+            "No baseline was set for the workflow. Workflow running with auto baseline. No previous execution found. This will be the baseline run");
 
     List<DelegateTask> tasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).asList();
     assertThat(tasks).hasSize(1);

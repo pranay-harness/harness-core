@@ -6,7 +6,6 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -168,8 +167,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
 
           for (AppdynamicsMetric leafMetric : btMetric.getChildMetrices()) {
             assertThat(isBlank(leafMetric.getName())).isFalse();
-            assertEquals("failed for " + btMetric.getName() + "|" + leafMetric.getName(), 0,
-                leafMetric.getChildMetrices().size());
+            assertThat(leafMetric.getChildMetrices().size()).isEqualTo(0);
           }
         }
       }

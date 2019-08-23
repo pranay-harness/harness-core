@@ -2,7 +2,6 @@ package software.wings.verification;
 
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
@@ -112,9 +111,9 @@ public class CVActivityLogServiceTest extends BaseIntegrationTest {
     long nowMinute = TimeUnit.MILLISECONDS.toMinutes(nowMilli);
     createLog(cvConfigId, nowMinute, logLine);
     createLog(cvConfigId, nowMinute + 1, "log line");
-    assertEquals(Collections.emptyList(),
-        cvActivityLogService.findByCVConfigId(
-            cvConfigId, TimeUnit.MINUTES.toMillis(nowMinute), TimeUnit.MINUTES.toMillis(nowMinute - 1)));
+    assertThat(cvActivityLogService.findByCVConfigId(
+                   cvConfigId, TimeUnit.MINUTES.toMillis(nowMinute), TimeUnit.MINUTES.toMillis(nowMinute - 1)))
+        .isEqualTo(Collections.emptyList());
     List<CVActivityLog> activityLogs = cvActivityLogService.findByCVConfigId(cvConfigId, nowMilli, nowMilli);
     assertThat(activityLogs).hasSize(1);
     assertThat(activityLogs.get(0).getCvConfigId()).isEqualTo(cvConfigId);

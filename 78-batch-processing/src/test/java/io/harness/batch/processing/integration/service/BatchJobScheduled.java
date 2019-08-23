@@ -2,7 +2,6 @@ package io.harness.batch.processing.integration.service;
 
 import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertTrue;
 
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.entities.BatchJobScheduledData;
@@ -42,8 +41,7 @@ public class BatchJobScheduled {
     Instant firstEndAt = Instant.now().minus(1, ChronoUnit.DAYS);
     BatchJobScheduledData batchJobScheduledData =
         new BatchJobScheduledData(BatchJobType.ECS_EVENT, firstStartAt, firstEndAt);
-    boolean save = batchJobScheduledDataService.create(batchJobScheduledData);
-    assertTrue(save);
+    assertThat(batchJobScheduledDataService.create(batchJobScheduledData)).isTrue();
 
     Instant instant = batchJobScheduledDataService.fetchLastBatchJobScheduledTime(BatchJobType.ECS_EVENT);
     assertThat(instant).isEqualTo(firstEndAt);
@@ -51,8 +49,7 @@ public class BatchJobScheduled {
     Instant secondStartAt = firstEndAt;
     Instant secondEndAt = Instant.now();
     batchJobScheduledData = new BatchJobScheduledData(BatchJobType.ECS_EVENT, secondStartAt, secondEndAt);
-    save = batchJobScheduledDataService.create(batchJobScheduledData);
-    assertTrue(save);
+    assertThat(batchJobScheduledDataService.create(batchJobScheduledData)).isTrue();
 
     instant = batchJobScheduledDataService.fetchLastBatchJobScheduledTime(BatchJobType.ECS_EVENT);
     assertThat(instant).isEqualTo(secondEndAt);

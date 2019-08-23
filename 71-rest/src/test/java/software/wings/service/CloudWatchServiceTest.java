@@ -119,11 +119,9 @@ public class CloudWatchServiceTest extends WingsBaseTest {
     assertThat(cloudwatchMetrics.containsKey(AwsNameSpace.LAMBDA)).isFalse();
     assertThat(cloudwatchMetrics.containsKey(AwsNameSpace.EC2)).isFalse();
     assertThat(cloudwatchMetrics.get(AwsNameSpace.ECS)).hasSize(1);
-    assertEquals("The ECS metric is CPUUtillization", "CPUUtilization",
-        cloudwatchMetrics.get(AwsNameSpace.ECS).get(0).getMetricName());
+    assertEquals("CPUUtilization", cloudwatchMetrics.get(AwsNameSpace.ECS).get(0).getMetricName());
     assertThat(cloudwatchMetrics.get(AwsNameSpace.ELB)).hasSize(1);
-    assertEquals("The ELB metric is HTTPCode_Backend_2XX", "HTTPCode_Backend_2XX",
-        cloudwatchMetrics.get(AwsNameSpace.ELB).get(0).getMetricName());
+    assertEquals("HTTPCode_Backend_2XX", cloudwatchMetrics.get(AwsNameSpace.ELB).get(0).getMetricName());
   }
 
   @Test

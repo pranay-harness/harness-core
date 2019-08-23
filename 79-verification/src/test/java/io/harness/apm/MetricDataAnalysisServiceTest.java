@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rest.RestResponse.Builder.aRestResponse;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -124,12 +123,12 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
       }
     }
 
-    assertEquals(numOfGroups * numOfMinutes,
-        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-            .filter("stateExecutionId", stateExecutionId)
-            .filter("appId", appId)
-            .asList()
-            .size());
+    assertThat(wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
+                   .filter("stateExecutionId", stateExecutionId)
+                   .filter("appId", appId)
+                   .asList()
+                   .size())
+        .isEqualTo(numOfGroups * numOfMinutes);
     Set<NewRelicMetricAnalysisRecord> resultList =
         managerAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId);
 

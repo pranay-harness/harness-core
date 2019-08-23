@@ -622,8 +622,8 @@ public class KmsTest extends WingsBaseTest {
     wingsPersistence.save(settingAttributes);
 
     assertThat(wingsPersistence.createQuery(SettingAttribute.class).count()).isEqualTo(numOfSettingAttributes);
-    assertEquals(
-        numOfEncryptedValsForKms + numOfSettingAttributes, wingsPersistence.createQuery(EncryptedData.class).count());
+    assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
+        .isEqualTo(numOfEncryptedValsForKms + numOfSettingAttributes);
     for (int i = 0; i < numOfSettingAttributes; i++) {
       String id = settingAttributes.get(i).getUuid();
       SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, id);
@@ -1518,14 +1518,14 @@ public class KmsTest extends WingsBaseTest {
     }
 
     assertThat(wingsPersistence.createQuery(SettingAttribute.class).count()).isEqualTo(numOfSettingAttributes);
-    assertEquals(
-        numOfEncryptedValsForKms + numOfSettingAttributes, wingsPersistence.createQuery(EncryptedData.class).count());
+    assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
+        .isEqualTo(numOfEncryptedValsForKms + numOfSettingAttributes);
     for (int i = 0; i < numOfSettingAttributes; i++) {
       wingsPersistence.delete(settingAttributes.get(i));
       assertThat(wingsPersistence.createQuery(SettingAttribute.class).count())
           .isEqualTo(numOfSettingAttributes - (i + 1));
-      assertEquals(numOfEncryptedValsForKms + numOfSettingAttributes - (i + 1),
-          wingsPersistence.createQuery(EncryptedData.class).count());
+      assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
+          .isEqualTo(numOfEncryptedValsForKms + numOfSettingAttributes - (i + 1));
     }
   }
 
@@ -1547,29 +1547,29 @@ public class KmsTest extends WingsBaseTest {
     }
 
     assertThat(wingsPersistence.createQuery(SettingAttribute.class).count()).isEqualTo(numOfSettingAttributes);
-    assertEquals(
-        numOfEncryptedValsForKms + numOfSettingAttributes, wingsPersistence.createQuery(EncryptedData.class).count());
+    assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
+        .isEqualTo(numOfEncryptedValsForKms + numOfSettingAttributes);
 
     for (int i = 0; i < numOfSettingAttributes; i++) {
       wingsPersistence.delete(accountId, SettingAttribute.class, settingAttributes.get(i).getUuid());
       assertThat(wingsPersistence.createQuery(SettingAttribute.class).count())
           .isEqualTo(numOfSettingAttributes - (i + 1));
-      assertEquals(numOfEncryptedValsForKms + numOfSettingAttributes - (i + 1),
-          wingsPersistence.createQuery(EncryptedData.class).count());
+      assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
+          .isEqualTo(numOfEncryptedValsForKms + numOfSettingAttributes - (i + 1));
     }
 
     wingsPersistence.save(settingAttributes);
     assertThat(wingsPersistence.createQuery(SettingAttribute.class).count()).isEqualTo(numOfSettingAttributes);
-    assertEquals(
-        numOfEncryptedValsForKms + numOfSettingAttributes, wingsPersistence.createQuery(EncryptedData.class).count());
+    assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
+        .isEqualTo(numOfEncryptedValsForKms + numOfSettingAttributes);
 
     for (int i = 0; i < numOfSettingAttributes; i++) {
       wingsPersistence.delete(
           SettingAttribute.class, settingAttributes.get(i).getAppId(), settingAttributes.get(i).getUuid());
       assertThat(wingsPersistence.createQuery(SettingAttribute.class).count())
           .isEqualTo(numOfSettingAttributes - (i + 1));
-      assertEquals(numOfEncryptedValsForKms + numOfSettingAttributes - (i + 1),
-          wingsPersistence.createQuery(EncryptedData.class).count());
+      assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
+          .isEqualTo(numOfEncryptedValsForKms + numOfSettingAttributes - (i + 1));
     }
   }
 
@@ -1591,8 +1591,8 @@ public class KmsTest extends WingsBaseTest {
     }
 
     assertThat(wingsPersistence.createQuery(SettingAttribute.class).count()).isEqualTo(numOfSettingAttributes);
-    assertEquals(
-        numOfEncryptedValsForKms + numOfSettingAttributes, wingsPersistence.createQuery(EncryptedData.class).count());
+    assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
+        .isEqualTo(numOfEncryptedValsForKms + numOfSettingAttributes);
 
     Set<String> idsToDelete = new HashSet<>();
     idsToDelete.add(settingAttributes.get(0).getUuid());
@@ -1603,10 +1603,10 @@ public class KmsTest extends WingsBaseTest {
                                         .filter(SettingAttributeKeys.accountId, accountId);
     for (int i = 0; i < numOfSettingAttributes; i++) {
       wingsPersistence.delete(query);
-      assertEquals(
-          numOfSettingAttributes - idsToDelete.size(), wingsPersistence.createQuery(SettingAttribute.class).count());
-      assertEquals(numOfEncryptedValsForKms + numOfSettingAttributes - idsToDelete.size(),
-          wingsPersistence.createQuery(EncryptedData.class).count());
+      assertThat(wingsPersistence.createQuery(SettingAttribute.class).count())
+          .isEqualTo(numOfSettingAttributes - idsToDelete.size());
+      assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
+          .isEqualTo(numOfEncryptedValsForKms + numOfSettingAttributes - idsToDelete.size());
     }
   }
 
@@ -2291,8 +2291,9 @@ public class KmsTest extends WingsBaseTest {
     assertThat(savedConfigFile.isEncrypted()).isTrue();
     assertThat(isEmpty(savedConfigFile.getEncryptedFileId())).isFalse();
 
-    assertEquals(1,
-        wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, renameAccountId).count());
+    assertThat(
+        wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, renameAccountId).count())
+        .isEqualTo(1);
     EncryptedData encryptedData =
         wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, renameAccountId).get();
     assertThat(encryptedData.getAccountId()).isEqualTo(renameAccountId);

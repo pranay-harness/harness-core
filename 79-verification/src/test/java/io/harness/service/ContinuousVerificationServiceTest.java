@@ -6,7 +6,6 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
@@ -375,11 +374,11 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     SumoDataCollectionInfo sumoDataCollectionInfo = (SumoDataCollectionInfo) delegateTask.getData().getParameters()[0];
 
-    assertEquals(
-        TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()), sumoDataCollectionInfo.getStartTime());
-    assertEquals(
-        TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1),
-        sumoDataCollectionInfo.getEndTime());
+    assertThat(sumoDataCollectionInfo.getStartTime())
+        .isEqualTo(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()));
+    assertThat(sumoDataCollectionInfo.getEndTime())
+        .isEqualTo(TimeUnit.MINUTES.toMillis(
+            logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1));
 
     assertThat(sumoDataCollectionInfo.getSumoConfig()).isEqualTo(sumoConfig);
     assertThat(sumoDataCollectionInfo.getCvConfigId()).isEqualTo(cvConfigId);
@@ -405,11 +404,11 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     CustomLogDataCollectionInfo customLogDataCollectionInfo =
         (CustomLogDataCollectionInfo) delegateTask.getData().getParameters()[0];
 
-    assertEquals(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()),
-        customLogDataCollectionInfo.getStartTime());
-    assertEquals(
-        TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1),
-        customLogDataCollectionInfo.getEndTime());
+    assertThat(customLogDataCollectionInfo.getStartTime())
+        .isEqualTo(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()));
+    assertThat(customLogDataCollectionInfo.getEndTime())
+        .isEqualTo(TimeUnit.MINUTES.toMillis(
+            logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1));
 
     assertThat(delegateTask.getAccountId()).isEqualTo(accountId);
     assertThat(delegateTask.getAppId()).isEqualTo(appId);
@@ -477,11 +476,11 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     LogsCVConfiguration logsCVConfiguration =
         (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
-    assertEquals(
-        TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()), sumoDataCollectionInfo.getStartTime());
-    assertEquals(
-        TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1),
-        sumoDataCollectionInfo.getEndTime());
+    assertThat(sumoDataCollectionInfo.getStartTime())
+        .isEqualTo(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()));
+    assertThat(sumoDataCollectionInfo.getEndTime())
+        .isEqualTo(TimeUnit.MINUTES.toMillis(
+            logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1));
 
     // save some log and trigger again
     long numOfMinutesSaved = 100;
@@ -511,11 +510,11 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(sumoDataCollectionInfo.getAccountId()).isEqualTo(accountId);
     assertThat(sumoDataCollectionInfo.getServiceId()).isEqualTo(serviceId);
 
-    assertEquals(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + numOfMinutesSaved + 1),
-        sumoDataCollectionInfo.getStartTime());
-    assertEquals(TimeUnit.MINUTES.toMillis(
-                     logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES + numOfMinutesSaved),
-        sumoDataCollectionInfo.getEndTime());
+    assertThat(sumoDataCollectionInfo.getStartTime())
+        .isEqualTo(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + numOfMinutesSaved + 1));
+    assertThat(sumoDataCollectionInfo.getEndTime())
+        .isEqualTo(TimeUnit.MINUTES.toMillis(
+            logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES + numOfMinutesSaved));
   }
 
   @Test
@@ -542,11 +541,11 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     LogsCVConfiguration logsCVConfiguration =
         (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, datadogCvConfigId);
-    assertEquals(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()),
-        customLogDataCollectionInfo.getStartTime());
-    assertEquals(
-        TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1),
-        customLogDataCollectionInfo.getEndTime());
+    assertThat(customLogDataCollectionInfo.getStartTime())
+        .isEqualTo(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()));
+    assertThat(customLogDataCollectionInfo.getEndTime())
+        .isEqualTo(TimeUnit.MINUTES.toMillis(
+            logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1));
 
     // save some log and trigger again
     long numOfMinutesSaved = 100;
@@ -574,11 +573,11 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(customLogDataCollectionInfo.getAccountId()).isEqualTo(accountId);
     assertThat(customLogDataCollectionInfo.getServiceId()).isEqualTo(serviceId);
 
-    assertEquals(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + numOfMinutesSaved + 1),
-        customLogDataCollectionInfo.getStartTime());
-    assertEquals(TimeUnit.MINUTES.toMillis(
-                     logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES + numOfMinutesSaved),
-        customLogDataCollectionInfo.getEndTime());
+    assertThat(customLogDataCollectionInfo.getStartTime())
+        .isEqualTo(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + numOfMinutesSaved + 1));
+    assertThat(customLogDataCollectionInfo.getEndTime())
+        .isEqualTo(TimeUnit.MINUTES.toMillis(
+            logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES + numOfMinutesSaved));
   }
 
   @Test
@@ -787,18 +786,18 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
       LearningEngineAnalysisTask learningEngineAnalysisTask = learningEngineAnalysisTasks.get(i);
       assertThat(learningEngineAnalysisTask.getWorkflow_id()).isNull();
       assertThat(learningEngineAnalysisTask.getWorkflow_execution_id()).isNull();
-      assertEquals(
-          "LOGS_CLUSTER_L1_" + cvConfigId + "_" + (100 + i * 2), learningEngineAnalysisTask.getState_execution_id());
+      assertThat(learningEngineAnalysisTask.getState_execution_id())
+          .isEqualTo("LOGS_CLUSTER_L1_" + cvConfigId + "_" + (100 + i * 2));
       assertThat(learningEngineAnalysisTask.getService_id()).isEqualTo(serviceId);
       assertThat(learningEngineAnalysisTask.getAnalysis_minute()).isEqualTo(100 + i * 2);
-      assertEquals(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_GET_24X7_LOG_URL + "?cvConfigId="
-              + cvConfigId + "&appId=" + appId + "&clusterLevel=L0&logCollectionMinute=" + (100 + i * 2),
-          learningEngineAnalysisTask.getControl_input_url());
+      assertThat(learningEngineAnalysisTask.getControl_input_url())
+          .isEqualTo(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_GET_24X7_LOG_URL + "?cvConfigId="
+              + cvConfigId + "&appId=" + appId + "&clusterLevel=L0&logCollectionMinute=" + (100 + i * 2));
       assertThat(learningEngineAnalysisTask.getTest_input_url()).isNull();
-      assertEquals(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_STATE_SAVE_24X7_CLUSTERED_LOG_URL
+      assertThat(learningEngineAnalysisTask.getAnalysis_save_url())
+          .isEqualTo(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_STATE_SAVE_24X7_CLUSTERED_LOG_URL
               + "?cvConfigId=" + cvConfigId + "&appId=" + appId
-              + "&clusterLevel=L1&logCollectionMinute=" + (100 + i * 2),
-          learningEngineAnalysisTask.getAnalysis_save_url());
+              + "&clusterLevel=L1&logCollectionMinute=" + (100 + i * 2));
       assertThat(learningEngineAnalysisTask.getControl_nodes()).isEqualTo(hosts);
       assertThat(learningEngineAnalysisTask.getTest_nodes()).isNull();
     }
@@ -944,17 +943,18 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   private void validateL2Clustering(LearningEngineAnalysisTask learningEngineAnalysisTask, int clusterMinute) {
     assertThat(learningEngineAnalysisTask.getWorkflow_id()).isNull();
     assertThat(learningEngineAnalysisTask.getWorkflow_execution_id()).isNull();
-    assertEquals(
-        "LOGS_CLUSTER_L2_" + cvConfigId + "_" + clusterMinute, learningEngineAnalysisTask.getState_execution_id());
+    assertThat(learningEngineAnalysisTask.getState_execution_id())
+        .isEqualTo("LOGS_CLUSTER_L2_" + cvConfigId + "_" + clusterMinute);
     assertThat(learningEngineAnalysisTask.getService_id()).isEqualTo(serviceId);
     assertThat(learningEngineAnalysisTask.getAnalysis_minute()).isEqualTo(clusterMinute);
-    assertEquals(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_GET_24X7_ALL_LOGS_URL + "?cvConfigId="
-            + cvConfigId + "&appId=" + appId + "&clusterLevel=L1&startMinute=100&endMinute=" + clusterMinute,
-        learningEngineAnalysisTask.getControl_input_url());
+    assertThat(learningEngineAnalysisTask.getControl_input_url())
+        .isEqualTo(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_GET_24X7_ALL_LOGS_URL + "?cvConfigId="
+            + cvConfigId + "&appId=" + appId + "&clusterLevel=L1&startMinute=100&endMinute=" + clusterMinute);
     assertThat(learningEngineAnalysisTask.getTest_input_url()).isNull();
-    assertEquals(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_STATE_SAVE_24X7_CLUSTERED_LOG_URL
-            + "?cvConfigId=" + cvConfigId + "&appId=" + appId + "&clusterLevel=L2&logCollectionMinute=" + clusterMinute,
-        learningEngineAnalysisTask.getAnalysis_save_url());
+    assertThat(learningEngineAnalysisTask.getAnalysis_save_url())
+        .isEqualTo(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_STATE_SAVE_24X7_CLUSTERED_LOG_URL
+            + "?cvConfigId=" + cvConfigId + "&appId=" + appId
+            + "&clusterLevel=L2&logCollectionMinute=" + clusterMinute);
     assertThat(learningEngineAnalysisTask.getControl_nodes()).isNull();
     assertThat(learningEngineAnalysisTask.getTest_nodes()).isNull();
   }
@@ -1026,9 +1026,9 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(alert.getSeverity()).isEqualTo(AlertSeverity.Error);
 
     final ContinuousVerificationAlertData alertData = (ContinuousVerificationAlertData) alert.getAlertData();
-    assertEquals(MLAnalysisType.TIME_SERIES, alertData.getMlAnalysisType());
-    assertEquals(0.6, alertData.getRiskScore(), 0.0);
-    assertEquals(configId, alertData.getCvConfiguration().getUuid());
+    assertThat(alertData.getMlAnalysisType()).isEqualTo(MLAnalysisType.TIME_SERIES);
+    assertThat(alertData.getRiskScore()).isEqualTo(0.6);
+    assertThat(alertData.getCvConfiguration().getUuid()).isEqualTo(configId);
     assertThat(alertData.getLogAnomaly()).isNull();
 
     // same minute should not throw another alert

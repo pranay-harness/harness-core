@@ -90,8 +90,8 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
       }
     }));
 
-    assertEquals(numOfHosts * numOfTxns * numOfMinutes,
-        wingsPersistence.createQuery(NewRelicMetricDataRecord.class, excludeAuthority).asList().size());
+    assertThat(wingsPersistence.createQuery(NewRelicMetricDataRecord.class, excludeAuthority).asList().size())
+        .isEqualTo(numOfHosts * numOfTxns * numOfMinutes);
 
     int analysisStartMinute = randomizer.nextInt(100);
     int analysisEndMinute = analysisStartMinute + randomizer.nextInt(102);
@@ -99,8 +99,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
     final Set<NewRelicMetricDataRecord> metricRecords =
         timeSeriesAnalysisService.getMetricRecords(cvConfigId, analysisStartMinute, analysisEndMinute, null, accountId);
     int numOfMinutesAsked = analysisEndMinute - analysisStartMinute + 1;
-    assertEquals("failed for start " + analysisStartMinute + " end " + analysisEndMinute,
-        numOfMinutesAsked * numOfTxns * numOfHosts, metricRecords.size());
+    assertEquals(numOfMinutesAsked * numOfTxns * numOfHosts, metricRecords.size());
 
     metricRecords.forEach(metricRecord -> metricRecord.setUuid(null));
     Set<NewRelicMetricDataRecord> expectedRecords = new HashSet<>();

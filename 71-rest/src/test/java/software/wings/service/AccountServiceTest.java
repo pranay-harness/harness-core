@@ -2,8 +2,7 @@ package software.wings.service;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -230,13 +229,7 @@ public class AccountServiceTest extends WingsBaseTest {
                           .build();
 
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
-
-    try {
-      accountService.save(account);
-      fail("Exception is expected when inviting with invalid account name");
-    } catch (WingsException e) {
-      // Ignore, exception expected here.
-    }
+    assertThatExceptionOfType(WingsException.class).isThrownBy(() -> accountService.save(account));
   }
 
   @Test
@@ -406,8 +399,7 @@ public class AccountServiceTest extends WingsBaseTest {
     assertThat(cvConfigs.getResponse().get(0).getService().getUuid()).isEqualTo(serviceId);
     assertThat("1").isEqualTo(cvConfigs.getOffset());
     assertThat(cvConfigs.getResponse().get(0).getService().getName()).isEqualTo("serviceTest");
-    assertEquals(
-        "CVConfigType name should be same", "NewRelic", cvConfigs.getResponse().get(0).getCvConfig().get(0).getName());
+    assertThat(cvConfigs.getResponse().get(0).getCvConfig().get(0).getName()).isEqualTo("NewRelic");
   }
 
   @Test
@@ -438,8 +430,7 @@ public class AccountServiceTest extends WingsBaseTest {
     assertThat(cvConfigs.getResponse().get(0).getService().getUuid()).isEqualTo(serviceId);
     assertThat("1").isEqualTo(cvConfigs.getOffset());
     assertThat(cvConfigs.getResponse().get(0).getService().getName()).isEqualTo("serviceTest");
-    assertEquals(
-        "CVConfigType name should be same", "NewRelic", cvConfigs.getResponse().get(0).getCvConfig().get(0).getName());
+    assertThat(cvConfigs.getResponse().get(0).getCvConfig().get(0).getName()).isEqualTo("NewRelic");
   }
 
   @Test
@@ -458,8 +449,7 @@ public class AccountServiceTest extends WingsBaseTest {
     assertThat(cvConfigs.getResponse().get(0).getService().getUuid()).isEqualTo(serviceId);
     assertThat("1").isEqualTo(cvConfigs.getOffset());
     assertThat(cvConfigs.getResponse().get(0).getService().getName()).isEqualTo("serviceTest");
-    assertEquals(
-        "CVConfigType name should be same", "NewRelic", cvConfigs.getResponse().get(0).getCvConfig().get(0).getName());
+    assertThat(cvConfigs.getResponse().get(0).getCvConfig().get(0).getName()).isEqualTo("NewRelic");
   }
 
   @Test

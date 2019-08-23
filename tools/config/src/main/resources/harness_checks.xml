@@ -75,7 +75,8 @@
             <!-- use org.slf4j.Logger instead -->
             <property name="illegalPkgs" value="java.util.logging.Logger"/>
 
-            <!-- use org.junit.Assert.assertEquals instead -->
+            <!-- use org.org.assertj.core.api.Assertions.assertThat instead -->
+            <!-- TODO: add org.junit.Assert,-->
             <property name="illegalPkgs" value="junit.framework.Assert"/>
 
             <!-- use org.apache.commons.text.StrSubstitutor instead -->
@@ -95,6 +96,8 @@
                                                    org.assertj.core.api.Java6Assertions.assertThat,
                                                    org.hamcrest.MatcherAssert.assertThat,
                                                    org.junit.Assert.assertThat"/>
+
+
 
 
             <!-- Do not use morphia Embedded. We do not need to change the name of the field and we

@@ -1,7 +1,6 @@
 package io.harness.k8s.kubectl;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -33,8 +32,9 @@ public class ApplyCommandTest extends CategoryTest {
 
     applyCommand = client.apply().filename("manifests.yaml");
 
-    assertEquals("\"C:\\Program Files\\Docker\\Docker\\Resources\\bin\\kubectl.exe\" apply --filename=manifests.yaml",
-        applyCommand.command());
+    assertThat(applyCommand.command())
+        .isEqualTo(
+            "\"C:\\Program Files\\Docker\\Docker\\Resources\\bin\\kubectl.exe\" apply --filename=manifests.yaml");
   }
 
   @Test
@@ -50,8 +50,8 @@ public class ApplyCommandTest extends CategoryTest {
 
     applyCommand = client.apply().filename("manifests.yaml");
 
-    assertEquals("kubectl --kubeconfig=\"c:\\config files\\.kubeconfig\" apply --filename=manifests.yaml",
-        applyCommand.command());
+    assertThat(applyCommand.command())
+        .isEqualTo("kubectl --kubeconfig=\"c:\\config files\\.kubeconfig\" apply --filename=manifests.yaml");
   }
 
   @Test

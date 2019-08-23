@@ -5,7 +5,6 @@ import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -272,8 +271,8 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
 
     assertThat(actualMetricDefinitions.get("requestsPerMinute"))
         .isEqualTo(expectedMetricDefinitions.get("requestsPerMinute"));
-    assertEquals(
-        expectedMetricDefinitions.get("averageResponseTime"), actualMetricDefinitions.get("averageResponseTime"));
+    assertThat(actualMetricDefinitions.get("averageResponseTime"))
+        .isEqualTo(expectedMetricDefinitions.get("averageResponseTime"));
     assertThat(actualMetricDefinitions.get("error")).isEqualTo(expectedMetricDefinitions.get("error"));
     assertThat(actualMetricDefinitions.get("apdexScore")).isEqualTo(expectedMetricDefinitions.get("apdexScore"));
   }

@@ -3,7 +3,6 @@ package software.wings.service;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
@@ -138,9 +137,9 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       workflowExecutionService.markBaseline(appId, workflowExecutionId, true);
     } catch (WingsException e) {
       assertThat(e.getCode()).isEqualTo(ErrorCode.BASELINE_CONFIGURATION_ERROR);
-      assertEquals("Either there is no workflow execution with verification steps "
-              + "or verification steps haven't been executed for the workflow.",
-          e.getMessage());
+      assertThat(e.getMessage())
+          .isEqualTo("Either there is no workflow execution with verification steps "
+              + "or verification steps haven't been executed for the workflow.");
     }
   }
 

@@ -2,7 +2,6 @@ package io.harness.metrics;
 
 import static io.harness.metrics.HarnessMetricRegistry.getAbsoluteMetricName;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import com.codahale.metrics.MetricRegistry;
 import io.harness.CategoryTest;
@@ -45,7 +44,7 @@ public class HarnessMetricRegistryTest extends CategoryTest {
 
     harnessMetricRegistry.updateMetricValue(metricName, value);
 
-    assertEquals(
-        ((Gauge) harnessMetricRegistry.getNamesToCollectors().get(getAbsoluteMetricName(metricName))).get(), value, 0);
+    assertThat(value).isEqualTo(
+        ((Gauge) harnessMetricRegistry.getNamesToCollectors().get(getAbsoluteMetricName(metricName))).get());
   }
 }

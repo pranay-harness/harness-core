@@ -4,7 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PARNIAN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
@@ -114,16 +114,13 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     String savedAttributeId = saveAppdynamicsConfig();
     SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     ((AppDynamicsConfig) settingAttribute.getValue()).setPassword(UUID.randomUUID().toString().toCharArray());
-    try {
-      appdynamicsService.validateConfig(settingAttribute, Collections.emptyList());
-      fail("Validated invalid config");
-    } catch (WingsException e) {
-      assertThat(e.getCode()).isEqualTo(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR);
-      logger.info("got exception", e);
-      assertEquals("got exception: " + e + " params: " + e.getParams(),
-          "Could not reach AppDynamics server. " + ExceptionUtils.getMessage(runtimeException),
-          e.getParams().get("reason"));
-    }
+
+    Throwable thrown =
+        catchThrowable(() -> appdynamicsService.validateConfig(settingAttribute, Collections.emptyList()));
+    assertThat(thrown).isInstanceOf(WingsException.class);
+    assertThat(((WingsException) thrown).getCode()).isEqualTo(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR);
+    assertThat(((WingsException) thrown).getParams().get("reason"))
+        .isEqualTo("Could not reach AppDynamics server. " + ExceptionUtils.getMessage(runtimeException));
   }
 
   @Test
@@ -140,8 +137,8 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     ((AppDynamicsConfig) settingAttribute.getValue()).setPassword(UUID.randomUUID().toString().toCharArray());
     final List<NewRelicApplication> applications = appdynamicsService.getApplications(savedAttributeId);
-    assertEquals(1, applications.size());
-    assertEquals(123, applications.get(0).getId());
+    assertThat(applications.size()).isEqualTo(1);
+    assertThat(applications.get(0).getId()).isEqualTo(123);
   }
 
   @Test
@@ -167,8 +164,8 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     } catch (WingsException e) {
       assertThat(e.getCode()).isEqualTo(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR);
       logger.info("got exception", e);
-      assertEquals("got exception: " + e + " params: " + e.getParams(),
-          "Could not login to AppDynamics server with the given credentials", e.getParams().get("reason"));
+      assertThat(e.getParams().get("reason"))
+          .isEqualTo("Could not login to AppDynamics server with the given credentials");
     }
   }
 

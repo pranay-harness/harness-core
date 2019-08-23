@@ -3,7 +3,6 @@ package io.harness.functional.authentication;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static junit.framework.TestCase.fail;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import com.google.inject.Inject;
 
@@ -56,13 +55,13 @@ public class PasswordStrengthPolicyFunctionalTest extends AbstractFunctionalTest
     PasswordStrengthPolicy passwordStrengthPolicyResponse = loginSettings.getPasswordStrengthPolicy();
     assertThat(PASSWORD_STRENGTH_POLICY_ENABLED).isEqualTo(passwordStrengthPolicyResponse.isEnabled());
     assertThat(MINIMUM_NUMBER_OF_CHARACTERS).isEqualTo(passwordStrengthPolicyResponse.getMinNumberOfCharacters());
-    assertEquals(
-        passwordStrengthPolicyResponse.getMinNumberOfUppercaseCharacters(), MINIMUM_NUMBER_OF_UPPERCASE_CHARACTERS);
-    assertEquals(
-        passwordStrengthPolicyResponse.getMinNumberOfLowercaseCharacters(), MINIMUM_NUMBER_OF_LOWERCASE_CHARACTERS);
+    assertThat(MINIMUM_NUMBER_OF_UPPERCASE_CHARACTERS)
+        .isEqualTo(passwordStrengthPolicyResponse.getMinNumberOfUppercaseCharacters());
+    assertThat(MINIMUM_NUMBER_OF_LOWERCASE_CHARACTERS)
+        .isEqualTo(passwordStrengthPolicyResponse.getMinNumberOfLowercaseCharacters());
     assertThat(MINIMUM_NUMBER_OF_DIGITS).isEqualTo(passwordStrengthPolicyResponse.getMinNumberOfDigits());
-    assertEquals(
-        passwordStrengthPolicyResponse.getMinNumberOfSpecialCharacters(), MINIMUM_NUMBER_OF_SPECIAL_CHARACTERS);
+    assertThat(MINIMUM_NUMBER_OF_SPECIAL_CHARACTERS)
+        .isEqualTo(passwordStrengthPolicyResponse.getMinNumberOfSpecialCharacters());
   }
 
   @Test
@@ -104,9 +103,10 @@ public class PasswordStrengthPolicyFunctionalTest extends AbstractFunctionalTest
       loginSettingsService.verifyPasswordStrength(getAccount(), TEST_PASSWORD.toCharArray());
       fail("Password should not have been accepted");
     } catch (WingsException e) {
-      assertEquals(String.valueOf(e),
+      assertThat(
           String.format("io.harness.exception.WingsException: Password validation checks failed for account :[%s].",
-              getAccount().getUuid()));
+              getAccount().getUuid()))
+          .isEqualTo(String.valueOf(e));
     }
   }
 

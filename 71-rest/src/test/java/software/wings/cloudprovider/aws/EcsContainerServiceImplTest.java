@@ -3,7 +3,6 @@ package software.wings.cloudprovider.aws;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -182,9 +181,9 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetIdFromArn() {
     EcsContainerServiceImpl ecsContainerServiceImpl = (EcsContainerServiceImpl) ecsContainerService;
-    assertEquals("b506302e5cf6448ca67e1896b679c92e",
-        ecsContainerServiceImpl.getIdFromArn(
-            "arn:aws:ecs:us-east-1:448640225317:task/SdkTesting/b506302e5cf6448ca67e1896b679c92e"));
+    assertThat(ecsContainerServiceImpl.getIdFromArn(
+                   "arn:aws:ecs:us-east-1:448640225317:task/SdkTesting/b506302e5cf6448ca67e1896b679c92e"))
+        .isEqualTo("b506302e5cf6448ca67e1896b679c92e");
   }
 
   @Test
@@ -237,6 +236,6 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
     assertThat(network.getIPv4Addresses().get(0)).isEqualTo("172.31.21.197");
 
     EcsContainerServiceImpl serviceImpl = new EcsContainerServiceImpl();
-    assertEquals("172.31.21.197", serviceImpl.getIp("ip", task.getContainers().get(0)));
+    assertThat(serviceImpl.getIp("ip", task.getContainers().get(0))).isEqualTo("172.31.21.197");
   }
 }
