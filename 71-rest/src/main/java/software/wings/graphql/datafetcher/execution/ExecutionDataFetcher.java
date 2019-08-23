@@ -11,7 +11,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
-import software.wings.graphql.datafetcher.AbstractDataFetcher;
+import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
 import software.wings.graphql.schema.query.QLExecutionQueryParameters;
 import software.wings.graphql.schema.type.QLExecution;
 import software.wings.graphql.schema.type.QLPipelineExecution;
@@ -23,7 +23,7 @@ import software.wings.security.annotations.AuthRule;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
-public class ExecutionDataFetcher extends AbstractDataFetcher<QLExecution, QLExecutionQueryParameters> {
+public class ExecutionDataFetcher extends AbstractObjectDataFetcher<QLExecution, QLExecutionQueryParameters> {
   @Inject protected WingsPersistence persistence;
   @Inject private WorkflowExecutionController workflowExecutionController;
 

@@ -7,7 +7,7 @@ import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Environment;
-import software.wings.graphql.datafetcher.AbstractDataFetcher;
+import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
 import software.wings.graphql.schema.query.QLEnvironmentQueryParameters;
 import software.wings.graphql.schema.type.QLEnvironment;
 import software.wings.graphql.schema.type.QLEnvironment.QLEnvironmentBuilder;
@@ -16,7 +16,7 @@ import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 
 @Slf4j
-public class EnvironmentDataFetcher extends AbstractDataFetcher<QLEnvironment, QLEnvironmentQueryParameters> {
+public class EnvironmentDataFetcher extends AbstractObjectDataFetcher<QLEnvironment, QLEnvironmentQueryParameters> {
   public static final String ENV_DOES_NOT_EXISTS_MSG = "Environment does not exist";
 
   @Inject HPersistence persistence;

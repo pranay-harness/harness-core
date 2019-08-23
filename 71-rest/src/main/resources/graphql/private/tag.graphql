@@ -1,0 +1,8 @@
+type Tag {
+  name: String
+  value: String
+}
+
+extend type Service {
+  tags: [Tag] @dataFetcher(name: tags, contextFieldArgsMap: "{ \"serviceId\": \"id\"}")
+}

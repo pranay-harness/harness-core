@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
-import software.wings.graphql.datafetcher.AbstractDataFetcher;
+import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
 import software.wings.graphql.schema.query.QLApplicationQueryParameters;
 import software.wings.graphql.schema.type.QLApplication;
 import software.wings.graphql.schema.type.QLApplication.QLApplicationBuilder;
@@ -17,7 +17,7 @@ import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 
 @Slf4j
-public class ApplicationDataFetcher extends AbstractDataFetcher<QLApplication, QLApplicationQueryParameters> {
+public class ApplicationDataFetcher extends AbstractObjectDataFetcher<QLApplication, QLApplicationQueryParameters> {
   public static final String APP_DOES_NOT_EXIST_MSG = "Application does not exist";
   @Inject HPersistence persistence;
 

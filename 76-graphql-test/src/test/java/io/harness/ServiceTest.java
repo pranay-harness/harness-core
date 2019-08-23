@@ -2,7 +2,9 @@ package io.harness;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
+import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.graphql.schema.type.QLService.QLServiceKeys;
+import static software.wings.graphql.schema.type.QLTag.QLTagKeys;
 
 import com.google.inject.Inject;
 
@@ -21,16 +23,23 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
+import software.wings.beans.HarnessTagLink;
 import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceBuilder;
 import software.wings.graphql.schema.type.QLServiceConnection;
 import software.wings.graphql.schema.type.QLUser.QLUserKeys;
+import software.wings.service.intfc.HarnessTagService;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Slf4j
 public class ServiceTest extends GraphQLTest {
   @Inject private OwnerManager ownerManager;
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private ApplicationGenerator applicationGenerator;
+  @Inject private HarnessTagService harnessTagService;
 
   @Test
   @Category({GraphQLTests.class, UnitTests.class})
@@ -41,8 +50,8 @@ public class ServiceTest extends GraphQLTest {
 
     final Service service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);
     assertThat(service).isNotNull();
-
-    String query = $GQL(/*
+    {
+      String query = $GQL(/*
 {
   service(serviceId: "%s") {
     id
@@ -59,17 +68,38 @@ public class ServiceTest extends GraphQLTest {
   }
 }*/ service.getUuid());
 
-    QLTestObject qlService = qlExecute(query, service.getAccountId());
-    assertThat(qlService.get(QLServiceKeys.id)).isEqualTo(service.getUuid());
-    assertThat(qlService.get(QLServiceKeys.name)).isEqualTo(service.getName());
-    assertThat(qlService.get(QLServiceKeys.description)).isEqualTo(service.getDescription());
-    assertThat(qlService.get(QLServiceKeys.artifactType)).isEqualTo(service.getArtifactType().name());
-    assertThat(qlService.get(QLServiceKeys.deploymentType)).isEqualTo(service.getDeploymentType().name());
-    assertThat(qlService.get(QLServiceKeys.createdAt)).isEqualTo(service.getCreatedAt());
-    assertThat(qlService.sub(QLServiceKeys.createdBy).get(QLUserKeys.id)).isEqualTo(service.getCreatedBy().getUuid());
-    assertThat(qlService.sub(QLServiceKeys.createdBy).get(QLUserKeys.name)).isEqualTo(service.getCreatedBy().getName());
-    assertThat(qlService.sub(QLServiceKeys.createdBy).get(QLUserKeys.email))
-        .isEqualTo(service.getCreatedBy().getEmail());
+      QLTestObject qlService = qlExecute(query, service.getAccountId());
+      assertThat(qlService.get(QLServiceKeys.id)).isEqualTo(service.getUuid());
+      assertThat(qlService.get(QLServiceKeys.name)).isEqualTo(service.getName());
+      assertThat(qlService.get(QLServiceKeys.description)).isEqualTo(service.getDescription());
+      assertThat(qlService.get(QLServiceKeys.artifactType)).isEqualTo(service.getArtifactType().name());
+      assertThat(qlService.get(QLServiceKeys.deploymentType)).isEqualTo(service.getDeploymentType().name());
+      assertThat(qlService.get(QLServiceKeys.createdAt)).isEqualTo(service.getCreatedAt());
+      assertThat(qlService.sub(QLServiceKeys.createdBy).get(QLUserKeys.id)).isEqualTo(service.getCreatedBy().getUuid());
+      assertThat(qlService.sub(QLServiceKeys.createdBy).get(QLUserKeys.name))
+          .isEqualTo(service.getCreatedBy().getName());
+      assertThat(qlService.sub(QLServiceKeys.createdBy).get(QLUserKeys.email))
+          .isEqualTo(service.getCreatedBy().getEmail());
+    }
+
+    {
+      String query = $GQL(/*
+{
+  service(serviceId: "%s") {
+    id
+    tags {
+      name
+      value
+    }
+  }
+}*/ service.getUuid());
+      attachTagToService(service);
+      QLTestObject qlService = qlExecute(query, service.getAccountId());
+      assertThat(qlService.get(QLServiceKeys.id)).isEqualTo(service.getUuid());
+      Map<String, String> tagsMap = (LinkedHashMap) (((ArrayList) qlService.get("tags")).get(0));
+      assertThat(tagsMap.get(QLTagKeys.name)).isEqualTo("color");
+      assertThat(tagsMap.get(QLTagKeys.value)).isEqualTo("red");
+    }
   }
 
   @Test
@@ -138,5 +168,39 @@ public class ServiceTest extends GraphQLTest {
       final QLTestObject qlTestObject = qlExecute(query, application.getAccountId());
       assertThat(qlTestObject.getMap().size()).isEqualTo(1);
     }
+
+    {
+      String query = $GQL(/*
+{
+  services(filters:[{service:{operator:IN,values:["%s"]}}] limit: 3) {
+    nodes {
+      id
+      tags {
+        name
+        value
+      }
+    }
+  }
+}*/ service1.getUuid());
+
+      attachTagToService(service1);
+      QLTestObject serviceConnection = qlExecute(query, application.getAccountId());
+      Map<String, Object> serviceMap = (LinkedHashMap) (((ArrayList) serviceConnection.get("nodes")).get(0));
+      assertThat(serviceMap.get(QLServiceKeys.id)).isEqualTo(service1.getUuid());
+      Map<String, String> tagsMap = (LinkedHashMap) (((ArrayList) serviceMap.get("tags")).get(0));
+      assertThat(tagsMap.get(QLTagKeys.name)).isEqualTo("color");
+      assertThat(tagsMap.get(QLTagKeys.value)).isEqualTo("red");
+    }
+  }
+
+  private void attachTagToService(Service service) {
+    harnessTagService.attachTag(HarnessTagLink.builder()
+                                    .accountId(service.getAccountId())
+                                    .appId(service.getAppId())
+                                    .entityId(service.getUuid())
+                                    .entityType(SERVICE)
+                                    .key("color")
+                                    .value("red")
+                                    .build());
   }
 }

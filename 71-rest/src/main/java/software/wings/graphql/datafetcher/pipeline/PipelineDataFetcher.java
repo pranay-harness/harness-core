@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Pipeline;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
-import software.wings.graphql.datafetcher.AbstractDataFetcher;
+import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
 import software.wings.graphql.schema.query.QLPipelineQueryParameters;
 import software.wings.graphql.schema.type.QLPipeline;
 import software.wings.graphql.schema.type.QLPipeline.QLPipelineBuilder;
@@ -18,7 +18,7 @@ import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 
 @Slf4j
-public class PipelineDataFetcher extends AbstractDataFetcher<QLPipeline, QLPipelineQueryParameters> {
+public class PipelineDataFetcher extends AbstractObjectDataFetcher<QLPipeline, QLPipelineQueryParameters> {
   public static final String PIPELINE_DOES_NOT_EXIST_MSG = "Pipeline does not exist";
   @Inject HPersistence persistence;
 
