@@ -7,14 +7,15 @@ import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SettingAttribute;
-import software.wings.graphql.datafetcher.AbstractDataFetcher;
+import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
 import software.wings.graphql.schema.query.QLCloudProviderQueryParameters;
 import software.wings.graphql.schema.type.cloudProvider.QLCloudProvider;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 
 @Slf4j
-public class CloudProviderDataFetcher extends AbstractDataFetcher<QLCloudProvider, QLCloudProviderQueryParameters> {
+public class CloudProviderDataFetcher
+    extends AbstractObjectDataFetcher<QLCloudProvider, QLCloudProviderQueryParameters> {
   @Inject HPersistence persistence;
 
   @Override

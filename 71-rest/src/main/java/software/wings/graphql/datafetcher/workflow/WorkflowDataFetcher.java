@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
-import software.wings.graphql.datafetcher.AbstractDataFetcher;
+import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
 import software.wings.graphql.schema.query.QLWorkflowQueryParameters;
 import software.wings.graphql.schema.type.QLWorkflow;
 import software.wings.graphql.schema.type.QLWorkflow.QLWorkflowBuilder;
@@ -21,7 +21,7 @@ import software.wings.security.annotations.AuthRule;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class WorkflowDataFetcher extends AbstractDataFetcher<QLWorkflow, QLWorkflowQueryParameters> {
+public class WorkflowDataFetcher extends AbstractObjectDataFetcher<QLWorkflow, QLWorkflowQueryParameters> {
   public static final String WORKFLOW_DOES_NOT_EXIST_MSG = "Workflow does not exist";
   @Inject HPersistence persistence;
 

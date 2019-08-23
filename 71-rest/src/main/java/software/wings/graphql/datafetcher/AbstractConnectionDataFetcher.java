@@ -11,7 +11,7 @@ import software.wings.dl.WingsPersistence;
 import java.time.OffsetDateTime;
 
 @Slf4j
-public abstract class AbstractConnectionDataFetcher<T, P> extends AbstractDataFetcher<T, P> {
+public abstract class AbstractConnectionDataFetcher<T, P> extends AbstractObjectDataFetcher<T, P> {
   @Inject protected WingsPersistence persistence;
 
   // Adds closed open range filter to the query

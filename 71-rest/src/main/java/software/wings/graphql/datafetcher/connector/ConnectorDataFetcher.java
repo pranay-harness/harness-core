@@ -6,13 +6,13 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
 import software.wings.beans.SettingAttribute;
-import software.wings.graphql.datafetcher.AbstractDataFetcher;
+import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
 import software.wings.graphql.schema.query.QLConnectorQueryParameters;
 import software.wings.graphql.schema.type.connector.QLConnector;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 
-public class ConnectorDataFetcher extends AbstractDataFetcher<QLConnector, QLConnectorQueryParameters> {
+public class ConnectorDataFetcher extends AbstractObjectDataFetcher<QLConnector, QLConnectorQueryParameters> {
   @Inject HPersistence persistence;
 
   @Override

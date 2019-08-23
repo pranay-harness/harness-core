@@ -7,7 +7,7 @@ import com.google.inject.Inject;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.instance.dashboard.InstanceStatsUtils;
-import software.wings.graphql.datafetcher.AbstractDataFetcher;
+import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
 import software.wings.graphql.schema.query.QLInstancesCountQueryParameters;
 import software.wings.graphql.schema.type.QLInstanceCount;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -19,7 +19,8 @@ import software.wings.service.intfc.instance.stats.InstanceStatService;
 import java.util.List;
 
 @Slf4j
-public class InstanceCountDataFetcher extends AbstractDataFetcher<QLInstanceCount, QLInstancesCountQueryParameters> {
+public class InstanceCountDataFetcher
+    extends AbstractObjectDataFetcher<QLInstanceCount, QLInstancesCountQueryParameters> {
   @Inject DashboardStatisticsService dashboardService;
   @Inject InstanceStatService instanceStatService;
   @Inject AppService appService;

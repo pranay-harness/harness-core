@@ -4,7 +4,7 @@ import org.dataloader.DataLoader;
 
 import java.util.concurrent.CompletionStage;
 
-public abstract class AbstractBatchDataFetcher<T, P, K> extends AbstractDataFetcher<T, P> {
+public abstract class AbstractBatchDataFetcher<T, P, K> extends AbstractObjectDataFetcher<T, P> {
   protected abstract CompletionStage<T> load(P parameters, DataLoader<K, T> dataLoader);
 
   @Override

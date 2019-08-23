@@ -38,7 +38,7 @@ import javax.validation.constraints.NotNull;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
-public abstract class AbstractDataFetcher<T, P> extends BaseDataFetcher {
+public abstract class PlainObjectBaseDataFetcher<T, P> extends BaseDataFetcher {
   public static final String SELECTION_SET_FIELD_NAME = "selectionSet";
 
   public void addDataFetcherDirectiveAttributesForParent(
@@ -46,7 +46,7 @@ public abstract class AbstractDataFetcher<T, P> extends BaseDataFetcher {
     parentToContextFieldArgsMap.putIfAbsent(parentTypeName, dataFetcherDirectiveAttributes);
   }
 
-  protected abstract T fetch(P parameters, String accountId);
+  protected abstract Object fetchPlainObject(P parameters, String accountId);
 
   protected CompletionStage<T> fetchWithBatching(P parameters, DataLoader dataLoader) {
     return null;
@@ -55,6 +55,7 @@ public abstract class AbstractDataFetcher<T, P> extends BaseDataFetcher {
   @Override
   public final Object get(DataFetchingEnvironment dataFetchingEnvironment) {
     Type[] typeArguments = ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments();
+
     Class<T> returnClass = (Class<T>) typeArguments[0];
     Class<P> parametersClass = (Class<P>) typeArguments[1];
     Object result;
@@ -66,7 +67,7 @@ public abstract class AbstractDataFetcher<T, P> extends BaseDataFetcher {
         String dataFetcherName = getDataFetcherName(parentTypeName);
         result = fetchWithBatching(parameters, dataFetchingEnvironment.getDataLoader(dataFetcherName));
       } else {
-        result = fetch(parameters, getAccountId(dataFetchingEnvironment));
+        result = fetchPlainObject(parameters, getAccountId(dataFetchingEnvironment));
       }
     } catch (WingsException ex) {
       throw new WingsException(getCombinedErrorMessages(ex), ex, ex.getReportTargets());
@@ -80,7 +81,7 @@ public abstract class AbstractDataFetcher<T, P> extends BaseDataFetcher {
     Object contextObj = dataFetchingEnvironment.getContext();
 
     if (!(contextObj instanceof GraphQLContext)) {
-      throw new WingsException("Context not a graphqlContext");
+      throw new WingsException("Context not a graphql Context");
     }
 
     GraphQLContext context = (GraphQLContext) contextObj;

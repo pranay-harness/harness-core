@@ -4,14 +4,14 @@ import com.google.inject.Inject;
 
 import io.harness.persistence.HPersistence;
 import software.wings.beans.trigger.Trigger;
-import software.wings.graphql.datafetcher.AbstractDataFetcher;
+import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
 import software.wings.graphql.schema.query.QLTriggerQueryParameters;
 import software.wings.graphql.schema.type.trigger.QLTrigger;
 import software.wings.graphql.schema.type.trigger.QLTrigger.QLTriggerBuilder;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 
-public class TriggerDataFetcher extends AbstractDataFetcher<QLTrigger, QLTriggerQueryParameters> {
+public class TriggerDataFetcher extends AbstractObjectDataFetcher<QLTrigger, QLTriggerQueryParameters> {
   @Inject HPersistence persistence;
 
   @Override
