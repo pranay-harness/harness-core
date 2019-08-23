@@ -26,4 +26,8 @@ public class JsonFunctor implements ExpressionFunctor {
   public Object list(String path, String json) {
     return JsonUtils.jsonPath(json, path);
   }
+
+  public String format(Object object) {
+    return JsonUtils.asJson(object);
+  }
 }
