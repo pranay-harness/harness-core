@@ -17,7 +17,6 @@ import migrations.all.DeleteStaleThirdPartyApiCallLogsMigration;
 import migrations.all.ExplodeLogMLFeedbackRecordsMigration;
 import migrations.all.FetchAndSaveAccounts;
 import migrations.all.FetchAndSaveAccounts2;
-import migrations.all.InfraMappingToDefinitionMigration;
 import migrations.all.InitInfraProvisionerCounters;
 import migrations.all.InitPipelineCounters;
 import migrations.all.InitServiceCounters;
@@ -99,7 +98,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(47, UpdateWorkflowExecutionAccountId.class))
         .add(Pair.of(48, UpdateAccountEncryptionClassNames.class))
         .add(Pair.of(49, ScheduleSegmentPublishJob.class))
-        .add(Pair.of(50, InfraMappingToDefinitionMigration.class))
+        .add(Pair.of(50, BaseMigration.class))
         .add(Pair.of(51, BaseMigration.class))
 
         .build();
