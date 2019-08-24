@@ -10,6 +10,7 @@ import migrations.all.AddOrchestrationToWorkflows;
 import migrations.all.AddStateMachineToWorkflowExecutions;
 import migrations.all.AddValidUntilToCommandLog;
 import migrations.all.AddValidUntilToWorkflowExecution;
+import migrations.all.ApiKeysSetNameMigration;
 import migrations.all.CleanupOrphanInstances;
 import migrations.all.CleanupSyncStatusForDeletedEntities;
 import migrations.all.DeleteOrphanNotificationGroups;
@@ -100,7 +101,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(49, ScheduleSegmentPublishJob.class))
         .add(Pair.of(50, BaseMigration.class))
         .add(Pair.of(51, BaseMigration.class))
-
+        .add(Pair.of(52, ApiKeysSetNameMigration.class))
         .build();
   }
 }
