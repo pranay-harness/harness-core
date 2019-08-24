@@ -12,6 +12,7 @@ import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
 import io.harness.VerificationBaseTest;
+import io.harness.beans.SortOrder.OrderType;
 import io.harness.category.element.UnitTests;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
@@ -25,6 +26,7 @@ import org.mockito.MockitoAnnotations;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.TimeSeriesDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
 
 import java.util.ArrayList;
@@ -38,6 +40,9 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   private String cvConfigId;
   private String serviceId;
   private String accountId;
+  private String appId;
+  private String stateExecutionId;
+  private String workflowExecutionId;
   private Random randomizer;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
@@ -52,6 +57,9 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
     cvConfigId = generateUuid();
     serviceId = generateUuid();
     accountId = generateUuid();
+    appId = generateUuid();
+    stateExecutionId = generateUuid();
+    workflowExecutionId = generateUuid();
 
     MockitoAnnotations.initMocks(this);
     when(managerClientHelper.callManagerWithRetry(any())).thenReturn(aRestResponse().withResource(false).build());
@@ -165,5 +173,29 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
 
     assertThat(savedRecord.getValues()).isEqualTo(values);
     assertThat(savedRecord.getDeeplinkMetadata()).isEqualTo(deeplinkMetadata);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetHeartBeat() {
+    for (int i = 0; i < 10; i++) {
+      wingsPersistence.save(NewRelicMetricDataRecord.builder()
+                                .stateType(StateType.NEW_RELIC)
+                                .appId(appId)
+                                .stateExecutionId(stateExecutionId)
+                                .workflowExecutionId(workflowExecutionId)
+                                .serviceId(serviceId)
+                                .groupName(NewRelicMetricDataRecord.DEFAULT_GROUP_NAME)
+                                .dataCollectionMinute(i)
+                                .level(ClusterLevel.HF)
+                                .build());
+    }
+
+    NewRelicMetricDataRecord heartBeat = timeSeriesAnalysisService.getHeartBeat(StateType.NEW_RELIC, appId,
+        stateExecutionId, workflowExecutionId, serviceId, NewRelicMetricDataRecord.DEFAULT_GROUP_NAME, OrderType.ASC);
+    assertEquals(0, heartBeat.getDataCollectionMinute());
+    heartBeat = timeSeriesAnalysisService.getHeartBeat(StateType.NEW_RELIC, appId, stateExecutionId,
+        workflowExecutionId, serviceId, NewRelicMetricDataRecord.DEFAULT_GROUP_NAME, OrderType.DESC);
+    assertEquals(9, heartBeat.getDataCollectionMinute());
   }
 }
