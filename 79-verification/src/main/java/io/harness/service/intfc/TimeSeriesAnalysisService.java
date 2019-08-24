@@ -1,5 +1,6 @@
 package io.harness.service.intfc;
 
+import io.harness.beans.SortOrder.OrderType;
 import io.harness.entities.TimeSeriesAnomaliesRecord;
 import io.harness.entities.TimeSeriesCumulativeSums;
 import io.harness.validation.Create;
@@ -51,8 +52,8 @@ public interface TimeSeriesAnalysisService {
 
   List<String> getLastSuccessfulWorkflowExecutionIds(String appId, String workflowId, String serviceId);
 
-  NewRelicMetricDataRecord getLastHeartBeat(StateType stateType, String appId, String stateExecutionId,
-      String workflowExecutionId, String serviceId, String metricGroup);
+  NewRelicMetricDataRecord getHeartBeat(StateType stateType, String appId, String stateExecutionId,
+      String workflowExecutionId, String serviceId, String metricGroup, OrderType orderType);
 
   void bumpCollectionMinuteToProcess(String appId, String stateExecutionId, String workflowExecutionId,
       String groupName, int analysisMinute, String accountId);

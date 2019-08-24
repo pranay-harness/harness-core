@@ -617,8 +617,8 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   @Override
-  public NewRelicMetricDataRecord getLastHeartBeat(StateType stateType, String appId, String stateExecutionId,
-      String workflowExecutionId, String serviceId, String groupName) {
+  public NewRelicMetricDataRecord getHeartBeat(StateType stateType, String appId, String stateExecutionId,
+      String workflowExecutionId, String serviceId, String groupName, OrderType orderType) {
     logger.info(
         "Querying for getLastHeartBeat. Params are: stateType {}, appId {}, stateExecutionId: {}, workflowExecutionId: {} serviceId {}, groupName: {} ",
         stateType, appId, stateExecutionId, workflowExecutionId, serviceId, groupName);
@@ -628,7 +628,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             .withLimit(UNLIMITED)
             .addFilter(NewRelicMetricDataRecordKeys.stateExecutionId, Operator.EQ, stateExecutionId)
             .addFilter(NewRelicMetricDataRecordKeys.groupName, Operator.EQ, groupName)
-            .addOrder(NewRelicMetricDataRecordKeys.dataCollectionMinute, OrderType.DESC)
+            .addOrder(NewRelicMetricDataRecordKeys.dataCollectionMinute, orderType)
             .build();
 
     final PageResponse<NewRelicMetricDataRecord> results =

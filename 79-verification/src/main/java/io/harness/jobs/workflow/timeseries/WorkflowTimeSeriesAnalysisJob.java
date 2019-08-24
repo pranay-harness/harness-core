@@ -11,6 +11,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SortOrder.OrderType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.managerclient.VerificationManagerClientHelper;
@@ -330,19 +331,23 @@ public class WorkflowTimeSeriesAnalysisJob implements Job {
           TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo timeSeriesMlAnalysisGroupInfo = entry.getValue();
           String groupName = timeSeriesMlAnalysisGroupInfo.getGroupName();
           TimeSeriesMlAnalysisType timeSeriesMlAnalysisType = timeSeriesMlAnalysisGroupInfo.getMlAnalysisType();
-          final NewRelicMetricDataRecord heartBeatRecord =
-              analysisService.getLastHeartBeat(context.getStateType(), context.getAppId(),
-                  context.getStateExecutionId(), context.getWorkflowExecutionId(), context.getServiceId(), groupName);
+          final NewRelicMetricDataRecord lastHeartBeatRecord =
+              analysisService.getHeartBeat(context.getStateType(), context.getAppId(), context.getStateExecutionId(),
+                  context.getWorkflowExecutionId(), context.getServiceId(), groupName, OrderType.DESC);
 
-          if (heartBeatRecord != null) {
+          if (lastHeartBeatRecord != null) {
+            final NewRelicMetricDataRecord firstHeartBeatRecord =
+                analysisService.getHeartBeat(context.getStateType(), context.getAppId(), context.getStateExecutionId(),
+                    context.getWorkflowExecutionId(), context.getServiceId(), groupName, OrderType.ASC);
             completeCron = timeSeriesMlAnalysisType.equals(TimeSeriesMlAnalysisType.PREDICTIVE)
-                ? heartBeatRecord.getDataCollectionMinute()
+                ? lastHeartBeatRecord.getDataCollectionMinute()
                     >= PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES + analysisDuration
-                : heartBeatRecord.getDataCollectionMinute() >= analysisDuration;
+                : lastHeartBeatRecord.getDataCollectionMinute() - firstHeartBeatRecord.getDataCollectionMinute()
+                    >= analysisDuration;
 
             if (completeCron) {
               logger.info("time series analysis finished after running for {} minutes",
-                  heartBeatRecord.getDataCollectionMinute());
+                  lastHeartBeatRecord.getDataCollectionMinute());
 
               return;
             }
