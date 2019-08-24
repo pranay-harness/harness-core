@@ -41,11 +41,15 @@ public class ApiKeysSetNameMigration implements Migration {
         continue;
       }
 
-      ApiKeyEntry apiKeyEntry = apiKeyService.get(uuId, accountId);
-      UpdateOperations<ApiKeyEntry> operations = wingsPersistence.createUpdateOperations(ApiKeyEntry.class);
-      setUnset(operations, "name", apiKeyEntry.getDecryptedKey().substring(0, 5));
-      wingsPersistence.update(wingsPersistence.createQuery(ApiKeyEntry.class).filter("_id", uuId).get(), operations);
-      logger.info("updated api key: " + uuId);
+      try {
+        ApiKeyEntry apiKeyEntry = apiKeyService.get(uuId, accountId);
+        UpdateOperations<ApiKeyEntry> operations = wingsPersistence.createUpdateOperations(ApiKeyEntry.class);
+        setUnset(operations, "name", apiKeyEntry.getDecryptedKey().substring(0, 5));
+        wingsPersistence.update(wingsPersistence.createQuery(ApiKeyEntry.class).filter("_id", uuId).get(), operations);
+        logger.info("updated api key: {}", uuId);
+      } catch (Exception ex) {
+        logger.warn("Failed to update api key: {}", uuId, ex);
+      }
     }
 
     logger.info("Completed setting name to api keys");
