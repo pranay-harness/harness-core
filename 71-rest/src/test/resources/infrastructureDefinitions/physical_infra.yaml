@@ -8,4 +8,3 @@ infrastructure:
   hostConnectionAttrsName: TEST_CLOUD_PROVIDER
   hostNames:
   - 0.0.0.0
-name: infra-def

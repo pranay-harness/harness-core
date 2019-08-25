@@ -9,4 +9,4 @@ infrastructure:
     releaseName: release-${infra.kubernetes.infraId}
     clusterName: ${terraform.cluster}
     namespace: default
-name: infra-def
+provisioner: infraProvisioner

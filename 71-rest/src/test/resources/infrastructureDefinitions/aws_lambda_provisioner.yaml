@@ -11,4 +11,4 @@ infrastructure:
     vpcId: ${vpc}
     region: region
     subnetIds: ${terraform.subnet}
-name: infra-def
+provisioner: infraProvisioner

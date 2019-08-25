@@ -32,9 +32,11 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureType;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
+import software.wings.infra.InfraDefinitionTestConstants;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.InfrastructureDefinition.Yaml;
 import software.wings.service.impl.yaml.handler.InfraDefinition.AwsEcsInfrastructureYamlHandler;
@@ -52,8 +54,8 @@ import software.wings.service.impl.yaml.handler.InfraDefinition.PhysicalInfraYam
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
+import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
@@ -70,8 +72,8 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
   @Mock private YamlHandlerFactory mockYamlHandlerFactory;
   @Mock private AppService appService;
   @Mock private ServiceResourceService serviceResourceService;
-  @Mock private EnvironmentService environmentService;
   @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
+  @Mock private InfrastructureProvisionerService infrastructureProvisionerService;
 
   @InjectMocks @Inject private InfrastructureDefinitionYamlHandler handler;
   @InjectMocks @Inject private AwsLambdaInfrastructureYamlHandler awsLambdaInfrastructureYamlHandler;
@@ -92,8 +94,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
 
   @UtilityClass
   private static class validYamlInfraStructureFiles {
-    // Make sure that CloudProviderName is TEST_CLOUD_PROVIDER and InfraDefinition name is
-    // infra-def in yaml files
+    // Make sure that CloudProviderName is TEST_CLOUD_PROVIDER
     private static final String AWS_ECS = "aws_ecs.yaml";
     private static final String AWS_ECS_PROVISIONER = "aws_ecs_provisioner.yaml";
     private static final String AWS_LAMBDA = "aws_lambda.yaml";
@@ -118,6 +119,11 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
     SettingAttribute settingAttribute =
         SettingAttribute.Builder.aSettingAttribute().withUuid(SETTING_ID).withName("TEST_CLOUD_PROVIDER").build();
     Service service = Service.builder().name("httpd").uuid(SERVICE_ID).build();
+    TerraformInfrastructureProvisioner infrastructureProvisioner =
+        TerraformInfrastructureProvisioner.builder()
+            .uuid(InfraDefinitionTestConstants.INFRA_PROVISIONER_ID)
+            .name(InfraDefinitionTestConstants.INFRA_PROVISIONER)
+            .build();
     doReturn(ACCOUNT_ID).when(appService).getAccountIdByAppId(anyString());
     doReturn(APP_ID).when(mockYamlHelper).getAppId(anyString(), anyString());
     doReturn(ENV_ID).when(mockYamlHelper).getEnvironmentId(anyString(), anyString());
@@ -132,6 +138,8 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
     doReturn(Optional.of(anEnvironment().uuid(ENV_ID).build()))
         .when(mockYamlHelper)
         .getEnvIfPresent(anyString(), anyString());
+    doReturn(infrastructureProvisioner).when(infrastructureProvisionerService).get(anyString(), anyString());
+    doReturn(infrastructureProvisioner).when(infrastructureProvisionerService).getByName(anyString(), anyString());
   }
 
   @Test

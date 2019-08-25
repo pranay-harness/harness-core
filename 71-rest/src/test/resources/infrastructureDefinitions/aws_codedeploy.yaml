@@ -10,4 +10,3 @@ infrastructure:
   deploymentGroup: test-group
   hostNameConvention: ${host.ec2Instance.privateDnsName.split('\.')[0]}
   region: us-east-1
-name: infra-def

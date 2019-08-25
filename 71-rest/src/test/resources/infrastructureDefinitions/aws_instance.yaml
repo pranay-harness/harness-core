@@ -21,4 +21,3 @@ infrastructure:
   setDesiredCapacity: false
   useAutoScalingGroup: false
   usePublicDns: false
-name: infra-def
