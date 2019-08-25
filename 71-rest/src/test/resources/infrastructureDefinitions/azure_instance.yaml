@@ -13,6 +13,5 @@ infrastructure:
     value: name
   - key: managed-by
     value: someone
-name: infra-def
 scopedServices:
 - httpd

@@ -14,4 +14,4 @@ infrastructure:
     region: ${terraform.region}
     subnetIds: ${terraform.subnets}
   launchType: EC2
-name: infra-def
+provisioner: infraProvisioner

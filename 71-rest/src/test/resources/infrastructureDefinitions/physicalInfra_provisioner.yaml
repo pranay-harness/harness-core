@@ -10,4 +10,4 @@ infrastructure:
     subnet: snets
     hostname: hostname
   hostConnectionAttrsName: TEST_CLOUD_PROVIDER
-name: infra-def
+provisioner: infraProvisioner

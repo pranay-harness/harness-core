@@ -92,17 +92,18 @@ public class InfrastructureDefinition implements PersistentEntity, UuidAware, Na
     private DeploymentType deploymentType;
     @NotNull private List<CloudProviderInfrastructureYaml> infrastructure = new ArrayList<>();
     private List<String> scopedServices;
+    private String provisioner;
 
     @Builder
-    public Yaml(String type, String harnessApiVersion, String name, CloudProviderType cloudProviderType,
+    public Yaml(String type, String harnessApiVersion, CloudProviderType cloudProviderType,
         DeploymentType deploymentType, List<CloudProviderInfrastructureYaml> infrastructure,
-        List<String> scopedServices) {
+        List<String> scopedServices, String provisioner) {
       super(type, harnessApiVersion);
-      setName(name);
       setCloudProviderType(cloudProviderType);
       setDeploymentType(deploymentType);
       setInfrastructure(infrastructure);
       setScopedServices(scopedServices);
+      setProvisioner(provisioner);
     }
   }
 }

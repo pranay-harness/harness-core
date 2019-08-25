@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.InfraDefinition;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.utils.Validator.notNullCheck;
@@ -9,8 +10,10 @@ import com.google.inject.Singleton;
 
 import io.harness.data.structure.CollectionUtils;
 import io.harness.exception.WingsException;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Service;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
@@ -22,7 +25,9 @@ import software.wings.service.impl.yaml.handler.CloudProviderInfrastructure.Clou
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.InfrastructureDefinitionService;
+import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,6 +38,7 @@ import java.util.Optional;
 public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, InfrastructureDefinition> {
   @Inject private YamlHelper yamlHelper;
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
+  @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject private YamlHandlerFactory yamlHandlerFactory;
   @Inject private ServiceResourceService serviceResourceService;
 
@@ -40,6 +46,10 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
   public Yaml toYaml(InfrastructureDefinition bean, String appId) {
     CloudProviderInfrastructureYamlHandler cloudProviderInfrastructureYamlHandler = yamlHandlerFactory.getYamlHandler(
         YamlType.CLOUD_PROVIDER_INFRASTRUCTURE, bean.getInfrastructure().getInfrastructureType());
+    String provisionerName = StringUtils.EMPTY;
+    if (isNotEmpty(bean.getProvisionerId())) {
+      provisionerName = infrastructureProvisionerService.get(appId, bean.getProvisionerId()).getName();
+    }
     List<String> scopedToServiceNames = new ArrayList<>();
     for (String serviceId : CollectionUtils.emptyIfNull(bean.getScopedToServices())) {
       scopedToServiceNames.add(getServiceName(appId, serviceId));
@@ -48,11 +58,11 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
     return Yaml.builder()
         .type(YamlType.INFRA_DEFINITION.name())
         .harnessApiVersion(getHarnessApiVersion())
-        .name(bean.getName())
         .scopedServices(scopedToServiceNames)
         .infrastructure(Arrays.asList(cloudProviderInfrastructureYamlHandler.toYaml(bean.getInfrastructure(), appId)))
         .deploymentType(bean.getDeploymentType())
         .cloudProviderType(bean.getCloudProviderType())
+        .provisioner(provisionerName)
         .build();
   }
 
@@ -85,19 +95,27 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
     for (String serviceName : CollectionUtils.emptyIfNull(yaml.getScopedServices())) {
       scopedToServicesId.add(getServiceId(appId, serviceName));
     }
+
     bean.setAppId(appId);
     bean.setEnvId(envId);
-    bean.setName(yaml.getName());
     bean.setCloudProviderType(yaml.getCloudProviderType());
     bean.setDeploymentType(yaml.getDeploymentType());
     bean.setScopedToServices(scopedToServicesId);
     bean.setInfrastructure(cloudProviderInfrastructure);
+    if (isNotEmpty(yaml.getProvisioner())) {
+      InfrastructureProvisioner infrastructureProvisioner =
+          infrastructureProvisionerService.getByName(appId, yaml.getProvisioner());
+      Validator.notNullCheck(
+          "Couldn't retrieve infrastructure provisioner from name:" + yaml.getProvisioner(), infrastructureProvisioner);
+      bean.setProvisionerId(infrastructureProvisioner.getUuid());
+    }
   }
 
   private InfrastructureDefinition upsertInfraDefinition(
       InfrastructureDefinition current, InfrastructureDefinition previous, boolean syncFromGit) {
     if (previous != null) {
       current.setUuid(previous.getUuid());
+      current.setName(previous.getName());
       return infrastructureDefinitionService.update(current);
     } else {
       return infrastructureDefinitionService.save(current, false);

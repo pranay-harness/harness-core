@@ -8,4 +8,3 @@ infrastructure:
   clusterName: us-central1-a/harness-test
   namespace: default
   releaseName: release-${infra.kubernetes.infraId}
-name: infra-def

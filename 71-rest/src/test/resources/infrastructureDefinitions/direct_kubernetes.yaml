@@ -8,4 +8,3 @@ infrastructure:
   clusterName: local
   namespace: default
   releaseName: release-${infra.kubernetes.infraId}
-name: infra-def

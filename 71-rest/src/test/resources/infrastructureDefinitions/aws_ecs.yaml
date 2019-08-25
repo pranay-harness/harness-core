@@ -14,4 +14,3 @@ infrastructure:
   subnetIds:
   - subnet-0581525f93ec3267f
   vpcId: vpc-058e7fbdc7163accf
-name: infra-def
