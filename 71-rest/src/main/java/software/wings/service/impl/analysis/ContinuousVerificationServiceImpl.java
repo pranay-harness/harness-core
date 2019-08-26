@@ -1479,6 +1479,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Override
   public boolean notifyVerificationState(String correlationId, VerificationDataAnalysisResponse response) {
     try {
+      logger.info("Received state notification for {} data {}", correlationId, response);
       waitNotifyEngine.notify(correlationId, response);
       return true;
     } catch (Exception ex) {

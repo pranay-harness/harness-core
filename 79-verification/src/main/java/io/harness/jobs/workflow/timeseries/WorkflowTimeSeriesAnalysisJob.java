@@ -320,6 +320,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Job {
       try {
         // Check whether workflow state is valid or not.
         if (!learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
+          logger.info("for {} state is no longer valid", context.getStateExecutionId());
           completeCron = true;
           return;
         }
@@ -346,9 +347,8 @@ public class WorkflowTimeSeriesAnalysisJob implements Job {
                     >= analysisDuration;
 
             if (completeCron) {
-              logger.info("time series analysis finished after running for {} minutes",
-                  lastHeartBeatRecord.getDataCollectionMinute());
-
+              logger.info("time series analysis finished for {} after running for {} minutes",
+                  context.getStateExecutionId(), lastHeartBeatRecord.getDataCollectionMinute());
               return;
             }
           }
@@ -427,20 +427,21 @@ public class WorkflowTimeSeriesAnalysisJob implements Job {
           try {
             createExperimentalTask(analysisMinute, groupName, timeSeriesMlAnalysisType);
           } catch (Exception ex) {
-            logger.info("[Learning Engine] : Failed to create Experimental Task with error {}", ex);
+            logger.info("[Learning Engine] : Failed to create Experimental Task for {} with error {}",
+                context.getStateExecutionId(), ex);
           }
         }
       } catch (RuntimeException | IOException ex) {
         completeCron = true;
         error = true;
         errMsg = ExceptionUtils.getMessage(ex);
-        logger.warn("analysis failed", ex);
+        logger.warn("analysis failed for {}", context.getStateExecutionId(), ex);
       } finally {
         try {
           if (completeCron || !learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
             try {
-              logger.info(
-                  "send notification to state manager and delete cron with error : {} errorMsg : {}", error, errMsg);
+              logger.info("send notification to state manager for {} and delete cron with error : {} errorMsg : {}",
+                  context.getStateExecutionId(), error, errMsg);
               sendStateNotification(context, error, errMsg, analysisMinute);
             } catch (Exception e) {
               logger.error("Send notification failed for new relic analysis manager", e);

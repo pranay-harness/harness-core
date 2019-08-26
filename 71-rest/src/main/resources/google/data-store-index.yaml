@@ -32,6 +32,13 @@ indexes:
 
 - kind: newRelicMetricRecords
   properties:
+  - name: stateExecutionId
+  - name: groupName
+  - name: dataCollectionMinute
+    direction: asc
+
+- kind: newRelicMetricRecords
+  properties:
   - name: workflowExecutionId
   - name: groupName
   - name: dataCollectionMinute
