@@ -1,5 +1,6 @@
 package software.wings.resources.graphql;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
@@ -52,6 +53,7 @@ import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 @Api("/graphql")
@@ -92,10 +94,11 @@ public class GraphQLResource {
   @POST
   @Consumes(MediaType.TEXT_PLAIN)
   @ExternalFacingApiAuth
-  public Map<String, Object> execute(@HeaderParam(API_KEY_HEADER) String apiKey, String query) {
+  public Map<String, Object> execute(
+      @HeaderParam(API_KEY_HEADER) String apiKey, @QueryParam("accountId") String accountId, String query) {
     GraphQLQuery graphQLQuery = new GraphQLQuery();
     graphQLQuery.setQuery(query);
-    return executeExternal(apiKey, graphQLQuery);
+    return executeExternal(accountId, apiKey, graphQLQuery);
   }
 
   /**
@@ -109,8 +112,9 @@ public class GraphQLResource {
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @ExternalFacingApiAuth
-  public Map<String, Object> execute(@HeaderParam(API_KEY_HEADER) String apiKey, GraphQLQuery graphQLQuery) {
-    return executeExternal(apiKey, graphQLQuery);
+  public Map<String, Object> execute(@HeaderParam(API_KEY_HEADER) String apiKey,
+      @QueryParam("accountId") String accountId, GraphQLQuery graphQLQuery) {
+    return executeExternal(accountId, apiKey, graphQLQuery);
   }
 
   @Path("int")
@@ -139,22 +143,29 @@ public class GraphQLResource {
     return executeInternal(graphQLQuery);
   }
 
-  private Map<String, Object> executeExternal(String apiKey, GraphQLQuery graphQLQuery) {
+  private Map<String, Object> executeExternal(
+      String accountIdFromQueryParam, String apiKey, GraphQLQuery graphQLQuery) {
     String accountId;
     boolean hasUserContext = false;
-    UserPermissionInfo userPermissionInfo = null;
-    UserRestrictionInfo userRestrictionInfo = null;
-    if (apiKey == null || (accountId = apiKeyService.getAccountIdFromApiKey(apiKey)) == null) {
-      User user = UserThreadLocal.get();
-      if (user != null) {
-        accountId = user.getUserRequestContext().getAccountId();
-        userPermissionInfo = user.getUserRequestContext().getUserPermissionInfo();
-        userRestrictionInfo = user.getUserRequestContext().getUserRestrictionInfo();
-        hasUserContext = true;
-      } else {
+    UserRequestContext userRequestContext = null;
+    User user = UserThreadLocal.get();
+    if (user != null) {
+      accountId = user.getUserRequestContext().getAccountId();
+      userRequestContext = user.getUserRequestContext();
+      hasUserContext = true;
+    } else if (isNotEmpty(apiKey)) {
+      accountId = apiKeyService.getAccountIdFromApiKey(apiKey);
+      if (accountId == null) {
+        accountId = accountIdFromQueryParam;
+      }
+
+      if (accountId == null) {
         logger.info(GraphQLConstants.INVALID_API_KEY);
         return getExecutionResultWithError(GraphQLConstants.INVALID_API_KEY).toSpecification();
       }
+    } else {
+      logger.info(GraphQLConstants.INVALID_API_KEY);
+      return getExecutionResultWithError(GraphQLConstants.INVALID_API_KEY).toSpecification();
     }
 
     if (checkRateLimit(accountId)) {
@@ -177,15 +188,16 @@ public class GraphQLResource {
         graphQL = publicGraphQL;
       }
       if (hasUserContext) {
-        executionResult = graphQL.execute(getExecutionInput(
-            userPermissionInfo, userRestrictionInfo, accountId, graphQLQuery, dataLoaderRegistryHelper));
+        executionResult = graphQL.execute(getExecutionInput(userRequestContext.getUserPermissionInfo(),
+            userRequestContext.getUserRestrictionInfo(), accountId, graphQLQuery, dataLoaderRegistryHelper));
       } else {
         ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(apiKey, accountId, true);
         if (apiKeyEntry == null) {
           executionResult = getExecutionResultWithError(GraphQLConstants.INVALID_API_KEY);
         } else {
-          userPermissionInfo = authHandler.evaluateUserPermissionInfo(accountId, apiKeyEntry.getUserGroups(), null);
-          userRestrictionInfo =
+          UserPermissionInfo userPermissionInfo =
+              authHandler.evaluateUserPermissionInfo(accountId, apiKeyEntry.getUserGroups(), null);
+          UserRestrictionInfo userRestrictionInfo =
               authService.getUserRestrictionInfoFromDB(accountId, userPermissionInfo, apiKeyEntry.getUserGroups());
           executionResult = graphQL.execute(getExecutionInput(
               userPermissionInfo, userRestrictionInfo, accountId, graphQLQuery, dataLoaderRegistryHelper));

@@ -181,9 +181,13 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
   @Override
   public String getAccountIdFromApiKey(String apiKey) {
-    String decodedApiKey = new String(Base64.getDecoder().decode(apiKey), Charsets.UTF_8);
-    String[] split = decodedApiKey.split(DELIMITER);
-    return split[0];
+    if (apiKey.contains(DELIMITER)) {
+      String decodedApiKey = new String(Base64.getDecoder().decode(apiKey), Charsets.UTF_8);
+      String[] split = decodedApiKey.split(DELIMITER);
+      return split[0];
+    } else {
+      return null;
+    }
   }
 
   @Override
@@ -200,12 +204,12 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   }
 
   @Override
-  public void validate(String key, String accountId) {
+  public void validate(String apiKey, String accountId) {
     PageRequest<ApiKeyEntry> pageRequest = aPageRequest().addFilter(ApiKeyEntryKeys.accountId, EQ, accountId).build();
     if (!wingsPersistence.query(ApiKeyEntry.class, pageRequest)
              .getResponse()
              .stream()
-             .anyMatch(apiKeyEntry -> checkpw(key, apiKeyEntry.getHashOfKey()))) {
+             .anyMatch(apiKeyEntry -> checkpw(apiKey, apiKeyEntry.getHashOfKey()))) {
       throw new UnauthorizedException("Invalid Api Key", USER);
     }
   }
