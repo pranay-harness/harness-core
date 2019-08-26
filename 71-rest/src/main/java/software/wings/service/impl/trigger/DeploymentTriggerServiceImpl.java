@@ -26,6 +26,7 @@ import software.wings.beans.trigger.DeploymentTrigger.DeploymentTriggerKeys;
 import software.wings.beans.trigger.PipelineAction;
 import software.wings.beans.trigger.TriggerArtifactVariable;
 import software.wings.beans.trigger.TriggerExecution;
+import software.wings.beans.trigger.WebhookSource;
 import software.wings.beans.trigger.WorkflowAction;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.AuditServiceHelper;
@@ -122,6 +123,16 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
     triggerProcessor.transformTriggerConditionRead(deploymentTrigger);
     triggerProcessor.transformTriggerActionRead(deploymentTrigger);
     return deploymentTrigger;
+  }
+
+  @Override
+  public Map<String, WebhookSource.WebhookEventInfo> fetchWebhookChildEvents(String webhookSource) {
+    return triggerServiceHelper.fetchWebhookChildEvents(webhookSource);
+  }
+
+  @Override
+  public Map<String, String> fetchCustomExpressionList(String webhookSource) {
+    return triggerServiceHelper.fetchCustomExpressionList(webhookSource);
   }
 
   @Override
