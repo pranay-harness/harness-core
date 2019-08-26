@@ -50,6 +50,8 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
   PageResponse<Workflow> listWorkflows(
       PageRequest<Workflow> pageRequest, Integer previousExecutionsCount, boolean withTags, String tagFilter);
 
+  List<Workflow> listWorkflows(String artifactStreamId, String accountId);
+
   Workflow readWorkflow(@NotNull String appId, @NotNull String workflowId, Integer version);
 
   Workflow readWorkflow(@NotNull String appId, @NotNull String workflowId);

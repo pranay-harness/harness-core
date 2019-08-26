@@ -24,6 +24,7 @@ import software.wings.beans.ServiceVariable.ServiceVariableKeys;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
+import software.wings.beans.Workflow;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamBinding;
@@ -35,6 +36,7 @@ import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceVariableService;
+import software.wings.service.intfc.WorkflowService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,6 +54,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
   @Inject private AppService appService;
   @Inject private ArtifactService artifactService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private WorkflowService workflowService;
 
   @Override
   public ArtifactStreamBinding create(
@@ -228,6 +231,12 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
                                            .addFilter(ServiceVariableKeys.type, Operator.EQ, Type.ARTIFACT)
                                            .addFilter(ServiceVariableKeys.name, Operator.EQ, name)
                                            .build());
+  }
+
+  @Override
+  public List<ServiceVariable> fetchArtifactServiceVariableByArtifactStreamId(
+      String accountId, String artifactStreamId) {
+    return getServiceVariablesByArtifactStreamId(accountId, artifactStreamId);
   }
 
   private List<ServiceVariable> getServiceVariablesByArtifactStreamId(
@@ -450,12 +459,21 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
     }
 
     List<String> serviceIds =
-        serviceVariables.stream().map(ServiceVariable::getServiceId).distinct().collect(Collectors.toList());
+        serviceVariables.stream().map(ServiceVariable::getEntityId).distinct().collect(Collectors.toList());
     if (isEmpty(serviceIds)) {
       return new ArrayList<>();
     }
 
     return serviceResourceService.fetchServicesByUuidsByAccountId(artifactStream.getAccountId(), serviceIds);
+  }
+
+  @Override
+  public List<Workflow> listWorkflows(String artifactStreamId) {
+    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+    if (artifactStream == null) {
+      return new ArrayList<>();
+    }
+    return workflowService.listWorkflows(artifactStreamId, artifactStream.getAccountId());
   }
 
   // TODO: ASR: make sure throwException is false after refactor to connector level artifact

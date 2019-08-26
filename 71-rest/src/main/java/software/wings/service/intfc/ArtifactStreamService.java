@@ -138,4 +138,6 @@ public interface ArtifactStreamService extends OwnedByService {
   List<ArtifactStream> listBySettingId(String appId, String settingId);
 
   List<ArtifactStream> listByAppId(String appId);
+
+  boolean pruneArtifactStream(String appId, String artifactStreamId);
 }

@@ -4,6 +4,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.Variable;
+import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamBinding;
 import software.wings.service.intfc.ownership.OwnedByArtifactStream;
@@ -26,6 +27,8 @@ public interface ArtifactStreamServiceBindingService extends OwnedByArtifactStre
   List<ServiceVariable> fetchArtifactServiceVariables(String appId, String serviceId);
 
   List<ServiceVariable> fetchArtifactServiceVariableByName(String appId, String serviceId, String name);
+
+  List<ServiceVariable> fetchArtifactServiceVariableByArtifactStreamId(String accountId, String artifactStreamId);
 
   /**
    * Create artifact stream service binding.
@@ -118,6 +121,8 @@ public interface ArtifactStreamServiceBindingService extends OwnedByArtifactStre
    * @return list of services
    */
   List<Service> listServices(@NotEmpty String artifactStreamId);
+
+  List<Workflow> listWorkflows(@NotEmpty String artifactStreamId);
 
   Service getService(@NotEmpty String appId, @NotEmpty String artifactStreamId, boolean throwException);
 

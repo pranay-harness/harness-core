@@ -79,6 +79,23 @@ public abstract class ExpressionBuilder {
   protected static final String ARTIFACT_SOURCE_REPOSITORY_NAME =
       "artifact.source." + ARTIFACT_SOURCE_REPOSITORY_NAME_KEY;
 
+  protected static final String ARTIFACT_DISPLAY_NAME_SUFFIX = ".displayName";
+  protected static final String ARTIFACT_DESCRIPTION_SUFFIX = ".description";
+  protected static final String ARTIFACT_BUILDNO_SUFFIX = ".buildNo";
+  protected static final String ARTIFACT_REVISION_SUFFIX = ".revision";
+  protected static final String ARTIFACT_ARTIFACT_FILE_NAME_SUFFIX = ".fileName";
+  protected static final String ARTIFACT_BUCKET_NAME_SUFFIX = ".bucketName";
+  protected static final String ARTIFACT_BUCKET_KEY_SUFFIX = ".key";
+  protected static final String ARTIFACT_URL_SUFFIX = ".url";
+  protected static final String ARTIFACT_BUILD_FULL_DISPLAYNAME_SUFFIX = ".buildFullDisplayName";
+  protected static final String ARTIFACT_METADATA_IMAGE_SUFFIX = "." + ArtifactKeys.metadata_image;
+  protected static final String ARTIFACT_METADATA_TAG_SUFFIX = "." + ArtifactKeys.metadata_tag;
+  protected static final String ARTIFACT_PATH_SUFFIX = ".artifactPath";
+  protected static final String ARTIFACT_SOURCE_USER_NAME_SUFFIX = ".source." + ARTIFACT_SOURCE_USER_NAME_KEY;
+  protected static final String ARTIFACT_SOURCE_REGISTRY_URL_SUFFIX = ".source." + ARTIFACT_SOURCE_REGISTRY_URL_KEY;
+  protected static final String ARTIFACT_SOURCE_REPOSITORY_NAME_SUFFIX =
+      ".source." + ARTIFACT_SOURCE_REPOSITORY_NAME_KEY;
+
   protected static final String ENV_NAME = "env.name";
   protected static final String ENV_DESCRIPTION = "env.description";
 
@@ -265,7 +282,11 @@ public abstract class ExpressionBuilder {
       Set<String> serviceVariableMentions = new HashSet<>();
       serviceVariables.forEach(serviceVariable -> {
         if (ServiceVariable.Type.ARTIFACT.equals(serviceVariable.getType())) {
-          serviceVariableMentions.add("artifacts." + serviceVariable.getName());
+          String artifactMentions = "artifacts." + serviceVariable.getName();
+          serviceVariableMentions.add(artifactMentions);
+          for (String suffix : getArtifactExpressionSuffixes()) {
+            serviceVariableMentions.add(artifactMentions + suffix);
+          }
         } else {
           serviceVariableMentions.add("serviceVariable." + serviceVariable.getName());
         }
@@ -292,5 +313,15 @@ public abstract class ExpressionBuilder {
     serviceVariables.addAll(getServiceVariables(
         appId, serviceTemplates.stream().map(ServiceTemplate::getUuid).collect(toList()), SERVICE_TEMPLATE));
     return serviceVariables;
+  }
+
+  public Set<String> getArtifactExpressionSuffixes() {
+    Set<String> expressions = new TreeSet<>();
+    expressions.addAll(asList(ARTIFACT_DISPLAY_NAME_SUFFIX, ARTIFACT_BUILDNO_SUFFIX, ARTIFACT_REVISION_SUFFIX,
+        ARTIFACT_DESCRIPTION_SUFFIX, ARTIFACT_ARTIFACT_FILE_NAME_SUFFIX, ARTIFACT_BUILD_FULL_DISPLAYNAME_SUFFIX,
+        ARTIFACT_BUCKET_NAME_SUFFIX, ARTIFACT_BUCKET_KEY_SUFFIX, ARTIFACT_PATH_SUFFIX, ARTIFACT_URL_SUFFIX,
+        ARTIFACT_SOURCE_USER_NAME_SUFFIX, ARTIFACT_SOURCE_REGISTRY_URL_SUFFIX, ARTIFACT_SOURCE_REPOSITORY_NAME_SUFFIX,
+        ARTIFACT_METADATA_IMAGE_SUFFIX, ARTIFACT_METADATA_TAG_SUFFIX));
+    return expressions;
   }
 }

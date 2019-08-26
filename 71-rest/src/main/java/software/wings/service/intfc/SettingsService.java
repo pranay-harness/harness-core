@@ -10,6 +10,7 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ValidationResult;
 import software.wings.service.intfc.ownership.OwnedByAccount;
+import software.wings.service.intfc.ownership.OwnedBySettingAttribute;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
@@ -20,7 +21,7 @@ import java.util.Map;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
-public interface SettingsService extends OwnedByAccount {
+public interface SettingsService extends OwnedByAccount, OwnedBySettingAttribute {
   /**
    * List.
    *

@@ -507,7 +507,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     if (!variables.containsKey(variableName) && !Type.ARTIFACT.equals(serviceVariable.getType())) {
       if (serviceVariable.getType() == TEXT || encryptedFieldMode == MASKED) {
         variables.put(variableName, renderExpression(new String(serviceVariable.getValue())));
-      } else {
+      } else if (!Type.ARTIFACT.equals(serviceVariable.getType())) {
         if (isEmpty(serviceVariable.getAccountId())) {
           serviceVariable.setAccountId(getApp().getAccountId());
         }

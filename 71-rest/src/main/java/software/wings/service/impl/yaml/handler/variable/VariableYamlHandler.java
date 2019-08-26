@@ -49,7 +49,8 @@ public class VariableYamlHandler extends BaseYamlHandler<Variable.Yaml, Variable
     String accountId = changeContext.getChange().getAccountId();
     if (variableType != null && variableType.equals(VariableType.ARTIFACT)) {
       if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-        List<String> allowedList = artifactVariableYamlHelper.computeAllowedList(accountId, yaml.getAllowedList());
+        List<String> allowedList =
+            artifactVariableYamlHelper.computeAllowedList(accountId, yaml.getAllowedList(), yaml.getName());
         return VariableBuilder.aVariable()
             .description(yaml.getDescription())
             .fixed(yaml.isFixed())
