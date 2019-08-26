@@ -1,0 +1,5 @@
+input TagFilter {
+  entityType: EntityType
+  name: String
+  values: [String]
+}

@@ -25,6 +25,7 @@ import software.wings.graphql.schema.type.aggregation.QLSinglePointData;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceAggregation;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceFilter;
+import software.wings.graphql.schema.type.aggregation.tag.QLTagAggregation;
 import software.wings.graphql.utils.nameservice.NameService;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.FlatEntitySummaryStats;
 
@@ -34,14 +35,15 @@ import java.util.Optional;
 
 @Slf4j
 public class InstanceStatsDataFetcher extends RealTimeStatsDataFetcher<QLNoOpAggregateFunction, QLInstanceFilter,
-    QLInstanceAggregation, QLTimeSeriesAggregation, QLNoOpSortCriteria> {
+    QLInstanceAggregation, QLTimeSeriesAggregation, QLTagAggregation, QLNoOpSortCriteria> {
   @Inject private WingsPersistence wingsPersistence;
   @Inject InstanceTimeSeriesDataHelper timeSeriesDataHelper;
   @Inject InstanceQueryHelper instanceMongoHelper;
 
   @Override
   protected QLData fetch(String accountId, QLNoOpAggregateFunction aggregateFunction, List<QLInstanceFilter> filters,
-      List<QLInstanceAggregation> groupBy, QLTimeSeriesAggregation groupByTime, List<QLNoOpSortCriteria> sortCriteria) {
+      List<QLInstanceAggregation> groupBy, QLTimeSeriesAggregation groupByTime,
+      List<QLTagAggregation> tagAggregationList, List<QLNoOpSortCriteria> sortCriteria) {
     if (groupByTime != null) {
       if (isNotEmpty(groupBy)) {
         if (groupBy.size() == 1) {

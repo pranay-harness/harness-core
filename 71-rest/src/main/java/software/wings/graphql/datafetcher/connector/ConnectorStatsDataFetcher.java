@@ -19,6 +19,7 @@ import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.connector.QLConnectorAggregation;
 import software.wings.graphql.schema.type.aggregation.connector.QLConnectorFilter;
+import software.wings.graphql.schema.type.aggregation.tag.QLTagAggregation;
 import software.wings.graphql.utils.nameservice.NameService;
 
 import java.util.ArrayList;
@@ -26,13 +27,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ConnectorStatsDataFetcher extends SettingsAttributeStatsDataFetcher<QLNoOpAggregateFunction,
-    QLConnectorFilter, QLConnectorAggregation, QLTimeSeriesAggregation, QLNoOpSortCriteria> {
+    QLConnectorFilter, QLConnectorAggregation, QLTimeSeriesAggregation, QLTagAggregation, QLNoOpSortCriteria> {
   @Inject ConnectorQueryHelper connectorQueryHelper;
 
   @Override
   protected QLData fetch(String accountId, QLNoOpAggregateFunction aggregateFunction, List<QLConnectorFilter> filters,
       List<QLConnectorAggregation> groupBy, QLTimeSeriesAggregation groupByTime,
-      List<QLNoOpSortCriteria> sortCriteria) {
+      List<QLTagAggregation> tagAggregationList, List<QLNoOpSortCriteria> sortCriteria) {
     final Class entityClass = SettingAttribute.class;
     List<String> groupByList = new ArrayList<>();
     if (isNotEmpty(groupBy)) {

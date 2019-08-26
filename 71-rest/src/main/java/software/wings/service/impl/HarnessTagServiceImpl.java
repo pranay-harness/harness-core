@@ -634,4 +634,14 @@ public class HarnessTagServiceImpl implements HarnessTagService {
           "Unauthorized: User need to have TAG_MANAGEMENT permission to create system tags");
     }
   }
+
+  @Override
+  public Set<HarnessTagLink> getTagLinks(EntityType entityType, List<String> entityIds, String key) {
+    return null;
+  }
+
+  @Override
+  public Set<String> getEntityIdsWithTag(String key, EntityType entityType, String value) {
+    return null;
+  }
 }

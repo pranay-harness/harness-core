@@ -11,6 +11,7 @@ import software.wings.beans.HarnessTagLink;
 import software.wings.security.PermissionAttribute.Action;
 
 import java.util.List;
+import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -39,4 +40,15 @@ public interface HarnessTagService {
   void deleteTag(@NotBlank String accountId, @NotBlank String key, boolean syncFromGit);
 
   void validateTagResourceAccess(String appId, String accountId, String entityId, EntityType entityType, Action action);
+
+  Set<HarnessTagLink> getTagLinks(EntityType entityType, List<String> entityIds, String key);
+
+  /**
+   *
+   * @param key
+   * @param entityType
+   * @param value if value is not present, returns all the entityIds with the key and any value
+   * @return set of entityIds
+   */
+  Set<String> getEntityIdsWithTag(@NotBlank String key, EntityType entityType, String value);
 }

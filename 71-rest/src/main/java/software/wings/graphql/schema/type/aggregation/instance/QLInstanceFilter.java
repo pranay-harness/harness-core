@@ -5,6 +5,7 @@ import lombok.Value;
 import software.wings.graphql.schema.type.aggregation.EntityFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
+import software.wings.graphql.schema.type.aggregation.tag.QLTagFilter;
 import software.wings.graphql.schema.type.instance.QLInstanceType;
 
 @Value
@@ -16,4 +17,5 @@ public class QLInstanceFilter implements EntityFilter {
   private QLIdFilter environment;
   private QLIdFilter cloudProvider;
   private QLInstanceType instanceType;
+  private QLTagFilter tagFilter;
 }

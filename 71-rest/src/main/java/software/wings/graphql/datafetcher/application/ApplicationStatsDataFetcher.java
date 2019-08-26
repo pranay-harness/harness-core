@@ -9,16 +9,17 @@ import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.application.QLApplicationAggregation;
 import software.wings.graphql.schema.type.aggregation.application.QLApplicationFilter;
+import software.wings.graphql.schema.type.aggregation.tag.QLTagAggregation;
 import software.wings.graphql.utils.nameservice.NameService;
 
 import java.util.List;
 
 public class ApplicationStatsDataFetcher extends RealTimeStatsDataFetcher<QLNoOpAggregateFunction, QLApplicationFilter,
-    QLApplicationAggregation, QLTimeSeriesAggregation, QLNoOpSortCriteria> {
+    QLApplicationAggregation, QLTimeSeriesAggregation, QLTagAggregation, QLNoOpSortCriteria> {
   @Override
   protected QLData fetch(String accountId, QLNoOpAggregateFunction aggregateFunction, List<QLApplicationFilter> filters,
       List<QLApplicationAggregation> groupBy, QLTimeSeriesAggregation groupByTime,
-      List<QLNoOpSortCriteria> sortCriteria) {
+      List<QLTagAggregation> tagAggregationList, List<QLNoOpSortCriteria> sortCriteria) {
     Query<Application> query = wingsPersistence.createQuery(Application.class);
     query.filter("accountId", accountId);
 

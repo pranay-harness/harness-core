@@ -6,8 +6,27 @@ enum InstanceAggregation {
   InstanceType
 }
 
+enum InstanceAggregationType {
+  Entity
+  Time
+  Tag
+}
+
+input InstanceAggregation1 {
+  type: InstanceAggregationType
+  entity: InstanceAggregation
+  time: TimeSeriesAggregation
+  tag: TagAggregation
+}
+
 extend type Query {
   # Get statistics about instances.
-  instanceStats(filters: [InstanceFilter], groupBy: [InstanceAggregation], groupByTime: TimeSeriesAggregation): Data
-    @dataFetcher(name: instanceStats)
+  instanceStats(
+    filters: [InstanceFilter]
+    groupBy: [InstanceAggregation]
+    groupByTime: TimeSeriesAggregation
+    groupByTag: [TagAggregation]
+  ): Data @dataFetcher(name: instanceStats)
+  # Get statistics about instances.
+  instanceStats1(filters: [InstanceFilter], groupBy: [InstanceAggregation1]): Data @dataFetcher(name: instanceStats)
 }

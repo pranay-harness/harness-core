@@ -12,6 +12,7 @@ import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLNoOpAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
+import software.wings.graphql.schema.type.aggregation.tag.QLTagAggregation;
 import software.wings.graphql.schema.type.aggregation.workflow.QLWorkflowAggregation;
 import software.wings.graphql.schema.type.aggregation.workflow.QLWorkflowFilter;
 import software.wings.graphql.utils.nameservice.NameService;
@@ -21,12 +22,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class WorkflowStatsDataFetcher extends RealTimeStatsDataFetcher<QLNoOpAggregateFunction, QLWorkflowFilter,
-    QLWorkflowAggregation, QLTimeSeriesAggregation, QLNoOpSortCriteria> {
+    QLWorkflowAggregation, QLTimeSeriesAggregation, QLTagAggregation, QLNoOpSortCriteria> {
   @Inject WorkflowQueryHelper workflowQueryHelper;
 
   @Override
   protected QLData fetch(String accountId, QLNoOpAggregateFunction aggregateFunction, List<QLWorkflowFilter> filters,
-      List<QLWorkflowAggregation> groupBy, QLTimeSeriesAggregation groupByTime, List<QLNoOpSortCriteria> sortCriteria) {
+      List<QLWorkflowAggregation> groupBy, QLTimeSeriesAggregation groupByTime,
+      List<QLTagAggregation> tagAggregationList, List<QLNoOpSortCriteria> sortCriteria) {
     final Class entityClass = Workflow.class;
     List<String> groupByList = new ArrayList<>();
     if (isNotEmpty(groupBy)) {

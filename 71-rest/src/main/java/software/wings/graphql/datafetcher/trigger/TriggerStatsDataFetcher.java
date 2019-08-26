@@ -15,6 +15,7 @@ import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLNoOpAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
+import software.wings.graphql.schema.type.aggregation.tag.QLTagAggregation;
 import software.wings.graphql.schema.type.aggregation.trigger.QLTriggerAggregation;
 import software.wings.graphql.schema.type.aggregation.trigger.QLTriggerFilter;
 import software.wings.graphql.utils.nameservice.NameService;
@@ -25,13 +26,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class TriggerStatsDataFetcher extends RealTimeStatsDataFetcher<QLNoOpAggregateFunction, QLTriggerFilter,
-    QLTriggerAggregation, QLTimeSeriesAggregation, QLNoOpSortCriteria> {
+    QLTriggerAggregation, QLTimeSeriesAggregation, QLTagAggregation, QLNoOpSortCriteria> {
   @Inject private AppService appService;
   @Inject TriggerQueryHelper triggerQueryHelper;
 
   @Override
   protected QLData fetch(String accountId, QLNoOpAggregateFunction aggregateFunction, List<QLTriggerFilter> filters,
-      List<QLTriggerAggregation> groupBy, QLTimeSeriesAggregation groupByTime, List<QLNoOpSortCriteria> sortCriteria) {
+      List<QLTriggerAggregation> groupBy, QLTimeSeriesAggregation groupByTime,
+      List<QLTagAggregation> tagAggregationList, List<QLNoOpSortCriteria> sortCriteria) {
     final Class entityClass = Trigger.class;
     List<String> groupByList = new ArrayList<>();
     if (isNotEmpty(groupBy)) {

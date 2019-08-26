@@ -33,7 +33,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public abstract class RealTimeStatsDataFetcher<A, F, G, T, S> extends AbstractStatsDataFetcher<A, F, G, T, S> {
+public abstract class RealTimeStatsDataFetcher<A, F, G, T, TG, S> extends AbstractStatsDataFetcher<A, F, G, T, TG, S> {
   @Inject protected WingsPersistence wingsPersistence;
   @Inject protected NameService nameService;
 
