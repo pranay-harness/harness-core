@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateMetaInfo;
+import lombok.ToString;
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.CountsByStatuses;
 
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
  *
  * @author Rishi
  */
+@ToString(exclude = {"delegateMetaInfo", "templateVariable", "stateParams", "element"})
 public class StateExecutionData {
   public static final int SUMMARY_PAYLOAD_LIMIT = 1024;
 
