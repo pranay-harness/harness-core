@@ -26,3 +26,8 @@ extend type Trigger {
 extend type Application {
   tags: [Tag] @dataFetcher(name: tags, contextFieldArgsMap: "{ \"applicationId\": \"id\"}")
 }
+
+input TagAggregation {
+  entityType: EntityType
+  tagName: String
+}

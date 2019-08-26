@@ -27,6 +27,7 @@ input InstanceFilter {
   environment: IdFilter
   cloudProvider: IdFilter
   instanceType: InstanceType
+  tagFilter: TagFilter
 }
 
 interface Instance {

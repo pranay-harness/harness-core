@@ -73,6 +73,7 @@ import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentFil
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentSortCriteria;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentSortType;
 import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentTypeFilter;
+import software.wings.graphql.schema.type.aggregation.tag.QLTagAggregation;
 import software.wings.graphql.utils.nameservice.NameService;
 
 import java.sql.Connection;
@@ -94,7 +95,7 @@ import javax.validation.constraints.NotNull;
 
 @Slf4j
 public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeploymentAggregationFunction,
-    QLDeploymentFilter, QLDeploymentAggregation, QLTimeSeriesAggregation, QLDeploymentSortCriteria> {
+    QLDeploymentFilter, QLDeploymentAggregation, QLTimeSeriesAggregation, QLTagAggregation, QLDeploymentSortCriteria> {
   @Inject TimeScaleDBService timeScaleDBService;
   @Inject QLStatsHelper statsHelper;
   private DeploymentTableSchema schema = new DeploymentTableSchema();
@@ -103,7 +104,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
   @Override
   protected QLData fetch(String accountId, QLDeploymentAggregationFunction aggregateFunction,
       List<QLDeploymentFilter> filters, List<QLDeploymentAggregation> groupBy, QLTimeSeriesAggregation groupByTime,
-      List<QLDeploymentSortCriteria> sortCriteria) {
+      List<QLTagAggregation> tagAggregationList, List<QLDeploymentSortCriteria> sortCriteria) {
     try {
       if (timeScaleDBService.isValid()) {
         return getData(accountId, aggregateFunction, filters, groupBy, groupByTime, sortCriteria);
