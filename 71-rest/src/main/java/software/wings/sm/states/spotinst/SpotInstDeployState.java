@@ -39,6 +39,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.TaskType;
+import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.command.SpotinstDummyCommandUnit;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
@@ -56,6 +57,7 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.AwsStateHelper;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -119,13 +121,21 @@ public class SpotInstDeployState extends State {
             .orElse(SpotInstSetupContextElement.builder().build());
 
     // create activity
-    Activity activity = spotInstStateHelper.createActivity(context, null, getStateType(), SPOTINST_DEPLOY_COMMAND,
-        CommandUnitType.SPOTINST_DEPLOY,
-        ImmutableList.of(new SpotinstDummyCommandUnit(UP_SCALE_COMMAND_UNIT),
-            new SpotinstDummyCommandUnit(UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
-            new SpotinstDummyCommandUnit(DOWN_SCALE_COMMAND_UNIT),
-            new SpotinstDummyCommandUnit(DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
-            new SpotinstDummyCommandUnit(DEPLOYMENT_ERROR)));
+    List<CommandUnit> commandUnitList = null;
+    if (spotInstSetupContextElement.isBlueGreen()) {
+      commandUnitList = ImmutableList.of(new SpotinstDummyCommandUnit(UP_SCALE_COMMAND_UNIT),
+          new SpotinstDummyCommandUnit(UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
+          new SpotinstDummyCommandUnit(DEPLOYMENT_ERROR));
+    } else {
+      commandUnitList = ImmutableList.of(new SpotinstDummyCommandUnit(UP_SCALE_COMMAND_UNIT),
+          new SpotinstDummyCommandUnit(UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
+          new SpotinstDummyCommandUnit(DOWN_SCALE_COMMAND_UNIT),
+          new SpotinstDummyCommandUnit(DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
+          new SpotinstDummyCommandUnit(DEPLOYMENT_ERROR));
+    }
+
+    Activity activity = spotInstStateHelper.createActivity(
+        context, null, getStateType(), SPOTINST_DEPLOY_COMMAND, CommandUnitType.SPOTINST_DEPLOY, commandUnitList);
 
     // Generate DeployStateExeuctionData, contains commandRequest object.
     SpotInstDeployStateExecutionData stateExecutionData =

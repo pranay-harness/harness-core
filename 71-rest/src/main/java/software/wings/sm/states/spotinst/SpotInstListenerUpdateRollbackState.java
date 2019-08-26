@@ -3,6 +3,7 @@ package software.wings.sm.states.spotinst;
 import static io.harness.spotinst.model.SpotInstConstants.DEPLOYMENT_ERROR;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.RENAME_NEW_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.RENAME_OLD_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.SWAP_ROUTES_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_COMMAND_UNIT;
@@ -52,12 +53,12 @@ public class SpotInstListenerUpdateRollbackState extends SpotInstListenerUpdateS
     return super.isDownsizeOldElastiGroup();
   }
 
-  protected ImmutableList<CommandUnit> getCommandUnitList() {
+  protected ImmutableList<CommandUnit> getCommandUnits() {
     return ImmutableList.of(new SpotinstDummyCommandUnit(UP_SCALE_COMMAND_UNIT),
         new SpotinstDummyCommandUnit(UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
         new SpotinstDummyCommandUnit(RENAME_OLD_COMMAND_UNIT), new SpotinstDummyCommandUnit(SWAP_ROUTES_COMMAND_UNIT),
         new SpotinstDummyCommandUnit(DOWN_SCALE_COMMAND_UNIT),
         new SpotinstDummyCommandUnit(DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
-        new SpotinstDummyCommandUnit(DEPLOYMENT_ERROR));
+        new SpotinstDummyCommandUnit(RENAME_NEW_COMMAND_UNIT), new SpotinstDummyCommandUnit(DEPLOYMENT_ERROR));
   }
 }

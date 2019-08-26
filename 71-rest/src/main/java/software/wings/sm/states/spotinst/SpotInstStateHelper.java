@@ -7,6 +7,7 @@ import static io.harness.spotinst.model.SpotInstConstants.CAPACITY_MINIMUM_CONFI
 import static io.harness.spotinst.model.SpotInstConstants.CAPACITY_TARGET_CONFIG_ELEMENT;
 import static io.harness.spotinst.model.SpotInstConstants.CAPACITY_UNIT_CONFIG_ELEMENT;
 import static io.harness.spotinst.model.SpotInstConstants.COMPUTE;
+import static io.harness.spotinst.model.SpotInstConstants.DEPLOYMENT_ERROR;
 import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_IMAGE_CONFIG;
 import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_NAME_PLACEHOLDER;
 import static io.harness.spotinst.model.SpotInstConstants.GROUP_CONFIG_ELEMENT;
@@ -24,6 +25,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.sm.states.spotinst.SpotInstServiceSetup.SPOTINST_SERVICE_SETUP_COMMAND;
 import static software.wings.utils.Validator.notNullCheck;
 
+import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
@@ -75,7 +77,6 @@ import software.wings.utils.Misc;
 import software.wings.utils.ServiceVersionConvention;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -117,7 +118,9 @@ public class SpotInstStateHelper {
         (AwsAmiInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
 
     Activity activity = createActivity(context, artifact, serviceSetup.getStateType(), SPOTINST_SERVICE_SETUP_COMMAND,
-        CommandUnitType.SPOTINST_SETUP, Collections.singletonList(new SpotinstDummyCommandUnit(SETUP_COMMAND_UNIT)));
+        CommandUnitType.SPOTINST_SETUP,
+        ImmutableList.of(
+            new SpotinstDummyCommandUnit(SETUP_COMMAND_UNIT), new SpotinstDummyCommandUnit(DEPLOYMENT_ERROR)));
 
     SettingAttribute settingAttribute = settingsService.get(awsAmiInfrastructureMapping.getComputeProviderSettingId());
     AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();

@@ -1,12 +1,8 @@
 package software.wings.sm.states.spotinst;
 
-import static io.harness.spotinst.model.SpotInstConstants.DEPLOYMENT_ERROR;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
-import static io.harness.spotinst.model.SpotInstConstants.RENAME_NEW_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.SWAP_ROUTES_COMMAND_UNIT;
-import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_COMMAND_UNIT;
-import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.collect.ImmutableList;
@@ -32,6 +28,7 @@ import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.TaskType;
+import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.command.SpotinstDummyCommandUnit;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
@@ -48,6 +45,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -107,13 +105,7 @@ public class SpotInstListenerUpdateState extends State {
 
     // create activity with details
     Activity activity = spotInstStateHelper.createActivity(context, null, getStateType(),
-        SPOTINST_LISTENER_UPDATE_COMMAND, CommandUnitType.SPOTINST_UPDATE_LISTENER,
-        ImmutableList.of(new SpotinstDummyCommandUnit(UP_SCALE_COMMAND_UNIT),
-            new SpotinstDummyCommandUnit(UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
-            new SpotinstDummyCommandUnit(DOWN_SCALE_COMMAND_UNIT),
-            new SpotinstDummyCommandUnit(DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
-            new SpotinstDummyCommandUnit(SWAP_ROUTES_COMMAND_UNIT),
-            new SpotinstDummyCommandUnit(RENAME_NEW_COMMAND_UNIT), new SpotinstDummyCommandUnit(DEPLOYMENT_ERROR)));
+        SPOTINST_LISTENER_UPDATE_COMMAND, CommandUnitType.SPOTINST_UPDATE_LISTENER, getCommandUnits());
 
     // Generate SpotInstListenerUpdateStateExecutionData
     SpotInstListenerUpdateStateExecutionData stateExecutionData =
@@ -140,6 +132,12 @@ public class SpotInstListenerUpdateState extends State {
         .withCorrelationIds(Arrays.asList(activity.getUuid()))
         .withAsync(true)
         .build();
+  }
+
+  protected List<CommandUnit> getCommandUnits() {
+    return ImmutableList.of(new SpotinstDummyCommandUnit(SWAP_ROUTES_COMMAND_UNIT),
+        new SpotinstDummyCommandUnit(DOWN_SCALE_COMMAND_UNIT),
+        new SpotinstDummyCommandUnit(DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT));
   }
 
   protected ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
