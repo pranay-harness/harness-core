@@ -3,3 +3,6 @@ pom.xml                     @wings-software/portal_pom-maintainers
 
 # morphia registrar functionality can be tricky. Let have a second pair of eyes before we commit changes there.
 *MorphiaRegistrar.java      @george-harness
+
+# gitignores changes are ot frequent and can have tricky impact. Let have a second pair of eyes before we commit changes there.
+**/.gitignore               @george-harness
