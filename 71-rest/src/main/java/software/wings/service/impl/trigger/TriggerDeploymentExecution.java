@@ -49,11 +49,13 @@ import software.wings.beans.trigger.TriggerExecution.Status;
 import software.wings.beans.trigger.WebhookCondition;
 import software.wings.beans.trigger.WorkflowAction;
 import software.wings.dl.WingsPersistence;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -84,6 +86,7 @@ public class TriggerDeploymentExecution {
   @Inject private transient WorkflowExecutionService workflowExecutionService;
   @Inject private transient EnvironmentService environmentService;
   @Inject private transient WebhookTriggerProcessor webhookTriggerProcessor;
+  @Inject private transient InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private transient TriggerExecutionService triggerExecutionService;
   @Inject private transient ServiceResourceService serviceResourceService;
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
@@ -262,6 +265,7 @@ public class TriggerDeploymentExecution {
     resolveServices(deploymentTrigger.getAppId(), triggerWorkflowVariableValues, pipelineVariables);
     resolveServiceInfrastructures(
         deploymentTrigger.getAppId(), triggerWorkflowVariableValues, envId, pipelineVariables);
+    resolveInfraDefinitions(deploymentTrigger.getAppId(), triggerWorkflowVariableValues, envId, pipelineVariables);
 
     executionArgs.setWorkflowVariables(triggerWorkflowVariableValues);
 
@@ -523,6 +527,25 @@ public class TriggerDeploymentExecution {
     }
     notNullCheck("Environment  [" + envId + "] might have been deleted", envId, USER);
     return envId;
+  }
+
+  private void resolveInfraDefinitions(
+      String appId, Map<String, String> triggerWorkflowVariableValues, String envId, List<Variable> variables) {
+    for (String infraDefVarName : WorkflowServiceTemplateHelper.getInfraDefinitionWorkflowVariables(variables)) {
+      String infraDefIdOrName = triggerWorkflowVariableValues.get(infraDefVarName);
+      notNullCheck(
+          "There is no corresponding Workflow Variable associated to Infra Definition", infraDefIdOrName, USER);
+      logger.info("Checking  Infra Definition {} can be found by id first.", infraDefIdOrName);
+      InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefIdOrName);
+      if (infrastructureDefinition == null) {
+        logger.info("InfraDefinition does not exist by Id, checking if infra definition {} can be found by name.",
+            infraDefIdOrName);
+        infrastructureDefinition = infrastructureDefinitionService.getInfraDefByName(appId, envId, infraDefIdOrName);
+      }
+      notNullCheck(
+          "InfraStructure Definition [" + infraDefIdOrName + "] does not exist", infrastructureDefinition, USER);
+      triggerWorkflowVariableValues.put(infraDefVarName, infrastructureDefinition.getUuid());
+    }
   }
 
   private void resolveServiceInfrastructures(
