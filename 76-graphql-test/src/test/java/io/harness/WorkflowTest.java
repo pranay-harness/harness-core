@@ -6,6 +6,7 @@ import static io.harness.generator.WorkflowGenerator.Workflows.BASIC_SIMPLE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
+import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
@@ -29,12 +30,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
+import software.wings.beans.HarnessTagLink;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
+import software.wings.graphql.schema.type.QLTag.QLTagKeys;
 import software.wings.graphql.schema.type.QLUser.QLUserKeys;
 import software.wings.graphql.schema.type.QLWorkflow.QLWorkflowKeys;
 import software.wings.graphql.schema.type.QLWorkflowConnection;
+import software.wings.service.intfc.HarnessTagService;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Slf4j
 public class WorkflowTest extends GraphQLTest {
@@ -43,6 +51,7 @@ public class WorkflowTest extends GraphQLTest {
   @Inject ApplicationGenerator applicationGenerator;
   @Inject WorkflowGenerator workflowGenerator;
   @Inject InfrastructureMappingGenerator infrastructureMappingGenerator;
+  @Inject private HarnessTagService harnessTagService;
 
   @Test
   @Category({GraphQLTests.class, UnitTests.class})
@@ -53,7 +62,8 @@ public class WorkflowTest extends GraphQLTest {
 
     final Workflow workflow = workflowGenerator.ensurePredefined(seed, owners, BASIC_SIMPLE);
 
-    String query = $GQL(/*
+    {
+      String query = $GQL(/*
 {
   workflow(workflowId: "%s") {
     id
@@ -66,13 +76,34 @@ public class WorkflowTest extends GraphQLTest {
   }
 }*/ workflow.getUuid());
 
-    QLTestObject qlWorkflow = qlExecute(query, workflow.getAccountId());
-    assertThat(qlWorkflow.get(QLWorkflowKeys.id)).isEqualTo(workflow.getUuid());
-    assertThat(qlWorkflow.get(QLWorkflowKeys.name)).isEqualTo(workflow.getName());
-    assertThat(qlWorkflow.get(QLWorkflowKeys.description)).isEqualTo(workflow.getDescription());
-    assertThat(qlWorkflow.get(QLWorkflowKeys.createdAt)).isEqualTo(workflow.getCreatedAt());
-    assertThat(qlWorkflow.sub(QLWorkflowKeys.createdBy).get(QLUserKeys.id))
-        .isEqualTo(workflow.getCreatedBy().getUuid());
+      QLTestObject qlWorkflow = qlExecute(query, workflow.getAccountId());
+      assertThat(qlWorkflow.get(QLWorkflowKeys.id)).isEqualTo(workflow.getUuid());
+      assertThat(qlWorkflow.get(QLWorkflowKeys.name)).isEqualTo(workflow.getName());
+      assertThat(qlWorkflow.get(QLWorkflowKeys.description)).isEqualTo(workflow.getDescription());
+      assertThat(qlWorkflow.get(QLWorkflowKeys.createdAt)).isEqualTo(workflow.getCreatedAt());
+      assertThat(qlWorkflow.sub(QLWorkflowKeys.createdBy).get(QLUserKeys.id))
+          .isEqualTo(workflow.getCreatedBy().getUuid());
+    }
+
+    {
+      String query = $GQL(/*
+{
+  workflow(workflowId: "%s") {
+    id
+    tags {
+      name
+      value
+    }
+  }
+}*/ workflow.getUuid());
+
+      attachTag(workflow);
+      QLTestObject qlWorkflow = qlExecute(query, workflow.getAccountId());
+      assertThat(qlWorkflow.get(QLWorkflowKeys.id)).isEqualTo(workflow.getUuid());
+      Map<String, String> tagsMap = (LinkedHashMap) (((ArrayList) qlWorkflow.get("tags")).get(0));
+      assertThat(tagsMap.get(QLTagKeys.name)).isEqualTo("color");
+      assertThat(tagsMap.get(QLTagKeys.value)).isEqualTo("red");
+    }
   }
 
   @Test
@@ -166,5 +197,39 @@ application(applicationId: "%s") {
       final QLTestObject qlTestObject = qlExecute(query, accountId);
       assertThat(qlTestObject.getMap().size()).isEqualTo(1);
     }
+
+    {
+      String query = $GQL(/*
+{
+  workflows(filters:[{workflow:{operator:IN,values:["%s"]}}] limit: 1) {
+    nodes {
+      id
+      tags {
+        name
+        value
+      }
+    }
+  }
+}*/ workflow1.getUuid());
+
+      attachTag(workflow1);
+      QLTestObject workflowConnection = qlExecute(query, application.getAccountId());
+      Map<String, Object> workflowMap = (LinkedHashMap) (((ArrayList) workflowConnection.get("nodes")).get(0));
+      assertThat(workflowMap.get(QLWorkflowKeys.id)).isEqualTo(workflow1.getUuid());
+      Map<String, String> tagsMap = (LinkedHashMap) (((ArrayList) workflowMap.get("tags")).get(0));
+      assertThat(tagsMap.get(QLTagKeys.name)).isEqualTo("color");
+      assertThat(tagsMap.get(QLTagKeys.value)).isEqualTo("red");
+    }
+  }
+
+  private void attachTag(Workflow workflow) {
+    harnessTagService.attachTag(HarnessTagLink.builder()
+                                    .accountId(workflow.getAccountId())
+                                    .appId(workflow.getAppId())
+                                    .entityId(workflow.getUuid())
+                                    .entityType(WORKFLOW)
+                                    .key("color")
+                                    .value("red")
+                                    .build());
   }
 }

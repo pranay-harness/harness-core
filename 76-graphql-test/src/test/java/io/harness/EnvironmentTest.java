@@ -3,6 +3,7 @@ package io.harness;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 
 import com.google.inject.Inject;
@@ -24,13 +25,21 @@ import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
+import software.wings.beans.HarnessTagLink;
 import software.wings.graphql.schema.type.QLEnvironment.QLEnvironmentKeys;
 import software.wings.graphql.schema.type.QLEnvironmentConnection;
+import software.wings.graphql.schema.type.QLTag.QLTagKeys;
 import software.wings.graphql.schema.type.QLUser.QLUserKeys;
+import software.wings.service.intfc.HarnessTagService;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Slf4j
 public class EnvironmentTest extends GraphQLTest {
   @Inject private OwnerManager ownerManager;
+  @Inject private HarnessTagService harnessTagService;
 
   @Inject ApplicationGenerator applicationGenerator;
   @Inject EnvironmentGenerator environmentGenerator;
@@ -44,7 +53,8 @@ public class EnvironmentTest extends GraphQLTest {
 
     final Environment environment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
 
-    String query = $GQL(/*
+    {
+      String query = $GQL(/*
 {
   environment(environmentId: "%s") {
     id
@@ -58,13 +68,34 @@ public class EnvironmentTest extends GraphQLTest {
   }
 }*/ environment.getUuid());
 
-    QLTestObject qlEnvironment = qlExecute(query, environment.getAccountId());
-    assertThat(qlEnvironment.get(QLEnvironmentKeys.id)).isEqualTo(environment.getUuid());
-    assertThat(qlEnvironment.get(QLEnvironmentKeys.name)).isEqualTo(environment.getName());
-    assertThat(qlEnvironment.get(QLEnvironmentKeys.description)).isEqualTo(environment.getDescription());
-    assertThat(qlEnvironment.get(QLEnvironmentKeys.createdAt)).isEqualTo(environment.getCreatedAt());
-    assertThat(qlEnvironment.sub(QLEnvironmentKeys.createdBy).get(QLUserKeys.id))
-        .isEqualTo(environment.getCreatedBy().getUuid());
+      QLTestObject qlEnvironment = qlExecute(query, environment.getAccountId());
+      assertThat(qlEnvironment.get(QLEnvironmentKeys.id)).isEqualTo(environment.getUuid());
+      assertThat(qlEnvironment.get(QLEnvironmentKeys.name)).isEqualTo(environment.getName());
+      assertThat(qlEnvironment.get(QLEnvironmentKeys.description)).isEqualTo(environment.getDescription());
+      assertThat(qlEnvironment.get(QLEnvironmentKeys.createdAt)).isEqualTo(environment.getCreatedAt());
+      assertThat(qlEnvironment.sub(QLEnvironmentKeys.createdBy).get(QLUserKeys.id))
+          .isEqualTo(environment.getCreatedBy().getUuid());
+    }
+
+    {
+      String query = $GQL(/*
+{
+  environment(environmentId: "%s") {
+    id
+    tags {
+      name
+      value
+    }
+  }
+}*/ environment.getUuid());
+
+      attachTag(environment);
+      QLTestObject qlEnvironment = qlExecute(query, environment.getAccountId());
+      assertThat(qlEnvironment.get(QLEnvironmentKeys.id)).isEqualTo(environment.getUuid());
+      Map<String, String> tagsMap = (LinkedHashMap) (((ArrayList) qlEnvironment.get("tags")).get(0));
+      assertThat(tagsMap.get(QLTagKeys.name)).isEqualTo("color");
+      assertThat(tagsMap.get(QLTagKeys.value)).isEqualTo("red");
+    }
   }
 
   @Test
@@ -137,5 +168,39 @@ public class EnvironmentTest extends GraphQLTest {
       assertThat(environmentConnection.getNodes().get(0).getId()).isEqualTo(environment2.getUuid());
       assertThat(environmentConnection.getNodes().get(1).getId()).isEqualTo(environment1.getUuid());
     }
+
+    {
+      String query = $GQL(/*
+{
+  environments(filters:[{environment:{operator:IN,values:["%s"]}}] limit: 1) {
+    nodes {
+      id
+      tags {
+        name
+        value
+      }
+    }
+  }
+}*/ environment1.getUuid());
+
+      attachTag(environment1);
+      QLTestObject environmentConnection = qlExecute(query, application.getAccountId());
+      Map<String, Object> envMap = (LinkedHashMap) (((ArrayList) environmentConnection.get("nodes")).get(0));
+      assertThat(envMap.get(QLEnvironmentKeys.id)).isEqualTo(environment1.getUuid());
+      Map<String, String> tagsMap = (LinkedHashMap) (((ArrayList) envMap.get("tags")).get(0));
+      assertThat(tagsMap.get(QLTagKeys.name)).isEqualTo("color");
+      assertThat(tagsMap.get(QLTagKeys.value)).isEqualTo("red");
+    }
+  }
+
+  private void attachTag(Environment environment) {
+    harnessTagService.attachTag(HarnessTagLink.builder()
+                                    .accountId(environment.getAccountId())
+                                    .appId(environment.getAppId())
+                                    .entityId(environment.getUuid())
+                                    .entityType(ENVIRONMENT)
+                                    .key("color")
+                                    .value("red")
+                                    .build());
   }
 }

@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.PipelineGenerator.Pipelines.BARRIER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.EntityType.PIPELINE;
 
 import com.google.inject.Inject;
 
@@ -21,14 +22,22 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
+import software.wings.beans.HarnessTagLink;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.PipelineBuilder;
 import software.wings.graphql.schema.type.QLPipeline.QLPipelineKeys;
 import software.wings.graphql.schema.type.QLPipelineConnection;
+import software.wings.graphql.schema.type.QLTag.QLTagKeys;
+import software.wings.service.intfc.HarnessTagService;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Slf4j
 public class PipelineTest extends GraphQLTest {
   @Inject private OwnerManager ownerManager;
+  @Inject private HarnessTagService harnessTagService;
 
   @Inject ApplicationGenerator applicationGenerator;
   @Inject PipelineGenerator pipelineGenerator;
@@ -42,7 +51,8 @@ public class PipelineTest extends GraphQLTest {
 
     final Pipeline pipeline = pipelineGenerator.ensurePredefined(seed, owners, BARRIER);
 
-    String query = $GQL(/*
+    {
+      String query = $GQL(/*
 {
   pipeline(pipelineId: "%s") {
     id
@@ -55,10 +65,31 @@ public class PipelineTest extends GraphQLTest {
   }
 }*/ pipeline.getUuid());
 
-    QLTestObject qlPipeline = qlExecute(query, pipeline.getAccountId());
-    assertThat(qlPipeline.get(QLPipelineKeys.id)).isEqualTo(pipeline.getUuid());
-    assertThat(qlPipeline.get(QLPipelineKeys.name)).isEqualTo(pipeline.getName());
-    assertThat(qlPipeline.get(QLPipelineKeys.description)).isEqualTo(pipeline.getDescription());
+      QLTestObject qlPipeline = qlExecute(query, pipeline.getAccountId());
+      assertThat(qlPipeline.get(QLPipelineKeys.id)).isEqualTo(pipeline.getUuid());
+      assertThat(qlPipeline.get(QLPipelineKeys.name)).isEqualTo(pipeline.getName());
+      assertThat(qlPipeline.get(QLPipelineKeys.description)).isEqualTo(pipeline.getDescription());
+    }
+
+    {
+      String query = $GQL(/*
+{
+  pipeline(pipelineId: "%s") {
+    id
+    tags {
+      name
+      value
+    }
+  }
+}*/ pipeline.getUuid());
+
+      attachTag(pipeline);
+      QLTestObject qlPipeline = qlExecute(query, pipeline.getAccountId());
+      assertThat(qlPipeline.get(QLPipelineKeys.id)).isEqualTo(pipeline.getUuid());
+      Map<String, String> tagsMap = (LinkedHashMap) (((ArrayList) qlPipeline.get("tags")).get(0));
+      assertThat(tagsMap.get(QLTagKeys.name)).isEqualTo("color");
+      assertThat(tagsMap.get(QLTagKeys.value)).isEqualTo("red");
+    }
   }
 
   @Test
@@ -146,5 +177,39 @@ public class PipelineTest extends GraphQLTest {
       final QLTestObject qlTestObject = qlExecute(query, accountId);
       assertThat(qlTestObject.getMap().size()).isEqualTo(1);
     }
+
+    {
+      String query = $GQL(/*
+{
+  pipelines(filters:[{pipeline:{operator:IN,values:["%s"]}}] limit: 1) {
+    nodes {
+      id
+      tags {
+        name
+        value
+      }
+    }
+  }
+}*/ pipeline1.getUuid());
+
+      attachTag(pipeline1);
+      QLTestObject pipelineConnection = qlExecute(query, application.getAccountId());
+      Map<String, Object> pipelineMap = (LinkedHashMap) (((ArrayList) pipelineConnection.get("nodes")).get(0));
+      assertThat(pipelineMap.get(QLPipelineKeys.id)).isEqualTo(pipeline1.getUuid());
+      Map<String, String> tagsMap = (LinkedHashMap) (((ArrayList) pipelineMap.get("tags")).get(0));
+      assertThat(tagsMap.get(QLTagKeys.name)).isEqualTo("color");
+      assertThat(tagsMap.get(QLTagKeys.value)).isEqualTo("red");
+    }
+  }
+
+  private void attachTag(Pipeline pipeline) {
+    harnessTagService.attachTag(HarnessTagLink.builder()
+                                    .accountId(pipeline.getAccountId())
+                                    .appId(pipeline.getAppId())
+                                    .entityId(pipeline.getUuid())
+                                    .entityType(PIPELINE)
+                                    .key("color")
+                                    .value("red")
+                                    .build());
   }
 }

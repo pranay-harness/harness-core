@@ -3,6 +3,7 @@ package io.harness;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.EntityType.APPLICATION;
 
 import com.google.inject.Inject;
 
@@ -21,13 +22,21 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
+import software.wings.beans.HarnessTagLink;
 import software.wings.graphql.schema.type.QLApplication.QLApplicationKeys;
 import software.wings.graphql.schema.type.QLApplicationConnection;
+import software.wings.graphql.schema.type.QLTag.QLTagKeys;
 import software.wings.graphql.schema.type.QLUser.QLUserKeys;
+import software.wings.service.intfc.HarnessTagService;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Slf4j
 public class ApplicationTest extends GraphQLTest {
   @Inject private OwnerManager ownerManager;
+  @Inject private HarnessTagService harnessTagService;
 
   @Inject AccountGenerator accountGenerator;
   @Inject ApplicationGenerator applicationGenerator;
@@ -41,7 +50,8 @@ public class ApplicationTest extends GraphQLTest {
 
     final Application application = applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST);
 
-    String query = $GQL(/*
+    {
+      String query = $GQL(/*
 {
   application(applicationId: "%s") {
     id
@@ -54,13 +64,34 @@ public class ApplicationTest extends GraphQLTest {
   }
 }*/ application.getUuid());
 
-    final QLTestObject qlTestObject = qlExecute(query, application.getAccountId());
-    assertThat(qlTestObject.get(QLApplicationKeys.id)).isEqualTo(application.getUuid());
-    assertThat(qlTestObject.get(QLApplicationKeys.name)).isEqualTo(application.getName());
-    assertThat(qlTestObject.get(QLApplicationKeys.description)).isEqualTo(application.getDescription());
-    assertThat(qlTestObject.get(QLApplicationKeys.createdAt)).isEqualTo(application.getCreatedAt());
-    assertThat(qlTestObject.sub(QLApplicationKeys.createdBy).get(QLUserKeys.id))
-        .isEqualTo(application.getCreatedBy().getUuid());
+      final QLTestObject qlTestObject = qlExecute(query, application.getAccountId());
+      assertThat(qlTestObject.get(QLApplicationKeys.id)).isEqualTo(application.getUuid());
+      assertThat(qlTestObject.get(QLApplicationKeys.name)).isEqualTo(application.getName());
+      assertThat(qlTestObject.get(QLApplicationKeys.description)).isEqualTo(application.getDescription());
+      assertThat(qlTestObject.get(QLApplicationKeys.createdAt)).isEqualTo(application.getCreatedAt());
+      assertThat(qlTestObject.sub(QLApplicationKeys.createdBy).get(QLUserKeys.id))
+          .isEqualTo(application.getCreatedBy().getUuid());
+    }
+
+    {
+      String query = $GQL(/*
+{
+  application(applicationId: "%s") {
+    id
+    tags {
+      name
+      value
+    }
+  }
+}*/ application.getUuid());
+
+      attachTag(application);
+      QLTestObject qlApplication = qlExecute(query, application.getAccountId());
+      assertThat(qlApplication.get(QLApplicationKeys.id)).isEqualTo(application.getUuid());
+      Map<String, String> tagsMap = (LinkedHashMap) (((ArrayList) qlApplication.get("tags")).get(0));
+      assertThat(tagsMap.get(QLTagKeys.name)).isEqualTo("color");
+      assertThat(tagsMap.get(QLTagKeys.value)).isEqualTo("red");
+    }
   }
 
   @Test
@@ -142,5 +173,39 @@ public class ApplicationTest extends GraphQLTest {
       assertThat(applicationConnection.getNodes().get(0).getId()).isEqualTo(application2.getUuid());
       assertThat(applicationConnection.getNodes().get(1).getId()).isEqualTo(application1.getUuid());
     }
+
+    {
+      String query = $GQL(/*
+{
+  applications(limit: 1, offset: 2) {
+    nodes {
+      id
+      tags {
+        name
+        value
+      }
+    }
+  }
+}*/ application1.getAccountId());
+
+      attachTag(application1);
+      QLTestObject applicationConnection = qlExecute(query, application1.getAccountId());
+      Map<String, Object> applicationMap = (LinkedHashMap) (((ArrayList) applicationConnection.get("nodes")).get(0));
+      assertThat(applicationMap.get(QLApplicationKeys.id)).isEqualTo(application1.getUuid());
+      Map<String, String> tagsMap = (LinkedHashMap) (((ArrayList) applicationMap.get("tags")).get(0));
+      assertThat(tagsMap.get(QLTagKeys.name)).isEqualTo("color");
+      assertThat(tagsMap.get(QLTagKeys.value)).isEqualTo("red");
+    }
+  }
+
+  private void attachTag(Application application) {
+    harnessTagService.attachTag(HarnessTagLink.builder()
+                                    .accountId(application.getAccountId())
+                                    .appId(application.getUuid())
+                                    .entityId(application.getUuid())
+                                    .entityType(APPLICATION)
+                                    .key("color")
+                                    .value("red")
+                                    .build());
   }
 }

@@ -23,14 +23,22 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
+import software.wings.beans.EntityType;
+import software.wings.beans.HarnessTagLink;
 import software.wings.beans.Pipeline;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.trigger.ArtifactTriggerCondition;
 import software.wings.beans.trigger.Trigger;
+import software.wings.graphql.schema.type.QLTag.QLTagKeys;
 import software.wings.graphql.schema.type.QLUser.QLUserKeys;
 import software.wings.graphql.schema.type.trigger.QLTriggerConnection;
 import software.wings.service.impl.trigger.TriggerGenerator;
+import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.TriggerService;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Slf4j
 public class TriggerTest extends GraphQLTest {
@@ -40,6 +48,7 @@ public class TriggerTest extends GraphQLTest {
   @Inject TriggerService triggerService;
   @Inject ArtifactStreamManager artifactStreamManager;
   @Inject ApplicationGenerator applicationGenerator;
+  @Inject private HarnessTagService harnessTagService;
 
   @Test
   @Category({GraphQLTests.class, UnitTests.class})
@@ -79,7 +88,8 @@ public class TriggerTest extends GraphQLTest {
 
     assertThat(savedTrigger).isNotNull();
 
-    String query = $GQL(/*
+    {
+      String query = $GQL(/*
 {
   trigger(triggerId: "%s") {
     id
@@ -94,16 +104,37 @@ public class TriggerTest extends GraphQLTest {
   }
 }*/ savedTrigger.getUuid());
 
-    QLTestObject qlTrigger = qlExecute(query, accountId);
-    assertThat(qlTrigger.get(QLTriggerKeys.id)).isEqualTo(savedTrigger.getUuid());
-    assertThat(qlTrigger.get(QLTriggerKeys.name)).isEqualTo(savedTrigger.getName());
-    assertThat(qlTrigger.get(QLTriggerKeys.description)).isEqualTo(savedTrigger.getDescription());
-    assertThat(qlTrigger.sub(QLTriggerKeys.createdBy).get(QLUserKeys.id))
-        .isEqualTo(savedTrigger.getCreatedBy().getUuid());
-    assertThat(qlTrigger.sub(QLTriggerKeys.createdBy).get(QLUserKeys.name))
-        .isEqualTo(savedTrigger.getCreatedBy().getName());
-    assertThat(qlTrigger.sub(QLTriggerKeys.createdBy).get(QLUserKeys.email))
-        .isEqualTo(savedTrigger.getCreatedBy().getEmail());
+      QLTestObject qlTrigger = qlExecute(query, accountId);
+      assertThat(qlTrigger.get(QLTriggerKeys.id)).isEqualTo(savedTrigger.getUuid());
+      assertThat(qlTrigger.get(QLTriggerKeys.name)).isEqualTo(savedTrigger.getName());
+      assertThat(qlTrigger.get(QLTriggerKeys.description)).isEqualTo(savedTrigger.getDescription());
+      assertThat(qlTrigger.sub(QLTriggerKeys.createdBy).get(QLUserKeys.id))
+          .isEqualTo(savedTrigger.getCreatedBy().getUuid());
+      assertThat(qlTrigger.sub(QLTriggerKeys.createdBy).get(QLUserKeys.name))
+          .isEqualTo(savedTrigger.getCreatedBy().getName());
+      assertThat(qlTrigger.sub(QLTriggerKeys.createdBy).get(QLUserKeys.email))
+          .isEqualTo(savedTrigger.getCreatedBy().getEmail());
+    }
+
+    {
+      String query = $GQL(/*
+{
+  trigger(triggerId: "%s") {
+    id
+    tags {
+      name
+      value
+    }
+  }
+}*/ savedTrigger.getUuid());
+
+      attachTag(savedTrigger, accountId);
+      QLTestObject qlTrigger = qlExecute(query, accountId);
+      assertThat(qlTrigger.get(QLTriggerKeys.id)).isEqualTo(savedTrigger.getUuid());
+      Map<String, String> tagsMap = (LinkedHashMap) (((ArrayList) qlTrigger.get("tags")).get(0));
+      assertThat(tagsMap.get(QLTagKeys.name)).isEqualTo("color");
+      assertThat(tagsMap.get(QLTagKeys.value)).isEqualTo("red");
+    }
   }
 
   @Test
@@ -220,5 +251,39 @@ public class TriggerTest extends GraphQLTest {
       final QLTestObject qlTestObject = qlExecute(query, accountId);
       assertThat(qlTestObject.getMap().size()).isEqualTo(1);
     }
+
+    {
+      String query = $GQL(/*
+{
+  triggers(filters:[{trigger:{operator:IN,values:["%s"]}}] limit: 1) {
+    nodes {
+      id
+      tags {
+        name
+        value
+      }
+    }
+  }
+}*/ trigger1.getUuid());
+
+      attachTag(trigger1, accountId);
+      QLTestObject triggerConnection = qlExecute(query, application.getAccountId());
+      Map<String, Object> triggerMap = (LinkedHashMap) (((ArrayList) triggerConnection.get("nodes")).get(0));
+      assertThat(triggerMap.get(QLTriggerKeys.id)).isEqualTo(trigger1.getUuid());
+      Map<String, String> tagsMap = (LinkedHashMap) (((ArrayList) triggerMap.get("tags")).get(0));
+      assertThat(tagsMap.get(QLTagKeys.name)).isEqualTo("color");
+      assertThat(tagsMap.get(QLTagKeys.value)).isEqualTo("red");
+    }
+  }
+
+  private void attachTag(Trigger trigger, String accountId) {
+    harnessTagService.attachTag(HarnessTagLink.builder()
+                                    .accountId(accountId)
+                                    .appId(trigger.getAppId())
+                                    .entityId(trigger.getUuid())
+                                    .entityType(EntityType.TRIGGER)
+                                    .key("color")
+                                    .value("red")
+                                    .build());
   }
 }
