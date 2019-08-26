@@ -65,6 +65,7 @@ import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Variable;
+import software.wings.beans.Workflow;
 import software.wings.beans.artifact.AcrArtifactStream;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactKeys;
@@ -593,15 +594,30 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       validateTriggerUsages(appId, artifactStreamId);
     } else if (appId.equals(GLOBAL_APP_ID)) {
       validateTriggerUsages(appId, artifactStreamId);
-      List<Service> services = artifactStreamServiceBindingService.listServices(artifactStreamId);
-      if (isEmpty(services)) {
-        return;
-      }
-
-      List<String> serviceNames = services.stream().map(Service::getName).collect(toList());
-      throw new InvalidRequestException(
-          format("Artifact Stream linked to Services [%s]", Joiner.on(", ").join(serviceNames)), USER);
+      validateServiceVariableUsages(artifactStreamId);
+      validateWorkflowUsages(artifactStreamId);
     }
+  }
+
+  private void validateServiceVariableUsages(String artifactStreamId) {
+    List<Service> services = artifactStreamServiceBindingService.listServices(artifactStreamId);
+    if (isEmpty(services)) {
+      return;
+    }
+
+    List<String> serviceNames = services.stream().map(Service::getName).collect(toList());
+    throw new InvalidRequestException(
+        format("Artifact Stream linked to Services [%s]", Joiner.on(", ").join(serviceNames)), USER);
+  }
+
+  private void validateWorkflowUsages(String artifactStreamId) {
+    List<Workflow> workflows = artifactStreamServiceBindingService.listWorkflows(artifactStreamId);
+    if (isEmpty(workflows)) {
+      return;
+    }
+    List<String> workflowNames = workflows.stream().map(Workflow::getName).collect(toList());
+    throw new InvalidRequestException(
+        format("Artifact Stream linked to Workflows [%s]", Joiner.on(", ").join(workflowNames)), USER);
   }
 
   private void validateTriggerUsages(String appId, String artifactStreamId) {
@@ -686,7 +702,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     return pruneArtifactStream(appId, artifactStreamId);
   }
 
-  private boolean pruneArtifactStream(String appId, String artifactStreamId) {
+  @Override
+  public boolean pruneArtifactStream(String appId, String artifactStreamId) {
     pruneQueue.send(new PruneEvent(ArtifactStream.class, appId, artifactStreamId));
     return wingsPersistence.delete(ArtifactStream.class, appId, artifactStreamId);
   }

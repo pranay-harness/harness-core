@@ -83,6 +83,8 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
 
   private List<String> linkedTemplateUuids = new ArrayList<>();
 
+  @Indexed private List<String> linkedArtifactStreamIds = new ArrayList<>();
+
   @Getter @Setter private transient List<DeploymentType> deploymentTypes = new ArrayList<>();
   @Indexed private String accountId;
   private boolean sample;
@@ -98,6 +100,14 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
 
   public void setLinkedTemplateUuids(List<String> linkedTemplateUuids) {
     this.linkedTemplateUuids = linkedTemplateUuids;
+  }
+
+  public List<String> getLinkedArtifactStreamIds() {
+    return linkedArtifactStreamIds;
+  }
+
+  public void setLinkedArtifactStreamIds(List<String> linkedArtifactStreamIds) {
+    this.linkedArtifactStreamIds = linkedArtifactStreamIds;
   }
 
   /**
@@ -333,6 +343,7 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
     private boolean templatized;
     private List<TemplateExpression> templateExpressions;
     private List<String> linkedTemplateUuids;
+    private List<String> linkedArtifactStreamIds;
     private boolean syncFromGit;
     private String ecsBGType;
     private boolean sample;
@@ -448,6 +459,11 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
       return this;
     }
 
+    public WorkflowBuilder linkedArtifactStreamIds(List<String> linkedArtifactStreamIds) {
+      this.linkedArtifactStreamIds = linkedArtifactStreamIds;
+      return this;
+    }
+
     public WorkflowBuilder notes(String notes) {
       this.notes = notes;
       return this;
@@ -488,6 +504,7 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
       workflow.setTemplateExpressions(templateExpressions);
       workflow.setNotes(notes);
       workflow.setLinkedTemplateUuids(linkedTemplateUuids);
+      workflow.setLinkedArtifactStreamIds(linkedArtifactStreamIds);
       workflow.setSyncFromGit(syncFromGit);
       workflow.setSample(sample);
       return workflow;

@@ -119,7 +119,11 @@ public class WorkflowExpressionBuilder extends ExpressionBuilder {
           .filter(variable -> variable.getName() != null && (includeEntityType || variable.obtainEntityType() == null))
           .forEach(variable -> {
             if (VariableType.ARTIFACT.equals(variable.getType())) {
-              workflowVariableMentions.add("artifacts." + variable.getName());
+              String artifactMentions = "artifacts." + variable.getName();
+              workflowVariableMentions.add(artifactMentions);
+              for (String suffix : getArtifactExpressionSuffixes()) {
+                workflowVariableMentions.add(artifactMentions + suffix);
+              }
             } else {
               workflowVariableMentions.add("workflow.variables." + variable.getName());
             }

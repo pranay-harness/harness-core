@@ -262,8 +262,8 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
           serviceVar.setValue(value != null ? value.toCharArray() : null);
         } else if (serviceVar.getType() == Type.ARTIFACT) {
           if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-            List<String> allowedList =
-                artifactVariableYamlHelper.computeAllowedList(accountId, configVar.getAllowedList());
+            List<String> allowedList = artifactVariableYamlHelper.computeAllowedList(
+                accountId, configVar.getAllowedList(), configVar.getName());
             serviceVar.setAllowedList(allowedList);
           } else {
             logger.warn("Yaml doesn't support {} type service variables", configVar.getValueType());
@@ -298,7 +298,8 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     } else if ("ARTIFACT".equals(cv.getValueType())) {
       if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
         serviceVariableBuilder.type(Type.ARTIFACT);
-        List<String> allowedList = artifactVariableYamlHelper.computeAllowedList(accountId, cv.getAllowedList());
+        List<String> allowedList =
+            artifactVariableYamlHelper.computeAllowedList(accountId, cv.getAllowedList(), cv.getName());
         serviceVariableBuilder.allowedList(allowedList);
       } else {
         logger.warn("Yaml doesn't support {} type service variables", cv.getValueType());

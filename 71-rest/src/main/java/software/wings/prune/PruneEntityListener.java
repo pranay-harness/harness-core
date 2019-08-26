@@ -1,6 +1,7 @@
 package software.wings.prune;
 
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.prune.PruneEvent.MAX_RETRIES;
 
 import com.google.inject.Inject;
@@ -19,6 +20,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.infrastructure.Host;
@@ -35,6 +37,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
 
 import java.time.OffsetDateTime;
@@ -59,6 +62,7 @@ public class PruneEntityListener extends QueueListener<PruneEvent> {
   @Inject private ExecutorService executorService;
   @Inject private HarnessTagService harnessTagService;
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
+  @Inject private SettingsService settingsService;
 
   public PruneEntityListener() {
     super(true);
@@ -125,12 +129,17 @@ public class PruneEntityListener extends QueueListener<PruneEvent> {
       } else if (clz.equals(InfrastructureProvisioner.class)) {
         pruneTagLinks = true;
         infrastructureProvisionerService.pruneDescendingEntities(appId, entityId);
+      } else if (clz.equals(SettingAttribute.class)) {
+        pruneTagLinks = true;
+        settingsService.pruneBySettingAttribute(appId, entityId);
       } else {
         logger.error("Unsupported class [{}] was scheduled for pruning.", clz.getCanonicalName());
       }
 
       if (pruneTagLinks) {
-        harnessTagService.pruneTagLinks(appService.getAccountIdByAppId(appId), entityId);
+        if (!appId.equals(GLOBAL_APP_ID)) {
+          harnessTagService.pruneTagLinks(appService.getAccountIdByAppId(appId), entityId);
+        } // TODO: ASR check how to handle the feature flag enabled case
       }
     } catch (WingsException exception) {
       ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);

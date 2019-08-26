@@ -75,7 +75,8 @@ public class ArtifactVariableYamlHelper {
   }
 
   @NotNull
-  public List<String> computeAllowedList(String accountId, List<AllowedValueYaml> allowedValueYamlList) {
+  public List<String> computeAllowedList(
+      String accountId, List<AllowedValueYaml> allowedValueYamlList, String artifactVariableName) {
     List<String> allowedList = new ArrayList<>();
     if (isNotEmpty(allowedValueYamlList)) {
       for (AllowedValueYaml allowedValueYaml : allowedValueYamlList) {
@@ -105,6 +106,9 @@ public class ArtifactVariableYamlHelper {
           }
         } // TODO: else throw Exception?
       }
+    } else {
+      throw new WingsException(
+          format("Allowed artifact stream(s) not provided for variable: [%s]", artifactVariableName));
     }
     return allowedList;
   }

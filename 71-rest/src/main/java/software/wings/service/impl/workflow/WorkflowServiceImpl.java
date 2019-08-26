@@ -617,6 +617,26 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
+  public List<Workflow> listWorkflows(String artifactStreamId, String accountId) {
+    List<Workflow> workflows = wingsPersistence.createQuery(Workflow.class)
+                                   .field(WorkflowKeys.linkedArtifactStreamIds)
+                                   .contains(artifactStreamId)
+                                   .filter(WorkflowKeys.accountId, accountId)
+                                   .project(WorkflowKeys.name, true)
+                                   .project(WorkflowKeys.uuid, true)
+                                   .project(WorkflowKeys.appId, true)
+                                   .asList();
+    if (isEmpty(workflows)) {
+      return new ArrayList<>();
+    }
+    List<Workflow> allWorkflows = new ArrayList<>();
+    for (Workflow workflow : workflows) {
+      allWorkflows.add(readWorkflowWithoutServices(workflow.getAppId(), workflow.getUuid()));
+    }
+    return allWorkflows;
+  }
+
+  @Override
   public Workflow readWorkflow(String appId, String workflowId) {
     return readWorkflow(appId, workflowId, null);
   }
@@ -1018,6 +1038,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     workflow.setDefaultVersion(1);
     List<String> linkedTemplateUuids = new ArrayList<>();
+    List<String> linkedArtifactStreamIds = new ArrayList<>();
     if (orchestrationWorkflow != null) {
       if (StringUtils.isNotEmpty(workflow.getServiceId())
           && workflowServiceHelper.isK8sV2Service(workflow.getAppId(), workflow.getServiceId())) {
@@ -1090,7 +1111,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       wingsPersistence.save(stateMachine);
 
       linkedTemplateUuids = workflow.getOrchestrationWorkflow().getLinkedTemplateUuids();
-
+      linkedArtifactStreamIds = setLinkedArtifactStreamIdsAtWorkflowLevel(workflow);
       workflow.setOrchestration(orchestrationWorkflow);
     }
 
@@ -1102,8 +1123,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     Workflow newWorkflow = readWorkflow(workflow.getAppId(), key, workflow.getDefaultVersion());
     updateKeywordsAndLinkedTemplateUuids(newWorkflow, linkedTemplateUuids);
-
     String accountId = appService.getAccountIdByAppId(workflow.getAppId());
+
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+      updateLinkedArtifactStreamIds(newWorkflow, linkedArtifactStreamIds);
+    }
+
     yamlPushService.pushYamlChangeSet(accountId, null, newWorkflow, Type.CREATE, workflow.isSyncFromGit(), false);
 
     if (!newWorkflow.isSample()) {
@@ -1111,6 +1136,29 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     return newWorkflow;
+  }
+
+  private List<String> setLinkedArtifactStreamIdsAtWorkflowLevel(Workflow workflow) {
+    List<String> linkedArtifactStreamIds = new ArrayList<>();
+    if (featureFlagService.isEnabled(
+            FeatureName.ARTIFACT_STREAM_REFACTOR, appService.getAccountIdByAppId(workflow.getAppId()))) {
+      List<Variable> userVariables = workflow.getOrchestrationWorkflow().getUserVariables();
+      if (isNotEmpty(userVariables)) {
+        for (Variable userVariable : userVariables) {
+          if (userVariable.getType().equals(VariableType.ARTIFACT)) {
+            if (isNotEmpty(userVariable.getAllowedList())) {
+              for (String artifactStreamId : userVariable.getAllowedList()) {
+                if (!linkedArtifactStreamIds.contains(artifactStreamId)) {
+                  linkedArtifactStreamIds.add(artifactStreamId);
+                }
+              }
+            }
+          }
+        }
+        workflow.setLinkedArtifactStreamIds(linkedArtifactStreamIds);
+      }
+    }
+    return linkedArtifactStreamIds;
   }
 
   private boolean isDaemonSet(String appId, String serviceId) {
@@ -1148,6 +1196,19 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             .set("linkedTemplateUuids", linkedTemplateUuids));
     workflow.setKeywords(keywords);
     workflow.setLinkedTemplateUuids(linkedTemplateUuids);
+  }
+
+  private void updateLinkedArtifactStreamIds(Workflow workflow, List<String> linkedArtifactStreamIds) {
+    if (isNotEmpty(linkedArtifactStreamIds)) {
+      linkedArtifactStreamIds = linkedArtifactStreamIds.stream().distinct().collect(toList());
+    }
+
+    wingsPersistence.update(wingsPersistence.createQuery(Workflow.class)
+                                .filter(Workflow.APP_ID_KEY, workflow.getAppId())
+                                .filter(Workflow.ID_KEY, workflow.getUuid()),
+        wingsPersistence.createUpdateOperations(Workflow.class)
+            .set("linkedArtifactStreamIds", linkedArtifactStreamIds));
+    workflow.setLinkedTemplateUuids(linkedArtifactStreamIds);
   }
 
   @Override
@@ -1271,6 +1332,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     setUnset(ops, "templateExpressions", templateExpressions);
 
     List<String> linkedTemplateUuids = new ArrayList<>();
+    List<String> linkedArtifactStreamIds = new ArrayList<>();
     if (orchestrationWorkflow != null) {
       if (onSaveCallNeeded) {
         orchestrationWorkflow.onSave();
@@ -1298,7 +1360,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
       setUnset(ops, "defaultVersion", workflow.getDefaultVersion());
       linkedTemplateUuids = workflow.getOrchestrationWorkflow().getLinkedTemplateUuids();
-
+      linkedArtifactStreamIds = setLinkedArtifactStreamIdsAtWorkflowLevel(workflow);
       setUnset(ops, "orchestration", workflow.getOrchestrationWorkflow());
     }
 
@@ -1318,6 +1380,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
     }
     updateKeywordsAndLinkedTemplateUuids(finalWorkflow, linkedTemplateUuids);
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+      updateLinkedArtifactStreamIds(finalWorkflow, linkedArtifactStreamIds);
+    }
     return finalWorkflow;
   }
 

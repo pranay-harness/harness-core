@@ -62,6 +62,7 @@ import com.google.inject.name.Named;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.data.parser.CsvParser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
@@ -71,6 +72,7 @@ import io.harness.exception.WingsException;
 import io.harness.observer.Rejection;
 import io.harness.observer.Subject;
 import io.harness.persistence.HIterator;
+import io.harness.queue.Queue;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.validation.Create;
 import lombok.Getter;
@@ -89,11 +91,14 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.StringValue;
 import software.wings.beans.ValidationResult;
+import software.wings.beans.Variable;
+import software.wings.beans.Workflow;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
@@ -105,20 +110,24 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.GitOpsFeature;
 import software.wings.features.api.UsageLimitedFeature;
+import software.wings.prune.PruneEvent;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.BuildService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.manipulation.SettingsServiceManipulationObserver;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -181,6 +190,10 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject @Named(GitOpsFeature.FEATURE_NAME) private UsageLimitedFeature gitOpsFeature;
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Inject private ServiceVariableService serviceVariableService;
+  @Inject private WorkflowService workflowService;
+  @Inject private Queue<PruneEvent> pruneQueue;
 
   @Override
   public PageResponse<SettingAttribute> list(
@@ -818,6 +831,9 @@ public class SettingsServiceImpl implements SettingsService {
 
     ensureSettingAttributeSafeToDelete(settingAttribute);
 
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+      pruneQueue.send(new PruneEvent(SettingAttribute.class, appId, settingAttribute.getUuid()));
+    }
     boolean deleted = wingsPersistence.delete(settingAttribute);
     if (deleted && shouldBeSynced(settingAttribute, pushToGit)) {
       yamlPushService.pushYamlChangeSet(accountId, settingAttribute, null, Type.DELETE, syncFromGit, false);
@@ -897,24 +913,27 @@ public class SettingsServiceImpl implements SettingsService {
             Joiner.on(", ").join(infraMappingNames)));
       }
     } else {
-      List<ArtifactStream> artifactStreams = artifactStreamService.listBySettingId(connectorSetting.getUuid());
-      if (!artifactStreams.isEmpty()) {
-        List<String> artifactStreamNames = artifactStreams.stream()
-                                               .map(ArtifactStream::getSourceName)
-                                               .filter(java.util.Objects::nonNull)
-                                               .collect(toList());
-        throw new InvalidRequestException(
-            format("Connector [%s] is referenced by %d Artifact %s [%s].", connectorSetting.getName(),
-                artifactStreamNames.size(), plural("Source", artifactStreamNames.size()),
-                Joiner.on(", ").join(artifactStreamNames)),
-            USER);
-      }
+      if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, connectorSetting.getAccountId())) {
+        List<ArtifactStream> artifactStreams = artifactStreamService.listBySettingId(connectorSetting.getUuid());
+        if (!artifactStreams.isEmpty()) {
+          List<String> artifactStreamNames = artifactStreams.stream()
+                                                 .map(ArtifactStream::getSourceName)
+                                                 .filter(java.util.Objects::nonNull)
+                                                 .collect(toList());
+          throw new InvalidRequestException(
+              format("Connector [%s] is referenced by %d Artifact %s [%s].", connectorSetting.getName(),
+                  artifactStreamNames.size(), plural("Source", artifactStreamNames.size()),
+                  Joiner.on(", ").join(artifactStreamNames)),
+              USER);
+        }
 
-      List<Rejection> rejections = manipulationSubject.fireApproveFromAll(
-          SettingsServiceManipulationObxxxxxxxx:settingsServiceDeleting, connectorSetting);
-      if (isNotEmpty(rejections)) {
-        throw new InvalidRequestException(
-            format("[%s]", Joiner.on("\n").join(rejections.stream().map(Rejection::message).collect(toList()))), USER);
+        List<Rejection> rejections = manipulationSubject.fireApproveFromAll(
+            SettingsServiceManipulationObxxxxxxxx:settingsServiceDeleting, connectorSetting);
+        if (isNotEmpty(rejections)) {
+          throw new InvalidRequestException(
+              format("[%s]", Joiner.on("\n").join(rejections.stream().map(Rejection::message).collect(toList()))),
+              USER);
+        }
       }
     }
 
@@ -948,16 +967,17 @@ public class SettingsServiceImpl implements SettingsService {
       }
     }
 
-    List<ArtifactStream> artifactStreams = artifactStreamService.listBySettingId(cloudProviderSetting.getUuid());
-    if (!artifactStreams.isEmpty()) {
-      List<String> artifactStreamNames = artifactStreams.stream().map(ArtifactStream::getName).collect(toList());
-      throw new InvalidRequestException(
-          format("Cloud provider [%s] is referenced by %d Artifact %s [%s].", cloudProviderSetting.getName(),
-              artifactStreamNames.size(), plural("Source", artifactStreamNames.size()),
-              Joiner.on(", ").join(artifactStreamNames)),
-          USER);
+    if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+      List<ArtifactStream> artifactStreams = artifactStreamService.listBySettingId(cloudProviderSetting.getUuid());
+      if (!artifactStreams.isEmpty()) {
+        List<String> artifactStreamNames = artifactStreams.stream().map(ArtifactStream::getName).collect(toList());
+        throw new InvalidRequestException(
+            format("Cloud provider [%s] is referenced by %d Artifact %s [%s].", cloudProviderSetting.getName(),
+                artifactStreamNames.size(), plural("Source", artifactStreamNames.size()),
+                Joiner.on(", ").join(artifactStreamNames)),
+            USER);
+      }
     }
-
     // TODO:: workflow scan for finding out usage in Steps ???
   }
 
@@ -1187,5 +1207,60 @@ public class SettingsServiceImpl implements SettingsService {
       throw new InvalidRequestException(format("Setting attribute %s not found", settingId), USER);
     }
     return getUsageRestriction(settingAttribute);
+  }
+
+  @Override
+  public void pruneBySettingAttribute(String appId, String settingId) {
+    // Delete all artifact stream bindings and artifact streams
+    wingsPersistence.createQuery(ArtifactStream.class)
+        .filter(ArtifactStreamKeys.appId, appId)
+        .filter(ArtifactStreamKeys.settingId, settingId)
+        .asList()
+        .forEach(artifactStream -> {
+          // remove artifact stream bindings
+          removeArtifactStreamBindings(artifactStream);
+          artifactStreamService.pruneArtifactStream(appId, artifactStream.getUuid());
+          auditServiceHelper.reportDeleteForAuditing(appId, artifactStream);
+        });
+  }
+
+  private void removeArtifactStreamBindings(ArtifactStream artifactStream) {
+    List<ServiceVariable> serviceVariables =
+        artifactStreamServiceBindingService.fetchArtifactServiceVariableByArtifactStreamId(
+            artifactStream.getAccountId(), artifactStream.getUuid());
+    if (isNotEmpty(serviceVariables)) {
+      for (ServiceVariable serviceVariable : serviceVariables) {
+        List<String> allowedList = serviceVariable.getAllowedList();
+        allowedList.remove(artifactStream.getUuid());
+        // TODO: remove artifact variable if allowedList is empty
+        serviceVariable.setAllowedList(allowedList);
+        serviceVariableService.updateWithChecks(serviceVariable.getAppId(), serviceVariable.getUuid(), serviceVariable);
+      }
+    }
+
+    List<Workflow> workflows = artifactStreamServiceBindingService.listWorkflows(artifactStream.getUuid());
+    if (isNotEmpty(workflows)) {
+      for (Workflow workflow : workflows) {
+        if (workflow.getOrchestrationWorkflow() != null
+            && isNotEmpty(workflow.getOrchestrationWorkflow().getUserVariables())) {
+          List<Variable> userVariables = workflow.getOrchestrationWorkflow().getUserVariables();
+          List<Variable> updatedUserVariables = new ArrayList<>();
+          for (Variable userVariable : userVariables) {
+            String allowedValues = userVariable.getAllowedValues();
+            List<String> allowedValuesList = CsvParser.parse(allowedValues);
+            allowedValuesList.remove(artifactStream.getUuid());
+            // TODO: remove artifact variable if allowedList is empty
+            userVariable.setAllowedValues(String.join(",", allowedValuesList));
+            updatedUserVariables.add(userVariable);
+          }
+
+          workflowService.updateUserVariables(workflow.getAppId(), workflow.getUuid(), updatedUserVariables);
+          List<String> linkedArtifactStreamIds = workflow.getLinkedArtifactStreamIds();
+          linkedArtifactStreamIds.remove(artifactStream.getUuid());
+          workflow.setLinkedArtifactStreamIds(linkedArtifactStreamIds);
+          workflowService.updateWorkflow(workflow);
+        }
+      }
+    }
   }
 }
