@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.exception.WingsException.USER;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
 import com.google.inject.Inject;
@@ -9,10 +10,12 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.trigger.TriggerAuthHandler;
 import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.utils.Validator;
 
@@ -35,10 +38,13 @@ import javax.ws.rs.QueryParam;
 @Scope(APPLICATION)
 public class DeploymentTriggerResource {
   private DeploymentTriggerService deploymentTriggerService;
+  private TriggerAuthHandler triggerAuthHandler;
 
   @Inject
-  public DeploymentTriggerResource(DeploymentTriggerService deploymentTriggerService) {
+  public DeploymentTriggerResource(
+      DeploymentTriggerService deploymentTriggerService, TriggerAuthHandler triggerAuthHandler) {
     this.deploymentTriggerService = deploymentTriggerService;
+    this.triggerAuthHandler = triggerAuthHandler;
   }
 
   /**
@@ -93,8 +99,15 @@ public class DeploymentTriggerResource {
     Validator.notNullCheck("trigger", trigger);
     trigger.setAppId(appId);
     if (trigger.getUuid() != null) {
-      return new RestResponse(deploymentTriggerService.update(trigger));
+      DeploymentTrigger existingTrigger = deploymentTriggerService.get(appId, trigger.getUuid());
+      if (existingTrigger == null) {
+        throw new WingsException("Trigger does not exist for uuid:" + trigger.getUuid(), USER);
+      }
+      triggerAuthHandler.authorize(existingTrigger, true);
+      triggerAuthHandler.authorize(trigger, false);
+      return new RestResponse<>(deploymentTriggerService.update(trigger));
     }
+    triggerAuthHandler.authorize(trigger, false);
     return new RestResponse<>(deploymentTriggerService.save(trigger));
   }
 
@@ -114,6 +127,12 @@ public class DeploymentTriggerResource {
       @QueryParam("appId") String appId, @PathParam("triggerId") String triggerId, DeploymentTrigger trigger) {
     trigger.setUuid(triggerId);
     trigger.setAppId(appId);
+    DeploymentTrigger existingTrigger = deploymentTriggerService.get(appId, trigger.getUuid());
+    if (existingTrigger == null) {
+      throw new WingsException("Trigger doesn't exist for uuid: " + triggerId, USER);
+    }
+    triggerAuthHandler.authorize(existingTrigger, true);
+    triggerAuthHandler.authorize(trigger, false);
     return new RestResponse<>(deploymentTriggerService.update(trigger));
   }
 
@@ -129,7 +148,11 @@ public class DeploymentTriggerResource {
   @Timed
   @ExceptionMetered
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("triggerId") String triggerId) {
-    deploymentTriggerService.delete(appId, triggerId);
+    DeploymentTrigger trigger = deploymentTriggerService.get(appId, triggerId);
+    if (trigger != null) {
+      triggerAuthHandler.authorize(trigger, true);
+      deploymentTriggerService.delete(appId, triggerId);
+    }
     return new RestResponse<>();
   }
 }
