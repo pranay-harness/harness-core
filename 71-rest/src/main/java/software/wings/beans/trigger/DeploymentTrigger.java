@@ -29,7 +29,6 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.trigger.Condition.Type;
-import software.wings.stencils.DefaultValue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -71,7 +70,7 @@ public class DeploymentTrigger implements PersistentEntity, UuidAware, CreatedAt
 
   @EntityName @NotEmpty @Trimmed private String name;
   private String description;
-  @DefaultValue("true") private boolean triggerEnabled;
+  private boolean triggerDisabled;
 
   private List<Long> nextIterations;
   private Action action;

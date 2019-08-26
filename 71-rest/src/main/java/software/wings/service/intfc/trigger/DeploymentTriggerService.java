@@ -11,6 +11,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.TriggerArtifactVariable;
 import software.wings.beans.trigger.TriggerExecution;
+import software.wings.beans.trigger.WebhookSource;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.service.intfc.ownership.OwnedByArtifactStream;
 import software.wings.service.intfc.ownership.OwnedByPipeline;
@@ -31,6 +32,10 @@ public interface DeploymentTriggerService
   void delete(@NotEmpty String appId, @NotEmpty String triggerId);
 
   DeploymentTrigger get(@NotEmpty String appId, @NotEmpty String triggerId);
+
+  Map<String, WebhookSource.WebhookEventInfo> fetchWebhookChildEvents(String webhookSource);
+
+  Map<String, String> fetchCustomExpressionList(String webhookSource);
 
   PageResponse<DeploymentTrigger> list(PageRequest<DeploymentTrigger> pageRequest);
 

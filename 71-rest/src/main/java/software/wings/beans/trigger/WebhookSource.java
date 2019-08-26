@@ -1,6 +1,8 @@
 package software.wings.beans.trigger;
 
+import lombok.Builder;
 import lombok.Getter;
+import lombok.Value;
 
 import java.util.HashMap;
 import java.util.List;
@@ -44,7 +46,7 @@ public enum WebhookSource {
       GHEventHolder.map.put(value, this);
     }
 
-    private static class GHEventHolder { static Map<String, GitHubEventType> map = new HashMap<>(); }
+    public static class GHEventHolder { @Getter static Map<String, GitHubEventType> map = new HashMap<>(); }
 
     public static GitHubEventType find(String val) {
       return GitHubEventType.GHEventHolder.map.get(val);
@@ -94,7 +96,7 @@ public enum WebhookSource {
       BitBucketEventHolder.map.put(value, this);
     }
 
-    private static class BitBucketEventHolder { static Map<String, BitBucketEventType> map = new HashMap<>(); }
+    public static class BitBucketEventHolder { @Getter static Map<String, BitBucketEventType> map = new HashMap<>(); }
 
     public static BitBucketEventType find(String val) {
       return BitBucketEventType.BitBucketEventHolder.map.get(val);
@@ -127,10 +129,25 @@ public enum WebhookSource {
       GitLabEventHolder.map.put(eventKeyValue, this);
     }
 
-    private static class GitLabEventHolder { static Map<String, GitLabEventType> map = new HashMap<>(); }
+    public static class GitLabEventHolder { @Getter static Map<String, GitLabEventType> map = new HashMap<>(); }
 
     public static GitLabEventType find(String eventKeyValue) {
       return GitLabEventType.GitLabEventHolder.map.get(eventKeyValue);
     }
+  }
+
+  @Value
+  @Builder
+  public static class WebhookSubEventInfo {
+    String displayValue;
+    String enumName;
+  }
+
+  @Value
+  @Builder
+  public static class WebhookEventInfo {
+    String displayValue;
+    String enumName;
+    List<WebhookSubEventInfo> subEvents;
   }
 }

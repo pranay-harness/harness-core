@@ -14,6 +14,7 @@ import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.beans.trigger.DeploymentTrigger;
+import software.wings.beans.trigger.WebhookSource;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.trigger.TriggerAuthHandler;
 import software.wings.service.intfc.trigger.DeploymentTriggerService;
@@ -75,6 +76,24 @@ public class DeploymentTriggerResource {
   public RestResponse<DeploymentTrigger> get(
       @QueryParam("appId") String appId, @PathParam("triggerId") String triggerId) {
     return new RestResponse<>(deploymentTriggerService.get(appId, triggerId));
+  }
+
+  @GET
+  @Path("subEvents")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Map<String, WebhookSource.WebhookEventInfo>> fetchWebhookChildEvents(
+      @QueryParam("webhookSource") String webhookSource) {
+    return new RestResponse<>(deploymentTriggerService.fetchWebhookChildEvents(webhookSource));
+  }
+
+  @GET
+  @Path("customExp")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Map<String, String>> fetchCustomExpressionList(
+      @QueryParam("webhookSource") String webhookSource) {
+    return new RestResponse<>(deploymentTriggerService.fetchCustomExpressionList(webhookSource));
   }
 
   @POST

@@ -7,12 +7,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum WebhookEventType {
-  PULL_REQUEST("Pull Request", "pull_request"),
-  PUSH("Push", "push"),
-  REPO("Repo", "repo"),
-  ISSUE("Issue", "issue"),
-  PING("Ping", "ping"),
-  DELETE("Delete", "delete"),
+  PULL_REQUEST("On Pull Request", "pull_request"),
+  PUSH("On Push", "push"),
+  REPO("On Repo", "repo"),
+  ISSUE("On Issue", "issue"),
+  PING("On Ping", "ping"),
+  DELETE("On Delete", "delete"),
   ANY("Any", "any"),
   OTHER("Other", "other");
 

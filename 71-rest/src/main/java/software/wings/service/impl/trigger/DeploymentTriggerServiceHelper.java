@@ -6,6 +6,10 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static net.redhogs.cronparser.CronExpressionDescriptor.getDescription;
 import static software.wings.beans.trigger.Condition.Type.PIPELINE_COMPLETION;
+import static software.wings.beans.trigger.WebhookCustomExpression.suggestExpressions;
+import static software.wings.beans.trigger.WebhookEventType.ISSUE;
+import static software.wings.beans.trigger.WebhookEventType.PULL_REQUEST;
+import static software.wings.beans.trigger.WebhookEventType.PUSH;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
@@ -25,12 +29,20 @@ import software.wings.beans.trigger.PipelineAction;
 import software.wings.beans.trigger.PipelineCondition;
 import software.wings.beans.trigger.TriggerArgs;
 import software.wings.beans.trigger.TriggerArtifactVariable;
+import software.wings.beans.trigger.WebhookSource;
+import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
+import software.wings.beans.trigger.WebhookSource.GitHubEventType;
+import software.wings.beans.trigger.WebhookSource.GitLabEventType;
+import software.wings.beans.trigger.WebhookSource.WebhookSubEventInfo;
 import software.wings.beans.trigger.WorkflowAction;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowService;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 @Singleton
@@ -123,6 +135,96 @@ public class DeploymentTriggerServiceHelper {
     } catch (Exception e) {
       throw new WingsException("Invalid cron expression" + cronExpression, USER);
     }
+  }
+
+  public Map<String, String> fetchCustomExpressionList(String webhookSource) {
+    return suggestExpressions(webhookSource);
+  }
+
+  public Map<String, WebhookSource.WebhookEventInfo> fetchWebhookChildEvents(String webhookSource) {
+    Map<String, WebhookSource.WebhookEventInfo> events = new HashMap<>();
+    switch (webhookSource) {
+      case "GITHUB":
+        GitHubEventType.GHEventHolder.getMap().values().forEach(gitHubEventType -> {
+          if (events.containsKey(gitHubEventType.getEventType().name())) {
+            WebhookSource.WebhookEventInfo webhookEventInfo = events.get(gitHubEventType.getEventType().name());
+            if (gitHubEventType.getEventType().equals(PULL_REQUEST)) {
+              webhookEventInfo.getSubEvents().add(WebhookSubEventInfo.builder()
+                                                      .displayValue(gitHubEventType.getDisplayName())
+                                                      .enumName(gitHubEventType.name())
+                                                      .build());
+            }
+          } else {
+            List<WebhookSubEventInfo> subEvents = new ArrayList<>();
+
+            if (gitHubEventType.getEventType().equals(PULL_REQUEST)) {
+              subEvents.add(WebhookSubEventInfo.builder()
+                                .displayValue(gitHubEventType.getDisplayName())
+                                .enumName(gitHubEventType.name())
+                                .build());
+            }
+
+            WebhookSource.WebhookEventInfo webhookEventInfo =
+                WebhookSource.WebhookEventInfo.builder()
+                    .displayValue(gitHubEventType.getEventType().getDisplayName())
+                    .enumName(gitHubEventType.getEventType().name())
+                    .subEvents(subEvents)
+                    .build();
+
+            events.put(gitHubEventType.getEventType().name(), webhookEventInfo);
+          }
+        });
+        break;
+      case "GITLAB":
+        GitLabEventType.GitLabEventHolder.getMap().values().forEach(gitLabEventType -> {
+          WebhookSource.WebhookEventInfo webhookEventInfo =
+              WebhookSource.WebhookEventInfo.builder()
+                  .displayValue(gitLabEventType.getEventType().getDisplayName())
+                  .enumName(gitLabEventType.getEventType().name())
+                  .build();
+
+          events.put(gitLabEventType.getEventType().name(), webhookEventInfo);
+        });
+        break;
+      case "BITBUCKET":
+        BitBucketEventType.BitBucketEventHolder.getMap().values().forEach(bitBucketEventType -> {
+          if (events.containsKey(bitBucketEventType.getEventType().name())) {
+            WebhookSource.WebhookEventInfo webhookEventInfo = events.get(bitBucketEventType.getEventType().name());
+            if (bitBucketEventType.getEventType().equals(PULL_REQUEST)
+                || bitBucketEventType.getEventType().equals(ISSUE) || bitBucketEventType.getEventType().equals(PUSH)) {
+              webhookEventInfo.getSubEvents().add(WebhookSubEventInfo.builder()
+                                                      .displayValue(bitBucketEventType.getDisplayName())
+                                                      .enumName(bitBucketEventType.name())
+                                                      .build());
+            }
+          } else {
+            List<WebhookSubEventInfo> subEvents = new ArrayList<>();
+
+            if (bitBucketEventType.getEventType().equals(PULL_REQUEST)
+                || bitBucketEventType.getEventType().equals(ISSUE) || bitBucketEventType.getEventType().equals(PUSH)) {
+              subEvents.add(WebhookSubEventInfo.builder()
+                                .displayValue(bitBucketEventType.getDisplayName())
+                                .enumName(bitBucketEventType.name())
+                                .build());
+            }
+
+            WebhookSource.WebhookEventInfo webhookEventInfo =
+                WebhookSource.WebhookEventInfo.builder()
+                    .displayValue(bitBucketEventType.getEventType().getDisplayName())
+                    .enumName(bitBucketEventType.getEventType().name())
+                    .subEvents(subEvents)
+                    .build();
+
+            events.put(bitBucketEventType.getEventType().name(), webhookEventInfo);
+          }
+        });
+        break;
+
+      default:
+        unhandled(webhookSource);
+        return null;
+    }
+    return events;
   }
 
   public Stream<DeploymentTrigger> getTriggersMatchesWorkflow(String appId, String sourcePipelineId) {
