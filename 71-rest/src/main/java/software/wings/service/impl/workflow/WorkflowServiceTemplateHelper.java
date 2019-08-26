@@ -363,6 +363,16 @@ public class WorkflowServiceTemplateHelper {
     return null;
   }
 
+  public static Variable getEnvVariable(List<Variable> variables) {
+    if (isNotEmpty(variables)) {
+      return variables.stream()
+          .filter((Variable variable) -> ENVIRONMENT.equals(variable.obtainEntityType()))
+          .findFirst()
+          .orElse(null);
+    }
+    return null;
+  }
+
   /***
    * Templatizes the service infra if environment templatized for Phase
    */
