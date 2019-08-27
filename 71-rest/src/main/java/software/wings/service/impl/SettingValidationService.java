@@ -53,7 +53,6 @@ import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SftpConfig;
-import software.wings.beans.SlackConfig;
 import software.wings.beans.SmbConfig;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SpotInstConfig;
@@ -132,12 +131,10 @@ public class SettingValidationService {
   public ValidationResult validateConnectivity(SettingAttribute settingAttribute) {
     SettingValue settingValue = settingAttribute.getValue();
     if (settingValue instanceof HostConnectionAttributes || settingValue instanceof WinRmConnectionAttributes
-        || settingValue instanceof SmtpConfig || settingValue instanceof SlackConfig) {
+        || settingValue instanceof SmtpConfig) {
       List<EncryptedDataDetail> encryptionDetails = null;
-      if (!(settingValue instanceof SlackConfig)) {
-        encryptionDetails =
-            secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
-      }
+      encryptionDetails =
+          secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
       ConnectivityValidationDelegateRequest request = ConnectivityValidationDelegateRequest.builder()
                                                           .encryptedDataDetails(encryptionDetails)
                                                           .settingAttribute(settingAttribute)

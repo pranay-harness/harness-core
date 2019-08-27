@@ -226,7 +226,6 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SftpConfig;
-import software.wings.beans.SlackConfig;
 import software.wings.beans.SmbConfig;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SpotInstConfig;
@@ -1103,7 +1102,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.settings.helm.GCSHelmRepoConfig", GCSHelmRepoConfig.class);
     w.put("beans.settings.helm.HttpHelmRepoConfig", HttpHelmRepoConfig.class);
     w.put("beans.SftpConfig", SftpConfig.class);
-    w.put("beans.SlackConfig", SlackConfig.class);
     w.put("beans.SmbConfig", SmbConfig.class);
     w.put("beans.SplunkConfig", SplunkConfig.class);
     w.put("beans.SpotInstConfig", SpotInstConfig.class);

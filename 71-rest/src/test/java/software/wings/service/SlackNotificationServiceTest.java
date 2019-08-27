@@ -28,7 +28,7 @@ import software.wings.beans.Application;
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
-import software.wings.beans.SlackConfig;
+import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.service.impl.SlackNotificationServiceImpl;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.NotificationSetupService;
@@ -55,8 +55,8 @@ public class SlackNotificationServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldSendMessage() {
     doReturn(slackWebhookClient).when(slackNotificationService).getWebhookClient(anyString());
-    SlackConfig slackConfig = new SlackConfig();
-    slackConfig.setOutgoingWebhookUrl(SLACK_WEBHOOK_URL_PREFIX + WingsTestConstants.PORTAL_URL);
+    SlackNotificationSetting slackConfig =
+        new SlackNotificationSetting("dummyChannelName", SLACK_WEBHOOK_URL_PREFIX + WingsTestConstants.PORTAL_URL);
     slackNotificationService.sendMessage(slackConfig, CHANNEL, SENDER, MESSAGE);
     ArgumentCaptor<Payload> argumentCaptor = ArgumentCaptor.forClass(Payload.class);
     verify(slackWebhookClient).post(argumentCaptor.capture());

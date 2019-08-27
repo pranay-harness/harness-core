@@ -49,7 +49,6 @@ import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.SftpConfig;
-import software.wings.beans.SlackConfig;
 import software.wings.beans.SmbConfig;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SpotInstConfig;
@@ -243,15 +242,6 @@ public class PluginServiceImpl implements PluginService {
             .withType("SMTP")
             .withPluginCategories(asList(Collaboration))
             .withUiSchema(readUiSchema("SMTP"))
-            .build(),
-        anAccountPlugin()
-            .withSettingClass(SlackConfig.class)
-            .withAccountId(accountId)
-            .withIsEnabled(true)
-            .withDisplayName("Slack")
-            .withType("SLACK")
-            .withPluginCategories(asList(Collaboration))
-            .withUiSchema(readUiSchema("SLACK"))
             .build(),
         anAccountPlugin()
             .withSettingClass(AwsConfig.class)
