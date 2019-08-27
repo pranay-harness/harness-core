@@ -1258,7 +1258,7 @@ public class SettingsServiceImpl implements SettingsService {
           List<String> linkedArtifactStreamIds = workflow.getLinkedArtifactStreamIds();
           linkedArtifactStreamIds.remove(artifactStream.getUuid());
           workflow.setLinkedArtifactStreamIds(linkedArtifactStreamIds);
-          workflowService.updateWorkflow(workflow);
+          workflowService.updateWorkflow(workflow, false);
         }
       }
     }
