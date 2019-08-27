@@ -3918,7 +3918,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (orchestrationWorkflow != null) {
         buildWorkflow = BUILD.equals(orchestrationWorkflow.getOrchestrationWorkflowType());
       }
-      if (isNotBlank(phaseId)) {
+      if (isNotBlank(phaseId) && !phaseId.equalsIgnoreCase("default")) {
         if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
           workflowPhase = ((CanaryOrchestrationWorkflow) orchestrationWorkflow)
                               .getWorkflowPhases()
@@ -3964,7 +3964,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (orchestrationWorkflow != null) {
         buildWorkflow = BUILD.equals(orchestrationWorkflow.getOrchestrationWorkflowType());
       }
-      if (isNotBlank(phaseId)) {
+      if (isNotBlank(phaseId) && !phaseId.equalsIgnoreCase("default")) {
         if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
           workflowPhase = ((CanaryOrchestrationWorkflow) orchestrationWorkflow)
                               .getWorkflowPhases()
