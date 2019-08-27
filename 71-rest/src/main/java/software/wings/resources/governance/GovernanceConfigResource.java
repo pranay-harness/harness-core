@@ -1,4 +1,4 @@
-package software.wings.resources;
+package software.wings.resources.governance;
 
 import com.google.inject.Inject;
 

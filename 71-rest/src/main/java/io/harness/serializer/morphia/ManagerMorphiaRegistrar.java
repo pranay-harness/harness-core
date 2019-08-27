@@ -1,6 +1,7 @@
 package io.harness.serializer.morphia;
 
 import io.harness.dashboard.DashboardSettings;
+import io.harness.governance.pipeline.model.PipelineGovernanceConfig;
 import io.harness.marketplace.gcp.events.AccountActiveEvent;
 import io.harness.marketplace.gcp.events.GcpMarketplaceEvent;
 import io.harness.mongo.HObjectFactory;
@@ -894,6 +895,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(PerpetualTaskRecord.class);
     set.add(CyberArkConfig.class);
     set.add(SupervisedTrainingStatus.class);
+    set.add(PipelineGovernanceConfig.class);
   }
 
   @Override
