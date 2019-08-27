@@ -17,6 +17,8 @@ import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobServiceImpl;
 import io.harness.exception.WingsException;
 import io.harness.govern.DependencyModule;
+import io.harness.governance.pipeline.service.PipelineGovernanceService;
+import io.harness.governance.pipeline.service.PipelineGovernanceServiceImpl;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitCheckerFactoryImpl;
 import io.harness.limits.configuration.LimitConfigurationService;
@@ -838,6 +840,8 @@ public class WingsModule extends DependencyModule {
     bind(PreDeploymentChecker.class).annotatedWith(RateLimitCheck.class).to(DeploymentRateLimitChecker.class);
     bind(PreDeploymentChecker.class).annotatedWith(ServiceInstanceUsage.class).to(SIUsageChecker.class);
     bind(PreDeploymentChecker.class).annotatedWith(AccountExpiryCheck.class).to(AccountExpirationChecker.class);
+
+    bind(PipelineGovernanceService.class).to(PipelineGovernanceServiceImpl.class);
 
     bind(ExecutorService.class)
         .annotatedWith(Names.named("verificationDataCollector"))

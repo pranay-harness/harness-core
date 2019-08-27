@@ -1,0 +1,71 @@
+package io.harness.governance.pipeline.model;
+
+import static org.apache.commons.lang3.StringUtils.trimToEmpty;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.harness.data.structure.CollectionUtils;
+import io.harness.data.structure.UUIDGenerator;
+import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UuidAccess;
+import lombok.Value;
+import lombok.experimental.FieldNameConstants;
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexes;
+
+import java.util.List;
+import java.util.Objects;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@Value
+@Entity(value = "pipelineGovernanceConfigs")
+@Indexes(@Index(fields = @Field("accountId"), options = @IndexOptions(name = "account_id_idx")))
+@FieldNameConstants(innerTypeName = "PipelineGovernanceConfigKeys")
+@ParametersAreNonnullByDefault
+public class PipelineGovernanceConfig implements PersistentEntity, UuidAccess {
+  @Id private String uuid;
+  @Nonnull private String accountId;
+  @Nonnull private String name;
+  @Nonnull private String description;
+  @Nonnull private List<PipelineGovernanceRule> rules;
+  @Nonnull private List<String> appIds;
+
+  @JsonCreator
+  public PipelineGovernanceConfig(@Nullable @JsonProperty("uuid") String uuid,
+      @JsonProperty("accountId") String accountId, @JsonProperty("name") String name,
+      @JsonProperty("description") String description, @JsonProperty("rules") List<PipelineGovernanceRule> rules,
+      @JsonProperty("appIds") List<String> appIds) {
+    if (null == uuid) {
+      this.uuid = UUIDGenerator.generateUuid();
+    } else {
+      this.uuid = uuid;
+    }
+
+    this.description = trimToEmpty(description);
+    this.accountId = Objects.requireNonNull(accountId, "accountId must be present");
+    this.name = name;
+    this.rules = rules;
+    this.appIds = appIds;
+  }
+
+  public List<PipelineGovernanceRule> getRules() {
+    return CollectionUtils.emptyIfNull(rules);
+  }
+
+  @Nonnull
+  public List<String> getAppIds() {
+    return CollectionUtils.emptyIfNull(appIds);
+  }
+
+  @Override
+  @Nonnull
+  public String getUuid() {
+    return uuid;
+  }
+}
