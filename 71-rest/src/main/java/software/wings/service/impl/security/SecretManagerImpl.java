@@ -36,6 +36,7 @@ import static software.wings.service.intfc.security.VaultService.PATH_SEPARATOR;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.TreeBasedTable;
 import com.google.common.io.ByteStreams;
@@ -43,11 +44,13 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
+import com.segment.analytics.messages.TrackMessage;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
+import io.harness.event.model.EventType;
 import io.harness.exception.KmsOperationException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
@@ -57,6 +60,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
+import io.harness.segment.client.SegmentClientBuilder;
 import io.harness.serializer.KryoUtils;
 import io.harness.stream.BoundedInputStream;
 import lombok.Builder;
@@ -168,6 +172,7 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private UserService userService;
   @Inject private SecretManagerConfigService secretManagerConfigService;
   @Inject private AzureSecretsManagerService azureSecretsManagerService;
+  @Inject private SegmentClientBuilder segmentClientBuilder;
 
   @Override
   public EncryptionType getEncryptionType(String accountId) {
@@ -2181,6 +2186,22 @@ public class SecretManagerImpl implements SecretManager {
   private void validateSecretManagerConfigs(String accountId) {
     List<SecretManagerConfig> encryptionConfigs = secretManagerConfigService.listSecretManagers(accountId, false);
     for (EncryptionConfig encryptionConfig : encryptionConfigs) {
+      // PL-3102: Publish default secret manager type for each account, piggy-back on the validate secret manager config
+      // job.
+      if (encryptionConfig.isDefault()) {
+        TrackMessage.Builder messageBuilder =
+            TrackMessage.builder(EventType.SECRET_MANAGER_TYPE.name())
+                .anonymousId(accountId)
+                .properties(
+                    new ImmutableMap.Builder<String, Object>()
+                        .put(ACCOUNT_ID_KEY, accountId)
+                        .put(TRAIT_DEFAULT_SECRET_MANAGER, encryptionConfig.getEncryptionType().name())
+                        .put(TRAIT_IS_GLOBAL, Objects.equals(GLOBAL_ACCOUNT_ID, encryptionConfig.getAccountId()))
+                        .build());
+
+        segmentClientBuilder.getInstance().enqueue(messageBuilder);
+      }
+
       KmsSetupAlert kmsSetupAlert =
           KmsSetupAlert.builder()
               .kmsId(encryptionConfig.getUuid())
