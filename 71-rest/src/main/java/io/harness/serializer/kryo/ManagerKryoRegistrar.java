@@ -185,7 +185,6 @@ import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SftpConfig;
-import software.wings.beans.SlackConfig;
 import software.wings.beans.SmbConfig;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SpotInstConfig;
@@ -884,7 +883,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SettingAttribute.SettingCategory.class, 5069);
     kryo.register(SettingAttribute.class, 5008);
     kryo.register(SftpConfig.class, 5560);
-    kryo.register(SlackConfig.class, 5573);
     kryo.register(SmbConfig.class, 5551);
     kryo.register(SplunkConfig.class, 5177);
     kryo.register(SSHExecutionCredential.class, 5022);

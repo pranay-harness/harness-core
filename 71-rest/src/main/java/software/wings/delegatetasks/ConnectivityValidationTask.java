@@ -24,7 +24,6 @@ import software.wings.beans.ExecutionCredential;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostValidationResponse;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SlackConfig;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.mail.Mailer;
@@ -34,7 +33,6 @@ import software.wings.settings.SettingValue;
 import software.wings.settings.validation.ConnectivityValidationAttributes;
 import software.wings.settings.validation.ConnectivityValidationDelegateRequest;
 import software.wings.settings.validation.ConnectivityValidationDelegateResponse;
-import software.wings.settings.validation.SlackConnectivityValidationAttributes;
 import software.wings.settings.validation.SmtpConnectivityValidationAttributes;
 import software.wings.settings.validation.SshConnectionConnectivityValidationAttributes;
 import software.wings.settings.validation.WinRmConnectivityValidationAttributes;
@@ -119,28 +117,6 @@ public class ConnectivityValidationTask extends AbstractDelegateRunnableTask {
         String errorMessage = "";
         try {
           mailer.send((SmtpConfig) settingValue, encryptedDataDetails, emailData);
-          valid = true;
-        } catch (Exception ex) {
-          errorMessage = ExceptionUtils.getMessage(ex);
-        }
-        return ConnectivityValidationDelegateResponse.builder()
-            .executionStatus(SUCCESS)
-            .errorMessage(errorMessage)
-            .valid(valid)
-            .build();
-      } else if (settingValue instanceof SlackConfig) {
-        if (!(connectivityValidationAttributes instanceof SlackConnectivityValidationAttributes)) {
-          throw new InvalidRequestException("Must send Slack connectivity attributes", USER);
-        }
-        SlackConnectivityValidationAttributes attributes =
-            (SlackConnectivityValidationAttributes) connectivityValidationAttributes;
-        boolean valid = false;
-        String errorMessage = "";
-        try {
-          slackNotificationService.sendMessage((SlackConfig) settingValue, attributes.getChannel(),
-              isNotEmpty(attributes.getSender()) ? attributes.getSender() : "Harness",
-              isNotEmpty(attributes.getMessage()) ? attributes.getMessage()
-                                                  : "Test Slack connectivity message from Harness Inc.");
           valid = true;
         } catch (Exception ex) {
           errorMessage = ExceptionUtils.getMessage(ex);

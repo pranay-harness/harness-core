@@ -48,7 +48,6 @@ import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.SftpConfig;
-import software.wings.beans.SlackConfig;
 import software.wings.beans.SmbConfig;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SpotInstConfig;
@@ -94,7 +93,7 @@ public class PluginServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldGetInstalledPlugins() throws Exception {
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(35)
+        .hasSize(34)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -229,14 +228,6 @@ public class PluginServiceTest extends CategoryTest {
                 .withIsEnabled(true)
                 .withDisplayName("SMTP")
                 .withType("SMTP")
-                .withPluginCategories(asList(Collaboration))
-                .build(),
-            anAccountPlugin()
-                .withSettingClass(SlackConfig.class)
-                .withAccountId(accountId)
-                .withIsEnabled(true)
-                .withDisplayName("Slack")
-                .withType("SLACK")
                 .withPluginCategories(asList(Collaboration))
                 .build(),
             anAccountPlugin()
@@ -377,7 +368,7 @@ public class PluginServiceTest extends CategoryTest {
                 .build());
 
     assertThat(pluginService.getInstalledPlugins(multiArtifactEnabledAccountId))
-        .hasSize(36)
+        .hasSize(35)
         .contains(anAccountPlugin()
                       .withSettingClass(CustomArtifactServerConfig.class)
                       .withAccountId(multiArtifactEnabledAccountId)
@@ -392,16 +383,16 @@ public class PluginServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldGetPluginSettingSchema() throws Exception {
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(35)
+        .hasSize(34)
         .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "PROMETHEUS", "APM_VERIFICATION", "DATA_DOG",
-            "JENKINS", "BAMBOO", "SMTP", "SLACK", "BUG_SNAG", "SPLUNK", "ELK", "LOGZ", "SUMO", "AWS", "GCP", "AZURE",
+            "JENKINS", "BAMBOO", "SMTP", "BUG_SNAG", "SPLUNK", "ELK", "LOGZ", "SUMO", "AWS", "GCP", "AZURE",
             "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS",
             "ARTIFACTORY", "PCF", "GIT", "JIRA", "SMB", "SFTP", "HTTP_HELM_REPO", "AMAZON_S3_HELM_REPO",
             "GCS_HELM_REPO", "SERVICENOW", "SPOT_INST");
     assertThat(pluginService.getPluginSettingSchema(multiArtifactEnabledAccountId))
-        .hasSize(36)
+        .hasSize(35)
         .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "PROMETHEUS", "APM_VERIFICATION", "DATA_DOG",
-            "JENKINS", "BAMBOO", "SMTP", "SLACK", "BUG_SNAG", "SPLUNK", "ELK", "LOGZ", "SUMO", "AWS", "GCP", "AZURE",
+            "JENKINS", "BAMBOO", "SMTP", "BUG_SNAG", "SPLUNK", "ELK", "LOGZ", "SUMO", "AWS", "GCP", "AZURE",
             "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS",
             "ARTIFACTORY", "PCF", "GIT", "JIRA", "SMB", "SFTP", "HTTP_HELM_REPO", "AMAZON_S3_HELM_REPO",
             "GCS_HELM_REPO", "SERVICENOW", "CUSTOM", "SPOT_INST");

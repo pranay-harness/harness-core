@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Notification;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SlackConfig;
 import software.wings.beans.notification.SlackNotificationConfiguration;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.service.intfc.SettingsService;
@@ -57,7 +56,7 @@ public class SlackMessageDispatcher {
       return;
     }
     SettingAttribute settingAttribute = settingAttributes.iterator().next();
-    SlackConfig slackConfig = (SlackConfig) settingAttribute.getValue();
+    SlackNotificationConfiguration slackConfig = (SlackNotificationConfiguration) settingAttribute.getValue();
 
     List<String> messages = new ArrayList<>();
 

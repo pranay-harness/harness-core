@@ -1,6 +1,5 @@
 package software.wings.delegatetasks.validation;
 
-import static io.harness.network.Http.connectableHttpUrl;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -11,7 +10,6 @@ import io.harness.beans.DelegateTask;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.HostConnectionAttributes;
-import software.wings.beans.SlackConfig;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.helpers.ext.external.comm.handlers.EmailHandler;
 import software.wings.helpers.ext.mail.SmtpConfig;
@@ -46,8 +44,6 @@ public class ConnectivityBasicValidation extends AbstractDelegateValidateTask {
       return getWinRmValidationResult(request);
     } else if (settingValue instanceof SmtpConfig) {
       return getSmtpValidationResult(request);
-    } else if (settingValue instanceof SlackConfig) {
-      return getSlackValidationResult();
     } else {
       // Should never happen
       return singletonList(DelegateConnectionResult.builder().criteria("").validated(false).build());
@@ -64,8 +60,6 @@ public class ConnectivityBasicValidation extends AbstractDelegateValidateTask {
       return getWinRmCriteria(request);
     } else if (settingValue instanceof SmtpConfig) {
       return getSmtpCriteria(request);
-    } else if (settingValue instanceof SlackConfig) {
-      return getSlackCriteria();
     } else {
       // Should never happen
       return singletonList("");
@@ -115,13 +109,6 @@ public class ConnectivityBasicValidation extends AbstractDelegateValidateTask {
     return singletonList(DelegateConnectionResult.builder().criteria(criteria).validated(valid).build());
   }
 
-  private List<DelegateConnectionResult> getSlackValidationResult() {
-    return singletonList(DelegateConnectionResult.builder()
-                             .criteria(SLACK_API_CRITERIA)
-                             .validated(connectableHttpUrl(SLACK_API_CRITERIA))
-                             .build());
-  }
-
   private List<String> getSshCriteria(ConnectivityValidationDelegateRequest request) {
     SshConnectionConnectivityValidationAttributes validationAttributes =
         (SshConnectionConnectivityValidationAttributes) request.getSettingAttribute().getValidationAttributes();
@@ -137,9 +124,5 @@ public class ConnectivityBasicValidation extends AbstractDelegateValidateTask {
   private List<String> getSmtpCriteria(ConnectivityValidationDelegateRequest request) {
     SmtpConfig smtpConfig = (SmtpConfig) request.getSettingAttribute().getValue();
     return singletonList(format("%s:%s", smtpConfig.getHost(), smtpConfig.getPort()));
-  }
-
-  private List<String> getSlackCriteria() {
-    return singletonList(SLACK_API_CRITERIA);
   }
 }
