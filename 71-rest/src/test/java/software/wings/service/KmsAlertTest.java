@@ -86,7 +86,7 @@ public class KmsAlertTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testAlertFiredForVault() throws IOException, InterruptedException {
+  public void testAlertFiredForVault() throws InterruptedException {
     VaultConfig vaultConfig = getVaultConfig();
     vaultConfig.setAuthToken(UUID.randomUUID().toString());
     vaultConfig.setAccountId(accountId);
@@ -121,7 +121,7 @@ public class KmsAlertTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testAlertFiredForVaultRenewal() throws IOException, InterruptedException {
+  public void testAlertFiredForVaultRenewal() throws InterruptedException {
     VaultConfig vaultConfig = getVaultConfig();
     vaultConfig.setRenewIntervalHours(1);
     vaultConfig.setRenewedAt(0);
