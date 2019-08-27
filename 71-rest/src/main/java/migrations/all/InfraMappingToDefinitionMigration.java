@@ -350,6 +350,7 @@ public class InfraMappingToDefinitionMigration implements Migration {
                              .namespace(azureK8sSrc.getNamespace())
                              .subscriptionId(azureK8sSrc.getSubscriptionId())
                              .resourceGroup(azureK8sSrc.getResourceGroup())
+                             .releaseName(azureK8sSrc.getReleaseName())
                              .build();
       } else if (src instanceof PcfInfrastructureMapping) {
         PcfInfrastructureMapping pcfSrc = (PcfInfrastructureMapping) src;
