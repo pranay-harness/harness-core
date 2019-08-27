@@ -32,6 +32,7 @@ import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.sm.ExecutionInterruptType.ABORT;
 import static software.wings.sm.ExecutionInterruptType.ABORT_ALL;
 import static software.wings.sm.ExecutionInterruptType.IGNORE;
+import static software.wings.sm.ExecutionInterruptType.MARK_EXPIRED;
 import static software.wings.sm.ExecutionInterruptType.PAUSE;
 import static software.wings.sm.ExecutionInterruptType.PAUSE_ALL;
 import static software.wings.sm.ExecutionInterruptType.RESUME;
@@ -85,6 +86,7 @@ public class ExecutionInterruptManager {
           .put(IGNORE, asList(PAUSED, WAITING))
           .put(RETRY, asList(WAITING, FAILED, ERROR))
           .put(ABORT, asList(NEW, STARTING, RUNNING, PAUSED, WAITING))
+          .put(MARK_EXPIRED, asList(NEW, STARTING, RUNNING, PAUSED, WAITING))
           .put(PAUSE, asList(NEW, STARTING, RUNNING))
           .build();
 
