@@ -741,7 +741,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   public List<String> listHostDisplayNames(String appId, String infraDefinitionId, String workflowExecutionId) {
     InfrastructureDefinition infrastructureDefinition = get(appId, infraDefinitionId);
     notNullCheck("Infra definition was deleted", infrastructureDefinition, USER);
-    return getInfrastructureMappingHostDisplayNames(infrastructureDefinition, appId, workflowExecutionId);
+    return getInfrastructureDefinitionHostDisplayNames(infrastructureDefinition, appId, workflowExecutionId);
   }
 
   @Override
@@ -995,14 +995,14 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     return (AwsConfig) computeProviderSetting.getValue();
   }
 
-  private List<String> getInfrastructureMappingHostDisplayNames(
+  private List<String> getInfrastructureDefinitionHostDisplayNames(
       InfrastructureDefinition infrastructureDefinition, String appId, String workflowExecutionId) {
+    if (infrastructureDefinition.getProvisionerId() != null) {
+      return emptyList();
+    }
     List<String> hostDisplayNames = new ArrayList<>();
     if (infrastructureDefinition.getInfrastructure() instanceof PhysicalInfra) {
       PhysicalInfra physicalInfra = (PhysicalInfra) infrastructureDefinition.getInfrastructure();
-      if (infrastructureDefinition.getProvisionerId() != null) {
-        return physicalInfra.getHosts().stream().map(Host::getHostName).collect(Collectors.toList());
-      }
       return physicalInfra.getHostNames();
     } else if (infrastructureDefinition.getInfrastructure() instanceof AwsInstanceInfrastructure) {
       AwsInstanceInfrastructure awsInfrastructureMapping =
