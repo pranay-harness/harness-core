@@ -134,7 +134,9 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = AADITI, resent = false)
   @Category(FunctionalTests.class)
+  @Ignore("This test is Flaky. Need to debug more by the test owner")
   public void getDockerImagesNamesForArtifactoryAtConnectorLevel() {
     GenericType<RestResponse<Set<String>>> artifactStreamType = new GenericType<RestResponse<Set<String>>>() {
 
