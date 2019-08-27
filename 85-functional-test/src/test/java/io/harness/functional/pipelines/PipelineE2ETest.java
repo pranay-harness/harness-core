@@ -213,7 +213,7 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
     logger.info("Waiting for 2 mins until the execution is complete");
 
     Awaitility.await()
-        .atMost(120, TimeUnit.SECONDS)
+        .atMost(240, TimeUnit.SECONDS)
         .pollInterval(5, TimeUnit.SECONDS)
         .until(()
                    -> Setup.portal()
