@@ -335,6 +335,10 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
           return anExecutionEventAdvice().withExecutionInterruptType(ExecutionInterruptType.ROLLBACK_DONE).build();
         }
 
+        if (!orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().containsKey(phaseSubWorkflow.getId())) {
+          return null;
+        }
+
         return anExecutionEventAdvice()
             .withNextStateName(
                 orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(phaseSubWorkflow.getId()).getName())
