@@ -442,9 +442,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
         .isFalse();
   }
 
-  @Test
-  @Category(UnitTests.class)
-  public void testCV247TaskQueue() {
+  private void createNRConfig(String cvConfigId) {
     NewRelicCVServiceConfiguration cvServiceConfiguration =
         NewRelicCVServiceConfiguration.builder().applicationId(generateUUID()).build();
     cvServiceConfiguration.setName(generateUUID());
@@ -454,11 +452,17 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
     cvServiceConfiguration.setEnabled24x7(true);
     cvServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.LOW);
     cvServiceConfiguration.setStateType(StateType.NEW_RELIC);
-    String cvConfigId = generateUuid();
+
     cvServiceConfiguration.setUuid(cvConfigId);
     cvServiceConfiguration.setAccountId(accountId);
     cvServiceConfiguration.setAppId(appId);
     wingsPersistence.save(cvServiceConfiguration);
+  }
+  @Test
+  @Category(UnitTests.class)
+  public void testCV247TaskQueue() {
+    String cvConfigId = generateUuid();
+    createNRConfig(cvConfigId);
 
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
 

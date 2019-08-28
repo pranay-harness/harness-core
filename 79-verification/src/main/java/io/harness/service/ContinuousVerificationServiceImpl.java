@@ -188,7 +188,18 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       // over from there.
       logger.info("The last analysis was more than 2 hours ago. We're restarting the analysis from minute: {} for {}",
           currentMinute - PREDECTIVE_HISTORY_MINUTES, cvConfiguration.getUuid());
-      return currentMinute - PREDECTIVE_HISTORY_MINUTES;
+      long restartTime = currentMinute - PREDECTIVE_HISTORY_MINUTES;
+      if ((restartTime - lastCVAnalysisMinute) % CRON_POLL_INTERVAL_IN_MINUTES != 0) {
+        restartTime -= (restartTime - lastCVAnalysisMinute) % CRON_POLL_INTERVAL_IN_MINUTES;
+      }
+      // check to see if there was any task created for this cvConfig for one hour before expected restart time. If yes,
+      // dont do this. Return -1
+      boolean isTaskRunning = learningEngineService.isTaskRunningOrQueued(
+          cvConfiguration.getUuid(), restartTime - PREDECTIVE_HISTORY_MINUTES - 60);
+      if (isTaskRunning) {
+        return -1;
+      }
+      return restartTime;
     } else {
       return lastCVAnalysisMinute;
     }
@@ -231,6 +242,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                   cvConfiguration.getStateType());
             }
             long analysisStartMinute = getAnalysisStartMinuteForAPM(cvConfiguration, lastCVDataCollectionMinute);
+            if (analysisStartMinute == -1) {
+              logger.info(
+                  "The last analysis was more than 2 hours ago but there is currently a task running for {}. So exiting.",
+                  cvConfiguration.getUuid());
+              return;
+            }
             if (lastCVDataCollectionMinute - lastCVAnalysisMinute >= TimeUnit.SECONDS.toMinutes(CRON_POLL_INTERVAL)) {
               long endMinute = analysisStartMinute + TimeUnit.SECONDS.toMinutes(CRON_POLL_INTERVAL);
 

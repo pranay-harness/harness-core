@@ -2,7 +2,6 @@ package io.harness.jobs.workflow.timeseries;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
@@ -342,7 +341,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Job {
                     context.getWorkflowExecutionId(), context.getServiceId(), groupName, OrderType.ASC);
             completeCron = timeSeriesMlAnalysisType.equals(TimeSeriesMlAnalysisType.PREDICTIVE)
                 ? lastHeartBeatRecord.getDataCollectionMinute()
-                    >= PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES + analysisDuration
+                    >= PREDECTIVE_HISTORY_MINUTES + context.getStartDataCollectionMinute() + analysisDuration
                 : lastHeartBeatRecord.getDataCollectionMinute() - firstHeartBeatRecord.getDataCollectionMinute()
                     >= analysisDuration;
 
