@@ -1,10 +1,16 @@
 package software.wings.service.impl.compliance;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.segment.analytics.messages.TrackMessage;
+import com.segment.analytics.messages.TrackMessage.Builder;
 import io.harness.beans.EmbeddedUser;
+import io.harness.event.model.EventType;
+import io.harness.segment.client.SegmentClientBuilder;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.ListUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Event.Type;
@@ -31,7 +37,8 @@ import javax.validation.executable.ValidateOnExecution;
 public class GovernanceConfigServiceImpl implements GovernanceConfigService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
-  @Inject AuditServiceHelper auditServiceHelper;
+  @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private SegmentClientBuilder segmentClientBuilder;
 
   @Override
   public GovernanceConfig get(String accountId) {
@@ -72,7 +79,33 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
         wingsPersistence.findAndModify(query, updateOperations, WingsPersistence.upsertReturnNewOptions);
     auditServiceHelper.reportForAuditingUsingAccountId(accountId, oldSetting, updatedVal, Type.UPDATE);
 
+    if (!ListUtils.isEqualList(
+            oldSetting.getTimeRangeBasedFreezeConfigs(), governanceConfig.getTimeRangeBasedFreezeConfigs())) {
+      publishToSegment(accountId, user, EventType.BLACKOUT_WINDOW_UPDATED);
+    }
+
     return updatedVal;
+  }
+
+  private void publishToSegment(String accountId, User user, EventType eventType) {
+    if (null == user) {
+      logger.error(
+          "User is null when trying to publish to segment. Event will be skipped. Event Type: {}, accountId={}",
+          eventType, accountId);
+      return;
+    }
+
+    // repeating=false until repeating blackout windows are implemented
+    Builder messageBuilder = TrackMessage.builder(eventType.toString())
+                                 .userId(user.getUuid())
+                                 .properties(new ImmutableMap.Builder<String, Object>()
+                                                 .put("product", "Security")
+                                                 .put("groupId", accountId)
+                                                 .put("module", "Governance")
+                                                 .put("repeating", false)
+                                                 .build());
+
+    segmentClientBuilder.getInstance().enqueue(messageBuilder);
   }
 
   @Override
