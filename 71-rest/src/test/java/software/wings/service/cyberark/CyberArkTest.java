@@ -316,6 +316,38 @@ public class CyberArkTest extends WingsBaseTest {
     assertThat(decryptedValue).isEqualTo(null);
   }
 
+  @Test
+  @Category(UnitTests.class)
+  public void saveAndEditConfig_withMaskedSecrets_changeNameDefaultOnly() {
+    String name = UUID.randomUUID().toString();
+    CyberArkConfig cyberArkConfig = getCyberArkConfig();
+    cyberArkConfig.setName(name);
+    cyberArkConfig.setAccountId(accountId);
+
+    cyberArkService.saveConfig(accountId, KryoUtils.clone(cyberArkConfig));
+
+    CyberArkConfig savedConfig = (CyberArkConfig) secretManagerConfigService.getDefaultSecretManager(accountId);
+    assertThat(savedConfig.getClientCertificate()).isEqualTo(cyberArkConfig.getClientCertificate());
+    assertThat(savedConfig.getAppId()).isEqualTo(cyberArkConfig.getAppId());
+    assertThat(savedConfig.getName()).isEqualTo(cyberArkConfig.getName());
+    assertThat(savedConfig.isDefault()).isEqualTo(true);
+
+    String newName = UUID.randomUUID().toString();
+    cyberArkConfig.setUuid(savedConfig.getUuid());
+    cyberArkConfig.setName(newName);
+    cyberArkConfig.setDefault(false);
+    cyberArkConfig.maskSecrets();
+
+    // Masked Secrets, only name and default flag should be updated.
+    cyberArkService.saveConfig(accountId, KryoUtils.clone(cyberArkConfig));
+
+    CyberArkConfig modifiedSavedConfig = cyberArkService.getConfig(accountId, savedConfig.getUuid());
+    assertThat(modifiedSavedConfig.getClientCertificate()).isEqualTo(savedConfig.getClientCertificate());
+    assertThat(modifiedSavedConfig.getAppId()).isEqualTo(savedConfig.getAppId());
+    assertThat(modifiedSavedConfig.getName()).isEqualTo(cyberArkConfig.getName());
+    assertThat(modifiedSavedConfig.isDefault()).isEqualTo(false);
+  }
+
   private CyberArkConfig saveCyberArkConfig() {
     return saveCyberArkConfig(null);
   }

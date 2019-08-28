@@ -141,27 +141,33 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
   @Override
   public String saveAwsSecretsManagerConfig(String accountId, AwsSecretsManagerConfig secretsManagerConfig) {
     checkIfSecretsManagerConfigCanBeCreatedOrUpdated(accountId);
+    secretsManagerConfig.setAccountId(accountId);
 
     AwsSecretsManagerConfig savedSecretsManagerConfig = null;
-    boolean shouldVerify = true;
+    boolean credentialChanged = true;
     if (!isEmpty(secretsManagerConfig.getUuid())) {
+      savedSecretsManagerConfig = getAwsSecretsManagerConfig(accountId, secretsManagerConfig.getUuid());
+      if (SECRET_MASK.equals(secretsManagerConfig.getSecretKey())) {
+        secretsManagerConfig.setSecretKey(savedSecretsManagerConfig.getSecretKey());
+      }
+      credentialChanged = !Objects.equals(secretsManagerConfig.getAccessKey(), savedSecretsManagerConfig.getAccessKey())
+          || !Objects.equals(secretsManagerConfig.getSecretKey(), savedSecretsManagerConfig.getSecretKey());
+
+      // secret field un-decrypted version of saved AWS config
       savedSecretsManagerConfig = wingsPersistence.get(AwsSecretsManagerConfig.class, secretsManagerConfig.getUuid());
-      shouldVerify = !Objects.equals(savedSecretsManagerConfig.getAccessKey(), savedSecretsManagerConfig.getAccessKey())
-          || !SECRET_MASK.equals(secretsManagerConfig.getSecretKey());
     }
-    if (shouldVerify) {
-      // New AWS Secrets Manager configuration, need to validate it's parameters
-      validateSecretsManagerConfig(secretsManagerConfig);
-    } else {
-      // update without token or url changes
+
+    // Validate every time when secret manager config change submitted
+    validateSecretsManagerConfig(secretsManagerConfig);
+
+    if (!credentialChanged) {
+      // update without access/secret key changes
       savedSecretsManagerConfig.setName(secretsManagerConfig.getName());
       savedSecretsManagerConfig.setDefault(secretsManagerConfig.isDefault());
       savedSecretsManagerConfig.setSecretNamePrefix(secretsManagerConfig.getSecretNamePrefix());
-      savedSecretsManagerConfig.setAccessKey(secretsManagerConfig.getAccessKey());
+
       return secretManagerConfigService.save(savedSecretsManagerConfig);
     }
-
-    secretsManagerConfig.setAccountId(accountId);
 
     EncryptedData secretKeyEncryptedData = getEncryptedDataForSecretField(
         savedSecretsManagerConfig, secretsManagerConfig, secretsManagerConfig.getSecretKey(), SECRET_KEY_NAME_SUFFIX);

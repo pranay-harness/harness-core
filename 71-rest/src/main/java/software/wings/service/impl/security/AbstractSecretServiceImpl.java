@@ -8,6 +8,7 @@ import com.google.inject.name.Named;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.expression.SecretString;
 import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +30,7 @@ import java.util.UUID;
  */
 @Slf4j
 public abstract class AbstractSecretServiceImpl {
-  static final String SECRET_MASK = "**************";
+  static final String SECRET_MASK = SecretString.SECRET_MASK;
   static final String REASON_KEY = "reason";
   static final String IS_DEFAULT_KEY = "isDefault";
   static final String ID_KEY = "_id";

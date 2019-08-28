@@ -5,7 +5,6 @@ import static io.harness.expression.SecretString.SECRET_MASK;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.encryption.Encrypted;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,7 +29,7 @@ public class AzureVaultConfig extends SecretManagerConfig {
 
   @Attributes(title = "Azure Secret Id", required = true) @NotEmpty private String secretKey;
 
-  @Attributes(title = "Azure Tenant Id", required = true) @Encrypted @NotEmpty private String tenantId;
+  @Attributes(title = "Azure Tenant Id", required = true) @NotEmpty private String tenantId;
 
   @Attributes(title = "Azure Vault Name", required = true) private String vaultName;
 

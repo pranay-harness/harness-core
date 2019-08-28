@@ -4,7 +4,6 @@ import static io.harness.expression.SecretString.SECRET_MASK;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
-import io.harness.encryption.Encrypted;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,9 +29,9 @@ public class CyberArkConfig extends SecretManagerConfig {
 
   @Attributes(title = "CyberArk Url", required = true) private String cyberArkUrl;
 
-  @Attributes(title = "App ID") @Encrypted private String appId;
+  @Attributes(title = "App ID") private String appId;
 
-  @Attributes(title = "Client Certificate") @Encrypted private String clientCertificate;
+  @Attributes(title = "Client Certificate") private String clientCertificate;
 
   @Override
   public void maskSecrets() {

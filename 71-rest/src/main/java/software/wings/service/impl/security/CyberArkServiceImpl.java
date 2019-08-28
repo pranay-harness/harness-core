@@ -97,18 +97,26 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
     checkIfSecretsManagerConfigCanBeCreatedOrUpdated(accountId);
 
     CyberArkConfig savedConfig = null;
-    boolean shouldVerify = true;
+    boolean credentialChanged = true;
     if (!isEmpty(cyberArkConfig.getUuid())) {
-      savedConfig = wingsPersistence.get(CyberArkConfig.class, cyberArkConfig.getUuid());
-      shouldVerify = (!SECRET_MASK.equals(cyberArkConfig.getClientCertificate())
-                         && !Objects.equals(cyberArkConfig.getClientCertificate(), savedConfig.getClientCertificate()))
+      savedConfig = getConfig(accountId, cyberArkConfig.getUuid());
+      if (SECRET_MASK.equals(cyberArkConfig.getClientCertificate())) {
+        cyberArkConfig.setClientCertificate(savedConfig.getClientCertificate());
+      }
+      credentialChanged =
+          (!SECRET_MASK.equals(cyberArkConfig.getClientCertificate())
+              && !Objects.equals(cyberArkConfig.getClientCertificate(), savedConfig.getClientCertificate()))
           || !Objects.equals(cyberArkConfig.getCyberArkUrl(), savedConfig.getCyberArkUrl())
           || !Objects.equals(cyberArkConfig.getAppId(), savedConfig.getAppId());
+
+      // Secret field un-decrypted version of saved config
+      savedConfig = wingsPersistence.get(CyberArkConfig.class, cyberArkConfig.getUuid());
     }
-    if (shouldVerify) {
-      // New CyberArk Secret Manager configuration, need to validate it's parameters
-      validateConfig(cyberArkConfig);
-    } else {
+
+    // Validate every time when secret manager config change submitted
+    validateConfig(cyberArkConfig);
+
+    if (!credentialChanged) {
       // update without client certificate or url changes
       savedConfig.setName(cyberArkConfig.getName());
       savedConfig.setDefault(cyberArkConfig.isDefault());

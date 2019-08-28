@@ -31,6 +31,7 @@ import software.wings.service.intfc.security.AzureSecretsManagerService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -41,31 +42,45 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
   private static final String SECRET_KEY_NAME_SUFFIX = "_secretKey";
 
   @Override
-  public String saveAzureSecretsManagerConfig(String accountId, AzureVaultConfig secretsManagerConfig) {
+  public String saveAzureSecretsManagerConfig(String accountId, AzureVaultConfig azureVautConfig) {
     checkIfSecretsManagerConfigCanBeCreatedOrUpdated(accountId);
-    AzureVaultConfig savedSecretsManagerConfig = null;
-    secretsManagerConfig.setAccountId(accountId);
+    AzureVaultConfig savedAzureVaultConfig = null;
+    azureVautConfig.setAccountId(accountId);
 
-    boolean updateCallWithMaskedSecretKey = false;
+    boolean credentialChanged = false;
 
-    if (isNotEmpty(secretsManagerConfig.getUuid())) {
-      updateCallWithMaskedSecretKey = SECRET_MASK.equals(secretsManagerConfig.getSecretKey());
+    if (isNotEmpty(azureVautConfig.getUuid())) {
+      savedAzureVaultConfig = getAzureVaultConfig(azureVautConfig.getUuid());
+      if (SECRET_MASK.equals(azureVautConfig.getSecretKey())) {
+        savedAzureVaultConfig.setSecretKey(savedAzureVaultConfig.getSecretKey());
+      }
+      credentialChanged = !Objects.equals(azureVautConfig.getSecretKey(), savedAzureVaultConfig.getSecretKey())
+          || !Objects.equals(azureVautConfig.getClientId(), savedAzureVaultConfig.getClientId())
+          || !Objects.equals(azureVautConfig.getTenantId(), savedAzureVaultConfig.getTenantId())
+          || !Objects.equals(azureVautConfig.getSubscription(), savedAzureVaultConfig.getSubscription());
+
+      // Secret fields un-decrypted azure config
+      savedAzureVaultConfig = wingsPersistence.get(AzureVaultConfig.class, azureVautConfig.getUuid());
     }
 
-    if (updateCallWithMaskedSecretKey) {
-      savedSecretsManagerConfig = wingsPersistence.get(AzureVaultConfig.class, secretsManagerConfig.getUuid());
-      secretsManagerConfig.setSecretKey(savedSecretsManagerConfig.getSecretKey());
-      secretsManagerConfig.setUuid(savedSecretsManagerConfig.getUuid());
-      return secretManagerConfigService.save(secretsManagerConfig);
+    // Validate every time when secret manager config change submitted
+    validateAzureVaultConfig(azureVautConfig);
+
+    if (!credentialChanged) {
+      savedAzureVaultConfig.setName(azureVautConfig.getName());
+      savedAzureVaultConfig.setDefault(azureVautConfig.isDefault());
+      savedAzureVaultConfig.setVaultName(azureVautConfig.getVaultName());
+
+      return secretManagerConfigService.save(savedAzureVaultConfig);
     }
 
     EncryptedData secretKeyEncryptedData = getEncryptedDataForSecretField(
-        secretsManagerConfig, secretsManagerConfig, secretsManagerConfig.getSecretKey(), SECRET_KEY_NAME_SUFFIX);
-    secretsManagerConfig.setSecretKey(null);
+        azureVautConfig, azureVautConfig, azureVautConfig.getSecretKey(), SECRET_KEY_NAME_SUFFIX);
+    azureVautConfig.setSecretKey(null);
     String secretsManagerConfigId;
 
     try {
-      secretsManagerConfigId = secretManagerConfigService.save(secretsManagerConfig);
+      secretsManagerConfigId = secretManagerConfigService.save(azureVautConfig);
     } catch (DuplicateKeyException e) {
       throw new WingsException(AZURE_KEY_VAULT_OPERATION_ERROR, USER_SRE)
           .addParam(REASON_KEY, "Another Azure vault secret configuration with the same name or URL exists");
@@ -73,10 +88,10 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
 
     // Create a LOCAL encrypted record for Azure secret key
     String secretKeyEncryptedDataId =
-        saveSecretField(secretsManagerConfig, secretsManagerConfigId, secretKeyEncryptedData, SECRET_KEY_NAME_SUFFIX);
-    secretsManagerConfig.setSecretKey(secretKeyEncryptedDataId);
+        saveSecretField(azureVautConfig, secretsManagerConfigId, secretKeyEncryptedData, SECRET_KEY_NAME_SUFFIX);
+    azureVautConfig.setSecretKey(secretKeyEncryptedDataId);
 
-    return secretManagerConfigService.save(secretsManagerConfig);
+    return secretManagerConfigService.save(azureVautConfig);
   }
 
   private String saveSecretField(AzureVaultConfig secretsManagerConfig, String configId,
@@ -158,7 +173,7 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
    * @param encryptionConfig - Azure encryption config to be used for initiating a connection with Azure vault.
    */
   @Override
-  public void validateSecretsManagerConfig(AzureVaultConfig encryptionConfig) {
+  public void validateAzureVaultConfig(AzureVaultConfig encryptionConfig) {
     try {
       KeyVaultClient client = getAzureVaultClient(encryptionConfig);
 
