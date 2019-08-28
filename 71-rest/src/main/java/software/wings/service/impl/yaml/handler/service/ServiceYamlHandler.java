@@ -1,9 +1,15 @@
 package software.wings.service.impl.yaml.handler.service;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.ServiceVariable.Type.ARTIFACT;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
@@ -12,7 +18,6 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AllowedValueYaml;
 import software.wings.beans.AppContainer;
@@ -41,6 +46,8 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.Utils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -102,8 +109,10 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
               throw new WingsException(e);
             }
           } else if (Type.TEXT == variableType) {
-            value = String.valueOf(serviceVariable.getValue());
-          } else if (Type.ARTIFACT == variableType) {
+            if (serviceVariable.getValue() != null) {
+              value = String.valueOf(serviceVariable.getValue());
+            }
+          } else if (ARTIFACT == variableType) {
             serviceVariableYamlHelper.convertArtifactVariableToYaml(accountId, serviceVariable, allowedValueYamlList);
           } else {
             logger.warn("Variable type {} not supported, skipping the processing of value", variableType);
@@ -138,7 +147,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     currentService.setConfigMapYaml(yaml.getConfigMapYaml());
 
     String applicationStack = yaml.getApplicationStack();
-    if (StringUtils.isNotBlank(applicationStack)) {
+    if (isNotBlank(applicationStack)) {
       AppContainer appContainer = appContainerService.getByName(accountId, applicationStack);
       notNullCheck("No application stack found with the given name: " + applicationStack, appContainer, USER);
       currentService.setAppContainer(appContainer);
@@ -150,21 +159,28 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
 
     if (previousService != null) {
       currentService.setUuid(previousService.getUuid());
+      // Service Variables are updated first. Consider a scenario where we are adding 1000 new variables.
+      // If the service is updated first, then the change set created because of this may not contain all service
+      // variables. Lets assume that only 200 variables were added. Now after the change set is pushed to git, it will
+      // come back to harness. There is a chance that this change set may delete the newly added service
+      // variables if the remaining 800 variables are not added yet. This does not apply when new service is created
+      // as this is not allowed in harness UI. If the service is created in git, then we wont be pushing it to git
+      // again.
+      saveOrUpdateServiceVariables(yaml, previousService.getServiceVariables(), previousService.getAppId(),
+          previousService.getUuid(), syncFromGit);
+
       currentService = serviceResourceService.update(currentService, true);
-      Yaml previousYaml = toYaml(previousService, previousService.getAppId());
-      saveOrUpdateServiceVariables(previousYaml, yaml, previousService.getServiceVariables(), currentService.getAppId(),
-          currentService.getUuid(), syncFromGit);
+
     } else {
       ArtifactType artifactType = Utils.getEnumFromString(ArtifactType.class, yaml.getArtifactType());
       currentService.setArtifactType(artifactType);
-      if (StringUtils.isNotBlank(yaml.getDeploymentType())) {
+      if (isNotBlank(yaml.getDeploymentType())) {
         DeploymentType deploymentType = Utils.getEnumFromString(DeploymentType.class, yaml.getDeploymentType());
         currentService.setDeploymentType(deploymentType);
       }
       currentService =
           serviceResourceService.save(currentService, true, serviceResourceService.hasInternalCommands(currentService));
-      saveOrUpdateServiceVariables(
-          null, yaml, emptyList(), currentService.getAppId(), currentService.getUuid(), syncFromGit);
+      saveOrUpdateServiceVariables(yaml, emptyList(), currentService.getAppId(), currentService.getUuid(), syncFromGit);
     }
 
     changeContext.setEntity(currentService);
@@ -182,100 +198,172 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     return yamlHelper.getService(appId, yamlFilePath);
   }
 
-  private void saveOrUpdateServiceVariables(Yaml previousYaml, Yaml updatedYaml,
-      List<ServiceVariable> previousServiceVariables, String appId, String serviceId, boolean syncFromGit) {
-    // what are the config variable changes? Which are additions and which are deletions?
+  private List<NameValuePair.Yaml> getConfigVariablesToAdd(
+      Yaml yaml, Map<String, ServiceVariable> serviceVariablesMap) {
     List<NameValuePair.Yaml> configVarsToAdd = new ArrayList<>();
-    List<NameValuePair.Yaml> configVarsToDelete = new ArrayList<>();
-    List<NameValuePair.Yaml> configVarsToUpdate = new ArrayList<>();
 
-    // ----------- START CONFIG VARIABLE SECTION ---------------
-    List<NameValuePair.Yaml> configVars = updatedYaml.getConfigVariables();
-    List<NameValuePair.Yaml> beforeConfigVars = null;
-
-    if (previousYaml != null) {
-      beforeConfigVars = previousYaml.getConfigVariables();
+    if (isEmpty(yaml.getConfigVariables())) {
+      return configVarsToAdd;
     }
 
-    if (configVars != null) {
-      // initialize the config vars to add from the after
-      configVarsToAdd.addAll(configVars);
-    }
-
-    if (beforeConfigVars != null) {
-      // initialize the config vars to delete from the before, and remove the befores from the config vars to add list
-      for (NameValuePair.Yaml cv : beforeConfigVars) {
-        configVarsToDelete.add(cv);
-        configVarsToAdd.remove(cv);
+    for (NameValuePair.Yaml configVar : yaml.getConfigVariables()) {
+      if (!serviceVariablesMap.containsKey(configVar.getName())) {
+        configVarsToAdd.add(configVar);
       }
     }
 
-    if (configVars != null) {
-      // remove the afters from the config vars to delete list
-      for (NameValuePair.Yaml cv : configVars) {
-        configVarsToDelete.remove(cv);
+    return configVarsToAdd;
+  }
 
-        if (beforeConfigVars != null && beforeConfigVars.contains(cv)) {
-          NameValuePair.Yaml beforeCV = null;
-          for (NameValuePair.Yaml bcv : beforeConfigVars) {
-            if (bcv.equals(cv)) {
-              beforeCV = bcv;
-              break;
+  private List<NameValuePair.Yaml> getConfigVariablesToUpdate(
+      Yaml yaml, Map<String, ServiceVariable> serviceVariablesMap) {
+    List<NameValuePair.Yaml> configVarsToUpdate = new ArrayList<>();
+
+    if (isEmpty(yaml.getConfigVariables())) {
+      return configVarsToUpdate;
+    }
+
+    for (NameValuePair.Yaml configVar : yaml.getConfigVariables()) {
+      if (serviceVariablesMap.containsKey(configVar.getName())) {
+        ServiceVariable serviceVariable = serviceVariablesMap.get(configVar.getName());
+
+        switch (serviceVariable.getType()) {
+          case TEXT:
+            if (configVar.getValue() == null
+                || !Arrays.equals(configVar.getValue().toCharArray(), serviceVariable.getValue())) {
+              configVarsToUpdate.add(configVar);
             }
-          }
-          if (beforeCV != null) {
-            if (beforeCV.getValueType().equals("ARTIFACT")) {
-              configVarsToUpdate.add(cv);
-            } else if (!cv.getValue().equals(beforeCV.getValue())) {
-              configVarsToUpdate.add(cv);
-            }
-          }
+            break;
+
+          case ENCRYPTED_TEXT:
+          case ARTIFACT:
+            configVarsToUpdate.add(configVar);
+            break;
+
+          default:
+            logger.warn(
+                format("Unhandled type %s while finding config variables to update", serviceVariable.getType()));
         }
       }
     }
 
+    return configVarsToUpdate;
+  }
+
+  private List<ServiceVariable> getConfigVariablesToDelete(
+      Yaml yaml, Map<String, ServiceVariable> serviceVariablesMap) {
+    List<ServiceVariable> configVarsToDelete = new ArrayList<>();
+
+    if (isEmpty(serviceVariablesMap)) {
+      return configVarsToDelete;
+    }
+
+    Map<String, NameValuePair.Yaml> configVariablesFromYamlMap = new HashMap<>();
+    if (isNotEmpty(yaml.getConfigVariables())) {
+      for (NameValuePair.Yaml configVar : yaml.getConfigVariables()) {
+        configVariablesFromYamlMap.put(configVar.getName(), configVar);
+      }
+    }
+
+    for (String serviceVariableName : serviceVariablesMap.keySet()) {
+      if (!configVariablesFromYamlMap.containsKey(serviceVariableName)) {
+        configVarsToDelete.add(serviceVariablesMap.get(serviceVariableName));
+      }
+    }
+
+    return configVarsToDelete;
+  }
+
+  private void saveOrUpdateServiceVariables(Yaml updatedYaml, List<ServiceVariable> previousServiceVariables,
+      String appId, String serviceId, boolean syncFromGit) {
     Map<String, ServiceVariable> serviceVariableMap =
         previousServiceVariables.stream().collect(Collectors.toMap(ServiceVariable::getName, serviceVar -> serviceVar));
 
-    // do deletions
-    for (NameValuePair.Yaml yaml : configVarsToDelete) {
-      if (serviceVariableMap.containsKey(yaml.getName())) {
-        serviceVariableService.delete(appId, serviceVariableMap.get(yaml.getName()).getUuid(), syncFromGit);
+    List<NameValuePair.Yaml> configVarsToAdd = getConfigVariablesToAdd(updatedYaml, serviceVariableMap);
+    List<ServiceVariable> configVarsToDelete = getConfigVariablesToDelete(updatedYaml, serviceVariableMap);
+    List<NameValuePair.Yaml> configVarsToUpdate = getConfigVariablesToUpdate(updatedYaml, serviceVariableMap);
+
+    // We are passing true for syncFromGit because we don't want to generate multiple yaml change sets if user is adding
+    // many service variables through yaml. After performing all add/update/delete, we will call pushToGit which will
+    // push everything to git
+    ServiceVariable lastUpdatedServiceVariable = null;
+    String accountId = appService.get(appId).getAccountId();
+
+    try {
+      // Delete service variables
+      for (ServiceVariable serviceVariable : configVarsToDelete) {
+        serviceVariableService.delete(appId, serviceVariable.getUuid(), true);
+        lastUpdatedServiceVariable = serviceVariable;
+      }
+
+      // Add service variables
+      for (NameValuePair.Yaml yaml : configVarsToAdd) {
+        ServiceVariable serviceVariable =
+            serviceVariableService.save(createNewServiceVariable(accountId, appId, serviceId, yaml), true);
+        lastUpdatedServiceVariable = serviceVariable;
+      }
+
+      // Update service variables
+      lastUpdatedServiceVariable =
+          updateServiceVariables(accountId, configVarsToUpdate, serviceVariableMap, lastUpdatedServiceVariable);
+
+    } finally {
+      if (!syncFromGit && lastUpdatedServiceVariable != null) {
+        serviceVariableService.pushServiceVariablesToGit(lastUpdatedServiceVariable);
       }
     }
+  }
 
-    String accountId = appService.get(appId).getAccountId();
-    // save the new variables
-    for (NameValuePair.Yaml yaml : configVarsToAdd) {
-      serviceVariableService.save(createNewServiceVariable(accountId, appId, serviceId, yaml), syncFromGit);
+  private String extractEncryptedRecordId(String encryptedValue) {
+    if (isBlank(encryptedValue)) {
+      return encryptedValue;
     }
 
-    // update the existing variables
+    int pos = encryptedValue.indexOf(':');
+    if (pos == -1) {
+      return encryptedValue;
+    } else {
+      return encryptedValue.substring(pos + 1);
+    }
+  }
+
+  private ServiceVariable updateServiceVariables(String accountId, List<NameValuePair.Yaml> configVarsToUpdate,
+      Map<String, ServiceVariable> serviceVariableMap, ServiceVariable lastUpdatedServiceVariable) {
     for (NameValuePair.Yaml configVar : configVarsToUpdate) {
-      ServiceVariable serviceVar = serviceVariableMap.get(configVar.getName());
-      if (serviceVar != null) {
-        String value = configVar.getValue();
-        if (serviceVar.getType() == Type.ENCRYPTED_TEXT) {
-          serviceVar.setValue(value != null ? value.toCharArray() : null);
-          serviceVar.setEncryptedValue(value);
-        } else if (serviceVar.getType() == Type.TEXT) {
-          serviceVar.setValue(value != null ? value.toCharArray() : null);
-        } else if (serviceVar.getType() == Type.ARTIFACT) {
+      ServiceVariable serviceVariable = serviceVariableMap.get(configVar.getName());
+      String value = configVar.getValue();
+
+      switch (serviceVariable.getType()) {
+        case TEXT:
+          serviceVariable.setValue(value != null ? value.toCharArray() : null);
+          break;
+
+        case ENCRYPTED_TEXT:
+          String encryptedRecordId = extractEncryptedRecordId(value);
+          serviceVariable.setEncryptedValue(encryptedRecordId);
+          serviceVariable.setValue(isBlank(encryptedRecordId) ? null : encryptedRecordId.toCharArray());
+          break;
+
+        case ARTIFACT:
           if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
             List<String> allowedList = artifactVariableYamlHelper.computeAllowedList(
                 accountId, configVar.getAllowedList(), configVar.getName());
-            serviceVar.setAllowedList(allowedList);
+            serviceVariable.setAllowedList(allowedList);
           } else {
             logger.warn("Yaml doesn't support {} type service variables", configVar.getValueType());
+            continue;
           }
-        } else {
-          logger.warn("Yaml doesn't support {} type service variables", serviceVar.getType());
-          continue;
-        }
+          break;
 
-        serviceVariableService.update(serviceVar, syncFromGit);
+        default:
+          logger.warn("Yaml doesn't  support {} type service variables", serviceVariable.getType());
+          continue;
       }
+
+      lastUpdatedServiceVariable = serviceVariableService.update(serviceVariable, true);
     }
+
+    return lastUpdatedServiceVariable;
   }
 
   private ServiceVariable createNewServiceVariable(
@@ -293,6 +381,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
       serviceVariableBuilder.type(Type.TEXT);
       serviceVariableBuilder.value(cv.getValue() != null ? cv.getValue().toCharArray() : null);
     } else if ("ENCRYPTED_TEXT".equals(cv.getValueType())) {
+      serviceVariableBuilder.value(cv.getValue() != null ? cv.getValue().toCharArray() : null);
       serviceVariableBuilder.type(Type.ENCRYPTED_TEXT);
       serviceVariableBuilder.encryptedValue(cv.getValue());
     } else if ("ARTIFACT".equals(cv.getValueType())) {
