@@ -12,6 +12,7 @@ import software.wings.service.intfc.ownership.OwnedByService;
 
 import java.util.List;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by peeyushaggarwal on 9/14/16.
@@ -130,4 +131,6 @@ public interface ServiceVariableService extends OwnedByService {
   @ValidationGroups(Create.class) ServiceVariable save(@Valid ServiceVariable serviceVariable, boolean syncFromGit);
 
   void delete(@NotEmpty String appId, @NotEmpty String settingId, boolean syncFromGit);
+
+  void pushServiceVariablesToGit(@NotNull ServiceVariable serviceVariable);
 }

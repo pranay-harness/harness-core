@@ -14,6 +14,7 @@ import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
+import static software.wings.beans.ServiceVariable.Type.TEXT;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.utils.Validator.duplicateCheck;
@@ -136,6 +137,15 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     return savedServiceVariable;
   }
 
+  private void validateServiceVariable(ServiceVariable serviceVariable) {
+    if (serviceVariable.getType() == TEXT || serviceVariable.getType() == ENCRYPTED_TEXT) {
+      if (serviceVariable.getValue() == null) {
+        throw new InvalidRequestException(
+            format("Service Variable [%s] value cannot be empty", serviceVariable.getName()));
+      }
+    }
+  }
+
   @Override
   @ValidationGroups(Create.class)
   public ServiceVariable save(@Valid ServiceVariable serviceVariable, boolean syncFromGit) {
@@ -144,6 +154,8 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
       throw new WingsException(INVALID_ARGUMENT)
           .addParam("args", "Service setting not supported for entityType " + serviceVariable.getEntityType());
     }
+
+    validateServiceVariable(serviceVariable);
 
     ServiceVariable newServiceVariable = duplicateCheck(
         () -> wingsPersistence.saveAndGet(ServiceVariable.class, serviceVariable), "name", serviceVariable.getName());
@@ -557,5 +569,10 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     PermissionAttribute permissionAttribute = new PermissionAttribute(permissionType, Action.UPDATE);
     permissionAttributeList = asList(permissionAttribute);
     authHandler.authorize(permissionAttributeList, asList(serviceVariable.getAppId()), entityId);
+  }
+
+  public void pushServiceVariablesToGit(ServiceVariable serviceVariable) {
+    String accountId = appService.getAccountIdByAppId(serviceVariable.getAppId());
+    yamlPushService.pushYamlChangeSet(accountId, serviceVariable, serviceVariable, Event.Type.UPDATE, false, false);
   }
 }
