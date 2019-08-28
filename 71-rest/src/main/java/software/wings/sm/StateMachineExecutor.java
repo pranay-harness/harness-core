@@ -101,7 +101,6 @@ import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.sm.ExecutionEvent.ExecutionEventBuilder;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.states.BarrierState;
 import software.wings.sm.states.EnvState;
@@ -499,8 +498,7 @@ public class StateMachineExecutor implements StateInspectionListener {
 
     ExecutionEventAdvice executionEventAdvice = null;
     for (ExecutionEventAdvisor advisor : advisors) {
-      executionEventAdvice = advisor.onExecutionEvent(
-          ExecutionEventBuilder.anExecutionEvent().withContext(context).withState(state).build());
+      executionEventAdvice = advisor.onExecutionEvent(ExecutionEvent.builder().context(context).state(state).build());
     }
     return executionEventAdvice;
   }
