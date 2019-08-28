@@ -1,5 +1,7 @@
 package io.harness.event.client;
 
+import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
+import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_STOP;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
@@ -12,7 +14,6 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.util.Modules;
 import com.google.protobuf.Any;
-import com.google.protobuf.util.Timestamps;
 
 import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
@@ -24,6 +25,7 @@ import io.harness.event.PublishMessage;
 import io.harness.event.payloads.Lifecycle;
 import io.harness.event.payloads.Lifecycle.EventType;
 import io.harness.grpc.auth.EventServiceTokenGenerator;
+import io.harness.grpc.utils.HTimestamps;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.threading.Concurrent;
 import net.openhft.chronicle.queue.impl.RollingChronicleQueue;
@@ -121,8 +123,8 @@ public class EventPublisherTest {
         for (int i = 0; i < numMessages; i++) {
           eventPublisher.publishMessage(Lifecycle.newBuilder()
                                             .setInstanceId("instanceId-123")
-                                            .setType(EventType.START)
-                                            .setTimestamp(Timestamps.fromMillis(System.currentTimeMillis()))
+                                            .setType(EVENT_TYPE_START)
+                                            .setTimestamp(HTimestamps.fromInstant(Instant.now()))
                                             .build());
           messagesPublished.incrementAndGet();
         }
@@ -145,7 +147,7 @@ public class EventPublisherTest {
     Instant instant = Instant.now().minus(3, ChronoUnit.MINUTES);
     PublishMessage publishMessage =
         PublishMessage.newBuilder()
-            .setPayload(Any.pack(ecsLifecycleEvent("instance-123", instant, EventType.STOP)))
+            .setPayload(Any.pack(ecsLifecycleEvent("instance-123", instant, EVENT_TYPE_STOP)))
             .build();
     eventPublisher.publish(publishMessage);
 
@@ -165,7 +167,7 @@ public class EventPublisherTest {
     Instant instant = Instant.now().minus(13, ChronoUnit.MINUTES);
     PublishMessage publishMessage =
         PublishMessage.newBuilder()
-            .setPayload(Any.pack(ecsLifecycleEvent("instance-456", instant, EventType.START)))
+            .setPayload(Any.pack(ecsLifecycleEvent("instance-456", instant, EVENT_TYPE_START)))
             .build();
 
     eventPublisher.publish(publishMessage);
@@ -179,9 +181,9 @@ public class EventPublisherTest {
   private Lifecycle ecsLifecycleEvent(String instanceId, Instant eventTime, EventType eventType) {
     return Lifecycle.newBuilder()
         .setInstanceId(instanceId)
-        .setTimestamp(Timestamps.fromMillis(eventTime.toEpochMilli()))
+        .setTimestamp(HTimestamps.fromInstant(eventTime))
         .setType(eventType)
-        .setCreatedTimestamp(Timestamps.fromMillis(System.currentTimeMillis()))
+        .setCreatedTimestamp(HTimestamps.fromInstant(Instant.now()))
         .build();
   }
 }

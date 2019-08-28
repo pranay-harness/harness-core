@@ -26,8 +26,8 @@ public class PerpetualTaskRecord implements PersistentEntity, CreatedAtAware, Up
   String accountId;
   String clientName;
   String clientHandle; // unique identifier known to client
-  long interval; // unit: second
-  long timeout; // unit: millisecond
+  long intervalSeconds;
+  long timeoutMillis;
   String delegateId;
   long createdAt;
   long lastUpdatedAt;

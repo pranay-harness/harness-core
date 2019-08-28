@@ -1,14 +1,17 @@
 syntax = "proto3";
 
 package io.harness.event.payloads;
-import "google/protobuf/timestamp.proto";
+
 option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
 
 message Lifecycle {
   string instance_id = 1;
   enum EventType {
-    START = 0;
-    STOP = 1;
+    EVENT_TYPE_INVALID = 0;
+    EVENT_TYPE_START = 1;
+    EVENT_TYPE_STOP = 2;
   }
   EventType type = 2;
   google.protobuf.Timestamp timestamp = 3;

@@ -7,7 +7,6 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watcher;
 import io.harness.event.client.EventPublisher;
-import io.harness.perpetualtask.k8s.watch.K8SWatch.K8sWatchTaskParams;
 import io.harness.serializer.KryoUtils;
 import software.wings.delegatetasks.k8s.client.KubernetesClientFactory;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;

@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
-abstract class AbstractPublisherImpl implements EventPublisher {
+abstract class AbstractPublisherImpl extends EventPublisher {
   private static final int MAX_BATCH_SIZE = 5000;
   private static final int MAX_DELAY_MILLIS = 1000;
 
@@ -37,7 +37,7 @@ abstract class AbstractPublisherImpl implements EventPublisher {
   }
 
   @Override
-  public final void publish(PublishMessage publishMessage) {
+  final void publish(PublishMessage publishMessage) {
     Preconditions.checkState(!shutDown.get(), "Publisher shut-down. Cannot publish any more messages");
     enqueue(publishMessage);
     acceptedCount.incrementAndGet();

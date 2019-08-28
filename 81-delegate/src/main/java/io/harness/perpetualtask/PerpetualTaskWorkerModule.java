@@ -8,10 +8,10 @@ import com.google.inject.multibindings.MapBinder;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.harness.perpetualtask.example.SamplePerpetualTaskFactory;
-import io.harness.perpetualtask.example.SampleTask.SamplePerpetualTaskParams;
-import io.harness.perpetualtask.k8s.watch.K8SWatch.K8sWatchTaskParams;
+import io.harness.perpetualtask.example.SamplePerpetualTaskParams;
 import io.harness.perpetualtask.k8s.watch.K8sWatchTask;
 import io.harness.perpetualtask.k8s.watch.K8sWatchTaskFactory;
+import io.harness.perpetualtask.k8s.watch.K8sWatchTaskParams;
 
 public class PerpetualTaskWorkerModule extends AbstractModule {
   @Override

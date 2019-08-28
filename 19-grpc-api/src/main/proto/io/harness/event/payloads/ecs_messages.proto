@@ -1,9 +1,11 @@
 syntax = "proto3";
 
 package io.harness.event.payloads;
-import "io/harness/event/payloads/common_messages.proto";
-import "google/protobuf/timestamp.proto";
+
 option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+import "io/harness/event/payloads/common_messages.proto";
 
 message EcsTaskInfo {
   EcsTaskDescription ecs_task_description = 1;

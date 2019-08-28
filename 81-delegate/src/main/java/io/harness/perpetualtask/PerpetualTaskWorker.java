@@ -3,8 +3,10 @@ package io.harness.perpetualtask;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.inject.Inject;
+import com.google.protobuf.util.Durations;
 
 import io.grpc.ManagedChannel;
+import io.harness.grpc.utils.AnyUtils;
 import io.harness.perpetualtask.PerpetualTaskServiceGrpc.PerpetualTaskServiceBlockingStub;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -59,7 +61,7 @@ public class PerpetualTaskWorker implements Runnable {
   public void updateAssignedTaskIds() {
     logger.debug("Updating the list of assigned tasks..");
     PerpetualTaskIdList list = serviceBlockingStub.listTaskIds(DelegateId.newBuilder().setId(delegateId).build());
-    assignedTasks = new HashSet<>(list.getTaskIdListList());
+    assignedTasks = new HashSet<>(list.getTaskIdsList());
   }
 
   @VisibleForTesting
@@ -75,14 +77,14 @@ public class PerpetualTaskWorker implements Runnable {
     PerpetualTaskContext context = getTaskContext(taskId);
     PerpetualTaskParams params = context.getTaskParams();
     PerpetualTaskSchedule schedule = context.getTaskSchedule();
-    long interval = schedule.getInterval();
-    long timeout = schedule.getTimeout();
+    long interval = Durations.toSeconds(schedule.getInterval());
+    long timeout = Durations.toMillis(schedule.getTimeout());
 
     PerpetualTaskFactory factory = factoryMap.get(getTaskType(params));
     PerpetualTask task = factory.newTask(taskId, params);
     runningTaskMap.put(taskId, task);
 
-    Void v = simpleTimeLimiter.callWithTimeout(task, timeout, TimeUnit.SECONDS, true);
+    Void v = simpleTimeLimiter.callWithTimeout(task, timeout, TimeUnit.MILLISECONDS, true);
     // TODO: support interval
     // ScheduledFuture<?> taskHandle =
     //    scheduledService.scheduleAtFixedRate(taskFactory.newTask(taskId, params), 0, interval, TimeUnit.SECONDS);
@@ -116,8 +118,7 @@ public class PerpetualTaskWorker implements Runnable {
   }
 
   private String getTaskType(PerpetualTaskParams params) {
-    String typeUrl = params.getCustomizedParams().getTypeUrl();
-    String fullyQualifiedClassName = typeUrl.split("/")[1];
+    String fullyQualifiedClassName = AnyUtils.toFqcn(params.getCustomizedParams());
     return StringUtils.substringAfterLast(fullyQualifiedClassName, ".");
   }
 }

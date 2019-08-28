@@ -1,10 +1,11 @@
 package io.harness.batch.processing.writer;
 
+import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_STOP;
+
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.payloads.Ec2Lifecycle;
 import io.harness.event.payloads.Lifecycle;
-import io.harness.event.payloads.Lifecycle.EventType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -29,10 +30,9 @@ public class Ec2InstanceLifecycleWriter extends EventWriter implements ItemWrite
           String instanceId = lifecycle.getInstanceId();
 
           boolean updateInstanceLifecycle = true;
-          if (lifecycle.getType().equals(EventType.STOP)) {
+          if (lifecycle.getType().equals(EVENT_TYPE_STOP)) {
             updateInstanceLifecycle = deleteActiveInstance(accountId, instanceId);
           }
-
           if (updateInstanceLifecycle) {
             logger.info("Updating instance lifecycle {} ", instanceId);
             updateInstanceDataLifecycle(accountId, instanceId, lifecycle);

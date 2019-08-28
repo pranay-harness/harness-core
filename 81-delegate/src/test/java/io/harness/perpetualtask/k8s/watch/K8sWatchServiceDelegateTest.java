@@ -5,7 +5,6 @@ import static io.harness.rule.OwnerRule.HANTANG;
 import com.google.inject.Inject;
 
 import io.harness.category.element.IntegrationTests;
-import io.harness.perpetualtask.k8s.watch.K8SWatch.K8sWatchTaskParams;
 import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.BeforeClass;
@@ -26,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class K8sWatchServiceDelegateTest {
   private String id;
-  final CountDownLatch closeLatch = new CountDownLatch(1);
+  private final CountDownLatch closeLatch = new CountDownLatch(1);
 
   @Inject private static K8sWatchServiceDelegate watchServiceDelegate;
 

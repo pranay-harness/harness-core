@@ -6,7 +6,6 @@ import com.google.inject.assistedinject.Assisted;
 import io.harness.perpetualtask.AbstractPerpetualTask;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskParams;
-import io.harness.perpetualtask.k8s.watch.K8SWatch.K8sWatchTaskParams;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

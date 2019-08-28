@@ -3,6 +3,7 @@ package io.harness.perpetualtask;
 import static io.harness.rule.OwnerRule.HANTANG;
 
 import com.google.inject.Inject;
+import com.google.protobuf.util.Durations;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.perpetualtask.example.SamplePerpetualTaskServiceClient;
@@ -28,8 +29,12 @@ public class PerpetualTaskServiceImplTest extends BaseIntegrationTest {
 
   String clientName = SamplePerpetualTaskServiceClient.class.getSimpleName();
   String clientHandle = "testClientHandle";
-  PerpetualTaskSchedule taskSchedule = PerpetualTaskSchedule.newBuilder().setInterval(1).setTimeout(1).build();
+  PerpetualTaskSchedule taskSchedule = PerpetualTaskSchedule.newBuilder()
+                                           .setInterval(Durations.fromSeconds(1))
+                                           .setTimeout(Durations.fromMillis(1))
+                                           .build();
 
+  @Override
   @Before
   public void setUp() throws Exception {
     cleanUpData();

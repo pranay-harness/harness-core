@@ -3,6 +3,7 @@ package io.harness.perpetualtask;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
 import com.google.inject.Inject;
+import com.google.protobuf.util.Durations;
 
 import io.harness.perpetualtask.PerpetualTaskRecord.PerpetualTaskRecordKeys;
 import lombok.extern.slf4j.Slf4j;
@@ -34,8 +35,8 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
                                      .accountId(GLOBAL_ACCOUNT_ID)
                                      .clientName(clientName)
                                      .clientHandle(clientHandle)
-                                     .timeout(schedule.getTimeout())
-                                     .interval(schedule.getInterval())
+                                     .timeoutMillis(Durations.toMillis(schedule.getTimeout()))
+                                     .intervalSeconds(schedule.getInterval().getSeconds())
                                      .delegateId("")
                                      .build();
     persistence.save(record);
@@ -53,6 +54,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
     persistence.delete(query);
   }
 
+  @Override
   public List<PerpetualTaskId> listTaskIds(String delegateId) {
     List<PerpetualTaskRecord> records = persistence.createQuery(PerpetualTaskRecord.class)
                                             .field(PerpetualTaskRecordKeys.accountId)
@@ -68,6 +70,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
     return taskIds;
   }
 
+  @Override
   public PerpetualTaskContext getTaskContext(String taskId) {
     PerpetualTaskRecord record =
         persistence.createQuery(PerpetualTaskRecord.class).field(PerpetualTaskRecordKeys.uuid).equal(taskId).get();
@@ -75,8 +78,10 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
     PerpetualTaskServiceClient client = clientMap.get(record.getClientName());
     PerpetualTaskParams params = client.getTaskParams(record.getClientHandle());
 
-    PerpetualTaskSchedule schedule =
-        PerpetualTaskSchedule.newBuilder().setInterval(record.getInterval()).setTimeout(record.getTimeout()).build();
+    PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
+                                         .setInterval(Durations.fromSeconds(record.getIntervalSeconds()))
+                                         .setTimeout(Durations.fromMillis(record.getTimeoutMillis()))
+                                         .build();
 
     return PerpetualTaskContext.newBuilder().setTaskParams(params).setTaskSchedule(schedule).build();
   }

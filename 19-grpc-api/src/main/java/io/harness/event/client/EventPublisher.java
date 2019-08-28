@@ -10,17 +10,17 @@ import io.harness.event.PublishMessage;
 import java.util.Collections;
 import java.util.Map;
 
-public interface EventPublisher {
-  void publish(PublishMessage publishMessage);
+public abstract class EventPublisher {
+  abstract void publish(PublishMessage publishMessage);
 
-  default void publishMessage(Message message) {
+  public final void publishMessage(Message message) {
     publishMessageWithAttributes(message, Collections.emptyMap());
   }
 
-  default void publishMessageWithAttributes(Message message, Map<String, String> attributes) {
-    checkArgument(!(message instanceof PublishMessage)); // call publish() directly.
+  public final void publishMessageWithAttributes(Message message, Map<String, String> attributes) {
+    checkArgument(!(message instanceof PublishMessage)); // to avoid accidental nesting
     publish(PublishMessage.newBuilder().setPayload(Any.pack(message)).putAllAttributes(attributes).build());
   }
 
-  void shutdown();
+  public void shutdown() {}
 }

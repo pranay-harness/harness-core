@@ -11,12 +11,17 @@ import io.harness.perpetualtask.PerpetualTaskService;
 
 public class PerpetualTaskServiceGrpc
     extends io.harness.perpetualtask.PerpetualTaskServiceGrpc.PerpetualTaskServiceImplBase {
-  @Inject PerpetualTaskService perpetualTaskService;
+  private final PerpetualTaskService perpetualTaskService;
+
+  @Inject
+  public PerpetualTaskServiceGrpc(PerpetualTaskService perpetualTaskService) {
+    this.perpetualTaskService = perpetualTaskService;
+  }
 
   @Override
   public void listTaskIds(DelegateId request, StreamObserver<PerpetualTaskIdList> responseObserver) {
     PerpetualTaskIdList taskIdList =
-        PerpetualTaskIdList.newBuilder().addAllTaskIdList(perpetualTaskService.listTaskIds(request.getId())).build();
+        PerpetualTaskIdList.newBuilder().addAllTaskIds(perpetualTaskService.listTaskIds(request.getId())).build();
     responseObserver.onNext(taskIdList);
     responseObserver.onCompleted();
   }

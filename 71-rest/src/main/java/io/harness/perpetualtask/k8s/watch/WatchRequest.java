@@ -1,13 +1,11 @@
 package io.harness.perpetualtask.k8s.watch;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Value;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 
-@Data
+@Value
 @Builder
-@AllArgsConstructor
 public class WatchRequest {
   private K8sClusterConfig k8sClusterConfig;
   private String k8sResourceKind;

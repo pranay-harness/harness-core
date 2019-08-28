@@ -13,7 +13,7 @@ import java.util.List;
 
 @Singleton
 public class K8sClusterConfigFactory {
-  private SecretManager secretManager;
+  private final SecretManager secretManager;
 
   @Inject
   K8sClusterConfigFactory(SecretManager secretManager) {
