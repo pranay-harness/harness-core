@@ -13,6 +13,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
@@ -30,6 +31,7 @@ import java.util.List;
 @JsonTypeName("GCP")
 @Data
 @Builder
+@ToString(exclude = {"serviceAccountKeyFileContent", "encryptedServiceAccountKeyFileContent"})
 @EqualsAndHashCode(callSuper = false)
 public class GcpConfig extends SettingValue implements EncryptableSetting {
   private static final String GCS_URL = "https://storage.cloud.google.com/";

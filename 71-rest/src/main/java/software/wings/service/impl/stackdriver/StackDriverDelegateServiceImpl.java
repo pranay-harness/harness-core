@@ -3,6 +3,7 @@ package software.wings.service.impl.stackdriver;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
+import static software.wings.common.VerificationConstants.STACKDRIVER_DEFAULT_HOST_NAME_FIELD;
 import static software.wings.common.VerificationConstants.STACKDRIVER_DEFAULT_LOG_MESSAGE_FIELD;
 import static software.wings.common.VerificationConstants.STACK_DRIVER_QUERY_SEPARATER;
 import static software.wings.service.impl.stackdriver.StackDriverNameSpace.LOADBALANCER;
@@ -16,12 +17,14 @@ import com.google.api.services.logging.v2.model.ListLogEntriesResponse;
 import com.google.api.services.logging.v2.model.LogEntry;
 import com.google.api.services.monitoring.v3.Monitoring;
 import com.google.api.services.monitoring.v3.model.ListTimeSeriesResponse;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.jayway.jsonpath.JsonPath;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.expression.SecretString;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -167,7 +170,8 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
 
   private ListTimeSeriesResponse getTimeSeriesResponse(Monitoring monitoring, String projectResource, GcpConfig config,
       String filter, long startTime, long endTime, ThirdPartyApiCallLog apiCallLog) {
-    apiCallLog.setTitle("Fetching metric data from project");
+    apiCallLog.setTitle(
+        "Fetching metric data from project from " + getDateFormatTime(startTime) + " to " + getDateFormatTime(endTime));
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
 
     apiCallLog.addFieldToRequest(
@@ -226,14 +230,33 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
   }
 
   public VerificationNodeDataSetupResponse getLogWithDataForNode(GcpConfig gcpConfig,
-      List<EncryptedDataDetail> encryptionDetails, String query, long startTime, long endTime,
-      ThirdPartyApiCallLog apiCallLog, Set<String> hosts, String hostnameField, long logCollectionMinute,
-      boolean is24X7Task, String logMessageField) {
+      List<EncryptedDataDetail> encryptionDetails, String hostName, StackDriverSetupTestNodeData setupTestNodeData,
+      ThirdPartyApiCallLog apiCallLog) {
     List<LogEntry> entries;
+    List<LogEntry> serviceLevelLoad;
+    final long startTime = TimeUnit.SECONDS.toMillis(setupTestNodeData.getFromTime());
+    final long endTime = TimeUnit.SECONDS.toMillis(setupTestNodeData.getToTime());
     try {
-      entries = fetchLogs(
-          query, startTime, endTime, apiCallLog, hosts, hostnameField, gcpConfig, encryptionDetails, is24X7Task);
+      // get data without host
+      serviceLevelLoad = fetchLogs(setupTestNodeData.getQuery(), startTime, endTime, apiCallLog, Collections.emptySet(),
+          setupTestNodeData.getHostnameField(), gcpConfig, encryptionDetails, true, false);
+
+      if (setupTestNodeData.isServiceLevel()) {
+        return VerificationNodeDataSetupResponse.builder()
+            .providerReachable(true)
+            .loadResponse(VerificationLoadResponse.builder()
+                              .isLoadPresent(isNotEmpty(serviceLevelLoad))
+                              .loadResponse(serviceLevelLoad)
+                              .build())
+            .build();
+      }
+
+      // get data with host
+      entries = fetchLogs(setupTestNodeData.getQuery(), startTime, endTime, apiCallLog, Sets.newHashSet(hostName),
+          setupTestNodeData.getHostnameField(), gcpConfig, encryptionDetails, false, false);
+
     } catch (Exception e) {
+      logger.error("error fetching logs", e);
       return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
     }
     List<LogElement> logElements = new ArrayList<>();
@@ -243,20 +266,27 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
       for (LogEntry entry : entries) {
         LogElement logElement;
         try {
-          String logMessage = JsonPath.read(
-              entry.toString(), isNotEmpty(logMessageField) ? logMessageField : STACKDRIVER_DEFAULT_LOG_MESSAGE_FIELD);
+          String logMessage = JsonPath.read(entry.toString(),
+              isNotEmpty(setupTestNodeData.getMessageField()) ? setupTestNodeData.getMessageField()
+                                                              : STACKDRIVER_DEFAULT_LOG_MESSAGE_FIELD);
+          String host = JsonPath.read(entry.toString(),
+              isNotEmpty(setupTestNodeData.getHostnameField()) ? setupTestNodeData.getHostnameField()
+                                                               : STACKDRIVER_DEFAULT_HOST_NAME_FIELD);
+
+          if (isEmpty(host) || isEmpty(logMessage)) {
+            continue;
+          }
 
           long timeStamp = new DateTime(entry.getTimestamp()).getMillis();
           if (isNotEmpty(logMessage)) {
             logElement = LogElement.builder()
-                             .query(query)
-                             .logCollectionMinute(
-                                 is24X7Task ? (int) TimeUnit.MILLISECONDS.toMinutes(timeStamp) : logCollectionMinute)
+                             .query(setupTestNodeData.getQuery())
+                             .logCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(timeStamp))
                              .clusterLabel(String.valueOf(clusterLabel++))
                              .count(1)
                              .logMessage(logMessage)
                              .timeStamp(timeStamp)
-                             .host(entry.getResource().getLabels().get(hostnameField))
+                             .host(host)
                              .build();
             logElements.add(logElement);
           }
@@ -268,58 +298,80 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
     }
     return VerificationNodeDataSetupResponse.builder()
         .providerReachable(true)
-        .loadResponse(
-            VerificationLoadResponse.builder().isLoadPresent(!logElements.isEmpty()).loadResponse(logElements).build())
+        .loadResponse(VerificationLoadResponse.builder()
+                          .isLoadPresent(isNotEmpty(serviceLevelLoad))
+                          .loadResponse(serviceLevelLoad)
+                          .build())
         .dataForNode(logElements)
         .build();
   }
 
-  public List<LogEntry> fetchLogs(String query, long startTime, long endTime, ThirdPartyApiCallLog apiCallLog,
+  public List<LogEntry> fetchLogs(String query, long startTime, long endTime, ThirdPartyApiCallLog callLog,
       Set<String> hosts, String hostnameField, GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails,
-      boolean is24X7Task) {
+      boolean is24X7Task, boolean fetchNextPage) {
     encryptionService.decrypt(gcpConfig, encryptionDetails);
     String projectId = getProjectId(gcpConfig);
     Logging logging = gcpHelperService.getLoggingResource(gcpConfig, encryptionDetails, projectId);
-    apiCallLog.setTitle("Fetching log data from project");
-    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
 
     String queryField = getQueryField(hostnameField, new ArrayList<>(hosts), query, startTime, endTime, is24X7Task);
 
-    apiCallLog.addFieldToRequest(ThirdPartyApiCallLog.ThirdPartyApiCallField.builder()
-                                     .name("query")
-                                     .value(queryField)
-                                     .type(ThirdPartyApiCallLog.FieldType.JSON)
-                                     .build());
-    apiCallLog.addFieldToRequest(ThirdPartyApiCallLog.ThirdPartyApiCallField.builder()
-                                     .name("Start Time")
-                                     .value(getDateFormatTime(startTime))
-                                     .type(ThirdPartyApiCallLog.FieldType.TIMESTAMP)
-                                     .build());
-    apiCallLog.addFieldToRequest(ThirdPartyApiCallLog.ThirdPartyApiCallField.builder()
-                                     .name("End Time")
-                                     .value(getDateFormatTime(endTime))
-                                     .type(ThirdPartyApiCallLog.FieldType.TIMESTAMP)
-                                     .build());
-
+    List<LogEntry> logEntries = new ArrayList<>();
     ListLogEntriesResponse response;
-    try {
+    String nextPageToken = null;
+    do {
       ListLogEntriesRequest request = new ListLogEntriesRequest();
+      ThirdPartyApiCallLog apiCallLog = callLog.copy();
+      apiCallLog.setTitle("Fetching log data from project " + projectId + " from " + getDateFormatTime(startTime)
+          + " to " + getDateFormatTime(endTime));
+      apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+      apiCallLog.addFieldToRequest(ThirdPartyApiCallLog.ThirdPartyApiCallField.builder()
+                                       .name("query")
+                                       .value(queryField)
+                                       .type(ThirdPartyApiCallLog.FieldType.JSON)
+                                       .build());
+      apiCallLog.addFieldToRequest(ThirdPartyApiCallLog.ThirdPartyApiCallField.builder()
+                                       .name("Start Time")
+                                       .value(getDateFormatTime(startTime))
+                                       .type(ThirdPartyApiCallLog.FieldType.TIMESTAMP)
+                                       .build());
+      apiCallLog.addFieldToRequest(ThirdPartyApiCallLog.ThirdPartyApiCallField.builder()
+                                       .name("End Time")
+                                       .value(getDateFormatTime(endTime))
+                                       .type(ThirdPartyApiCallLog.FieldType.TIMESTAMP)
+                                       .build());
       request.setFilter(queryField);
       request.setProjectIds(Collections.singletonList(projectId));
-      response = logging.entries().list(request).execute();
-    } catch (Exception e) {
+      request.setPageSize(fetchNextPage ? 1000 : 10);
+      if (isNotEmpty(nextPageToken)) {
+        request.setPageToken(nextPageToken);
+        apiCallLog.addFieldToRequest(ThirdPartyApiCallLog.ThirdPartyApiCallField.builder()
+                                         .name("Next Page Token")
+                                         .value(SecretString.SECRET_MASK)
+                                         .type(FieldType.TEXT)
+                                         .build());
+      }
+      try {
+        response = logging.entries().list(request).execute();
+      } catch (Exception e) {
+        logger.error("Error fetching logs, request {}", request, e);
+        apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+        apiCallLog.addFieldToResponse(
+            HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), ThirdPartyApiCallLog.FieldType.TEXT);
+        delegateLogService.save(gcpConfig.getAccountId(), apiCallLog);
+        throw new WingsException("Unsuccessful response while fetching data from StackDriver. Error message: " + e);
+      }
       apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-      apiCallLog.addFieldToResponse(
-          HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), ThirdPartyApiCallLog.FieldType.TEXT);
+      apiCallLog.addFieldToResponse(HttpStatus.SC_OK, response, ThirdPartyApiCallLog.FieldType.JSON);
       delegateLogService.save(gcpConfig.getAccountId(), apiCallLog);
-      throw new WingsException("Unsuccessful response while fetching data from StackDriver. Error message: " + e);
-    }
-    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-    apiCallLog.addFieldToResponse(HttpStatus.SC_OK, response, ThirdPartyApiCallLog.FieldType.JSON);
-    delegateLogService.save(gcpConfig.getAccountId(), apiCallLog);
+      nextPageToken = response.getNextPageToken();
+      if (isNotEmpty(response.getEntries())) {
+        logEntries.addAll(response.getEntries());
+      }
+    } while (fetchNextPage && isNotEmpty(response) && isNotEmpty(response.getNextPageToken()));
 
-    return response.getEntries();
+    return logEntries;
   }
+
   private String getQueryField(
       String hostnameField, List<String> hosts, String query, long startTime, long endTime, boolean is24X7Task) {
     String formattedStartTime = getDateFormatTime(startTime);
@@ -328,7 +380,11 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
     StringBuilder queryBuilder = new StringBuilder(80);
 
     if (!is24X7Task) {
-      queryBuilder.append("resource.labels." + hostnameField + "=(");
+      // for backward compatibility
+      if (!hostnameField.contains("resource.labels")) {
+        queryBuilder.append("resource.labels.");
+      }
+      queryBuilder.append(hostnameField).append("=(");
       for (int i = 0; i < hosts.size(); i++) {
         queryBuilder.append(hosts.get(i));
         if (i != hosts.size() - 1) {
@@ -354,7 +410,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
   public Object getLogSample(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String query,
       ThirdPartyApiCallLog apiCallLog, long startTime, long endTime) {
     final List<LogEntry> logEntries = fetchLogs(
-        query, startTime, endTime, apiCallLog, Collections.emptySet(), null, gcpConfig, encryptionDetails, true);
+        query, startTime, endTime, apiCallLog, Collections.emptySet(), null, gcpConfig, encryptionDetails, true, false);
     if (isEmpty(logEntries)) {
       return null;
     }

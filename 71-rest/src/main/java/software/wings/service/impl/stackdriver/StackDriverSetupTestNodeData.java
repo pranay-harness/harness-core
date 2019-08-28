@@ -31,22 +31,22 @@ public class StackDriverSetupTestNodeData extends SetupTestNodeData {
 
   private String query;
 
-  private String hostNameField;
+  private String hostnameField;
 
-  private String logMessageField;
+  private String messageField;
 
   @Builder
   public StackDriverSetupTestNodeData(String appId, String settingId, String instanceName, boolean isServiceLevel,
       InstanceElement instanceElement, String hostExpression, String workflowId, long fromTime, long toTime,
       Map<String, List<StackDriverMetric>> loadBalancerMetrics, Set<StackDriverMetric> podMetrics, String guid,
-      String query, String hostNameField, String logMessageField, boolean isLogConfiguration) {
+      String query, String hostnameField, String messageField, boolean isLogConfiguration) {
     super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid,
         StateType.STACK_DRIVER, fromTime, toTime);
     this.loadBalancerMetrics = loadBalancerMetrics;
     this.podMetrics = podMetrics;
     this.query = query;
-    this.hostNameField = hostNameField;
-    this.logMessageField = logMessageField;
+    this.hostnameField = hostnameField;
+    this.messageField = messageField;
     this.isLogConfiguration = isLogConfiguration;
   }
 }

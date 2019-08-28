@@ -88,6 +88,7 @@ public class VerificationConstants {
 
   public static final String STACK_DRIVER_QUERY_SEPARATER = " AND ";
   public static final String STACKDRIVER_DEFAULT_LOG_MESSAGE_FIELD = "textPayload";
+  public static final String STACKDRIVER_DEFAULT_HOST_NAME_FIELD = "pod_id";
 
   // DEMO Workflow Constants
   public static final String DEMO_APPLICAITON_ID = "CV-Demo";

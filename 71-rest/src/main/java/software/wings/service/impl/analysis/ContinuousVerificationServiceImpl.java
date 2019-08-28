@@ -2016,7 +2016,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                   .gcpConfig(gcpConfig)
                   .accountId(config.getAccountId())
                   .applicationId(config.getAppId())
-                  .logMessageField(stackdriverCVConfiguration.getLogMessageField())
+                  .logMessageField(stackdriverCVConfiguration.getMessageField())
                   .stateExecutionId(stateExecutionId)
                   .serviceId(config.getServiceId())
                   .query(stackdriverCVConfiguration.getQuery())
