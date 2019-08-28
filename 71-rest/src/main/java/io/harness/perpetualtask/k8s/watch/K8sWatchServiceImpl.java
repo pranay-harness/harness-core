@@ -4,13 +4,13 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.util.Durations;
 
 import io.harness.perpetualtask.PerpetualTaskParams;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.perpetualtask.PerpetualTaskServiceFactory;
-import io.harness.perpetualtask.k8s.watch.K8SWatch.K8sWatchTaskParams;
 import io.harness.serializer.KryoUtils;
 import software.wings.beans.SettingAttribute;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
@@ -22,9 +22,9 @@ import java.util.StringJoiner;
 
 @Singleton
 public class K8sWatchServiceImpl implements K8sWatchService, PerpetualTaskServiceClient {
-  private PerpetualTaskService perpetualTaskService;
-  private SettingsService settingsService;
-  private K8sClusterConfigFactory k8sClusterConfigFactory;
+  private final PerpetualTaskService perpetualTaskService;
+  private final SettingsService settingsService;
+  private final K8sClusterConfigFactory k8sClusterConfigFactory;
 
   @Inject
   public K8sWatchServiceImpl(PerpetualTaskServiceFactory serviceFactory, SettingsService settingsService,
@@ -37,9 +37,11 @@ public class K8sWatchServiceImpl implements K8sWatchService, PerpetualTaskServic
   @Override
   public String create(K8sWatchTaskParams params) {
     String clientHandle = generateWatchHandle(params);
-    PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder().setInterval(0).setTimeout(60).build();
+    PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
+                                         .setInterval(Durations.fromSeconds(0))
+                                         .setTimeout(Durations.fromMillis(60))
+                                         .build();
     perpetualTaskService.createTask(this.getClass().getSimpleName(), clientHandle, schedule);
-
     return clientHandle;
   }
 

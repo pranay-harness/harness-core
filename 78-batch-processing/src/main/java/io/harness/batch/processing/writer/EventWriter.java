@@ -1,12 +1,14 @@
 package io.harness.batch.processing.writer;
 
+import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
+import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_STOP;
+
 import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.entities.ActiveInstance;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.service.intfc.ActiveInstanceService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.event.payloads.Lifecycle;
-import io.harness.event.payloads.Lifecycle.EventType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -49,10 +51,10 @@ public abstract class EventWriter {
     InstanceState currentInstanceState = null;
     InstanceState updateInstanceState = null;
 
-    if (lifecycle.getType() == EventType.START) {
+    if (lifecycle.getType() == EVENT_TYPE_START) {
       currentInstanceState = InstanceState.INITIALIZING;
       updateInstanceState = InstanceState.RUNNING;
-    } else if (lifecycle.getType() == EventType.STOP) {
+    } else if (lifecycle.getType() == EVENT_TYPE_STOP) {
       currentInstanceState = InstanceState.RUNNING;
       updateInstanceState = InstanceState.STOPPED;
     }

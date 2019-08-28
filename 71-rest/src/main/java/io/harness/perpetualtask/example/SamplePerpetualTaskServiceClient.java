@@ -8,7 +8,6 @@ import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.perpetualtask.PerpetualTaskServiceFactory;
-import io.harness.perpetualtask.example.SampleTask.SamplePerpetualTaskParams;
 
 import java.util.Map;
 import java.util.UUID;

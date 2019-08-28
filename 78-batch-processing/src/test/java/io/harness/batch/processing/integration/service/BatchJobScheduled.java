@@ -46,9 +46,8 @@ public class BatchJobScheduled {
     Instant instant = batchJobScheduledDataService.fetchLastBatchJobScheduledTime(BatchJobType.ECS_EVENT);
     assertThat(instant).isEqualTo(firstEndAt);
 
-    Instant secondStartAt = firstEndAt;
     Instant secondEndAt = Instant.now();
-    batchJobScheduledData = new BatchJobScheduledData(BatchJobType.ECS_EVENT, secondStartAt, secondEndAt);
+    batchJobScheduledData = new BatchJobScheduledData(BatchJobType.ECS_EVENT, firstEndAt, secondEndAt);
     assertThat(batchJobScheduledDataService.create(batchJobScheduledData)).isTrue();
 
     instant = batchJobScheduledDataService.fetchLastBatchJobScheduledTime(BatchJobType.ECS_EVENT);

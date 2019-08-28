@@ -5,11 +5,9 @@ import static io.harness.rule.OwnerRule.HANTANG;
 import com.google.inject.Inject;
 
 import io.harness.category.element.IntegrationTests;
-import io.harness.perpetualtask.k8s.watch.K8SWatch.K8sWatchTaskParams;
 import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
 import software.wings.integration.BaseIntegrationTest;
 
 public class K8SWatchServiceImplTest extends BaseIntegrationTest {

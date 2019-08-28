@@ -11,6 +11,7 @@ import io.harness.event.EventPublisherGrpc;
 import io.harness.event.PublishRequest;
 import io.harness.event.PublishResponse;
 import io.harness.grpc.auth.DelegateAuthCallCredentials;
+import io.harness.grpc.utils.AnyUtils;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,17 +31,16 @@ public class EventPublisherServerImpl extends EventPublisherGrpc.EventPublisherI
   public void publish(PublishRequest request, StreamObserver<PublishResponse> responseObserver) {
     logger.info("Received publish request");
     String accountId = requireNonNull(DelegateAuthCallCredentials.ACCOUNT_ID_CTX_KEY.get(Context.current()));
-    List<PublishedMessage> publishedMessages =
-        request.getMessagesList()
-            .stream()
-            .map(publishMessage
-                -> PublishedMessage.builder()
-                       .accountId(accountId)
-                       .data(publishMessage.getPayload().toByteArray())
-                       .type(getClassNameFromTypeUrl(publishMessage.getPayload().getTypeUrl()))
-                       .attributes(publishMessage.getAttributesMap())
-                       .build())
-            .collect(Collectors.toList());
+    List<PublishedMessage> publishedMessages = request.getMessagesList()
+                                                   .stream()
+                                                   .map(publishMessage
+                                                       -> PublishedMessage.builder()
+                                                              .accountId(accountId)
+                                                              .data(publishMessage.getPayload().toByteArray())
+                                                              .type(AnyUtils.toFqcn(publishMessage.getPayload()))
+                                                              .attributes(publishMessage.getAttributesMap())
+                                                              .build())
+                                                   .collect(Collectors.toList());
     try {
       hPersistence.save(publishedMessages);
     } catch (Exception e) {
@@ -51,9 +51,5 @@ public class EventPublisherServerImpl extends EventPublisherGrpc.EventPublisherI
     logger.info("Published messages persisted");
     responseObserver.onNext(PublishResponse.newBuilder().build());
     responseObserver.onCompleted();
-  }
-
-  private String getClassNameFromTypeUrl(String typeUrl) {
-    return typeUrl.split("/")[1];
   }
 }

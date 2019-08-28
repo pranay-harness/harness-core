@@ -1,5 +1,7 @@
 package io.harness.event.grpc;
 
+import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
+import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_STOP;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -22,7 +24,6 @@ import io.harness.event.PublishMessage;
 import io.harness.event.PublishRequest;
 import io.harness.event.PublishResponse;
 import io.harness.event.payloads.Lifecycle;
-import io.harness.event.payloads.Lifecycle.EventType;
 import io.harness.grpc.auth.DelegateAuthCallCredentials;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.OwnerRule.Owner;
@@ -109,9 +110,9 @@ public class EventPublisherServerImplTest {
   }
 
   private List<Message> testMessages() {
-    return Arrays.asList(Lifecycle.newBuilder().setType(EventType.START).setInstanceId("instance-1").build(),
-        Lifecycle.newBuilder().setType(EventType.START).setInstanceId("instance-2").build(),
-        Lifecycle.newBuilder().setType(EventType.STOP).setInstanceId("instance-2").build(),
-        Lifecycle.newBuilder().setType(EventType.STOP).setInstanceId("instance-1").build());
+    return Arrays.asList(Lifecycle.newBuilder().setType(EVENT_TYPE_START).setInstanceId("instance-1").build(),
+        Lifecycle.newBuilder().setType(EVENT_TYPE_START).setInstanceId("instance-2").build(),
+        Lifecycle.newBuilder().setType(EVENT_TYPE_STOP).setInstanceId("instance-2").build(),
+        Lifecycle.newBuilder().setType(EVENT_TYPE_STOP).setInstanceId("instance-1").build());
   }
 }

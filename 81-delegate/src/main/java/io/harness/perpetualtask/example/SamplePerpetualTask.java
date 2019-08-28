@@ -3,7 +3,6 @@ package io.harness.perpetualtask.example;
 import io.harness.perpetualtask.AbstractPerpetualTask;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskParams;
-import io.harness.perpetualtask.example.SampleTask.SamplePerpetualTaskParams;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

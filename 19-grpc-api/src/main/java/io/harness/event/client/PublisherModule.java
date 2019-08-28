@@ -42,9 +42,6 @@ public class PublisherModule extends AbstractModule {
           .toProvider(() -> new EventPublisher() {
             @Override
             public void publish(PublishMessage publishMessage) {}
-
-            @Override
-            public void shutdown() {}
           })
           .in(Singleton.class);
     } else {

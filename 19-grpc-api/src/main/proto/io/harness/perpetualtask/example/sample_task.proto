@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package io.harness.perpetualtask.example;
 
+option java_multiple_files = true;
+
 message SamplePerpetualTaskParams {
-    string country = 1;
+  string country = 1;
 }

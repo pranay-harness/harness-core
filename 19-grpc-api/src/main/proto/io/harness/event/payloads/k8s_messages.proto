@@ -1,11 +1,12 @@
 syntax = "proto3";
 
 package io.harness.event.payloads;
+
 option java_multiple_files = true;
 
+import "google/protobuf/timestamp.proto";
 
-message Container{
-
+message Container {
   message Resource {
     message Quantity {
       string amount = 1;
@@ -14,12 +15,10 @@ message Container{
     map<string, Quantity> requests = 1;
     map<string, Quantity> limits = 2;
   }
-
   string name = 1;
   string image = 2;
   Resource resource = 3;
 }
-
 
 message Owner {
   string uid = 1;
@@ -28,28 +27,25 @@ message Owner {
 }
 
 message PodInfo {
-
   string uid = 1;
   string name = 2;
   string namespace = 3;
   string node_name = 4;
-  string creation_timestamp = 5;
-
+  google.protobuf.Timestamp creation_timestamp = 5;
   // label without value is invalid
-  map<string,string> labels = 6;
+  map<string, string> labels = 6;
   repeated Owner owner = 7;
   Owner top_level_owner = 8;
-
   repeated Container containers = 9;
-
 }
 
 message PodEvent {
   string uid = 1;
   enum EventType {
-    DELETED = 0;
-    SCHEDULED = 1;
+    EVENT_TYPE_INVALID = 0;
+    EVENT_TYPE_DELETED = 1;
+    EVENT_TYPE_SCHEDULED = 2;
   }
   EventType type = 2;
-  string timestamp = 3;
+  google.protobuf.Timestamp timestamp = 3;
 }

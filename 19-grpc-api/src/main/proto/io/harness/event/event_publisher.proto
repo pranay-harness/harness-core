@@ -2,8 +2,9 @@ syntax = "proto3";
 
 package io.harness.event;
 
-import "google/protobuf/any.proto";
 option java_multiple_files = true;
+
+import "google/protobuf/any.proto";
 
 service EventPublisher {
   rpc Publish(PublishRequest) returns (PublishResponse);
@@ -18,5 +19,4 @@ message PublishMessage {
   map<string, string> attributes = 2;
 }
 
-message PublishResponse {
-}
+message PublishResponse {}

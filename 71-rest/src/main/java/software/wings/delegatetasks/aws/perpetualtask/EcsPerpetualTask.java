@@ -1,10 +1,12 @@
 package software.wings.delegatetasks.aws.perpetualtask;
 
+import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
+import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_STOP;
+
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.protobuf.Timestamp;
 
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ecs.model.ContainerInstance;
@@ -30,6 +32,7 @@ import io.harness.event.payloads.Lifecycle;
 import io.harness.event.payloads.Lifecycle.EventType;
 import io.harness.event.payloads.ReservedResource;
 import io.harness.exception.WingsException;
+import io.harness.grpc.utils.HTimestamps;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 import software.wings.service.impl.aws.model.AwsEcsListClusterServicesRequest;
@@ -99,7 +102,7 @@ public class EcsPerpetualTask {
                                     .addAllActiveEc2InstanceArns(activeEc2InstanceIds)
                                     .addAllActiveContainerInstanceArns(activeContainerInstanceArns)
                                     .addAllActiveTaskArns(activeTaskArns)
-                                    .setLastProcessedTimestamp(convertInstantToTimestamp(startTime))
+                                    .setLastProcessedTimestamp(HTimestamps.fromInstant(startTime))
                                     .build();
 
     logger.info("Esc sync published Message {} ", ecsSyncEvent.toString());
@@ -114,7 +117,7 @@ public class EcsPerpetualTask {
 
     for (Task task : tasks) {
       if (null != task.getStoppedAt() && taskStoppedEventRequired(lastProcessedTime, task, activeTaskArns)) {
-        publishTaskLifecycleEvent(task.getTaskArn(), task.getStoppedAt(), EventType.STOP);
+        publishTaskLifecycleEvent(task.getTaskArn(), task.getStoppedAt(), EVENT_TYPE_STOP);
       }
 
       if (null == task.getStoppedAt()) {
@@ -123,10 +126,10 @@ public class EcsPerpetualTask {
 
       if (!activeTaskArns.contains(task.getTaskArn())
           && convertDateToInstant(task.getPullStartedAt()).isAfter(lastProcessedTime)) {
-        int memory = Integer.valueOf(task.getMemory());
-        int cpu = Integer.valueOf(task.getCpu());
+        int memory = Integer.parseInt(task.getMemory());
+        int cpu = Integer.parseInt(task.getCpu());
         if (null != task.getPullStartedAt()) {
-          publishTaskLifecycleEvent(task.getTaskArn(), task.getPullStartedAt(), EventType.START);
+          publishTaskLifecycleEvent(task.getTaskArn(), task.getPullStartedAt(), EVENT_TYPE_START);
         }
 
         EcsTaskDescription.Builder ecsTaskDescriptionBuilder = EcsTaskDescription.newBuilder()
@@ -169,9 +172,9 @@ public class EcsPerpetualTask {
   private Lifecycle createLifecycle(String instanceId, Date date, EventType eventType) {
     return Lifecycle.newBuilder()
         .setInstanceId(instanceId)
-        .setTimestamp(convertDateToTimestamp(date))
+        .setTimestamp(HTimestamps.fromDate(date))
         .setType(eventType)
-        .setCreatedTimestamp(convertDateToTimestamp(Date.from(Instant.now())))
+        .setCreatedTimestamp(HTimestamps.fromInstant(Instant.now()))
         .build();
   }
 
@@ -194,9 +197,7 @@ public class EcsPerpetualTask {
   }
 
   private Set<String> getCurrentActiveContainerInstanceArns(List<ContainerInstance> containerInstances) {
-    return containerInstances.stream()
-        .map(containerInstance -> containerInstance.getContainerInstanceArn())
-        .collect(Collectors.toSet());
+    return containerInstances.stream().map(ContainerInstance::getContainerInstanceArn).collect(Collectors.toSet());
   }
 
   private void publishContainerInstanceEvent(String clusterName, Set<String> currentActiveArns,
@@ -210,7 +211,7 @@ public class EcsPerpetualTask {
       if (!activeContainerInstancesArns.contains(containerInstance.getContainerInstanceArn())
           && convertDateToInstant(containerInstance.getRegisteredAt()).isAfter(lastProcessedTime)) {
         publishContainerInstanceLifecycleEvent(
-            containerInstance.getContainerInstanceArn(), containerInstance.getRegisteredAt(), EventType.START);
+            containerInstance.getContainerInstanceArn(), containerInstance.getRegisteredAt(), EVENT_TYPE_START);
 
         List<Resource> registeredResources = containerInstance.getRegisteredResources();
         Map<String, Resource> resourceMap =
@@ -244,7 +245,7 @@ public class EcsPerpetualTask {
       Set<String> activeContainerInstancesArns, Set<String> currentActiveArns) {
     SetView<String> stoppedContainerInstanceArns = Sets.difference(activeContainerInstancesArns, currentActiveArns);
     for (String stoppedContainerInstanceArn : stoppedContainerInstanceArns) {
-      publishContainerInstanceLifecycleEvent(stoppedContainerInstanceArn, Date.from(Instant.now()), EventType.STOP);
+      publishContainerInstanceLifecycleEvent(stoppedContainerInstanceArn, Date.from(Instant.now()), EVENT_TYPE_STOP);
     }
   }
 
@@ -257,13 +258,13 @@ public class EcsPerpetualTask {
 
     for (Instance instance : instances) {
       if (INSTANCE_TERMINATED_NAME.equals(instance.getState().getName())) {
-        publishEc2LifecycleEvent(instance.getInstanceId(), Date.from(Instant.now()), EventType.STOP);
+        publishEc2LifecycleEvent(instance.getInstanceId(), Date.from(Instant.now()), EVENT_TYPE_STOP);
       } else {
         currentActiveEc2InstanceIds.add(instance.getInstanceId());
       }
 
       if (!activeEc2InstanceIds.contains(instance.getInstanceId())) {
-        publishEc2LifecycleEvent(instance.getInstanceId(), instance.getLaunchTime(), EventType.START);
+        publishEc2LifecycleEvent(instance.getInstanceId(), instance.getLaunchTime(), EVENT_TYPE_START);
 
         InstanceState.Builder instanceStateBuilder =
             InstanceState.newBuilder().setCode(instance.getState().getCode()).setName(instance.getState().getName());
@@ -294,10 +295,10 @@ public class EcsPerpetualTask {
   }
 
   private void publishMissingTaskLifecycleEvent(Set<String> activeTaskArns, List<Task> tasks) {
-    Set<String> currentlyActiveTaskArns = tasks.stream().map(task -> task.getTaskArn()).collect(Collectors.toSet());
+    Set<String> currentlyActiveTaskArns = tasks.stream().map(Task::getTaskArn).collect(Collectors.toSet());
     SetView<String> missingTaskArns = Sets.difference(activeTaskArns, currentlyActiveTaskArns);
     for (String missingTask : missingTaskArns) {
-      publishTaskLifecycleEvent(missingTask, Date.from(Instant.now()), EventType.STOP);
+      publishTaskLifecycleEvent(missingTask, Date.from(Instant.now()), EVENT_TYPE_STOP);
     }
   }
 
@@ -305,12 +306,11 @@ public class EcsPerpetualTask {
    * Can happen if perpetual task didn't run within 1 hr of ec2 instance was termination.
    */
   private void publishMissingInstancesLifecycleEvent(Set<String> activeEc2InstanceIds, List<Instance> instances) {
-    Set<String> ec2InstanceIds =
-        instances.stream().map(instance -> instance.getInstanceId()).collect(Collectors.toSet());
+    Set<String> ec2InstanceIds = instances.stream().map(Instance::getInstanceId).collect(Collectors.toSet());
     SetView<String> missingInstances = Sets.difference(activeEc2InstanceIds, ec2InstanceIds);
     logger.info("Missing instances {} ", missingInstances);
     for (String missingInstance : missingInstances) {
-      publishEc2LifecycleEvent(missingInstance, Date.from(Instant.now()), EventType.STOP);
+      publishEc2LifecycleEvent(missingInstance, Date.from(Instant.now()), EVENT_TYPE_STOP);
     }
   }
 
@@ -371,9 +371,7 @@ public class EcsPerpetualTask {
       AwsEcsListClusterServicesRequest request, List<ContainerInstance> containerInstances) {
     Set<String> instanceIds = new HashSet<>();
     if (!CollectionUtils.isEmpty(containerInstances)) {
-      instanceIds = containerInstances.stream()
-                        .map(containerInstance -> containerInstance.getEc2InstanceId())
-                        .collect(Collectors.toSet());
+      instanceIds = containerInstances.stream().map(ContainerInstance::getEc2InstanceId).collect(Collectors.toSet());
       instanceIds.addAll(fetchActiveEc2InstanceIds(request.getCluster()));
     }
     return instanceIds;
@@ -385,7 +383,7 @@ public class EcsPerpetualTask {
         && !CollectionUtils.isEmpty(ecsActiveInstancesCache.getActiveEc2InstanceIds())) {
       return ecsActiveInstancesCache.getActiveEc2InstanceIds();
     } else {
-      return Collections.EMPTY_SET;
+      return Collections.emptySet();
     }
   }
 
@@ -395,7 +393,7 @@ public class EcsPerpetualTask {
         && !CollectionUtils.isEmpty(ecsActiveInstancesCache.getActiveContainerInstanceArns())) {
       return ecsActiveInstancesCache.getActiveContainerInstanceArns();
     } else {
-      return Collections.EMPTY_SET;
+      return Collections.emptySet();
     }
   }
 
@@ -413,7 +411,7 @@ public class EcsPerpetualTask {
     if (null != ecsActiveInstancesCache && !CollectionUtils.isEmpty(ecsActiveInstancesCache.getActiveTaskArns())) {
       return ecsActiveInstancesCache.getActiveTaskArns();
     } else {
-      return Collections.EMPTY_SET;
+      return Collections.emptySet();
     }
   }
 
@@ -427,7 +425,7 @@ public class EcsPerpetualTask {
                 activeInstancesCache, activeEc2InstanceIds, activeContainerInstanceArns, activeTaskArns, startTime));
   }
 
-  public void updateCache(EcsActiveInstancesCache activeInstancesCache, Set<String> activeEc2InstanceIds,
+  private void updateCache(EcsActiveInstancesCache activeInstancesCache, Set<String> activeEc2InstanceIds,
       Set<String> activeContainerInstanceArns, Set<String> activeTaskArns, Instant startTime) {
     activeInstancesCache.setActiveEc2InstanceIds(activeEc2InstanceIds);
     activeInstancesCache.setActiveContainerInstanceArns(activeContainerInstanceArns);
@@ -437,7 +435,7 @@ public class EcsPerpetualTask {
 
   private EcsActiveInstancesCache createDefaultCache() {
     return new EcsActiveInstancesCache(
-        Collections.EMPTY_SET, Collections.EMPTY_SET, Collections.EMPTY_SET, Instant.now());
+        Collections.emptySet(), Collections.emptySet(), Collections.emptySet(), Instant.now());
   }
 
   private List<Instance> listEc2Instances(AwsEcsListClusterServicesRequest request, Set<String> instanceIds) {
@@ -449,16 +447,5 @@ public class EcsPerpetualTask {
       logger.info("Instances {} ", instances.toString());
     }
     return instances;
-  }
-
-  private Timestamp convertDateToTimestamp(Date date) {
-    return Timestamp.newBuilder()
-        .setSeconds(date.getTime() / 1000)
-        .setNanos((int) ((date.getTime() % 1000) * 1000000))
-        .build();
-  }
-
-  private Timestamp convertInstantToTimestamp(Instant instant) {
-    return Timestamp.newBuilder().setSeconds(instant.getEpochSecond()).build();
   }
 }

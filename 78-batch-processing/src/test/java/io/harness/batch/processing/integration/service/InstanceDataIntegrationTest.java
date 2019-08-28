@@ -1,7 +1,6 @@
 package io.harness.batch.processing.integration.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertTrue;
 
 import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.ccm.InstanceType;
@@ -44,7 +43,7 @@ public class InstanceDataIntegrationTest extends BaseIntegrationTest {
   public void shouldCreateInstanceData() {
     InstanceData instanceData = createInstanceData(TEST_INSTANCE_ID);
     boolean instanceCreated = instanceDataService.create(instanceData);
-    assertTrue(instanceCreated);
+    assertThat(instanceCreated).isTrue();
 
     List<InstanceState> activeInstanceStates =
         new ArrayList<>(Arrays.asList(InstanceState.INITIALIZING, InstanceState.RUNNING));
@@ -54,7 +53,7 @@ public class InstanceDataIntegrationTest extends BaseIntegrationTest {
     Instant startTime = Instant.now().minus(1, ChronoUnit.DAYS);
     boolean instanceUpdated =
         instanceDataService.updateInstanceState(savedInstanceData, startTime, InstanceState.RUNNING);
-    assertTrue(instanceUpdated);
+    assertThat(instanceUpdated).isTrue();
 
     savedInstanceData =
         instanceDataService.fetchActiveInstanceData(TEST_ACCOUNT_ID, TEST_INSTANCE_ID, activeInstanceStates);
@@ -64,7 +63,7 @@ public class InstanceDataIntegrationTest extends BaseIntegrationTest {
     Instant endTime = Instant.now();
     boolean instanceStopped =
         instanceDataService.updateInstanceState(savedInstanceData, endTime, InstanceState.STOPPED);
-    assertTrue(instanceStopped);
+    assertThat(instanceStopped).isTrue();
   }
 
   private InstanceData createInstanceData(String instanceId) {
