@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -31,9 +32,8 @@ import javax.validation.constraints.NotNull;
     @Field("accountId"), @Field("encryptedDataId")
   }, options = @IndexOptions(name = "acctEncryptedDataIdx"))
 })
+@FieldNameConstants(innerTypeName = "SecretChangeLogKeys")
 public class SecretChangeLog extends Base {
-  public static final String ENCRYPTED_DATA_ID_KEY = "encryptedDataId";
-
   @NotEmpty private String accountId;
 
   @NotEmpty @Indexed private String encryptedDataId;
