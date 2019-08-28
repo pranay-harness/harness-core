@@ -2226,7 +2226,7 @@ public class SecretManagerImpl implements SecretManager {
             secretsManagerService.validateSecretsManagerConfig((AwsSecretsManagerConfig) encryptionConfig);
             break;
           case AZURE_VAULT:
-            azureSecretsManagerService.validateSecretsManagerConfig((AzureVaultConfig) encryptionConfig);
+            azureSecretsManagerService.validateAzureVaultConfig((AzureVaultConfig) encryptionConfig);
             break;
           case CYBERARK:
             cyberArkService.validateConfig((CyberArkConfig) encryptionConfig);

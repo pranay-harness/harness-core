@@ -14,5 +14,5 @@ public interface AzureSecretsManagerService {
 
   AzureVaultConfig getEncryptionConfig(String accountId, String id);
 
-  void validateSecretsManagerConfig(AzureVaultConfig encryptionConfig);
+  void validateAzureVaultConfig(AzureVaultConfig encryptionConfig);
 }

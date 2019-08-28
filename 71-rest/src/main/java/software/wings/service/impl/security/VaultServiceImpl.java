@@ -28,7 +28,6 @@ import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import io.harness.expression.SecretString;
 import io.harness.network.Http;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptionType;
@@ -243,21 +242,33 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     // First normalize the base path value. Set default base path if it has not been specified from input.
     String basePath = isEmpty(vaultConfig.getBasePath()) ? DEFAULT_BASE_PATH : vaultConfig.getBasePath().trim();
     vaultConfig.setBasePath(basePath);
+    vaultConfig.setAccountId(accountId);
 
     VaultConfig savedVaultConfig = null;
-    boolean shouldVerify = true;
+    boolean credentialChanged = true;
     if (!isEmpty(vaultConfig.getUuid())) {
-      savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
-      shouldVerify = !savedVaultConfig.getVaultUrl().equals(vaultConfig.getVaultUrl())
+      savedVaultConfig = getVaultConfig(accountId, vaultConfig.getUuid());
+      // Replaced masked secrets with the real secret value.
+      if (SECRET_MASK.equals(vaultConfig.getAuthToken())) {
+        vaultConfig.setAuthToken(savedVaultConfig.getAuthToken());
+      }
+      if (SECRET_MASK.equals(vaultConfig.getSecretId())) {
+        vaultConfig.setSecretId(savedVaultConfig.getSecretId());
+      }
+      credentialChanged = !savedVaultConfig.getVaultUrl().equals(vaultConfig.getVaultUrl())
           || !Objects.equals(savedVaultConfig.getAppRoleId(), vaultConfig.getAppRoleId())
-          || !SecretString.SECRET_MASK.equals(vaultConfig.getAuthToken())
-          || !SecretString.SECRET_MASK.equals(vaultConfig.getSecretId());
+          || !Objects.equals(savedVaultConfig.getAuthToken(), vaultConfig.getAuthToken())
+          || !Objects.equals(savedVaultConfig.getSecretId(), vaultConfig.getSecretId());
+
+      // secret field un-decrypted version of saved KMS config
+      savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
     }
-    if (shouldVerify) {
-      // New vault configuration, need to validate it's parameters
-      validateVaultConfig(accountId, vaultConfig);
-    } else {
-      // update without token or url changes
+
+    // Validate every time when secret manager config change submitted
+    validateVaultConfig(accountId, vaultConfig);
+
+    if (!credentialChanged) {
+      // update without token/secretId or url changes
       savedVaultConfig.setName(vaultConfig.getName());
       savedVaultConfig.setRenewIntervalHours(vaultConfig.getRenewIntervalHours());
       savedVaultConfig.setDefault(vaultConfig.isDefault());
@@ -266,8 +277,6 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
       return secretManagerConfigService.save(savedVaultConfig);
     }
-
-    vaultConfig.setAccountId(accountId);
 
     String authToken = vaultConfig.getAuthToken();
     String secretId = vaultConfig.getSecretId();
@@ -309,7 +318,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       query.criteria(ACCOUNT_ID_KEY)
           .equal(vaultConfig.getAccountId())
           .or(query.criteria(ID_KEY).equal(savedVaultConfig.getAuthToken()),
-              query.criteria(SECRET_NAME_KEY).equal(vaultConfig.getName() + secretNameSuffix));
+              query.criteria(SECRET_NAME_KEY).equal(savedVaultConfig.getName() + secretNameSuffix));
       EncryptedData savedEncryptedData = query.get();
       if (savedEncryptedData != null) {
         savedEncryptedData.setEncryptionKey(encryptedData.getEncryptionKey());

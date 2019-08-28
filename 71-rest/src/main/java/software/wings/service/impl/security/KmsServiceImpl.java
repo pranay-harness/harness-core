@@ -26,7 +26,6 @@ import com.google.inject.Singleton;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.KmsOperationException;
 import io.harness.exception.WingsException;
-import io.harness.expression.SecretString;
 import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.CountOptions;
@@ -49,6 +48,7 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.time.Duration;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -101,7 +101,6 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
   @Override
   public String saveGlobalKmsConfig(String accountId, KmsConfig kmsConfig) {
-    validateKms(accountId, kmsConfig);
     return saveKmsConfigInternal(GLOBAL_ACCOUNT_ID, kmsConfig);
   }
 
@@ -117,21 +116,46 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
   @Override
   public String saveKmsConfig(String accountId, KmsConfig kmsConfig) {
-    if (accountId.equals(GLOBAL_ACCOUNT_ID)) {
-      return saveGlobalKmsConfig(accountId, kmsConfig);
-    }
     checkIfSecretsManagerConfigCanBeCreatedOrUpdated(accountId);
-    validateKms(accountId, kmsConfig);
     return saveKmsConfigInternal(accountId, kmsConfig);
   }
 
   private String saveKmsConfigInternal(String accountId, KmsConfig kmsConfig) {
     kmsConfig.setAccountId(accountId);
 
+    KmsConfig savedKmsConfig = null;
+    boolean credentialChanged = true;
+    if (isNotEmpty(kmsConfig.getUuid())) {
+      savedKmsConfig = getKmsConfig(accountId, kmsConfig.getUuid());
+      // Replaced masked secrets with the real secret value.
+      if (SECRET_MASK.equals(kmsConfig.getSecretKey())) {
+        kmsConfig.setSecretKey(savedKmsConfig.getSecretKey());
+      }
+      if (SECRET_MASK.equals(kmsConfig.getKmsArn())) {
+        kmsConfig.setKmsArn(savedKmsConfig.getKmsArn());
+      }
+      credentialChanged = !Objects.equals(kmsConfig.getRegion(), savedKmsConfig.getRegion())
+          || !Objects.equals(kmsConfig.getAccessKey(), savedKmsConfig.getAccessKey())
+          || !Objects.equals(kmsConfig.getSecretKey(), savedKmsConfig.getSecretKey())
+          || !Objects.equals(kmsConfig.getKmsArn(), savedKmsConfig.getKmsArn());
+
+      // secret field un-decrypted version of saved KMS config
+      savedKmsConfig = wingsPersistence.get(KmsConfig.class, kmsConfig.getUuid());
+    }
+
+    // Validate every time when secret manager config change submitted
+    validateKms(accountId, kmsConfig);
+
+    if (!credentialChanged) {
+      savedKmsConfig.setName(kmsConfig.getName());
+      savedKmsConfig.setDefault(kmsConfig.isDefault());
+
+      return secretManagerConfigService.save(savedKmsConfig);
+    }
+
     EncryptedData accessKeyData = encryptLocal(kmsConfig.getAccessKey().toCharArray());
     if (isNotBlank(kmsConfig.getUuid())) {
-      EncryptedData savedAccessKey = wingsPersistence.get(
-          EncryptedData.class, wingsPersistence.get(KmsConfig.class, kmsConfig.getUuid()).getAccessKey());
+      EncryptedData savedAccessKey = wingsPersistence.get(EncryptedData.class, savedKmsConfig.getAccessKey());
       Preconditions.checkNotNull(savedAccessKey, "reference is null for " + kmsConfig.getUuid());
       savedAccessKey.setEncryptionKey(accessKeyData.getEncryptionKey());
       savedAccessKey.setEncryptedValue(accessKeyData.getEncryptedValue());
@@ -145,8 +169,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
     EncryptedData secretKeyData = encryptLocal(kmsConfig.getSecretKey().toCharArray());
     if (isNotBlank(kmsConfig.getUuid())) {
-      EncryptedData savedSecretKey = wingsPersistence.get(
-          EncryptedData.class, wingsPersistence.get(KmsConfig.class, kmsConfig.getUuid()).getSecretKey());
+      EncryptedData savedSecretKey = wingsPersistence.get(EncryptedData.class, savedKmsConfig.getSecretKey());
       Preconditions.checkNotNull(savedSecretKey, "reference is null for " + kmsConfig.getUuid());
       savedSecretKey.setEncryptionKey(secretKeyData.getEncryptionKey());
       savedSecretKey.setEncryptedValue(secretKeyData.getEncryptedValue());
@@ -160,8 +183,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
     EncryptedData arnKeyData = encryptLocal(kmsConfig.getKmsArn().toCharArray());
     if (isNotBlank(kmsConfig.getUuid())) {
-      EncryptedData savedArn = wingsPersistence.get(
-          EncryptedData.class, wingsPersistence.get(KmsConfig.class, kmsConfig.getUuid()).getKmsArn());
+      EncryptedData savedArn = wingsPersistence.get(EncryptedData.class, savedKmsConfig.getKmsArn());
       Preconditions.checkNotNull(savedArn, "reference is null for " + kmsConfig.getUuid());
       savedArn.setEncryptionKey(arnKeyData.getEncryptionKey());
       savedArn.setEncryptedValue(arnKeyData.getEncryptedValue());
@@ -285,20 +307,11 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   }
 
   private void validateKms(String accountId, KmsConfig kmsConfig) {
-    boolean shouldVerify = true;
-    if (isNotEmpty(kmsConfig.getUuid())) {
-      shouldVerify = !SecretString.SECRET_MASK.equals(kmsConfig.getAccessKey())
-          || !SecretString.SECRET_MASK.equals(kmsConfig.getSecretKey())
-          || !SecretString.SECRET_MASK.equals(kmsConfig.getKmsArn());
-    }
-
-    if (shouldVerify) {
-      try {
-        encrypt(UUID.randomUUID().toString().toCharArray(), accountId, kmsConfig);
-      } catch (WingsException e) {
-        String message = "Was not able to encrypt using given credentials. Please check your credentials and try again";
-        throw new KmsOperationException(message, USER);
-      }
+    try {
+      encrypt(UUID.randomUUID().toString().toCharArray(), accountId, kmsConfig);
+    } catch (WingsException e) {
+      String message = "Was not able to encrypt using given credentials. Please check your credentials and try again";
+      throw new KmsOperationException(message, USER);
     }
   }
 

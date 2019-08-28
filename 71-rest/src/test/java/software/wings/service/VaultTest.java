@@ -32,6 +32,7 @@ import io.harness.rule.RepeatRule.Repeat;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
+import io.harness.serializer.KryoUtils;
 import io.harness.stream.BoundedInputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -367,6 +368,38 @@ public class VaultTest extends WingsBaseTest {
     assertThat(encryptedDataList.get(0).getParentIds()).hasSize(1);
     assertThat(encryptedDataList.get(0).getParentIds().iterator().next()).isEqualTo(savedConfig.getUuid());
     assertThat(encryptedDataList.get(0).getName()).isEqualTo(name + "_token");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void saveAndEditConfig_withMaskedSecrets_changeNameDefaultOnly() {
+    String name = UUID.randomUUID().toString();
+    VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
+    vaultConfig.setName(name);
+    vaultConfig.setAccountId(accountId);
+
+    vaultService.saveVaultConfig(accountId, KryoUtils.clone(vaultConfig));
+
+    VaultConfig savedConfig = (VaultConfig) secretManagerConfigService.getDefaultSecretManager(accountId);
+    assertThat(savedConfig.getAuthToken()).isEqualTo(vaultConfig.getAuthToken());
+    assertThat(savedConfig.getSecretId()).isEqualTo(vaultConfig.getSecretId());
+    assertThat(savedConfig.getName()).isEqualTo(vaultConfig.getName());
+    assertThat(savedConfig.isDefault()).isEqualTo(true);
+
+    String newName = UUID.randomUUID().toString();
+    vaultConfig.setUuid(savedConfig.getUuid());
+    vaultConfig.setName(newName);
+    vaultConfig.setDefault(false);
+    vaultConfig.maskSecrets();
+
+    // Masked Secrets, only name and default flag should be updated.
+    vaultService.saveVaultConfig(accountId, KryoUtils.clone(vaultConfig));
+
+    VaultConfig modifiedSavedConfig = vaultService.getVaultConfig(accountId, savedConfig.getUuid());
+    assertThat(modifiedSavedConfig.getAuthToken()).isEqualTo(savedConfig.getAuthToken());
+    assertThat(modifiedSavedConfig.getSecretId()).isEqualTo(savedConfig.getSecretId());
+    assertThat(modifiedSavedConfig.getName()).isEqualTo(vaultConfig.getName());
+    assertThat(modifiedSavedConfig.isDefault()).isEqualTo(false);
   }
 
   @Test

@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.encryption.Encrypted;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,9 +30,9 @@ import software.wings.delegatetasks.validation.AbstractSecretManagerValidation;
 public class AwsSecretsManagerConfig extends SecretManagerConfig {
   @Attributes(title = "Name", required = true) private String name;
 
-  @Attributes(title = "AWS Access Key", required = true) @Encrypted private String accessKey;
+  @Attributes(title = "AWS Access Key", required = true) private String accessKey;
 
-  @Attributes(title = "AWS Secret Key", required = true) @Encrypted private String secretKey;
+  @Attributes(title = "AWS Secret Key", required = true) private String secretKey;
 
   @Attributes(title = "AWS Region", required = true) private String region;
 

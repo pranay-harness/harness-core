@@ -375,6 +375,40 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  public void saveAndEditConfig_withMaskedSecrets_changeNameDefaultOnly() {
+    String name = UUID.randomUUID().toString();
+    KmsConfig kmsConfig = getKmsConfig();
+    kmsConfig.setName(name);
+    kmsConfig.setAccountId(accountId);
+
+    kmsService.saveKmsConfig(accountId, KryoUtils.clone(kmsConfig));
+
+    KmsConfig savedConfig = (KmsConfig) secretManagerConfigService.getDefaultSecretManager(accountId);
+    assertThat(savedConfig.getAccessKey()).isEqualTo(kmsConfig.getAccessKey());
+    assertThat(savedConfig.getSecretKey()).isEqualTo(kmsConfig.getSecretKey());
+    assertThat(savedConfig.getKmsArn()).isEqualTo(kmsConfig.getKmsArn());
+    assertThat(savedConfig.getName()).isEqualTo(kmsConfig.getName());
+    assertThat(savedConfig.isDefault()).isEqualTo(true);
+
+    String newName = UUID.randomUUID().toString();
+    kmsConfig.setUuid(savedConfig.getUuid());
+    kmsConfig.setName(newName);
+    kmsConfig.setDefault(false);
+    kmsConfig.maskSecrets();
+
+    // Masked Secrets, only name and default flag should be updated.
+    kmsService.saveKmsConfig(accountId, KryoUtils.clone(kmsConfig));
+
+    KmsConfig modifiedSavedConfig = kmsService.getKmsConfig(accountId, savedConfig.getUuid());
+    assertThat(modifiedSavedConfig.getAccessKey()).isEqualTo(savedConfig.getAccessKey());
+    assertThat(modifiedSavedConfig.getSecretKey()).isEqualTo(savedConfig.getSecretKey());
+    assertThat(modifiedSavedConfig.getKmsArn()).isEqualTo(savedConfig.getKmsArn());
+    assertThat(modifiedSavedConfig.getName()).isEqualTo(kmsConfig.getName());
+    assertThat(modifiedSavedConfig.isDefault()).isEqualTo(false);
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void localNullEncryption() {
     final char[] keyToEncrypt = null;
     final EncryptedData encryptedData = kmsService.encrypt(keyToEncrypt, null, null);
@@ -1614,7 +1648,7 @@ public class KmsTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void kmsEncryptionSaveGlobalConfig() {
     KmsConfig kmsConfig = getKmsConfig();
-    kmsResource.saveKmsConfig(GLOBAL_ACCOUNT_ID, KryoUtils.clone(kmsConfig));
+    kmsResource.saveGlobalKmsConfig(GLOBAL_ACCOUNT_ID, KryoUtils.clone(kmsConfig));
     assertThat(wingsPersistence.createQuery(KmsConfig.class).count()).isEqualTo(1);
 
     KmsConfig savedKmsConfig = (KmsConfig) secretManagerConfigService.getDefaultSecretManager(accountId);
