@@ -83,6 +83,7 @@ public class TerraformInfrastructureProvisionerYamlHandler
     super.toBean(changeContext, bean, appId, yamlFilePath);
     bean.setPath(yaml.getPath());
     bean.setSourceRepoSettingId(getSourceRepoSettingId(appId, yaml.getSourceRepoSettingName()));
+    bean.setSourceRepoBranch(yaml.getSourceRepoBranch());
   }
 
   @Override

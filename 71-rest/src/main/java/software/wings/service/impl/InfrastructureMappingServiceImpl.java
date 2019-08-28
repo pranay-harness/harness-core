@@ -405,9 +405,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         () -> wingsPersistence.saveAndGet(InfrastructureMapping.class, infraMapping), "name", infraMapping.getName());
 
     String accountId = appService.getAccountIdByAppId(infraMapping.getAppId());
-    yamlPushService.pushYamlChangeSet(
-        accountId, null, savedInfraMapping, Type.CREATE, infraMapping.isSyncFromGit(), false);
-
+    if (!infraRefactor) {
+      yamlPushService.pushYamlChangeSet(
+          accountId, null, savedInfraMapping, Type.CREATE, infraMapping.isSyncFromGit(), false);
+    }
     if (!savedInfraMapping.isSample()) {
       eventPublishHelper.publishAccountEvent(
           accountId, AccountEvent.builder().accountEventType(AccountEventType.INFRA_MAPPING_ADDED).build());
@@ -713,8 +714,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     boolean isRename = !updatedInfraMapping.getName().equals(savedInfraMapping.getName());
 
-    yamlPushService.pushYamlChangeSet(savedInfraMapping.getAccountId(), savedInfraMapping, updatedInfraMapping,
-        Type.UPDATE, infrastructureMapping.isSyncFromGit(), isRename);
+    boolean infraRefactor =
+        featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, savedInfraMapping.getAccountId());
+    if (!infraRefactor) {
+      yamlPushService.pushYamlChangeSet(savedInfraMapping.getAccountId(), savedInfraMapping, updatedInfraMapping,
+          Type.UPDATE, infrastructureMapping.isSyncFromGit(), isRename);
+    }
 
     return updatedInfraMapping;
   }
@@ -1054,8 +1059,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
 
     String accountId = appService.getAccountIdByAppId(infrastructureMapping.getAppId());
+    boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId);
 
-    yamlPushService.pushYamlChangeSet(accountId, infrastructureMapping, null, Type.DELETE, syncFromGit, false);
+    if (!infraRefactor) {
+      yamlPushService.pushYamlChangeSet(accountId, infrastructureMapping, null, Type.DELETE, syncFromGit, false);
+    }
 
     prune(appId, infraMappingId);
   }

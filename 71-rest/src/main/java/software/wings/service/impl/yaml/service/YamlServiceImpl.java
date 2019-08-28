@@ -81,6 +81,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import software.wings.beans.Base;
+import software.wings.beans.FeatureName;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
@@ -94,6 +95,7 @@ import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.tag.HarnessTagYamlHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlResourceService;
@@ -153,6 +155,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   @Inject private WorkflowService workflowService;
   @Inject private AppService appService;
   @Inject private FailedCommitStore failedCommitStore;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Inject private HarnessTagYamlHelper harnessTagYamlHelper;
 
@@ -359,6 +362,11 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     return null;
   }
 
+  private boolean ignoreIfFeatureFlagEnabled(
+      String accountId, FeatureName featureName, YamlType yamlTypeToIgnore, YamlType givenYamlType) {
+    return yamlTypeToIgnore == givenYamlType && featureFlagService.isEnabled(featureName, accountId);
+  }
+
   private <T extends BaseYamlHandler> List<ChangeContext> validate(List<Change> changeList)
       throws YamlProcessingException {
     logger.info(GIT_YAML_LOG_PREFIX + "Validating changeset");
@@ -377,6 +385,13 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           validateYaml(change.getFileContent());
           YamlType yamlType = findYamlType(yamlFilePath);
           String yamlSubType = getYamlSubType(change.getFileContent());
+
+          if (ignoreIfFeatureFlagEnabled(
+                  change.getAccountId(), FeatureName.INFRA_MAPPING_REFACTOR, INFRA_MAPPING, yamlType)) {
+            logger.warn(format("Skipping %s because feature flag %s is enabled", change.getFilePath(),
+                FeatureName.INFRA_MAPPING_REFACTOR));
+            continue;
+          }
 
           T yamlSyncHandler = yamlHandlerFactory.getYamlHandler(yamlType, yamlSubType);
           Class yamlClass = yamlSyncHandler.getYamlClass();
