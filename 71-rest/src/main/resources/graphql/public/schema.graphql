@@ -60,3 +60,8 @@ input TimeFilter {
   operator: TimeOperator!
   value: DateTime!
 }
+
+input EntityTypeFilter {
+  operator: EnumOperator
+  values: [EntityType]
+}
