@@ -71,6 +71,7 @@ import org.mongodb.morphia.query.Query;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.Account;
+import software.wings.beans.AccountStatus;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.Base;
@@ -81,6 +82,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.LicenseInfo;
 import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.ServiceTemplate;
@@ -988,9 +990,12 @@ public class SecretManagerImpl implements SecretManager {
     try (HIterator<Account> records = new HIterator<>(query.fetch())) {
       for (Account account : records) {
         try {
-          validateSecretManagerConfigs(account.getUuid());
-          vaultService.renewTokens(account.getUuid());
-          vaultService.appRoleLogin(account.getUuid());
+          // PL-3286: Should not perform check and alert operation on the DELETED/INACTIVE accounts
+          if (shouldCheckAndAlert(account)) {
+            validateSecretManagerConfigs(account.getUuid());
+            vaultService.renewTokens(account.getUuid());
+            vaultService.appRoleLogin(account.getUuid());
+          }
         } catch (Exception e) {
           logger.info(
               "Failed to validate secret manager for {} account id {}", account.getAccountName(), account.getUuid(), e);
@@ -2340,6 +2345,12 @@ public class SecretManagerImpl implements SecretManager {
     }
 
     return deleted;
+  }
+
+  private boolean shouldCheckAndAlert(Account account) {
+    LicenseInfo licenseInfo = account.getLicenseInfo();
+    String accountStatus = licenseInfo == null ? AccountStatus.ACTIVE : licenseInfo.getAccountStatus();
+    return !(AccountStatus.DELETED.equals(accountStatus) || AccountStatus.INACTIVE.equals(accountStatus));
   }
 
   @Builder

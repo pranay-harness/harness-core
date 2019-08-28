@@ -24,7 +24,9 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.alerts.AlertStatus;
 import software.wings.beans.Account;
+import software.wings.beans.AccountStatus;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.LicenseInfo;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.alert.Alert;
@@ -38,7 +40,6 @@ import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
 
-import java.io.IOException;
 import java.util.UUID;
 
 /**
@@ -59,7 +60,7 @@ public class KmsAlertTest extends WingsBaseTest {
   private String accountId;
 
   @Before
-  public void setup() throws IOException, NoSuchFieldException, IllegalAccessException {
+  public void setup() throws NoSuchFieldException, IllegalAccessException {
     initMocks(this);
     when(mockDelegateServiceOK.encrypt(
              anyString(), anyString(), anyString(), anyObject(), any(VaultConfig.class), anyObject()))
@@ -88,17 +89,13 @@ public class KmsAlertTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testAlertFiredForVault() throws InterruptedException {
     VaultConfig vaultConfig = getVaultConfig();
-    vaultConfig.setAuthToken(UUID.randomUUID().toString());
     vaultConfig.setAccountId(accountId);
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
     vaultService.saveVaultConfig(accountId, vaultConfig);
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceEx);
     secretManager.checkAndAlertForInvalidManagers();
-    PageRequest<Alert> pageRequest = aPageRequest()
-                                         .addFilter("status", Operator.EQ, AlertStatus.Open)
-                                         .addFilter("accountId", Operator.EQ, accountId)
-                                         .build();
-    PageResponse<Alert> alerts = alertService.list(pageRequest);
+
+    PageResponse<Alert> alerts = listOpenAlerts(accountId);
     assertThat(alerts).hasSize(1);
     Alert alert = alerts.get(0);
     assertThat(alert.getAccountId()).isEqualTo(accountId);
@@ -110,13 +107,9 @@ public class KmsAlertTest extends WingsBaseTest {
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
     secretManager.checkAndAlertForInvalidManagers();
     Thread.sleep(2000);
-    assertThat(alertService.list(pageRequest)).isEmpty();
+    assertThat(listOpenAlerts(accountId)).isEmpty();
 
-    pageRequest = aPageRequest()
-                      .addFilter("status", Operator.EQ, AlertStatus.Closed)
-                      .addFilter("accountId", Operator.EQ, accountId)
-                      .build();
-    assertThat(alertService.list(pageRequest)).hasSize(1);
+    assertThat(listClosedAlerts(accountId)).hasSize(1);
   }
 
   @Test
@@ -125,17 +118,13 @@ public class KmsAlertTest extends WingsBaseTest {
     VaultConfig vaultConfig = getVaultConfig();
     vaultConfig.setRenewIntervalHours(1);
     vaultConfig.setRenewedAt(0);
-    vaultConfig.setAuthToken(UUID.randomUUID().toString());
     vaultConfig.setAccountId(accountId);
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
     vaultService.saveVaultConfig(accountId, vaultConfig);
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceEx);
     vaultService.renewTokens(accountId);
-    PageRequest<Alert> pageRequest = aPageRequest()
-                                         .addFilter("status", Operator.EQ, AlertStatus.Open)
-                                         .addFilter("accountId", Operator.EQ, accountId)
-                                         .build();
-    PageResponse<Alert> alerts = alertService.list(pageRequest);
+
+    PageResponse<Alert> alerts = listOpenAlerts(accountId);
     assertThat(alerts).hasSize(1);
     Alert alert = alerts.get(0);
     assertThat(alert.getAccountId()).isEqualTo(accountId);
@@ -150,31 +139,24 @@ public class KmsAlertTest extends WingsBaseTest {
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
     vaultService.renewTokens(accountId);
     Thread.sleep(2000);
-    assertThat(alertService.list(pageRequest)).isEmpty();
+    assertThat(listOpenAlerts(accountId)).isEmpty();
     savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
     assertThat(savedVaultConfig.getRenewedAt() > 0).isTrue();
 
-    pageRequest = aPageRequest()
-                      .addFilter("status", Operator.EQ, AlertStatus.Closed)
-                      .addFilter("accountId", Operator.EQ, accountId)
-                      .build();
-    assertThat(alertService.list(pageRequest)).hasSize(1);
+    assertThat(listClosedAlerts(accountId)).hasSize(1);
   }
 
   @Test
   @Category(UnitTests.class)
-  public void testAlertFiredForKms() throws IOException, InterruptedException {
+  public void testAlertFiredForKms() throws InterruptedException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsConfig.setAccountId(accountId);
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
     kmsService.saveKmsConfig(accountId, kmsConfig);
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceEx);
     secretManager.checkAndAlertForInvalidManagers();
-    PageRequest<Alert> pageRequest = aPageRequest()
-                                         .addFilter("status", Operator.EQ, AlertStatus.Open)
-                                         .addFilter("accountId", Operator.EQ, accountId)
-                                         .build();
-    PageResponse<Alert> alerts = alertService.list(pageRequest);
+
+    PageResponse<Alert> alerts = listOpenAlerts(accountId);
     assertThat(alerts).hasSize(1);
     Alert alert = alerts.get(0);
     assertThat(alert.getAccountId()).isEqualTo(accountId);
@@ -186,12 +168,43 @@ public class KmsAlertTest extends WingsBaseTest {
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
     secretManager.checkAndAlertForInvalidManagers();
     Thread.sleep(2000);
-    assertThat(alertService.list(pageRequest)).isEmpty();
+    assertThat(listOpenAlerts(accountId)).isEmpty();
 
-    pageRequest = aPageRequest()
-                      .addFilter("status", Operator.EQ, AlertStatus.Closed)
-                      .addFilter("accountId", Operator.EQ, accountId)
-                      .build();
-    assertThat(alertService.list(pageRequest)).hasSize(1);
+    assertThat(listClosedAlerts(accountId)).hasSize(1);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testNoAlertForInactiveAccount() {
+    accountId =
+        wingsPersistence.save(Account.Builder.anAccount()
+                                  .withAccountName(UUID.randomUUID().toString())
+                                  .withLicenseInfo(LicenseInfo.builder().accountStatus(AccountStatus.INACTIVE).build())
+                                  .build());
+
+    final KmsConfig kmsConfig = getKmsConfig();
+    kmsConfig.setAccountId(accountId);
+    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
+    kmsService.saveKmsConfig(accountId, kmsConfig);
+    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceEx);
+    secretManager.checkAndAlertForInvalidManagers();
+    PageResponse<Alert> alerts = listOpenAlerts(accountId);
+    assertThat(alerts).hasSize(0);
+  }
+
+  private PageResponse<Alert> listOpenAlerts(String accountId) {
+    return listAlerts(accountId, AlertStatus.Open);
+  }
+
+  private PageResponse<Alert> listClosedAlerts(String accountId) {
+    return listAlerts(accountId, AlertStatus.Closed);
+  }
+
+  private PageResponse<Alert> listAlerts(String accountId, AlertStatus alertStatus) {
+    PageRequest<Alert> pageRequest = aPageRequest()
+                                         .addFilter("status", Operator.EQ, alertStatus)
+                                         .addFilter("accountId", Operator.EQ, accountId)
+                                         .build();
+    return alertService.list(pageRequest);
   }
 }

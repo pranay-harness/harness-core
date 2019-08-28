@@ -1142,7 +1142,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     final String query = UUID.randomUUID().toString();
     final String lastWorkflowExecutionId = analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
         StateType.SPLUNKV2, appId, serviceId, workflowId, query);
-    assertThat(lastWorkflowExecutionId).isEqualTo("The baseline workflow should be null", null);
+    assertThat(lastWorkflowExecutionId).isEqualTo("The baseline workflow should be null");
   }
 
   @Test
