@@ -56,6 +56,7 @@ import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -604,6 +605,25 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
       nextBackoffCount = BACKOFF_LIMIT;
     }
     return nextBackoffCount;
+  }
+
+  public boolean isTaskRunningOrQueued(String cvConfigId, long analysisMinute) {
+    LearningEngineAnalysisTask task = wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
+                                          .filter(LearningEngineAnalysisTaskKeys.cvConfigId, cvConfigId)
+                                          .field(LearningEngineAnalysisTaskKeys.analysis_minute)
+                                          .greaterThanOrEq(analysisMinute)
+                                          .field(LearningEngineAnalysisTaskKeys.executionStatus)
+                                          .in(Arrays.asList(ExecutionStatus.RUNNING, ExecutionStatus.QUEUED))
+                                          .get();
+    if (task == null) {
+      logger.info(
+          "There are no tasks running or queued for cvConfig {} after analysisMinute {}", cvConfigId, analysisMinute);
+      return false;
+    } else {
+      logger.info(
+          "Found a task running or queued for cvConfig {} and minute {}", cvConfigId, task.getAnalysis_minute());
+      return true;
+    }
   }
 
   public boolean isEligibleToCreateTask(
