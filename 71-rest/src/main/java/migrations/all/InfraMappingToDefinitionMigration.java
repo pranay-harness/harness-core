@@ -7,6 +7,7 @@ import static java.lang.String.format;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
+import com.amazonaws.services.ecs.model.LaunchType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMapping.InfrastructureMappingKeys;
 import software.wings.beans.InfrastructureMappingBlueprint;
+import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisioner.InfrastructureProvisionerKeys;
 import software.wings.beans.NameValuePair;
@@ -85,7 +87,7 @@ public class InfraMappingToDefinitionMigration implements Migration {
   @Inject private SetInfraDefinitionWorkflows setInfraDefinitionWorkflows;
 
   private final String DEBUG_LINE = " INFRA_MAPPING_MIGRATION: ";
-  private final String accountId = "zEaak-FLS425IEO7OLzMUg";
+  private final String accountId = "kmpySmUISimoRrJL6NL73w";
 
   public void migrate() {
     logger.info(StringUtils.join(DEBUG_LINE, "Starting Infra Definition migration for accountId ", accountId));
@@ -214,7 +216,6 @@ public class InfraMappingToDefinitionMigration implements Migration {
         infrastructure =
             AwsInstanceInfrastructure.builder()
                 .cloudProviderId(awsSrc.getComputeProviderSettingId())
-                .useAutoScalingGroup(isNotEmpty(awsSrc.getAutoScalingGroupName()))
                 .region(awsSrc.getRegion())
                 .hostConnectionAttrs(awsSrc.getHostConnectionAttrs())
                 .loadBalancerId(awsSrc.getLoadBalancerId())
@@ -225,7 +226,7 @@ public class InfraMappingToDefinitionMigration implements Migration {
                 .desiredCapacity(awsSrc.getDesiredCapacity())
                 .setDesiredCapacity(awsSrc.isSetDesiredCapacity())
                 .hostNameConvention(awsSrc.getHostNameConvention())
-                .provisionInstances(awsSrc.isProvisionInstances())
+                .provisionInstances(isProvisionInstances(awsSrc, infrastructureMappingBlueprints))
                 .expressions(getExpressionsFromBluePrints(src, infrastructureMappingBlueprints, fieldNameChanges))
                 .build();
       } else if (src instanceof AwsAmiInfrastructureMapping) {
@@ -287,6 +288,7 @@ public class InfraMappingToDefinitionMigration implements Migration {
         fieldNameChanges.put("ecsVpc", AwsEcsInfrastructureKeys.vpcId);
         fieldNameChanges.put("ecsSubnets", AwsEcsInfrastructureKeys.subnetIds);
         fieldNameChanges.put("ecsSgs", AwsEcsInfrastructureKeys.securityGroupIds);
+        fieldNameChanges.put("ecsTaskExecutionRole", AwsEcsInfrastructureKeys.executionRole);
 
         infrastructure =
             AwsEcsInfrastructure.builder()
@@ -297,7 +299,7 @@ public class InfraMappingToDefinitionMigration implements Migration {
                 .securityGroupIds(ecsSrc.getSecurityGroupIds())
                 .assignPublicIp(ecsSrc.isAssignPublicIp())
                 .executionRole(ecsSrc.getExecutionRole())
-                .launchType(ecsSrc.getLaunchType())
+                .launchType(getLaunchType(ecsSrc, infrastructureMappingBlueprints))
                 .clusterName(ecsSrc.getClusterName())
                 .expressions(getExpressionsFromBluePrints(src, infrastructureMappingBlueprints, fieldNameChanges))
                 .build();
@@ -403,6 +405,82 @@ public class InfraMappingToDefinitionMigration implements Migration {
           " Could not create infradefinition for inframapping ", src.getUuid()));
       return Optional.empty();
     }
+  }
+
+  private boolean isProvisionInstances(
+      AwsInfrastructureMapping awsInfrastructureMapping, List<InfrastructureMappingBlueprint> blueprints) {
+    if (CollectionUtils.isEmpty(blueprints)) {
+      return awsInfrastructureMapping.isProvisionInstances();
+    }
+    final String serviceId = awsInfrastructureMapping.getServiceId();
+    final List<InfrastructureMappingBlueprint> blueprintList =
+        blueprints.stream()
+            .filter(blueprint -> serviceId.equals(blueprint.getServiceId()))
+            .collect(Collectors.toList());
+    if (blueprintList.isEmpty()) {
+      logger.info(StringUtils.join(DEBUG_LINE,
+          format("No service mapping for serviceId %s found "
+                  + "with provisioner %s linked to infraMapping",
+              awsInfrastructureMapping.getServiceId(), awsInfrastructureMapping.getProvisionerId(),
+              awsInfrastructureMapping.getUuid())));
+    } else if (blueprintList.size() == 1) {
+      InfrastructureMappingBlueprint blueprint = blueprintList.get(0);
+      if (NodeFilteringType.AWS_AUTOSCALING_GROUP.equals(blueprint.getNodeFilteringType())) {
+        return true;
+      } else if (NodeFilteringType.AWS_INSTANCE_FILTER.equals(blueprint.getNodeFilteringType())) {
+        return false;
+      } else {
+        logger.error(StringUtils.join(DEBUG_LINE,
+            "Unknown node filtering type for "
+                + "inframapping ",
+            awsInfrastructureMapping.getUuid(), " ", blueprint.getNodeFilteringType()));
+      }
+    } else {
+      logger.error(StringUtils.join(DEBUG_LINE,
+          format("Provisioner %s has more than 1 service "
+                  + "mappings "
+                  + "for 1 service %s",
+              awsInfrastructureMapping.getProvisionerId(), awsInfrastructureMapping.getServiceId())));
+    }
+    return awsInfrastructureMapping.isProvisionInstances();
+  }
+
+  private String getLaunchType(
+      EcsInfrastructureMapping ecsInfrastructureMapping, List<InfrastructureMappingBlueprint> blueprints) {
+    if (CollectionUtils.isEmpty(blueprints)) {
+      return ecsInfrastructureMapping.getLaunchType();
+    }
+    final String serviceId = ecsInfrastructureMapping.getServiceId();
+    final List<InfrastructureMappingBlueprint> blueprintList =
+        blueprints.stream()
+            .filter(blueprint -> serviceId.equals(blueprint.getServiceId()))
+            .collect(Collectors.toList());
+    if (blueprintList.isEmpty()) {
+      logger.info(StringUtils.join(DEBUG_LINE,
+          format("No service mapping for serviceId %s found "
+                  + "with provisioner %s linked to infraMapping",
+              ecsInfrastructureMapping.getServiceId(), ecsInfrastructureMapping.getProvisionerId(),
+              ecsInfrastructureMapping.getUuid())));
+    } else if (blueprintList.size() == 1) {
+      InfrastructureMappingBlueprint blueprint = blueprintList.get(0);
+      if (NodeFilteringType.AWS_ECS_EC2.equals(blueprint.getNodeFilteringType())) {
+        return LaunchType.EC2.toString();
+      } else if (NodeFilteringType.AWS_ECS_FARGATE.equals(blueprint.getNodeFilteringType())) {
+        return LaunchType.FARGATE.toString();
+      } else {
+        logger.error(StringUtils.join(DEBUG_LINE,
+            "Unknown node filtering type for infra mapping "
+                + "%s ",
+            ecsInfrastructureMapping.getUuid(), " ", blueprint.getNodeFilteringType()));
+      }
+    } else {
+      logger.error(StringUtils.join(DEBUG_LINE,
+          format("Provisioner %s has more than 1 service "
+                  + "mappings "
+                  + "for 1 service %s",
+              ecsInfrastructureMapping.getProvisionerId(), ecsInfrastructureMapping.getServiceId())));
+    }
+    return ecsInfrastructureMapping.getLaunchType();
   }
 
   private Map<String, String> getExpressionsFromBluePrints(InfrastructureMapping infrastructureMapping,
