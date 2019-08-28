@@ -153,7 +153,7 @@ public class PipelineServiceImpl implements PipelineService {
 
     List<Pipeline> pipelines = res.getResponse();
     if (withDetails) {
-      setPipelineDetails(pipelines);
+      setPipelineDetails(pipelines, false);
     }
     if (previousExecutionsCount != null && previousExecutionsCount > 0) {
       for (Pipeline pipeline : pipelines) {
@@ -463,7 +463,7 @@ public class PipelineServiceImpl implements PipelineService {
     Pipeline pipeline = wingsPersistence.getWithAppId(Pipeline.class, appId, pipelineId);
     notNullCheck("Pipeline does not exist", pipeline, USER);
     // Note: It filters out the services that does need artifact
-    setPipelineDetails(Collections.singletonList(pipeline));
+    setPipelineDetails(Collections.singletonList(pipeline), true);
     return pipeline;
   }
 
@@ -550,7 +550,7 @@ public class PipelineServiceImpl implements PipelineService {
         .get();
   }
 
-  private void setPipelineDetails(List<Pipeline> pipelines) {
+  private void setPipelineDetails(List<Pipeline> pipelines, boolean withFinalValuesOnly) {
     for (Pipeline pipeline : pipelines) {
       boolean hasSshInfraMapping = false;
       boolean templatized = false;
@@ -581,7 +581,7 @@ public class PipelineServiceImpl implements PipelineService {
               }
               validateWorkflowVariables(workflow, pse, invalidWorkflows, pse.getWorkflowVariables());
               setPipelineVariables(workflow.getOrchestrationWorkflow().getUserVariables(), pse.getWorkflowVariables(),
-                  pipelineVariables);
+                  pipelineVariables, withFinalValuesOnly);
               if (!pipelineParameterized) {
                 pipelineParameterized = checkPipelineEntityParameterized(pse.getWorkflowVariables(), workflow);
               }
@@ -673,8 +673,8 @@ public class PipelineServiceImpl implements PipelineService {
 
           validateWorkflowVariables(workflow, pse, invalidWorkflows, pse.getWorkflowVariables());
 
-          setPipelineVariables(
-              workflow.getOrchestrationWorkflow().getUserVariables(), pse.getWorkflowVariables(), pipelineVariables);
+          setPipelineVariables(workflow.getOrchestrationWorkflow().getUserVariables(), pse.getWorkflowVariables(),
+              pipelineVariables, false);
           if (!templatized && isNotEmpty(pse.getWorkflowVariables())) {
             templatized = true;
           }
@@ -704,8 +704,8 @@ public class PipelineServiceImpl implements PipelineService {
     pipeline.setHasBuildWorkflow(hasBuildWorkflow);
   }
 
-  private void setPipelineVariables(
-      List<Variable> workflowVariables, Map<String, String> pseWorkflowVariables, List<Variable> pipelineVariables) {
+  private void setPipelineVariables(List<Variable> workflowVariables, Map<String, String> pseWorkflowVariables,
+      List<Variable> pipelineVariables, boolean withFinalValuesOnly) {
     if (isEmpty(workflowVariables)) {
       return;
     }
@@ -725,23 +725,31 @@ public class PipelineServiceImpl implements PipelineService {
       return;
     }
     for (Variable variable : workflowVariables) {
-      // Entity Variables
       String value = pseWorkflowVariables.get(variable.getName());
       if (variable.obtainEntityType() == null) {
+        // Non-entity variables.
         if (isEmpty(value) && !variable.isFixed()) {
           if (!contains(pipelineVariables, variable.getName())) {
             pipelineVariables.add(variable.cloneInternal());
           }
         }
       } else {
+        // Entity variables.
         if (isNotEmpty(value)) {
           String variableName = matchesVariablePattern(value) ? getName(value) : null;
           if (variableName != null) {
+            // Variable is an expression - templatized pipeline.
             if (!contains(pipelineVariables, variableName)) {
-              // Variable has expression so prompt for the value at runtime
+              // Variable is an expression so prompt for the value at runtime.
               Variable pipelineVariable = variable.cloneInternal();
-              pipelineVariable.setValue(variable.getName());
               pipelineVariable.setName(variableName);
+              if (withFinalValuesOnly) {
+                // If only final concrete values are needed, set value as null as the used has not entered them yet.
+                pipelineVariable.setValue(null);
+              } else {
+                // Set variable value as workflow templatized variable name.
+                pipelineVariable.setValue(variable.getName());
+              }
               pipelineVariables.add(pipelineVariable);
             }
           }

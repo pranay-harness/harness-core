@@ -1930,13 +1930,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       finalDeploymentMetadata =
           workflowService.fetchDeploymentMetadata(appId, workflow, executionArgs.getWorkflowVariables(), null, null);
     } else {
-      if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)) {
+      if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)
+          || featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
         pipeline = pipelineService.readPipelineWithResolvedVariables(
             appId, executionArgs.getPipelineId(), executionArgs.getWorkflowVariables());
-
-        finalDeploymentMetadata = pipelineService.fetchDeploymentMetadata(appId, pipeline, null, null);
-      } else if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-        pipeline = pipelineService.readPipeline(appId, executionArgs.getPipelineId(), false);
         finalDeploymentMetadata = pipelineService.fetchDeploymentMetadata(appId, pipeline, null, null);
       } else {
         return DeploymentMetadata.builder().build();

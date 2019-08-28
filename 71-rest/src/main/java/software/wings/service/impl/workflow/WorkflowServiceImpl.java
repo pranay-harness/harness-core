@@ -2768,6 +2768,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       updateArtifactVariableNames(appId, phase, workflowVariablesMap, serviceArtifactVariableNamesMap);
     }
 
+    // Process PostDeploymentSteps.
+    updateArtifactVariableNames(
+        appId, "", canaryOrchestrationWorkflow.getPostDeploymentSteps(), null, null, serviceArtifactVariableNamesMap);
+
     boolean requiresArtifact = serviceArtifactVariableNamesMap.size() > 0;
 
     // Process RollbackWorkflowPhases.
@@ -3030,6 +3034,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       String serviceTemplatizedName = workflowPhase.fetchServiceTemplatizedName();
       if (serviceTemplatizedName != null) {
         serviceId = isEmpty(workflowVariablesMap) ? null : workflowVariablesMap.get(serviceTemplatizedName);
+        if (isBlank(serviceId)) {
+          return;
+        }
       }
     } else {
       serviceId = workflowPhase.getServiceId();
@@ -3037,6 +3044,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     if (serviceId == null) {
       serviceId = "";
+    } else if (matchesVariablePattern(serviceId)) {
+      return;
     }
 
     for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
@@ -3052,6 +3061,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       WorkflowPhase workflowPhase, Map<String, String> workflowVariables,
       Map<String, Set<String>> serviceArtifactVariableNamesMap) {
     // NOTE: If serviceId is "", we assume those artifact variables to be workflow variables.
+    // NOTE: Here, serviceId should not be an expression.
     boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(appId));
     Set<String> serviceArtifactVariableNames;
     if (serviceArtifactVariableNamesMap.containsKey(serviceId)) {
