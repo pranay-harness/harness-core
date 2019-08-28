@@ -243,12 +243,10 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
         String entityType = variable.getEntityType();
         String variableName = variable.getName();
         String variableValue = variable.getValue();
-        if (entityType != null) {
-          String workflowVariableValueForBean =
-              workflowYAMLHelper.getWorkflowVariableValueBean(accountId, envId, appId, entityType, variableValue);
-          if (workflowVariableValueForBean != null) {
-            workflowVariables.put(variableName, workflowVariableValueForBean);
-          }
+        String workflowVariableValueForBean =
+            workflowYAMLHelper.getWorkflowVariableValueBean(accountId, envId, appId, entityType, variableValue);
+        if (workflowVariableValueForBean != null) {
+          workflowVariables.put(variableName, workflowVariableValueForBean);
         }
       });
     }

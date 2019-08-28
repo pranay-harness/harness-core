@@ -31,10 +31,10 @@ public class WorkflowYAMLHelper {
 
   public String getWorkflowVariableValueBean(
       String accountId, String envId, String appId, String entityType, String variableValue) {
-    EntityType entityTypeEnum = EntityType.valueOf(entityType);
-    if (matchesVariablePattern(variableValue)) {
+    if (matchesVariablePattern(variableValue) || entityType == null) {
       return variableValue;
     }
+    EntityType entityTypeEnum = EntityType.valueOf(entityType);
     if (ENVIRONMENT.equals(entityTypeEnum)) {
       return null;
     }
@@ -48,7 +48,7 @@ public class WorkflowYAMLHelper {
   }
 
   public String getWorkflowVariableValueYaml(String appId, String entryValue, EntityType entityType) {
-    if (matchesVariablePattern(entryValue)) {
+    if (matchesVariablePattern(entryValue) || entityType == null) {
       return entryValue;
     }
     NameAccess x = getNameAccess(appId, entryValue, entityType);
