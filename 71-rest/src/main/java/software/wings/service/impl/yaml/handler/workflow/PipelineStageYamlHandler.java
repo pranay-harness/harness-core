@@ -88,12 +88,10 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
           String entityType = variable.getEntityType();
           String variableName = variable.getName();
           String variableValue = variable.getValue();
-          if (entityType != null) {
-            String workflowVariableValueForBean = workflowYAMLHelper.getWorkflowVariableValueBean(
-                change.getAccountId(), envId, appId, entityType, variableValue);
-            if (workflowVariableValueForBean != null) {
-              workflowVariables.put(variableName, workflowVariableValueForBean);
-            }
+          String workflowVariableValueForBean = workflowYAMLHelper.getWorkflowVariableValueBean(
+              change.getAccountId(), envId, appId, entityType, variableValue);
+          if (workflowVariableValueForBean != null) {
+            workflowVariables.put(variableName, workflowVariableValueForBean);
           }
         });
       }
