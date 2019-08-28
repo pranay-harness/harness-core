@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.task.aws.AwsElbListener;
+import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureMapping;
@@ -91,4 +92,7 @@ public interface InfrastructureDefinitionService extends OwnedByEnvironment {
 
   List<InfrastructureDefinition> getDefinitionWithFieldsForEnvironments(
       String appId, List<String> envIds, List<String> projections);
+
+  List<AwsLoadBalancerDetails> listElasticLoadBalancerDetails(String appId, String infraDefinitionId);
+  List<AwsLoadBalancerDetails> listNetworkLoadBalancerDetails(String appId, String infraDefinitionId);
 }

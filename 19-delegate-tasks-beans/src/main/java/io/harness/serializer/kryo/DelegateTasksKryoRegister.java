@@ -23,6 +23,7 @@ import io.harness.delegate.command.CommandExecutionData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.aws.AwsElbListener;
+import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
@@ -75,5 +76,6 @@ public class DelegateTasksKryoRegister implements KryoRegistrar {
     kryo.register(SystemEnvCheckerCapability.class, 19022);
     kryo.register(SpotInstSwapRoutesTaskParameters.class, 19023);
     kryo.register(ErrorNotifyResponseData.class, 5213);
+    kryo.register(AwsLoadBalancerDetails.class, 19024);
   }
 }

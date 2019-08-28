@@ -12,6 +12,7 @@ import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.task.aws.AwsElbListener;
+import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -172,6 +173,16 @@ public class InfrastructureDefinitionResource {
   }
 
   @GET
+  @Path("{infraDefinitionId}/aws-elastic-balancers-details")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<List<AwsLoadBalancerDetails>> getAwsLoadBalancerDetails(
+      @QueryParam("appId") String appId, @PathParam("infraDefinitionId") String infraDefinitionId) {
+    return new RestResponse<>(infrastructureDefinitionService.listElasticLoadBalancerDetails(appId, infraDefinitionId));
+  }
+
+  @GET
   @Path("{infraDefinitionId}/aws-network-balancers")
   @Timed
   @ExceptionMetered
@@ -179,6 +190,16 @@ public class InfrastructureDefinitionResource {
   public RestResponse<Map<String, String>> getAwsNetworkLoadBalancers(
       @QueryParam("appId") String appId, @PathParam("infraDefinitionId") String infraDefinitionId) {
     return new RestResponse<>(infrastructureDefinitionService.listNetworkLoadBalancers(appId, infraDefinitionId));
+  }
+
+  @GET
+  @Path("{infraDefinitionId}/aws-network-balancers-details")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<List<AwsLoadBalancerDetails>> getAwsNetworkLoadBalancerDetails(
+      @QueryParam("appId") String appId, @PathParam("infraDefinitionId") String infraDefinitionId) {
+    return new RestResponse<>(infrastructureDefinitionService.listNetworkLoadBalancerDetails(appId, infraDefinitionId));
   }
 
   @GET

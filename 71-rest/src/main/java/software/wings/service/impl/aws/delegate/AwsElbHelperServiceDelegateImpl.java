@@ -55,6 +55,7 @@ import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroupNotFoundEx
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetHealthDescription;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.aws.AwsElbListener;
+import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -133,28 +134,28 @@ public class AwsElbHelperServiceDelegateImpl
   }
 
   @Override
-  public List<String> listApplicationLoadBalancers(
+  public List<AwsLoadBalancerDetails> listApplicationLoadBalancerDetails(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
     return generateLoadBalancersList(awsConfig, encryptionDetails, region, new HashSet<>(Arrays.asList(ALB)));
   }
 
   @Override
-  public List<String> listNetworkLoadBalancers(
+  public List<AwsLoadBalancerDetails> listNetworkLoadBalancerDetails(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
     return generateLoadBalancersList(awsConfig, encryptionDetails, region, new HashSet<>(Arrays.asList(NLB)));
   }
 
   @Override
-  public List<String> listElasticLoadBalancers(
+  public List<AwsLoadBalancerDetails> listElasticLoadBalancerDetails(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
     return generateLoadBalancersList(awsConfig, encryptionDetails, region, new HashSet<>(Arrays.asList(ALB, NLB)));
   }
 
-  private List<String> generateLoadBalancersList(
+  private List<AwsLoadBalancerDetails> generateLoadBalancersList(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, Set<String> neededTypes) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      List<String> result = new ArrayList<>();
+      List<AwsLoadBalancerDetails> result = new ArrayList<>();
       String nextMarker = null;
       do {
         AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
@@ -166,7 +167,16 @@ public class AwsElbHelperServiceDelegateImpl
         result.addAll(describeLoadBalancersResult.getLoadBalancers()
                           .stream()
                           .filter(loadBalancer -> isNeededLoadBalancer(loadBalancer, neededTypes))
-                          .map(LoadBalancer::getLoadBalancerName)
+                          .map(loadBalancer
+                              -> AwsLoadBalancerDetails.builder()
+                                     .arn(loadBalancer.getLoadBalancerArn())
+                                     .name(loadBalancer.getLoadBalancerName())
+                                     .type(loadBalancer.getType())
+                                     .scheme(loadBalancer.getScheme())
+                                     .dNSName(loadBalancer.getDNSName())
+                                     .ipAddressType(loadBalancer.getIpAddressType())
+                                     .vpcId(loadBalancer.getVpcId())
+                                     .build())
                           .collect(toList()));
         nextMarker = describeLoadBalancersResult.getNextMarker();
       } while (nextMarker != null);
