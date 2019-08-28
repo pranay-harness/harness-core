@@ -82,21 +82,21 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
           wingsPersistence.createQuery(SecretManagerConfig.class).field(ACCOUNT_ID_KEY).equal(GLOBAL_ACCOUNT_ID).get();
     }
 
-    SecretManagerConfig encryptionConfig =
-        secretManagerConfig == null ? null : getEncryptionConfigInternal(accountId, secretManagerConfig);
-    if (encryptionConfig != null) {
-      encryptionConfig.setDefault(true);
+    if (secretManagerConfig != null) {
+      secretManagerConfig = getEncryptionConfigInternal(accountId, secretManagerConfig);
+      secretManagerConfig.setDefault(true);
     }
-    return encryptionConfig;
+    return secretManagerConfig;
   }
 
   @Override
   public SecretManagerConfig getSecretManager(String accountId, String entityId) {
     SecretManagerConfig secretManagerConfig =
         wingsPersistence.createQuery(SecretManagerConfig.class).field(ID_KEY).equal(entityId).get();
-    return getEncryptionConfigInternal(accountId, secretManagerConfig);
+    return secretManagerConfig == null ? null : getEncryptionConfigInternal(accountId, secretManagerConfig);
   }
 
+  // This method will decrypt the secret manager's encrypted fields
   private SecretManagerConfig getEncryptionConfigInternal(String accountId, SecretManagerConfig secretManagerConfig) {
     SecretManagerConfig encryptionConfig;
     EncryptionType encryptionType = secretManagerConfig.getEncryptionType();

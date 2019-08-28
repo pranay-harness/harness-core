@@ -10,8 +10,11 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 
@@ -28,6 +31,11 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "secretUsageLogs", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "SecretUsageLogKeys")
+@Indexes({
+  @Index(fields = {
+    @Field("accountId"), @Field("encryptedDataId")
+  }, options = @IndexOptions(name = "acctEncryptedDataIdx"))
+})
 public class SecretUsageLog extends Base {
   public static final String ENCRYPTED_DATA_ID_KEY = "encryptedDataId";
 

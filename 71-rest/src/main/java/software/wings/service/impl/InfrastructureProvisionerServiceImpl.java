@@ -773,8 +773,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
             throw new InvalidRequestException(format("The encrypted variable %s was not found", entry.getName()));
           }
 
-          EncryptionConfig encryptionConfig =
-              secretManager.getSecretManager(accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
+          EncryptionConfig encryptionConfig = secretManager.getSecretManager(accountId, encryptedData.getKmsId());
 
           return EncryptedDataDetail.builder()
               .encryptedData(SecretManager.buildRecordData(encryptedData))

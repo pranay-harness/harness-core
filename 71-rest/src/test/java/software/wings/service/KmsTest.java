@@ -8,7 +8,6 @@ import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.fail;
@@ -31,17 +30,14 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
-import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.KmsOperationException;
 import io.harness.exception.WingsException;
-import io.harness.persistence.UuidAware;
 import io.harness.queue.Queue;
 import io.harness.queue.TimerScheduledExecutorService;
-import io.harness.rest.RestResponse;
 import io.harness.rule.RealMongo;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.security.encryption.EncryptedRecord;
@@ -1687,36 +1683,35 @@ public class KmsTest extends WingsBaseTest {
       settingAttributes.add(settingAttribute);
     }
 
-    Collection<UuidAware> encryptedValues = secretManagementResource.listEncryptedValues(accountId).getResource();
+    Collection<SettingAttribute> encryptedValues =
+        secretManagementResource.listEncryptedSettingAttributes(accountId, null).getResource();
     validateContainEncryptedValues(settingAttributes, encryptedValues);
-
-    for (UuidAware encryptedValue : encryptedValues) {
-      assertThat(((SettingAttribute) encryptedValue).getEncryptionType()).isEqualTo(EncryptionType.KMS);
+    for (SettingAttribute encryptedValue : encryptedValues) {
+      assertThat(encryptedValue.getEncryptionType()).isEqualTo(EncryptionType.KMS);
     }
 
-    RestResponse<PageResponse<UuidAware>> restResponse = secretManagementResource.listEncryptedValues(
-        accountId, SettingVariableTypes.APP_DYNAMICS, PageRequestBuilder.aPageRequest().build());
-    encryptedValues = restResponse.getResource().getResponse();
+    // Retrieving the setting attributes of category CONNECTOR.
+    encryptedValues =
+        secretManagementResource.listEncryptedSettingAttributes(accountId, SettingCategory.CONNECTOR.name())
+            .getResource();
     validateContainEncryptedValues(settingAttributes, encryptedValues);
-
-    for (UuidAware encryptedValue : encryptedValues) {
-      assertThat(((SettingAttribute) encryptedValue).getEncryptionType()).isEqualTo(EncryptionType.KMS);
+    for (SettingAttribute encryptedValue : encryptedValues) {
+      assertThat(encryptedValue.getEncryptionType()).isEqualTo(EncryptionType.KMS);
     }
   }
 
   private void validateContainEncryptedValues(
-      List<SettingAttribute> settingAttributes, Collection<UuidAware> encryptedValues) {
+      List<SettingAttribute> settingAttributes, Collection<SettingAttribute> encryptedValues) {
     assertThat(encryptedValues).hasSize(settingAttributes.size());
     Map<String, SettingAttribute> settingAttributeMap = new HashMap<>();
     for (SettingAttribute settingAttribute : settingAttributes) {
       settingAttributeMap.put(settingAttribute.getName(), settingAttribute);
     }
 
-    for (UuidAware encryptedValue : encryptedValues) {
-      SettingAttribute settingAttribute = (SettingAttribute) encryptedValue;
+    for (SettingAttribute settingAttribute : encryptedValues) {
       assertThat(settingAttributeMap.containsKey(settingAttribute.getName())).isTrue();
       AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
-      assertArrayEquals(SecretManager.ENCRYPTED_FIELD_MASK.toCharArray(), appDynamicsConfig.getPassword());
+      assertThat(appDynamicsConfig.getPassword()).isEqualTo(SecretManager.ENCRYPTED_FIELD_MASK.toCharArray());
     }
   }
 
@@ -2252,10 +2247,11 @@ public class KmsTest extends WingsBaseTest {
       encryptedEntities.put(settingAttribute.getUuid(), settingAttribute);
     }
 
-    Collection<UuidAware> uuidAwares = secretManagementResource.listEncryptedValues(accountId).getResource();
+    Collection<SettingAttribute> uuidAwares =
+        secretManagementResource.listEncryptedSettingAttributes(accountId, null).getResource();
     assertThat(uuidAwares).hasSize(encryptedEntities.size());
-    for (UuidAware encryptedValue : uuidAwares) {
-      assertThat(((SettingAttribute) encryptedValue).getEncryptionType()).isEqualTo(EncryptionType.KMS);
+    for (SettingAttribute encryptedValue : uuidAwares) {
+      assertThat(encryptedValue.getEncryptionType()).isEqualTo(EncryptionType.KMS);
     }
   }
 

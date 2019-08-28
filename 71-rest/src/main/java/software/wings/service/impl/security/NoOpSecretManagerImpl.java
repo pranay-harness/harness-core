@@ -8,6 +8,7 @@ import io.harness.security.encryption.EncryptionType;
 import io.harness.stream.BoundedInputStream;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SecretManagerConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
@@ -52,11 +53,6 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public long getUsageLogsSize(String entityId, SettingVariableTypes variableType) throws IllegalAccessException {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
   public List<SecretChangeLog> getChangeLogs(String accountId, String entityId, SettingVariableTypes variableType)
       throws IllegalAccessException {
     throw new UnsupportedOperationException();
@@ -89,18 +85,18 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public SecretManagerConfig getSecretManager(String accountId, String entityId, EncryptionType encryptionType) {
+  public SecretManagerConfig getSecretManager(String accountId, String entityId) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public Collection<UuidAware> listEncryptedValues(String accountId) {
-    throw new UnsupportedOperationException();
+  public Collection<SettingAttribute> listEncryptedSettingAttributes(String accountId) {
+    return null;
   }
 
   @Override
-  public PageResponse<UuidAware> listEncryptedValues(String accountId, PageRequest<EncryptedData> pageRequest) {
-    throw new UnsupportedOperationException();
+  public Collection<SettingAttribute> listEncryptedSettingAttributes(String accountId, List<String> categories) {
+    return null;
   }
 
   @Override
