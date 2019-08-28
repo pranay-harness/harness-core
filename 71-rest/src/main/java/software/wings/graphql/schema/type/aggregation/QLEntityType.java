@@ -1,6 +1,8 @@
 package software.wings.graphql.schema.type.aggregation;
 
-public enum QLEntityType {
+import software.wings.graphql.schema.type.QLEnum;
+
+public enum QLEntityType implements QLEnum {
   APPLICATION,
   SERVICE,
   ENVIRONMENT,
@@ -12,5 +14,10 @@ public enum QLEntityType {
   CONNECTOR,
   TRIGGER,
   ARTIFACT,
-  COLLABORATION_PROVIDER
+  COLLABORATION_PROVIDER;
+
+  @Override
+  public String getStringValue() {
+    return this.name();
+  }
 }

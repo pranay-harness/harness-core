@@ -63,6 +63,7 @@ import software.wings.graphql.datafetcher.service.ServiceStatsDataFetcher;
 import software.wings.graphql.datafetcher.service.batch.ServiceBatchDataFetcher;
 import software.wings.graphql.datafetcher.service.batch.ServiceBatchDataLoader;
 import software.wings.graphql.datafetcher.tag.TagsDataFetcher;
+import software.wings.graphql.datafetcher.tag.TagsInUseConnectionDataFetcher;
 import software.wings.graphql.datafetcher.trigger.TriggerConnectionDataFetcher;
 import software.wings.graphql.datafetcher.trigger.TriggerDataFetcher;
 import software.wings.graphql.datafetcher.trigger.TriggerStatsDataFetcher;
@@ -159,6 +160,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(ServiceBatchDataFetcher.class);
     bindDataFetcherWithAnnotation(ServiceDataFetcher.class);
     bindDataFetcherWithAnnotation(ServiceStatsDataFetcher.class);
+    bindDataFetcherWithAnnotation(TagsInUseConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(TagsDataFetcher.class);
     bindDataFetcherWithAnnotation(TriggerConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(TriggerStatsDataFetcher.class);
