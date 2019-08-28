@@ -1,6 +1,5 @@
 package software.wings.resources;
 
-import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static java.util.Arrays.asList;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -320,7 +319,7 @@ public class SecureResourceTest extends CategoryTest {
   public void shouldDenyAccessForNonPublicResourceWithoutValidToken() {
     Assertions.assertThatThrownBy(() -> resources.client().target("/secure-resources/NonPublicApi").request().get())
         .hasCauseInstanceOf(WingsException.class)
-        .hasStackTraceContaining(INVALID_REQUEST.name());
+        .hasStackTraceContaining("User not authorized");
   }
 
   /**

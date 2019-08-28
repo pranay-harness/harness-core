@@ -2,23 +2,25 @@ package io.harness.exception;
 
 import static io.harness.eraro.ErrorCode.EXPRESSION_EVALUATION_FAILED;
 
+import io.harness.eraro.Level;
+
 public class CriticalExpressionEvaluationException extends WingsException {
   public static final String EXPRESSION_ARG = "expression";
   private static final String REASON_ARG = "reason";
   public CriticalExpressionEvaluationException(String reason, String expression) {
-    super(EXPRESSION_EVALUATION_FAILED);
-    super.addParam(REASON_ARG, reason);
-    super.addParam(EXPRESSION_ARG, expression);
+    super(null, null, EXPRESSION_EVALUATION_FAILED, Level.ERROR, null);
+    super.param(REASON_ARG, reason);
+    super.param(EXPRESSION_ARG, expression);
   }
 
   public CriticalExpressionEvaluationException(String reason, String expression, Throwable cause) {
-    super(EXPRESSION_EVALUATION_FAILED, cause);
-    super.addParam(REASON_ARG, reason);
-    super.addParam(EXPRESSION_ARG, expression);
+    super(null, cause, EXPRESSION_EVALUATION_FAILED, Level.ERROR, null);
+    super.param(REASON_ARG, reason);
+    super.param(EXPRESSION_ARG, expression);
   }
 
   public CriticalExpressionEvaluationException(String reason) {
-    super(EXPRESSION_EVALUATION_FAILED);
-    super.addParam(REASON_ARG, reason);
+    super(null, null, EXPRESSION_EVALUATION_FAILED, Level.ERROR, null);
+    super.param(REASON_ARG, reason);
   }
 }

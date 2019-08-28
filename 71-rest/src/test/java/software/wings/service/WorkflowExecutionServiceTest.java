@@ -3,7 +3,6 @@ package software.wings.service;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -232,7 +231,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
       RequiredExecutionArgs required = workflowExecutionService.getRequiredExecutionArgs(APP_ID, ENV_ID, executionArgs);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(INVALID_REQUEST.name());
+      assertThat(exception).hasMessage("OrchestrationWorkflow not found");
       assertThat(exception.getParams()).containsEntry("message", "OrchestrationWorkflow not found");
     }
   }
@@ -253,7 +252,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
       RequiredExecutionArgs required = workflowExecutionService.getRequiredExecutionArgs(APP_ID, ENV_ID, executionArgs);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(INVALID_REQUEST.name());
+      assertThat(exception).hasMessage("Associated state machine not found");
       assertThat(exception.getParams()).containsEntry("message", "Associated state machine not found");
     }
   }

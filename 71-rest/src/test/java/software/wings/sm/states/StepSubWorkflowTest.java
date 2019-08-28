@@ -1,7 +1,6 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.anyString;
@@ -121,10 +120,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
       assertThat(response).isNotNull();
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(INVALID_REQUEST.name());
-      assertThat(exception.getParams()).hasSize(1);
-      assertThat(exception.getParams()).containsKey("message");
-      assertThat(exception.getParams().get("message")).asString().contains("null phaseStepType");
+      assertThat(exception).hasMessage("null phaseStepType");
     }
   }
 
@@ -243,10 +239,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
     try {
       phaseStepSubWorkflow.handleAsyncResponse(context, notifyResponse);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(INVALID_REQUEST.name());
-      assertThat(exception.getParams()).hasSize(1);
-      assertThat(exception.getParams()).containsKey("message");
-      assertThat(exception.getParams().get("message")).asString().contains("Missing response");
+      assertThat(exception).hasMessage("Missing response");
     }
   }
 
@@ -312,10 +305,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
     try {
       phaseStepSubWorkflow.handleAsyncResponse(context, notifyResponse);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(INVALID_REQUEST.name());
-      assertThat(exception.getParams()).hasSize(1);
-      assertThat(exception.getParams()).containsKey("message");
-      assertThat(exception.getParams().get("message")).asString().contains("Missing response");
+      assertThat(exception).hasMessage("Missing response");
     }
   }
 }

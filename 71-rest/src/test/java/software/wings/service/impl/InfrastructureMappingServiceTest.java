@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
-import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.persistence.HQuery.allChecks;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -562,7 +561,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     assertThatThrownBy(() -> infrastructureMappingService.delete(APP_ID, INFRA_MAPPING_ID))
         .isInstanceOf(WingsException.class)
-        .hasMessage(INVALID_REQUEST.name());
+        .hasMessage("Service Infrastructure INFRA_MAPPING_ID is referenced by 1 workflow [Referenced Workflow].");
   }
 
   private void mockPhysicalInfra() {
@@ -593,7 +592,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         .thenReturn(asList("Referenced Pipeline"));
     assertThatThrownBy(() -> infrastructureMappingService.delete(APP_ID, INFRA_MAPPING_ID))
         .isInstanceOf(WingsException.class)
-        .hasMessage(INVALID_REQUEST.name());
+        .hasMessage("Service Infrastructure is referenced by 1 pipeline [Referenced Pipeline] as a workflow variable.");
   }
 
   @Test
@@ -608,7 +607,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         .thenReturn(asList("Referenced Trigger"));
     assertThatThrownBy(() -> infrastructureMappingService.delete(APP_ID, INFRA_MAPPING_ID))
         .isInstanceOf(WingsException.class)
-        .hasMessage(INVALID_REQUEST.name());
+        .hasMessage("Service Infrastructure is referenced by 1 trigger [Referenced Trigger] as a workflow variable.");
   }
 
   @Test
