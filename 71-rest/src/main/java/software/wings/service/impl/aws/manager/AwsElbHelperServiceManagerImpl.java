@@ -2,6 +2,7 @@ package software.wings.service.impl.aws.manager;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
@@ -12,6 +13,7 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.aws.AwsElbListener;
+import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -64,6 +66,20 @@ public class AwsElbHelperServiceManagerImpl implements AwsElbHelperServiceManage
             .region(region)
             .build(),
         appId);
+    List<AwsLoadBalancerDetails> details = ((AwsElbListAppElbsResponse) response).getAppElbs();
+    return details.stream().map(detail -> detail.getName()).collect(toList());
+  }
+
+  @Override
+  public List<AwsLoadBalancerDetails> listApplicationLoadBalancerDetails(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String appId) {
+    AwsResponse response = executeTask(awsConfig.getAccountId(),
+        AwsElbListAppElbsRequest.builder()
+            .awsConfig(awsConfig)
+            .encryptionDetails(encryptionDetails)
+            .region(region)
+            .build(),
+        appId);
     return ((AwsElbListAppElbsResponse) response).getAppElbs();
   }
 
@@ -77,6 +93,22 @@ public class AwsElbHelperServiceManagerImpl implements AwsElbHelperServiceManage
             .region(region)
             .build(),
         appId);
+
+    List<AwsLoadBalancerDetails> details = ((AwsElbListAppElbsResponse) response).getAppElbs();
+    return details.stream().map(detail -> detail.getName()).collect(toList());
+  }
+
+  @Override
+  public List<AwsLoadBalancerDetails> listElasticLoadBalancerDetails(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String appId) {
+    AwsResponse response = executeTask(awsConfig.getAccountId(),
+        AwsElbListElbsRequest.builder()
+            .awsConfig(awsConfig)
+            .encryptionDetails(encryptionDetails)
+            .region(region)
+            .build(),
+        appId);
+
     return ((AwsElbListAppElbsResponse) response).getAppElbs();
   }
 
@@ -90,6 +122,22 @@ public class AwsElbHelperServiceManagerImpl implements AwsElbHelperServiceManage
             .region(region)
             .build(),
         appId);
+
+    List<AwsLoadBalancerDetails> details = ((AwsElbListAppElbsResponse) response).getAppElbs();
+    return details.stream().map(detail -> detail.getName()).collect(toList());
+  }
+
+  @Override
+  public List<AwsLoadBalancerDetails> listNetworkLoadBalancerDetails(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String appId) {
+    AwsResponse response = executeTask(awsConfig.getAccountId(),
+        AwsElbListNetworkElbsRequest.builder()
+            .awsConfig(awsConfig)
+            .encryptionDetails(encryptionDetails)
+            .region(region)
+            .build(),
+        appId);
+
     return ((AwsElbListAppElbsResponse) response).getAppElbs();
   }
 

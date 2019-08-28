@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.aws;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static java.util.stream.Collectors.toList;
 
 import com.google.inject.Inject;
 
@@ -8,6 +9,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.aws.AwsElbListener;
+import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -55,17 +57,17 @@ public class AwsElbTask extends AbstractDelegateRunnableTask {
           return AwsElbListClassicElbsResponse.builder().classicElbs(classicLbs).executionStatus(SUCCESS).build();
         }
         case LIST_APPLICATION_LBS: {
-          List<String> applicationLbs = elbHelperServiceDelegate.listApplicationLoadBalancers(
+          List<AwsLoadBalancerDetails> applicationLbs = elbHelperServiceDelegate.listApplicationLoadBalancerDetails(
               request.getAwsConfig(), request.getEncryptionDetails(), request.getRegion());
           return AwsElbListAppElbsResponse.builder().appElbs(applicationLbs).executionStatus(SUCCESS).build();
         }
         case LIST_NETWORK_LBS: {
-          List<String> applicationLbs = elbHelperServiceDelegate.listNetworkLoadBalancers(
+          List<AwsLoadBalancerDetails> applicationLbs = elbHelperServiceDelegate.listNetworkLoadBalancerDetails(
               request.getAwsConfig(), request.getEncryptionDetails(), request.getRegion());
           return AwsElbListAppElbsResponse.builder().appElbs(applicationLbs).executionStatus(SUCCESS).build();
         }
         case LIST_ELB_LBS: {
-          List<String> applicationLbs = elbHelperServiceDelegate.listElasticLoadBalancers(
+          List<AwsLoadBalancerDetails> applicationLbs = elbHelperServiceDelegate.listElasticLoadBalancerDetails(
               request.getAwsConfig(), request.getEncryptionDetails(), request.getRegion());
           return AwsElbListAppElbsResponse.builder().appElbs(applicationLbs).executionStatus(SUCCESS).build();
         }
@@ -90,5 +92,9 @@ public class AwsElbTask extends AbstractDelegateRunnableTask {
     } catch (Exception exception) {
       throw new InvalidRequestException(exception.getMessage(), WingsException.USER);
     }
+  }
+
+  private List<String> generateLoadBalancerNamesList(List<AwsLoadBalancerDetails> details) {
+    return details.stream().map(detail -> detail.getName()).collect(toList());
   }
 }

@@ -14,6 +14,7 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
 import static software.wings.api.DeploymentType.AMI;
@@ -54,6 +55,7 @@ import io.harness.beans.WorkflowType;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.aws.AwsElbListener;
+import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -119,6 +121,7 @@ import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.impl.PcfHelperService;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
+import software.wings.service.intfc.aws.manager.AwsElbHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsRoute53HelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlPushService;
@@ -166,6 +169,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Inject private TriggerService triggerService;
   @Inject private PcfHelperService pcfHelperService;
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
+  @Inject private AwsElbHelperServiceManager awsElbHelperServiceManager;
 
   @Inject private Queue<PruneEvent> pruneQueue;
 
@@ -810,16 +814,34 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     SettingAttribute computeProviderSetting = settingsService.get(provider.getCloudProviderId());
     notNullCheck("Compute Provider", computeProviderSetting);
 
-    if (provider instanceof AwsEcsInfrastructure || provider instanceof AwsInstanceInfrastructure) {
-      String region = provider instanceof AwsEcsInfrastructure ? ((AwsEcsInfrastructure) provider).getRegion()
-                                                               : ((AwsInstanceInfrastructure) provider).getRegion();
-
-      return ((AwsInfrastructureProvider) infrastructureProviderMap.get(AWS.name()))
-          .listNetworkBalancers(computeProviderSetting, region, appId)
-          .stream()
-          .collect(toMap(s -> s, s -> s));
+    String region = extractRegionFromInfrastructureProvider(provider);
+    if (isBlank(region)) {
+      return Collections.emptyMap();
     }
-    return Collections.emptyMap();
+
+    return ((AwsInfrastructureProvider) infrastructureProviderMap.get(AWS.name()))
+        .listNetworkBalancers(computeProviderSetting, region, appId)
+        .stream()
+        .collect(toMap(s -> s, s -> s));
+  }
+
+  @Override
+  public List<AwsLoadBalancerDetails> listNetworkLoadBalancerDetails(String appId, String infraDefinitionId) {
+    InfrastructureDefinition infrastructureDefinition = get(appId, infraDefinitionId);
+    notNullCheck("Infrastructure Definition", infrastructureDefinition);
+
+    InfraMappingInfrastructureProvider infrastructureProvider = infrastructureDefinition.getInfrastructure();
+
+    SettingAttribute computeProviderSetting = settingsService.get(infrastructureProvider.getCloudProviderId());
+    notNullCheck("Compute Provider", computeProviderSetting);
+
+    String region = extractRegionFromInfrastructureProvider(infrastructureProvider);
+    if (isBlank(region)) {
+      return Collections.EMPTY_LIST;
+    }
+
+    return ((AwsInfrastructureProvider) infrastructureProviderMap.get(AWS.name()))
+        .listNetworkLoadBalancerDetails(computeProviderSetting, region, appId);
   }
 
   @Override
@@ -831,9 +853,12 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     SettingAttribute computeProviderSetting = settingsService.get(provider.getCloudProviderId());
     notNullCheck("Compute Provider", computeProviderSetting);
 
-    if (provider instanceof AwsInstanceInfrastructure || provider instanceof AwsEcsInfrastructure) {
-      String region = provider instanceof AwsInstanceInfrastructure ? ((AwsInstanceInfrastructure) provider).getRegion()
-                                                                    : ((AwsEcsInfrastructure) provider).getRegion();
+    if (provider instanceof AwsInstanceInfrastructure || provider instanceof AwsEcsInfrastructure
+        || provider instanceof AwsAmiInfrastructure) {
+      String region = extractRegionFromInfrastructureProvider(provider);
+      if (isBlank(region)) {
+        return Collections.EMPTY_MAP;
+      }
 
       return ((AwsInfrastructureProvider) infrastructureProviderMap.get(AWS.name()))
           .listLoadBalancers(computeProviderSetting, region, appId)
@@ -867,18 +892,33 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Override
   public Map<String, String> listElasticLoadBalancers(String appId, String infraDefinitionId) {
     InfrastructureDefinition infrastructureDefinition = get(appId, infraDefinitionId);
-    notNullCheck("Infrastructure Definition", infrastructureDefinition);
+    notNullCheck("InfrDefinition", infrastructureDefinition);
     InfraMappingInfrastructureProvider provider = infrastructureDefinition.getInfrastructure();
     String region = extractRegionFromInfrastructureProvider(provider);
     if (isEmpty(region)) {
       return Collections.emptyMap();
     }
     SettingAttribute computeProviderSetting = settingsService.get(provider.getCloudProviderId());
-    notNullCheck("Compute Provider", computeProviderSetting);
+    notNullCheck("ComputeProvider", computeProviderSetting);
     return ((AwsInfrastructureProvider) infrastructureProviderMap.get(AWS.name()))
         .listElasticBalancers(computeProviderSetting, region, appId)
         .stream()
         .collect(toMap(s -> s, s -> s));
+  }
+
+  @Override
+  public List<AwsLoadBalancerDetails> listElasticLoadBalancerDetails(String appId, String infraDefinitionId) {
+    InfrastructureDefinition infrastructureDefinition = get(appId, infraDefinitionId);
+    notNullCheck("InfraDefinition", infrastructureDefinition);
+    InfraMappingInfrastructureProvider infrastructureProvider = infrastructureDefinition.getInfrastructure();
+    String region = extractRegionFromInfrastructureProvider(infrastructureProvider);
+    if (isEmpty(region)) {
+      return Collections.EMPTY_LIST;
+    }
+    SettingAttribute computeProviderSetting = settingsService.get(infrastructureProvider.getCloudProviderId());
+    notNullCheck("ComputeProvider", computeProviderSetting);
+    return ((AwsInfrastructureProvider) infrastructureProviderMap.get(AWS.name()))
+        .listElasticLoadBalancerDetails(computeProviderSetting, region, appId);
   }
 
   private String extractRegionFromInfrastructureProvider(InfraMappingInfrastructureProvider provider) {

@@ -5,6 +5,7 @@ import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
 import com.amazonaws.services.elasticloadbalancingv2.model.LoadBalancer;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import io.harness.delegate.task.aws.AwsElbListener;
+import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -14,13 +15,16 @@ import java.util.Map;
 import java.util.Optional;
 
 public interface AwsElbHelperServiceDelegate {
+  List<AwsLoadBalancerDetails> listApplicationLoadBalancerDetails(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);
+
+  List<AwsLoadBalancerDetails> listNetworkLoadBalancerDetails(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);
+
+  List<AwsLoadBalancerDetails> listElasticLoadBalancerDetails(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);
+
   List<String> listClassicLoadBalancers(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);
-  List<String> listApplicationLoadBalancers(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);
-  List<String> listNetworkLoadBalancers(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);
-  List<String> listElasticLoadBalancers(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);
   Map<String, String> listTargetGroupsForAlb(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String loadBalancerName);

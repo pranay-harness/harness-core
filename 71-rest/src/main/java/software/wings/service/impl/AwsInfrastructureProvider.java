@@ -23,6 +23,7 @@ import com.amazonaws.services.ecs.model.Service;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.task.aws.AwsElbListener;
+import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -353,15 +354,36 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         secretManager.getEncryptionDetails(awsConfig, isNotEmpty(appId) ? appId : null, null), region, appId);
   }
 
+  public List<AwsLoadBalancerDetails> listApplicationLoadBalancers(
+      SettingAttribute computeProviderSetting, String region, String appId) {
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    return awsElbHelperServiceManager.listApplicationLoadBalancerDetails(awsConfig,
+        secretManager.getEncryptionDetails(awsConfig, isNotEmpty(appId) ? appId : null, null), region, appId);
+  }
+
   public List<String> listElasticBalancers(SettingAttribute computeProviderSetting, String region, String appId) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     return awsElbHelperServiceManager.listElasticLoadBalancers(
         awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), region, appId);
   }
 
+  public List<AwsLoadBalancerDetails> listElasticLoadBalancerDetails(
+      SettingAttribute computeProviderSetting, String region, String appId) {
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    return awsElbHelperServiceManager.listElasticLoadBalancerDetails(
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), region, appId);
+  }
+
   public List<String> listNetworkBalancers(SettingAttribute computeProviderSetting, String region, String appId) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     return awsElbHelperServiceManager.listNetworkLoadBalancers(
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), region, appId);
+  }
+
+  public List<AwsLoadBalancerDetails> listNetworkLoadBalancerDetails(
+      SettingAttribute computeProviderSetting, String region, String appId) {
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    return awsElbHelperServiceManager.listNetworkLoadBalancerDetails(
         awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), region, appId);
   }
 
