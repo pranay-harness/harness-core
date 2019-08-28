@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import software.wings.stencils.DefaultValue;
 
 /**
@@ -17,6 +18,7 @@ import software.wings.stencils.DefaultValue;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@FieldNameConstants(innerTypeName = "StackdriverCVConfigurationKeys")
 public class StackdriverCVConfiguration extends LogsCVConfiguration {
   @Attributes(title = "Is Log Configuration", required = true)
   @DefaultValue("true")
@@ -24,9 +26,7 @@ public class StackdriverCVConfiguration extends LogsCVConfiguration {
 
   @Attributes(required = true, title = "Host Name Field") @DefaultValue("pod_id") protected String hostnameField;
 
-  @Attributes(required = true, title = "Log Message Field")
-  @DefaultValue("textPayload")
-  protected String logMessageField;
+  @Attributes(required = true, title = "Log Message Field") @DefaultValue("textPayload") protected String messageField;
 
   @Data
   @NoArgsConstructor

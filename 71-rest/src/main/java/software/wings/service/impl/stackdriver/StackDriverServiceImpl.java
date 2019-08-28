@@ -33,6 +33,7 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.stackdriver.StackDriverDelegateService;
 import software.wings.service.intfc.stackdriver.StackDriverService;
+import software.wings.sm.StateType;
 
 import java.io.IOException;
 import java.net.URL;
@@ -81,16 +82,12 @@ public class StackDriverServiceImpl implements StackDriverService {
                                             .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                             .build();
 
-      if (setupTestNodeData.isLogConfiguration()) {
+      if (StateType.STACK_DRIVER_LOG.equals(setupTestNodeData.getStateType())) {
         long startTime = setupTestNodeData.getFromTime() * TimeUnit.SECONDS.toMillis(1);
         long endTime = setupTestNodeData.getToTime() * TimeUnit.SECONDS.toMillis(1);
         return delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)
-            .getLogWithDataForNode((GcpConfig) settingAttribute.getValue(), encryptionDetails,
-                setupTestNodeData.getQuery(), startTime, endTime,
-                createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getGuid()),
-                hostName != null ? Collections.singleton(hostName) : Collections.emptySet(),
-                setupTestNodeData.getHostNameField(), TimeUnit.MILLISECONDS.toMinutes(setupTestNodeData.getFromTime()),
-                setupTestNodeData.isServiceLevel(), setupTestNodeData.getLogMessageField());
+            .getLogWithDataForNode((GcpConfig) settingAttribute.getValue(), encryptionDetails, hostName,
+                setupTestNodeData, createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getGuid()));
       } else {
         return delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)
             .getMetricsWithDataForNode((GcpConfig) settingAttribute.getValue(), encryptionDetails, setupTestNodeData,
@@ -182,14 +179,20 @@ public class StackDriverServiceImpl implements StackDriverService {
                                           .appId(GLOBAL_APP_ID)
                                           .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                           .build();
+
+    StackDriverSetupTestNodeData stackDriverSetupTestNodeData =
+        StackDriverSetupTestNodeData.builder()
+            .query(query)
+            .fromTime(OffsetDateTime.now().minusMinutes(TIME_DURATION_FOR_LOGS_IN_MINUTES + 2).toEpochSecond())
+            .toTime(OffsetDateTime.now().minusMinutes(2).toEpochSecond())
+            .hostnameField(hostNameField)
+            .messageField(logMessageField)
+            .isServiceLevel(true)
+            .build();
     VerificationNodeDataSetupResponse nodeDataSetupResponse =
         delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)
-            .getLogWithDataForNode((GcpConfig) settingAttribute.getValue(), encryptionDetails, query,
-                TimeUnit.SECONDS.toMillis(
-                    OffsetDateTime.now().minusMinutes(TIME_DURATION_FOR_LOGS_IN_MINUTES + 2).toEpochSecond()),
-                TimeUnit.SECONDS.toMillis(OffsetDateTime.now().minusMinutes(2).toEpochSecond()),
-                createApiCallLog(settingAttribute.getAccountId(), null), Collections.EMPTY_SET, hostNameField, 0, true,
-                logMessageField);
+            .getLogWithDataForNode((GcpConfig) settingAttribute.getValue(), encryptionDetails, null,
+                stackDriverSetupTestNodeData, createApiCallLog(settingAttribute.getAccountId(), null));
     List<LogElement> response = nodeDataSetupResponse.getDataForNode() != null
         ? (List<LogElement>) nodeDataSetupResponse.getDataForNode()
         : Collections.emptyList();

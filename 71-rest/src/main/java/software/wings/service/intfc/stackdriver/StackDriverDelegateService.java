@@ -43,13 +43,12 @@ public interface StackDriverDelegateService {
 
   List<LogEntry> fetchLogs(String query, long startTime, long endTime, ThirdPartyApiCallLog apiCallLog,
       Set<String> hosts, String hostnameField, GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails,
-      boolean is24X7Task);
+      boolean is24X7Task, boolean fetchNextPage);
 
   @DelegateTaskType(TaskType.STACKDRIVER_LOG_DATA_FOR_NODE)
   VerificationNodeDataSetupResponse getLogWithDataForNode(GcpConfig gcpConfig,
-      List<EncryptedDataDetail> encryptionDetails, String query, long startTime, long endTime,
-      ThirdPartyApiCallLog apiCallLog, Set<String> hosts, String hostnameField, long logCollectionMinute,
-      boolean is24X7Task, String logMessageField);
+      List<EncryptedDataDetail> encryptionDetails, String hostName, StackDriverSetupTestNodeData setupTestNodeData,
+      ThirdPartyApiCallLog apiCallLog);
 
   @DelegateTaskType(TaskType.STACKDRIVER_GET_LOG_SAMPLE)
   Object getLogSample(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String query,

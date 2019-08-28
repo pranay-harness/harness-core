@@ -63,6 +63,7 @@ import software.wings.verification.log.LogsCVConfiguration.LogsCVConfigurationKe
 import software.wings.verification.log.SplunkCVConfiguration;
 import software.wings.verification.log.SplunkCVConfiguration.SplunkCVConfigurationKeys;
 import software.wings.verification.log.StackdriverCVConfiguration;
+import software.wings.verification.log.StackdriverCVConfiguration.StackdriverCVConfigurationKeys;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 
@@ -177,7 +178,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
           if (stackdriverCVConfiguration.isEnabled24x7()
               && !cvValidationService.validateStackdriverQuery(accountId, appId,
                      stackdriverCVConfiguration.getConnectorId(), stackdriverCVConfiguration.getQuery(),
-                     stackdriverCVConfiguration.getHostnameField(), stackdriverCVConfiguration.getLogMessageField())) {
+                     stackdriverCVConfiguration.getHostnameField(), stackdriverCVConfiguration.getMessageField())) {
             throw new WingsException(
                 "Invalid Query, Please provide textPayload in query " + stackdriverCVConfiguration.getQuery());
           }
@@ -357,7 +358,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
           if (stackdriverCVConfiguration.isEnabled24x7()
               && !cvValidationService.validateStackdriverQuery(accountId, appId,
                      stackdriverCVConfiguration.getConnectorId(), stackdriverCVConfiguration.getQuery(),
-                     stackdriverCVConfiguration.getHostnameField(), stackdriverCVConfiguration.getLogMessageField())) {
+                     stackdriverCVConfiguration.getHostnameField(), stackdriverCVConfiguration.getMessageField())) {
             throw new WingsException(
                 "Invalid Query, Please provide textPayload in query " + stackdriverCVConfiguration.getQuery());
           }
@@ -623,10 +624,12 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         break;
       case STACK_DRIVER_LOG:
         StackdriverCVConfiguration stackdriverCVConfiguration = (StackdriverCVConfiguration) cvConfiguration;
-        updateOperations.set("query", stackdriverCVConfiguration.getQuery())
-            .set("isLogsConfiguration", stackdriverCVConfiguration.isLogsConfiguration())
-            .set("baselineStartMinute", stackdriverCVConfiguration.getBaselineStartMinute())
-            .set("baselineEndMinute", stackdriverCVConfiguration.getBaselineEndMinute());
+        updateOperations.set(LogsCVConfigurationKeys.query, stackdriverCVConfiguration.getQuery())
+            .set(StackdriverCVConfigurationKeys.isLogsConfiguration, stackdriverCVConfiguration.isLogsConfiguration())
+            .set(StackdriverCVConfigurationKeys.hostnameField, stackdriverCVConfiguration.getHostnameField())
+            .set(StackdriverCVConfigurationKeys.messageField, stackdriverCVConfiguration.getMessageField())
+            .set(LogsCVConfigurationKeys.baselineStartMinute, stackdriverCVConfiguration.getBaselineStartMinute())
+            .set(LogsCVConfigurationKeys.baselineEndMinute, stackdriverCVConfiguration.getBaselineEndMinute());
         resetBaselineIfNecessary(stackdriverCVConfiguration, (StackdriverCVConfiguration) savedConfiguration);
         break;
       case ELK:

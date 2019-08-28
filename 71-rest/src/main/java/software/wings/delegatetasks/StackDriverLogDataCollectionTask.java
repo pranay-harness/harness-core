@@ -3,6 +3,7 @@ package software.wings.delegatetasks;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
+import static software.wings.common.VerificationConstants.STACKDRIVER_DEFAULT_HOST_NAME_FIELD;
 import static software.wings.common.VerificationConstants.STACKDRIVER_DEFAULT_LOG_MESSAGE_FIELD;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 
@@ -122,10 +123,10 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
           }
 
           try {
-            List<LogEntry> entries =
-                stackDriverDelegateService.fetchLogs(dataCollectionInfo.getQuery(), collectionStartTime,
-                    collectionEndTime, apiCallLog, dataCollectionInfo.getHosts(), dataCollectionInfo.getHostnameField(),
-                    dataCollectionInfo.getGcpConfig(), dataCollectionInfo.getEncryptedDataDetails(), is24X7Task());
+            List<LogEntry> entries = stackDriverDelegateService.fetchLogs(dataCollectionInfo.getQuery(),
+                collectionStartTime, collectionEndTime, apiCallLog, dataCollectionInfo.getHosts(),
+                dataCollectionInfo.getHostnameField(), dataCollectionInfo.getGcpConfig(),
+                dataCollectionInfo.getEncryptedDataDetails(), is24X7Task(), true);
             int clusterLabel = 0;
             if (isNotEmpty(entries)) {
               logger.info("Total no. of log records found : {}", entries.size());
@@ -137,8 +138,14 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
                       ? dataCollectionInfo.getLogMessageField()
                       : STACKDRIVER_DEFAULT_LOG_MESSAGE_FIELD;
                   String logMessage = JsonPath.read(entry.toString(), logMessageField);
-                  if (isEmpty(logMessage)) {
-                    logger.error("Log Message is empty for Field ", logMessageField);
+                  String host = JsonPath.read(entry.toString(),
+                      isNotEmpty(dataCollectionInfo.getHostnameField()) ? dataCollectionInfo.getHostnameField()
+                                                                        : STACKDRIVER_DEFAULT_HOST_NAME_FIELD);
+                  if (isEmpty(logMessage) || isEmpty(host)) {
+                    logger.error(
+                        "either log message or host is empty for stateExId {} cvConfigId {}. Log message field: {} host field: {} entry: {} ",
+                        dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getCvConfigId(), logMessageField,
+                        dataCollectionInfo.getHostnameField(), entry);
                   } else {
                     logElement =
                         LogElement.builder()
@@ -149,7 +156,7 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
                             .count(1)
                             .logMessage(logMessage)
                             .timeStamp(timeStamp)
-                            .host(entry.getResource().getLabels().get(dataCollectionInfo.getHostnameField()))
+                            .host(host)
                             .build();
                     logElements.add(logElement);
                   }
@@ -226,5 +233,11 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
         return;
       }
     }
+  }
+
+  @Override
+  protected int getInitialDelayMinutes() {
+    // this state is implemented with per min task
+    return 0;
   }
 }
