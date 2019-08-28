@@ -20,8 +20,6 @@ import java.util.Set;
 
 /**
  * The generic exception class for the Wings Application.
- *
- * @author Rishi
  */
 @Getter
 public class WingsException extends RuntimeException {
@@ -77,68 +75,76 @@ public class WingsException extends RuntimeException {
     this.reportTargets = reportTargets == null ? USER_SRE : reportTargets;
   }
 
+  @Deprecated
   public WingsException(String message) {
     this(UNKNOWN_ERROR, message);
   }
 
+  @Deprecated
   public WingsException(String message, EnumSet<ReportTarget> reportTargets) {
     this(UNKNOWN_ERROR, message);
     this.reportTargets = reportTargets == null ? null : reportTargets.clone();
   }
+  @Deprecated
   public WingsException(String message, Throwable cause, EnumSet<ReportTarget> reportTargets) {
     this(UNKNOWN_ERROR, message, cause);
     this.reportTargets = reportTargets == null ? null : reportTargets.clone();
   }
 
+  @Deprecated
   public WingsException(String message, Throwable cause) {
     this(UNKNOWN_ERROR, message, cause);
   }
 
+  @Deprecated
   public WingsException(Throwable cause) {
     this(UNKNOWN_ERROR, cause);
   }
 
+  @Deprecated
   public WingsException(ErrorCode errorCode, String message) {
     this(errorCode, message, (Throwable) null);
   }
 
+  @Deprecated
   public WingsException(ErrorCode errorCode, String message, EnumSet<ReportTarget> reportTargets) {
     this(errorCode, message, reportTargets, (Throwable) null);
   }
 
+  @Deprecated
   public WingsException(ErrorCode errorCode, EnumSet<ReportTarget> reportTargets, Throwable cause) {
     this(errorCode, null, reportTargets, cause);
   }
 
+  @Deprecated
   public WingsException(ErrorCode errorCode, String message, EnumSet<ReportTarget> reportTargets, Throwable cause) {
     this(errorCode, message, cause);
     this.reportTargets = reportTargets == null ? null : reportTargets.clone();
   }
 
+  @Deprecated
   public WingsException(ErrorCode errorCode) {
     this(errorCode, (Throwable) null);
   }
 
+  @Deprecated
   public WingsException(ErrorCode errorCode, EnumSet<ReportTarget> reportTargets) {
     this(errorCode, (Throwable) null);
     this.reportTargets = reportTargets == null ? null : reportTargets.clone();
   }
 
+  @Deprecated
   public WingsException(ErrorCode errorCode, Throwable cause) {
     this(errorCode, (String) null, cause);
   }
 
+  @Deprecated
   public WingsException(ErrorCode errorCode, String message, Throwable cause) {
     super(message == null ? errorCode.name() : message, cause);
     code = errorCode;
   }
 
-  /**
-   * Instantiates a new wings exception.
-   *
-   * @param params    the params
-   * @param errorCode the error code
-   */
+  @Deprecated
   public WingsException(Map<String, Object> params, ErrorCode errorCode) {
     this(errorCode, (Throwable) null);
     this.params = params;
@@ -149,7 +155,14 @@ public class WingsException extends RuntimeException {
     return this;
   }
 
+  @Deprecated
+  // Use param instead, from a helper class
   public WingsException addParam(String key, Object value) {
+    params.put(key, value.toString().replace("${", "$ {"));
+    return this;
+  }
+
+  protected WingsException param(String key, Object value) {
     params.put(key, value.toString().replace("${", "$ {"));
     return this;
   }
