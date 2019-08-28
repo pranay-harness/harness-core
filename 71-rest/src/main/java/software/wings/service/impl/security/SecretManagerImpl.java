@@ -10,6 +10,7 @@ import static io.harness.encryption.EncryptionReflectUtils.getEncryptedFields;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static io.harness.eraro.ErrorCode.CYBERARK_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
+import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION;
 import static io.harness.exception.WingsException.USER;
@@ -20,6 +21,8 @@ import static io.harness.security.encryption.EncryptionType.KMS;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.mongodb.morphia.aggregation.Group.grouping;
+import static org.mongodb.morphia.aggregation.Projection.projection;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
@@ -67,6 +70,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.aggregation.Accumulator;
+import org.mongodb.morphia.aggregation.AggregationPipeline;
 import org.mongodb.morphia.query.Query;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.KmsTransitionEvent;
@@ -88,6 +93,8 @@ import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingAttributeKeys;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.AlertType;
@@ -294,7 +301,8 @@ public class SecretManagerImpl implements SecretManager {
     return rv;
   }
 
-  private SecretManagerConfig getSecretManager(String accountId, String kmsId) {
+  @Override
+  public SecretManagerConfig getSecretManager(String accountId, String kmsId) {
     return isEmpty(kmsId) ? secretManagerConfigService.getDefaultSecretManager(accountId)
                           : secretManagerConfigService.getSecretManager(accountId, kmsId);
   }
@@ -313,8 +321,7 @@ public class SecretManagerImpl implements SecretManager {
       logger.info("No encrypted record set for field {} for id: {}", fieldName, refId);
       return Optional.empty();
     }
-    EncryptionConfig encryptionConfig =
-        getSecretManager(accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
+    EncryptionConfig encryptionConfig = getSecretManager(accountId, encryptedData.getKmsId());
 
     return Optional.of(EncryptedDataDetail.builder()
                            .encryptedData(SecretManager.buildRecordData(encryptedData))
@@ -364,8 +371,7 @@ public class SecretManagerImpl implements SecretManager {
             logger.info("No encrypted record set for field {} for id: {}", f.getName(), id);
             continue;
           }
-          EncryptionConfig encryptionConfig =
-              getSecretManager(object.getAccountId(), encryptedData.getKmsId(), encryptedData.getEncryptionType());
+          EncryptionConfig encryptionConfig = getSecretManager(object.getAccountId(), encryptedData.getKmsId());
 
           EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder()
                                                         .encryptedData(SecretManager.buildRecordData(encryptedData))
@@ -432,9 +438,9 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public PageResponse<SecretUsageLog> getUsageLogs(PageRequest<SecretUsageLog> pageRequest, String accountId,
       String entityId, SettingVariableTypes variableType) throws IllegalAccessException {
-    final List<String> secretIds = getSecretIds(entityId, variableType);
+    final List<String> secretIds = getSecretIds(accountId, Lists.newArrayList(entityId), variableType);
 
-    pageRequest.addFilter("encryptedDataId", Operator.IN, secretIds.toArray());
+    pageRequest.addFilter(ENCRYPTED_DATA_ID_KEY, Operator.IN, secretIds.toArray());
     pageRequest.addFilter(ACCOUNT_ID_KEY, Operator.EQ, accountId);
     PageResponse<SecretUsageLog> response = wingsPersistence.query(SecretUsageLog.class, pageRequest);
     response.getResponse().forEach(secretUsageLog -> {
@@ -449,13 +455,26 @@ public class SecretManagerImpl implements SecretManager {
     return response;
   }
 
-  @Override
-  public long getUsageLogsSize(String entityId, SettingVariableTypes variableType) throws IllegalAccessException {
-    final List<String> secretIds = getSecretIds(entityId, variableType);
-    return wingsPersistence.createQuery(SecretUsageLog.class, excludeAuthority)
-        .field(SecretUsageLog.ENCRYPTED_DATA_ID_KEY)
-        .in(secretIds)
-        .count();
+  private Map<String, Long> getUsageLogSizes(
+      String accountId, Collection<String> entityIds, SettingVariableTypes variableType) throws IllegalAccessException {
+    final List<String> secretIds = getSecretIds(accountId, entityIds, variableType);
+    Query<SecretUsageLog> query = wingsPersistence.createQuery(SecretUsageLog.class)
+                                      .filter(ACCOUNT_ID_KEY, accountId)
+                                      .field(ENCRYPTED_DATA_ID_KEY)
+                                      .in(secretIds);
+
+    final AggregationPipeline aggregationPipeline =
+        wingsPersistence.getDatastore(SecretUsageLog.class)
+            .createAggregation(SecretUsageLog.class)
+            .match(query)
+            .group(ENCRYPTED_DATA_ID_KEY, grouping("count", new Accumulator("$sum", 1)))
+            .project(projection(ENCRYPTED_DATA_ID_KEY, ID_KEY), projection("count"));
+
+    List<SecretUsageSummary> secretUsageSummaries = new ArrayList<>();
+    aggregationPipeline.aggregate(SecretUsageSummary.class).forEachRemaining(secretUsageSummaries::add);
+
+    return secretUsageSummaries.stream().collect(
+        Collectors.toMap(summary -> summary.encryptedDataId, summary -> summary.count));
   }
 
   @Override
@@ -471,7 +490,7 @@ public class SecretManagerImpl implements SecretManager {
 
   private List<SecretChangeLog> getChangeLogsInternal(String accountId, String entityId, EncryptedData encryptedData,
       SettingVariableTypes variableType) throws IllegalAccessException {
-    final List<String> secretIds = getSecretIds(entityId, variableType);
+    final List<String> secretIds = getSecretIds(accountId, Lists.newArrayList(entityId), variableType);
     List<SecretChangeLog> secretChangeLogs = wingsPersistence.createQuery(SecretChangeLog.class, excludeCount)
                                                  .filter(ACCOUNT_ID_KEY, accountId)
                                                  .field(ENCRYPTED_DATA_ID_KEY)
@@ -483,72 +502,92 @@ public class SecretManagerImpl implements SecretManager {
     if (variableType == SettingVariableTypes.SECRET_TEXT && encryptedData != null) {
       EncryptionType encryptionType = encryptedData.getEncryptionType();
       if (encryptionType == EncryptionType.VAULT && isNotEmpty(encryptedData.getPath())) {
-        EncryptionConfig encryptionConfig = getSecretManager(accountId, encryptedData.getKmsId());
-        if (encryptionConfig instanceof VaultConfig) {
-          secretChangeLogs.addAll(vaultService.getVaultSecretChangeLogs(encryptedData, (VaultConfig) encryptionConfig));
-          // Sort the change log by change time in descending order.
-          secretChangeLogs.sort(
-              (SecretChangeLog o1, SecretChangeLog o2) -> (int) (o2.getLastUpdatedAt() - o1.getLastUpdatedAt()));
-        }
+        VaultConfig vaultConfig = (VaultConfig) getSecretManager(accountId, encryptedData.getKmsId());
+        secretChangeLogs.addAll(vaultService.getVaultSecretChangeLogs(encryptedData, vaultConfig));
+        // Sort the change log by change time in descending order.
+        secretChangeLogs.sort(
+            (SecretChangeLog o1, SecretChangeLog o2) -> (int) (o2.getLastUpdatedAt() - o1.getLastUpdatedAt()));
       }
     }
 
     return secretChangeLogs;
   }
 
-  @Override
-  public Collection<UuidAware> listEncryptedValues(String accountId) {
-    Set<Parent> parents = new HashSet<>();
-    try (HIterator<EncryptedData> query = new HIterator<>(
-             wingsPersistence.createQuery(EncryptedData.class)
-                 .filter(ACCOUNT_ID_KEY, accountId)
-                 .field(EncryptedDataKeys.type)
-                 .hasNoneOf(Lists.newArrayList(SettingVariableTypes.SECRET_TEXT, SettingVariableTypes.CONFIG_FILE))
-                 .fetch())) {
-      for (EncryptedData data : query) {
-        if (!isEmpty(data.getParentIds()) && data.getType() != SettingVariableTypes.KMS) {
-          data.getParentIds().forEach(parentId
-              -> parents.add(Parent.builder()
-                                 .id(parentId)
-                                 .variableType(data.getType())
-                                 .encryptionDetail(EncryptionDetail.builder()
-                                                       .encryptionType(data.getEncryptionType())
-                                                       .secretManagerName(getSecretManagerName(data.getType(), parentId,
-                                                           data.getKmsId(), data.getEncryptionType()))
-                                                       .build())
-                                 .build()));
-        }
-      }
-    }
-    return fetchParents(accountId, parents);
+  private Map<String, Long> getChangeLogSizes(
+      String accountId, Collection<String> entityIds, SettingVariableTypes variableType) throws IllegalAccessException {
+    final List<String> secretIds = getSecretIds(accountId, entityIds, variableType);
+    Query<SecretChangeLog> query = wingsPersistence.createQuery(SecretChangeLog.class)
+                                       .filter(ACCOUNT_ID_KEY, accountId)
+                                       .field(ENCRYPTED_DATA_ID_KEY)
+                                       .in(secretIds);
+
+    final AggregationPipeline aggregationPipeline =
+        wingsPersistence.getDatastore(SecretChangeLog.class)
+            .createAggregation(SecretChangeLog.class)
+            .match(query)
+            .group(ENCRYPTED_DATA_ID_KEY, grouping("count", new Accumulator("$sum", 1)))
+            .project(projection(ENCRYPTED_DATA_ID_KEY, ID_KEY), projection("count"));
+
+    List<ChangeLogSummary> changeLogSummaries = new ArrayList<>();
+    aggregationPipeline.aggregate(ChangeLogSummary.class).forEachRemaining(changeLogSummaries::add);
+
+    return changeLogSummaries.stream().collect(
+        Collectors.toMap(summary -> summary.encryptedDataId, summary -> summary.count));
   }
 
   @Override
-  public PageResponse<UuidAware> listEncryptedValues(String accountId, PageRequest<EncryptedData> pageRequest) {
-    Set<Parent> parents = new HashSet<>();
-    PageResponse<EncryptedData> pageResponse = wingsPersistence.query(EncryptedData.class, pageRequest);
-    pageResponse.getResponse().forEach(data -> {
-      if (data.getParentIds() != null && data.getType() != SettingVariableTypes.KMS) {
-        for (String parentId : data.getParentIds()) {
-          parents.add(Parent.builder()
-                          .id(parentId)
-                          .variableType(data.getType())
-                          .encryptionDetail(EncryptionDetail.builder()
-                                                .encryptionType(data.getEncryptionType())
-                                                .secretManagerName(getSecretManagerName(data.getType(), parentId,
-                                                    data.getKmsId(), data.getEncryptionType()))
-                                                .build())
-                          .build());
+  public Collection<SettingAttribute> listEncryptedSettingAttributes(String accountId) {
+    return listEncryptedSettingAttributes(accountId,
+        Lists.newArrayList(SettingCategory.CLOUD_PROVIDER.name(), SettingCategory.CONNECTOR.name(),
+            SettingCategory.SETTING.name(), SettingCategory.HELM_REPO.name()));
+  }
+
+  @Override
+  public Collection<SettingAttribute> listEncryptedSettingAttributes(String accountId, List<String> categories) {
+    // 1. Fetch all setting attributes belonging to the specified category or all settings categories.
+    List<SettingAttribute> rv = new ArrayList<>();
+    Set<String> settingAttributeIds = new HashSet<>();
+    try (HIterator<SettingAttribute> query = new HIterator<>(wingsPersistence.createQuery(SettingAttribute.class)
+                                                                 .filter(ACCOUNT_ID_KEY, accountId)
+                                                                 .field(SettingAttributeKeys.category)
+                                                                 .in(categories)
+                                                                 .fetch())) {
+      for (SettingAttribute settingAttribute : query) {
+        rv.add(settingAttribute);
+        settingAttributeIds.add(settingAttribute.getUuid());
+        if (settingAttribute.getValue() instanceof EncryptableSetting) {
+          maskEncryptedFields((EncryptableSetting) settingAttribute.getValue());
         }
       }
-    });
-    List<UuidAware> rv = fetchParents(accountId, parents);
-    return aPageResponse()
-        .withResponse(rv)
-        .withTotal(rv.size())
-        .withOffset(pageResponse.getOffset())
-        .withLimit(pageResponse.getLimit())
-        .build();
+    }
+
+    // 2. Fetch children encrypted records associated with these setting attributes in a batch
+    Map<String, EncryptedData> encryptedDataMap = new HashMap<>();
+    try (HIterator<EncryptedData> query = new HIterator<>(wingsPersistence.createQuery(EncryptedData.class)
+                                                              .filter(ACCOUNT_ID_KEY, accountId)
+                                                              .field(EncryptedDataKeys.parentIds)
+                                                              .in(settingAttributeIds)
+                                                              .fetch())) {
+      for (EncryptedData encryptedData : query) {
+        for (String parentId : encryptedData.getParentIds()) {
+          encryptedDataMap.put(parentId, encryptedData);
+        }
+      }
+    }
+
+    // 3. Set 'encryptionType' and 'encryptedBy' field of setting attributes based on children encrypted record
+    // association
+    Map<String, SecretManagerConfig> secretManagerConfigMap = getSecretManagerMap(accountId);
+    for (SettingAttribute settingAttribute : rv) {
+      EncryptedData encryptedData = encryptedDataMap.get(settingAttribute.getUuid());
+      if (encryptedData != null) {
+        settingAttribute.setEncryptionType(encryptedData.getEncryptionType());
+        settingAttribute.setEncryptedBy(
+            getSecretManagerName(encryptedData.getKmsId(), encryptedData.getEncryptionType(), secretManagerConfigMap));
+      }
+    }
+
+    return rv;
   }
 
   @Override
@@ -782,10 +821,10 @@ public class SecretManagerImpl implements SecretManager {
     Preconditions.checkNotNull(encryptedData, "No encrypted data with id " + entityId);
     Preconditions.checkState(encryptedData.getEncryptionType() == fromEncryptionType,
         "mismatch between saved encrypted type and from encryption type");
-    EncryptionConfig fromConfig = getSecretManager(accountId, fromKmsId, fromEncryptionType);
+    EncryptionConfig fromConfig = getSecretManager(accountId, fromKmsId);
     Preconditions.checkNotNull(
         fromConfig, "No kms found for account " + accountId + " with id " + entityId + " type: " + fromEncryptionType);
-    EncryptionConfig toConfig = getSecretManager(accountId, toKmsId, toEncryptionType);
+    EncryptionConfig toConfig = getSecretManager(accountId, toKmsId);
     Preconditions.checkNotNull(
         toConfig, "No kms found for account " + accountId + " with id " + entityId + " type: " + fromEncryptionType);
 
@@ -1844,6 +1883,10 @@ public class SecretManagerImpl implements SecretManager {
           restrictionsFromUserPermissions, encryptedDataList, filteredEncryptedDataList);
     } while (numRecordsReturnedCurrentBatch == batchPageSize && filteredEncryptedDataList.size() < inputPageSize);
 
+    if (details) {
+      fillInDetails(accountId, filteredEncryptedDataList);
+    }
+
     // UI should read the adjust batchOffset while sending another page request!
     return aPageResponse()
         .withOffset(String.valueOf(batchOffset))
@@ -1851,6 +1894,33 @@ public class SecretManagerImpl implements SecretManager {
         .withResponse(filteredEncryptedDataList)
         .withTotal(Long.valueOf(filteredEncryptedDataList.size()))
         .build();
+  }
+
+  private void fillInDetails(String accountId, List<EncryptedData> encryptedDataList) throws IllegalAccessException {
+    if (isEmpty(encryptedDataList)) {
+      return;
+    }
+
+    Set<String> encryptedDataIds = encryptedDataList.stream().map(EncryptedData::getUuid).collect(Collectors.toSet());
+    Map<String, Long> usageLogSizes = getUsageLogSizes(accountId, encryptedDataIds, SettingVariableTypes.SECRET_TEXT);
+    Map<String, Long> changeLogSizes = getChangeLogSizes(accountId, encryptedDataIds, SettingVariableTypes.SECRET_TEXT);
+
+    Map<String, SecretManagerConfig> secretManagerConfigMap = getSecretManagerMap(accountId);
+    for (EncryptedData encryptedData : encryptedDataList) {
+      String entityId = encryptedData.getUuid();
+
+      encryptedData.setEncryptedBy(
+          getSecretManagerName(encryptedData.getKmsId(), encryptedData.getEncryptionType(), secretManagerConfigMap));
+      int secretUsageSize = encryptedData.getParentIds() == null ? 0 : encryptedData.getParentIds().size();
+      encryptedData.setSetupUsage(secretUsageSize);
+
+      if (usageLogSizes.containsKey(entityId)) {
+        encryptedData.setRunTimeUsage(usageLogSizes.get(entityId).intValue());
+      }
+      if (changeLogSizes.containsKey(entityId)) {
+        encryptedData.setChangeLog(changeLogSizes.get(entityId).intValue());
+      }
+    }
   }
 
   /**
@@ -1866,8 +1936,7 @@ public class SecretManagerImpl implements SecretManager {
   private int filterSecreteDataBasedOnUsageRestrictions(String accountId, boolean isAccountAdmin,
       String appIdFromRequest, String envIdFromRequest, boolean details, int inputPageSize, int batchOffset,
       Map<String, Set<String>> appEnvMapFromPermissions, UsageRestrictions restrictionsFromUserPermissions,
-      List<EncryptedData> encryptedDataList, List<EncryptedData> filteredEncryptedDataList)
-      throws IllegalAccessException {
+      List<EncryptedData> encryptedDataList, List<EncryptedData> filteredEncryptedDataList) {
     int index = 0;
     Set<String> appsByAccountId = appService.getAppIdsAsSetByAccountId(accountId);
     Map<String, List<Base>> appIdEnvMap = envService.getAppIdEnvMap(appsByAccountId);
@@ -1881,17 +1950,6 @@ public class SecretManagerImpl implements SecretManager {
         filteredEncryptedDataList.add(encryptedData);
         encryptedData.setEncryptedValue(SECRET_MASK.toCharArray());
         encryptedData.setEncryptionKey(SECRET_MASK);
-
-        if (details) {
-          encryptedData.setEncryptedBy(getSecretManagerName(encryptedData.getType(), encryptedData.getUuid(),
-              encryptedData.getKmsId(), encryptedData.getEncryptionType()));
-
-          encryptedData.setSetupUsage(getSecretUsage(encryptedData.getAccountId(), encryptedData.getUuid()).size());
-          encryptedData.setRunTimeUsage(getUsageLogsSize(encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT));
-          encryptedData.setChangeLog(getChangeLogsInternal(
-              encryptedData.getAccountId(), encryptedData.getUuid(), encryptedData, SettingVariableTypes.SECRET_TEXT)
-                                         .size());
-        }
 
         // Already got all data the page request wanted. Break out of the loop, no more filtering
         // to save some CPU cycles and reduce the latency.
@@ -1919,22 +1977,15 @@ public class SecretManagerImpl implements SecretManager {
     pageRequest.addFilter(EncryptedDataKeys.usageRestrictions, Operator.NOT_EXISTS);
 
     PageResponse<EncryptedData> pageResponse = wingsPersistence.query(EncryptedData.class, pageRequest);
-
     List<EncryptedData> encryptedDataList = pageResponse.getResponse();
 
     for (EncryptedData encryptedData : encryptedDataList) {
       encryptedData.setEncryptedValue(SECRET_MASK.toCharArray());
       encryptedData.setEncryptionKey(SECRET_MASK);
-      if (details) {
-        encryptedData.setEncryptedBy(getSecretManagerName(encryptedData.getType(), encryptedData.getUuid(),
-            encryptedData.getKmsId(), encryptedData.getEncryptionType()));
+    }
 
-        encryptedData.setSetupUsage(getSecretUsage(encryptedData.getAccountId(), encryptedData.getUuid()).size());
-        encryptedData.setRunTimeUsage(getUsageLogsSize(encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT));
-        encryptedData.setChangeLog(
-            getChangeLogs(encryptedData.getAccountId(), encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT)
-                .size());
-      }
+    if (details) {
+      fillInDetails(accountId, encryptedDataList);
     }
 
     pageResponse.setResponse(encryptedDataList);
@@ -1950,6 +2001,7 @@ public class SecretManagerImpl implements SecretManager {
       return Collections.emptyList();
     }
 
+    Map<String, SecretManagerConfig> secretManagerConfigMap = getSecretManagerMap(accountId);
     SettingVariableTypes type = secretText.getType() == SettingVariableTypes.SECRET_TEXT
         ? SettingVariableTypes.SERVICE_VARIABLE
         : secretText.getType();
@@ -1960,8 +2012,8 @@ public class SecretManagerImpl implements SecretManager {
                       .variableType(type)
                       .encryptionDetail(EncryptionDetail.builder()
                                             .encryptionType(secretText.getEncryptionType())
-                                            .secretManagerName(getSecretManagerName(
-                                                type, parentId, secretText.getKmsId(), secretText.getEncryptionType()))
+                                            .secretManagerName(getSecretManagerName(secretText.getKmsId(),
+                                                secretText.getEncryptionType(), secretManagerConfigMap))
                                             .build())
                       .build());
     }
@@ -1969,32 +2021,16 @@ public class SecretManagerImpl implements SecretManager {
     return fetchParents(accountId, parents);
   }
 
-  @Override
-  public SecretManagerConfig getSecretManager(String accountId, String entityId, EncryptionType encryptionType) {
-    switch (encryptionType) {
-      case LOCAL:
-        return localEncryptionService.getEncryptionConfig(accountId);
-      case KMS:
-        return kmsService.getKmsConfig(accountId, entityId);
-      case VAULT:
-        return vaultService.getVaultConfig(accountId, entityId);
-      case AWS_SECRETS_MANAGER:
-        return secretsManagerService.getAwsSecretsManagerConfig(accountId, entityId);
-      case AZURE_VAULT:
-        return azureSecretsManagerService.getEncryptionConfig(accountId, entityId);
-      case CYBERARK:
-        return cyberArkService.getConfig(accountId, entityId);
-      default:
-        throw new IllegalStateException("invalid type: " + encryptionType);
-    }
-  }
-
-  private List<String> getSecretIds(String entityId, SettingVariableTypes variableType) throws IllegalAccessException {
+  private List<String> getSecretIds(String accountId, Collection<String> entityIds, SettingVariableTypes variableType)
+      throws IllegalAccessException {
     final List<String> secretIds = new ArrayList<>();
     switch (variableType) {
       case SERVICE_VARIABLE:
-        ServiceVariable serviceVariable =
-            wingsPersistence.createQuery(ServiceVariable.class).filter(ID_KEY, entityId).get();
+        ServiceVariable serviceVariable = wingsPersistence.createQuery(ServiceVariable.class)
+                                              .filter(ACCOUNT_ID_KEY, accountId)
+                                              .field(ID_KEY)
+                                              .in(entityIds)
+                                              .get();
 
         if (serviceVariable != null) {
           List<Field> encryptedFields = getEncryptedFields(serviceVariable.getClass());
@@ -2009,12 +2045,15 @@ public class SecretManagerImpl implements SecretManager {
 
       case CONFIG_FILE:
       case SECRET_TEXT:
-        secretIds.add(entityId);
+        secretIds.addAll(entityIds);
         break;
 
       default:
-        SettingAttribute settingAttribute =
-            wingsPersistence.createQuery(SettingAttribute.class).filter(ID_KEY, entityId).get();
+        SettingAttribute settingAttribute = wingsPersistence.createQuery(SettingAttribute.class)
+                                                .filter(ACCOUNT_ID_KEY, accountId)
+                                                .field(ID_KEY)
+                                                .in(entityIds)
+                                                .get();
 
         if (settingAttribute != null) {
           List<Field> encryptedFields = getEncryptedFields(settingAttribute.getValue().getClass());
@@ -2151,40 +2190,23 @@ public class SecretManagerImpl implements SecretManager {
     return rv;
   }
 
+  private Map<String, SecretManagerConfig> getSecretManagerMap(String accountId) {
+    Map<String, SecretManagerConfig> result = new HashMap<>();
+    List<SecretManagerConfig> secretManagerConfigs = listSecretManagers(accountId);
+    for (SecretManagerConfig secretManagerConfig : secretManagerConfigs) {
+      result.put(secretManagerConfig.getUuid(), secretManagerConfig);
+    }
+    return result;
+  }
+
   private String getSecretManagerName(
-      SettingVariableTypes type, String parentId, String kmsId, EncryptionType encryptionType) {
-    switch (encryptionType) {
-      case LOCAL:
-        return HARNESS_DEFAULT_SECRET_MANAGER;
-      case KMS:
-        KmsConfig kmsConfig = wingsPersistence.get(KmsConfig.class, kmsId);
-        Preconditions.checkNotNull(kmsConfig,
-            "could not find kmsId " + kmsId + " for " + type + " id: " + parentId + " encryptionType" + encryptionType);
-        return kmsConfig.getName();
-      case VAULT:
-        VaultConfig vaultConfig = wingsPersistence.get(VaultConfig.class, kmsId);
-        Preconditions.checkNotNull(vaultConfig,
-            "could not find kmsId " + kmsId + " for " + type + " id: " + parentId + " encryptionType" + encryptionType);
-        return vaultConfig.getName();
-      case AWS_SECRETS_MANAGER:
-        AwsSecretsManagerConfig secretsManagerConfig = wingsPersistence.get(AwsSecretsManagerConfig.class, kmsId);
-        Preconditions.checkNotNull(secretsManagerConfig,
-            "could not find kmsId " + kmsId + " for " + type + " id: " + parentId + " encryptionType" + encryptionType);
-        return secretsManagerConfig.getName();
-      case AZURE_VAULT:
-        AzureVaultConfig azureConfig = wingsPersistence.get(AzureVaultConfig.class, kmsId);
-        Preconditions.checkNotNull(azureConfig,
-            "could not find azureid " + kmsId + " for " + type + " id: " + parentId + " encryptionType"
-                + encryptionType);
-        return azureConfig.getName();
-      case CYBERARK:
-        CyberArkConfig cyberArkConfig = wingsPersistence.get(CyberArkConfig.class, kmsId);
-        Preconditions.checkNotNull(cyberArkConfig,
-            "could not find azureid " + kmsId + " for " + type + " id: " + parentId + " encryptionType"
-                + encryptionType);
-        return cyberArkConfig.getName();
-      default:
-        throw new IllegalArgumentException("Invalid type: " + encryptionType);
+      String kmsId, EncryptionType encryptionType, Map<String, SecretManagerConfig> secretManagerConfigMap) {
+    if (encryptionType == LOCAL) {
+      return HARNESS_DEFAULT_SECRET_MANAGER;
+    } else if (secretManagerConfigMap.containsKey(kmsId)) {
+      return secretManagerConfigMap.get(kmsId).getName();
+    } else {
+      throw new WingsException(GENERAL_ERROR, "Secret manager with id " + kmsId + " doesn't exist!");
     }
   }
 
@@ -2362,5 +2384,17 @@ public class SecretManagerImpl implements SecretManager {
     String relativePath;
     String fullPath;
     String keyName;
+  }
+
+  @Builder
+  private static class SecretUsageSummary {
+    String encryptedDataId;
+    long count;
+  }
+
+  @Builder
+  private static class ChangeLogSummary {
+    String encryptedDataId;
+    long count;
   }
 }

@@ -8,7 +8,11 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 
 import javax.validation.constraints.NotNull;
@@ -22,6 +26,11 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "secretChangeLogs", noClassnameStored = true)
+@Indexes({
+  @Index(fields = {
+    @Field("accountId"), @Field("encryptedDataId")
+  }, options = @IndexOptions(name = "acctEncryptedDataIdx"))
+})
 public class SecretChangeLog extends Base {
   public static final String ENCRYPTED_DATA_ID_KEY = "encryptedDataId";
 

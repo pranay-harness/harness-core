@@ -18,6 +18,7 @@ import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
@@ -37,6 +38,7 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.QueryImpl;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.EntityType;
+import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.OverrideType;
 import software.wings.beans.ServiceVariable.Type;
@@ -49,6 +51,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.security.SecretManagerConfigService;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.RestrictionsAndAppEnvMap;
 import software.wings.settings.UsageRestrictions;
@@ -64,6 +67,7 @@ public class SecretManagerTest extends CategoryTest {
   @Mock private UserService userService;
   @Mock private VaultService vaultService;
   @Mock private AuditServiceHelper auditServiceHelper;
+  @Mock private SecretManagerConfigService secretManagerConfigService;
   @Inject @InjectMocks private SecretManagerImpl secretManager;
 
   @Before
@@ -73,6 +77,8 @@ public class SecretManagerTest extends CategoryTest {
     when(usageRestrictionsService.getRestrictionsAndAppEnvMapFromCache(anyString(), eq(Action.READ)))
         .thenReturn(mock(RestrictionsAndAppEnvMap.class));
     when(userService.isAccountAdmin(ACCOUNT_ID)).thenReturn(true);
+    when(secretManagerConfigService.listSecretManagers(anyString(), anyBoolean()))
+        .thenReturn(Lists.newArrayList(mock(SecretManagerConfig.class)));
   }
 
   @Test

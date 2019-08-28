@@ -1,8 +1,10 @@
 package software.wings.resources;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static org.apache.commons.lang3.StringUtils.trim;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -20,6 +22,7 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import retrofit2.http.Body;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.SecretManagerConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
@@ -89,19 +92,14 @@ public class SecretManagementResource {
   @Path("/list-values")
   @Timed
   @ExceptionMetered
-  public RestResponse<Collection<UuidAware>> listEncryptedValues(@QueryParam("accountId") final String accountId) {
-    return new RestResponse<>(secretManager.listEncryptedValues(accountId));
-  }
-
-  @GET
-  @Path("/list-values-page")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<PageResponse<UuidAware>> listEncryptedValues(@QueryParam("accountId") final String accountId,
-      @QueryParam("type") final SettingVariableTypes type, @BeanParam PageRequest<EncryptedData> pageRequest) {
-    pageRequest.addFilter("type", Operator.EQ, type);
-    pageRequest.addFilter("accountId", Operator.EQ, accountId);
-    return new RestResponse<>(secretManager.listEncryptedValues(accountId, pageRequest));
+  public RestResponse<Collection<SettingAttribute>> listEncryptedSettingAttributes(
+      @QueryParam("accountId") final String accountId, @QueryParam("category") String category) {
+    if (isEmpty(category)) {
+      return new RestResponse<>(secretManager.listEncryptedSettingAttributes(accountId));
+    } else {
+      return new RestResponse<>(
+          secretManager.listEncryptedSettingAttributes(accountId, Lists.newArrayList(category.toUpperCase())));
+    }
   }
 
   @GET

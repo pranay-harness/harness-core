@@ -9,6 +9,7 @@ import io.harness.security.encryption.EncryptionType;
 import io.harness.stream.BoundedInputStream;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SecretManagerConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
@@ -48,8 +49,6 @@ public interface SecretManager extends OwnedByAccount {
   PageResponse<SecretUsageLog> getUsageLogs(PageRequest<SecretUsageLog> pageRequest, String accountId, String entityId,
       SettingVariableTypes variableType) throws IllegalAccessException;
 
-  long getUsageLogsSize(String entityId, SettingVariableTypes variableType) throws IllegalAccessException;
-
   List<SecretChangeLog> getChangeLogs(String accountId, String entityId, SettingVariableTypes variableType)
       throws IllegalAccessException;
 
@@ -63,11 +62,11 @@ public interface SecretManager extends OwnedByAccount {
   List<EncryptedDataDetail> getEncryptionDetails(EncryptableSetting object);
   List<EncryptedDataDetail> getEncryptionDetails(EncryptableSetting object, String appId, String workflowExecutionId);
 
-  SecretManagerConfig getSecretManager(String accountId, String entityId, EncryptionType encryptionType);
+  SecretManagerConfig getSecretManager(String accountId, String entityId);
 
-  Collection<UuidAware> listEncryptedValues(String accountId);
+  Collection<SettingAttribute> listEncryptedSettingAttributes(String accountId);
 
-  PageResponse<UuidAware> listEncryptedValues(String accountId, PageRequest<EncryptedData> pageRequest);
+  Collection<SettingAttribute> listEncryptedSettingAttributes(String accountId, List<String> categories);
 
   String getEncryptedYamlRef(EncryptableSetting object, String... fieldName) throws IllegalAccessException;
 
