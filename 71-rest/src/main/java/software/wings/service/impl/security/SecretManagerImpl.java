@@ -29,7 +29,6 @@ import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.ServiceVariable.ENCRYPTED_VALUE_KEY;
 import static software.wings.security.EnvFilter.FilterType.NON_PROD;
 import static software.wings.security.EnvFilter.FilterType.PROD;
-import static software.wings.security.encryption.SecretChangeLog.ENCRYPTED_DATA_ID_KEY;
 import static software.wings.service.impl.security.VaultServiceImpl.VAULT_VAILDATION_URL;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 import static software.wings.service.intfc.security.VaultService.DEFAULT_BASE_PATH;
@@ -108,6 +107,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.security.encryption.SecretChangeLog;
+import software.wings.security.encryption.SecretChangeLog.SecretChangeLogKeys;
 import software.wings.security.encryption.SecretUsageLog;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AlertService;
@@ -440,7 +440,7 @@ public class SecretManagerImpl implements SecretManager {
       String entityId, SettingVariableTypes variableType) throws IllegalAccessException {
     final List<String> secretIds = getSecretIds(accountId, Lists.newArrayList(entityId), variableType);
 
-    pageRequest.addFilter(ENCRYPTED_DATA_ID_KEY, Operator.IN, secretIds.toArray());
+    pageRequest.addFilter(SecretChangeLogKeys.encryptedDataId, Operator.IN, secretIds.toArray());
     pageRequest.addFilter(ACCOUNT_ID_KEY, Operator.EQ, accountId);
     PageResponse<SecretUsageLog> response = wingsPersistence.query(SecretUsageLog.class, pageRequest);
     response.getResponse().forEach(secretUsageLog -> {
@@ -460,15 +460,15 @@ public class SecretManagerImpl implements SecretManager {
     final List<String> secretIds = getSecretIds(accountId, entityIds, variableType);
     Query<SecretUsageLog> query = wingsPersistence.createQuery(SecretUsageLog.class)
                                       .filter(ACCOUNT_ID_KEY, accountId)
-                                      .field(ENCRYPTED_DATA_ID_KEY)
+                                      .field(SecretChangeLogKeys.encryptedDataId)
                                       .in(secretIds);
 
     final AggregationPipeline aggregationPipeline =
         wingsPersistence.getDatastore(SecretUsageLog.class)
             .createAggregation(SecretUsageLog.class)
             .match(query)
-            .group(ENCRYPTED_DATA_ID_KEY, grouping("count", new Accumulator("$sum", 1)))
-            .project(projection(ENCRYPTED_DATA_ID_KEY, ID_KEY), projection("count"));
+            .group(SecretChangeLogKeys.encryptedDataId, grouping("count", new Accumulator("$sum", 1)))
+            .project(projection(SecretChangeLogKeys.encryptedDataId, ID_KEY), projection("count"));
 
     List<SecretUsageSummary> secretUsageSummaries = new ArrayList<>();
     aggregationPipeline.aggregate(SecretUsageSummary.class).forEachRemaining(secretUsageSummaries::add);
@@ -493,7 +493,7 @@ public class SecretManagerImpl implements SecretManager {
     final List<String> secretIds = getSecretIds(accountId, Lists.newArrayList(entityId), variableType);
     List<SecretChangeLog> secretChangeLogs = wingsPersistence.createQuery(SecretChangeLog.class, excludeCount)
                                                  .filter(ACCOUNT_ID_KEY, accountId)
-                                                 .field(ENCRYPTED_DATA_ID_KEY)
+                                                 .field(SecretChangeLogKeys.encryptedDataId)
                                                  .hasAnyOf(secretIds)
                                                  .order("-" + CREATED_AT_KEY)
                                                  .asList();
@@ -518,15 +518,15 @@ public class SecretManagerImpl implements SecretManager {
     final List<String> secretIds = getSecretIds(accountId, entityIds, variableType);
     Query<SecretChangeLog> query = wingsPersistence.createQuery(SecretChangeLog.class)
                                        .filter(ACCOUNT_ID_KEY, accountId)
-                                       .field(ENCRYPTED_DATA_ID_KEY)
+                                       .field(SecretChangeLogKeys.encryptedDataId)
                                        .in(secretIds);
 
     final AggregationPipeline aggregationPipeline =
         wingsPersistence.getDatastore(SecretChangeLog.class)
             .createAggregation(SecretChangeLog.class)
             .match(query)
-            .group(ENCRYPTED_DATA_ID_KEY, grouping("count", new Accumulator("$sum", 1)))
-            .project(projection(ENCRYPTED_DATA_ID_KEY, ID_KEY), projection("count"));
+            .group(SecretChangeLogKeys.encryptedDataId, grouping("count", new Accumulator("$sum", 1)))
+            .project(projection(SecretChangeLogKeys.encryptedDataId, ID_KEY), projection("count"));
 
     List<ChangeLogSummary> changeLogSummaries = new ArrayList<>();
     aggregationPipeline.aggregate(ChangeLogSummary.class).forEachRemaining(changeLogSummaries::add);
