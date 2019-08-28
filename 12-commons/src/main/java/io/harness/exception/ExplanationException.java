@@ -9,6 +9,6 @@ public class ExplanationException extends WingsException {
   public ExplanationException(String message, Throwable cause) {
     super(null, cause, EXPLANATION, INFO, USER_SRE);
     super.excludeReportTarget(EXPLANATION, EnumSet.of(ReportTarget.LOG_SYSTEM));
-    super.addParam("message", message);
+    super.param("message", message);
   }
 }

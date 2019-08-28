@@ -3,7 +3,6 @@ package software.wings.service;
 import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
-import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.rule.OwnerRule.RAMA;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -285,7 +284,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
 
     assertThatThrownBy(() -> settingsService.delete(APP_ID, SETTING_ID))
         .isInstanceOf(WingsException.class)
-        .hasMessage(INVALID_REQUEST.name());
+        .hasMessage("Connector [SETTING_NAME] is referenced by 1 Artifact Source [JOB_NAME].");
   }
 
   @Test
@@ -307,7 +306,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                                .build()));
     assertThatThrownBy(() -> settingsService.delete(APP_ID, SETTING_ID))
         .isInstanceOf(WingsException.class)
-        .hasMessage(INVALID_REQUEST.name());
+        .hasMessage("Cloud provider [SETTING_NAME] is referenced by 1 Service Infrastructure [NAME].");
   }
 
   /**

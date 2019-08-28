@@ -9,7 +9,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
@@ -420,7 +419,7 @@ public class KmsTest extends WingsBaseTest {
   public void localEncryption() {
     final String keyToEncrypt = UUID.randomUUID().toString();
     final EncryptedData encryptedData = kmsService.encrypt(keyToEncrypt.toCharArray(), null, null);
-    assertNotEquals(keyToEncrypt, new String(encryptedData.getEncryptedValue()));
+    assertThat(keyToEncrypt).isNotEqualTo(new String(encryptedData.getEncryptedValue()));
 
     final char[] decryptedValue = kmsService.decrypt(encryptedData, null, null);
     assertThat(new String(decryptedValue)).isEqualTo(keyToEncrypt);
@@ -446,7 +445,7 @@ public class KmsTest extends WingsBaseTest {
     final String keyToEncrypt = UUID.randomUUID().toString();
     final EncryptedData encryptedData =
         kmsService.encrypt(keyToEncrypt.toCharArray(), UUID.randomUUID().toString(), kmsConfig);
-    assertNotEquals(keyToEncrypt, new String(encryptedData.getEncryptedValue()));
+    assertThat(keyToEncrypt).isNotEqualTo(new String(encryptedData.getEncryptedValue()));
 
     final char[] decryptedValue = kmsService.decrypt(encryptedData, null, kmsConfig);
     assertThat(new String(decryptedValue)).isEqualTo(keyToEncrypt);
@@ -1135,7 +1134,7 @@ public class KmsTest extends WingsBaseTest {
                             .asList();
     assertThat(encryptedDataList).hasSize(1);
     encryptedData = encryptedDataList.get(0);
-    assertNotEquals(accountId, encryptedData.getEncryptionKey());
+    assertThat(accountId).isNotEqualTo(encryptedData.getEncryptionKey());
     assertThat(encryptedData.getEncryptionType()).isEqualTo(EncryptionType.KMS);
     // test decryption
     savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
@@ -1657,9 +1656,9 @@ public class KmsTest extends WingsBaseTest {
 
     KmsConfig encryptedKms = wingsPersistence.getDatastore(KmsConfig.class).createQuery(KmsConfig.class).get();
 
-    assertNotEquals(encryptedKms.getAccessKey(), savedKmsConfig.getAccessKey());
-    assertNotEquals(encryptedKms.getSecretKey(), savedKmsConfig.getSecretKey());
-    assertNotEquals(encryptedKms.getKmsArn(), savedKmsConfig.getKmsArn());
+    assertThat(encryptedKms.getAccessKey()).isNotEqualTo(savedKmsConfig.getAccessKey());
+    assertThat(encryptedKms.getSecretKey()).isNotEqualTo(savedKmsConfig.getSecretKey());
+    assertThat(encryptedKms.getKmsArn()).isNotEqualTo(savedKmsConfig.getKmsArn());
   }
 
   @Test
@@ -2193,8 +2192,8 @@ public class KmsTest extends WingsBaseTest {
 
       String configFileId = configService.save(configFile, null);
       File download = configService.download(randomAppId, configFileId);
-      assertEquals(FileUtils.readFileToString(fileToSave, Charset.defaultCharset()),
-          FileUtils.readFileToString(download, Charset.defaultCharset()));
+      assertThat(FileUtils.readFileToString(fileToSave, Charset.defaultCharset()))
+          .isEqualTo(FileUtils.readFileToString(download, Charset.defaultCharset()));
 
       EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, encryptedUuid);
       assertThat(encryptedData).isNotNull();
@@ -2209,8 +2208,8 @@ public class KmsTest extends WingsBaseTest {
       Thread.sleep(TimeUnit.SECONDS.toMillis(10));
 
       download = configService.download(randomAppId, configFileId);
-      assertEquals(FileUtils.readFileToString(fileToSave, Charset.defaultCharset()),
-          FileUtils.readFileToString(download, Charset.defaultCharset()));
+      assertThat(FileUtils.readFileToString(fileToSave, Charset.defaultCharset()))
+          .isEqualTo(FileUtils.readFileToString(download, Charset.defaultCharset()));
       encryptedData = wingsPersistence.get(EncryptedData.class, encryptedUuid);
       assertThat(encryptedData).isNotNull();
       assertThat(encryptedData.getKmsId()).isEqualTo(toKmsConfig.getUuid());

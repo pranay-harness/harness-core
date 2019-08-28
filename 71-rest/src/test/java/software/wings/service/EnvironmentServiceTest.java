@@ -4,7 +4,6 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
-import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -381,7 +380,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     when(pipelineService.obtainPipelineNamesReferencedByEnvironment(APP_ID, ENV_ID)).thenReturn(pipelineNames);
     assertThatThrownBy(() -> environmentService.delete(APP_ID, ENV_ID))
         .isInstanceOf(WingsException.class)
-        .hasMessage(INVALID_REQUEST.name());
+        .hasMessage("Environment is referenced by 1 pipeline [PIPELINE_NAME].");
   }
 
   @Test

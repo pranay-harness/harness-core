@@ -14,6 +14,6 @@ public class HintException extends WingsException {
   public HintException(String message) {
     super(null, null, HINT, INFO, null);
     super.excludeReportTarget(EXPLANATION, EnumSet.of(ReportTarget.LOG_SYSTEM));
-    super.addParam("message", message);
+    super.param("message", message);
   }
 }

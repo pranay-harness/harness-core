@@ -1,11 +1,13 @@
 package io.harness.k8s.manifest;
 
+import static io.harness.exception.WingsException.ReportTarget.LOG_SYSTEM;
 import static io.harness.k8s.manifest.ManifestHelper.MAX_VALUES_EXPRESSION_RECURSION_DEPTH;
 import static io.harness.k8s.manifest.ManifestHelper.getMapFromValuesFileContent;
 import static io.harness.k8s.manifest.ManifestHelper.getValuesExpressionKeysFromMap;
 import static io.harness.k8s.manifest.ManifestHelper.processYaml;
 import static io.harness.k8s.manifest.ManifestHelper.validateValuesFileContents;
 import static io.harness.k8s.manifest.ObjectYamlUtils.toYaml;
+import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -15,10 +17,14 @@ import com.google.common.io.Resources;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.eraro.ResponseMessage;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
+import io.harness.logging.ExceptionLogger;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -28,7 +34,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@Slf4j
 public class ManifestHelperTest extends CategoryTest {
+  @Before
+  public void setup() {
+    initializeLogging();
+  }
+
   @Test
   @Category(UnitTests.class)
   public void toYamlSmokeTest() throws Exception {
@@ -83,7 +95,9 @@ public class ManifestHelperTest extends CategoryTest {
     try {
       processYaml(":");
     } catch (KubernetesYamlException e) {
-      assertThat(e.getMessage()).isEqualTo("Error parsing YAML.");
+      assertThat(ExceptionLogger.getResponseMessageList(e, LOG_SYSTEM))
+          .extracting(ResponseMessage::getMessage)
+          .containsExactly("Invalid Kubernetes YAML Spec. Error parsing YAML..");
     }
   }
 
@@ -93,7 +107,9 @@ public class ManifestHelperTest extends CategoryTest {
     try {
       processYaml("object");
     } catch (KubernetesYamlException e) {
-      assertThat(e.getMessage()).isEqualTo("Invalid Yaml. Object is not a map.");
+      assertThat(ExceptionLogger.getResponseMessageList(e, LOG_SYSTEM))
+          .extracting(ResponseMessage::getMessage)
+          .containsExactly("Invalid Kubernetes YAML Spec. Invalid Yaml. Object is not a map..");
     }
   }
 
@@ -105,7 +121,9 @@ public class ManifestHelperTest extends CategoryTest {
     try {
       processYaml(fileContents);
     } catch (KubernetesYamlException e) {
-      assertThat(e.getMessage()).isEqualTo("Error processing yaml manifest. kind not found in spec.");
+      assertThat(ExceptionLogger.getResponseMessageList(e, LOG_SYSTEM))
+          .extracting(ResponseMessage::getMessage)
+          .containsExactly("Invalid Kubernetes YAML Spec. Error processing yaml manifest. kind not found in spec..");
     }
   }
 
@@ -117,7 +135,10 @@ public class ManifestHelperTest extends CategoryTest {
     try {
       processYaml(fileContents);
     } catch (KubernetesYamlException e) {
-      assertThat(e.getMessage()).isEqualTo("Error processing yaml manifest. metadata.name not found in spec.");
+      assertThat(ExceptionLogger.getResponseMessageList(e, LOG_SYSTEM))
+          .extracting(ResponseMessage::getMessage)
+          .containsExactly(
+              "Invalid Kubernetes YAML Spec. Error processing yaml manifest. metadata.name not found in spec..");
     }
   }
 
@@ -231,7 +252,9 @@ public class ManifestHelperTest extends CategoryTest {
       validateValuesFileContents("test");
       fail("Invalid values content not caught.");
     } catch (WingsException e) {
-      assertThat(e.getMessage()).isEqualTo("Object is not a map.");
+      assertThat(ExceptionLogger.getResponseMessageList(e, LOG_SYSTEM))
+          .extracting(ResponseMessage::getMessage)
+          .containsExactly("Invalid values file. Object is not a map..");
     }
   }
 
@@ -243,7 +266,10 @@ public class ManifestHelperTest extends CategoryTest {
           + "replicas ");
       fail("Invalid values content not caught.");
     } catch (WingsException e) {
-      assertThat(e.getMessage()).startsWith("Error parsing YAML.");
+      assertThat(ExceptionLogger.getResponseMessageList(e, LOG_SYSTEM))
+          .extracting(ResponseMessage::getMessage)
+          .containsExactly("Invalid values file. Error parsing YAML. Line 1, column 9: "
+              + "Expected a 'block end' but found: scalar. @[<>].");
     }
   }
 }

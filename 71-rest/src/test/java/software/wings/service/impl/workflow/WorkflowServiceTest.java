@@ -3,7 +3,6 @@ package software.wings.service.impl.workflow;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -583,7 +582,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .thenReturn(aPageResponse().withResponse(asList(pipeline)).build());
     assertThatThrownBy(() -> workflowService.deleteWorkflow(APP_ID, workflowId))
         .isInstanceOf(WingsException.class)
-        .hasMessage(INVALID_REQUEST.name());
+        .hasMessage("Workflow is referenced by 1 pipeline [PIPELINE_NAME].");
   }
 
   /**

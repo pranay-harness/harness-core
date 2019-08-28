@@ -3,7 +3,6 @@ package software.wings.service;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
@@ -427,7 +426,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     assertThatThrownBy(() -> srs.delete(APP_ID, SERVICE_ID))
         .isInstanceOf(WingsException.class)
-        .hasMessage(INVALID_REQUEST.name());
+        .hasMessage("Service SERVICE_ID is referenced by 1 workflow [Referenced Workflow].");
 
     verify(workflowService).obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID);
   }
@@ -447,7 +446,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     assertThatThrownBy(() -> srs.delete(APP_ID, SERVICE_ID))
         .isInstanceOf(WingsException.class)
-        .hasMessage(INVALID_REQUEST.name());
+        .hasMessage("Service [SERVICE_NAME] couldn't be deleted. "
+            + "Remove Service reference from the following infrastructure provisioner [Referenced Provisioner] ");
 
     verify(workflowService).obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID);
     verify(infrastructureProvisionerService).listByBlueprintDetails(APP_ID, null, SERVICE_ID, null, null);
@@ -467,7 +467,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     assertThatThrownBy(() -> srs.delete(APP_ID, SERVICE_ID))
         .isInstanceOf(WingsException.class)
-        .hasMessage(INVALID_REQUEST.name());
+        .hasMessage("Service is referenced by 1 pipeline [Referenced Pipeline] as a workflow variable.");
 
     verify(workflowService).obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID);
     verify(infrastructureProvisionerService).listByBlueprintDetails(APP_ID, null, SERVICE_ID, null, null);
@@ -489,7 +489,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     assertThatThrownBy(() -> srs.delete(APP_ID, SERVICE_ID))
         .isInstanceOf(WingsException.class)
-        .hasMessage(INVALID_REQUEST.name());
+        .hasMessage("Service is referenced by 1 trigger [Referenced Trigger] as a workflow variable.");
 
     verify(workflowService).obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID);
     verify(infrastructureProvisionerService).listByBlueprintDetails(APP_ID, null, SERVICE_ID, null, null);
@@ -1435,7 +1435,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(workflowService.listWorkflows(any(PageRequest.class))).thenReturn(listWorkflows(serviceCommand, "START"));
     assertThatThrownBy(() -> srs.deleteCommand(APP_ID, SERVICE_ID, SERVICE_COMMAND_ID))
         .isInstanceOf(WingsException.class)
-        .hasMessage(INVALID_REQUEST.name());
+        .hasMessage("Command [START] couldn't be deleted. "
+            + "Remove reference from the following workflows [ (WORKFLOW_NAME:null:Phase 1) ]");
     verify(mockWingsPersistence).getWithAppId(Service.class, APP_ID, SERVICE_ID);
     verify(mockWingsPersistence).getWithAppId(ServiceCommand.class, APP_ID, SERVICE_COMMAND_ID);
     verify(workflowService).listWorkflows(any(PageResponse.class));

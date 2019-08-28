@@ -67,7 +67,7 @@ public class WingsException extends RuntimeException {
   private Map<Class, Object> contextObjects = new HashMap<>();
 
   @Builder
-  public WingsException(
+  protected WingsException(
       String message, Throwable cause, ErrorCode code, Level level, EnumSet<ReportTarget> reportTargets) {
     super(message == null ? code.name() : message, cause);
     this.code = code == null ? UNKNOWN_ERROR : code;
