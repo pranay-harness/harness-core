@@ -14,6 +14,7 @@ import migrations.all.ApiKeysSetNameMigration;
 import migrations.all.CleanupOrphanInstances;
 import migrations.all.CleanupSyncStatusForDeletedEntities;
 import migrations.all.DeleteOrphanNotificationGroups;
+import migrations.all.DeleteStaleSlackConfigs;
 import migrations.all.DeleteStaleThirdPartyApiCallLogsMigration;
 import migrations.all.ExplodeLogMLFeedbackRecordsMigration;
 import migrations.all.FetchAndSaveAccounts;
@@ -102,6 +103,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(50, BaseMigration.class))
         .add(Pair.of(51, BaseMigration.class))
         .add(Pair.of(52, ApiKeysSetNameMigration.class))
+        .add(Pair.of(53, DeleteStaleSlackConfigs.class))
         .build();
   }
 }
