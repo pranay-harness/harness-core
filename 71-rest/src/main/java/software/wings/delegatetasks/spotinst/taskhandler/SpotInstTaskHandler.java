@@ -9,7 +9,9 @@ import static io.harness.spotinst.model.SpotInstConstants.defaultSteadyStateTime
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
+import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 
@@ -17,6 +19,7 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 
+import com.amazonaws.services.ec2.model.Instance;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.exception.InvalidRequestException;
@@ -48,13 +51,19 @@ public abstract class SpotInstTaskHandler {
     try {
       return executeTaskInternal(spotInstTaskParameters, spotInstConfig, awsConfig);
     } catch (Exception ex) {
-      String message = ex.getMessage();
-      ExecutionLogCallback logCallback = getLogCallBack(spotInstTaskParameters, DEPLOYMENT_ERROR);
-      logCallback.saveExecutionLog(message, ERROR, FAILURE);
-      logger.error(format("Exception: [%s] while processing spotinst task: [%s]. Workflow execution id: [%s]", message,
-                       spotInstTaskParameters.getCommandType().name(), spotInstTaskParameters.getWorkflowExecutionId()),
-          ex);
-      return SpotInstTaskExecutionResponse.builder().commandExecutionStatus(FAILURE).errorMessage(message).build();
+      if (spotInstTaskParameters.isSyncTask()) {
+        logger.error(format("Exception: [%s] while processing Spotinst sync task", ex.getMessage()), ex);
+        throw new InvalidRequestException(ex.getMessage(), WingsException.USER);
+      } else {
+        String message = ex.getMessage();
+        ExecutionLogCallback logCallback = getLogCallBack(spotInstTaskParameters, DEPLOYMENT_ERROR);
+        logCallback.saveExecutionLog(message, ERROR, FAILURE);
+        logger.error(
+            format("Exception: [%s] while processing spotinst task: [%s]. Workflow execution id: [%s]", message,
+                spotInstTaskParameters.getCommandType().name(), spotInstTaskParameters.getWorkflowExecutionId()),
+            ex);
+        return SpotInstTaskExecutionResponse.builder().commandExecutionStatus(FAILURE).errorMessage(message).build();
+      }
     }
   }
 
@@ -145,6 +154,17 @@ public abstract class SpotInstTaskHandler {
 
   protected int getTimeOut(int timeOut) {
     return (timeOut > 0) ? timeOut : defaultSteadyStateTimeout;
+  }
+
+  protected List<Instance> getAllEc2InstancesOfElastiGroup(AwsConfig awsConfig, String awsRegion, String spotInstToken,
+      String spotInstAccountId, String elastiGroupId) throws Exception {
+    List<ElastiGroupInstanceHealth> instanceHealths =
+        spotInstHelperServiceDelegate.listElastiGroupInstancesHealth(spotInstToken, spotInstAccountId, elastiGroupId);
+    if (isEmpty(instanceHealths)) {
+      return emptyList();
+    }
+    List<String> instanceIds = instanceHealths.stream().map(ElastiGroupInstanceHealth::getInstanceId).collect(toList());
+    return awsEc2HelperServiceDelegate.listEc2Instances(awsConfig, emptyList(), instanceIds, awsRegion);
   }
 
   protected abstract SpotInstTaskExecutionResponse executeTaskInternal(SpotInstTaskParameters spotInstTaskParameters,
