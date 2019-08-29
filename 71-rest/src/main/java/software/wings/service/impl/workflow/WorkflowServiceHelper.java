@@ -15,7 +15,6 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
@@ -1082,7 +1081,7 @@ public class WorkflowServiceHelper {
         InfrastructureDefinition infrastructureDefinition =
             infrastructureDefinitionService.get(appId, workflowPhase.getInfraDefinitionId());
         isGcpInfra = infrastructureDefinition.getInfrastructure() instanceof GoogleKubernetesEngine
-            && isBlank(((GoogleKubernetesEngine) infrastructureDefinition.getInfrastructure()).getClusterName());
+            && RUNTIME.equals(((GoogleKubernetesEngine) infrastructureDefinition.getInfrastructure()).getClusterName());
       } else {
         InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
         isGcpInfra = infraMapping instanceof GcpKubernetesInfrastructureMapping

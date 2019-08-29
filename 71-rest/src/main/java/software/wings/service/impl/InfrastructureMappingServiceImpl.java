@@ -847,7 +847,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     notNullCheck(format("No cloud provider found with given id : [%s]", infraMapping.getComputeProviderSettingId()),
         settingAttribute, USER);
     List<EncryptedDataDetail> encryptionDetails =
-        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
+        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue());
     return ContainerServiceParams.builder()
         .settingAttribute(settingAttribute)
         .encryptionDetails(encryptionDetails)
@@ -901,7 +901,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
     notNullCheck("SettingAttribute", settingAttribute, USER);
     List<EncryptedDataDetail> encryptionDetails =
-        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
+        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue());
 
     return ContainerServiceParams.builder()
         .settingAttribute(settingAttribute)
