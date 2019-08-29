@@ -357,29 +357,20 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
   @Override
   public <T> PageResponse<T> listWithTagFilters(
       PageRequest<T> request, String filter, EntityType entityType, boolean withTags) {
-    Long resourceLookupRecordCount = 0l;
-    String limit = request.getLimit();
-    int pageSize = request.getPageSize();
-    String offset = request.getOffset();
-
     if (isNotBlank(filter)) {
       String accountId = getAccountIdFromPageRequest(request);
 
       if (isNotBlank(accountId)) {
         PageResponse<ResourceLookup> resourceLookupPageResponse = listResourceLookupRecordsWithTagsInternal(
-            accountId, filter, request.getLimit(), request.getOffset(), new Object[] {entityType});
+            accountId, filter, String.valueOf(Integer.MAX_VALUE), "0", new Object[] {entityType});
 
         List<ResourceLookup> response = resourceLookupPageResponse.getResponse();
         if (isEmpty(response)) {
           return aPageResponse().withResponse(emptyList()).build();
         }
 
-        resourceLookupRecordCount = resourceLookupPageResponse.getTotal();
-
         List<String> resourceIds = response.stream().map(ResourceLookup::getResourceId).collect(Collectors.toList());
         request.addFilter("_id", IN, resourceIds.toArray());
-        request.setOffset("0");
-        request.setLimit(String.valueOf(Integer.MAX_VALUE));
       }
     }
 
@@ -417,16 +408,6 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
 
       default:
         throw new InvalidRequestException(format("Unhandled entity type %s while getting list", entityType));
-    }
-
-    if (isNotBlank(filter)) {
-      pageResponse.setPageSize(pageSize);
-      pageResponse.setLimit(limit);
-      pageResponse.setOffset(offset);
-
-      if (resourceLookupRecordCount > 0l) {
-        pageResponse.setTotal(resourceLookupRecordCount);
-      }
     }
 
     if (withTags) {
