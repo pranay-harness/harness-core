@@ -473,7 +473,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       throw new InvalidRequestException(
           format("Infra Definition does not exist with id: [%s]", infrastructureDefinition.getUuid()));
     }
-
+    validateImmutableFields(infrastructureDefinition, savedInfraDefinition);
     try {
       wingsPersistence.save(infrastructureDefinition);
     } catch (DuplicateKeyException ex) {
@@ -485,6 +485,16 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     yamlPushService.pushYamlChangeSet(
         accountId, savedInfraDefinition, infrastructureDefinition, Type.UPDATE, false, rename);
     return infrastructureDefinition;
+  }
+
+  void validateImmutableFields(
+      InfrastructureDefinition newInfrastructureDefinition, InfrastructureDefinition oldInfraDefinition) {
+    if (!oldInfraDefinition.getDeploymentType().equals(newInfrastructureDefinition.getDeploymentType())) {
+      throw new InvalidRequestException("Deployment Type is immutable");
+    }
+    if (!oldInfraDefinition.getCloudProviderType().equals(newInfrastructureDefinition.getCloudProviderType())) {
+      throw new InvalidRequestException("Cloud Provider Type is immutable");
+    }
   }
 
   @Override
