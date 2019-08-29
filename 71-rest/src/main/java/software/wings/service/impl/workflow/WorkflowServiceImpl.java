@@ -1129,7 +1129,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       updateLinkedArtifactStreamIds(newWorkflow, linkedArtifactStreamIds);
     }
 
-    yamlPushService.pushYamlChangeSet(accountId, null, newWorkflow, Type.CREATE, workflow.isSyncFromGit(), false);
+    if (newWorkflow.getOrchestrationWorkflow() != null) {
+      yamlPushService.pushYamlChangeSet(accountId, null, newWorkflow, Type.CREATE, workflow.isSyncFromGit(), false);
+    }
 
     if (!newWorkflow.isSample()) {
       eventPublishHelper.publishWorkflowCreatedEvent(newWorkflow, accountId);
