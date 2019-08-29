@@ -48,8 +48,8 @@ class AwsHelperServiceDelegateBase {
       logger.info("Instantiating EC2ContainerCredentialsProviderWrapper");
       credentialsProvider = new EC2ContainerCredentialsProviderWrapper();
     } else {
-      credentialsProvider = new AWSStaticCredentialsProvider(
-          new BasicAWSCredentials(awsConfig.getAccessKey(), new String(awsConfig.getSecretKey())));
+      credentialsProvider = new AWSStaticCredentialsProvider(new BasicAWSCredentials(
+          awsConfig.getAccessKey(), awsConfig.getSecretKey() != null ? new String(awsConfig.getSecretKey()) : null));
     }
     if (awsConfig.isAssumeCrossAccountRole() && awsConfig.getCrossAccountAttributes() != null) {
       // For the security token service we default to us-east-1.
