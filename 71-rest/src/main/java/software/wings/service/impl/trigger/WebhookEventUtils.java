@@ -71,7 +71,7 @@ public class WebhookEventUtils {
     if (httpHeaders.getHeaderString(X_GIT_HUB_EVENT) != null) {
       return Type.GITHUB;
     } else if (httpHeaders.getHeaderString(X_GIT_LAB_EVENT) != null) {
-      return Type.GITLABS;
+      return Type.GITLAB;
     } else if (httpHeaders.getHeaderString(X_BIT_BUCKET_EVENT) != null) {
       return Type.BITBUCKET;
     }

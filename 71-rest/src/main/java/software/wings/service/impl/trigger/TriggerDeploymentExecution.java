@@ -21,6 +21,7 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
+import io.harness.exception.TriggerException;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import lombok.extern.slf4j.Slf4j;
@@ -95,8 +96,15 @@ public class TriggerDeploymentExecution {
 
   public WorkflowExecution triggerDeployment(List<ArtifactVariable> artifactVariables,
       Map<String, String> webhookParameters, DeploymentTrigger deploymentTrigger, TriggerExecution triggerExecution) {
+    if (deploymentTrigger.isTriggerDisabled()) {
+      logger.warn("Trigger is disabled for appId {}, Trigger Id {} and name {} for token {} ",
+          deploymentTrigger.getAppId(), deploymentTrigger.getUuid(), deploymentTrigger.getWebHookToken());
+      return null;
+    }
     ExecutionArgs executionArgs = new ExecutionArgs();
     if (isNotEmpty(artifactVariables)) {
+      logger.info("The artifact variables set for the trigger {} are {}", deploymentTrigger.getUuid(),
+          artifactVariables.stream().map(ArtifactVariable::getName).collect(toList()));
       executionArgs.setArtifactVariables(artifactVariables);
     }
 
@@ -130,6 +138,9 @@ public class TriggerDeploymentExecution {
         unhandled(deploymentTrigger.getAction().getActionType());
     }
 
+    logger.info("Trigger {} executed deployment successfully in app {}", deploymentTrigger.getName(),
+        deploymentTrigger.getAppId());
+
     return null;
   }
 
@@ -157,10 +168,11 @@ public class TriggerDeploymentExecution {
   private void matchTriggerAndDeploymentArtifactVariables(String trigerId, String appId,
       List<ArtifactVariable> triggerArtifactVariables, List<ArtifactVariable> deploymentArtifactVariables) {
     if (isEmpty(triggerArtifactVariables) && isNotEmpty(deploymentArtifactVariables)) {
-      logger.info(
+      logger.error(
           "Some artifact variables {} do not exist in trigger {} but they exist in pipeline/Workflow for app {}",
           deploymentArtifactVariables, trigerId, appId);
-      throw new WingsException("Some artifact variables do not exist in trigger but they exist in pipeline/Workflow");
+      throw new TriggerException(
+          "Some artifact variables do not exist in trigger but they exist in pipeline/Workflow", null);
     }
 
     if (isEmpty(triggerArtifactVariables)) {
@@ -179,9 +191,9 @@ public class TriggerDeploymentExecution {
               .collect(Collectors.toList());
 
       if (isNotEmpty(artifactVariables)) {
-        logger.info("Some artifact variables {} do not exist in trigger {} but they exist in pipeline for app {}",
+        logger.error("Some artifact variables {} do not exist in trigger {} but they exist in pipeline for app {}",
             artifactVariables, trigerId, appId);
-        throw new WingsException("Some artifact variables do not exist in trigger but they exist in pipeline");
+        throw new TriggerException("Some artifact variables do not exist in trigger but they exist in pipeline", null);
       }
     }
   }
@@ -256,7 +268,9 @@ public class TriggerDeploymentExecution {
         String msg = "Pipeline contains environment as variable [" + templatizedEnvName
             + "]. However, there is no mapping associated in the trigger."
             + " Please update the trigger";
-        throw new WingsException(msg, USER);
+
+        logger.error(msg + " triggerId  {} appId {}", deploymentTrigger.getUuid(), deploymentTrigger.getAppId());
+        throw new TriggerException(msg, USER);
       }
       envId = resolveEnvId(deploymentTrigger.getAppId(), envNameOrId);
       triggerWorkflowVariableValues.put(templatizedEnvName, envId);
@@ -295,7 +309,7 @@ public class TriggerDeploymentExecution {
       logger.info("Checking  service {} can be found by id first.", serviceIdOrName);
       Service service = serviceResourceService.get(appId, serviceIdOrName, false);
       if (service == null) {
-        logger.info("Service does not exist by Id, checking if environment {} can be found by name.", serviceIdOrName);
+        logger.error("Service does not exist by Id, checking if environment {} can be found by name.", serviceIdOrName);
         service = serviceResourceService.getServiceByName(appId, serviceIdOrName, false);
       }
       notNullCheck("Service [" + serviceIdOrName + "] does not exist", service, USER);
@@ -535,10 +549,10 @@ public class TriggerDeploymentExecution {
       String infraDefIdOrName = triggerWorkflowVariableValues.get(infraDefVarName);
       notNullCheck(
           "There is no corresponding Workflow Variable associated to Infra Definition", infraDefIdOrName, USER);
-      logger.info("Checking  Infra Definition {} can be found by id first.", infraDefIdOrName);
+      logger.error("Checking  Infra Definition {} can be found by id first.", infraDefIdOrName);
       InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefIdOrName);
       if (infrastructureDefinition == null) {
-        logger.info("InfraDefinition does not exist by Id, checking if infra definition {} can be found by name.",
+        logger.error("InfraDefinition does not exist by Id, checking if infra definition {} can be found by name.",
             infraDefIdOrName);
         infrastructureDefinition = infrastructureDefinitionService.getInfraDefByName(appId, envId, infraDefIdOrName);
       }
@@ -559,7 +573,7 @@ public class TriggerDeploymentExecution {
       logger.info("Checking  Service Infrastructure {} can be found by id first.", serviceInfraIdOrName);
       InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, serviceInfraIdOrName);
       if (infrastructureMapping == null) {
-        logger.info(
+        logger.error(
             "Service Infrastructure does not exist by Id, checking if service infrastructure {} can be found by name.",
             serviceInfraIdOrName);
         infrastructureMapping = infrastructureMappingService.getInfraMappingByName(appId, envId, serviceInfraIdOrName);

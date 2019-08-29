@@ -68,6 +68,11 @@ public class PipelineTriggerProcessor implements TriggerProcessor {
     executorService.execute(() -> {
       triggerServiceHelper.getTriggersMatchesWorkflow(appId, pipelineTriggerExecutionParams.getPipelineId())
           .forEach(trigger -> {
+            if (trigger.isTriggerDisabled()) {
+              logger.warn("Trigger is disabled for appId {}, Trigger Id {} and name {}for pipeline id  {} ",
+                  trigger.getAppId(), trigger.getUuid(), pipelineTriggerExecutionParams.getPipelineId());
+              return;
+            }
             triggerDeploymentExecution.executeDeployment(trigger,
                 triggerArtifactVariableHandler.fetchArtifactVariablesForExecution(trigger.getAppId(), trigger, null));
           });

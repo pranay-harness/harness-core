@@ -416,8 +416,7 @@ public class WebHookServiceImpl implements WebHookService {
       for (Map<String, String> artifact : artifacts) {
         String buildNumber = artifact.get("buildNumber");
         String artifactStreamName = artifact.get("artifactSourceName");
-        String serviceName =
-            artifact.get("service"); // TODO Harsh it can be workflow or environment as it might have overridden
+        String serviceName = artifact.get("service");
         String artifactVariableName = ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME;
 
         if (artifact.containsKey("artifactVariableName")) {
@@ -434,7 +433,6 @@ public class WebHookServiceImpl implements WebHookService {
             serviceName, artifactVariableName, buildNumber, artifactStreamName);
         if (serviceName != null) {
           Service service = serviceResourceService.getServiceByName(appId, serviceName, false);
-          // TODO Harsh it can be workflow or environment as it might have overridden
           if (service == null) {
             return prepareResponse(
                 WebHookResponse.builder().error("Service Name [" + serviceName + "] does not exist").build(),

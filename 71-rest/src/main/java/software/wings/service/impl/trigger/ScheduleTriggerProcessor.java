@@ -4,7 +4,6 @@ import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.scheduler.ScheduledTriggerJob.PREFIX;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -64,7 +63,12 @@ public class ScheduleTriggerProcessor implements TriggerProcessor {
           (ScheduledTriggerExecutionParams) triggerExecutionParams;
 
       DeploymentTrigger trigger = scheduledTriggerExecutionParams.trigger;
-      logger.info("Received scheduled trigger for appId {} and Trigger Id {} and name {} with the scheduled fire time ",
+      if (trigger.isTriggerDisabled()) {
+        logger.warn("Trigger is disabled for appId {}, Trigger Id {} and name {} with the scheduled fire time ",
+            trigger.getAppId(), trigger.getUuid(), trigger.getName());
+        return;
+      }
+      logger.info("Received scheduled trigger for appId {}, Trigger Id {} and name {} with the scheduled fire time ",
           trigger.getAppId(), trigger.getUuid(), trigger.getName());
 
       ScheduledCondition scheduledCondition = (ScheduledCondition) (trigger.getCondition());
@@ -105,19 +109,14 @@ public class ScheduleTriggerProcessor implements TriggerProcessor {
   private void validateAndHandleCronExpression(
       DeploymentTrigger deploymentTrigger, DeploymentTrigger existingTrigger, ScheduledCondition scheduledCondition) {
     try {
-      String cronExpression;
-      if (existingTrigger == null) {
-        cronExpression = scheduledCondition.getCronExpression();
-      } else {
-        cronExpression = scheduledCondition.getCronExpression();
-      }
+      String cronExpression = scheduledCondition.getCronExpression();
       if (isNotBlank(scheduledCondition.getCronExpression())) {
-        ScheduledCondition scheduledConditionWithDesc = ScheduledCondition.builder()
-                                                            .cronExpression(cronExpression)
-                                                            .cronDescription(triggerServiceHelper.getCronDescription(
-                                                                PREFIX + scheduledCondition.getCronExpression()))
-                                                            .onNewArtifactOnly(scheduledCondition.isOnNewArtifactOnly())
-                                                            .build();
+        ScheduledCondition scheduledConditionWithDesc =
+            ScheduledCondition.builder()
+                .cronExpression(cronExpression)
+                .cronDescription(triggerServiceHelper.getCronDescription(cronExpression))
+                .onNewArtifactOnly(scheduledCondition.isOnNewArtifactOnly())
+                .build();
 
         deploymentTrigger.setCondition(scheduledConditionWithDesc);
         deploymentTrigger.setNextIterations(null);
