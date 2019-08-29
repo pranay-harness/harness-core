@@ -1,6 +1,7 @@
 package software.wings.sm.states.k8s;
 
 import static java.lang.Integer.parseInt;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.K8S_CANARY_DEPLOY;
 
@@ -135,6 +136,16 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
     activityService.updateStatus(activityId, appId, executionStatus);
 
     if (ExecutionStatus.FAILED.equals(executionStatus)) {
+      if (executionResponse.getK8sTaskResponse() instanceof K8sCanaryDeployResponse) {
+        K8sCanaryDeployResponse k8sCanaryDeployResponse =
+            (K8sCanaryDeployResponse) executionResponse.getK8sTaskResponse();
+
+        if (isNotBlank(k8sCanaryDeployResponse.getCanaryWorkload())) {
+          k8sStateHelper.saveK8sElement(
+              context, K8sElement.builder().canaryWorkload(k8sCanaryDeployResponse.getCanaryWorkload()).build());
+        }
+      }
+
       return anExecutionResponse()
           .executionStatus(executionStatus)
           .stateExecutionData(context.getStateExecutionData())
