@@ -38,6 +38,8 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.QueryImpl;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.EntityType;
+import software.wings.beans.KmsConfig;
+import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.OverrideType;
@@ -51,6 +53,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.security.LocalEncryptionService;
 import software.wings.service.intfc.security.SecretManagerConfigService;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.RestrictionsAndAppEnvMap;
@@ -68,6 +71,7 @@ public class SecretManagerTest extends CategoryTest {
   @Mock private VaultService vaultService;
   @Mock private AuditServiceHelper auditServiceHelper;
   @Mock private SecretManagerConfigService secretManagerConfigService;
+  @Mock private LocalEncryptionService localEncryptionService;
   @Inject @InjectMocks private SecretManagerImpl secretManager;
 
   @Before
@@ -254,6 +258,37 @@ public class SecretManagerTest extends CategoryTest {
     EncryptedData encryptedDataFromYaml = secretManager.getEncryptedDataFromYamlRef(yamlRef, accountId);
     assertThat(encryptedDataFromYaml).isNotNull();
     verify(wingsPersistence, times(1)).save(any(EncryptedData.class));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetSecretManager() {
+    when(localEncryptionService.getEncryptionConfig(anyString()))
+        .thenReturn(LocalEncryptionConfig.builder().uuid(ACCOUNT_ID).build());
+
+    // The following 2 cases getSecretManager() call should return LOCAL encryption config
+    SecretManagerConfig secretManagerConfig = secretManager.getSecretManager(ACCOUNT_ID, null);
+    assertThat(secretManagerConfig).isNotNull();
+    assertThat(secretManagerConfig.getEncryptionType()).isEqualTo(EncryptionType.LOCAL);
+
+    secretManagerConfig = secretManager.getSecretManager(ACCOUNT_ID, ACCOUNT_ID);
+    assertThat(secretManagerConfig).isNotNull();
+    assertThat(secretManagerConfig.getEncryptionType()).isEqualTo(EncryptionType.LOCAL);
+
+    // When default secret manager is configured...
+    String kmsId = UUIDGenerator.generateUuid();
+    when(secretManagerConfigService.getDefaultSecretManager(eq(ACCOUNT_ID))).thenReturn(KmsConfig.builder().build());
+    when(secretManagerConfigService.getSecretManager(eq(ACCOUNT_ID), eq(kmsId)))
+        .thenReturn(KmsConfig.builder().build());
+
+    // The following 2 cases getSecretManager() call should return KMS encryption config
+    secretManagerConfig = secretManager.getSecretManager(ACCOUNT_ID, null);
+    assertThat(secretManagerConfig).isNotNull();
+    assertThat(secretManagerConfig.getEncryptionType()).isEqualTo(EncryptionType.KMS);
+
+    secretManagerConfig = secretManager.getSecretManager(ACCOUNT_ID, kmsId);
+    assertThat(secretManagerConfig).isNotNull();
+    assertThat(secretManagerConfig.getEncryptionType()).isEqualTo(EncryptionType.KMS);
   }
 
   private List<EncryptedData> getSecretList(int num) {
