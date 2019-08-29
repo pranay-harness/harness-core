@@ -10,7 +10,6 @@ import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.toList;
-import static net.redhogs.cronparser.CronExpressionDescriptor.getDescription;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_COLLECTED;
@@ -19,19 +18,22 @@ import static software.wings.beans.trigger.TriggerConditionType.NEW_ARTIFACT;
 import static software.wings.beans.trigger.TriggerConditionType.PIPELINE_COMPLETION;
 import static software.wings.beans.trigger.TriggerConditionType.SCHEDULED;
 import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
+import static software.wings.scheduler.ScheduledTriggerJob.PREFIX;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.cronutils.descriptor.CronDescriptor;
+import com.cronutils.model.Cron;
+import com.cronutils.model.CronType;
+import com.cronutils.model.definition.CronDefinitionBuilder;
+import com.cronutils.parser.CronParser;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
-import net.redhogs.cronparser.DescriptionTypeEnum;
 import net.redhogs.cronparser.I18nMessages;
-import net.redhogs.cronparser.Options;
-import org.apache.commons.lang3.StringUtils;
 import org.quartz.CronScheduleBuilder;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Service;
@@ -234,9 +236,9 @@ public class TriggerServiceHelper {
 
   public static String getCronDescription(String cronExpression) {
     try {
-      String description = getDescription(DescriptionTypeEnum.FULL, ScheduledTriggerJob.PREFIX + cronExpression,
-          new Options(), I18nMessages.DEFAULT_LOCALE);
-      return StringUtils.lowerCase("" + description.charAt(0)) + description.substring(1);
+      CronParser parser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.QUARTZ));
+      Cron cron = parser.parse(PREFIX + cronExpression);
+      return CronDescriptor.instance(I18nMessages.DEFAULT_LOCALE).describe(cron) + " UTC";
     } catch (Exception e) {
       throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", "Invalid cron expression");
     }
