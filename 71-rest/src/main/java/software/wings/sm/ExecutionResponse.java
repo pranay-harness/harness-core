@@ -21,6 +21,37 @@ public class ExecutionResponse {
   private List<ContextElement> notifyElements;
   private List<ContextElement> contextElements;
   private String delegateTaskId;
+  private List<StateExecutionInstance> stateExecutionInstanceList;
+
+  /**
+   * Gets state execution instance list.
+   *
+   * @return the state execution instance list
+   */
+  public List<StateExecutionInstance> getStateExecutionInstanceList() {
+    return stateExecutionInstanceList;
+  }
+
+  /**
+   * Sets state execution instance list.
+   *
+   * @param stateExecutionInstanceList the state execution instance list
+   */
+  public void setStateExecutionInstanceList(List<StateExecutionInstance> stateExecutionInstanceList) {
+    this.stateExecutionInstanceList = stateExecutionInstanceList;
+  }
+
+  /**
+   * Adds the.
+   *
+   * @param stateExecutionInstance the state execution instance
+   */
+  public void add(StateExecutionInstance stateExecutionInstance) {
+    if (this.stateExecutionInstanceList == null) {
+      this.stateExecutionInstanceList = new ArrayList<>();
+    }
+    this.stateExecutionInstanceList.add(stateExecutionInstance);
+  }
 
   /**
    * Is async boolean.

@@ -20,7 +20,6 @@ import software.wings.beans.ExecutionStrategy;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
 
@@ -61,9 +60,8 @@ public class RepeatStateTest extends CategoryTest {
     assertThat(stateExecutionData.getRepeatElementIndex()).isNotNull();
     assertThat(stateExecutionData.getRepeatElementIndex()).isEqualTo(0);
 
-    assertThat(response).isInstanceOf(SpawningExecutionResponse.class);
-    assertThat(((SpawningExecutionResponse) response).getStateExecutionInstanceList()).isNotNull();
-    assertThat(((SpawningExecutionResponse) response).getStateExecutionInstanceList().size()).isEqualTo(1);
+    assertThat(response.getStateExecutionInstanceList()).isNotNull();
+    assertThat(response.getStateExecutionInstanceList()).hasSize(1);
   }
 
   /**
@@ -92,9 +90,8 @@ public class RepeatStateTest extends CategoryTest {
 
     assertThat(stateExecutionData.getRepeatElementIndex()).isNull();
 
-    assertThat(response).isInstanceOf(SpawningExecutionResponse.class);
-    assertThat(((SpawningExecutionResponse) response).getStateExecutionInstanceList()).isNotNull();
-    assertThat(((SpawningExecutionResponse) response).getStateExecutionInstanceList().size()).isEqualTo(2);
+    assertThat(response.getStateExecutionInstanceList()).isNotNull();
+    assertThat(response.getStateExecutionInstanceList()).hasSize(2);
   }
 
   private void assertResponse(List<ContextElement> repeatElements, ExecutionResponse response, int corrIdsExpected) {

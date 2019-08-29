@@ -17,7 +17,6 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatusData;
-import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
@@ -56,7 +55,7 @@ public class ForkState extends State {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     List<String> correlationIds = new ArrayList<>();
 
-    SpawningExecutionResponse executionResponse = new SpawningExecutionResponse();
+    ExecutionResponse executionResponse = new ExecutionResponse();
     ForkStateExecutionData forkStateExecutionData = new ForkStateExecutionData();
     forkStateExecutionData.setForkStateNames(forkStateNames);
     forkStateExecutionData.setElements(new ArrayList<>());

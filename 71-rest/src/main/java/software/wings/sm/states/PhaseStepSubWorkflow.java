@@ -71,7 +71,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatusData;
 import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
-import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.StepExecutionSummary;
@@ -121,10 +120,12 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       response = super.execute(contextIntf);
     } else {
       List<ContextElement> rollbackRequiredParams = getRollbackRequiredParam(phaseStepType, phaseElement, contextIntf);
-      SpawningExecutionResponse spawningExecutionResponse = (SpawningExecutionResponse) super.execute(contextIntf);
-      for (StateExecutionInstance instance : spawningExecutionResponse.getStateExecutionInstanceList()) {
-        if (isNotEmpty(rollbackRequiredParams)) {
-          rollbackRequiredParams.forEach(p -> instance.getContextElements().push(p));
+      ExecutionResponse spawningExecutionResponse = super.execute(contextIntf);
+      if (isNotEmpty(spawningExecutionResponse.getStateExecutionInstanceList())) {
+        for (StateExecutionInstance instance : spawningExecutionResponse.getStateExecutionInstanceList()) {
+          if (isNotEmpty(rollbackRequiredParams)) {
+            rollbackRequiredParams.forEach(p -> instance.getContextElements().push(p));
+          }
         }
       }
       response = spawningExecutionResponse;
