@@ -150,6 +150,10 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
 
   private K8sTaskExecutionResponse getFailureResponse() {
     K8sCanaryDeployResponse k8sCanaryDeployResponse = K8sCanaryDeployResponse.builder().build();
+    if (canaryWorkload != null && canaryWorkload.getResourceId() != null) {
+      k8sCanaryDeployResponse.setCanaryWorkload(canaryWorkload.getResourceId().namespaceKindNameRef());
+    }
+
     return K8sTaskExecutionResponse.builder()
         .commandExecutionStatus(CommandExecutionStatus.FAILURE)
         .k8sTaskResponse(k8sCanaryDeployResponse)
