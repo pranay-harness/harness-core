@@ -33,6 +33,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
@@ -3225,5 +3226,26 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       return true;
     }
     return false;
+  }
+
+  @Override
+  public List<WorkflowExecution> getLatestExecutionsFor(String appId, String infraMappingId, int limit) {
+    try {
+      final List<WorkflowExecution> workflowExecutionList =
+          emptyIfNull(wingsPersistence.createQuery(WorkflowExecution.class)
+                          .filter(WorkflowExecutionKeys.appId, appId)
+                          .filter(WorkflowExecutionKeys.workflowType, ORCHESTRATION)
+                          .filter(WorkflowExecutionKeys.status, SUCCESS)
+                          .filter(WorkflowExecutionKeys.infraMappingIds, infraMappingId)
+                          .order(Sort.descending(WorkflowExecutionKeys.createdAt))
+                          .asList(new FindOptions().limit(limit)));
+
+      workflowExecutionList.forEach(we -> we.setStateMachine(null));
+      return workflowExecutionList;
+    } catch (Exception e) {
+      logger.error(format("Failed to fetch recent executions for inframapping [%s]", infraMappingId), e);
+    }
+
+    return Collections.emptyList();
   }
 }

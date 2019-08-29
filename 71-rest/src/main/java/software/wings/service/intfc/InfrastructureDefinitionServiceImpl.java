@@ -1,9 +1,7 @@
 package software.wings.service.intfc;
 
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageRequestBuilder;
 import static io.harness.beans.PageResponse.PageResponseBuilder;
-import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
@@ -49,13 +47,10 @@ import com.amazonaws.services.ecs.model.LaunchType;
 import com.microsoft.azure.management.compute.VirtualMachine;
 import com.mongodb.DuplicateKeyException;
 import io.fabric8.utils.CountingMap;
-import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.beans.SortOrder.OrderType;
-import io.harness.beans.WorkflowType;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.aws.AwsElbListener;
@@ -93,7 +88,6 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SpotInstConfig;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
 import software.wings.dl.WingsPersistence;
@@ -789,29 +783,8 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     return infraDefinitionDetail;
   }
 
-  private List<WorkflowExecution> getLatestWFEFor(String appID, String infraMappingID, int limit) {
-    try {
-      PageRequest<WorkflowExecution> workflowExecutionPageRequest =
-          aPageRequest()
-              .addFilter(WorkflowExecutionKeys.infraMappingIds, Operator.CONTAINS, infraMappingID)
-              .addFilter(WorkflowExecutionKeys.appId, EQ, appID)
-              .addFilter(WorkflowExecutionKeys.status, EQ, ExecutionStatus.SUCCESS)
-              .addFilter(WorkflowExecutionKeys.workflowType, EQ, WorkflowType.ORCHESTRATION)
-              .addOrder(WorkflowExecutionKeys.createdAt, OrderType.DESC)
-              .withLimit(String.valueOf(limit))
-              .build();
-
-      final List<WorkflowExecution> workflowExecutions =
-          workflowExecutionService.listExecutions(workflowExecutionPageRequest, false, false, false, false)
-              .getResponse();
-
-      workflowExecutions.forEach(we -> we.setStateMachine(null));
-      return workflowExecutions;
-    } catch (Exception e) {
-      logger.error(format("Failed to fetch recent executions for inframapping [%s]", infraMappingID), e);
-    }
-
-    return Collections.emptyList();
+  private List<WorkflowExecution> getLatestWFEFor(String appId, String infraMappingId, int limit) {
+    return workflowExecutionService.getLatestExecutionsFor(appId, infraMappingId, limit);
   }
 
   @Override
