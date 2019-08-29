@@ -12,29 +12,41 @@ import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Key;
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.persistence.GoogleDataStoreAware;
+import io.harness.persistence.UuidAware;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
 import software.wings.metrics.MetricType;
 import software.wings.service.intfc.DataStoreService;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Data
 @Builder
-@EqualsAndHashCode(callSuper = false)
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @org.mongodb.morphia.annotations.Entity(value = "timeSeriesRawData", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "TimeSeriesRawDataKeys")
 @Slf4j
-public class TimeSeriesRawData implements GoogleDataStoreAware {
+public class TimeSeriesRawData implements GoogleDataStoreAware, UuidAware {
   public static final String connector = ":";
 
   @Inject private DataStoreService dataStoreService;
@@ -55,6 +67,12 @@ public class TimeSeriesRawData implements GoogleDataStoreAware {
   private List<Double> optimalData;
   private Long createdAt;
   private Long lastUpdatedAt;
+
+  @JsonIgnore
+  @SchemaIgnore
+  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  @Default
+  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 
   private String getKey() {
     return String.join(connector, stateExecutionId, transactionName, metricName);
@@ -80,6 +98,11 @@ public class TimeSeriesRawData implements GoogleDataStoreAware {
     addFieldIfNotEmpty(recordBuilder, TimeSeriesRawDataKeys.optimalData, optimalData, Double.class);
     addFieldIfNotEmpty(recordBuilder, TimeSeriesRawDataKeys.createdAt, createdAt, false);
     addFieldIfNotEmpty(recordBuilder, TimeSeriesRawDataKeys.lastUpdatedAt, lastUpdatedAt, false);
+
+    if (validUntil != null) {
+      recordBuilder.set(TimeSeriesRawDataKeys.validUntil, validUntil.getTime());
+    }
+
     return recordBuilder.build();
   }
 
@@ -100,6 +123,7 @@ public class TimeSeriesRawData implements GoogleDataStoreAware {
         .optimalData(readList(entity, TimeSeriesRawDataKeys.optimalData, Double.class))
         .createdAt(readLong(entity, TimeSeriesRawDataKeys.createdAt))
         .lastUpdatedAt(readLong(entity, TimeSeriesRawDataKeys.lastUpdatedAt))
+        .validUntil(new Date(readLong(entity, TimeSeriesRawDataKeys.validUntil)))
         .build();
   }
 
