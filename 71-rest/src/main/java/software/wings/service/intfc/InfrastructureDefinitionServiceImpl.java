@@ -983,7 +983,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Override
   public String getContainerRunningInstances(
       String appId, String infraDefinitionId, String serviceId, String serviceNameExpression) {
-    InfrastructureMapping infrastructureMapping = getInfraMapping(appId, infraDefinitionId, serviceId, null);
+    InfrastructureMapping infrastructureMapping = getInfraMapping(appId, serviceId, infraDefinitionId, null);
     return infrastructureMappingService.getContainerRunningInstances(
         appId, infrastructureMapping.getUuid(), serviceNameExpression);
   }
@@ -1319,7 +1319,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(awsConfig, appId, null);
 
     InfrastructureMapping infrastructureMapping =
-        infrastructureDefinitionService.getInfraMapping(appId, infraDefinitionId, serviceId, null);
+        infrastructureDefinitionService.getInfraMapping(appId, serviceId, infraDefinitionId, null);
     notNullCheck("Infrastructure Mapping does not exist", infrastructureDefinition);
     return awsAsgHelperServiceManager.getCurrentlyRunningInstanceCount(
         awsConfig, encryptionDetails, region, infrastructureMapping.getUuid(), appId);
