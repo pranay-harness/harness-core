@@ -303,8 +303,20 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public SecretManagerConfig getSecretManager(String accountId, String kmsId) {
-    return isEmpty(kmsId) ? secretManagerConfigService.getDefaultSecretManager(accountId)
-                          : secretManagerConfigService.getSecretManager(accountId, kmsId);
+    SecretManagerConfig secretManagerConfig;
+    if (isEmpty(kmsId)) {
+      secretManagerConfig = secretManagerConfigService.getDefaultSecretManager(accountId);
+      // PL-3301: Should return LocalEncryptionConfig if no default secret manager is present for this account
+      if (secretManagerConfig == null) {
+        secretManagerConfig = localEncryptionService.getEncryptionConfig(accountId);
+      }
+    } else if (Objects.equals(kmsId, accountId)) {
+      // PL-3301: Only LOCAL encryption's KMS id is the accountId!
+      secretManagerConfig = localEncryptionService.getEncryptionConfig(accountId);
+    } else {
+      secretManagerConfig = secretManagerConfigService.getSecretManager(accountId, kmsId);
+    }
+    return secretManagerConfig;
   }
 
   public String encrypt(String accountId, String secret, UsageRestrictions usageRestrictions) {
@@ -439,6 +451,11 @@ public class SecretManagerImpl implements SecretManager {
   public PageResponse<SecretUsageLog> getUsageLogs(PageRequest<SecretUsageLog> pageRequest, String accountId,
       String entityId, SettingVariableTypes variableType) throws IllegalAccessException {
     final List<String> secretIds = getSecretIds(accountId, Lists.newArrayList(entityId), variableType);
+    // PL-3298: Some setting attribute doesn't have encrypted fields and therefore no secret Ids associated with it.
+    // E.g. PHYSICAL_DATA_CENTER config. An empty response will be returned.
+    if (isEmpty(secretIds)) {
+      return new PageResponse<>(pageRequest);
+    }
 
     pageRequest.addFilter(SecretChangeLogKeys.encryptedDataId, Operator.IN, secretIds.toArray());
     pageRequest.addFilter(ACCOUNT_ID_KEY, Operator.EQ, accountId);
