@@ -4,9 +4,12 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -19,9 +22,9 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.ecs.model.LaunchType;
+import io.harness.beans.PageRequest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -33,6 +36,7 @@ import software.wings.WingsBaseTest;
 import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AwsInstanceFilter.AwsInstanceFilterKeys;
+import software.wings.beans.Service;
 import software.wings.dl.WingsPersistence;
 import software.wings.infra.AwsAmiInfrastructure;
 import software.wings.infra.AwsAmiInfrastructure.AwsAmiInfrastructureKeys;
@@ -49,12 +53,16 @@ import software.wings.infra.PhysicalInfra;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureDefinitionServiceImpl;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import javax.ws.rs.core.AbstractMultivaluedMap;
+import javax.ws.rs.core.UriInfo;
 
 public class InfrastructureDefinitionServiceTest extends WingsBaseTest {
   @Mock private Query<InfrastructureDefinition> query;
@@ -63,6 +71,7 @@ public class InfrastructureDefinitionServiceTest extends WingsBaseTest {
   @Mock private WorkflowService workflowService;
   @Mock private PipelineService pipelineService;
   @Mock private TriggerService triggerService;
+  @Mock private ServiceResourceService serviceResourceService;
 
   @Inject @InjectMocks private InfrastructureDefinitionService infrastructureDefinitionService;
 
@@ -249,7 +258,7 @@ public class InfrastructureDefinitionServiceTest extends WingsBaseTest {
     when(workflowService.obtainWorkflowNamesReferencedByInfrastructureDefinition(APP_ID, INFRA_DEFINITION_ID))
         .thenReturn(asList("Referenced Workflow"));
 
-    Assertions.assertThatExceptionOfType(WingsException.class)
+    assertThatExceptionOfType(WingsException.class)
         .isThrownBy(() -> infrastructureDefinitionService.delete(APP_ID, INFRA_DEFINITION_ID));
   }
 
@@ -307,5 +316,26 @@ public class InfrastructureDefinitionServiceTest extends WingsBaseTest {
     googleKubernetesEngine.setReleaseName("rel");
     allFields = infrastructureDefinitionService.getAllFields(googleKubernetesEngine);
     assertThat(allFields.get(GoogleKubernetesEngineKeys.releaseName).equals("rel")).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testApplySearchFilter() {
+    InfrastructureDefinitionServiceImpl infrastructureDefinitionService =
+        (InfrastructureDefinitionServiceImpl) this.infrastructureDefinitionService;
+    UriInfo uriInfo = mock(UriInfo.class);
+    Map<String, List<String>> queryParams = new HashMap<>();
+    when(uriInfo.getQueryParameters()).thenReturn(new AbstractMultivaluedMap<String, String>(queryParams) {});
+    PageRequest<InfrastructureDefinition> pageRequest = new PageRequest<>();
+    pageRequest.setUriInfo(uriInfo);
+
+    assertThatThrownBy(() -> infrastructureDefinitionService.applyServiceFilter(pageRequest));
+
+    queryParams.put("serviceId", Collections.singletonList("s1"));
+    queryParams.put("appId", Collections.singletonList("app1"));
+    Service service = Service.builder().deploymentType(DeploymentType.SSH).build();
+    when(serviceResourceService.get(anyString(), anyString())).thenReturn(service);
+    infrastructureDefinitionService.applyServiceFilter(pageRequest);
+    assertThat(pageRequest.getFilters().size() == 2).isTrue();
   }
 }
