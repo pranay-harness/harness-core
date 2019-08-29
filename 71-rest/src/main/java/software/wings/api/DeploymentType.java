@@ -1,5 +1,13 @@
 package software.wings.api;
 
+import com.google.common.collect.ImmutableMap;
+
+import software.wings.utils.ArtifactType;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Created by rishi on 12/22/16.
  */
@@ -24,4 +32,19 @@ public enum DeploymentType {
   public String getDisplayName() {
     return displayName;
   }
+
+  public static final ImmutableMap<DeploymentType, List<ArtifactType>> supportedArtifactTypes =
+      ImmutableMap.<DeploymentType, List<ArtifactType>>builder()
+          .put(SSH,
+              Arrays.asList(ArtifactType.DOCKER, ArtifactType.JAR, ArtifactType.WAR, ArtifactType.RPM,
+                  ArtifactType.OTHER, ArtifactType.TAR, ArtifactType.ZIP))
+          .put(ECS, Collections.singletonList(ArtifactType.DOCKER))
+          .put(KUBERNETES, Collections.singletonList(ArtifactType.DOCKER))
+          .put(HELM, Collections.singletonList(ArtifactType.DOCKER))
+          .put(AWS_CODEDEPLOY, Collections.singletonList(ArtifactType.AWS_CODEDEPLOY))
+          .put(AWS_LAMBDA, Collections.singletonList(ArtifactType.AWS_LAMBDA))
+          .put(AMI, Collections.singletonList(ArtifactType.AMI))
+          .put(WINRM, Arrays.asList(ArtifactType.IIS, ArtifactType.IIS_APP, ArtifactType.IIS_VirtualDirectory))
+          .put(PCF, Collections.singletonList(ArtifactType.PCF))
+          .build();
 }
