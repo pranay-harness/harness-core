@@ -23,6 +23,10 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
+/**
+ * Entity representing a pipeline governance standard.
+ */
+
 @Value
 @Entity(value = "pipelineGovernanceConfigs")
 @Indexes(@Index(fields = @Field("accountId"), options = @IndexOptions(name = "account_id_idx")))

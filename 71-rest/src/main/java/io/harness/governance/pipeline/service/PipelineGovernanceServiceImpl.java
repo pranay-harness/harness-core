@@ -17,7 +17,20 @@ public class PipelineGovernanceServiceImpl implements PipelineGovernanceService 
   @Inject private WingsPersistence persistence;
 
   @Override
-  public List<PipelineGovernanceConfig> list(String accountId) {
+  public PipelineGovernanceConfig get(final String uuid) {
+    return persistence.createQuery(PipelineGovernanceConfig.class)
+        .field(PipelineGovernanceConfigKeys.uuid)
+        .equal(uuid)
+        .get();
+  }
+
+  @Override
+  public boolean delete(final String uuid) {
+    return persistence.delete(PipelineGovernanceConfig.class, uuid);
+  }
+
+  @Override
+  public List<PipelineGovernanceConfig> list(final String accountId) {
     return persistence.createQuery(PipelineGovernanceConfig.class, HQuery.excludeCount)
         .field(PipelineGovernanceConfigKeys.accountId)
         .equal(accountId)
@@ -25,7 +38,7 @@ public class PipelineGovernanceServiceImpl implements PipelineGovernanceService 
   }
 
   @Override
-  public PipelineGovernanceConfig update(String uuid, PipelineGovernanceConfig config) {
+  public PipelineGovernanceConfig update(final String uuid, final PipelineGovernanceConfig config) {
     Query<PipelineGovernanceConfig> query =
         persistence.createQuery(PipelineGovernanceConfig.class).field(PipelineGovernanceConfigKeys.uuid).equal(uuid);
 
@@ -39,7 +52,7 @@ public class PipelineGovernanceServiceImpl implements PipelineGovernanceService 
   }
 
   @Override
-  public PipelineGovernanceConfig add(PipelineGovernanceConfig config) {
+  public PipelineGovernanceConfig add(final PipelineGovernanceConfig config) {
     persistence.save(config);
     return config;
   }

@@ -1,6 +1,8 @@
 .idea
 portal.iml
 
+*.iml
+*.class
 *.ipr
 *.iws
 *.orig
