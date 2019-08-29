@@ -203,7 +203,43 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
   @Override
   public PageResponse<InfrastructureDefinition> list(PageRequest<InfrastructureDefinition> pageRequest) {
+    if (pageRequest.getUriInfo().getQueryParameters().containsKey("serviceId")) {
+      applyServiceFilter(pageRequest);
+    }
     return wingsPersistence.query(InfrastructureDefinition.class, pageRequest);
+  }
+
+  @VisibleForTesting
+  public void applyServiceFilter(PageRequest<InfrastructureDefinition> pageRequest) {
+    List<String> serviceIds = pageRequest.getUriInfo().getQueryParameters().get("serviceId");
+    if (serviceIds.size() > 1) {
+      throw new InvalidRequestException("More than 1 service not supported for listing infra definitions");
+    }
+    String serviceId = serviceIds.get(0);
+    if (!pageRequest.getUriInfo().getQueryParameters().containsKey("appId")) {
+      throw new InvalidRequestException("AppId is mandatory for service-based filtering");
+    }
+    List<String> appIds = pageRequest.getUriInfo().getQueryParameters().get("appId");
+    if (appIds.size() > 1) {
+      throw new InvalidRequestException("More than 1 app not supported for listing infra definitions");
+    }
+    String appId = appIds.get(0);
+    Service service = serviceResourceService.get(appId, serviceId);
+    if (service == null) {
+      throw new InvalidRequestException(format("No service exists for id : [%s]", serviceId));
+    }
+    if (service.getDeploymentType() != null) {
+      pageRequest.addFilter(
+          InfrastructureDefinitionKeys.deploymentType, Operator.EQ, service.getDeploymentType().name());
+    }
+    SearchFilter op1 =
+        SearchFilter.builder().fieldName(InfrastructureDefinitionKeys.scopedToServices).op(Operator.NOT_EXISTS).build();
+    SearchFilter op2 = SearchFilter.builder()
+                           .fieldName(InfrastructureDefinitionKeys.scopedToServices)
+                           .op(Operator.CONTAINS)
+                           .fieldValues(new Object[] {serviceId})
+                           .build();
+    pageRequest.addFilter(InfrastructureDefinitionKeys.scopedToServices, Operator.OR, op1, op2);
   }
 
   @Override

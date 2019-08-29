@@ -53,9 +53,9 @@ public class InfrastructureDefinitionResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ENV, action = READ)
-  public RestResponse<PageResponse<InfrastructureDefinition>> list(@NotEmpty @QueryParam("appId") String appId,
-      @NotEmpty @QueryParam("envId") String envId, @QueryParam("serviceId") String serviceId) {
-    return new RestResponse<>(infrastructureDefinitionService.list(appId, envId, serviceId));
+  public RestResponse<PageResponse<InfrastructureDefinition>> list(
+      @BeanParam PageRequest<InfrastructureDefinition> pageRequest) {
+    return new RestResponse<>(infrastructureDefinitionService.list(pageRequest));
   }
 
   @GET
