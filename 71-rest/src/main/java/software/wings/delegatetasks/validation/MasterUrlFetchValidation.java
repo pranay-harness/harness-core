@@ -5,13 +5,10 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.harness.beans.DelegateTask;
-import io.harness.delegate.task.utils.KmsUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.KmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
-import software.wings.beans.VaultConfig;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.MasterUrlFetchTaskParameter;
 
@@ -49,18 +46,16 @@ public class MasterUrlFetchValidation extends AbstractDelegateValidateTask {
     ContainerServiceParams containerServiceParams = taskParameter.getContainerServiceParams();
     EncryptedDataDetail encryptedDataDetail = containerServiceParams.getEncryptionDetails().get(0);
     EncryptionConfig encryptionConfig = encryptedDataDetail.getEncryptionConfig();
-    if (encryptionConfig instanceof KmsConfig) {
-      String kmsUrl = KmsUtils.generateKmsUrl(((KmsConfig) encryptionConfig).getRegion());
-      logger.info("[MasterUrlValidation] Criteria Found for Kms with url" + kmsUrl);
-      return kmsUrl;
-    } else if (encryptionConfig instanceof VaultConfig) {
-      String vaultUrl = ((VaultConfig) encryptionConfig).getVaultUrl();
-      logger.info("[MasterUrlValidation] Criteria Found for Vault with url" + vaultUrl);
-      return vaultUrl;
+
+    if (encryptionConfig == null) {
+      logger.error("[MasterUrlValidation] No criteria Found. Should Not Happen");
+      return null;
     } else if (encryptionConfig instanceof LocalEncryptionConfig) {
       return LOCAL_ENCRYPTION_CONFIG;
+    } else {
+      String masterValidationUrl = encryptionConfig.getEncryptionServiceUrl();
+      logger.info("[MasterUrlValidation] Criteria Found for validation with url" + masterValidationUrl);
+      return masterValidationUrl;
     }
-    logger.error("[MasterUrlValidation] No criteria Found. Should Not Happen");
-    return null;
   }
 }
