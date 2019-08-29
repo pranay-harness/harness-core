@@ -3,6 +3,7 @@ package software.wings.sm.states.pcf;
 import static com.google.common.collect.Maps.newHashMap;
 import static java.util.Collections.emptyList;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -170,10 +171,10 @@ public class PcfDeployState extends State {
 
     delegateService.queueTask(task);
 
-    return ExecutionResponse.Builder.anExecutionResponse()
-        .withCorrelationIds(Arrays.asList(activity.getUuid()))
-        .withStateExecutionData(stateExecutionData)
-        .withAsync(true)
+    return anExecutionResponse()
+        .correlationIds(Arrays.asList(activity.getUuid()))
+        .stateExecutionData(stateExecutionData)
+        .async(true)
         .build();
   }
 
@@ -310,12 +311,12 @@ public class PcfDeployState extends State {
             .withPcfInstanceElements(pcfDeployCommandResponse.getPcfInstanceElements())
             .build();
 
-    return ExecutionResponse.Builder.anExecutionResponse()
-        .withExecutionStatus(executionStatus)
-        .withErrorMessage(executionResponse.getErrorMessage())
-        .withStateExecutionData(stateExecutionData)
-        .addContextElement(instanceElementListParam)
-        .addNotifyElement(instanceElementListParam)
+    return anExecutionResponse()
+        .executionStatus(executionStatus)
+        .errorMessage(executionResponse.getErrorMessage())
+        .stateExecutionData(stateExecutionData)
+        .contextElement(instanceElementListParam)
+        .notifyElement(instanceElementListParam)
         .build();
   }
 

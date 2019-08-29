@@ -131,10 +131,7 @@ public class K8sApplyState extends State implements K8sStateExecutor {
     stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
     stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
 
-    return anExecutionResponse()
-        .withExecutionStatus(executionStatus)
-        .withStateExecutionData(stateExecutionData)
-        .build();
+    return anExecutionResponse().executionStatus(executionStatus).stateExecutionData(stateExecutionData).build();
   }
 
   @Override

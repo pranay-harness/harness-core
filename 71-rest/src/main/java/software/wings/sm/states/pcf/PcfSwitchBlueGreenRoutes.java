@@ -1,6 +1,7 @@
 package software.wings.sm.states.pcf;
 
 import static java.util.stream.Collectors.toList;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
 
@@ -171,10 +172,10 @@ public class PcfSwitchBlueGreenRoutes extends State {
       stateExecutionData.setStatus(executionStatus);
       stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
 
-      return ExecutionResponse.Builder.anExecutionResponse()
-          .withExecutionStatus(executionStatus)
-          .withErrorMessage(executionResponse.getErrorMessage())
-          .withStateExecutionData(stateExecutionData)
+      return anExecutionResponse()
+          .executionStatus(executionStatus)
+          .errorMessage(executionResponse.getErrorMessage())
+          .stateExecutionData(stateExecutionData)
           .build();
 
     } catch (WingsException e) {

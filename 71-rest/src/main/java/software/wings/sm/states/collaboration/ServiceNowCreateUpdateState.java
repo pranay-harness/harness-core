@@ -97,9 +97,9 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
     }
 
     return anExecutionResponse()
-        .withStateExecutionData(snowExecutionData)
-        .withExecutionStatus(snowExecutionData.getExecutionStatus())
-        .withErrorMessage(snowExecutionData.getResponseMsg())
+        .stateExecutionData(snowExecutionData)
+        .executionStatus(snowExecutionData.getExecutionStatus())
+        .errorMessage(snowExecutionData.getResponseMsg())
         .build();
   }
 
@@ -155,10 +155,10 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
     return anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(Collections.singletonList(activityId))
-        .withDelegateTaskId(delegateTaskId)
-        .withStateExecutionData(ServiceNowExecutionData.builder().activityId(activityId).build())
+        .async(true)
+        .correlationIds(Collections.singletonList(activityId))
+        .delegateTaskId(delegateTaskId)
+        .stateExecutionData(ServiceNowExecutionData.builder().activityId(activityId).build())
         .build();
   }
 

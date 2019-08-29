@@ -138,7 +138,7 @@ public abstract class NodeSelectState extends State {
           serviceInstances, hostExclusionList, infrastructureMapping, totalAvailableInstances, context);
 
       if (isNotEmpty(errorMessage)) {
-        return anExecutionResponse().withExecutionStatus(ExecutionStatus.FAILED).withErrorMessage(errorMessage).build();
+        return anExecutionResponse().executionStatus(ExecutionStatus.FAILED).errorMessage(errorMessage).build();
       }
 
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
@@ -173,14 +173,14 @@ public abstract class NodeSelectState extends State {
       ContextElement serviceIdParamElement =
           aServiceInstanceIdsParam().withInstanceIds(serviceInstancesIds).withServiceId(serviceId).build();
       ExecutionResponse.Builder executionResponse = anExecutionResponse()
-                                                        .addContextElement(serviceIdParamElement)
-                                                        .addNotifyElement(serviceIdParamElement)
-                                                        .withStateExecutionData(selectedNodeExecutionData);
+                                                        .contextElement(serviceIdParamElement)
+                                                        .notifyElement(serviceIdParamElement)
+                                                        .stateExecutionData(selectedNodeExecutionData);
       if (isEmpty(serviceInstances)) {
         if (!excludeHostsWithSameArtifact) {
-          executionResponse.withErrorMessage("No nodes selected");
+          executionResponse.errorMessage("No nodes selected");
         } else {
-          executionResponse.withErrorMessage("No nodes selected (Nodes already deployed with the same artifact)");
+          executionResponse.errorMessage("No nodes selected (Nodes already deployed with the same artifact)");
         }
       }
       return executionResponse.build();

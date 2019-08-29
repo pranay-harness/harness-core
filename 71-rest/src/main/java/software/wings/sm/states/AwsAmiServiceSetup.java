@@ -164,12 +164,12 @@ public class AwsAmiServiceSetup extends State {
             .preDeploymentData(amiServiceSetupResponse.getPreDeploymentData())
             .build();
 
-    return ExecutionResponse.Builder.anExecutionResponse()
-        .withExecutionStatus(amiServiceSetupResponse.getExecutionStatus())
-        .withErrorMessage(amiServiceSetupResponse.getErrorMessage())
-        .withStateExecutionData(awsAmiExecutionData)
-        .addContextElement(amiServiceElement)
-        .addNotifyElement(amiServiceElement)
+    return anExecutionResponse()
+        .executionStatus(amiServiceSetupResponse.getExecutionStatus())
+        .errorMessage(amiServiceSetupResponse.getErrorMessage())
+        .stateExecutionData(awsAmiExecutionData)
+        .contextElement(amiServiceElement)
+        .notifyElement(amiServiceElement)
         .build();
   }
 
@@ -326,11 +326,11 @@ public class AwsAmiServiceSetup extends State {
     }
 
     return anExecutionResponse()
-        .withCorrelationIds(singletonList(activity.getUuid()))
-        .withStateExecutionData(awsAmiExecutionData)
-        .withAsync(true)
-        .withExecutionStatus(executionStatus)
-        .withErrorMessage(errorMessage)
+        .correlationIds(singletonList(activity.getUuid()))
+        .stateExecutionData(awsAmiExecutionData)
+        .async(true)
+        .executionStatus(executionStatus)
+        .errorMessage(errorMessage)
         .build();
   }
 

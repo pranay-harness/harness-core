@@ -135,17 +135,17 @@ public class EnvState extends State {
         anEnvStateExecutionData().withWorkflowId(workflowId).withEnvId(envId).build();
     if (workflow == null || workflow.getOrchestrationWorkflow() == null) {
       return anExecutionResponse()
-          .withExecutionStatus(FAILED)
-          .withErrorMessage("Workflow does not exist")
-          .withStateExecutionData(envStateExecutionData)
+          .executionStatus(FAILED)
+          .errorMessage("Workflow does not exist")
+          .stateExecutionData(envStateExecutionData)
           .build();
     }
 
     if (disable) {
       return anExecutionResponse()
-          .withExecutionStatus(SKIPPED)
-          .withErrorMessage("Workflow [" + workflow.getName() + "] step is disabled. Execution has been skipped.")
-          .withStateExecutionData(envStateExecutionData)
+          .executionStatus(SKIPPED)
+          .errorMessage("Workflow [" + workflow.getName() + "] step is disabled. Execution has been skipped.")
+          .stateExecutionData(envStateExecutionData)
           .build();
     }
 
@@ -175,16 +175,16 @@ public class EnvState extends State {
           appId, envId, workflowId, context.getWorkflowExecutionId(), executionArgs, null);
       envStateExecutionData.setWorkflowExecutionId(execution.getUuid());
       return anExecutionResponse()
-          .withAsync(true)
-          .withCorrelationIds(asList(execution.getUuid()))
-          .withStateExecutionData(envStateExecutionData)
+          .async(true)
+          .correlationIds(asList(execution.getUuid()))
+          .stateExecutionData(envStateExecutionData)
           .build();
     } catch (Exception e) {
       String message = ExceptionUtils.getMessage(e);
       return anExecutionResponse()
-          .withExecutionStatus(FAILED)
-          .withErrorMessage(message)
-          .withStateExecutionData(envStateExecutionData)
+          .executionStatus(FAILED)
+          .errorMessage(message)
+          .stateExecutionData(envStateExecutionData)
           .build();
     }
   }
@@ -327,7 +327,7 @@ public class EnvState extends State {
 
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     EnvExecutionResponseData responseData = (EnvExecutionResponseData) response.values().iterator().next();
-    ExecutionResponse executionResponse = anExecutionResponse().withExecutionStatus(responseData.getStatus()).build();
+    ExecutionResponse executionResponse = anExecutionResponse().executionStatus(responseData.getStatus()).build();
 
     if (responseData.getStatus() != SUCCESS) {
       return executionResponse;

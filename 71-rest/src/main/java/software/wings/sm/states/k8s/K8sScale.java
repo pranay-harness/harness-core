@@ -134,10 +134,10 @@ public class K8sScale extends State {
           k8sStateHelper.getInstanceStatusSummaries(instanceElementListParam.getInstanceElements(), executionStatus));
 
       return anExecutionResponse()
-          .withExecutionStatus(executionStatus)
-          .withStateExecutionData(context.getStateExecutionData())
-          .addContextElement(instanceElementListParam)
-          .addNotifyElement(instanceElementListParam)
+          .executionStatus(executionStatus)
+          .stateExecutionData(context.getStateExecutionData())
+          .contextElement(instanceElementListParam)
+          .notifyElement(instanceElementListParam)
           .build();
     } catch (WingsException e) {
       throw e;

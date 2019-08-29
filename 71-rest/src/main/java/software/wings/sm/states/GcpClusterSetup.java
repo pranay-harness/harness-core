@@ -113,15 +113,15 @@ public class GcpClusterSetup extends State {
                                         .build();
 
     return anExecutionResponse()
-        .withExecutionStatus(ExecutionStatus.SUCCESS)
-        .addContextElement(clusterElement)
-        .addNotifyElement(clusterElement)
-        .withStateExecutionData(aGcpClusterExecutionData()
-                                    .withClusterName(clusterName)
-                                    .withZone(zone)
-                                    .withNodeCount(nodeCount)
-                                    .withMachineType(machineType)
-                                    .build())
+        .executionStatus(ExecutionStatus.SUCCESS)
+        .contextElement(clusterElement)
+        .notifyElement(clusterElement)
+        .stateExecutionData(aGcpClusterExecutionData()
+                                .withClusterName(clusterName)
+                                .withZone(zone)
+                                .withNodeCount(nodeCount)
+                                .withMachineType(machineType)
+                                .build())
         .build();
   }
 

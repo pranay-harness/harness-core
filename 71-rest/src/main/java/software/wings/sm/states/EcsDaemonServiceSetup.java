@@ -145,10 +145,10 @@ public class EcsDaemonServiceSetup extends State {
         ecsStateHelper.createAndQueueDelegateTaskForEcsServiceSetUp(request, dataBag, activity, delegateService);
 
     return anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(singletonList(activity.getUuid()))
-        .withStateExecutionData(stateExecutionData)
-        .withDelegateTaskId(delegateTaskId)
+        .async(true)
+        .correlationIds(singletonList(activity.getUuid()))
+        .stateExecutionData(stateExecutionData)
+        .delegateTaskId(delegateTaskId)
         .build();
   }
 
@@ -210,10 +210,10 @@ public class EcsDaemonServiceSetup extends State {
     ecsStateHelper.populateFromDelegateResponse(setupExecutionData, executionData, containerServiceElement);
 
     return anExecutionResponse()
-        .withStateExecutionData(executionData)
-        .withExecutionStatus(executionStatus)
-        .addContextElement(containerServiceElement)
-        .addNotifyElement(containerServiceElement)
+        .stateExecutionData(executionData)
+        .executionStatus(executionStatus)
+        .contextElement(containerServiceElement)
+        .notifyElement(containerServiceElement)
         .build();
   }
 }

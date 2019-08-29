@@ -143,10 +143,10 @@ public class AwsLambdaVerification extends State {
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
     return anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(singletonList(activityId))
-        .withDelegateTaskId(delegateTaskId)
-        .withStateExecutionData(
+        .async(true)
+        .correlationIds(singletonList(activityId))
+        .delegateTaskId(delegateTaskId)
+        .stateExecutionData(
             CommandStateExecutionData.Builder.aCommandStateExecutionData().withActivityId(activityId).build())
         .build();
   }
@@ -163,10 +163,10 @@ public class AwsLambdaVerification extends State {
       awsLambdaExecutionData.setFunctionError(functionResponse.getFunctionError());
 
       if (functionResponse.getExecutionStatus() == ExecutionStatus.FAILED) {
-        return ExecutionResponse.Builder.anExecutionResponse()
-            .withExecutionStatus(functionResponse.getExecutionStatus())
-            .withStateExecutionData(awsLambdaExecutionData)
-            .withErrorMessage(functionResponse.getErrorMessage())
+        return anExecutionResponse()
+            .executionStatus(functionResponse.getExecutionStatus())
+            .stateExecutionData(awsLambdaExecutionData)
+            .errorMessage(functionResponse.getErrorMessage())
             .build();
       }
 
@@ -195,10 +195,7 @@ public class AwsLambdaVerification extends State {
       awsLambdaExecutionData.setAssertionStatus(executionStatus.name());
 
       updateActivityStatus(activityId, ((ExecutionContextImpl) context).getApp().getUuid(), executionStatus);
-      return ExecutionResponse.Builder.anExecutionResponse()
-          .withExecutionStatus(executionStatus)
-          .withStateExecutionData(awsLambdaExecutionData)
-          .build();
+      return anExecutionResponse().executionStatus(executionStatus).stateExecutionData(awsLambdaExecutionData).build();
 
     } catch (WingsException e) {
       throw e;

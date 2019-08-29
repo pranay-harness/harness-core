@@ -163,10 +163,10 @@ public class AwsAmiSwitchRoutesState extends State {
     delegateService.queueTask(delegateTask);
 
     return anExecutionResponse()
-        .withAsync(true)
-        .withStateExecutionData(executionData)
-        .withExecutionStatus(ExecutionStatus.SUCCESS)
-        .addCorrelationIds(activity.getUuid())
+        .async(true)
+        .stateExecutionData(executionData)
+        .executionStatus(ExecutionStatus.SUCCESS)
+        .correlationId(activity.getUuid())
         .build();
   }
 
@@ -174,7 +174,7 @@ public class AwsAmiSwitchRoutesState extends State {
     String activityId = response.keySet().iterator().next();
     AwsAmiSwitchRoutesResponse routesResponse = (AwsAmiSwitchRoutesResponse) response.values().iterator().next();
     activityService.updateStatus(activityId, context.getAppId(), routesResponse.getExecutionStatus());
-    return anExecutionResponse().withExecutionStatus(routesResponse.getExecutionStatus()).build();
+    return anExecutionResponse().executionStatus(routesResponse.getExecutionStatus()).build();
   }
 
   protected Activity createActivity(ExecutionContext executionContext) {

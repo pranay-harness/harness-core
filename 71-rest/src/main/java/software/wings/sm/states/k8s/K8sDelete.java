@@ -107,8 +107,8 @@ public class K8sDelete extends State {
       stateExecutionData.setStatus(executionStatus);
 
       return anExecutionResponse()
-          .withExecutionStatus(executionStatus)
-          .withStateExecutionData(context.getStateExecutionData())
+          .executionStatus(executionStatus)
+          .stateExecutionData(context.getStateExecutionData())
           .build();
     } catch (WingsException e) {
       throw e;

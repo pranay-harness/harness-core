@@ -6,6 +6,7 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -110,11 +111,11 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
                                     .build();
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
-    return ExecutionResponse.Builder.anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(Collections.singletonList(activityId))
-        .withDelegateTaskId(delegateTaskId)
-        .withStateExecutionData(ScriptStateExecutionData.builder().activityId(activityId).build())
+    return anExecutionResponse()
+        .async(true)
+        .correlationIds(Collections.singletonList(activityId))
+        .delegateTaskId(delegateTaskId)
+        .stateExecutionData(ScriptStateExecutionData.builder().activityId(activityId).build())
         .build();
   }
 
@@ -143,12 +144,12 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
     }
 
     activityService.updateStatus(activityId, context.getAppId(), executionData.getExecutionStatus());
-    return ExecutionResponse.Builder.anExecutionResponse()
-        .withStateExecutionData(executionData)
-        .addContextElement(outputInfoElement)
-        .addNotifyElement(outputInfoElement)
-        .withExecutionStatus(executionData.getExecutionStatus())
-        .withErrorMessage(executionData.getErrorMsg())
+    return anExecutionResponse()
+        .stateExecutionData(executionData)
+        .contextElement(outputInfoElement)
+        .notifyElement(outputInfoElement)
+        .executionStatus(executionData.getExecutionStatus())
+        .errorMessage(executionData.getErrorMsg())
         .build();
   }
 

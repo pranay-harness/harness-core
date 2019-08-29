@@ -181,10 +181,10 @@ public abstract class ContainerServiceDeploy extends State {
               .build());
 
       return anExecutionResponse()
-          .withAsync(true)
-          .withCorrelationIds(singletonList(waitId))
-          .withStateExecutionData(executionData)
-          .withDelegateTaskId(delegateTaskId)
+          .async(true)
+          .correlationIds(singletonList(waitId))
+          .stateExecutionData(executionData)
+          .delegateTaskId(delegateTaskId)
           .build();
     } catch (WingsException e) {
       throw e;
@@ -276,10 +276,10 @@ public abstract class ContainerServiceDeploy extends State {
     }
 
     return anExecutionResponse()
-        .withStateExecutionData(executionData)
-        .withExecutionStatus(status)
-        .addContextElement(listParam)
-        .addNotifyElement(listParam)
+        .stateExecutionData(executionData)
+        .executionStatus(status)
+        .contextElement(listParam)
+        .notifyElement(listParam)
         .build();
   }
 

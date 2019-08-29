@@ -340,10 +340,10 @@ public class PcfSetupState extends State {
 
     delegateService.queueTask(delegateTask);
 
-    return ExecutionResponse.Builder.anExecutionResponse()
-        .withCorrelationIds(Arrays.asList(activity.getUuid()))
-        .withStateExecutionData(stateExecutionData)
-        .withAsync(true)
+    return anExecutionResponse()
+        .correlationIds(Arrays.asList(activity.getUuid()))
+        .stateExecutionData(stateExecutionData)
+        .async(true)
         .build();
   }
 
@@ -429,11 +429,11 @@ public class PcfSetupState extends State {
     PcfSetupContextElement pcfSetupContextElement = pcfSetupContextElementBuilder.build();
 
     return anExecutionResponse()
-        .withExecutionStatus(executionStatus)
-        .withErrorMessage(executionResponse.getErrorMessage())
-        .withStateExecutionData(stateExecutionData)
-        .addContextElement(pcfSetupContextElement)
-        .addNotifyElement(pcfSetupContextElement)
+        .executionStatus(executionStatus)
+        .errorMessage(executionResponse.getErrorMessage())
+        .stateExecutionData(stateExecutionData)
+        .contextElement(pcfSetupContextElement)
+        .notifyElement(pcfSetupContextElement)
         .build();
   }
 

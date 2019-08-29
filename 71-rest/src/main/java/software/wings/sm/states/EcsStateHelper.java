@@ -274,9 +274,9 @@ public class EcsStateHelper {
     delegateService.queueTask(delegateTask);
 
     return anExecutionResponse()
-        .withCorrelationIds(Arrays.asList(activityId))
-        .withStateExecutionData(stateExecutionData)
-        .withAsync(true)
+        .correlationIds(Arrays.asList(activityId))
+        .stateExecutionData(stateExecutionData)
+        .async(true)
         .build();
   }
 
@@ -581,14 +581,14 @@ public class EcsStateHelper {
       executionData.setNewInstanceData(deployResponse.getNewInstanceData());
 
       return anExecutionResponse()
-          .withStateExecutionData(executionData)
-          .withExecutionStatus(executionStatus)
-          .addContextElement(listParam)
-          .addNotifyElement(listParam)
+          .stateExecutionData(executionData)
+          .executionStatus(executionStatus)
+          .contextElement(listParam)
+          .notifyElement(listParam)
           .build();
     }
 
-    return anExecutionResponse().withStateExecutionData(executionData).withExecutionStatus(executionStatus).build();
+    return anExecutionResponse().stateExecutionData(executionData).executionStatus(executionStatus).build();
   }
 
   public String createAndQueueDelegateTaskForEcsServiceDeploy(EcsDeployDataBag deployDataBag,

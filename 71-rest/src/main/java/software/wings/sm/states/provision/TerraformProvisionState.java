@@ -225,11 +225,11 @@ public abstract class TerraformProvisionState extends State {
             .build();
 
     return anExecutionResponse()
-        .withStateExecutionData(terraformExecutionData)
-        .addContextElement(inheritPlanElement)
-        .addNotifyElement(inheritPlanElement)
-        .withExecutionStatus(terraformExecutionData.getExecutionStatus())
-        .withErrorMessage(terraformExecutionData.getErrorMessage())
+        .stateExecutionData(terraformExecutionData)
+        .contextElement(inheritPlanElement)
+        .notifyElement(inheritPlanElement)
+        .executionStatus(terraformExecutionData.getExecutionStatus())
+        .errorMessage(terraformExecutionData.getErrorMessage())
         .build();
   }
 
@@ -244,9 +244,9 @@ public abstract class TerraformProvisionState extends State {
     saveUserInputs(context, terraformExecutionData, terraformProvisioner);
     if (terraformExecutionData.getExecutionStatus() == FAILED) {
       return anExecutionResponse()
-          .withStateExecutionData(terraformExecutionData)
-          .withExecutionStatus(terraformExecutionData.getExecutionStatus())
-          .withErrorMessage(terraformExecutionData.getErrorMessage())
+          .stateExecutionData(terraformExecutionData)
+          .executionStatus(terraformExecutionData.getExecutionStatus())
+          .errorMessage(terraformExecutionData.getErrorMessage())
           .build();
     } else {
       TerraformOutputInfoElement outputInfoElement = context.getContextElement(ContextElementType.TERRAFORM_PROVISION);
@@ -266,11 +266,11 @@ public abstract class TerraformProvisionState extends State {
 
       // subsequent execution
       return anExecutionResponse()
-          .withStateExecutionData(terraformExecutionData)
-          .addContextElement(outputInfoElement)
-          .addNotifyElement(outputInfoElement)
-          .withExecutionStatus(terraformExecutionData.getExecutionStatus())
-          .withErrorMessage(terraformExecutionData.getErrorMessage())
+          .stateExecutionData(terraformExecutionData)
+          .contextElement(outputInfoElement)
+          .notifyElement(outputInfoElement)
+          .executionStatus(terraformExecutionData.getExecutionStatus())
+          .errorMessage(terraformExecutionData.getErrorMessage())
           .build();
     }
   }
@@ -507,10 +507,10 @@ public abstract class TerraformProvisionState extends State {
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
     return anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(singletonList(activityId))
-        .withDelegateTaskId(delegateTaskId)
-        .withStateExecutionData(ScriptStateExecutionData.builder().activityId(activityId).build())
+        .async(true)
+        .correlationIds(singletonList(activityId))
+        .delegateTaskId(delegateTaskId)
+        .stateExecutionData(ScriptStateExecutionData.builder().activityId(activityId).build())
         .build();
   }
 

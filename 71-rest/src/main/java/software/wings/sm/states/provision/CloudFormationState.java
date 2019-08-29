@@ -136,13 +136,13 @@ public abstract class CloudFormationState extends State {
         executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
                                                                                              : ExecutionStatus.FAILED;
     activityService.updateStatus(activityId, context.getAppId(), executionStatus);
-    ExecutionResponse.Builder builder = anExecutionResponse().withExecutionStatus(executionStatus);
+    ExecutionResponse.Builder builder = anExecutionResponse().executionStatus(executionStatus);
     if (ExecutionStatus.SUCCESS.equals(executionStatus)) {
       List<CloudFormationElement> elements = handleResponse(executionResponse.getCommandResponse(), context);
       if (isNotEmpty(elements)) {
         elements.forEach(element -> {
-          builder.addContextElement(element);
-          builder.addNotifyElement(element);
+          builder.contextElement(element);
+          builder.notifyElement(element);
         });
       }
     }
@@ -194,10 +194,10 @@ public abstract class CloudFormationState extends State {
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
     return anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(Collections.singletonList(activityId))
-        .withDelegateTaskId(delegateTaskId)
-        .withStateExecutionData(ScriptStateExecutionData.builder().activityId(activityId).build())
+        .async(true)
+        .correlationIds(Collections.singletonList(activityId))
+        .delegateTaskId(delegateTaskId)
+        .stateExecutionData(ScriptStateExecutionData.builder().activityId(activityId).build())
         .build();
   }
 

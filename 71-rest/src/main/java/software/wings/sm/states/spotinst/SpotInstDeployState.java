@@ -7,6 +7,7 @@ import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STAT
 import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -151,10 +152,10 @@ public class SpotInstDeployState extends State {
 
     delegateService.queueTask(task);
 
-    return ExecutionResponse.Builder.anExecutionResponse()
-        .withCorrelationIds(Arrays.asList(activity.getUuid()))
-        .withStateExecutionData(stateExecutionData)
-        .withAsync(true)
+    return anExecutionResponse()
+        .correlationIds(Arrays.asList(activity.getUuid()))
+        .stateExecutionData(stateExecutionData)
+        .async(true)
         .build();
   }
 
@@ -209,12 +210,12 @@ public class SpotInstDeployState extends State {
                 spotInstDeployTaskResponse.getEc2InstancesAdded(), awsAmiInfrastructureMapping, context))
             .build();
 
-    return ExecutionResponse.Builder.anExecutionResponse()
-        .withExecutionStatus(executionStatus)
-        .withErrorMessage(executionResponse.getErrorMessage())
-        .withStateExecutionData(stateExecutionData)
-        .addContextElement(instanceElementListParam)
-        .addNotifyElement(instanceElementListParam)
+    return anExecutionResponse()
+        .executionStatus(executionStatus)
+        .errorMessage(executionResponse.getErrorMessage())
+        .stateExecutionData(stateExecutionData)
+        .contextElement(instanceElementListParam)
+        .notifyElement(instanceElementListParam)
         .build();
   }
 

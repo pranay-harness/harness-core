@@ -51,7 +51,7 @@ public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
   @Override
   protected ExecutionResponse executeInternal(ExecutionContext context) {
     if (allPhaseRollbackDone(context)) {
-      return anExecutionResponse().withExecutionStatus(ExecutionStatus.SUCCESS).build();
+      return anExecutionResponse().executionStatus(ExecutionStatus.SUCCESS).build();
     }
 
     AmiServiceSetupElement serviceSetupElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
@@ -111,10 +111,10 @@ public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
     awsAmiDeployStateExecutionData.setRollback(true);
 
     return anExecutionResponse()
-        .withAsync(true)
-        .withStateExecutionData(awsAmiDeployStateExecutionData)
-        .withExecutionStatus(ExecutionStatus.SUCCESS)
-        .addCorrelationIds(activity.getUuid())
+        .async(true)
+        .stateExecutionData(awsAmiDeployStateExecutionData)
+        .executionStatus(ExecutionStatus.SUCCESS)
+        .correlationId(activity.getUuid())
         .build();
   }
 

@@ -128,9 +128,9 @@ public class SpotInstListenerUpdateState extends State {
 
     delegateService.queueTask(task);
     return anExecutionResponse()
-        .withStateExecutionData(stateExecutionData)
-        .withCorrelationIds(Arrays.asList(activity.getUuid()))
-        .withAsync(true)
+        .stateExecutionData(stateExecutionData)
+        .correlationIds(Arrays.asList(activity.getUuid()))
+        .async(true)
         .build();
   }
 
@@ -156,9 +156,9 @@ public class SpotInstListenerUpdateState extends State {
     stateExecutionData.setStatus(executionStatus);
 
     return anExecutionResponse()
-        .withExecutionStatus(executionStatus)
-        .withStateExecutionData(stateExecutionData)
-        .withErrorMessage(executionResponse.getErrorMessage())
+        .executionStatus(executionStatus)
+        .stateExecutionData(stateExecutionData)
+        .errorMessage(executionResponse.getErrorMessage())
         .build();
   }
 

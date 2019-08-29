@@ -105,8 +105,8 @@ public class K8sTrafficSplitState extends State {
       stateExecutionData.setStatus(executionStatus);
 
       return anExecutionResponse()
-          .withStateExecutionData(context.getStateExecutionData())
-          .withExecutionStatus(executionStatus)
+          .stateExecutionData(context.getStateExecutionData())
+          .executionStatus(executionStatus)
           .build();
     } catch (WingsException e) {
       throw e;

@@ -370,10 +370,10 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     String delegateTaskId = scheduleDelegateTask(delegateTask);
 
     return anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(Collections.singletonList(activityId))
-        .withStateExecutionData(executionDataBuilder.build())
-        .withDelegateTaskId(delegateTaskId)
+        .async(true)
+        .correlationIds(Collections.singletonList(activityId))
+        .stateExecutionData(executionDataBuilder.build())
+        .delegateTaskId(delegateTaskId)
         .build();
   }
 

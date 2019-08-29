@@ -229,8 +229,8 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
     if (jenkinsConfig == null) {
       logger.warn("JenkinsConfig Id {} does not exist. It might have been deleted", jenkinsConfigId);
       return anExecutionResponse()
-          .withExecutionStatus(FAILED)
-          .withErrorMessage("Jenkins Server was deleted. Please update with an appropriate server.")
+          .executionStatus(FAILED)
+          .errorMessage("Jenkins Server was deleted. Please update with an appropriate server.")
           .build();
     }
 
@@ -283,10 +283,10 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
                                                     .activityId(activityId)
                                                     .build();
     return anExecutionResponse()
-        .withAsync(true)
-        .withStateExecutionData(jenkinsExecutionData)
-        .withCorrelationIds(Collections.singletonList(activityId))
-        .withDelegateTaskId(delegateTaskId)
+        .async(true)
+        .stateExecutionData(jenkinsExecutionData)
+        .correlationIds(Collections.singletonList(activityId))
+        .delegateTaskId(delegateTaskId)
         .build();
   }
 
@@ -315,7 +315,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
     JenkinsExecutionResponse jenkinsExecutionResponse = (JenkinsExecutionResponse) response.values().iterator().next();
 
     if (isEmpty(jenkinsExecutionResponse.queuedBuildUrl)) {
-      return anExecutionResponse().withAsync(true).withExecutionStatus(FAILED).build();
+      return anExecutionResponse().async(true).executionStatus(FAILED).build();
     }
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
@@ -332,8 +332,8 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
     if (jenkinsConfig == null) {
       logger.warn("JenkinsConfig Id {} does not exist. It might have been deleted", jenkinsConfigId);
       return anExecutionResponse()
-          .withExecutionStatus(FAILED)
-          .withErrorMessage("Jenkins Server was deleted. Please update with an appropriate server.")
+          .executionStatus(FAILED)
+          .errorMessage("Jenkins Server was deleted. Please update with an appropriate server.")
           .build();
     }
 
@@ -368,10 +368,10 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
     jenkinsExecutionData.setBuildFullDisplayName(jenkinsExecutionResponse.getBuildFullDisplayName());
 
     return anExecutionResponse()
-        .withAsync(true)
-        .withStateExecutionData(jenkinsExecutionData)
-        .withCorrelationIds(Collections.singletonList(waitId))
-        .withDelegateTaskId(delegateTaskId)
+        .async(true)
+        .stateExecutionData(jenkinsExecutionData)
+        .correlationIds(Collections.singletonList(waitId))
+        .delegateTaskId(delegateTaskId)
         .build();
   }
 
@@ -381,8 +381,8 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
     JenkinsExecutionResponse jenkinsExecutionResponse;
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
       return anExecutionResponse()
-          .withExecutionStatus(FAILED)
-          .withErrorMessage(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage())
+          .executionStatus(FAILED)
+          .errorMessage(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage())
           .build();
     }
 
@@ -407,9 +407,9 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
         updateActivityStatus(jenkinsExecutionResponse.getActivityId(),
             ((ExecutionContextImpl) context).getApp().getUuid(), jenkinsExecutionResponse.getExecutionStatus());
         return anExecutionResponse()
-            .withExecutionStatus(jenkinsExecutionResponse.getExecutionStatus())
-            .withStateExecutionData(jenkinsExecutionData)
-            .withErrorMessage(jenkinsExecutionResponse.getErrorMessage())
+            .executionStatus(jenkinsExecutionResponse.getExecutionStatus())
+            .stateExecutionData(jenkinsExecutionData)
+            .errorMessage(jenkinsExecutionResponse.getErrorMessage())
             .build();
       }
       if (isNotEmpty(jenkinsExecutionResponse.getQueuedBuildUrl())) {
@@ -424,9 +424,9 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
         updateActivityStatus(
             jenkinsExecutionResponse.getActivityId(), ((ExecutionContextImpl) context).getApp().getUuid(), FAILED);
         return anExecutionResponse()
-            .withExecutionStatus(FAILED)
-            .withStateExecutionData(jenkinsExecutionData)
-            .withErrorMessage("Queued build URL is empty. Verify in Jenkins server.")
+            .executionStatus(FAILED)
+            .stateExecutionData(jenkinsExecutionData)
+            .errorMessage("Queued build URL is empty. Verify in Jenkins server.")
             .build();
       }
     } else {
@@ -437,8 +437,8 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
     handleSweepingOutput(sweepingOutputService, context, jenkinsExecutionData);
 
     return anExecutionResponse()
-        .withExecutionStatus(jenkinsExecutionResponse.getExecutionStatus())
-        .withStateExecutionData(jenkinsExecutionData)
+        .executionStatus(jenkinsExecutionResponse.getExecutionStatus())
+        .stateExecutionData(jenkinsExecutionData)
         .build();
   }
 

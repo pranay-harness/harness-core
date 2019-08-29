@@ -94,7 +94,7 @@ public class BarrierState extends State {
 
     ResponseData notifyResponseData = response.values().iterator().next();
     if (notifyResponseData instanceof BarrierStatusData && ((BarrierStatusData) notifyResponseData).isFailed()) {
-      executionResponseBuilder.withExecutionStatus(ExecutionStatus.FAILED).withErrorMessage(errorMsg);
+      executionResponseBuilder.executionStatus(ExecutionStatus.FAILED).errorMessage(errorMsg);
     }
 
     return executionResponseBuilder.build();
@@ -106,26 +106,26 @@ public class BarrierState extends State {
     final Builder executionResponseBuilder = executionResponseBuilder(context);
 
     if (barrierInstance == null) {
-      return executionResponseBuilder.withExecutionStatus(ExecutionStatus.SUCCESS).build();
+      return executionResponseBuilder.executionStatus(ExecutionStatus.SUCCESS).build();
     }
     final Barrier.State state = Barrier.State.valueOf(barrierInstance.getState());
     switch (state) {
       case DOWN:
-        return executionResponseBuilder.withExecutionStatus(ExecutionStatus.SUCCESS).build();
+        return executionResponseBuilder.executionStatus(ExecutionStatus.SUCCESS).build();
       case ENDURE:
-        return executionResponseBuilder.withExecutionStatus(ExecutionStatus.FAILED).withErrorMessage(errorMsg).build();
+        return executionResponseBuilder.executionStatus(ExecutionStatus.FAILED).errorMessage(errorMsg).build();
       case STANDING:
         break;
       default:
         unhandled(state);
     }
-    return executionResponseBuilder.withAsync(true).withCorrelationIds(asList(barrierInstance.getUuid())).build();
+    return executionResponseBuilder.async(true).correlationIds(asList(barrierInstance.getUuid())).build();
   }
 
   private Builder executionResponseBuilder(ExecutionContext context) {
     BarrierExecutionData stateExecutionData = new BarrierExecutionData();
     stateExecutionData.setIdentifier(getIdentifier());
-    return anExecutionResponse().withStateExecutionData(stateExecutionData);
+    return anExecutionResponse().stateExecutionData(stateExecutionData);
   }
 
   private BarrierInstance updateBarrier(ExecutionContext context) {

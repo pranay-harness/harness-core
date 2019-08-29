@@ -231,11 +231,11 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       response.setExecutionStatus(ExecutionStatus.RUNNING);
       scheduleAnalysisCronJob(analysisContext, delegateTaskId);
       return anExecutionResponse()
-          .withAsync(true)
-          .withCorrelationIds(Collections.singletonList(executionData.getCorrelationId()))
-          .withExecutionStatus(ExecutionStatus.RUNNING)
-          .withErrorMessage(responseMessage)
-          .withStateExecutionData(executionData)
+          .async(true)
+          .correlationIds(Collections.singletonList(executionData.getCorrelationId()))
+          .executionStatus(ExecutionStatus.RUNNING)
+          .errorMessage(responseMessage)
+          .stateExecutionData(executionData)
           .build();
     } catch (Exception ex) {
       // set the CV Metadata status to ERROR as well.
@@ -248,18 +248,18 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
         getLogger().error("metric analysis state failed", ex);
       }
       return anExecutionResponse()
-          .withAsync(false)
-          .withCorrelationIds(Collections.singletonList(corelationId))
-          .withExecutionStatus(ExecutionStatus.ERROR)
-          .withErrorMessage(ExceptionUtils.getMessage(ex))
-          .withStateExecutionData(VerificationStateAnalysisExecutionData.builder()
-                                      .appId(context.getAppId())
-                                      .workflowExecutionId(context.getWorkflowExecutionId())
-                                      .stateExecutionInstanceId(context.getStateExecutionInstanceId())
-                                      .delegateTaskId(delegateTaskId)
-                                      .serverConfigId(getAnalysisServerConfigId())
-                                      .mlAnalysisType(MLAnalysisType.TIME_SERIES)
-                                      .build())
+          .async(false)
+          .correlationIds(Collections.singletonList(corelationId))
+          .executionStatus(ExecutionStatus.ERROR)
+          .errorMessage(ExceptionUtils.getMessage(ex))
+          .stateExecutionData(VerificationStateAnalysisExecutionData.builder()
+                                  .appId(context.getAppId())
+                                  .workflowExecutionId(context.getWorkflowExecutionId())
+                                  .stateExecutionInstanceId(context.getStateExecutionInstanceId())
+                                  .delegateTaskId(delegateTaskId)
+                                  .serverConfigId(getAnalysisServerConfigId())
+                                  .mlAnalysisType(MLAnalysisType.TIME_SERIES)
+                                  .build())
           .build();
     }
   }
@@ -291,9 +291,9 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       continuousVerificationService.setMetaDataExecutionStatus(
           context.getStateExecutionInstanceId(), executionResponse.getExecutionStatus(), true);
       return anExecutionResponse()
-          .withExecutionStatus(executionResponse.getExecutionStatus())
-          .withStateExecutionData(executionResponse.getStateExecutionData())
-          .withErrorMessage(executionResponse.getStateExecutionData().getErrorMsg())
+          .executionStatus(executionResponse.getExecutionStatus())
+          .stateExecutionData(executionResponse.getStateExecutionData())
+          .errorMessage(executionResponse.getStateExecutionData().getErrorMsg())
           .build();
     }
 
@@ -338,8 +338,8 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           continuousVerificationService.setMetaDataExecutionStatus(
               executionResponse.getStateExecutionData().getStateExecutionInstanceId(), ExecutionStatus.FAILED, true);
           return anExecutionResponse()
-              .withExecutionStatus(ExecutionStatus.FAILED)
-              .withStateExecutionData(executionResponse.getStateExecutionData())
+              .executionStatus(ExecutionStatus.FAILED)
+              .stateExecutionData(executionResponse.getStateExecutionData())
               .build();
         }
       }
@@ -359,19 +359,18 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           context.getAccountId(), context.getStateExecutionInstanceId(), executionStatus, getPhaseServiceId(context));
 
       return anExecutionResponse()
-          .withExecutionStatus(
-              isQAVerificationPath(appService.get(context.getAppId()).getAccountId(), context.getAppId())
+          .executionStatus(isQAVerificationPath(appService.get(context.getAppId()).getAccountId(), context.getAppId())
                   ? ExecutionStatus.SUCCESS
                   : executionStatus)
-          .withStateExecutionData(executionResponse.getStateExecutionData())
+          .stateExecutionData(executionResponse.getStateExecutionData())
           .build();
     }
 
     executionResponse.getStateExecutionData().setErrorMsg(
         "Analysis for minute " + analysisMinute + " failed to save in DB");
     return anExecutionResponse()
-        .withExecutionStatus(ExecutionStatus.ERROR)
-        .withStateExecutionData(executionResponse.getStateExecutionData())
+        .executionStatus(ExecutionStatus.ERROR)
+        .stateExecutionData(executionResponse.getStateExecutionData())
         .build();
   }
 
@@ -403,10 +402,10 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     continuousVerificationService.setMetaDataExecutionStatus(context.getStateExecutionInstanceId(), status, true);
 
     return anExecutionResponse()
-        .withAsync(false)
-        .withExecutionStatus(status)
-        .withStateExecutionData(executionData)
-        .withErrorMessage(message)
+        .async(false)
+        .executionStatus(status)
+        .stateExecutionData(executionData)
+        .errorMessage(message)
         .build();
   }
 

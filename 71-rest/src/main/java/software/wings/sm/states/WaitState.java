@@ -71,9 +71,9 @@ public class WaitState extends State {
         duration, TimeUnit.SECONDS);
 
     return anExecutionResponse()
-        .withAsync(true)
-        .addCorrelationIds(waitStateExecutionData.getResumeId())
-        .withStateExecutionData(waitStateExecutionData)
+        .async(true)
+        .correlationId(waitStateExecutionData.getResumeId())
+        .stateExecutionData(waitStateExecutionData)
         .build();
   }
 

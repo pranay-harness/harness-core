@@ -151,8 +151,8 @@ public class BambooState extends State {
     if (bambooConfig == null) {
       logger.warn("BamboodConfig Id {} does not exist. It might have been deleted", bambooConfigId);
       return anExecutionResponse()
-          .withExecutionStatus(FAILED)
-          .withErrorMessage("Bamboo Server was deleted. Please update with an appropriate server")
+          .executionStatus(FAILED)
+          .errorMessage("Bamboo Server was deleted. Please update with an appropriate server")
           .build();
     }
 
@@ -202,14 +202,14 @@ public class BambooState extends State {
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
     return anExecutionResponse()
-        .withAsync(true)
-        .withStateExecutionData(BambooExecutionData.builder()
-                                    .planName(planName)
-                                    .parameters(evaluatedParameters)
-                                    .filePathAssertionEntries(evaluatedFilePathsForAssertion)
-                                    .build())
-        .withCorrelationIds(Collections.singletonList(activityId))
-        .withDelegateTaskId(delegateTaskId)
+        .async(true)
+        .stateExecutionData(BambooExecutionData.builder()
+                                .planName(planName)
+                                .parameters(evaluatedParameters)
+                                .filePathAssertionEntries(evaluatedFilePathsForAssertion)
+                                .build())
+        .correlationIds(Collections.singletonList(activityId))
+        .delegateTaskId(delegateTaskId)
         .build();
   }
 
@@ -230,8 +230,8 @@ public class BambooState extends State {
     bambooExecutionData.setFilePathAssertionEntries(bambooExecutionResponse.getFilePathAssertionMap());
 
     return anExecutionResponse()
-        .withExecutionStatus(bambooExecutionResponse.getExecutionStatus())
-        .withStateExecutionData(bambooExecutionData)
+        .executionStatus(bambooExecutionResponse.getExecutionStatus())
+        .stateExecutionData(bambooExecutionData)
         .build();
   }
 

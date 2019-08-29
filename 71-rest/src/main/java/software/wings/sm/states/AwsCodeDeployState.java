@@ -212,10 +212,10 @@ public class AwsCodeDeployState extends State {
                                       .build());
 
     return anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(singletonList(activity.getUuid()))
-        .withStateExecutionData(executionDataBuilder.build())
-        .withDelegateTaskId(delegateTaskId)
+        .async(true)
+        .correlationIds(singletonList(activity.getUuid()))
+        .stateExecutionData(executionDataBuilder.build())
+        .delegateTaskId(delegateTaskId)
         .build();
   }
 
@@ -346,10 +346,10 @@ public class AwsCodeDeployState extends State {
     }
 
     return anExecutionResponse()
-        .withStateExecutionData(commandStateExecutionData)
-        .withExecutionStatus(status)
-        .addContextElement(instanceElementListParam)
-        .addNotifyElement(instanceElementListParam)
+        .stateExecutionData(commandStateExecutionData)
+        .executionStatus(status)
+        .contextElement(instanceElementListParam)
+        .notifyElement(instanceElementListParam)
         .build();
   }
 

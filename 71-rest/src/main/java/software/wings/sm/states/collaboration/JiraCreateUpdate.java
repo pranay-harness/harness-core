@@ -106,9 +106,9 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
 
     if (ExpressionEvaluator.containsVariablePattern(issueId)) {
       return anExecutionResponse()
-          .withExecutionStatus(FAILED)
-          .withErrorMessage("Expression not rendered for issue Id: " + issueId)
-          .withStateExecutionData(JiraExecutionData.builder().activityId(activityId).build())
+          .executionStatus(FAILED)
+          .errorMessage("Expression not rendered for issue Id: " + issueId)
+          .stateExecutionData(JiraExecutionData.builder().activityId(activityId).build())
           .build();
     }
 
@@ -136,9 +136,9 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
       List<String> issueIds = parseExpression(issueId);
       if (EmptyPredicate.isEmpty(issueIds)) {
         return anExecutionResponse()
-            .withExecutionStatus(FAILED)
-            .withErrorMessage("No valid issueId after parsing: " + issueId)
-            .withStateExecutionData(JiraExecutionData.builder().activityId(activityId).build())
+            .executionStatus(FAILED)
+            .errorMessage("No valid issueId after parsing: " + issueId)
+            .stateExecutionData(JiraExecutionData.builder().activityId(activityId).build())
             .build();
       }
       parameters.setUpdateIssueIds(issueIds);
@@ -158,10 +158,10 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
     return anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(Collections.singletonList(activityId))
-        .withDelegateTaskId(delegateTaskId)
-        .withStateExecutionData(JiraExecutionData.builder().activityId(activityId).build())
+        .async(true)
+        .correlationIds(Collections.singletonList(activityId))
+        .delegateTaskId(delegateTaskId)
+        .stateExecutionData(JiraExecutionData.builder().activityId(activityId).build())
         .build();
   }
 
@@ -249,9 +249,9 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
     }
 
     return anExecutionResponse()
-        .withStateExecutionData(jiraExecutionData)
-        .withExecutionStatus(jiraExecutionData.getExecutionStatus())
-        .withErrorMessage(jiraExecutionData.getErrorMessage())
+        .stateExecutionData(jiraExecutionData)
+        .executionStatus(jiraExecutionData.getExecutionStatus())
+        .errorMessage(jiraExecutionData.getErrorMessage())
         .build();
   }
 
