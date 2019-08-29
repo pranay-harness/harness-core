@@ -1,5 +1,7 @@
 package software.wings.sm.states;
 
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -53,15 +55,14 @@ public class SubWorkflowState extends State {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     List<String> correlationIds = new ArrayList<>();
 
-    ExecutionResponse executionResponse = new ExecutionResponse();
-
     StateExecutionInstance childStateExecutionInstance = getSpawningInstance(stateExecutionInstance);
-    executionResponse.add(childStateExecutionInstance);
     correlationIds.add(stateExecutionInstance.getUuid());
 
-    executionResponse.setAsync(true);
-    executionResponse.setCorrelationIds(correlationIds);
-    return executionResponse;
+    return anExecutionResponse()
+        .stateExecutionInstance(childStateExecutionInstance)
+        .async(true)
+        .correlationIds(correlationIds)
+        .build();
   }
 
   protected StateExecutionInstance getSpawningInstance(StateExecutionInstance stateExecutionInstance) {
@@ -95,21 +96,19 @@ public class SubWorkflowState extends State {
    */
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
-    ExecutionResponse executionResponse = new ExecutionResponse();
-    handleStatusSummary(workflowExecutionService, context, response, executionResponse);
-    return executionResponse;
+    ExecutionResponse.Builder executionResponseBuilder = anExecutionResponse();
+    handleStatusSummary(workflowExecutionService, context, response, executionResponseBuilder);
+    return executionResponseBuilder.build();
   }
 
   protected void handleStatusSummary(WorkflowExecutionService workflowExecutionService, ExecutionContext context,
-      Map<String, ResponseData> response, ExecutionResponse executionResponse) {
+      Map<String, ResponseData> response, ExecutionResponse.Builder executionResponseBuilder) {
     ExecutionStatus executionStatus = ((ExecutionStatusData) response.values().iterator().next()).getExecutionStatus();
     if (executionStatus != ExecutionStatus.SUCCESS) {
-      executionResponse.setExecutionStatus(executionStatus);
+      executionResponseBuilder.executionStatus(executionStatus);
     }
-    logger.info(
-        "Subworkflow state execution completed - stateExecutionInstanceId:{}, displayName:{}, executionStatus:{}",
-        ((ExecutionContextImpl) context).getStateExecutionInstance().getUuid(), getName(),
-        executionResponse.getExecutionStatus());
+    logger.info("Subworkflow state execution completed - stateExecutionInstanceId:{}, displayName:{}",
+        ((ExecutionContextImpl) context).getStateExecutionInstance().getUuid(), getName());
 
     ElementStateExecutionData stateExecutionData = (ElementStateExecutionData) context.getStateExecutionData();
     stateExecutionData.setElementStatusSummary(workflowExecutionService.getElementsSummary(

@@ -16,6 +16,7 @@ import static software.wings.api.AwsCodeDeployRequestElement.AwsCodeDeployReques
 import static software.wings.api.AwsLambdaContextElement.Builder.anAwsLambdaContextElement;
 import static software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBuilder.aPhaseStepExecutionData;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -455,38 +456,38 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
-    ExecutionResponse executionResponse = new ExecutionResponse();
+    ExecutionResponse.Builder executionResponseBuilder = anExecutionResponse();
     if (phaseStepType == PhaseStepType.PRE_DEPLOYMENT || phaseStepType == PhaseStepType.POST_DEPLOYMENT) {
       ExecutionStatus executionStatus =
           ((ExecutionStatusData) response.values().iterator().next()).getExecutionStatus();
       if (executionStatus != ExecutionStatus.SUCCESS) {
-        executionResponse.setExecutionStatus(executionStatus);
+        executionResponseBuilder.executionStatus(executionStatus);
       }
       ResponseData notifiedResponseData = response.values().iterator().next();
       if (notifiedResponseData instanceof ElementNotifyResponseData) {
         ElementNotifyResponseData elementNotifyResponseData = (ElementNotifyResponseData) notifiedResponseData;
         List<ContextElement> elements = elementNotifyResponseData.getContextElements();
         if (isNotEmpty(elements)) {
-          executionResponse.setContextElements(Lists.newArrayList(elements));
+          executionResponseBuilder.contextElements(Lists.newArrayList(elements));
         }
       }
-      return executionResponse;
+      return executionResponseBuilder.build();
     }
 
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     if (phaseElement != null) {
-      handleElementNotifyResponseData(phaseElement, response, executionResponse);
+      handleElementNotifyResponseData(phaseElement, response, executionResponseBuilder);
     }
     PhaseStepExecutionData phaseStepExecutionData = (PhaseStepExecutionData) context.getStateExecutionData();
     phaseStepExecutionData.setPhaseStepExecutionSummary(workflowExecutionService.getPhaseStepExecutionSummary(
         context.getAppId(), context.getWorkflowExecutionId(), context.getStateExecutionInstanceId()));
-    executionResponse.setStateExecutionData(phaseStepExecutionData);
-    super.handleStatusSummary(workflowExecutionService, context, response, executionResponse);
-    return executionResponse;
+    executionResponseBuilder.stateExecutionData(phaseStepExecutionData);
+    super.handleStatusSummary(workflowExecutionService, context, response, executionResponseBuilder);
+    return executionResponseBuilder.build();
   }
 
-  private void handleElementNotifyResponseData(
-      PhaseElement phaseElement, Map<String, ResponseData> response, ExecutionResponse executionResponse) {
+  private void handleElementNotifyResponseData(PhaseElement phaseElement, Map<String, ResponseData> response,
+      ExecutionResponse.Builder executionResponseBuilder) {
     if (isEmpty(response)) {
       throw new InvalidRequestException("Missing response");
     }
@@ -578,9 +579,9 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     }
 
     if (isNotEmpty(contextElements)) {
-      executionResponse.setContextElements(contextElements);
+      executionResponseBuilder.contextElements(contextElements);
       if (addNotifyElement) {
-        executionResponse.setNotifyElements(contextElements);
+        executionResponseBuilder.notifyElements(contextElements);
       }
     }
   }

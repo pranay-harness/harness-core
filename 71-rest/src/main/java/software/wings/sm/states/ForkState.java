@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static org.apache.commons.lang3.StringUtils.abbreviate;
 import static software.wings.api.ForkElement.Builder.aForkElement;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.base.Joiner;
 
@@ -55,7 +56,7 @@ public class ForkState extends State {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     List<String> correlationIds = new ArrayList<>();
 
-    ExecutionResponse executionResponse = new ExecutionResponse();
+    ExecutionResponse.Builder executionResponseBuilder = anExecutionResponse();
     ForkStateExecutionData forkStateExecutionData = new ForkStateExecutionData();
     forkStateExecutionData.setForkStateNames(forkStateNames);
     forkStateExecutionData.setElements(new ArrayList<>());
@@ -77,15 +78,15 @@ public class ForkState extends State {
       childStateExecutionInstance.setCreatedAt(0);
       childStateExecutionInstance.setLastUpdatedAt(0);
       childStateExecutionInstance.setHasInspection(false);
-      executionResponse.add(childStateExecutionInstance);
+      executionResponseBuilder.stateExecutionInstance(childStateExecutionInstance);
       correlationIds.add(element.getUuid());
       forkStateExecutionData.getElements().add(childStateExecutionInstance.getContextElement().getName());
     }
 
-    executionResponse.setStateExecutionData(forkStateExecutionData);
-    executionResponse.setAsync(true);
-    executionResponse.setCorrelationIds(correlationIds);
-    return executionResponse;
+    return executionResponseBuilder.stateExecutionData(forkStateExecutionData)
+        .async(true)
+        .correlationIds(correlationIds)
+        .build();
   }
 
   /**
@@ -103,13 +104,14 @@ public class ForkState extends State {
    */
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
-    ExecutionResponse executionResponse = new ExecutionResponse();
+    ExecutionResponse.Builder executionResponseBuilder = anExecutionResponse();
     for (Object status : response.values()) {
       ExecutionStatus executionStatus = ((ExecutionStatusData) status).getExecutionStatus();
       if (executionStatus != ExecutionStatus.SUCCESS) {
-        executionResponse.setExecutionStatus(executionStatus);
+        executionResponseBuilder.executionStatus(executionStatus);
       }
     }
+    final ExecutionResponse executionResponse = executionResponseBuilder.build();
     logger.info("Fork state execution completed - stateExecutionInstanceId:{}, displayName:{}, executionStatus:{}",
         ((ExecutionContextImpl) context).getStateExecutionInstance().getUuid(), getName(),
         executionResponse.getExecutionStatus());

@@ -6,6 +6,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.api.EmailStateExecutionData.Builder.anEmailStateExecutionData;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.base.Splitter;
 import com.google.inject.Inject;
@@ -59,7 +60,7 @@ public class EmailState extends State {
    */
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    ExecutionResponse executionResponse = new ExecutionResponse();
+    ExecutionResponse.Builder executionResponseBuilder = anExecutionResponse();
     EmailStateExecutionData emailStateExecutionData = anEmailStateExecutionData()
                                                           .withBody(body)
                                                           .withCcAddress(ccAddress)
@@ -83,17 +84,17 @@ public class EmailState extends State {
                                         .body(evaluatedBody)
                                         .accountId(((ExecutionContextImpl) context).getApp().getAccountId())
                                         .build());
-      executionResponse.setExecutionStatus(ExecutionStatus.SUCCESS);
+      executionResponseBuilder.executionStatus(ExecutionStatus.SUCCESS);
     } catch (Exception e) {
-      executionResponse.setErrorMessage(
+      executionResponseBuilder.errorMessage(
           e.getCause() == null ? ExceptionUtils.getMessage(e) : ExceptionUtils.getMessage(e.getCause()));
-      executionResponse.setExecutionStatus(ignoreDeliveryFailure ? ExecutionStatus.SUCCESS : ExecutionStatus.ERROR);
+      executionResponseBuilder.executionStatus(ignoreDeliveryFailure ? ExecutionStatus.SUCCESS : ExecutionStatus.ERROR);
       logger.error("Exception while sending email", e);
     }
 
-    executionResponse.setStateExecutionData(emailStateExecutionData);
+    executionResponseBuilder.stateExecutionData(emailStateExecutionData);
 
-    return executionResponse;
+    return executionResponseBuilder.build();
   }
 
   private List<String> getEmailAddressList(String address) {
