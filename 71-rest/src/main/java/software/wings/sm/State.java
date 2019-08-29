@@ -1,5 +1,7 @@
 package software.wings.sm;
 
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -282,7 +284,7 @@ public abstract class State {
    * @return Response from handling this state.
    */
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
-    return new ExecutionResponse();
+    return anExecutionResponse().build();
   }
 
   /**

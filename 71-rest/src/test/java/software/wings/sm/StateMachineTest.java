@@ -3,6 +3,7 @@ package software.wings.sm;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.states.RepeatState.Builder.aRepeatState;
 
 import com.google.inject.Inject;
@@ -714,15 +715,15 @@ public class StateMachineTest extends WingsBaseTest {
     @Override
     public ExecutionResponse execute(ExecutionContext context) {
       logger.info("Executing ..." + getClass());
-      ExecutionResponse response = new ExecutionResponse();
+      ExecutionResponse.Builder executionResponseBuilder = anExecutionResponse();
       StateExecutionData stateExecutionData = new TestStateExecutionData(getName(), System.currentTimeMillis() + "");
-      response.setStateExecutionData(stateExecutionData);
+      executionResponseBuilder.stateExecutionData(stateExecutionData);
       StaticMap.putValue(getName(), System.currentTimeMillis());
       logger.info("stateExecutionData:" + stateExecutionData);
       if (shouldFail) {
-        response.setExecutionStatus(ExecutionStatus.FAILED);
+        executionResponseBuilder.executionStatus(ExecutionStatus.FAILED);
       }
-      return response;
+      return executionResponseBuilder.build();
     }
 
     /**
@@ -809,18 +810,18 @@ public class StateMachineTest extends WingsBaseTest {
       String uuid = generateUuid();
 
       logger.info("Executing ..." + StateAsync.class.getName() + "..duration=" + duration + ", uuid=" + uuid);
-      ExecutionResponse response = new ExecutionResponse();
-      response.setAsync(true);
+      ExecutionResponse.Builder executionResponseBuilder = anExecutionResponse();
+      executionResponseBuilder.async(true);
       List<String> correlationIds = new ArrayList<>();
       correlationIds.add(uuid);
-      response.setCorrelationIds(correlationIds);
+      executionResponseBuilder.correlationIds(correlationIds);
       if (shouldThrowException) {
         throw new RuntimeException("Exception for test");
       }
       Notifier notifier = new Notifier(getName(), uuid, duration, shouldFail);
       injector.injectMembers(notifier);
       ThreadPool.execute(notifier);
-      return response;
+      return executionResponseBuilder.build();
     }
 
     /**
@@ -836,13 +837,13 @@ public class StateMachineTest extends WingsBaseTest {
      */
     @Override
     public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> responseMap) {
-      ExecutionResponse executionResponse = new ExecutionResponse();
+      ExecutionResponse.Builder executionResponseBuilder = anExecutionResponse();
       for (Object response : responseMap.values()) {
         if (!"SUCCESS".equals(((StringNotifyResponseData) response).getData())) {
-          executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
+          executionResponseBuilder.executionStatus(ExecutionStatus.FAILED);
         }
       }
-      return executionResponse;
+      return executionResponseBuilder.build();
     }
 
     @Override

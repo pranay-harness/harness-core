@@ -168,7 +168,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
-    ExecutionResponse executionResponse = new ExecutionResponse();
+    ExecutionResponse.Builder executionResponseBuilder = anExecutionResponse();
     String activityId = response.keySet().iterator().next();
     ResponseData data = response.values().iterator().next();
     boolean saveSweepingOutputToContext = false;
@@ -177,22 +177,22 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
 
       switch (commandExecutionResult.getStatus()) {
         case SUCCESS:
-          executionResponse.setExecutionStatus(ExecutionStatus.SUCCESS);
+          executionResponseBuilder.executionStatus(ExecutionStatus.SUCCESS);
           break;
         case FAILURE:
-          executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
+          executionResponseBuilder.executionStatus(ExecutionStatus.FAILED);
           break;
         case RUNNING:
-          executionResponse.setExecutionStatus(ExecutionStatus.RUNNING);
+          executionResponseBuilder.executionStatus(ExecutionStatus.RUNNING);
           break;
         case QUEUED:
-          executionResponse.setExecutionStatus(ExecutionStatus.QUEUED);
+          executionResponseBuilder.executionStatus(ExecutionStatus.QUEUED);
           break;
         default:
           throw new WingsException(
               "Unhandled type CommandExecutionStatus: " + commandExecutionResult.getStatus().name());
       }
-      executionResponse.setErrorMessage(commandExecutionResult.getErrorMessage());
+      executionResponseBuilder.errorMessage(commandExecutionResult.getErrorMessage());
 
       ScriptStateExecutionData scriptStateExecutionData = (ScriptStateExecutionData) context.getStateExecutionData();
       if (commandExecutionResult.getStatus().equals(SUCCESS)) {
@@ -202,14 +202,16 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
         scriptStateExecutionData.setSweepingOutputEnvVariables(sweepingOutputEnvVariables);
         saveSweepingOutputToContext = true;
       }
-      executionResponse.setStateExecutionData(scriptStateExecutionData);
+      executionResponseBuilder.stateExecutionData(scriptStateExecutionData);
     } else if (data instanceof ErrorNotifyResponseData) {
-      executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
-      executionResponse.setErrorMessage(((ErrorNotifyResponseData) data).getErrorMessage());
-      return executionResponse;
+      executionResponseBuilder.executionStatus(ExecutionStatus.FAILED);
+      executionResponseBuilder.errorMessage(((ErrorNotifyResponseData) data).getErrorMessage());
+      return executionResponseBuilder.build();
     } else {
       logger.error("Unhandled ResponseData class " + data.getClass().getCanonicalName(), new Exception(""));
     }
+
+    final ExecutionResponse executionResponse = executionResponseBuilder.build();
 
     updateActivityStatus(
         activityId, ((ExecutionContextImpl) context).getApp().getUuid(), executionResponse.getExecutionStatus());

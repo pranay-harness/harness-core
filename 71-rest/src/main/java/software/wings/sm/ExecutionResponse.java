@@ -42,18 +42,6 @@ public class ExecutionResponse {
   }
 
   /**
-   * Adds the.
-   *
-   * @param stateExecutionInstance the state execution instance
-   */
-  public void add(StateExecutionInstance stateExecutionInstance) {
-    if (this.stateExecutionInstanceList == null) {
-      this.stateExecutionInstanceList = new ArrayList<>();
-    }
-    this.stateExecutionInstanceList.add(stateExecutionInstance);
-  }
-
-  /**
    * Is async boolean.
    *
    * @return the boolean
@@ -189,6 +177,7 @@ public class ExecutionResponse {
     private List<ContextElement> notifyElements;
     private List<ContextElement> contextElements;
     private String delegateTaskId;
+    private List<StateExecutionInstance> stateExecutionInstanceList;
 
     private Builder() {}
 
@@ -244,6 +233,14 @@ public class ExecutionResponse {
       return this;
     }
 
+    public Builder stateExecutionInstance(StateExecutionInstance stateExecutionInstance) {
+      if (this.stateExecutionInstanceList == null) {
+        this.stateExecutionInstanceList = new ArrayList<>();
+      }
+      this.stateExecutionInstanceList.add(stateExecutionInstance);
+      return this;
+    }
+
     public Builder notifyElement(ContextElement notifyElement) {
       if (this.notifyElements == null) {
         this.notifyElements = new ArrayList<>();
@@ -279,6 +276,7 @@ public class ExecutionResponse {
       executionResponse.setNotifyElements(notifyElements);
       executionResponse.setContextElements(contextElements);
       executionResponse.setDelegateTaskId(delegateTaskId);
+      executionResponse.setStateExecutionInstanceList(stateExecutionInstanceList);
       return executionResponse;
     }
   }

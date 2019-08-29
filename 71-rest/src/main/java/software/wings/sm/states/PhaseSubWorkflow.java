@@ -6,6 +6,7 @@ import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder.aPhaseExecutionData;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
 
@@ -228,16 +229,15 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     StateExecutionInstance stateExecutionInstance = contextImpl.getStateExecutionInstance();
     List<String> correlationIds = new ArrayList<>();
 
-    ExecutionResponse executionResponse = new ExecutionResponse();
-
     StateExecutionInstance childStateExecutionInstance =
         getSpawningInstance(context, workflowStandardParams, stateExecutionInstance, service, infrastructureMapping);
-    executionResponse.add(childStateExecutionInstance);
     correlationIds.add(stateExecutionInstance.getUuid());
 
-    executionResponse.setAsync(true);
-    executionResponse.setCorrelationIds(correlationIds);
-    return executionResponse;
+    return anExecutionResponse()
+        .stateExecutionInstance(childStateExecutionInstance)
+        .async(true)
+        .correlationIds(correlationIds)
+        .build();
   }
 
   private StateExecutionInstance getSpawningInstance(ExecutionContext context,
@@ -612,24 +612,23 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
-    ExecutionResponse executionResponse = new ExecutionResponse();
-    super.handleStatusSummary(workflowExecutionService, context, response, executionResponse);
+    ExecutionResponse.Builder executionResponseBuilder = anExecutionResponse();
+    super.handleStatusSummary(workflowExecutionService, context, response, executionResponseBuilder);
     response.values().forEach(notifyResponseData -> {
       if (notifyResponseData instanceof ElementNotifyResponseData) {
         List<ContextElement> notifyElements = ((ElementNotifyResponseData) notifyResponseData).getContextElements();
         if (isNotEmpty(notifyElements)) {
-          if (executionResponse.getContextElements() == null) {
-            executionResponse.setContextElements(new ArrayList<>());
+          for (ContextElement element : notifyElements) {
+            executionResponseBuilder.contextElement(element);
           }
-          executionResponse.getContextElements().addAll(notifyElements);
         }
       }
     });
     PhaseExecutionData phaseExecutionData = (PhaseExecutionData) context.getStateExecutionData();
     phaseExecutionData.setPhaseExecutionSummary(workflowExecutionService.getPhaseExecutionSummary(
         context.getAppId(), context.getWorkflowExecutionId(), context.getStateExecutionInstanceId()));
-    executionResponse.setStateExecutionData(phaseExecutionData);
-    return executionResponse;
+    executionResponseBuilder.stateExecutionData(phaseExecutionData);
+    return executionResponseBuilder.build();
   }
 
   public String getServiceId() {

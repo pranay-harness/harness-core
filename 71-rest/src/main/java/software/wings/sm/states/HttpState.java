@@ -390,10 +390,10 @@ public class HttpState extends State implements SweepingOutputStateMixin {
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     ResponseData notifyResponseData = response.values().iterator().next();
-    ExecutionResponse executionResponse = new ExecutionResponse();
+    ExecutionResponse.Builder executionResponseBuilder = anExecutionResponse();
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
-      executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
-      executionResponse.setErrorMessage(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
+      executionResponseBuilder.executionStatus(ExecutionStatus.FAILED);
+      executionResponseBuilder.errorMessage(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
     } else {
       HttpStateExecutionData executionData = (HttpStateExecutionData) context.getStateExecutionData();
       HttpStateExecutionResponse httpStateExecutionResponse = (HttpStateExecutionResponse) notifyResponseData;
@@ -409,11 +409,11 @@ public class HttpState extends State implements SweepingOutputStateMixin {
       if (!evaluateAssertion(context, executionData) || executionData.getStatus().equals(ExecutionStatus.ERROR)) {
         executionStatus = ExecutionStatus.FAILED;
       }
-      executionResponse.setExecutionStatus(executionStatus);
+      executionResponseBuilder.executionStatus(executionStatus);
 
       executionData.setAssertionStatus(executionStatus.name());
-      executionResponse.setStateExecutionData(executionData);
-      executionResponse.setErrorMessage(errorMessage);
+      executionResponseBuilder.stateExecutionData(executionData);
+      executionResponseBuilder.errorMessage(errorMessage);
 
       if (isNotEmpty(responseProcessingExpressions)) {
         Map<String, Object> output = new HashMap<>();
@@ -432,6 +432,8 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     for (String key : response.keySet()) {
       activityId = key;
     }
+
+    final ExecutionResponse executionResponse = executionResponseBuilder.build();
 
     updateActivityStatus(
         activityId, ((ExecutionContextImpl) context).getApp().getUuid(), executionResponse.getExecutionStatus());
