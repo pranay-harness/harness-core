@@ -2,20 +2,22 @@ package software.wings.resources.governance;
 
 import com.google.inject.Inject;
 
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.WingsException;
+import io.harness.governance.pipeline.enforce.PipelineReportCard;
 import io.harness.governance.pipeline.model.PipelineGovernanceConfig;
+import io.harness.governance.pipeline.service.PipelineGovernanceReportEvaluator;
 import io.harness.governance.pipeline.service.PipelineGovernanceService;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
-import org.apache.commons.lang3.StringUtils;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 
 import java.util.List;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -32,55 +34,51 @@ import javax.ws.rs.core.MediaType;
 @Scope(ResourceType.SETTING)
 public class PipelineGovernanceResource {
   private PipelineGovernanceService pipelineGovernanceService;
+  private PipelineGovernanceReportEvaluator pipelineGovernanceReportEvaluator;
 
   @Inject
-  public PipelineGovernanceResource(PipelineGovernanceService pipelineGovernanceService) {
+  public PipelineGovernanceResource(PipelineGovernanceService pipelineGovernanceService,
+      PipelineGovernanceReportEvaluator pipelineGovernanceReportEvaluator) {
     this.pipelineGovernanceService = pipelineGovernanceService;
+    this.pipelineGovernanceReportEvaluator = pipelineGovernanceReportEvaluator;
   }
 
   @GET
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
-  public RestResponse<List<PipelineGovernanceConfig>> list(@QueryParam("accountId") String accountId) {
-    if (StringUtils.isEmpty(accountId)) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
-          .addParam("args", "accountId missing while trying to get pipeline governance config");
-    }
-
+  public RestResponse<List<PipelineGovernanceConfig>> list(@QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(pipelineGovernanceService.list(accountId));
   }
 
   @POST
   @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
-  public RestResponse<PipelineGovernanceConfig> add(
-      @QueryParam("accountId") String accountId, PipelineGovernanceConfig governanceConfig) {
-    if (StringUtils.isEmpty(accountId)) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
-          .addParam("args", "accountId missing while trying to update pipeline governance config");
-    }
-
-    if (null == governanceConfig) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
-          .addParam("args", "governanceConfig missing while trying to update pipeline governance config");
-    }
-
+  public RestResponse<PipelineGovernanceConfig> add(@QueryParam("accountId") @NotEmpty String accountId,
+      @NotNull(message = "governanceConfig missing while trying to add pipeline governance config")
+      PipelineGovernanceConfig governanceConfig) {
     return new RestResponse<>(pipelineGovernanceService.add(governanceConfig));
   }
 
   @PUT
   @Path("{uuid}")
   @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
-  public RestResponse<PipelineGovernanceConfig> update(@QueryParam("accountId") String accountId,
-      @PathParam("uuid") String uuid, PipelineGovernanceConfig governanceConfig) {
-    if (StringUtils.isEmpty(accountId)) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
-          .addParam("args", "accountId missing while trying to update pipeline governance config");
-    }
-
-    if (null == governanceConfig) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
-          .addParam("args", "governanceConfig missing while trying to update pipeline governance config");
-    }
-
+  public RestResponse<PipelineGovernanceConfig> update(@QueryParam("accountId") @NotEmpty String accountId,
+      @PathParam("uuid") String uuid,
+      @NotNull(message = "governanceConfig missing while trying to update pipeline governance config")
+      PipelineGovernanceConfig governanceConfig) {
     return new RestResponse<>(pipelineGovernanceService.update(uuid, governanceConfig));
+  }
+
+  @DELETE
+  @Path("{uuid}")
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  public RestResponse<Boolean> update(
+      @QueryParam("accountId") @NotEmpty String accountId, @PathParam("uuid") String uuid) {
+    return new RestResponse<>(pipelineGovernanceService.delete(uuid));
+  }
+
+  @GET
+  @Path("report")
+  public RestResponse<List<PipelineReportCard>> report(@QueryParam("accountId") @NotEmpty final String accountId,
+      @QueryParam("appId") final String appId, @QueryParam("pipelineId") final String pipelineId) {
+    return new RestResponse<>(pipelineGovernanceReportEvaluator.getPipelineReportCard(accountId, appId, pipelineId));
   }
 }

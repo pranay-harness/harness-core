@@ -3,8 +3,10 @@ package io.harness.governance.pipeline.model;
 import io.harness.data.structure.CollectionUtils;
 import lombok.Value;
 
+import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Associates a weight with a set of tags.
@@ -15,10 +17,11 @@ public class PipelineGovernanceRule {
 
   @Nonnull private MatchType matchType;
   private int weight;
-  private String note;
+  @Nullable private String note;
   private boolean distributedEqually;
 
   public List<Tag> getTags() {
-    return CollectionUtils.emptyIfNull(tags);
+    List<Tag> tags = CollectionUtils.emptyIfNull(this.tags);
+    return Collections.unmodifiableList(tags);
   }
 }

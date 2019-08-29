@@ -17,8 +17,13 @@ import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobServiceImpl;
 import io.harness.exception.WingsException;
 import io.harness.govern.DependencyModule;
+import io.harness.governance.pipeline.service.GovernanceStatusEvaluator;
 import io.harness.governance.pipeline.service.PipelineGovernanceService;
 import io.harness.governance.pipeline.service.PipelineGovernanceServiceImpl;
+import io.harness.governance.pipeline.service.evaluators.OnPipeline;
+import io.harness.governance.pipeline.service.evaluators.OnWorkflow;
+import io.harness.governance.pipeline.service.evaluators.PipelineStatusEvaluator;
+import io.harness.governance.pipeline.service.evaluators.WorkflowStatusEvaluator;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitCheckerFactoryImpl;
 import io.harness.limits.configuration.LimitConfigurationService;
@@ -55,8 +60,10 @@ import software.wings.beans.EcrConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.NotificationGroup;
+import software.wings.beans.Pipeline;
 import software.wings.beans.SftpConfig;
 import software.wings.beans.SmbConfig;
+import software.wings.beans.Workflow;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.loginSettings.LoginSettingsService;
@@ -840,6 +847,14 @@ public class WingsModule extends DependencyModule {
     bind(PreDeploymentChecker.class).annotatedWith(RateLimitCheck.class).to(DeploymentRateLimitChecker.class);
     bind(PreDeploymentChecker.class).annotatedWith(ServiceInstanceUsage.class).to(SIUsageChecker.class);
     bind(PreDeploymentChecker.class).annotatedWith(AccountExpiryCheck.class).to(AccountExpirationChecker.class);
+
+    bind(new TypeLiteral<GovernanceStatusEvaluator<Pipeline>>() {})
+        .annotatedWith(OnPipeline.class)
+        .to(PipelineStatusEvaluator.class);
+
+    bind(new TypeLiteral<GovernanceStatusEvaluator<Workflow>>() {})
+        .annotatedWith(OnWorkflow.class)
+        .to(WorkflowStatusEvaluator.class);
 
     bind(PipelineGovernanceService.class).to(PipelineGovernanceServiceImpl.class);
 
