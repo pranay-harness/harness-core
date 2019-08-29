@@ -1,4 +1,4 @@
-package software.wings.service.impl;
+package software.wings.service.intfc;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static java.util.Arrays.asList;
@@ -50,12 +50,6 @@ import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.GoogleKubernetesEngine.GoogleKubernetesEngineKeys;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.PhysicalInfra;
-import software.wings.service.intfc.InfrastructureDefinitionService;
-import software.wings.service.intfc.InfrastructureDefinitionServiceImpl;
-import software.wings.service.intfc.PipelineService;
-import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.TriggerService;
-import software.wings.service.intfc.WorkflowService;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -337,5 +331,32 @@ public class InfrastructureDefinitionServiceTest extends WingsBaseTest {
     when(serviceResourceService.get(anyString(), anyString())).thenReturn(service);
     infrastructureDefinitionService.applyServiceFilter(pageRequest);
     assertThat(pageRequest.getFilters().size() == 2).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateImmutableFields() {
+    InfrastructureDefinitionServiceImpl infrastructureDefinitionService =
+        (InfrastructureDefinitionServiceImpl) this.infrastructureDefinitionService;
+    InfrastructureDefinition oldInfraDefinition = InfrastructureDefinition.builder()
+                                                      .deploymentType(DeploymentType.SSH)
+                                                      .cloudProviderType(CloudProviderType.AWS)
+                                                      .build();
+    InfrastructureDefinition newInfraDefinition = InfrastructureDefinition.builder()
+                                                      .deploymentType(DeploymentType.SSH)
+                                                      .cloudProviderType(CloudProviderType.AWS)
+                                                      .build();
+
+    infrastructureDefinitionService.validateImmutableFields(newInfraDefinition, oldInfraDefinition);
+
+    newInfraDefinition.setDeploymentType(DeploymentType.HELM);
+    assertThatThrownBy(
+        () -> infrastructureDefinitionService.validateImmutableFields(newInfraDefinition, oldInfraDefinition));
+    newInfraDefinition.setDeploymentType(oldInfraDefinition.getDeploymentType());
+
+    newInfraDefinition.setCloudProviderType(CloudProviderType.GCP);
+    assertThatThrownBy(
+        () -> infrastructureDefinitionService.validateImmutableFields(newInfraDefinition, oldInfraDefinition));
+    newInfraDefinition.setCloudProviderType(oldInfraDefinition.getCloudProviderType());
   }
 }
