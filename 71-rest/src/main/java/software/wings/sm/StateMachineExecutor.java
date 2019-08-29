@@ -933,31 +933,28 @@ public class StateMachineExecutor implements StateInspectionListener {
 
   private void handleSpawningStateExecutionInstances(
       StateMachine sm, StateExecutionInstance stateExecutionInstance, ExecutionResponse executionResponse) {
-    if (executionResponse instanceof SpawningExecutionResponse) {
-      SpawningExecutionResponse spawningExecutionResponse = (SpawningExecutionResponse) executionResponse;
-      if (isNotEmpty(spawningExecutionResponse.getStateExecutionInstanceList())) {
-        for (StateExecutionInstance childStateExecutionInstance :
-            spawningExecutionResponse.getStateExecutionInstanceList()) {
-          childStateExecutionInstance.setUuid(null);
-          childStateExecutionInstance.setStateParams(null);
-          childStateExecutionInstance.setParentInstanceId(stateExecutionInstance.getUuid());
-          childStateExecutionInstance.setAppId(stateExecutionInstance.getAppId());
-          childStateExecutionInstance.setNotifyElements(null);
-          if (childStateExecutionInstance.getStateName() == null
-              && childStateExecutionInstance.getChildStateMachineId() != null) {
-            if (sm.getChildStateMachines().get(childStateExecutionInstance.getChildStateMachineId()) == null) {
-              notify(childStateExecutionInstance, SUCCESS);
-              return;
-            }
-            String initialStateName = sm.getChildStateMachines()
-                                          .get(childStateExecutionInstance.getChildStateMachineId())
-                                          .getInitialStateName();
-            childStateExecutionInstance.setDisplayName(initialStateName);
-            childStateExecutionInstance.setStateName(initialStateName);
-          }
-          triggerExecution(sm, childStateExecutionInstance);
+    if (isEmpty(executionResponse.getStateExecutionInstanceList())) {
+      return;
+    }
+
+    for (StateExecutionInstance childStateExecutionInstance : executionResponse.getStateExecutionInstanceList()) {
+      childStateExecutionInstance.setUuid(null);
+      childStateExecutionInstance.setStateParams(null);
+      childStateExecutionInstance.setParentInstanceId(stateExecutionInstance.getUuid());
+      childStateExecutionInstance.setAppId(stateExecutionInstance.getAppId());
+      childStateExecutionInstance.setNotifyElements(null);
+      if (childStateExecutionInstance.getStateName() == null
+          && childStateExecutionInstance.getChildStateMachineId() != null) {
+        if (sm.getChildStateMachines().get(childStateExecutionInstance.getChildStateMachineId()) == null) {
+          notify(childStateExecutionInstance, SUCCESS);
+          return;
         }
+        String initialStateName =
+            sm.getChildStateMachines().get(childStateExecutionInstance.getChildStateMachineId()).getInitialStateName();
+        childStateExecutionInstance.setDisplayName(initialStateName);
+        childStateExecutionInstance.setStateName(initialStateName);
       }
+      triggerExecution(sm, childStateExecutionInstance);
     }
   }
 

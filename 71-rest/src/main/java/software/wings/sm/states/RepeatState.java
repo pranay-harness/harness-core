@@ -28,7 +28,6 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExpressionProcessor;
-import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
@@ -126,7 +125,7 @@ public class RepeatState extends State {
 
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
 
-    SpawningExecutionResponse executionResponse = new SpawningExecutionResponse();
+    ExecutionResponse executionResponse = new ExecutionResponse();
 
     if (isNotEmpty(repeatElements)) {
       List<String> correlationIds = new ArrayList<>();
@@ -176,7 +175,7 @@ public class RepeatState extends State {
       executionResponse.setStateExecutionData(repeatStateExecutionData);
       return executionResponse;
     } else {
-      SpawningExecutionResponse executionResponse = new SpawningExecutionResponse();
+      ExecutionResponse executionResponse = new ExecutionResponse();
 
       Integer repeatElementIndex = repeatStateExecutionData.getRepeatElementIndex();
       repeatElementIndex++;
@@ -215,7 +214,7 @@ public class RepeatState extends State {
   }
 
   private void processChildState(StateExecutionInstance stateExecutionInstance, List<String> correlationIds,
-      SpawningExecutionResponse executionResponse, ContextElement repeatElement) {
+      ExecutionResponse executionResponse, ContextElement repeatElement) {
     String notifyId = stateExecutionInstance.getUuid() + "-repeat-" + repeatElement.getUuid();
     StateExecutionInstance childStateExecutionInstance = KryoUtils.clone(stateExecutionInstance);
     childStateExecutionInstance.setStateParams(null);

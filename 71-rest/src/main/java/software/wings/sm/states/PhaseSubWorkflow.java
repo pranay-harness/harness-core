@@ -55,7 +55,6 @@ import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
@@ -229,7 +228,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     StateExecutionInstance stateExecutionInstance = contextImpl.getStateExecutionInstance();
     List<String> correlationIds = new ArrayList<>();
 
-    SpawningExecutionResponse executionResponse = new SpawningExecutionResponse();
+    ExecutionResponse executionResponse = new ExecutionResponse();
 
     StateExecutionInstance childStateExecutionInstance =
         getSpawningInstance(context, workflowStandardParams, stateExecutionInstance, service, infrastructureMapping);
