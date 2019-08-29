@@ -7,6 +7,8 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -62,6 +64,7 @@ import com.amazonaws.services.ecs.model.LaunchType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HQuery;
@@ -1146,5 +1149,25 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     awsAmiInfrastructureMapping.setRegion(region);
     assertThat(infrastructureMappingServiceImpl.extractRegionFromInfraMapping(awsAmiInfrastructureMapping))
         .isEqualTo(region);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateGcpInfraMapping() {
+    InfrastructureMappingServiceImpl infrastructureMappingService =
+        (InfrastructureMappingServiceImpl) this.infrastructureMappingService;
+    GcpKubernetesInfrastructureMapping gcpKubernetesInfrastructureMapping =
+        GcpKubernetesInfrastructureMapping.builder()
+            .clusterName("cluster")
+            .namespace("namespace")
+            .deploymentType(DeploymentType.KUBERNETES.name())
+            .build();
+
+    try {
+      infrastructureMappingService.validateGcpInfraMapping(gcpKubernetesInfrastructureMapping);
+      fail("Should throw exception");
+    } catch (InvalidRequestException ex) {
+      assertTrue(ExceptionUtils.getMessage(ex).contains("Release name"));
+    }
   }
 }
