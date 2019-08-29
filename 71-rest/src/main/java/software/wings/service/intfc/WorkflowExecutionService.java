@@ -181,4 +181,6 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   boolean appendInfraMappingId(String appId, String workflowExecutionId, String infraMappingId);
 
   boolean isTriggerBasedDeployment(ExecutionContext context);
+
+  List<WorkflowExecution> getLatestExecutionsFor(String appId, String infraMappingId, int limit);
 }
