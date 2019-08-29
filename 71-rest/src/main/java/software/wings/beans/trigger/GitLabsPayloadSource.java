@@ -8,11 +8,11 @@ import software.wings.beans.trigger.WebhookSource.GitLabEventType;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
-@JsonTypeName("GITLABS")
+@JsonTypeName("GITLAB")
 @Value
 @Builder
 public class GitLabsPayloadSource implements PayloadSource {
-  @NotNull private Type type = Type.GITLABS;
+  @NotNull private Type type = Type.GITLAB;
   private List<GitLabEventType> gitLabEventTypes;
   private List<CustomPayloadExpression> customPayloadExpressions;
 }

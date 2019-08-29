@@ -157,6 +157,11 @@ public class ArtifactTriggerProcessor implements TriggerProcessor {
 
   private void executeTrigger(String appId, String artifactStreamId, List<Artifact> collectedArtifacts) {
     fetchNewArtifactTriggers(appId, artifactStreamId).forEach(trigger -> {
+      if (trigger.isTriggerDisabled()) {
+        logger.warn("Trigger is disabled for appId {}, Trigger Id {} and name {} for artifactStreamId {} ",
+            trigger.getAppId(), trigger.getUuid(), artifactStreamId);
+        return;
+      }
       logger.info("Trigger found with name {} and Id {} for artifactStreamId {}", trigger.getName(), trigger.getUuid(),
           artifactStreamId);
       ArtifactCondition artifactTriggerCondition = (ArtifactCondition) trigger.getCondition();

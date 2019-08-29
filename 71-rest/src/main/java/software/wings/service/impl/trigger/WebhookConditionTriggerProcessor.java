@@ -1,6 +1,8 @@
 package software.wings.service.impl.trigger;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static io.harness.expression.ExpressionEvaluator.getName;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static io.harness.govern.Switch.unhandled;
 import static software.wings.beans.trigger.Condition.Type.WEBHOOK;
@@ -8,10 +10,14 @@ import static software.wings.beans.trigger.Condition.Type.WEBHOOK;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 
+import io.harness.exception.TriggerException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.logging.ExceptionLogger;
 import lombok.Builder;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.Application;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.Variable;
 import software.wings.beans.WebHookToken;
@@ -32,6 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class WebhookConditionTriggerProcessor implements TriggerProcessor {
   @Inject private transient DeploymentTriggerServiceHelper triggerServiceHelper;
   @Inject private transient TriggerArtifactVariableHandler triggerArtifactVariableHandler;
@@ -68,8 +75,15 @@ public class WebhookConditionTriggerProcessor implements TriggerProcessor {
     List<ArtifactVariable> artifactVariables = triggerArtifactVariableHandler.fetchArtifactVariablesForExecution(
         webhookTriggerExecutionParams.trigger.getAppId(), webhookTriggerExecutionParams.trigger, null);
 
-    return triggerDeploymentExecution.triggerDeployment(
-        artifactVariables, webhookTriggerExecutionParams.parameters, webhookTriggerExecutionParams.trigger, null);
+    try {
+      return triggerDeploymentExecution.triggerDeployment(
+          artifactVariables, webhookTriggerExecutionParams.parameters, webhookTriggerExecutionParams.trigger, null);
+    } catch (WingsException exception) {
+      exception.addContext(Application.class, appId);
+      exception.addContext(DeploymentTrigger.class, webhookTriggerExecutionParams.trigger.getUuid());
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+      return null;
+    }
   }
 
   private void updateWebhookToken(DeploymentTrigger deploymentTrigger, DeploymentTrigger existingTrigger) {
@@ -84,8 +98,9 @@ public class WebhookConditionTriggerProcessor implements TriggerProcessor {
 
   private void validatePayloadSource(WebhookCondition webhookCondition) {
     Type type = webhookCondition.getPayloadSource().getType();
-    if (!((type.equals(Type.BITBUCKET) || type.equals(Type.GITHUB) || type.equals(Type.GITLABS)))) {
-      throw new WingsException("Invalid Payload type");
+    if (!((type.equals(Type.BITBUCKET) || type.equals(Type.CUSTOM) || type.equals(Type.GITHUB)
+            || type.equals(Type.GITLAB)))) {
+      throw new TriggerException("Invalid Payload type", null);
     }
   }
 
@@ -98,6 +113,7 @@ public class WebhookConditionTriggerProcessor implements TriggerProcessor {
       addExpressionsAsParameters(deploymentTrigger, webHookToken);
     } else {
       webHookToken = existingToken;
+      addExpressionsAsParameters(deploymentTrigger, webHookToken);
     }
 
     return webHookToken;
@@ -148,10 +164,14 @@ public class WebhookConditionTriggerProcessor implements TriggerProcessor {
       variables.stream().filter(variableEntry -> isNotEmpty(variableEntry.getValue())).forEach(variable -> {
         String wfVariableValue = variable.getValue();
         if (matchesVariablePattern(wfVariableValue)) {
-          parameters.put(variable.getValue(), variable.getValue() + "_placeholder");
+          parameters.put(getNameFromExpression(variable.getValue()), variable.getValue());
         }
       });
     }
+  }
+
+  private String getNameFromExpression(String expression) {
+    return getName(expression);
   }
 
   private void addArtifactVariablesexpression(
@@ -162,15 +182,17 @@ public class WebhookConditionTriggerProcessor implements TriggerProcessor {
             (TriggerArtifactSelectionLastCollected) triggerArtifactVariableValue;
 
         if (matchesVariablePattern(lastCollected.getArtifactStreamId())) {
-          parameters.put(lastCollected.getArtifactStreamId(), lastCollected.getArtifactStreamId() + "_placeholder");
+          parameters.put(
+              getNameFromExpression(lastCollected.getArtifactStreamId()), lastCollected.getArtifactStreamId());
         }
 
         if (matchesVariablePattern(lastCollected.getArtifactFilter())) {
-          parameters.put(lastCollected.getArtifactStreamId(), lastCollected.getArtifactFilter() + "_placeholder");
+          parameters.put(getNameFromExpression(lastCollected.getArtifactStreamId()), lastCollected.getArtifactFilter());
         }
 
         if (matchesVariablePattern(lastCollected.getArtifactServerId())) {
-          parameters.put(lastCollected.getArtifactStreamId(), lastCollected.getArtifactServerId() + "_placeholder");
+          parameters.put(
+              getNameFromExpression(lastCollected.getArtifactStreamId()), lastCollected.getArtifactServerId());
         }
         break;
       case LAST_DEPLOYED:
@@ -178,22 +200,22 @@ public class WebhookConditionTriggerProcessor implements TriggerProcessor {
             (TriggerArtifactSelectionLastDeployed) triggerArtifactVariableValue;
 
         if (ExpressionEvaluator.matchesVariablePattern(lastDeployed.getWorkflowId())) {
-          parameters.put(lastDeployed.getWorkflowId(), lastDeployed.getWorkflowId() + "_placeholder");
+          parameters.put(getNameFromExpression(lastDeployed.getWorkflowId()), lastDeployed.getWorkflowId());
         }
         break;
       case WEBHOOK_VARIABLE:
         TriggerArtifactSelectionWebhook webhook = (TriggerArtifactSelectionWebhook) triggerArtifactVariableValue;
 
         if (matchesVariablePattern(webhook.getArtifactStreamId())) {
-          parameters.put(webhook.getArtifactStreamId(), webhook.getArtifactStreamId() + "_placeholder");
+          parameters.put(getNameFromExpression(webhook.getArtifactStreamId()), webhook.getArtifactStreamId());
         }
 
         if (matchesVariablePattern(webhook.getBuildNumber())) {
-          parameters.put(webhook.getBuildNumber(), webhook.getBuildNumber() + "_placeholder");
+          parameters.put(getNameFromExpression(webhook.getBuildNumber()), webhook.getBuildNumber());
         }
 
         if (matchesVariablePattern(webhook.getArtifactServerId())) {
-          parameters.put(webhook.getArtifactServerId(), webhook.getArtifactServerId() + "_placeholder");
+          parameters.put(getNameFromExpression(webhook.getArtifactServerId()), webhook.getArtifactServerId());
         }
         break;
       default:

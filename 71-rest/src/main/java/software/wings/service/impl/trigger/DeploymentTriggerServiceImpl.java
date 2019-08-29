@@ -5,7 +5,6 @@ import static software.wings.beans.trigger.Condition.Type.NEW_ARTIFACT;
 import static software.wings.beans.trigger.Condition.Type.PIPELINE_COMPLETION;
 import static software.wings.beans.trigger.Condition.Type.SCHEDULED;
 import static software.wings.beans.trigger.Condition.Type.WEBHOOK;
-import static software.wings.scheduler.ScheduledTriggerJob.PREFIX;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
@@ -162,7 +161,7 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
 
   @Override
   public String getCronDescription(String expression) {
-    return triggerServiceHelper.getCronDescription(PREFIX + expression);
+    return triggerServiceHelper.getCronDescription(expression);
   }
 
   @Override

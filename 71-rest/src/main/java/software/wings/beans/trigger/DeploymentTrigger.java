@@ -3,6 +3,7 @@ package software.wings.beans.trigger;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.scheduler.ScheduledTriggerJob.PREFIX;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
@@ -28,6 +29,8 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
+import software.wings.beans.HarnessTagLink;
+import software.wings.beans.entityinterface.TagAware;
 import software.wings.beans.trigger.Condition.Type;
 
 import java.util.ArrayList;
@@ -58,7 +61,7 @@ import javax.validation.constraints.NotNull;
 @HarnessExportableEntity
 @FieldNameConstants(innerTypeName = "DeploymentTriggerKeys")
 public class DeploymentTrigger implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
-                                          UpdatedByAware, PersistentCronIterable {
+                                          UpdatedByAware, PersistentCronIterable, TagAware {
   @Id @NotNull(groups = {DeploymentTrigger.class}) @SchemaIgnore private String uuid;
   @NotNull protected String appId;
   @Indexed protected String accountId;
@@ -76,7 +79,8 @@ public class DeploymentTrigger implements PersistentEntity, UuidAware, CreatedAt
   private Action action;
   @NotNull private Condition condition;
   private Type type;
-  private String webHookToken;
+  @JsonIgnore private String webHookToken;
+  private transient List<HarnessTagLink> tagLinks;
 
   @Override
   public boolean skipMissed() {
