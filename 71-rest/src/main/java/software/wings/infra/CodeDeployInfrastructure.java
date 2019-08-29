@@ -8,7 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.annotation.ExcludeFieldMap;
+import software.wings.annotation.IncludeFieldMap;
 import software.wings.api.CloudProviderType;
 import software.wings.beans.CodeDeployInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
@@ -19,9 +19,9 @@ import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInf
 @Data
 @Builder
 public class CodeDeployInfrastructure implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
-  @ExcludeFieldMap private String cloudProviderId;
+  private String cloudProviderId;
 
-  private String region;
+  @IncludeFieldMap private String region;
 
   @NotEmpty private String applicationName;
   @NotEmpty private String deploymentGroup;

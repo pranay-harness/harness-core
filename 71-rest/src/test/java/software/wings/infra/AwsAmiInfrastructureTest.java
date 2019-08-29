@@ -70,25 +70,16 @@ public class AwsAmiInfrastructureTest {
     assertThat(fieldMap.containsKey("region")).isTrue();
     assertThat(REGION).isEqualTo(fieldMap.get("region"));
 
-    assertThat(fieldMap.containsKey("hostNameConvention")).isTrue();
-    assertThat(HOSTNAME_CONVENTION).isEqualTo(fieldMap.get("hostNameConvention"));
+    assertThat(fieldMap.containsKey("hostNameConvention")).isFalse();
 
-    assertThat(fieldMap.containsKey("autoScalingGroupName")).isTrue();
-    assertThat(WingsTestConstants.AUTO_SCALING_GROUP_NAME).isEqualTo(fieldMap.get("autoScalingGroupName"));
+    assertThat(fieldMap.containsKey("autoScalingGroupName")).isFalse();
 
-    assertThat(fieldMap.containsKey("region")).isTrue();
-    assertThat(REGION).isEqualTo(fieldMap.get("region"));
+    assertThat(fieldMap.containsKey("classicLoadBalancers")).isFalse();
 
-    assertThat(fieldMap.containsKey("classicLoadBalancers")).isTrue();
-    assertThat(CLASSIC_LOAD_BALANCERS).isEqualTo(fieldMap.get("classicLoadBalancers"));
+    assertThat(fieldMap.containsKey("stageClassicLoadBalancers")).isFalse();
 
-    assertThat(fieldMap.containsKey("stageClassicLoadBalancers")).isTrue();
-    assertThat(STAGE_CLASSIC_LOAD_BALANCERS).isEqualTo(fieldMap.get("stageClassicLoadBalancers"));
+    assertThat(fieldMap.containsKey("targetGroupArns")).isFalse();
 
-    assertThat(fieldMap.containsKey("targetGroupArns")).isTrue();
-    assertThat(TARGET_GROUP_ARNS).isEqualTo(fieldMap.get("targetGroupArns"));
-
-    assertThat(fieldMap.containsKey("stageTargetGroupArns")).isTrue();
-    assertThat(STAGE_TARGET_GROUP_ARNS).isEqualTo(fieldMap.get("stageTargetGroupArns"));
+    assertThat(fieldMap.containsKey("stageTargetGroupArns")).isFalse();
   }
 }

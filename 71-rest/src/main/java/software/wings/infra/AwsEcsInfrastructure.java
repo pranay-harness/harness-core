@@ -18,7 +18,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.FieldNameConstants;
-import software.wings.annotation.ExcludeFieldMap;
+import software.wings.annotation.IncludeFieldMap;
 import software.wings.api.CloudProviderType;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
@@ -35,21 +35,22 @@ import java.util.Set;
 @FieldNameConstants(innerTypeName = "AwsEcsInfrastructureKeys")
 public class AwsEcsInfrastructure
     implements InfraMappingInfrastructureProvider, ContainerInfrastructure, FieldKeyValMapProvider, ProvisionerAware {
-  @ExcludeFieldMap private String cloudProviderId;
-  private String region;
+  private String cloudProviderId;
+  @IncludeFieldMap private String region;
   private String vpcId;
   private List<String> subnetIds;
   private List<String> securityGroupIds;
   private boolean assignPublicIp;
   private String executionRole;
-  private String launchType;
-  private String clusterName;
+  // Do not allow to modify
+  @IncludeFieldMap private String launchType;
+  @IncludeFieldMap private String clusterName;
   @Getter(onMethod = @__(@JsonIgnore)) private String type;
   @Getter(onMethod = @__(@JsonIgnore)) private String role;
   @Getter(onMethod = @__(@JsonIgnore)) private int diskSize;
   @Getter(onMethod = @__(@JsonIgnore)) private String ami;
   @Getter(onMethod = @__(@JsonIgnore)) private int numberOfNodes;
-  @ExcludeFieldMap private Map<String, String> expressions;
+  private Map<String, String> expressions;
 
   @Override
   public InfrastructureMapping getInfraMapping() {

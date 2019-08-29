@@ -6,6 +6,7 @@ import com.google.common.collect.Maps;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -46,7 +47,22 @@ public class MapperUtilsTest extends CategoryTest {
         .containsExactly("name1", "body1", "toAddress1", "ccAddress1", null);
   }
 
+  @Test
+  @Category(UnitTests.class)
+  public void mapObjectOnlyNonNull() {
+    EmailState emailState1 = new EmailState("name1", "toAddress1", "ccAddress1", "subject1", "body1", true);
+
+    EmailState emailState2 = new EmailState("name2", "toAddress2", "ccAddress2", null, null, true);
+
+    MapperUtils.mapObjectOnlyNonNull(emailState2, emailState1);
+
+    assertThat(emailState1)
+        .extracting("name", "body", "toAddress", "ccAddress", "subject")
+        .containsExactly("name2", "body1", "toAddress2", "ccAddress2", "subject1");
+  }
+
   @Data
+  @AllArgsConstructor
   public class EmailState {
     private String name;
     private String toAddress;

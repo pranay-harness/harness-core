@@ -23,6 +23,7 @@ import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -268,5 +269,28 @@ public class InfrastructureDefinitionResource {
       @PathParam("computeProviderId") String computeProviderId, @PathParam("elastigroupId") String elastigroupId) {
     return new RestResponse<>(
         infrastructureDefinitionService.getElastigroupJson(appId, computeProviderId, elastigroupId));
+  }
+
+  @GET
+  @Path("{infraDefinitionId}/ami/runningcount")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<AwsAsgGetRunningCountData> getRunningCountForAmi(@QueryParam("appId") String appId,
+      @PathParam("infraDefinitionId") String infraDefinitionId, @QueryParam("serviceId") String serviceId) {
+    return new RestResponse<>(
+        infrastructureDefinitionService.getAmiCurrentlyRunningInstanceCount(appId, infraDefinitionId, serviceId));
+  }
+
+  @GET
+  @Path("{infraDefinitionId}/containers")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<String> getRunningContainerCount(@QueryParam("appId") String appId,
+      @QueryParam("serviceNameExpr") String serviceNameExpr, @PathParam("infraDefinitionId") String infraDefinitionId,
+      @QueryParam("serviceId") String serviceId) {
+    return new RestResponse<>(infrastructureDefinitionService.getContainerRunningInstances(
+        appId, infraDefinitionId, serviceId, serviceNameExpr));
   }
 }

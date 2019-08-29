@@ -295,4 +295,17 @@ public class InfrastructureDefinitionServiceTest extends WingsBaseTest {
     when(wingsPersistence.getWithAppId(InfrastructureDefinition.class, APP_ID, INFRA_DEFINITION_ID))
         .thenReturn(infrastructureDefinition);
   }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetAllFields() {
+    InfrastructureDefinitionServiceImpl infrastructureDefinitionService =
+        (InfrastructureDefinitionServiceImpl) this.infrastructureDefinitionService;
+    GoogleKubernetesEngine googleKubernetesEngine = GoogleKubernetesEngine.builder().build();
+    Map<String, Object> allFields = infrastructureDefinitionService.getAllFields(googleKubernetesEngine);
+    assertThat(allFields.size() == 5).isTrue();
+    googleKubernetesEngine.setReleaseName("rel");
+    allFields = infrastructureDefinitionService.getAllFields(googleKubernetesEngine);
+    assertThat(allFields.get(GoogleKubernetesEngineKeys.releaseName).equals("rel")).isTrue();
+  }
 }

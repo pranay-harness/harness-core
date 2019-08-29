@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.annotation.ExcludeFieldMap;
+import software.wings.annotation.IncludeFieldMap;
 import software.wings.api.CloudProviderType;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
@@ -19,16 +19,11 @@ import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInf
 @Builder
 public class AzureKubernetesService
     implements KubernetesInfrastructure, InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
-  @ExcludeFieldMap private String cloudProviderId;
-
-  private String clusterName;
-
+  private String cloudProviderId;
+  @IncludeFieldMap private String clusterName;
   private String namespace;
-
   private String releaseName;
-
   private String subscriptionId;
-
   private String resourceGroup;
 
   @Override

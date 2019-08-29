@@ -6,7 +6,7 @@ import static io.harness.beans.PageResponse.PageResponseBuilder;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
+import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -28,6 +28,10 @@ import static software.wings.api.DeploymentType.SPOTINST;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.api.DeploymentType.WINRM;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_DESIRED_INSTANCES;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MAX_INSTANCES;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MIN_INSTANCES;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_NAME;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.utils.Utils.safe;
@@ -56,8 +60,8 @@ import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.queue.Queue;
@@ -66,6 +70,7 @@ import io.harness.spotinst.model.ElastiGroup;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.jexl3.JexlException;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
 import software.wings.annotation.EncryptableSetting;
@@ -122,8 +127,10 @@ import software.wings.prune.PruneEvent;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.impl.PcfHelperService;
+import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
 import software.wings.service.impl.spotinst.SpotinstHelperServiceManager;
+import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsElbHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsRoute53HelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
@@ -172,6 +179,9 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Inject private TriggerService triggerService;
   @Inject private PcfHelperService pcfHelperService;
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
+  @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
+  @Inject private AwsAsgHelperServiceManager awsAsgHelperServiceManager;
+
   @Inject private AwsElbHelperServiceManager awsElbHelperServiceManager;
   @Inject private SpotinstHelperServiceManager spotinstHelperServiceManager;
   @Inject private Queue<PruneEvent> pruneQueue;
@@ -388,14 +398,14 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     Map<String, String> expressions = infra.getExpressions();
     if (infra.isProvisionInstances()) {
       if (isEmpty(expressions.get(AwsInstanceInfrastructureKeys.autoScalingGroupName))) {
-        throw new WingsException(INVALID_ARGUMENT).addParam("args", "Auto Scaling group Name must not be empty");
+        throw new InvalidArgumentsException(Pair.of("args", "Auto Scaling group Name must not be empty"));
       }
       if (infra.isSetDesiredCapacity() && infra.getDesiredCapacity() <= 0) {
-        throw new WingsException(INVALID_ARGUMENT).addParam("args", "Desired count must be greater than zero.");
+        throw new InvalidArgumentsException(Pair.of("args", "Desired count must be greater than zero."));
       }
     } else {
       if (isEmpty(expressions.get(AwsInstanceFilterKeys.tags))) {
-        throw new WingsException(INVALID_ARGUMENT).addParam("args", "Tags must not be empty with AWS Instance Filter");
+        throw new InvalidArgumentsException(Pair.of("args", "Tags must not be empty with AWS Instance Filter"));
       }
     }
   }
@@ -493,21 +503,22 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       renderExpression(infrastructureDefinition, context);
     }
     InfrastructureMapping infraMapping = existingInfraMapping(infrastructureDefinition, serviceId);
+    InfrastructureMapping newInfraMapping = infrastructureDefinition.getInfraMapping();
+    newInfraMapping.setServiceId(serviceId);
+    newInfraMapping.setAccountId(appService.getAccountIdByAppId(appId));
+    newInfraMapping.setInfrastructureDefinitionId(infraDefinitionId);
     if (infraMapping != null) {
-      return infraMapping;
+      newInfraMapping.setUuid(infraMapping.getUuid());
+      newInfraMapping.setName(infraMapping.getName());
+      return infrastructureMappingService.update(newInfraMapping);
     } else {
-      infraMapping = infrastructureDefinition.getInfraMapping();
-      infraMapping.setServiceId(serviceId);
-      infraMapping.setAccountId(appService.getAccountIdByAppId(appId));
-      infraMapping.setInfrastructureDefinitionId(infraDefinitionId);
-      infraMapping.setAutoPopulate(true);
-      return infrastructureMappingService.save(infraMapping);
+      newInfraMapping.setAutoPopulate(true);
+      return infrastructureMappingService.save(newInfraMapping);
     }
   }
 
   private void renderExpression(InfrastructureDefinition infrastructureDefinition, ExecutionContext context) {
-    Map<String, Object> fieldMapForClass =
-        ((FieldKeyValMapProvider) infrastructureDefinition.getInfrastructure()).getFieldMapForClass();
+    Map<String, Object> fieldMapForClass = getAllFields(infrastructureDefinition.getInfrastructure());
     Map<String, String> renderedFieldMap = new HashMap<>();
 
     if (isEmpty(infrastructureDefinition.getProvisionerId())) {
@@ -529,6 +540,21 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       provisionerAwareInfrastructure.applyExpressions(resolvedExpressions, infrastructureDefinition.getAppId(),
           infrastructureDefinition.getEnvId(), infrastructureDefinition.getUuid());
     }
+  }
+
+  @VisibleForTesting
+  public Map<String, Object> getAllFields(InfraMappingInfrastructureProvider infrastructure) {
+    Map<String, Object> fieldValueMap = new HashMap<>();
+    Field[] declaredFields = infrastructure.getClass().getDeclaredFields();
+    for (Field declaredField : declaredFields) {
+      try {
+        declaredField.setAccessible(true);
+        fieldValueMap.put(declaredField.getName(), declaredField.get(infrastructure));
+      } catch (IllegalAccessException e) {
+        throw new WingsException(UNKNOWN_ERROR, e);
+      }
+    }
+    return fieldValueMap;
   }
 
   private List<BlueprintProperty> getBlueprintProperties(InfrastructureDefinition infrastructureDefinition) {
@@ -583,7 +609,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
         field.set(infrastructureDefinition.getInfrastructure(), entry.getValue());
       }
     } catch (Exception ex) {
-      throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", ExceptionUtils.getMessage(ex));
+      throw new InvalidArgumentsException(Pair.of("message", ExceptionUtils.getMessage(ex)));
     }
   }
 
@@ -631,13 +657,11 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     InfraMappingInfrastructureProvider infrastructure = infraDefinition.getInfrastructure();
     Class<? extends InfrastructureMapping> mappingClass = infrastructure.getMappingClass();
     Map<String, Object> queryMap = ((FieldKeyValMapProvider) infrastructure).getFieldMapForClass();
-    Query baseQuery =
-        wingsPersistence.createQuery(mappingClass)
-            .filter(InfrastructureMapping.APP_ID_KEY, infraDefinition.getAppId())
-            .filter(InfrastructureMapping.ENV_ID_KEY, infraDefinition.getEnvId())
-            .filter(InfrastructureMappingKeys.serviceId, serviceId)
-            .filter(InfrastructureMappingKeys.computeProviderSettingId, infrastructure.getCloudProviderId())
-            .filter(InfrastructureMappingKeys.infrastructureDefinitionId, infraDefinition.getUuid());
+    Query baseQuery = wingsPersistence.createQuery(mappingClass)
+                          .filter(InfrastructureMapping.APP_ID_KEY, infraDefinition.getAppId())
+                          .filter(InfrastructureMapping.ENV_ID_KEY, infraDefinition.getEnvId())
+                          .filter(InfrastructureMappingKeys.serviceId, serviceId)
+                          .filter(InfrastructureMappingKeys.infrastructureDefinitionId, infraDefinition.getUuid());
 
     // TODO => Hackish Find a better way to handle V1 services
     if (queryMap.containsKey("releaseName") && !service.isK8sV2()) {
@@ -649,8 +673,9 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       return null;
     } else {
       if (infrastructureMappings.size() > 1) {
-        throw new WingsException(format("More than 1 mappings found for infra definition : [%s]. Mappings : [%s",
-            infraDefinition.toString(), infrastructureMappings.toString()));
+        throw new InvalidRequestException(
+            format("More than 1 mappings found for infra definition : [%s]. Mappings : [%s", infraDefinition.toString(),
+                infrastructureMappings.toString()));
       }
       return infrastructureMappings.get(0);
     }
@@ -894,7 +919,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Override
   public Map<String, String> listElasticLoadBalancers(String appId, String infraDefinitionId) {
     InfrastructureDefinition infrastructureDefinition = get(appId, infraDefinitionId);
-    notNullCheck("InfrDefinition", infrastructureDefinition);
+    notNullCheck("Infrastructure Definition", infrastructureDefinition);
     InfraMappingInfrastructureProvider provider = infrastructureDefinition.getInfrastructure();
     String region = extractRegionFromInfrastructureProvider(provider);
     if (isEmpty(region)) {
@@ -1032,7 +1057,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
   private AwsConfig validateAndGetAwsConfig(SettingAttribute computeProviderSetting) {
     if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof AwsConfig)) {
-      throw new WingsException(INVALID_ARGUMENT).addParam("args", "InvalidConfiguration");
+      throw new InvalidArgumentsException(Pair.of("args", "InvalidConfiguration"));
     }
     return (AwsConfig) computeProviderSetting.getValue();
   }
@@ -1273,6 +1298,34 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   }
 
   @Override
+  public AwsAsgGetRunningCountData getAmiCurrentlyRunningInstanceCount(
+      String appId, String infraDefinitionId, String serviceId) {
+    InfrastructureDefinition infrastructureDefinition = get(appId, infraDefinitionId);
+    notNullCheck("InfraStructure Definition", infrastructureDefinition);
+    AwsAmiInfrastructure awsAmiInfrastructure = (AwsAmiInfrastructure) infrastructureDefinition.getInfrastructure();
+    SettingAttribute computeProviderSetting = settingsService.get(awsAmiInfrastructure.getCloudProviderId());
+    notNullCheck("Compute Provider", computeProviderSetting);
+    String region = awsAmiInfrastructure.getRegion();
+    if (isEmpty(region)) {
+      // case that could happen since we support dynamic infra for Ami Asg
+      return AwsAsgGetRunningCountData.builder()
+          .asgName(DEFAULT_AMI_ASG_NAME)
+          .asgMin(DEFAULT_AMI_ASG_MIN_INSTANCES)
+          .asgMax(DEFAULT_AMI_ASG_MAX_INSTANCES)
+          .asgDesired(DEFAULT_AMI_ASG_DESIRED_INSTANCES)
+          .build();
+    }
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(awsConfig, appId, null);
+
+    InfrastructureMapping infrastructureMapping =
+        infrastructureDefinitionService.getInfraMapping(appId, infraDefinitionId, serviceId, null);
+    notNullCheck("Infrastructure Mapping does not exist", infrastructureDefinition);
+    return awsAsgHelperServiceManager.getCurrentlyRunningInstanceCount(
+        awsConfig, encryptionDetails, region, infrastructureMapping.getUuid(), appId);
+  }
+
+  @Override
   public Integer getPcfRunningInstances(
       String appId, String infraDefinitionId, String appNameExpression, String serviceId) {
     InfrastructureDefinition infrastructureDefinition = get(appId, infraDefinitionId);
@@ -1290,8 +1343,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
     InfraMappingInfrastructureProvider infrastructure = infrastructureDefinition.getInfrastructure();
     if (!(infrastructure instanceof PcfInfraStructure)) {
-      throw new WingsException(INVALID_ARGUMENT, USER)
-          .addParam("args", "InvalidConfiguration, Needs Instance of PcfConfig");
+      throw new InvalidArgumentsException(Pair.of("args", "InvalidConfiguration, Needs Instance of PcfConfig"));
     }
 
     SettingAttribute computeProviderSetting = settingsService.get(infrastructure.getCloudProviderId());

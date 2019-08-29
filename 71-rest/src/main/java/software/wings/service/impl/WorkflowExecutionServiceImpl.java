@@ -2484,33 +2484,22 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       return 0;
     }
 
+    List<String> resolvedInfraMappingIds;
     if (infraRefactor) {
-      List<InfrastructureDefinition> resolvedInfraDefinitions =
-          getResolvedInfraDefinitions(workflow, workflowExecution);
-      if (isEmpty(resolvedInfraDefinitions)) {
-        return 0;
-      }
-      try {
-        List<Host> hosts = hostService.getHostsByInfraDefinitionIds(workflow.getAppId(),
-            resolvedInfraDefinitions.stream().map(InfrastructureDefinition::getUuid).collect(toList()));
-        return hosts == null ? 0 : hosts.size();
-      } catch (Exception e) {
-        logger.error(
-            "Error occurred while calculating Refresh total for workflow execution {}", workflowExecution.getUuid(), e);
-      }
+      resolvedInfraMappingIds = workflowExecution.getInfraMappingIds();
     } else {
       List<InfrastructureMapping> resolvedInfraMappings = getResolvedInfraMappings(workflow, workflowExecution);
-      if (isEmpty(resolvedInfraMappings)) {
-        return 0;
-      }
-      try {
-        List<Host> hosts = hostService.getHostsByInfraMappingIds(
-            workflow.getAppId(), resolvedInfraMappings.stream().map(InfrastructureMapping::getUuid).collect(toList()));
-        return hosts == null ? 0 : hosts.size();
-      } catch (Exception e) {
-        logger.error(
-            "Error occurred while calculating Refresh total for workflow execution {}", workflowExecution.getUuid(), e);
-      }
+      resolvedInfraMappingIds = resolvedInfraMappings.stream().map(InfrastructureMapping::getUuid).collect(toList());
+    }
+    if (isEmpty(resolvedInfraMappingIds)) {
+      return 0;
+    }
+    try {
+      List<Host> hosts = hostService.getHostsByInfraMappingIds(workflow.getAppId(), resolvedInfraMappingIds);
+      return hosts == null ? 0 : hosts.size();
+    } catch (Exception e) {
+      logger.error(
+          "Error occurred while calculating Refresh total for workflow execution {}", workflowExecution.getUuid(), e);
     }
 
     return 0;

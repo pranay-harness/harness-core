@@ -8,7 +8,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.annotation.ExcludeFieldMap;
 import software.wings.api.CloudProviderType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
@@ -23,11 +22,11 @@ import java.util.List;
 @Builder
 public class PhysicalInfraWinrm implements PhysicalDataCenterInfra, InfraMappingInfrastructureProvider,
                                            FieldKeyValMapProvider, WinRmBasedInfrastructure {
-  @ExcludeFieldMap private String cloudProviderId;
+  private String cloudProviderId;
   private List<String> hostNames;
   private List<Host> hosts;
   private String loadBalancerId;
-  @Transient @ExcludeFieldMap private String loadBalancerName;
+  @Transient private String loadBalancerName;
   private String winRmConnectionAttributes;
 
   @Override

@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.annotation.ExcludeFieldMap;
+import software.wings.annotation.IncludeFieldMap;
 import software.wings.api.CloudProviderType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
@@ -19,9 +19,9 @@ import java.util.List;
 @Data
 @Builder
 public class PcfInfraStructure implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
-  @ExcludeFieldMap private String cloudProviderId;
-  private String organization;
-  private String space;
+  private String cloudProviderId;
+  @IncludeFieldMap private String organization;
+  @IncludeFieldMap private String space;
   private List<String> tempRouteMap;
   private List<String> routeMaps;
 

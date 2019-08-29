@@ -44,6 +44,7 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
+import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_INSTANCE_ID;
@@ -369,6 +370,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                                                    .withHostNames(singletonList(HOST_NAME))
                                                    .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
                                                    .build();
+    savedInfra.setInfrastructureDefinitionId(INFRA_DEFINITION_ID);
 
     PhysicalInfrastructureMapping updatedInfra = aPhysicalInfrastructureMapping()
                                                      .withName("Name4")
@@ -387,6 +389,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                                                      .withHostNames(singletonList(HOST_NAME))
                                                      .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
                                                      .build();
+    updatedInfra.setInfrastructureDefinitionId(INFRA_DEFINITION_ID);
 
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
 
@@ -420,6 +423,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     keyValuePairs.put("hostNames", singletonList(HOST_NAME));
     keyValuePairs.put("computeProviderName", COMPUTE_PROVIDER_ID_CHANGED);
     keyValuePairs.put("name", "Name4");
+    keyValuePairs.put("infrastructureDefinitionId", INFRA_DEFINITION_ID);
 
     Set<String> fieldsToRemove = Sets.newHashSet("provisionerId", "hosts", "loadBalancerId");
     verify(wingsPersistence)
@@ -450,6 +454,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                                                         .withHostNames(singletonList(HOST_NAME))
                                                         .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
                                                         .build();
+    savedInfra.setInfrastructureDefinitionId(INFRA_DEFINITION_ID);
 
     PhysicalInfrastructureMappingWinRm updatedInfra = aPhysicalInfrastructureMappingWinRm()
                                                           .withName(infraName)
@@ -467,6 +472,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                                                           .withHostNames(singletonList(HOST_NAME))
                                                           .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
                                                           .build();
+    updatedInfra.setInfrastructureDefinitionId(INFRA_DEFINITION_ID);
 
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
 
@@ -509,6 +515,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     keyValuePairs.put("hostNames", singletonList(HOST_NAME));
     keyValuePairs.put("computeProviderName", COMPUTE_PROVIDER_ID);
     keyValuePairs.put("name", infraName);
+    keyValuePairs.put("infrastructureDefinitionId", INFRA_DEFINITION_ID);
 
     Set<String> fieldsToRemove = new HashSet<>();
     fieldsToRemove.add("provisionerId");

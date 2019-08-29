@@ -11,6 +11,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.infrastructure.Host;
 import software.wings.infra.InfraDefinitionDetail;
 import software.wings.infra.InfrastructureDefinition;
+import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
 import software.wings.service.intfc.ownership.OwnedByEnvironment;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -99,4 +100,7 @@ public interface InfrastructureDefinitionService extends OwnedByEnvironment {
 
   List<ElastiGroup> listElastiGroups(String appId, String computeProviderId);
   String getElastigroupJson(String appId, String computeProviderId, String elastigroupId);
+
+  AwsAsgGetRunningCountData getAmiCurrentlyRunningInstanceCount(
+      String appId, String infraDefinitionId, String serviceId);
 }

@@ -12,7 +12,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.apache.commons.lang3.StringUtils;
-import software.wings.annotation.ExcludeFieldMap;
+import software.wings.annotation.IncludeFieldMap;
 import software.wings.api.CloudProviderType;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.InfrastructureMapping;
@@ -30,13 +30,13 @@ import java.util.Set;
 @FieldNameConstants(innerTypeName = "AwsLambdaInfrastructureKeys")
 public class AwsLambdaInfrastructure
     implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider, ProvisionerAware {
-  @ExcludeFieldMap private String cloudProviderId;
-  private String region;
+  private String cloudProviderId;
+  @IncludeFieldMap private String region;
   private String vpcId;
   private List<String> subnetIds;
   private List<String> securityGroupIds;
   private String role;
-  @ExcludeFieldMap private Map<String, String> expressions;
+  private Map<String, String> expressions;
 
   @Override
   public InfrastructureMapping getInfraMapping() {

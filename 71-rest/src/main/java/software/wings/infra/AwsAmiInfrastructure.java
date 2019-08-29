@@ -16,7 +16,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.apache.commons.lang3.StringUtils;
-import software.wings.annotation.ExcludeFieldMap;
+import software.wings.annotation.IncludeFieldMap;
 import software.wings.api.CloudProviderType;
 import software.wings.beans.AmiDeploymentType;
 import software.wings.beans.AwsAmiInfrastructureMapping;
@@ -35,8 +35,10 @@ import java.util.Set;
 @FieldNameConstants(innerTypeName = "AwsAmiInfrastructureKeys")
 public class AwsAmiInfrastructure
     implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider, ProvisionerAware {
-  @ExcludeFieldMap private String cloudProviderId;
-  private String region;
+  private String cloudProviderId;
+  @IncludeFieldMap private String region;
+
+  // Base AutoScaling Group
   private String autoScalingGroupName;
   private List<String> classicLoadBalancers;
   private List<String> targetGroupArns;
@@ -48,13 +50,13 @@ public class AwsAmiInfrastructure
 
   // Right now ONLY regular Asg OR SpotInst
   // This field can't be modified once Infra is created
-  private AmiDeploymentType amiDeploymentType;
+  @IncludeFieldMap private AmiDeploymentType amiDeploymentType;
 
   // Variables used for SpotInst Deployment type
   private String spotinstElastiGroupJson;
   private String spotinstCloudProvider;
 
-  @ExcludeFieldMap private Map<String, String> expressions;
+  private Map<String, String> expressions;
 
   public AmiDeploymentType getAmiDeploymentType() {
     return amiDeploymentType != null ? amiDeploymentType : AmiDeploymentType.AWS_ASG;

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import software.wings.annotation.CustomFieldMapKey;
-import software.wings.annotation.ExcludeFieldMap;
+import software.wings.annotation.IncludeFieldMap;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -18,7 +18,7 @@ public interface FieldKeyValMapProvider {
     Field[] fields = cls.getDeclaredFields();
     for (Field field : fields) {
       String fieldKey;
-      if (field.isAnnotationPresent(ExcludeFieldMap.class)) {
+      if (!field.isAnnotationPresent(IncludeFieldMap.class)) {
         continue;
       }
 
