@@ -24,6 +24,7 @@ import com.amazonaws.services.lambda.model.CreateFunctionRequest;
 import com.amazonaws.services.lambda.model.CreateFunctionResult;
 import com.amazonaws.services.lambda.model.Environment;
 import com.amazonaws.services.lambda.model.FunctionCode;
+import com.amazonaws.services.lambda.model.FunctionConfiguration;
 import com.amazonaws.services.lambda.model.GetFunctionRequest;
 import com.amazonaws.services.lambda.model.GetFunctionResult;
 import com.amazonaws.services.lambda.model.InvokeRequest;
@@ -31,6 +32,7 @@ import com.amazonaws.services.lambda.model.InvokeResult;
 import com.amazonaws.services.lambda.model.ListAliasesRequest;
 import com.amazonaws.services.lambda.model.ListAliasesResult;
 import com.amazonaws.services.lambda.model.ListFunctionsRequest;
+import com.amazonaws.services.lambda.model.ListFunctionsResult;
 import com.amazonaws.services.lambda.model.LogType;
 import com.amazonaws.services.lambda.model.PublishVersionRequest;
 import com.amazonaws.services.lambda.model.PublishVersionResult;
@@ -79,8 +81,6 @@ import java.util.Map.Entry;
 @Slf4j
 public class AwsLambdaHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsLambdaHelperServiceDelegate {
-  private int MAX_RESULTS = 1000;
-
   @VisibleForTesting
   public AWSLambdaClient getAmazonLambdaClient(String region, AwsConfig awsConfig) {
     AWSLambdaClientBuilder builder = AWSLambdaClientBuilder.standard().withRegion(region);
@@ -138,9 +138,19 @@ public class AwsLambdaHelperServiceDelegateImpl
       AWSLambdaClient lambdaClient = getAmazonLambdaClient(request.getRegion(), awsConfig);
       AwsLambdaFunctionResponseBuilder response = AwsLambdaFunctionResponse.builder();
       List<String> lambdaFunctions = new ArrayList<>();
-      lambdaClient.listFunctions(new ListFunctionsRequest().withMaxItems(MAX_RESULTS))
-          .getFunctions()
-          .forEach(functionConfiguration -> { lambdaFunctions.add(functionConfiguration.getFunctionName()); });
+      List<FunctionConfiguration> functionConfigurations = new ArrayList<>();
+
+      ListFunctionsResult listFunctionsResult = null;
+      String nextMarker = null;
+      do {
+        listFunctionsResult =
+            lambdaClient.listFunctions(new ListFunctionsRequest().withMaxItems(100).withMarker(nextMarker));
+        functionConfigurations.addAll(listFunctionsResult.getFunctions());
+        nextMarker = listFunctionsResult.getNextMarker();
+      } while (nextMarker != null);
+
+      functionConfigurations.forEach(
+          functionConfiguration -> lambdaFunctions.add(functionConfiguration.getFunctionName()));
       return response.lambdaFunctions(lambdaFunctions).executionStatus(SUCCESS).build();
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
