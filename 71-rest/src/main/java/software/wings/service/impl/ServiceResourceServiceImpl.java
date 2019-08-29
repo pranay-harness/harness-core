@@ -22,6 +22,11 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.api.DeploymentType.ECS;
+import static software.wings.api.DeploymentType.HELM;
+import static software.wings.api.DeploymentType.KUBERNETES;
+import static software.wings.api.DeploymentType.PCF;
+import static software.wings.api.DeploymentType.valueOf;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
@@ -816,11 +821,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       auditServiceHelper.reportDeleteForAuditing(service.getAppId(), pcfServiceSpecification);
     }
 
-    ContainerTask containerTask =
-        getContainerTaskByDeploymentType(service.getAppId(), service.getUuid(), DeploymentType.ECS.name());
+    ContainerTask containerTask = getContainerTaskByDeploymentType(service.getAppId(), service.getUuid(), ECS.name());
     if (containerTask == null) {
-      containerTask =
-          getContainerTaskByDeploymentType(service.getAppId(), service.getUuid(), DeploymentType.KUBERNETES.name());
+      containerTask = getContainerTaskByDeploymentType(service.getAppId(), service.getUuid(), KUBERNETES.name());
     }
     if (containerTask != null) {
       wingsPersistence.delete(ContainerTask.class, service.getAppId(), containerTask.getUuid());
@@ -2135,7 +2138,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       return service;
     }
 
-    if (DeploymentType.HELM.equals(service.getDeploymentType())) {
+    if (HELM.equals(service.getDeploymentType())) {
       ManifestFile manifestFile = ManifestFile.builder().fileContent(DEFAULT_HELM_VALUE_YAML).build();
 
       createValuesYaml(service.getAppId(), service.getUuid(), manifestFile);
@@ -2214,7 +2217,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private void createDefaultPCFManifestsIfApplicable(Service service) {
-    if (!DeploymentType.PCF.equals(service.getDeploymentType())) {
+    if (!PCF.equals(service.getDeploymentType())) {
       return;
     }
 
@@ -2264,7 +2267,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       throw new InvalidRequestException(msg, USER);
     }
 
-    return DeploymentType.valueOf(infraMapping.getDeploymentType());
+    return valueOf(infraMapping.getDeploymentType());
   }
 
   @Override
@@ -2281,7 +2284,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       Query<Service> query = wingsPersistence.createQuery(Service.class)
                                  .filter(Service.APP_ID_KEY, applicationManifest.getAppId())
                                  .filter(Service.ID_KEY, applicationManifest.getServiceId())
-                                 .filter(ServiceKeys.deploymentType, DeploymentType.KUBERNETES.name());
+                                 .filter(ServiceKeys.deploymentType, KUBERNETES.name());
 
       wingsPersistence.update(query, updateOperations);
     }
@@ -2434,10 +2437,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public List<Service> listByDeploymentType(String appId, String deploymentType) {
+    List<ArtifactType> supportedArtifactTypes =
+        DeploymentType.supportedArtifactTypes.get(DeploymentType.valueOf(deploymentType));
     Query<Service> query = wingsPersistence.createQuery(Service.class).field(ServiceKeys.appId).equal(appId);
     query.or(query.criteria(ServiceKeys.deploymentType).equal(deploymentType),
-        query.criteria(ServiceKeys.deploymentType).doesNotExist(),
-        query.criteria(ServiceKeys.deploymentType).equal(null));
+        query.and(query.criteria(ServiceKeys.deploymentType).equal(null),
+            query.criteria(ServiceKeys.artifactType).in(supportedArtifactTypes)));
     return query.asList();
   }
 }
