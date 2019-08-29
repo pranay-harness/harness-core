@@ -506,7 +506,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
               : "default");
     } else if (infrastructureMapping instanceof AzureInfrastructureMapping) {
       AzureInfrastructureMapping azureInfrastructureMapping = (AzureInfrastructureMapping) infrastructureMapping;
-      validateAzureInfraMapping(azureInfrastructureMapping);
+      validateInfraMapping(azureInfrastructureMapping, fromYaml);
       keyValuePairs.put("subscriptionId", azureInfrastructureMapping.getSubscriptionId());
       keyValuePairs.put("resourceGroup", azureInfrastructureMapping.getResourceGroup());
       keyValuePairs.put("tags", azureInfrastructureMapping.getTags());
@@ -645,7 +645,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     } else if (infrastructureMapping instanceof AwsAmiInfrastructureMapping) {
       AwsAmiInfrastructureMapping awsAmiInfrastructureMapping = (AwsAmiInfrastructureMapping) infrastructureMapping;
       AwsAmiInfrastructureMapping savedAwsAmiInfrastructureMapping = (AwsAmiInfrastructureMapping) savedInfraMapping;
-      validateAwsAmiInfrastructureMapping(awsAmiInfrastructureMapping);
+      validateInfraMapping(awsAmiInfrastructureMapping, fromYaml);
       if (awsAmiInfrastructureMapping.getRegion() != null) {
         keyValuePairs.put("region", awsAmiInfrastructureMapping.getRegion());
       } else {
