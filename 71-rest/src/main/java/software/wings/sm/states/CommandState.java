@@ -496,10 +496,10 @@ public class CommandState extends State {
     }
 
     return anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(Collections.singletonList(activityId))
-        .withStateExecutionData(executionDataBuilder.withDelegateTaskId(delegateTaskId).build())
-        .withDelegateTaskId(delegateTaskId)
+        .async(true)
+        .correlationIds(Collections.singletonList(activityId))
+        .stateExecutionData(executionDataBuilder.withDelegateTaskId(delegateTaskId).build())
+        .delegateTaskId(delegateTaskId)
         .build();
   }
 
@@ -902,10 +902,10 @@ public class CommandState extends State {
     }
 
     return anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(Collections.singletonList(activityId))
-        .withStateExecutionData(executionDataBuilder.withDelegateTaskId(delegateTaskId).build())
-        .withDelegateTaskId(delegateTaskId)
+        .async(true)
+        .correlationIds(Collections.singletonList(activityId))
+        .stateExecutionData(executionDataBuilder.withDelegateTaskId(delegateTaskId).build())
+        .delegateTaskId(delegateTaskId)
         .build();
   }
 
@@ -920,9 +920,9 @@ public class CommandState extends State {
     handleCommandException(context, activityId, appId);
     updateWorkflowExecutionStats(ExecutionStatus.FAILED, context);
     return anExecutionResponse()
-        .withExecutionStatus(ExecutionStatus.FAILED)
-        .withStateExecutionData(executionDataBuilder.build())
-        .withErrorMessage(ExceptionUtils.getMessage(e))
+        .executionStatus(ExecutionStatus.FAILED)
+        .stateExecutionData(executionDataBuilder.build())
+        .errorMessage(ExceptionUtils.getMessage(e))
         .build();
   }
 
@@ -1209,8 +1209,8 @@ public class CommandState extends State {
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     if (response.size() != 1) {
       return anExecutionResponse()
-          .withExecutionStatus(ExecutionStatus.FAILED)
-          .withErrorMessage("Unexpected number of response data items")
+          .executionStatus(ExecutionStatus.FAILED)
+          .errorMessage("Unexpected number of response data items")
           .build();
     }
 
@@ -1218,8 +1218,8 @@ public class CommandState extends State {
 
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
       return anExecutionResponse()
-          .withExecutionStatus(ExecutionStatus.FAILED)
-          .withErrorMessage(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage())
+          .executionStatus(ExecutionStatus.FAILED)
+          .errorMessage(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage())
           .build();
     }
 
@@ -1248,9 +1248,9 @@ public class CommandState extends State {
     commandStateExecutionData.setDelegateMetaInfo(commandExecutionResult.getDelegateMetaInfo());
 
     return anExecutionResponse()
-        .withExecutionStatus(executionStatus)
-        .withErrorMessage(commandExecutionResult.getErrorMessage())
-        .withStateExecutionData(commandStateExecutionData)
+        .executionStatus(executionStatus)
+        .errorMessage(commandExecutionResult.getErrorMessage())
+        .stateExecutionData(commandStateExecutionData)
         .build();
   }
 

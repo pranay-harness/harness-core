@@ -144,17 +144,17 @@ public class KubernetesSteadyStateCheck extends State {
                                       .infrastructureMappingId(containerInfraMapping.getUuid())
                                       .build();
       String delegateTaskId = delegateService.queueTask(delegateTask);
-      return ExecutionResponse.Builder.anExecutionResponse()
-          .withAsync(true)
-          .withCorrelationIds(singletonList(activity.getUuid()))
-          .withStateExecutionData(
+      return anExecutionResponse()
+          .async(true)
+          .correlationIds(singletonList(activity.getUuid()))
+          .stateExecutionData(
               KubernetesSteadyStateCheckExecutionData.builder()
                   .activityId(activity.getUuid())
                   .labels(labels)
                   .commandName(KUBERNETES_STEADY_STATE_CHECK_COMMAND_NAME)
                   .namespace(kubernetesSteadyStateCheckParams.getContainerServiceParams().getNamespace())
                   .build())
-          .withDelegateTaskId(delegateTaskId)
+          .delegateTaskId(delegateTaskId)
           .build();
     } catch (WingsException e) {
       throw e;
@@ -190,10 +190,10 @@ public class KubernetesSteadyStateCheck extends State {
           InstanceElementListParamBuilder.anInstanceElementListParam().withInstanceElements(instanceElements).build();
 
       return anExecutionResponse()
-          .withExecutionStatus(executionResponse.getExecutionStatus())
-          .withStateExecutionData(context.getStateExecutionData())
-          .addContextElement(instanceElementListParam)
-          .addNotifyElement(instanceElementListParam)
+          .executionStatus(executionResponse.getExecutionStatus())
+          .stateExecutionData(context.getStateExecutionData())
+          .contextElement(instanceElementListParam)
+          .notifyElement(instanceElementListParam)
           .build();
     } catch (WingsException e) {
       throw e;

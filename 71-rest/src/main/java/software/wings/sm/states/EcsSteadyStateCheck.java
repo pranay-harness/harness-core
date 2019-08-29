@@ -131,10 +131,10 @@ public class EcsSteadyStateCheck extends State {
               .build();
       String delegateTaskId = delegateService.queueTask(delegateTask);
       return anExecutionResponse()
-          .withAsync(true)
-          .withCorrelationIds(singletonList(activity.getUuid()))
-          .withStateExecutionData(ScriptStateExecutionData.builder().activityId(activity.getUuid()).build())
-          .withDelegateTaskId(delegateTaskId)
+          .async(true)
+          .correlationIds(singletonList(activity.getUuid()))
+          .stateExecutionData(ScriptStateExecutionData.builder().activityId(activity.getUuid()).build())
+          .delegateTaskId(delegateTaskId)
           .build();
     } catch (Exception e) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
@@ -162,10 +162,10 @@ public class EcsSteadyStateCheck extends State {
           InstanceElementListParamBuilder.anInstanceElementListParam().withInstanceElements(instanceElements).build();
 
       return anExecutionResponse()
-          .withExecutionStatus(ecsSteadyStateCheckResponse.getExecutionStatus())
-          .withStateExecutionData(context.getStateExecutionData())
-          .addContextElement(instanceElementListParam)
-          .addNotifyElement(instanceElementListParam)
+          .executionStatus(ecsSteadyStateCheckResponse.getExecutionStatus())
+          .stateExecutionData(context.getStateExecutionData())
+          .contextElement(instanceElementListParam)
+          .notifyElement(instanceElementListParam)
           .build();
     } catch (WingsException e) {
       throw e;

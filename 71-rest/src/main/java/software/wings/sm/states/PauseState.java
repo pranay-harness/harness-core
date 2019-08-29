@@ -38,8 +38,8 @@ public class PauseState extends EmailState {
         (EmailStateExecutionData) emailExecutionResponse.getStateExecutionData();
 
     return anExecutionResponse()
-        .withStateExecutionData(emailStateExecutionData)
-        .withExecutionStatus(ExecutionStatus.PAUSED)
+        .stateExecutionData(emailStateExecutionData)
+        .executionStatus(ExecutionStatus.PAUSED)
         .build();
   }
 

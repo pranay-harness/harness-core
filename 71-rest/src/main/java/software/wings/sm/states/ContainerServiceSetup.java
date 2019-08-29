@@ -222,10 +222,10 @@ public abstract class ContainerServiceSetup extends State {
                                         .build());
 
       return anExecutionResponse()
-          .withAsync(true)
-          .withCorrelationIds(singletonList(activity.getUuid()))
-          .withStateExecutionData(executionData)
-          .withDelegateTaskId(delegateTaskId)
+          .async(true)
+          .correlationIds(singletonList(activity.getUuid()))
+          .stateExecutionData(executionData)
+          .delegateTaskId(delegateTaskId)
           .build();
 
     } catch (WingsException e) {
@@ -341,12 +341,12 @@ public abstract class ContainerServiceSetup extends State {
     }
 
     return anExecutionResponse()
-        .withStateExecutionData(executionData)
-        .withExecutionStatus(status)
-        .addContextElement(containerServiceElement)
-        .addContextElement(instanceElementListParam)
-        .addNotifyElement(containerServiceElement)
-        .addNotifyElement(instanceElementListParam)
+        .stateExecutionData(executionData)
+        .executionStatus(status)
+        .contextElement(containerServiceElement)
+        .contextElement(instanceElementListParam)
+        .notifyElement(containerServiceElement)
+        .notifyElement(instanceElementListParam)
         .build();
   }
 

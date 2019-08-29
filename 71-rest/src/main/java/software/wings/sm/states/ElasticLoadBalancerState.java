@@ -117,9 +117,9 @@ public class ElasticLoadBalancerState extends State {
     }
 
     return anExecutionResponse()
-        .withStateExecutionData(ElbStateExecutionData.builder().hostName(instance.getHost().getHostName()).build())
-        .withExecutionStatus(status)
-        .withErrorMessage(errorMessage)
+        .stateExecutionData(ElbStateExecutionData.builder().hostName(instance.getHost().getHostName()).build())
+        .executionStatus(status)
+        .errorMessage(errorMessage)
         .build();
   }
 

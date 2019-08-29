@@ -401,7 +401,7 @@ public class HelmDeployState extends State {
 
     if (ExecutionStatus.FAILED.equals(executionStatus)) {
       activityService.updateStatus(activityId, appId, executionStatus);
-      return anExecutionResponse().withExecutionStatus(executionStatus).build();
+      return anExecutionResponse().executionStatus(executionStatus).build();
     }
 
     if (isNotBlank(executionResponse.getValuesFileContent())) {
@@ -748,10 +748,10 @@ public class HelmDeployState extends State {
                                   .envId(env.getUuid())
                                   .infrastructureMappingId(containerInfraMapping.getUuid())
                                   .build());
-    return ExecutionResponse.Builder.anExecutionResponse()
-        .withCorrelationIds(singletonList(activityId))
-        .withStateExecutionData(stateExecutionData)
-        .withAsync(true)
+    return anExecutionResponse()
+        .correlationIds(singletonList(activityId))
+        .stateExecutionData(stateExecutionData)
+        .async(true)
         .build();
   }
 
@@ -786,17 +786,17 @@ public class HelmDeployState extends State {
       valuesFiles.putAll(stateExecutionData.getValuesFiles());
     }
 
-    return ExecutionResponse.Builder.anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(Arrays.asList(waitId))
-        .withStateExecutionData(HelmDeployStateExecutionData.builder()
-                                    .activityId(activityId)
-                                    .commandName(HELM_COMMAND_NAME)
-                                    .currentTaskType(TaskType.GIT_COMMAND)
-                                    .appManifestMap(appManifestMap)
-                                    .valuesFiles(valuesFiles)
-                                    .build())
-        .withDelegateTaskId(delegateTaskId)
+    return anExecutionResponse()
+        .async(true)
+        .correlationIds(Arrays.asList(waitId))
+        .stateExecutionData(HelmDeployStateExecutionData.builder()
+                                .activityId(activityId)
+                                .commandName(HELM_COMMAND_NAME)
+                                .currentTaskType(TaskType.GIT_COMMAND)
+                                .appManifestMap(appManifestMap)
+                                .valuesFiles(valuesFiles)
+                                .build())
+        .delegateTaskId(delegateTaskId)
         .build();
   }
 
@@ -814,9 +814,9 @@ public class HelmDeployState extends State {
     stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
 
     Builder executionResponseBuilder = Builder.anExecutionResponse()
-                                           .withExecutionStatus(executionStatus)
-                                           .withErrorMessage(executionResponse.getErrorMessage())
-                                           .withStateExecutionData(stateExecutionData);
+                                           .executionStatus(executionStatus)
+                                           .errorMessage(executionResponse.getErrorMessage())
+                                           .stateExecutionData(stateExecutionData);
 
     if (executionResponse.getHelmCommandResponse() == null) {
       logger.info("Helm command task failed with status " + executionResponse.getCommandExecutionStatus().toString()
@@ -839,8 +839,8 @@ public class HelmDeployState extends State {
         InstanceElementListParam instanceElementListParam =
             InstanceElementListParamBuilder.anInstanceElementListParam().withInstanceElements(instanceElements).build();
 
-        executionResponseBuilder.addContextElement(instanceElementListParam);
-        executionResponseBuilder.addNotifyElement(instanceElementListParam);
+        executionResponseBuilder.contextElement(instanceElementListParam);
+        executionResponseBuilder.notifyElement(instanceElementListParam);
       }
     } else {
       logger.info("Got helm execution response with status "
@@ -864,7 +864,7 @@ public class HelmDeployState extends State {
 
     if (ExecutionStatus.FAILED.equals(executionStatus)) {
       activityService.updateStatus(activityId, appId, executionStatus);
-      return anExecutionResponse().withExecutionStatus(executionStatus).build();
+      return anExecutionResponse().executionStatus(executionStatus).build();
     }
 
     Map<K8sValuesLocation, String> valuesFiles =
@@ -967,15 +967,15 @@ public class HelmDeployState extends State {
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
-    return ExecutionResponse.Builder.anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(Arrays.asList(waitId))
-        .withStateExecutionData(HelmDeployStateExecutionData.builder()
-                                    .activityId(activityId)
-                                    .commandName(HELM_COMMAND_NAME)
-                                    .currentTaskType(TaskType.HELM_VALUES_FETCH)
-                                    .build())
-        .withDelegateTaskId(delegateTaskId)
+    return anExecutionResponse()
+        .async(true)
+        .correlationIds(Arrays.asList(waitId))
+        .stateExecutionData(HelmDeployStateExecutionData.builder()
+                                .activityId(activityId)
+                                .commandName(HELM_COMMAND_NAME)
+                                .currentTaskType(TaskType.HELM_VALUES_FETCH)
+                                .build())
+        .delegateTaskId(delegateTaskId)
         .build();
   }
 

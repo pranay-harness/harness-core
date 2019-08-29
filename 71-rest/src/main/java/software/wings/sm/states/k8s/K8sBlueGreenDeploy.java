@@ -124,8 +124,8 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
 
     if (ExecutionStatus.FAILED.equals(executionStatus)) {
       return anExecutionResponse()
-          .withExecutionStatus(executionStatus)
-          .withStateExecutionData(context.getStateExecutionData())
+          .executionStatus(executionStatus)
+          .stateExecutionData(context.getStateExecutionData())
           .build();
     }
 
@@ -149,10 +149,10 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
             .build());
 
     return anExecutionResponse()
-        .withExecutionStatus(executionStatus)
-        .withStateExecutionData(stateExecutionData)
-        .addContextElement(instanceElementListParam)
-        .addNotifyElement(instanceElementListParam)
+        .executionStatus(executionStatus)
+        .stateExecutionData(stateExecutionData)
+        .contextElement(instanceElementListParam)
+        .notifyElement(instanceElementListParam)
         .build();
   }
 

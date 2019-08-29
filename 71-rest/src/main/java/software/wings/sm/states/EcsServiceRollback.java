@@ -122,10 +122,10 @@ public class EcsServiceRollback extends State {
         ecsStateHelper.createAndQueueDelegateTaskForEcsServiceDeploy(deployDataBag, request, activity, delegateService);
 
     return anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(singletonList(activity.getUuid()))
-        .withStateExecutionData(executionData)
-        .withDelegateTaskId(delegateTaskId)
+        .async(true)
+        .correlationIds(singletonList(activity.getUuid()))
+        .stateExecutionData(executionData)
+        .delegateTaskId(delegateTaskId)
         .build();
   }
 

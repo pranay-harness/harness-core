@@ -184,10 +184,10 @@ public class AwsLambdaState extends State {
                                                           .build();
 
     return anExecutionResponse()
-        .withStateExecutionData(stateExecutionData)
-        .withExecutionStatus(wfResponse.getExecutionStatus())
-        .addContextElement(awsLambdaContextElement)
-        .addNotifyElement(awsLambdaContextElement)
+        .stateExecutionData(stateExecutionData)
+        .executionStatus(wfResponse.getExecutionStatus())
+        .contextElement(awsLambdaContextElement)
+        .notifyElement(awsLambdaContextElement)
         .build();
   }
 
@@ -285,10 +285,10 @@ public class AwsLambdaState extends State {
                                                             .withFunctionArns(functionArns)
                                                             .build();
       return anExecutionResponse()
-          .withStateExecutionData(executionDataBuilder.build())
-          .addContextElement(awsLambdaContextElement)
-          .addNotifyElement(awsLambdaContextElement)
-          .withExecutionStatus(SUCCESS)
+          .stateExecutionData(executionDataBuilder.build())
+          .contextElement(awsLambdaContextElement)
+          .notifyElement(awsLambdaContextElement)
+          .executionStatus(SUCCESS)
           .build();
     } else {
       AwsLambdaExecuteWfRequest wfRequest = constructLambdaWfRequestParams(specification, context, context.getAppId(),
@@ -310,10 +310,10 @@ public class AwsLambdaState extends State {
               .build();
       String delegateTaskId = delegateService.queueTask(delegateTask);
       return anExecutionResponse()
-          .withAsync(true)
-          .withCorrelationIds(singletonList(activity.getUuid()))
-          .withDelegateTaskId(delegateTaskId)
-          .withStateExecutionData(executionDataBuilder.build())
+          .async(true)
+          .correlationIds(singletonList(activity.getUuid()))
+          .delegateTaskId(delegateTaskId)
+          .stateExecutionData(executionDataBuilder.build())
           .build();
     }
   }

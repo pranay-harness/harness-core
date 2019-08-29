@@ -234,16 +234,16 @@ public class K8sStateHelper {
       valuesFiles.putAll(stateExecutionData.getValuesFiles());
     }
 
-    return ExecutionResponse.Builder.anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(Arrays.asList(waitId))
-        .withStateExecutionData(K8sStateExecutionData.builder()
-                                    .activityId(activityId)
-                                    .commandName(commandName)
-                                    .currentTaskType(TaskType.GIT_COMMAND)
-                                    .valuesFiles(valuesFiles)
-                                    .build())
-        .withDelegateTaskId(delegateTaskId)
+    return anExecutionResponse()
+        .async(true)
+        .correlationIds(Arrays.asList(waitId))
+        .stateExecutionData(K8sStateExecutionData.builder()
+                                .activityId(activityId)
+                                .commandName(commandName)
+                                .currentTaskType(TaskType.GIT_COMMAND)
+                                .valuesFiles(valuesFiles)
+                                .build())
+        .delegateTaskId(delegateTaskId)
         .build();
   }
 
@@ -486,18 +486,18 @@ public class K8sStateHelper {
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
-    return ExecutionResponse.Builder.anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(Arrays.asList(waitId))
-        .withStateExecutionData(K8sStateExecutionData.builder()
-                                    .activityId(k8sTaskParameters.getActivityId())
-                                    .commandName(k8sTaskParameters.getCommandName())
-                                    .namespace(k8sTaskParameters.getK8sClusterConfig().getNamespace())
-                                    .clusterName(k8sTaskParameters.getK8sClusterConfig().getClusterName())
-                                    .releaseName(k8sTaskParameters.getReleaseName())
-                                    .currentTaskType(TaskType.K8S_COMMAND_TASK)
-                                    .build())
-        .withDelegateTaskId(delegateTaskId)
+    return anExecutionResponse()
+        .async(true)
+        .correlationIds(Arrays.asList(waitId))
+        .stateExecutionData(K8sStateExecutionData.builder()
+                                .activityId(k8sTaskParameters.getActivityId())
+                                .commandName(k8sTaskParameters.getCommandName())
+                                .namespace(k8sTaskParameters.getK8sClusterConfig().getNamespace())
+                                .clusterName(k8sTaskParameters.getK8sClusterConfig().getClusterName())
+                                .releaseName(k8sTaskParameters.getReleaseName())
+                                .currentTaskType(TaskType.K8S_COMMAND_TASK)
+                                .build())
+        .delegateTaskId(delegateTaskId)
         .build();
   }
 
@@ -681,7 +681,7 @@ public class K8sStateHelper {
 
     if (ExecutionStatus.FAILED.equals(executionStatus)) {
       activityService.updateStatus(activityId, appId, executionStatus);
-      return anExecutionResponse().withExecutionStatus(executionStatus).build();
+      return anExecutionResponse().executionStatus(executionStatus).build();
     }
 
     Map<K8sValuesLocation, String> valuesFiles =
@@ -747,7 +747,7 @@ public class K8sStateHelper {
 
     if (ExecutionStatus.FAILED.equals(executionStatus)) {
       activityService.updateStatus(activityId, appId, executionStatus);
-      return anExecutionResponse().withExecutionStatus(executionStatus).build();
+      return anExecutionResponse().executionStatus(executionStatus).build();
     }
 
     if (isNotBlank(executionResponse.getValuesFileContent())) {
@@ -785,15 +785,15 @@ public class K8sStateHelper {
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
-    return ExecutionResponse.Builder.anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(Arrays.asList(waitId))
-        .withStateExecutionData(K8sStateExecutionData.builder()
-                                    .activityId(activityId)
-                                    .commandName(commandName)
-                                    .currentTaskType(TaskType.HELM_VALUES_FETCH)
-                                    .build())
-        .withDelegateTaskId(delegateTaskId)
+    return anExecutionResponse()
+        .async(true)
+        .correlationIds(Arrays.asList(waitId))
+        .stateExecutionData(K8sStateExecutionData.builder()
+                                .activityId(activityId)
+                                .commandName(commandName)
+                                .currentTaskType(TaskType.HELM_VALUES_FETCH)
+                                .build())
+        .delegateTaskId(delegateTaskId)
         .build();
   }
 

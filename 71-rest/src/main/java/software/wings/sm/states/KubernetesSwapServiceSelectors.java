@@ -125,8 +125,8 @@ public class KubernetesSwapServiceSelectors extends State {
     stateExecutionData.setStatus(executionResponse.getExecutionStatus());
 
     return anExecutionResponse()
-        .withExecutionStatus(executionResponse.getExecutionStatus())
-        .withStateExecutionData(context.getStateExecutionData())
+        .executionStatus(executionResponse.getExecutionStatus())
+        .stateExecutionData(context.getStateExecutionData())
         .build();
   }
 
@@ -269,16 +269,16 @@ public class KubernetesSwapServiceSelectors extends State {
                                     .build();
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
-    return ExecutionResponse.Builder.anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(Arrays.asList(activity.getUuid()))
-        .withStateExecutionData(KubernetesSwapServiceSelectorsExecutionData.builder()
-                                    .activityId(activity.getUuid())
-                                    .service1(renderedService1)
-                                    .service2(renderedService2)
-                                    .commandName(KUBERNETES_SWAP_SERVICE_SELECTORS_COMMAND_NAME)
-                                    .build())
-        .withDelegateTaskId(delegateTaskId)
+    return anExecutionResponse()
+        .async(true)
+        .correlationIds(Arrays.asList(activity.getUuid()))
+        .stateExecutionData(KubernetesSwapServiceSelectorsExecutionData.builder()
+                                .activityId(activity.getUuid())
+                                .service1(renderedService1)
+                                .service2(renderedService2)
+                                .commandName(KUBERNETES_SWAP_SERVICE_SELECTORS_COMMAND_NAME)
+                                .build())
+        .delegateTaskId(delegateTaskId)
         .build();
   }
 

@@ -163,12 +163,12 @@ public class NewRelicDeploymentMarkerState extends State {
     executionData.setStatus(ExecutionStatus.RUNNING);
 
     return anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(Collections.singletonList(correlationId))
-        .withExecutionStatus(ExecutionStatus.RUNNING)
-        .withErrorMessage("Sending deployment marker to NewRelic")
-        .withStateExecutionData(executionData)
-        .withDelegateTaskId(delegateTaskId)
+        .async(true)
+        .correlationIds(Collections.singletonList(correlationId))
+        .executionStatus(ExecutionStatus.RUNNING)
+        .errorMessage("Sending deployment marker to NewRelic")
+        .stateExecutionData(executionData)
+        .delegateTaskId(delegateTaskId)
         .build();
   }
 
@@ -186,16 +186,16 @@ public class NewRelicDeploymentMarkerState extends State {
       analysisExecutionData.setStatus(ExecutionStatus.FAILED);
 
       return anExecutionResponse()
-          .withExecutionStatus(ExecutionStatus.FAILED)
-          .withStateExecutionData(analysisExecutionData)
-          .withErrorMessage(executionResponse.getErrorMessage())
+          .executionStatus(ExecutionStatus.FAILED)
+          .stateExecutionData(analysisExecutionData)
+          .errorMessage(executionResponse.getErrorMessage())
           .build();
     }
 
     analysisExecutionData.setStatus(ExecutionStatus.SUCCESS);
     return anExecutionResponse()
-        .withExecutionStatus(executionStatus)
-        .withStateExecutionData(analysisExecutionData)
+        .executionStatus(executionStatus)
+        .stateExecutionData(analysisExecutionData)
 
         .build();
   }

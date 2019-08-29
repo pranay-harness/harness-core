@@ -223,12 +223,12 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
       scheduleAnalysisCronJob(analysisContext, delegateTaskId);
       return anExecutionResponse()
-          .withAsync(true)
-          .withCorrelationIds(Collections.singletonList(analysisContext.getCorrelationId()))
-          .withExecutionStatus(ExecutionStatus.RUNNING)
-          .withErrorMessage(responseMessage)
-          .withStateExecutionData(executionData)
-          .withDelegateTaskId(delegateTaskId)
+          .async(true)
+          .correlationIds(Collections.singletonList(analysisContext.getCorrelationId()))
+          .executionStatus(ExecutionStatus.RUNNING)
+          .errorMessage(responseMessage)
+          .stateExecutionData(executionData)
+          .delegateTaskId(delegateTaskId)
           .build();
     } catch (Exception ex) {
       getLogger().error("log analysis state failed ", ex);
@@ -237,17 +237,17 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       continuousVerificationService.setMetaDataExecutionStatus(
           executionContext.getStateExecutionInstanceId(), ExecutionStatus.ERROR, true);
       return anExecutionResponse()
-          .withAsync(false)
-          .withCorrelationIds(Collections.singletonList(corelationId))
-          .withExecutionStatus(ExecutionStatus.ERROR)
-          .withErrorMessage(ExceptionUtils.getMessage(ex))
-          .withStateExecutionData(VerificationStateAnalysisExecutionData.builder()
-                                      .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
-                                      .serverConfigId(getAnalysisServerConfigId())
-                                      .query(getRenderedQuery())
-                                      .timeDuration(Integer.parseInt(getTimeDuration()))
-                                      .delegateTaskId(delegateTaskId)
-                                      .build())
+          .async(false)
+          .correlationIds(Collections.singletonList(corelationId))
+          .executionStatus(ExecutionStatus.ERROR)
+          .errorMessage(ExceptionUtils.getMessage(ex))
+          .stateExecutionData(VerificationStateAnalysisExecutionData.builder()
+                                  .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
+                                  .serverConfigId(getAnalysisServerConfigId())
+                                  .query(getRenderedQuery())
+                                  .timeDuration(Integer.parseInt(getTimeDuration()))
+                                  .delegateTaskId(delegateTaskId)
+                                  .build())
           .build();
     }
   }
@@ -266,9 +266,9 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       continuousVerificationService.setMetaDataExecutionStatus(
           executionContext.getStateExecutionInstanceId(), executionResponse.getExecutionStatus(), true);
       return anExecutionResponse()
-          .withExecutionStatus(executionResponse.getExecutionStatus())
-          .withStateExecutionData(executionResponse.getStateExecutionData())
-          .withErrorMessage(executionResponse.getStateExecutionData().getErrorMsg())
+          .executionStatus(executionResponse.getExecutionStatus())
+          .stateExecutionData(executionResponse.getStateExecutionData())
+          .errorMessage(executionResponse.getStateExecutionData().getErrorMsg())
           .build();
     } else {
       AnalysisContext context =
@@ -319,18 +319,17 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         continuousVerificationService.setMetaDataExecutionStatus(
             executionContext.getStateExecutionInstanceId(), executionStatus, false);
         return anExecutionResponse()
-            .withExecutionStatus(isQAVerificationPath(context.getAccountId(), context.getAppId())
-                    ? ExecutionStatus.SUCCESS
-                    : executionStatus)
-            .withStateExecutionData(executionResponse.getStateExecutionData())
+            .executionStatus(isQAVerificationPath(context.getAccountId(), context.getAppId()) ? ExecutionStatus.SUCCESS
+                                                                                              : executionStatus)
+            .stateExecutionData(executionResponse.getStateExecutionData())
             .build();
       }
 
       executionResponse.getStateExecutionData().setErrorMsg(
           "Analysis for minute " + analysisMinute + " failed to save in DB");
       return anExecutionResponse()
-          .withExecutionStatus(ExecutionStatus.ERROR)
-          .withStateExecutionData(executionResponse.getStateExecutionData())
+          .executionStatus(ExecutionStatus.ERROR)
+          .stateExecutionData(executionResponse.getStateExecutionData())
           .build();
     }
   }
@@ -379,10 +378,10 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     executionData.setStatus(status);
     continuousVerificationService.setMetaDataExecutionStatus(context.getStateExecutionId(), status, true);
     return anExecutionResponse()
-        .withAsync(false)
-        .withExecutionStatus(status)
-        .withStateExecutionData(executionData)
-        .withErrorMessage(message)
+        .async(false)
+        .executionStatus(status)
+        .stateExecutionData(executionData)
+        .errorMessage(message)
         .build();
   }
 

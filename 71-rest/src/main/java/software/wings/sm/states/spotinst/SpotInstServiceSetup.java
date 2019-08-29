@@ -103,10 +103,10 @@ public class SpotInstServiceSetup extends State {
 
     delegateService.queueTask(delegateTask);
 
-    return ExecutionResponse.Builder.anExecutionResponse()
-        .withCorrelationIds(Arrays.asList(spotInstTaskParameters.getActivityId()))
-        .withStateExecutionData(spotinstSetupStateExecutionData)
-        .withAsync(true)
+    return anExecutionResponse()
+        .correlationIds(Arrays.asList(spotInstTaskParameters.getActivityId()))
+        .stateExecutionData(spotinstSetupStateExecutionData)
+        .async(true)
         .build();
   }
 
@@ -173,11 +173,11 @@ public class SpotInstServiceSetup extends State {
     addDetailsForSuccessfulExecution(spotInstSetupContextElement, spotInstSetupTaskResponse);
 
     return anExecutionResponse()
-        .withExecutionStatus(executionStatus)
-        .withErrorMessage(executionResponse.getErrorMessage())
-        .withStateExecutionData(stateExecutionData)
-        .addContextElement(spotInstSetupContextElement)
-        .addNotifyElement(spotInstSetupContextElement)
+        .executionStatus(executionStatus)
+        .errorMessage(executionResponse.getErrorMessage())
+        .stateExecutionData(stateExecutionData)
+        .contextElement(spotInstSetupContextElement)
+        .notifyElement(spotInstSetupContextElement)
         .build();
   }
 

@@ -76,9 +76,8 @@ public class K8sRollingDeployRollback extends State {
 
       if (k8sContextElement == null) {
         return anExecutionResponse()
-            .withExecutionStatus(SKIPPED)
-            .withStateExecutionData(
-                aStateExecutionData().withErrorMsg("No context found for rollback. Skipping.").build())
+            .executionStatus(SKIPPED)
+            .stateExecutionData(aStateExecutionData().withErrorMsg("No context found for rollback. Skipping.").build())
             .build();
       }
 
@@ -122,8 +121,8 @@ public class K8sRollingDeployRollback extends State {
       stateExecutionData.setStatus(executionStatus);
 
       return anExecutionResponse()
-          .withExecutionStatus(executionStatus)
-          .withStateExecutionData(context.getStateExecutionData())
+          .executionStatus(executionStatus)
+          .stateExecutionData(context.getStateExecutionData())
           .build();
     } catch (WingsException e) {
       throw e;

@@ -400,10 +400,10 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
         StateExecutionContext.builder().stateExecutionData(scriptStateExecutionData).scriptType(scriptType).build());
 
     return anExecutionResponse()
-        .withAsync(true)
-        .withStateExecutionData(scriptStateExecutionData)
-        .withCorrelationIds(singletonList(activityId))
-        .withDelegateTaskId(delegateTaskId)
+        .async(true)
+        .stateExecutionData(scriptStateExecutionData)
+        .correlationIds(singletonList(activityId))
+        .delegateTaskId(delegateTaskId)
         .build();
   }
 

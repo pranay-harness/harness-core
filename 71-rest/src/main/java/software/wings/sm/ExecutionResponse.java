@@ -1,7 +1,5 @@
 package software.wings.sm;
 
-import static java.util.Arrays.asList;
-
 import com.google.common.collect.Lists;
 
 import io.harness.beans.ExecutionStatus;
@@ -167,53 +165,47 @@ public class ExecutionResponse {
       return new Builder();
     }
 
-    public Builder withAsync(boolean async) {
+    public Builder async(boolean async) {
       this.async = async;
       return this;
     }
 
-    /**
-     * Add correlation ids builder.
-     *
-     * @param correlationIds the correlation ids
-     * @return the builder
-     */
-    public Builder addCorrelationIds(String... correlationIds) {
-      this.correlationIds.addAll(asList(correlationIds));
+    public Builder correlationId(String correlationId) {
+      this.correlationIds.add(correlationId);
       return this;
     }
 
-    public Builder withCorrelationIds(List<String> correlationIds) {
+    public Builder correlationIds(List<String> correlationIds) {
       this.correlationIds = correlationIds;
       return this;
     }
 
-    public Builder withExecutionStatus(ExecutionStatus executionStatus) {
+    public Builder executionStatus(ExecutionStatus executionStatus) {
       this.executionStatus = executionStatus;
       return this;
     }
 
-    public Builder withErrorMessage(String errorMessage) {
+    public Builder errorMessage(String errorMessage) {
       this.errorMessage = errorMessage;
       return this;
     }
 
-    public Builder withStateExecutionData(StateExecutionData stateExecutionData) {
+    public Builder stateExecutionData(StateExecutionData stateExecutionData) {
       this.stateExecutionData = stateExecutionData;
       return this;
     }
 
-    public Builder withNotifyElements(List<ContextElement> notifyElements) {
+    public Builder notifyElements(List<ContextElement> notifyElements) {
       this.notifyElements = notifyElements;
       return this;
     }
 
-    public Builder withContextElements(List<ContextElement> contextElements) {
+    public Builder contextElements(List<ContextElement> contextElements) {
       this.contextElements = contextElements;
       return this;
     }
 
-    public Builder addContextElement(ContextElement contextElement) {
+    public Builder contextElement(ContextElement contextElement) {
       if (this.contextElements == null) {
         this.contextElements = new ArrayList<>();
       }
@@ -221,7 +213,7 @@ public class ExecutionResponse {
       return this;
     }
 
-    public Builder addNotifyElement(ContextElement notifyElement) {
+    public Builder notifyElement(ContextElement notifyElement) {
       if (this.notifyElements == null) {
         this.notifyElements = new ArrayList<>();
       }
@@ -229,21 +221,21 @@ public class ExecutionResponse {
       return this;
     }
 
-    public Builder withDelegateTaskId(String delegateTaskId) {
+    public Builder delegateTaskId(String delegateTaskId) {
       this.delegateTaskId = delegateTaskId;
       return this;
     }
 
     public Builder but() {
       return anExecutionResponse()
-          .withAsync(async)
-          .withCorrelationIds(correlationIds)
-          .withExecutionStatus(executionStatus)
-          .withErrorMessage(errorMessage)
-          .withStateExecutionData(stateExecutionData)
-          .withNotifyElements(notifyElements)
-          .withContextElements(contextElements)
-          .withDelegateTaskId(delegateTaskId);
+          .async(async)
+          .correlationIds(correlationIds)
+          .executionStatus(executionStatus)
+          .errorMessage(errorMessage)
+          .stateExecutionData(stateExecutionData)
+          .notifyElements(notifyElements)
+          .contextElements(contextElements)
+          .delegateTaskId(delegateTaskId);
     }
 
     public ExecutionResponse build() {

@@ -46,7 +46,7 @@ public class ArtifactCheckState extends State {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     List<Artifact> artifacts = workflowStandardParams.getArtifacts();
     if (isEmpty(artifacts)) {
-      return anExecutionResponse().withErrorMessage("Artifacts are not required.").build();
+      return anExecutionResponse().errorMessage("Artifacts are not required.").build();
     }
     List<Artifact> failedArtifacts =
         artifacts.stream()
@@ -55,8 +55,8 @@ public class ArtifactCheckState extends State {
 
     if (!isEmpty(failedArtifacts)) {
       return anExecutionResponse()
-          .withExecutionStatus(ExecutionStatus.FAILED)
-          .withErrorMessage("One or more artifacts: " + failedArtifacts + " are in failed status")
+          .executionStatus(ExecutionStatus.FAILED)
+          .errorMessage("One or more artifacts: " + failedArtifacts + " are in failed status")
           .build();
     }
 
@@ -91,15 +91,15 @@ public class ArtifactCheckState extends State {
     }
 
     return anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(correlationIds)
-        .withErrorMessage("Waiting for artifacts:" + artifactNamesForDownload + " to be downloaded")
+        .async(true)
+        .correlationIds(correlationIds)
+        .errorMessage("Waiting for artifacts:" + artifactNamesForDownload + " to be downloaded")
         .build();
   }
 
   private ExecutionResponse getExecutionResponse(List<Artifact> artifacts) {
     return anExecutionResponse()
-        .withErrorMessage(
+        .errorMessage(
             "All artifacts: " + artifacts.stream().map(Artifact::getDisplayName).collect(toList()) + " are available.")
         .build();
   }
@@ -134,8 +134,8 @@ public class ArtifactCheckState extends State {
 
     if (!isEmpty(failedArtifacts)) {
       return anExecutionResponse()
-          .withExecutionStatus(ExecutionStatus.FAILED)
-          .withErrorMessage("One or more artifacts: "
+          .executionStatus(ExecutionStatus.FAILED)
+          .errorMessage("One or more artifacts: "
               + failedArtifacts.stream().map(Artifact::getDisplayName).collect(toList()) + " are in failed status")
           .build();
     }
@@ -147,9 +147,9 @@ public class ArtifactCheckState extends State {
     }
 
     return anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(correlationIds)
-        .withErrorMessage("Waiting for artifacts:" + artifactNamesForDownload + " to be downloaded")
+        .async(true)
+        .correlationIds(correlationIds)
+        .errorMessage("Waiting for artifacts:" + artifactNamesForDownload + " to be downloaded")
         .build();
   }
 

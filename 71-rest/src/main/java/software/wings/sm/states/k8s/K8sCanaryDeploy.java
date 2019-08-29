@@ -136,8 +136,8 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
 
     if (ExecutionStatus.FAILED.equals(executionStatus)) {
       return anExecutionResponse()
-          .withExecutionStatus(executionStatus)
-          .withStateExecutionData(context.getStateExecutionData())
+          .executionStatus(executionStatus)
+          .stateExecutionData(context.getStateExecutionData())
           .build();
     }
 
@@ -167,10 +167,10 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
             .build());
 
     return anExecutionResponse()
-        .withExecutionStatus(executionStatus)
-        .withStateExecutionData(context.getStateExecutionData())
-        .addContextElement(instanceElementListParam)
-        .addNotifyElement(instanceElementListParam)
+        .executionStatus(executionStatus)
+        .stateExecutionData(context.getStateExecutionData())
+        .contextElement(instanceElementListParam)
+        .notifyElement(instanceElementListParam)
         .build();
   }
 

@@ -98,8 +98,8 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
         CommandExecutionStatus.SUCCESS.equals(executionResponse.getCommandExecutionStatus()) ? SUCCESS : FAILED;
     activityService.updateStatus(activityId, context.getAppId(), executionStatus);
     return anExecutionResponse()
-        .withErrorMessage(executionResponse.getErrorMessage())
-        .withExecutionStatus(executionStatus)
+        .errorMessage(executionResponse.getErrorMessage())
+        .executionStatus(executionStatus)
         .build();
   }
 
@@ -189,10 +189,10 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
     delegateService.queueTask(delegateTask);
 
     return anExecutionResponse()
-        .withAsync(true)
-        .withStateExecutionData(executionData)
-        .withExecutionStatus(SUCCESS)
-        .addCorrelationIds(activity.getUuid())
+        .async(true)
+        .stateExecutionData(executionData)
+        .executionStatus(SUCCESS)
+        .correlationId(activity.getUuid())
         .build();
   }
 

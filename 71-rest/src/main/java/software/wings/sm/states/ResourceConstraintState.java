@@ -167,11 +167,11 @@ public class ResourceConstraintState extends State {
           permits, constraintContext, resourceConstraintService.getRegistry());
 
       if (state == Consumer.State.ACTIVE) {
-        return executionResponseBuilder.withExecutionStatus(ExecutionStatus.SUCCESS).build();
+        return executionResponseBuilder.executionStatus(ExecutionStatus.SUCCESS).build();
       }
     } catch (ConstraintException exception) {
-      return executionResponseBuilder.withExecutionStatus(ExecutionStatus.FAILED)
-          .withErrorMessage(exception.getMessage())
+      return executionResponseBuilder.executionStatus(ExecutionStatus.FAILED)
+          .errorMessage(exception.getMessage())
           .build();
     }
 
@@ -179,7 +179,7 @@ public class ResourceConstraintState extends State {
       sendNotification(accountId, context, resourceConstraint, RESOURCE_CONSTRAINT_BLOCKED_NOTIFICATION);
     }
 
-    return executionResponseBuilder.withAsync(true).withCorrelationIds(asList(consumerId)).build();
+    return executionResponseBuilder.async(true).correlationIds(asList(consumerId)).build();
   }
 
   private void sendNotification(
@@ -251,6 +251,6 @@ public class ResourceConstraintState extends State {
     stateExecutionData.setResourceConstraintCapacity(resourceConstraint.getCapacity());
     stateExecutionData.setUnit(resourceUnit);
     stateExecutionData.setUsage(permits);
-    return anExecutionResponse().withStateExecutionData(stateExecutionData);
+    return anExecutionResponse().stateExecutionData(stateExecutionData);
   }
 }

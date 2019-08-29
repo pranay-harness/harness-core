@@ -81,8 +81,8 @@ public class TerraformRollbackState extends TerraformProvisionState {
                                .fetch())) {
       if (!configIterator.hasNext()) {
         return anExecutionResponse()
-            .withExecutionStatus(SUCCESS)
-            .withErrorMessage("No Rollback Required. Provisioning seems to have failed.")
+            .executionStatus(SUCCESS)
+            .errorMessage("No Rollback Required. Provisioning seems to have failed.")
             .build();
       }
 
@@ -187,7 +187,7 @@ public class TerraformRollbackState extends TerraformProvisionState {
       }
     }
 
-    return anExecutionResponse().withExecutionStatus(terraformExecutionData.getExecutionStatus()).build();
+    return anExecutionResponse().executionStatus(terraformExecutionData.getExecutionStatus()).build();
   }
 
   @Override

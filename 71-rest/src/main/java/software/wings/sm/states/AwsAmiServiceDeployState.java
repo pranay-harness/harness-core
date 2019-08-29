@@ -293,10 +293,10 @@ public class AwsAmiServiceDeployState extends State {
         serviceSetupElement.getBaseScalingPolicyJSONs(), serviceSetupElement.getDesiredInstances());
 
     return anExecutionResponse()
-        .withAsync(true)
-        .withStateExecutionData(awsAmiDeployStateExecutionData)
-        .withExecutionStatus(ExecutionStatus.SUCCESS)
-        .addCorrelationIds(activity.getUuid())
+        .async(true)
+        .stateExecutionData(awsAmiDeployStateExecutionData)
+        .executionStatus(ExecutionStatus.SUCCESS)
+        .correlationId(activity.getUuid())
         .build();
   }
 
@@ -463,11 +463,11 @@ public class AwsAmiServiceDeployState extends State {
                                                         : CommandExecutionStatus.FAILURE);
 
     return anExecutionResponse()
-        .withStateExecutionData(awsAmiDeployStateExecutionData)
-        .withExecutionStatus(executionStatus)
-        .withErrorMessage(errorMessage)
-        .addContextElement(instanceElementListParam)
-        .addNotifyElement(instanceElementListParam)
+        .stateExecutionData(awsAmiDeployStateExecutionData)
+        .executionStatus(executionStatus)
+        .errorMessage(errorMessage)
+        .contextElement(instanceElementListParam)
+        .notifyElement(instanceElementListParam)
         .build();
   }
 

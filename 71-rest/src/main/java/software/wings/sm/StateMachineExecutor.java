@@ -1606,7 +1606,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     @Override
     public void run() {
       try {
-        stateMachineExecutor.handleExecuteResponse(context, anExecutionResponse().withExecutionStatus(status).build());
+        stateMachineExecutor.handleExecuteResponse(context, anExecutionResponse().executionStatus(status).build());
       } catch (WingsException ex) {
         stateMachineExecutor.handleExecuteResponseException(context, ex);
       } catch (Exception ex) {
@@ -1654,9 +1654,9 @@ public class StateMachineExecutor implements StateInspectionListener {
           stateExecutionData.setStatus(ERROR);
           stateMachineExecutor.handleExecuteResponse(context,
               anExecutionResponse()
-                  .withExecutionStatus(ERROR)
-                  .withStateExecutionData(stateExecutionData)
-                  .withErrorMessage(errorNotifyResponseData.getErrorMessage())
+                  .executionStatus(ERROR)
+                  .stateExecutionData(stateExecutionData)
+                  .errorMessage(errorNotifyResponseData.getErrorMessage())
                   .build());
           return;
         }

@@ -227,10 +227,10 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
               .build();
       String delegateTaskId = delegateService.queueTask(delegateTask);
       return anExecutionResponse()
-          .withAsync(true)
-          .withCorrelationIds(Collections.singletonList(activityId))
-          .withDelegateTaskId(delegateTaskId)
-          .withStateExecutionData(ScriptStateExecutionData.builder().activityId(activityId).build())
+          .async(true)
+          .correlationIds(Collections.singletonList(activityId))
+          .delegateTaskId(delegateTaskId)
+          .stateExecutionData(ScriptStateExecutionData.builder().activityId(activityId).build())
           .build();
     }
   }
@@ -249,8 +249,8 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
     Optional<CloudFormationRollbackInfoElement> stackElementOptional = getRollbackElement(context);
     if (!stackElementOptional.isPresent()) {
       return anExecutionResponse()
-          .withExecutionStatus(SUCCESS)
-          .withErrorMessage("No cloud formation rollback state found")
+          .executionStatus(SUCCESS)
+          .errorMessage("No cloud formation rollback state found")
           .build();
     }
     CloudFormationRollbackInfoElement stackElement = stackElementOptional.get();
@@ -317,10 +317,10 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
     }
     String delegateTaskId = delegateService.queueTask(delegateTask);
     return anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(Collections.singletonList(activityId))
-        .withDelegateTaskId(delegateTaskId)
-        .withStateExecutionData(ScriptStateExecutionData.builder().activityId(activityId).build())
+        .async(true)
+        .correlationIds(Collections.singletonList(activityId))
+        .delegateTaskId(delegateTaskId)
+        .stateExecutionData(ScriptStateExecutionData.builder().activityId(activityId).build())
         .build();
   }
 }
