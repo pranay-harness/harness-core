@@ -7,8 +7,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface SpotInstHelperServiceDelegate {
+  List<ElastiGroup> listAllElstiGroups(String spotInstToken, String spotInstAccountId) throws Exception;
   List<ElastiGroup> listAllElastiGroups(String spotInstToken, String spotInstAccountId, String elastiGroupNamePrefix)
       throws Exception;
+  String getElastigroupJson(String spotInstToken, String spotInstAccountId, String elastiGroupId) throws Exception;
   Optional<ElastiGroup> getElastiGroupByName(String spotInstToken, String spotInstAccountId, String elastiGroupName)
       throws Exception;
   Optional<ElastiGroup> getElastiGroupById(String spotInstToken, String spotInstAccountId, String elastiGroupId)

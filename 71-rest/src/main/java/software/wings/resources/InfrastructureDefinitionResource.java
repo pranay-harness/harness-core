@@ -14,6 +14,7 @@ import io.harness.beans.PageResponse;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.rest.RestResponse;
+import io.harness.spotinst.model.ElastiGroup;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.api.DeploymentType;
@@ -246,5 +247,26 @@ public class InfrastructureDefinitionResource {
       @QueryParam("serviceId") String serviceId) {
     return new RestResponse<>(
         infrastructureDefinitionService.getPcfRunningInstances(appId, infraDefinitionId, appNameExpr, serviceId));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/elasti-groups")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<List<ElastiGroup>> listElastgroups(
+      @QueryParam("appId") String appId, @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureDefinitionService.listElastiGroups(appId, computeProviderId));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/elasti-groups/{elastigroupId}/json")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<String> getElastigroupJson(@QueryParam("appId") String appId,
+      @PathParam("computeProviderId") String computeProviderId, @PathParam("elastigroupId") String elastigroupId) {
+    return new RestResponse<>(
+        infrastructureDefinitionService.getElastigroupJson(appId, computeProviderId, elastigroupId));
   }
 }

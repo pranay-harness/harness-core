@@ -58,7 +58,8 @@ public class SpotInstHelperServiceDelegateImpl implements SpotInstHelperServiceD
     return format("Bearer %s", spotInstToken);
   }
 
-  private List<ElastiGroup> listAllElstiGroups(String spotInstToken, String spotInstAccountId) throws Exception {
+  @Override
+  public List<ElastiGroup> listAllElstiGroups(String spotInstToken, String spotInstAccountId) throws Exception {
     String auth = getAuthToken(spotInstToken);
     long max = System.currentTimeMillis();
     long min = max - DAYS.toMillis(listElastiGroupsQueryTime);
@@ -81,6 +82,19 @@ public class SpotInstHelperServiceDelegateImpl implements SpotInstHelperServiceD
       return empty();
     }
     return items.stream().filter(group -> elastiGroupName.equals(group.getName())).findFirst();
+  }
+
+  @Override
+  public String getElastigroupJson(String spotInstToken, String spotInstAccountId, String elastiGroupId)
+      throws Exception {
+    String auth = getAuthToken(spotInstToken);
+    Object body = executeRestCall(getSpotInstRestClient().getElastigroupJson(auth, elastiGroupId, spotInstAccountId));
+    Object groupMap = ((Map<String, Object>) (((Map<String, Object>) body).get("response"))).get("items");
+    Gson gson = new Gson();
+    String json = gson.toJson(groupMap);
+    json = json.substring(1, json.length() - 2);
+    json = format("{\"group\":%s}}", json);
+    return json;
   }
 
   @Override

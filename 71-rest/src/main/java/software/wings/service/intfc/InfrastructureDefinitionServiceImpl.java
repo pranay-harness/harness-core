@@ -62,6 +62,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.queue.Queue;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.spotinst.model.ElastiGroup;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.jexl3.JexlException;
 import org.apache.commons.lang3.StringUtils;
@@ -85,6 +86,7 @@ import software.wings.beans.NameValuePair;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SpotInstConfig;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.infrastructure.Host;
@@ -121,6 +123,7 @@ import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.impl.PcfHelperService;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
+import software.wings.service.impl.spotinst.SpotinstHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsElbHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsRoute53HelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
@@ -170,9 +173,8 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Inject private PcfHelperService pcfHelperService;
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject private AwsElbHelperServiceManager awsElbHelperServiceManager;
-
+  @Inject private SpotinstHelperServiceManager spotinstHelperServiceManager;
   @Inject private Queue<PruneEvent> pruneQueue;
-
   @Inject private AuditServiceHelper auditServiceHelper;
 
   private static Map<CloudProviderType, EnumSet<DeploymentType>> supportedCloudProviderDeploymentTypes =
@@ -1302,5 +1304,38 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     return pcfHelperService.getRunningInstanceCount((PcfConfig) computeProviderSetting.getValue(),
         ((PcfInfraStructure) infrastructure).getOrganization(), ((PcfInfraStructure) infrastructure).getSpace(),
         appNameExpression);
+  }
+
+  @Override
+  public List<ElastiGroup> listElastiGroups(String appId, String computeProviderId) {
+    SpotInstConfig spotInstConfig = validateAndGetSpotinstConfig(computeProviderId);
+    try {
+      return spotinstHelperServiceManager.listElastigroups(
+          spotInstConfig, secretManager.getEncryptionDetails(spotInstConfig, appId, null), appId);
+    } catch (Exception e) {
+      logger.warn(ExceptionUtils.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
+    }
+  }
+
+  @Override
+  public String getElastigroupJson(String appId, String computeProviderId, String elastigroupId) {
+    SpotInstConfig spotInstConfig = validateAndGetSpotinstConfig(computeProviderId);
+    try {
+      return spotinstHelperServiceManager.getElastigroupJson(
+          spotInstConfig, secretManager.getEncryptionDetails(spotInstConfig, appId, null), appId, elastigroupId);
+    } catch (Exception e) {
+      logger.warn(ExceptionUtils.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
+    }
+  }
+
+  private SpotInstConfig validateAndGetSpotinstConfig(String computeProviderSettingId) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderSettingId);
+    notNullCheck("Compute Provider", computeProviderSetting);
+    if (!(computeProviderSetting.getValue() instanceof SpotInstConfig)) {
+      throw new InvalidRequestException("Setting Attribute not type of Spotinst config");
+    }
+    return (SpotInstConfig) computeProviderSetting.getValue();
   }
 }

@@ -1,6 +1,5 @@
 package software.wings.delegatetasks.spotinst.taskhandler;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_COMMAND_UNIT;
@@ -9,7 +8,6 @@ import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
 
 import com.google.inject.Singleton;
 
@@ -19,7 +17,6 @@ import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstDeployTaskResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.spotinst.model.ElastiGroup;
-import io.harness.spotinst.model.ElastiGroupInstanceHealth;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
@@ -82,16 +79,5 @@ public class SpotInstDeployTaskHandler extends SpotInstTaskHandler {
         .commandExecutionStatus(SUCCESS)
         .spotInstTaskResponse(SpotInstDeployTaskResponse.builder().ec2InstancesAdded(newElastiGroupInstances).build())
         .build();
-  }
-
-  private List<Instance> getAllEc2InstancesOfElastiGroup(AwsConfig awsConfig, String awsRegion, String spotInstToken,
-      String spotInstAccountId, String elastiGroupId) throws Exception {
-    List<ElastiGroupInstanceHealth> instanceHealths =
-        spotInstHelperServiceDelegate.listElastiGroupInstancesHealth(spotInstToken, spotInstAccountId, elastiGroupId);
-    if (isEmpty(instanceHealths)) {
-      return emptyList();
-    }
-    List<String> instanceIds = instanceHealths.stream().map(ElastiGroupInstanceHealth::getInstanceId).collect(toList());
-    return awsEc2HelperServiceDelegate.listEc2Instances(awsConfig, emptyList(), instanceIds, awsRegion);
   }
 }

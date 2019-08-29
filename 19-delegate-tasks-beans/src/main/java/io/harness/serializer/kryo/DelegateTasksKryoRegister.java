@@ -28,11 +28,17 @@ import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstDeployTaskParameters;
+import io.harness.delegate.task.spotinst.request.SpotInstGetElastigroupJsonParameters;
+import io.harness.delegate.task.spotinst.request.SpotInstListElastigroupInstancesParameters;
+import io.harness.delegate.task.spotinst.request.SpotInstListElastigroupNamesParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstSwapRoutesTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters.SpotInstTaskType;
 import io.harness.delegate.task.spotinst.response.SpotInstDeployTaskResponse;
+import io.harness.delegate.task.spotinst.response.SpotInstGetElastigroupJsonResponse;
+import io.harness.delegate.task.spotinst.response.SpotInstListElastigroupInstancesResponse;
+import io.harness.delegate.task.spotinst.response.SpotInstListElastigroupNamesResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstSetupTaskResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskResponse;
@@ -77,5 +83,11 @@ public class DelegateTasksKryoRegister implements KryoRegistrar {
     kryo.register(SpotInstSwapRoutesTaskParameters.class, 19023);
     kryo.register(ErrorNotifyResponseData.class, 5213);
     kryo.register(AwsLoadBalancerDetails.class, 19024);
+    kryo.register(SpotInstGetElastigroupJsonParameters.class, 19025);
+    kryo.register(SpotInstListElastigroupInstancesParameters.class, 19026);
+    kryo.register(SpotInstListElastigroupNamesParameters.class, 19027);
+    kryo.register(SpotInstGetElastigroupJsonResponse.class, 19028);
+    kryo.register(SpotInstListElastigroupInstancesResponse.class, 19029);
+    kryo.register(SpotInstListElastigroupNamesResponse.class, 19030);
   }
 }

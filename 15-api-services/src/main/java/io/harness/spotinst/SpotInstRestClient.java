@@ -30,6 +30,11 @@ public interface SpotInstRestClient {
   Call<SpotInstListElastiGroupsResponse> listElastiGroup(@Header("Authorization") String authorization,
       @Path("groupId") String elastiGroupId, @Query("accountId") String spotInstAccountId);
 
+  @GET("aws/ec2/group/{groupId}")
+  @Headers("Content-Type: application/json")
+  Call<Object> getElastigroupJson(@Header("Authorization") String authorization, @Path("groupId") String elastigroupId,
+      @Query("accountId") String spotInstAccountId);
+
   @POST("aws/ec2/group")
   @Headers("Content-Type: application/json")
   Call<SpotInstListElastiGroupsResponse> createElastiGroup(@Header("Authorization") String authorization,

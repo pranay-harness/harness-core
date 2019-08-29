@@ -16,6 +16,7 @@ import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.spotinst.taskhandler.SpotInstDeployTaskHandler;
 import software.wings.delegatetasks.spotinst.taskhandler.SpotInstSetupTaskHandler;
 import software.wings.delegatetasks.spotinst.taskhandler.SpotInstSwapRoutesTaskHandler;
+import software.wings.delegatetasks.spotinst.taskhandler.SpotInstSyncTaskHandler;
 import software.wings.delegatetasks.spotinst.taskhandler.SpotInstTaskHandler;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.intfc.security.EncryptionService;
@@ -25,10 +26,11 @@ import java.util.function.Supplier;
 
 @Slf4j
 public class SpotInstTask extends AbstractDelegateRunnableTask {
+  @Inject private EncryptionService encryptionService;
+  @Inject private SpotInstSyncTaskHandler syncTaskHandler;
   @Inject private SpotInstSetupTaskHandler setupTaskHandler;
   @Inject private SpotInstDeployTaskHandler deployTaskHandler;
   @Inject private SpotInstSwapRoutesTaskHandler swapRoutesTaskHandler;
-  @Inject private EncryptionService encryptionService;
 
   public SpotInstTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
       Supplier<Boolean> preExecute) {
@@ -54,25 +56,31 @@ public class SpotInstTask extends AbstractDelegateRunnableTask {
     encryptionService.decrypt(spotInstCommandRequest.getAwsConfig(), spotInstCommandRequest.getAwsEncryptionDetails());
     encryptionService.decrypt(
         spotInstCommandRequest.getSpotInstConfig(), spotInstCommandRequest.getSpotinstEncryptionDetails());
+
     SpotInstTaskHandler handler;
-    switch (spotInstTaskParameters.getCommandType()) {
-      case SPOT_INST_SETUP: {
-        handler = setupTaskHandler;
-        break;
-      }
-      case SPOT_INST_DEPLOY: {
-        handler = deployTaskHandler;
-        break;
-      }
-      case SPOT_INST_SWAP_ROUTES: {
-        handler = swapRoutesTaskHandler;
-        break;
-      }
-      default: {
-        String message = format("Unrecognized task params type running spot inst task: [%s]. Workflow execution: [%s]",
-            spotInstTaskParameters.getCommandType().name(), spotInstTaskParameters.getWorkflowExecutionId());
-        logger.error(message);
-        return SpotInstTaskExecutionResponse.builder().commandExecutionStatus(FAILURE).errorMessage(message).build();
+    if (spotInstTaskParameters.isSyncTask()) {
+      handler = syncTaskHandler;
+    } else {
+      switch (spotInstTaskParameters.getCommandType()) {
+        case SPOT_INST_SETUP: {
+          handler = setupTaskHandler;
+          break;
+        }
+        case SPOT_INST_DEPLOY: {
+          handler = deployTaskHandler;
+          break;
+        }
+        case SPOT_INST_SWAP_ROUTES: {
+          handler = swapRoutesTaskHandler;
+          break;
+        }
+        default: {
+          String message =
+              format("Unrecognized task params type running spot inst task: [%s]. Workflow execution: [%s]",
+                  spotInstTaskParameters.getCommandType().name(), spotInstTaskParameters.getWorkflowExecutionId());
+          logger.error(message);
+          return SpotInstTaskExecutionResponse.builder().commandExecutionStatus(FAILURE).errorMessage(message).build();
+        }
       }
     }
     return handler.executeTask(
