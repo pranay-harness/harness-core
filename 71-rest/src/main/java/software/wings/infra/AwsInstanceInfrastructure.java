@@ -17,7 +17,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.annotation.ExcludeFieldMap;
+import software.wings.annotation.IncludeFieldMap;
 import software.wings.api.CloudProviderType;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInstanceFilter;
@@ -38,11 +38,12 @@ import java.util.Set;
 @FieldNameConstants(innerTypeName = "AwsInstanceInfrastructureKeys")
 public class AwsInstanceInfrastructure
     implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider, SshBasedInfrastructure, ProvisionerAware {
-  @ExcludeFieldMap private String cloudProviderId;
-  private String region;
+  private String cloudProviderId;
+  private boolean useAutoScalingGroup;
+  @IncludeFieldMap private String region;
   private String hostConnectionAttrs;
   private String loadBalancerId;
-  @ExcludeFieldMap @Transient private String loadBalancerName;
+  @Transient private String loadBalancerName;
   private boolean usePublicDns;
   private AwsInstanceFilter awsInstanceFilter;
   private String autoScalingGroupName;
@@ -50,7 +51,7 @@ public class AwsInstanceInfrastructure
   private int desiredCapacity;
   private String hostNameConvention;
   private boolean provisionInstances;
-  @ExcludeFieldMap private Map<String, String> expressions;
+  private Map<String, String> expressions;
 
   @Override
   public InfrastructureMapping getInfraMapping() {

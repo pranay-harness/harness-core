@@ -12,7 +12,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
-import software.wings.annotation.ExcludeFieldMap;
+import software.wings.annotation.IncludeFieldMap;
 import software.wings.api.CloudProviderType;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
@@ -29,11 +29,11 @@ import java.util.Set;
 @FieldNameConstants(innerTypeName = "GoogleKubernetesEngineKeys")
 public class GoogleKubernetesEngine
     implements KubernetesInfrastructure, InfraMappingInfrastructureProvider, FieldKeyValMapProvider, ProvisionerAware {
-  @ExcludeFieldMap private String cloudProviderId;
-  private String clusterName;
+  private String cloudProviderId;
+  @IncludeFieldMap private String clusterName;
   private String namespace;
   private String releaseName;
-  @ExcludeFieldMap private Map<String, String> expressions;
+  private Map<String, String> expressions;
 
   @Override
   public InfrastructureMapping getInfraMapping() {

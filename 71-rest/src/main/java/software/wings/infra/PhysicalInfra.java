@@ -11,7 +11,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.annotation.ExcludeFieldMap;
 import software.wings.api.CloudProviderType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
@@ -31,16 +30,16 @@ import java.util.Set;
 @Builder
 public class PhysicalInfra implements PhysicalDataCenterInfra, InfraMappingInfrastructureProvider,
                                       FieldKeyValMapProvider, SshBasedInfrastructure, ProvisionerAware {
-  @ExcludeFieldMap public static final String hostArrayPath = "hostArrayPath";
-  @ExcludeFieldMap public static final String hostname = "hostname";
+  public static final String hostArrayPath = "hostArrayPath";
+  public static final String hostname = "hostname";
 
-  @ExcludeFieldMap private String cloudProviderId;
+  private String cloudProviderId;
   private List<String> hostNames;
   private List<Host> hosts;
   private String loadBalancerId;
-  @Transient @ExcludeFieldMap private String loadBalancerName;
+  @Transient private String loadBalancerName;
   private String hostConnectionAttrs;
-  @ExcludeFieldMap private Map<String, String> expressions;
+  private Map<String, String> expressions;
 
   @Override
   public InfrastructureMapping getInfraMapping() {

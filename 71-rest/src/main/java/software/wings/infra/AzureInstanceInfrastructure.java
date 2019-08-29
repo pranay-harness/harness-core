@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.annotation.ExcludeFieldMap;
+import software.wings.annotation.IncludeFieldMap;
 import software.wings.api.CloudProviderType;
 import software.wings.beans.AzureInfrastructureMapping;
 import software.wings.beans.AzureTag;
@@ -23,10 +23,9 @@ import java.util.List;
 @Builder
 public class AzureInstanceInfrastructure implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider,
                                                     SshBasedInfrastructure, WinRmBasedInfrastructure {
-  @ExcludeFieldMap private String cloudProviderId;
-
-  private String subscriptionId;
-  private String resourceGroup;
+  private String cloudProviderId;
+  @IncludeFieldMap private String subscriptionId;
+  @IncludeFieldMap private String resourceGroup;
   @Builder.Default private List<AzureTag> tags = new ArrayList<>();
   private String hostConnectionAttrs;
   private String winRmConnectionAttributes;

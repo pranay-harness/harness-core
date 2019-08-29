@@ -8,7 +8,6 @@ import io.harness.data.validator.Trimmed;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.annotation.ExcludeFieldMap;
 import software.wings.api.CloudProviderType;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
@@ -20,12 +19,9 @@ import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInf
 @Builder
 public class DirectKubernetesInfrastructure
     implements InfraMappingInfrastructureProvider, KubernetesInfrastructure, FieldKeyValMapProvider {
-  @ExcludeFieldMap private String cloudProviderId;
-
+  private String cloudProviderId;
   private String clusterName;
-
   private String namespace;
-
   @Trimmed private String releaseName;
 
   @Override

@@ -32,6 +32,7 @@ import software.wings.common.Constants;
 import software.wings.service.impl.instance.InstanceHelper;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -77,6 +78,8 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   @Inject @Transient private transient StateExecutionService stateExecutionService;
 
   @Inject @Transient private transient WorkflowServiceHelper workflowServiceHelper;
+
+  @Inject @Transient private transient FeatureFlagService featureFlagService;
 
   @Override
   public ExecutionEventAdvice onExecutionEvent(ExecutionEvent executionEvent) {
@@ -141,8 +144,13 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
 
           String infraMappingId;
           if (phaseElement == null || phaseElement.getInfraMappingId() == null) {
-            List<InfrastructureMapping> resolvedInfraMappings =
-                workflowExecutionService.getResolvedInfraMappings(workflow, workflowExecution);
+            List<InfrastructureMapping> resolvedInfraMappings;
+            if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, workflow.getAccountId())) {
+              resolvedInfraMappings = infrastructureMappingService.getInfraStructureMappingsByUuids(
+                  workflow.getAppId(), workflowExecution.getInfraMappingIds());
+            } else {
+              resolvedInfraMappings = workflowExecutionService.getResolvedInfraMappings(workflow, workflowExecution);
+            }
             if (isEmpty(resolvedInfraMappings)) {
               return anExecutionEventAdvice()
                   .withExecutionInterruptType(ExecutionInterruptType.NEXT_STEP)
