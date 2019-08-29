@@ -161,8 +161,8 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
 
     TimeSeriesDataRecord savedRecord = wingsPersistence.get(TimeSeriesDataRecord.class, recordId);
 
-    assertThat(savedRecord.getValues()).isNull();
-    assertThat(savedRecord.getDeeplinkMetadata()).isNull();
+    assertThat(savedRecord.getValues()).isEqualTo(TreeBasedTable.create());
+    assertThat(savedRecord.getDeeplinkMetadata()).isEqualTo(TreeBasedTable.create());
     assertThat(savedRecord.getValuesBytes()).isNotNull();
 
     savedRecord.decompress();
