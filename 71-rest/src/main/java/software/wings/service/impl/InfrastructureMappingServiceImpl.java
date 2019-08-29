@@ -347,7 +347,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   private String fetchReleaseName(InfrastructureMapping infraMapping) {
     Service service = serviceResourceService.get(infraMapping.getAppId(), infraMapping.getServiceId(), false);
-    if (service == null || !service.isK8sV2()) {
+    if (service == null) {
       return null;
     }
 
@@ -827,6 +827,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
     if (isEmpty(namespace)) {
       throw new InvalidRequestException("Namespace can't be empty");
+    }
+    if (DeploymentType.KUBERNETES.name().equals(infraMapping.getDeploymentType())) {
+      if (isEmpty(infraMapping.getReleaseName())) {
+        throw new InvalidRequestException("Release name can't be empty");
+      }
     }
     KubernetesHelperService.validateNamespace(namespace);
 
