@@ -1,8 +1,15 @@
+# Please do not use recursive filters. They seem as a good idea at first, but they create issues on a long term.
+#
+# For example having iml files ignored form the root will cause when a module is removed or renamed the old module
+# directory to leak, because the iml file in it is still ignored and git does not remove directories that have files
+# in it.
+#
+# if you have a legacy files after obtaining a new version of the gitignore that have previously recursive patterns
+# removed, you can use `git clean -df` to cleanup your repo.
+
 .idea
 portal.iml
 
-*.iml
-*.class
 *.ipr
 *.iws
 *.orig
