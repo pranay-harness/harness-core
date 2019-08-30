@@ -76,6 +76,7 @@ import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl;
+import software.wings.service.impl.spotinst.SpotinstHelperServiceManager;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.ContainerService;
@@ -127,6 +128,7 @@ public class SettingValidationService {
   @Inject private JiraHelperService jiraHelperService;
   @Inject private DelegateService delegateService;
   @Inject private ServiceNowServiceImpl servicenowServiceImpl;
+  @Inject private SpotinstHelperServiceManager spotinstHelperServiceManager;
 
   public ValidationResult validateConnectivity(SettingAttribute settingAttribute) {
     SettingValue settingValue = settingAttribute.getValue();
@@ -302,7 +304,12 @@ public class SettingValidationService {
 
   private void validateSpotInstConfig(
       SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptedDataDetails) {
-    logger.info("This is a placeholder to unblock ui. Not being used anywhere");
+    try {
+      spotinstHelperServiceManager.listElastigroups(
+          (SpotInstConfig) settingAttribute.getValue(), encryptedDataDetails, GLOBAL_APP_ID);
+    } catch (Exception ex) {
+      throw new InvalidRequestException("Invalid spotinst credentials");
+    }
   }
 
   private void validatePcfConfig(SettingAttribute settingAttribute, PcfConfig pcfConfig) {
