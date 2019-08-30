@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Created by rsingh on 10/30/17.
@@ -66,7 +67,7 @@ public interface SecretManager extends OwnedByAccount {
 
   Collection<SettingAttribute> listEncryptedSettingAttributes(String accountId);
 
-  Collection<SettingAttribute> listEncryptedSettingAttributes(String accountId, List<String> categories);
+  Collection<SettingAttribute> listEncryptedSettingAttributes(String accountId, Set<String> categories);
 
   String getEncryptedYamlRef(EncryptableSetting object, String... fieldName) throws IllegalAccessException;
 

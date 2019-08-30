@@ -12,7 +12,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 
@@ -36,7 +35,7 @@ import javax.validation.constraints.NotNull;
 public class SecretChangeLog extends Base {
   @NotEmpty private String accountId;
 
-  @NotEmpty @Indexed private String encryptedDataId;
+  @NotEmpty private String encryptedDataId;
 
   @NotNull private EmbeddedUser user;
 
