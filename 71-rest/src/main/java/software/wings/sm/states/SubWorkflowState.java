@@ -1,7 +1,5 @@
 package software.wings.sm.states;
 
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -16,6 +14,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.ExecutionStatusData;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionInstance;
@@ -58,7 +57,7 @@ public class SubWorkflowState extends State {
     StateExecutionInstance childStateExecutionInstance = getSpawningInstance(stateExecutionInstance);
     correlationIds.add(stateExecutionInstance.getUuid());
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .stateExecutionInstance(childStateExecutionInstance)
         .async(true)
         .correlationIds(correlationIds)
@@ -96,13 +95,13 @@ public class SubWorkflowState extends State {
    */
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
-    ExecutionResponse.Builder executionResponseBuilder = anExecutionResponse();
+    ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
     handleStatusSummary(workflowExecutionService, context, response, executionResponseBuilder);
     return executionResponseBuilder.build();
   }
 
   protected void handleStatusSummary(WorkflowExecutionService workflowExecutionService, ExecutionContext context,
-      Map<String, ResponseData> response, ExecutionResponse.Builder executionResponseBuilder) {
+      Map<String, ResponseData> response, ExecutionResponseBuilder executionResponseBuilder) {
     ExecutionStatus executionStatus = ((ExecutionStatusData) response.values().iterator().next()).getExecutionStatus();
     if (executionStatus != ExecutionStatus.SUCCESS) {
       executionResponseBuilder.executionStatus(executionStatus);

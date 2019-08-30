@@ -2,7 +2,6 @@ package software.wings.sm.states;
 
 import static org.apache.commons.lang3.StringUtils.abbreviate;
 import static software.wings.api.ForkElement.Builder.aForkElement;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.base.Joiner;
 
@@ -17,6 +16,7 @@ import software.wings.common.Constants;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.ExecutionStatusData;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
@@ -56,7 +56,7 @@ public class ForkState extends State {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     List<String> correlationIds = new ArrayList<>();
 
-    ExecutionResponse.Builder executionResponseBuilder = anExecutionResponse();
+    ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
     ForkStateExecutionData forkStateExecutionData = new ForkStateExecutionData();
     forkStateExecutionData.setForkStateNames(forkStateNames);
     forkStateExecutionData.setElements(new ArrayList<>());
@@ -104,7 +104,7 @@ public class ForkState extends State {
    */
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
-    ExecutionResponse.Builder executionResponseBuilder = anExecutionResponse();
+    ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
     for (Object status : response.values()) {
       ExecutionStatus executionStatus = ((ExecutionStatusData) status).getExecutionStatus();
       if (executionStatus != ExecutionStatus.SUCCESS) {

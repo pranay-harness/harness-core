@@ -7,7 +7,6 @@ import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.Log.Builder.aLog;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
@@ -65,6 +64,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ManagerExecutionLogCallback;
@@ -136,7 +136,7 @@ public abstract class CloudFormationState extends State {
         executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
                                                                                              : ExecutionStatus.FAILED;
     activityService.updateStatus(activityId, context.getAppId(), executionStatus);
-    ExecutionResponse.Builder builder = anExecutionResponse().executionStatus(executionStatus);
+    ExecutionResponseBuilder builder = ExecutionResponse.builder().executionStatus(executionStatus);
     if (ExecutionStatus.SUCCESS.equals(executionStatus)) {
       List<CloudFormationElement> elements = handleResponse(executionResponse.getCommandResponse(), context);
       if (isNotEmpty(elements)) {
@@ -193,7 +193,7 @@ public abstract class CloudFormationState extends State {
         buildDelegateTask(executionContext, cloudFormationInfrastructureProvisioner, awsConfig, activityId);
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Collections.singletonList(activityId))
         .delegateTaskId(delegateTaskId)

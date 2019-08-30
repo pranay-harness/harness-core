@@ -18,7 +18,6 @@ import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TAS
 import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_SECONDS;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_NAMESPACE_PLACEHOLDER_REGEX;
 import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.HELM_DEPLOY;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -109,7 +108,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.ExecutionResponse.Builder;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
@@ -401,7 +400,7 @@ public class HelmDeployState extends State {
 
     if (ExecutionStatus.FAILED.equals(executionStatus)) {
       activityService.updateStatus(activityId, appId, executionStatus);
-      return anExecutionResponse().executionStatus(executionStatus).build();
+      return ExecutionResponse.builder().executionStatus(executionStatus).build();
     }
 
     if (isNotBlank(executionResponse.getValuesFileContent())) {
@@ -748,7 +747,7 @@ public class HelmDeployState extends State {
                                   .envId(env.getUuid())
                                   .infrastructureMappingId(containerInfraMapping.getUuid())
                                   .build());
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .correlationIds(singletonList(activityId))
         .stateExecutionData(stateExecutionData)
         .async(true)
@@ -786,7 +785,7 @@ public class HelmDeployState extends State {
       valuesFiles.putAll(stateExecutionData.getValuesFiles());
     }
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Arrays.asList(waitId))
         .stateExecutionData(HelmDeployStateExecutionData.builder()
@@ -813,10 +812,10 @@ public class HelmDeployState extends State {
     stateExecutionData.setStatus(executionStatus);
     stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
 
-    Builder executionResponseBuilder = Builder.anExecutionResponse()
-                                           .executionStatus(executionStatus)
-                                           .errorMessage(executionResponse.getErrorMessage())
-                                           .stateExecutionData(stateExecutionData);
+    ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder()
+                                                            .executionStatus(executionStatus)
+                                                            .errorMessage(executionResponse.getErrorMessage())
+                                                            .stateExecutionData(stateExecutionData);
 
     if (executionResponse.getHelmCommandResponse() == null) {
       logger.info("Helm command task failed with status " + executionResponse.getCommandExecutionStatus().toString()
@@ -864,7 +863,7 @@ public class HelmDeployState extends State {
 
     if (ExecutionStatus.FAILED.equals(executionStatus)) {
       activityService.updateStatus(activityId, appId, executionStatus);
-      return anExecutionResponse().executionStatus(executionStatus).build();
+      return ExecutionResponse.builder().executionStatus(executionStatus).build();
     }
 
     Map<K8sValuesLocation, String> valuesFiles =
@@ -967,7 +966,7 @@ public class HelmDeployState extends State {
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Arrays.asList(waitId))
         .stateExecutionData(HelmDeployStateExecutionData.builder()

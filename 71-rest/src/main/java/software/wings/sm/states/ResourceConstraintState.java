@@ -9,7 +9,6 @@ import static java.util.Arrays.asList;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.RESOURCE_CONSTRAINT_BLOCKED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.RESOURCE_CONSTRAINT_UNBLOCKED_NOTIFICATION;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.states.ResourceConstraintState.HoldingScope.WORKFLOW;
 
 import com.google.inject.Inject;
@@ -48,7 +47,7 @@ import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.ResourceConstraintService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.ExecutionResponse.Builder;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
@@ -121,7 +120,7 @@ public class ResourceConstraintState extends State {
       sendNotification(accountId, context, resourceConstraint, RESOURCE_CONSTRAINT_UNBLOCKED_NOTIFICATION);
     }
 
-    final Builder executionResponseBuilder =
+    final ExecutionResponseBuilder executionResponseBuilder =
         executionResponseBuilder(resourceConstraint, context.renderExpression(resourceUnit));
     return executionResponseBuilder.build();
   }
@@ -158,7 +157,7 @@ public class ResourceConstraintState extends State {
 
     ConstraintUnit renderedResourceUnit = new ConstraintUnit(context.renderExpression(resourceUnit));
 
-    final Builder executionResponseBuilder =
+    final ExecutionResponseBuilder executionResponseBuilder =
         executionResponseBuilder(resourceConstraint, renderedResourceUnit.getValue());
 
     String consumerId = generateUuid();
@@ -245,12 +244,13 @@ public class ResourceConstraintState extends State {
     notificationService.sendNotificationAsync(notification, asList(notificationRule));
   }
 
-  private Builder executionResponseBuilder(ResourceConstraint resourceConstraint, String resourceUnit) {
+  private ExecutionResponseBuilder executionResponseBuilder(
+      ResourceConstraint resourceConstraint, String resourceUnit) {
     ResourceConstraintExecutionData stateExecutionData = new ResourceConstraintExecutionData();
     stateExecutionData.setResourceConstraintName(resourceConstraint.getName());
     stateExecutionData.setResourceConstraintCapacity(resourceConstraint.getCapacity());
     stateExecutionData.setUnit(resourceUnit);
     stateExecutionData.setUsage(permits);
-    return anExecutionResponse().stateExecutionData(stateExecutionData);
+    return ExecutionResponse.builder().stateExecutionData(stateExecutionData);
   }
 }

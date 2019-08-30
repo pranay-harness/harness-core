@@ -1,6 +1,5 @@
 package software.wings.sm.states.k8s;
 
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.K8S_DELETE;
 
 import com.google.common.collect.ImmutableList;
@@ -106,7 +105,7 @@ public class K8sDelete extends State {
       K8sStateExecutionData stateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
       stateExecutionData.setStatus(executionStatus);
 
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(executionStatus)
           .stateExecutionData(context.getStateExecutionData())
           .build();

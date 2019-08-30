@@ -6,7 +6,6 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static java.util.Collections.singletonList;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.ECS_BG_SERVICE_SETUP_ROUTE53;
 
 import com.google.inject.Inject;
@@ -142,7 +141,7 @@ public class EcsBlueGreenServiceSetupRoute53DNS extends State {
     String delegateTaskId =
         ecsStateHelper.createAndQueueDelegateTaskForEcsServiceSetUp(request, dataBag, activity, delegateService);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .correlationIds(singletonList(activity.getUuid()))
         .stateExecutionData(stateExecutionData)
@@ -199,7 +198,7 @@ public class EcsBlueGreenServiceSetupRoute53DNS extends State {
     CommandStateExecutionData executionData = (CommandStateExecutionData) context.getStateExecutionData();
     ecsStateHelper.populateFromDelegateResponse(setupExecutionData, executionData, containerServiceElement);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .stateExecutionData(context.getStateExecutionData())
         .executionStatus(executionStatus)
         .contextElement(containerServiceElement)

@@ -1,7 +1,6 @@
 package software.wings.sm.states.collaboration;
 
 import static software.wings.beans.TaskType.SERVICENOW_ASYNC;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
 
@@ -96,7 +95,7 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
       handleSweepingOutput(sweepingOutputService, context, sweepingOutputMap);
     }
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .stateExecutionData(snowExecutionData)
         .executionStatus(snowExecutionData.getExecutionStatus())
         .errorMessage(snowExecutionData.getResponseMsg())
@@ -154,7 +153,7 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
                                     .build();
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Collections.singletonList(activityId))
         .delegateTaskId(delegateTaskId)

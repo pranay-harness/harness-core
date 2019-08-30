@@ -1,7 +1,6 @@
 package software.wings.sm.states.k8s;
 
 import static io.harness.beans.ExecutionStatus.SKIPPED;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING_ROLLBACK;
 
@@ -75,7 +74,7 @@ public class K8sRollingDeployRollback extends State {
       K8sContextElement k8sContextElement = context.getContextElement(ContextElementType.K8S);
 
       if (k8sContextElement == null) {
-        return anExecutionResponse()
+        return ExecutionResponse.builder()
             .executionStatus(SKIPPED)
             .stateExecutionData(aStateExecutionData().withErrorMsg("No context found for rollback. Skipping.").build())
             .build();
@@ -120,7 +119,7 @@ public class K8sRollingDeployRollback extends State {
       K8sStateExecutionData stateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
       stateExecutionData.setStatus(executionStatus);
 
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(executionStatus)
           .stateExecutionData(context.getStateExecutionData())
           .build();

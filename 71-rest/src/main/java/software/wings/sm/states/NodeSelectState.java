@@ -12,7 +12,6 @@ import static software.wings.beans.InstanceUnitType.COUNT;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
 
@@ -51,6 +50,7 @@ import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 
@@ -138,7 +138,7 @@ public abstract class NodeSelectState extends State {
           serviceInstances, hostExclusionList, infrastructureMapping, totalAvailableInstances, context);
 
       if (isNotEmpty(errorMessage)) {
-        return anExecutionResponse().executionStatus(ExecutionStatus.FAILED).errorMessage(errorMessage).build();
+        return ExecutionResponse.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(errorMessage).build();
       }
 
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
@@ -172,10 +172,10 @@ public abstract class NodeSelectState extends State {
       List<String> serviceInstancesIds = serviceInstances.stream().map(ServiceInstance::getUuid).collect(toList());
       ContextElement serviceIdParamElement =
           aServiceInstanceIdsParam().withInstanceIds(serviceInstancesIds).withServiceId(serviceId).build();
-      ExecutionResponse.Builder executionResponse = anExecutionResponse()
-                                                        .contextElement(serviceIdParamElement)
-                                                        .notifyElement(serviceIdParamElement)
-                                                        .stateExecutionData(selectedNodeExecutionData);
+      ExecutionResponseBuilder executionResponse = ExecutionResponse.builder()
+                                                       .contextElement(serviceIdParamElement)
+                                                       .notifyElement(serviceIdParamElement)
+                                                       .stateExecutionData(selectedNodeExecutionData);
       if (isEmpty(serviceInstances)) {
         if (!excludeHostsWithSameArtifact) {
           executionResponse.errorMessage("No nodes selected");

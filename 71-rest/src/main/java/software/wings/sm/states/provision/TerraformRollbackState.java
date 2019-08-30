@@ -4,7 +4,6 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.intfc.FileService.FileBucket.TERRAFORM_STATE;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
 
@@ -80,7 +79,7 @@ public class TerraformRollbackState extends TerraformProvisionState {
                                .order(Sort.descending(TerraformConfigKeys.createdAt))
                                .fetch())) {
       if (!configIterator.hasNext()) {
-        return anExecutionResponse()
+        return ExecutionResponse.builder()
             .executionStatus(SUCCESS)
             .errorMessage("No Rollback Required. Provisioning seems to have failed.")
             .build();
@@ -187,7 +186,7 @@ public class TerraformRollbackState extends TerraformProvisionState {
       }
     }
 
-    return anExecutionResponse().executionStatus(terraformExecutionData.getExecutionStatus()).build();
+    return ExecutionResponse.builder().executionStatus(terraformExecutionData.getExecutionStatus()).build();
   }
 
   @Override

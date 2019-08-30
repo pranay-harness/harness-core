@@ -6,7 +6,6 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.api.EmailStateExecutionData.Builder.anEmailStateExecutionData;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.base.Splitter;
 import com.google.inject.Inject;
@@ -22,6 +21,7 @@ import software.wings.service.intfc.EmailNotificationService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 
@@ -60,7 +60,7 @@ public class EmailState extends State {
    */
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    ExecutionResponse.Builder executionResponseBuilder = anExecutionResponse();
+    ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
     EmailStateExecutionData emailStateExecutionData = anEmailStateExecutionData()
                                                           .withBody(body)
                                                           .withCcAddress(ccAddress)

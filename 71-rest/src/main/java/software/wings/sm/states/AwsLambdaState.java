@@ -13,7 +13,6 @@ import static software.wings.api.CommandStateExecutionData.Builder.aCommandState
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.TaskType.AWS_LAMBDA_TASK;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Maps;
@@ -183,7 +182,7 @@ public class AwsLambdaState extends State {
                                                           .withFunctionArns(functionMetas)
                                                           .build();
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .stateExecutionData(stateExecutionData)
         .executionStatus(wfResponse.getExecutionStatus())
         .contextElement(awsLambdaContextElement)
@@ -284,7 +283,7 @@ public class AwsLambdaState extends State {
                                                             .withRegion(region)
                                                             .withFunctionArns(functionArns)
                                                             .build();
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .stateExecutionData(executionDataBuilder.build())
           .contextElement(awsLambdaContextElement)
           .notifyElement(awsLambdaContextElement)
@@ -309,7 +308,7 @@ public class AwsLambdaState extends State {
                         .build())
               .build();
       String delegateTaskId = delegateService.queueTask(delegateTask);
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .async(true)
           .correlationIds(singletonList(activity.getUuid()))
           .delegateTaskId(delegateTaskId)

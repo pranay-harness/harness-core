@@ -7,7 +7,6 @@ import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STAT
 import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -152,7 +151,7 @@ public class SpotInstDeployState extends State {
 
     delegateService.queueTask(task);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .correlationIds(Arrays.asList(activity.getUuid()))
         .stateExecutionData(stateExecutionData)
         .async(true)
@@ -210,7 +209,7 @@ public class SpotInstDeployState extends State {
                 spotInstDeployTaskResponse.getEc2InstancesAdded(), awsAmiInfrastructureMapping, context))
             .build();
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .executionStatus(executionStatus)
         .errorMessage(executionResponse.getErrorMessage())
         .stateExecutionData(stateExecutionData)

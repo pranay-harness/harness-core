@@ -43,7 +43,6 @@ import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anE
 import static software.wings.sm.ExecutionInterruptType.PAUSE_ALL;
 import static software.wings.sm.ExecutionInterruptType.RESUME_ALL;
 import static software.wings.sm.ExecutionInterruptType.RETRY;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.utils.Validator.notNullCheck;
@@ -933,11 +932,11 @@ public class StateMachineExecutor implements StateInspectionListener {
 
   private void handleSpawningStateExecutionInstances(
       StateMachine sm, StateExecutionInstance stateExecutionInstance, ExecutionResponse executionResponse) {
-    if (isEmpty(executionResponse.getStateExecutionInstanceList())) {
+    if (isEmpty(executionResponse.getStateExecutionInstances())) {
       return;
     }
 
-    for (StateExecutionInstance childStateExecutionInstance : executionResponse.getStateExecutionInstanceList()) {
+    for (StateExecutionInstance childStateExecutionInstance : executionResponse.getStateExecutionInstances()) {
       childStateExecutionInstance.setUuid(null);
       childStateExecutionInstance.setStateParams(null);
       childStateExecutionInstance.setParentInstanceId(stateExecutionInstance.getUuid());
@@ -1603,7 +1602,8 @@ public class StateMachineExecutor implements StateInspectionListener {
     @Override
     public void run() {
       try {
-        stateMachineExecutor.handleExecuteResponse(context, anExecutionResponse().executionStatus(status).build());
+        stateMachineExecutor.handleExecuteResponse(
+            context, ExecutionResponse.builder().executionStatus(status).build());
       } catch (WingsException ex) {
         stateMachineExecutor.handleExecuteResponseException(context, ex);
       } catch (Exception ex) {
@@ -1650,7 +1650,7 @@ public class StateMachineExecutor implements StateInspectionListener {
           stateExecutionData.setErrorMsg(errorNotifyResponseData.getErrorMessage());
           stateExecutionData.setStatus(ERROR);
           stateMachineExecutor.handleExecuteResponse(context,
-              anExecutionResponse()
+              ExecutionResponse.builder()
                   .executionStatus(ERROR)
                   .stateExecutionData(stateExecutionData)
                   .errorMessage(errorNotifyResponseData.getErrorMessage())

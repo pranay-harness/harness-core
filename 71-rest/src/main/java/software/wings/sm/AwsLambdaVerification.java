@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -142,7 +141,7 @@ public class AwsLambdaVerification extends State {
             .build();
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .correlationIds(singletonList(activityId))
         .delegateTaskId(delegateTaskId)
@@ -163,7 +162,7 @@ public class AwsLambdaVerification extends State {
       awsLambdaExecutionData.setFunctionError(functionResponse.getFunctionError());
 
       if (functionResponse.getExecutionStatus() == ExecutionStatus.FAILED) {
-        return anExecutionResponse()
+        return ExecutionResponse.builder()
             .executionStatus(functionResponse.getExecutionStatus())
             .stateExecutionData(awsLambdaExecutionData)
             .errorMessage(functionResponse.getErrorMessage())
@@ -195,7 +194,10 @@ public class AwsLambdaVerification extends State {
       awsLambdaExecutionData.setAssertionStatus(executionStatus.name());
 
       updateActivityStatus(activityId, ((ExecutionContextImpl) context).getApp().getUuid(), executionStatus);
-      return anExecutionResponse().executionStatus(executionStatus).stateExecutionData(awsLambdaExecutionData).build();
+      return ExecutionResponse.builder()
+          .executionStatus(executionStatus)
+          .stateExecutionData(awsLambdaExecutionData)
+          .build();
 
     } catch (WingsException e) {
       throw e;

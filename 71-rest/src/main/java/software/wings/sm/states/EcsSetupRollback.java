@@ -5,7 +5,6 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static java.util.Collections.singletonList;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
 
@@ -131,7 +130,7 @@ public class EcsSetupRollback extends State {
     String delegateTaskId =
         ecsStateHelper.createAndQueueDelegateTaskForEcsServiceSetUp(request, dataBag, activity, delegateService);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .correlationIds(singletonList(activity.getUuid()))
         .stateExecutionData(stateExecutionData)
@@ -176,7 +175,7 @@ public class EcsSetupRollback extends State {
 
     ecsStateHelper.populateFromDelegateResponse(setupExecutionData, executionData, containerServiceElement);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .stateExecutionData(executionData)
         .executionStatus(executionStatus)
         .contextElement(containerServiceElement)

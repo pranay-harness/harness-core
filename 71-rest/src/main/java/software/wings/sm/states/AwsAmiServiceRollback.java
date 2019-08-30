@@ -5,7 +5,6 @@ import static java.util.Collections.emptyList;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_AMI_ALL_PHASE_ROLLBACK_NAME;
 import static software.wings.service.impl.aws.model.AwsConstants.PHASE_PARAM;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.collect.Lists;
 
@@ -51,7 +50,7 @@ public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
   @Override
   protected ExecutionResponse executeInternal(ExecutionContext context) {
     if (allPhaseRollbackDone(context)) {
-      return anExecutionResponse().executionStatus(ExecutionStatus.SUCCESS).build();
+      return ExecutionResponse.builder().executionStatus(ExecutionStatus.SUCCESS).build();
     }
 
     AmiServiceSetupElement serviceSetupElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
@@ -110,7 +109,7 @@ public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
         amiServiceDeployElement.getNewInstanceData(), amiServiceDeployElement.getOldInstanceData());
     awsAmiDeployStateExecutionData.setRollback(true);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .stateExecutionData(awsAmiDeployStateExecutionData)
         .executionStatus(ExecutionStatus.SUCCESS)

@@ -3,7 +3,6 @@ package software.wings.sm.states;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
 
@@ -20,7 +19,7 @@ import software.wings.service.intfc.BarrierService;
 import software.wings.sm.BarrierStatusData;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.ExecutionResponse.Builder;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
@@ -90,7 +89,7 @@ public class BarrierState extends State {
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     updateBarrier(context);
-    final Builder executionResponseBuilder = executionResponseBuilder(context);
+    final ExecutionResponseBuilder executionResponseBuilder = executionResponseBuilder(context);
 
     ResponseData notifyResponseData = response.values().iterator().next();
     if (notifyResponseData instanceof BarrierStatusData && ((BarrierStatusData) notifyResponseData).isFailed()) {
@@ -103,7 +102,7 @@ public class BarrierState extends State {
   private ExecutionResponse executeInternal(ExecutionContext context) {
     BarrierInstance barrierInstance = updateBarrier(context);
 
-    final Builder executionResponseBuilder = executionResponseBuilder(context);
+    final ExecutionResponseBuilder executionResponseBuilder = executionResponseBuilder(context);
 
     if (barrierInstance == null) {
       return executionResponseBuilder.executionStatus(ExecutionStatus.SUCCESS).build();
@@ -122,10 +121,10 @@ public class BarrierState extends State {
     return executionResponseBuilder.async(true).correlationIds(asList(barrierInstance.getUuid())).build();
   }
 
-  private Builder executionResponseBuilder(ExecutionContext context) {
+  private ExecutionResponseBuilder executionResponseBuilder(ExecutionContext context) {
     BarrierExecutionData stateExecutionData = new BarrierExecutionData();
     stateExecutionData.setIdentifier(getIdentifier());
-    return anExecutionResponse().stateExecutionData(stateExecutionData);
+    return ExecutionResponse.builder().stateExecutionData(stateExecutionData);
   }
 
   private BarrierInstance updateBarrier(ExecutionContext context) {

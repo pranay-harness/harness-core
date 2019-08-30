@@ -10,7 +10,6 @@ import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplate
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.common.Constants.ARTIFACT_S3_BUCKET_EXPRESSION;
 import static software.wings.common.Constants.ARTIFACT__S3_KEY_EXPRESSION;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
 import com.google.common.collect.ImmutableMap;
@@ -211,7 +210,7 @@ public class AwsCodeDeployState extends State {
                                       .infrastructureMappingId(infrastructureMapping.getUuid())
                                       .build());
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .correlationIds(singletonList(activity.getUuid()))
         .stateExecutionData(executionDataBuilder.build())
@@ -345,7 +344,7 @@ public class AwsCodeDeployState extends State {
       commandStateExecutionData.setDelegateMetaInfo(commandExecutionResult.getDelegateMetaInfo());
     }
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .stateExecutionData(commandStateExecutionData)
         .executionStatus(status)
         .contextElement(instanceElementListParam)

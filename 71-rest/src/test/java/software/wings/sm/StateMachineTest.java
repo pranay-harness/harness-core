@@ -3,7 +3,6 @@ package software.wings.sm;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.states.RepeatState.Builder.aRepeatState;
 
 import com.google.inject.Inject;
@@ -27,6 +26,7 @@ import software.wings.beans.ExecutionStrategy;
 import software.wings.common.InstanceExpressionProcessor;
 import software.wings.rules.Listeners;
 import software.wings.service.StaticMap;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.RepeatState;
 
@@ -715,7 +715,7 @@ public class StateMachineTest extends WingsBaseTest {
     @Override
     public ExecutionResponse execute(ExecutionContext context) {
       logger.info("Executing ..." + getClass());
-      ExecutionResponse.Builder executionResponseBuilder = anExecutionResponse();
+      ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
       StateExecutionData stateExecutionData = new TestStateExecutionData(getName(), System.currentTimeMillis() + "");
       executionResponseBuilder.stateExecutionData(stateExecutionData);
       StaticMap.putValue(getName(), System.currentTimeMillis());
@@ -810,7 +810,7 @@ public class StateMachineTest extends WingsBaseTest {
       String uuid = generateUuid();
 
       logger.info("Executing ..." + StateAsync.class.getName() + "..duration=" + duration + ", uuid=" + uuid);
-      ExecutionResponse.Builder executionResponseBuilder = anExecutionResponse();
+      ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
       executionResponseBuilder.async(true);
       List<String> correlationIds = new ArrayList<>();
       correlationIds.add(uuid);
@@ -837,7 +837,7 @@ public class StateMachineTest extends WingsBaseTest {
      */
     @Override
     public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> responseMap) {
-      ExecutionResponse.Builder executionResponseBuilder = anExecutionResponse();
+      ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
       for (Object response : responseMap.values()) {
         if (!"SUCCESS".equals(((StringNotifyResponseData) response).getData())) {
           executionResponseBuilder.executionStatus(ExecutionStatus.FAILED);

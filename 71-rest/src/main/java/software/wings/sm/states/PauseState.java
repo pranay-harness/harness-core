@@ -1,7 +1,5 @@
 package software.wings.sm.states;
 
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
 import software.wings.api.EmailStateExecutionData;
@@ -37,7 +35,7 @@ public class PauseState extends EmailState {
     EmailStateExecutionData emailStateExecutionData =
         (EmailStateExecutionData) emailExecutionResponse.getStateExecutionData();
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .stateExecutionData(emailStateExecutionData)
         .executionStatus(ExecutionStatus.PAUSED)
         .build();

@@ -7,7 +7,6 @@ import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.PRIMARY_SERVICE_NAME_EXPRESSION;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.STAGE_SERVICE_NAME_EXPRESSION;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
@@ -124,7 +123,7 @@ public class KubernetesSwapServiceSelectors extends State {
         (KubernetesSwapServiceSelectorsExecutionData) context.getStateExecutionData();
     stateExecutionData.setStatus(executionResponse.getExecutionStatus());
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .executionStatus(executionResponse.getExecutionStatus())
         .stateExecutionData(context.getStateExecutionData())
         .build();
@@ -269,7 +268,7 @@ public class KubernetesSwapServiceSelectors extends State {
                                     .build();
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Arrays.asList(activity.getUuid()))
         .stateExecutionData(KubernetesSwapServiceSelectorsExecutionData.builder()

@@ -1,7 +1,5 @@
 package software.wings.sm.states;
 
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-
 import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
@@ -116,7 +114,7 @@ public class ElasticLoadBalancerState extends State {
       errorMessage = ExceptionUtils.getMessage(e);
     }
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .stateExecutionData(ElbStateExecutionData.builder().hostName(instance.getHost().getHostName()).build())
         .executionStatus(status)
         .errorMessage(errorMessage)

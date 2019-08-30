@@ -6,7 +6,6 @@ import static software.wings.beans.artifact.Artifact.ContentStatus;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADED;
 import static software.wings.beans.artifact.Artifact.ContentStatus.FAILED;
 import static software.wings.beans.artifact.Artifact.ContentStatus.METADATA_ONLY;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -46,7 +45,7 @@ public class ArtifactCheckState extends State {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     List<Artifact> artifacts = workflowStandardParams.getArtifacts();
     if (isEmpty(artifacts)) {
-      return anExecutionResponse().errorMessage("Artifacts are not required.").build();
+      return ExecutionResponse.builder().errorMessage("Artifacts are not required.").build();
     }
     List<Artifact> failedArtifacts =
         artifacts.stream()
@@ -54,7 +53,7 @@ public class ArtifactCheckState extends State {
             .collect(toList());
 
     if (!isEmpty(failedArtifacts)) {
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(ExecutionStatus.FAILED)
           .errorMessage("One or more artifacts: " + failedArtifacts + " are in failed status")
           .build();
@@ -90,7 +89,7 @@ public class ArtifactCheckState extends State {
       return getExecutionResponse(artifacts);
     }
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .correlationIds(correlationIds)
         .errorMessage("Waiting for artifacts:" + artifactNamesForDownload + " to be downloaded")
@@ -98,7 +97,7 @@ public class ArtifactCheckState extends State {
   }
 
   private ExecutionResponse getExecutionResponse(List<Artifact> artifacts) {
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .errorMessage(
             "All artifacts: " + artifacts.stream().map(Artifact::getDisplayName).collect(toList()) + " are available.")
         .build();
@@ -133,7 +132,7 @@ public class ArtifactCheckState extends State {
     });
 
     if (!isEmpty(failedArtifacts)) {
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(ExecutionStatus.FAILED)
           .errorMessage("One or more artifacts: "
               + failedArtifacts.stream().map(Artifact::getDisplayName).collect(toList()) + " are in failed status")
@@ -146,7 +145,7 @@ public class ArtifactCheckState extends State {
       return getExecutionResponse(artifacts);
     }
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .correlationIds(correlationIds)
         .errorMessage("Waiting for artifacts:" + artifactNamesForDownload + " to be downloaded")

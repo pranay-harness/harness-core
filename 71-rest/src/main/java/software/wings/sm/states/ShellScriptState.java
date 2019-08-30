@@ -11,7 +11,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.delegation.ShellScriptParameters.CommandUnit;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
 
@@ -72,6 +71,7 @@ import software.wings.settings.SettingValue;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionContext;
 import software.wings.sm.StateType;
@@ -168,7 +168,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
-    ExecutionResponse.Builder executionResponseBuilder = anExecutionResponse();
+    ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
     String activityId = response.keySet().iterator().next();
     ResponseData data = response.values().iterator().next();
     boolean saveSweepingOutputToContext = false;
@@ -401,7 +401,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
     String delegateTaskId = renderAndScheduleDelegateTask(context, delegateTask,
         StateExecutionContext.builder().stateExecutionData(scriptStateExecutionData).scriptType(scriptType).build());
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .stateExecutionData(scriptStateExecutionData)
         .correlationIds(singletonList(activityId))

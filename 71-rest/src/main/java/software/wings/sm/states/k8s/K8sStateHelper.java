@@ -15,7 +15,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -234,7 +233,7 @@ public class K8sStateHelper {
       valuesFiles.putAll(stateExecutionData.getValuesFiles());
     }
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Arrays.asList(waitId))
         .stateExecutionData(K8sStateExecutionData.builder()
@@ -486,7 +485,7 @@ public class K8sStateHelper {
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Arrays.asList(waitId))
         .stateExecutionData(K8sStateExecutionData.builder()
@@ -681,7 +680,7 @@ public class K8sStateHelper {
 
     if (ExecutionStatus.FAILED.equals(executionStatus)) {
       activityService.updateStatus(activityId, appId, executionStatus);
-      return anExecutionResponse().executionStatus(executionStatus).build();
+      return ExecutionResponse.builder().executionStatus(executionStatus).build();
     }
 
     Map<K8sValuesLocation, String> valuesFiles =
@@ -747,7 +746,7 @@ public class K8sStateHelper {
 
     if (ExecutionStatus.FAILED.equals(executionStatus)) {
       activityService.updateStatus(activityId, appId, executionStatus);
-      return anExecutionResponse().executionStatus(executionStatus).build();
+      return ExecutionResponse.builder().executionStatus(executionStatus).build();
     }
 
     if (isNotBlank(executionResponse.getValuesFileContent())) {
@@ -785,7 +784,7 @@ public class K8sStateHelper {
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Arrays.asList(waitId))
         .stateExecutionData(K8sStateExecutionData.builder()

@@ -1,6 +1,5 @@
 package software.wings.sm.states.k8s;
 
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.K8S_SCALE;
 
 import com.google.common.collect.ImmutableList;
@@ -133,7 +132,7 @@ public class K8sScale extends State {
       stateExecutionData.setNewInstanceStatusSummaries(
           k8sStateHelper.getInstanceStatusSummaries(instanceElementListParam.getInstanceElements(), executionStatus));
 
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(executionStatus)
           .stateExecutionData(context.getStateExecutionData())
           .contextElement(instanceElementListParam)
