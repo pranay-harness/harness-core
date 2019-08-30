@@ -12,7 +12,7 @@ public class KubernetesYamlException extends WingsException {
   }
 
   public KubernetesYamlException(String reason, Throwable cause) {
-    super(null, cause, KUBERNETES_YAML_ERROR, Level.ERROR, null);
+    super(null, cause, KUBERNETES_YAML_ERROR, Level.ERROR, null, null);
     super.param(REASON_ARG, reason);
   }
 }

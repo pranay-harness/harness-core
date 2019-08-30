@@ -12,7 +12,7 @@ public class HintException extends WingsException {
   public static final HintException REFRESH_THE_PAGE = new HintException("Refresh the web page to update the data.");
 
   public HintException(String message) {
-    super(null, null, HINT, INFO, null);
+    super(null, null, HINT, INFO, null, null);
     super.excludeReportTarget(EXPLANATION, EnumSet.of(ReportTarget.LOG_SYSTEM));
     super.param("message", message);
   }

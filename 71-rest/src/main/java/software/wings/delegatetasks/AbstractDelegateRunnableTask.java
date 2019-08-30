@@ -14,11 +14,12 @@ import io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData.ErrorNotifyResponseDataBuilder;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.exception.DelegateRetryableException;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.FailureType;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import lombok.Getter;
@@ -26,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 
 import java.io.IOException;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -107,25 +109,33 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
       } else {
         String errorMessage = "No response from delegate task " + taskId;
         logger.error(errorMessage);
-        taskResponse.response(errorNotifyResponseDataBuilder.errorMessage(errorMessage).build());
+        taskResponse.response(errorNotifyResponseDataBuilder.failureTypes(EnumSet.of(FailureType.APPLICATION_ERROR))
+                                  .errorMessage(errorMessage)
+                                  .build());
         taskResponse.responseCode(ResponseCode.FAILED);
       }
       logger.info("Completed executing task {}", taskId);
     } catch (DelegateRetryableException exception) {
       exception.addContext(DelegateTask.class, taskId);
       ExceptionLogger.logProcessedMessages(exception, DELEGATE, logger);
-      taskResponse.response(errorNotifyResponseDataBuilder.errorMessage(ExceptionUtils.getMessage(exception)).build());
+      taskResponse.response(errorNotifyResponseDataBuilder.failureTypes(ExceptionUtils.getFailureTypes(exception))
+                                .errorMessage(ExceptionUtils.getMessage(exception))
+                                .build());
       taskResponse.responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE);
     } catch (WingsException exception) {
       exception.addContext(DelegateTask.class, taskId);
       ExceptionLogger.logProcessedMessages(exception, DELEGATE, logger);
-      taskResponse.response(errorNotifyResponseDataBuilder.errorMessage(ExceptionUtils.getMessage(exception)).build());
+      taskResponse.response(errorNotifyResponseDataBuilder.failureTypes(ExceptionUtils.getFailureTypes(exception))
+                                .errorMessage(ExceptionUtils.getMessage(exception))
+                                .build());
       taskResponse.responseCode(ResponseCode.FAILED);
     } catch (Throwable exception) {
       logger.error(
           format("Unexpected error while executing delegate taskId: [%s] in accountId: [%s]", taskId, accountId),
           exception);
-      taskResponse.response(errorNotifyResponseDataBuilder.errorMessage(ExceptionUtils.getMessage(exception)).build());
+      taskResponse.response(errorNotifyResponseDataBuilder.failureTypes(ExceptionUtils.getFailureTypes(exception))
+                                .errorMessage(ExceptionUtils.getMessage(exception))
+                                .build());
       taskResponse.responseCode(ResponseCode.FAILED);
     } finally {
       if (consumer != null) {

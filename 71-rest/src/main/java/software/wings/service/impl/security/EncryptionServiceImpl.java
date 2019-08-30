@@ -9,7 +9,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.exception.DelegateRetryableException;
+import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.KmsOperationException;
 import io.harness.security.SimpleEncryption;
