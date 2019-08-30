@@ -3193,28 +3193,36 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public boolean appendInfraMappingId(String appId, String workflowExecutionId, String infraMappingId) {
+    boolean modified = false;
     WorkflowExecution workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
     List<String> infraMappingIds = workflowExecution.getInfraMappingIds();
-    if (infraMappingIds != null && !infraMappingIds.contains(infraMappingId)) {
-      infraMappingIds.add(infraMappingId);
+    if (isNotEmpty(infraMappingIds)) {
+      if (!infraMappingIds.contains(infraMappingId)) {
+        infraMappingIds.add(infraMappingId);
+        modified = true;
+      }
     } else {
       infraMappingIds = new ArrayList<>();
       infraMappingIds.add(infraMappingId);
+      modified = true;
     }
-    notNullCheck("workflowExecution", workflowExecution, USER);
-    try {
-      Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
-                                           .filter(WorkflowExecutionKeys.appId, workflowExecution.getAppId())
-                                           .filter(ID_KEY, workflowExecution.getUuid());
+    if (modified) {
+      try {
+        Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
+                                             .filter(WorkflowExecutionKeys.appId, workflowExecution.getAppId())
+                                             .filter(ID_KEY, workflowExecution.getUuid());
 
-      UpdateOperations<WorkflowExecution> updateOps =
-          wingsPersistence.createUpdateOperations(WorkflowExecution.class).set("infraMappingIds", infraMappingIds);
-      UpdateResults updateResults = wingsPersistence.update(query, updateOps);
-      return updateResults != null && updateResults.getWriteResult() != null
-          && updateResults.getWriteResult().getN() > 0;
+        UpdateOperations<WorkflowExecution> updateOps =
+            wingsPersistence.createUpdateOperations(WorkflowExecution.class).set("infraMappingIds", infraMappingIds);
+        UpdateResults updateResults = wingsPersistence.update(query, updateOps);
+        return updateResults != null && updateResults.getWriteResult() != null
+            && updateResults.getWriteResult().getN() > 0;
 
-    } catch (Exception ex) {
-      return false;
+      } catch (Exception ex) {
+        return false;
+      }
+    } else {
+      return true;
     }
   }
 
