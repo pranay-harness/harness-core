@@ -50,7 +50,7 @@ public abstract class SecretManagerConfig implements EncryptionConfig, Persisten
 
   private boolean isDefault;
 
-  @NotEmpty private String accountId;
+  @NotEmpty @Indexed private String accountId;
 
   @SchemaIgnore @Transient private int numOfEncryptedValue;
 
