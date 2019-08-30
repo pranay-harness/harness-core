@@ -12,7 +12,6 @@ import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.CO
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.PREDICTIVE;
 import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -222,7 +221,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       analysisContext.setQuery(getRenderedQuery());
 
       scheduleAnalysisCronJob(analysisContext, delegateTaskId);
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .async(true)
           .correlationIds(Collections.singletonList(analysisContext.getCorrelationId()))
           .executionStatus(ExecutionStatus.RUNNING)
@@ -236,7 +235,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       activityLogger.error("Data collection failed: " + ex.getMessage());
       continuousVerificationService.setMetaDataExecutionStatus(
           executionContext.getStateExecutionInstanceId(), ExecutionStatus.ERROR, true);
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .async(false)
           .correlationIds(Collections.singletonList(corelationId))
           .executionStatus(ExecutionStatus.ERROR)
@@ -265,7 +264,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           "for {} got failed execution response {}", executionContext.getStateExecutionInstanceId(), executionResponse);
       continuousVerificationService.setMetaDataExecutionStatus(
           executionContext.getStateExecutionInstanceId(), executionResponse.getExecutionStatus(), true);
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(executionResponse.getExecutionStatus())
           .stateExecutionData(executionResponse.getStateExecutionData())
           .errorMessage(executionResponse.getStateExecutionData().getErrorMsg())
@@ -318,7 +317,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         executionResponse.getStateExecutionData().setStatus(executionStatus);
         continuousVerificationService.setMetaDataExecutionStatus(
             executionContext.getStateExecutionInstanceId(), executionStatus, false);
-        return anExecutionResponse()
+        return ExecutionResponse.builder()
             .executionStatus(isQAVerificationPath(context.getAccountId(), context.getAppId()) ? ExecutionStatus.SUCCESS
                                                                                               : executionStatus)
             .stateExecutionData(executionResponse.getStateExecutionData())
@@ -327,7 +326,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
       executionResponse.getStateExecutionData().setErrorMsg(
           "Analysis for minute " + analysisMinute + " failed to save in DB");
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(ExecutionStatus.ERROR)
           .stateExecutionData(executionResponse.getStateExecutionData())
           .build();
@@ -377,7 +376,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
                                                                .build();
     executionData.setStatus(status);
     continuousVerificationService.setMetaDataExecutionStatus(context.getStateExecutionId(), status, true);
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(false)
         .executionStatus(status)
         .stateExecutionData(executionData)

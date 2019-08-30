@@ -60,8 +60,8 @@ public class RepeatStateTest extends CategoryTest {
     assertThat(stateExecutionData.getRepeatElementIndex()).isNotNull();
     assertThat(stateExecutionData.getRepeatElementIndex()).isEqualTo(0);
 
-    assertThat(response.getStateExecutionInstanceList()).isNotNull();
-    assertThat(response.getStateExecutionInstanceList()).hasSize(1);
+    assertThat(response.getStateExecutionInstances()).isNotNull();
+    assertThat(response.getStateExecutionInstances()).hasSize(1);
   }
 
   /**
@@ -90,8 +90,8 @@ public class RepeatStateTest extends CategoryTest {
 
     assertThat(stateExecutionData.getRepeatElementIndex()).isNull();
 
-    assertThat(response.getStateExecutionInstanceList()).isNotNull();
-    assertThat(response.getStateExecutionInstanceList()).hasSize(2);
+    assertThat(response.getStateExecutionInstances()).isNotNull();
+    assertThat(response.getStateExecutionInstances()).hasSize(2);
   }
 
   private void assertResponse(List<ContextElement> repeatElements, ExecutionResponse response, int corrIdsExpected) {

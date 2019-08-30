@@ -6,7 +6,6 @@ import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder.aPhaseExecutionData;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
 
@@ -56,6 +55,7 @@ import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
@@ -183,7 +183,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
           + "] is not associated with the Service Infrastructure [" + infrastructureMapping.getName() + "]");
     }
 
-    ExecutionResponse response =
+    ExecutionResponseBuilder executionResponseBuilder =
         getSpawningExecutionResponse(context, workflowStandardParams, service, infrastructureMapping);
 
     PhaseExecutionDataBuilder phaseExecutionDataBuilder = aPhaseExecutionData();
@@ -219,11 +219,11 @@ public class PhaseSubWorkflow extends SubWorkflowState {
       }
     }
 
-    response.setStateExecutionData(phaseExecutionData);
-    return response;
+    executionResponseBuilder.stateExecutionData(phaseExecutionData);
+    return executionResponseBuilder.build();
   }
 
-  private ExecutionResponse getSpawningExecutionResponse(ExecutionContext context,
+  private ExecutionResponseBuilder getSpawningExecutionResponse(ExecutionContext context,
       WorkflowStandardParams workflowStandardParams, Service service, InfrastructureMapping infrastructureMapping) {
     ExecutionContextImpl contextImpl = (ExecutionContextImpl) context;
     StateExecutionInstance stateExecutionInstance = contextImpl.getStateExecutionInstance();
@@ -233,11 +233,10 @@ public class PhaseSubWorkflow extends SubWorkflowState {
         getSpawningInstance(context, workflowStandardParams, stateExecutionInstance, service, infrastructureMapping);
     correlationIds.add(stateExecutionInstance.getUuid());
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .stateExecutionInstance(childStateExecutionInstance)
         .async(true)
-        .correlationIds(correlationIds)
-        .build();
+        .correlationIds(correlationIds);
   }
 
   private StateExecutionInstance getSpawningInstance(ExecutionContext context,
@@ -612,7 +611,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
-    ExecutionResponse.Builder executionResponseBuilder = anExecutionResponse();
+    ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
     super.handleStatusSummary(workflowExecutionService, context, response, executionResponseBuilder);
     response.values().forEach(notifyResponseData -> {
       if (notifyResponseData instanceof ElementNotifyResponseData) {

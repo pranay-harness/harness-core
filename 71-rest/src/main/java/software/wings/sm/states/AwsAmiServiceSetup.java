@@ -12,7 +12,6 @@ import static software.wings.service.impl.aws.model.AwsConstants.AMI_SETUP_COMMA
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_DESIRED_INSTANCES;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MAX_INSTANCES;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_TIMEOUT_MIN;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.utils.Misc.normalizeExpression;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -164,7 +163,7 @@ public class AwsAmiServiceSetup extends State {
             .preDeploymentData(amiServiceSetupResponse.getPreDeploymentData())
             .build();
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .executionStatus(amiServiceSetupResponse.getExecutionStatus())
         .errorMessage(amiServiceSetupResponse.getErrorMessage())
         .stateExecutionData(awsAmiExecutionData)
@@ -325,7 +324,7 @@ public class AwsAmiServiceSetup extends State {
       Misc.logAllMessages(exception, executionLogCallback, CommandExecutionStatus.FAILURE);
     }
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .correlationIds(singletonList(activity.getUuid()))
         .stateExecutionData(awsAmiExecutionData)
         .async(true)

@@ -3,7 +3,6 @@ package software.wings.sm.states.pcf;
 import static com.google.common.collect.Maps.newHashMap;
 import static java.util.Collections.emptyList;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -171,7 +170,7 @@ public class PcfDeployState extends State {
 
     delegateService.queueTask(task);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .correlationIds(Arrays.asList(activity.getUuid()))
         .stateExecutionData(stateExecutionData)
         .async(true)
@@ -311,7 +310,7 @@ public class PcfDeployState extends State {
             .withPcfInstanceElements(pcfDeployCommandResponse.getPcfInstanceElements())
             .build();
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .executionStatus(executionStatus)
         .errorMessage(executionResponse.getErrorMessage())
         .stateExecutionData(stateExecutionData)

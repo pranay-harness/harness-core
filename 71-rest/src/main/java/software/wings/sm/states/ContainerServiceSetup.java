@@ -7,7 +7,6 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder.anInstanceElementListParam;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
 
@@ -221,7 +220,7 @@ public abstract class ContainerServiceSetup extends State {
                                         .infrastructureMappingId(infrastructureMapping.getUuid())
                                         .build());
 
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .async(true)
           .correlationIds(singletonList(activity.getUuid()))
           .stateExecutionData(executionData)
@@ -340,7 +339,7 @@ public abstract class ContainerServiceSetup extends State {
       executionData.setDelegateMetaInfo(executionResult.getDelegateMetaInfo());
     }
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .stateExecutionData(executionData)
         .executionStatus(status)
         .contextElement(containerServiceElement)

@@ -1,6 +1,5 @@
 package software.wings.sm.states.k8s;
 
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.K8S_BLUE_GREEN_DEPLOY;
 
 import com.google.inject.Inject;
@@ -123,7 +122,7 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
     stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
 
     if (ExecutionStatus.FAILED.equals(executionStatus)) {
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(executionStatus)
           .stateExecutionData(context.getStateExecutionData())
           .build();
@@ -148,7 +147,7 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
             .stageServiceName(k8sBlueGreenDeployResponse.getStageServiceName())
             .build());
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .executionStatus(executionStatus)
         .stateExecutionData(stateExecutionData)
         .contextElement(instanceElementListParam)

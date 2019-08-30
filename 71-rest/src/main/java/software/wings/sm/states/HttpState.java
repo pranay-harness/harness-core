@@ -7,7 +7,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 import static software.wings.beans.template.TemplateHelper.convertToVariableMap;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.base.MoreObjects;
 import com.google.inject.Inject;
@@ -58,6 +57,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionContext;
 import software.wings.sm.StateType;
@@ -369,7 +369,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
 
     String delegateTaskId = scheduleDelegateTask(delegateTask);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Collections.singletonList(activityId))
         .stateExecutionData(executionDataBuilder.build())
@@ -390,7 +390,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     ResponseData notifyResponseData = response.values().iterator().next();
-    ExecutionResponse.Builder executionResponseBuilder = anExecutionResponse();
+    ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
       executionResponseBuilder.executionStatus(ExecutionStatus.FAILED);
       executionResponseBuilder.errorMessage(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());

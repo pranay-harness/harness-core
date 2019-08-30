@@ -7,7 +7,6 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -144,7 +143,7 @@ public class KubernetesSteadyStateCheck extends State {
                                       .infrastructureMappingId(containerInfraMapping.getUuid())
                                       .build();
       String delegateTaskId = delegateService.queueTask(delegateTask);
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .async(true)
           .correlationIds(singletonList(activity.getUuid()))
           .stateExecutionData(
@@ -189,7 +188,7 @@ public class KubernetesSteadyStateCheck extends State {
       InstanceElementListParam instanceElementListParam =
           InstanceElementListParamBuilder.anInstanceElementListParam().withInstanceElements(instanceElements).build();
 
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(executionResponse.getExecutionStatus())
           .stateExecutionData(context.getStateExecutionData())
           .contextElement(instanceElementListParam)

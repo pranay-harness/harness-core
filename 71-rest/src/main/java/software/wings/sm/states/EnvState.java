@@ -14,7 +14,6 @@ import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.common.Constants.ENV_STATE_TIMEOUT_MILLIS;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
 
@@ -59,6 +58,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptType;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
@@ -134,7 +134,7 @@ public class EnvState extends State {
     EnvStateExecutionData envStateExecutionData =
         anEnvStateExecutionData().withWorkflowId(workflowId).withEnvId(envId).build();
     if (workflow == null || workflow.getOrchestrationWorkflow() == null) {
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(FAILED)
           .errorMessage("Workflow does not exist")
           .stateExecutionData(envStateExecutionData)
@@ -142,7 +142,7 @@ public class EnvState extends State {
     }
 
     if (disable) {
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(SKIPPED)
           .errorMessage("Workflow [" + workflow.getName() + "] step is disabled. Execution has been skipped.")
           .stateExecutionData(envStateExecutionData)
@@ -174,14 +174,14 @@ public class EnvState extends State {
       WorkflowExecution execution = executionService.triggerOrchestrationExecution(
           appId, envId, workflowId, context.getWorkflowExecutionId(), executionArgs, null);
       envStateExecutionData.setWorkflowExecutionId(execution.getUuid());
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .async(true)
           .correlationIds(asList(execution.getUuid()))
           .stateExecutionData(envStateExecutionData)
           .build();
     } catch (Exception e) {
       String message = ExceptionUtils.getMessage(e);
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(FAILED)
           .errorMessage(message)
           .stateExecutionData(envStateExecutionData)
@@ -327,10 +327,11 @@ public class EnvState extends State {
 
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     EnvExecutionResponseData responseData = (EnvExecutionResponseData) response.values().iterator().next();
-    ExecutionResponse executionResponse = anExecutionResponse().executionStatus(responseData.getStatus()).build();
+    ExecutionResponseBuilder executionResponseBuilder =
+        ExecutionResponse.builder().executionStatus(responseData.getStatus());
 
     if (responseData.getStatus() != SUCCESS) {
-      return executionResponse;
+      return executionResponseBuilder.build();
     }
 
     EnvStateExecutionData stateExecutionData = (EnvStateExecutionData) context.getStateExecutionData();
@@ -347,7 +348,7 @@ public class EnvState extends State {
                                           .withServiceIds(artifactStreamServiceBindingService.listServiceIds(
                                               artifact.getArtifactStreamId()))
                                           .build()));
-          executionResponse.setContextElements(artifactElements);
+          executionResponseBuilder.contextElements(artifactElements);
         }
       } else {
         List<StateExecutionInstance> allStateExecutionInstances = executionService.getStateExecutionInstances(
@@ -371,12 +372,12 @@ public class EnvState extends State {
                     .build());
           });
 
-          executionResponse.setContextElements(artifactElements);
+          executionResponseBuilder.contextElements(artifactElements);
         }
       }
     }
 
-    return executionResponse;
+    return executionResponseBuilder.build();
   }
 
   public String getEnvId() {

@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.abbreviate;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
@@ -28,6 +27,7 @@ import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.ExpressionProcessor;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
@@ -104,7 +104,7 @@ public class RepeatState extends State {
     }
 
     if (repeatTransitionStateName == null) {
-      return anExecutionResponse().executionStatus(ExecutionStatus.FAILED).build();
+      return ExecutionResponse.builder().executionStatus(ExecutionStatus.FAILED).build();
     }
 
     if (executionStrategyExpression != null) {
@@ -124,7 +124,7 @@ public class RepeatState extends State {
 
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
 
-    ExecutionResponse.Builder executionResponseBuilder = anExecutionResponse();
+    ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
 
     if (isNotEmpty(repeatElements)) {
       List<String> correlationIds = new ArrayList<>();
@@ -166,7 +166,7 @@ public class RepeatState extends State {
     executionStrategy = repeatStateExecutionData.getExecutionStrategy();
     if (executionStrategy == ExecutionStrategy.PARALLEL || executionStatus != ExecutionStatus.SUCCESS
         || repeatStateExecutionData.indexReachedMax()) {
-      ExecutionResponse.Builder executionResponseBuilder = anExecutionResponse();
+      ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
       executionResponseBuilder.executionStatus(executionStatus);
 
       repeatStateExecutionData.setElementStatusSummary(workflowExecutionService.getElementsSummary(
@@ -174,7 +174,7 @@ public class RepeatState extends State {
       executionResponseBuilder.stateExecutionData(repeatStateExecutionData);
       return executionResponseBuilder.build();
     } else {
-      ExecutionResponse.Builder executionResponseBuilder = anExecutionResponse();
+      ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
 
       Integer repeatElementIndex = repeatStateExecutionData.getRepeatElementIndex();
       repeatElementIndex++;
@@ -213,7 +213,7 @@ public class RepeatState extends State {
   }
 
   private void processChildState(StateExecutionInstance stateExecutionInstance, List<String> correlationIds,
-      ExecutionResponse.Builder executionResponseBuilder, ContextElement repeatElement) {
+      ExecutionResponseBuilder executionResponseBuilder, ContextElement repeatElement) {
     String notifyId = stateExecutionInstance.getUuid() + "-repeat-" + repeatElement.getUuid();
     StateExecutionInstance childStateExecutionInstance = KryoUtils.clone(stateExecutionInstance);
     childStateExecutionInstance.setStateParams(null);

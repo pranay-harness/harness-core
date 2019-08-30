@@ -6,7 +6,6 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -111,7 +110,7 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
                                     .build();
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Collections.singletonList(activityId))
         .delegateTaskId(delegateTaskId)
@@ -144,7 +143,7 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
     }
 
     activityService.updateStatus(activityId, context.getAppId(), executionData.getExecutionStatus());
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .stateExecutionData(executionData)
         .contextElement(outputInfoElement)
         .notifyElement(outputInfoElement)

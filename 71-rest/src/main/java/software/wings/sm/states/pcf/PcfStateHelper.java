@@ -1,7 +1,6 @@
 package software.wings.sm.states.pcf;
 
 import static io.harness.exception.WingsException.USER;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Singleton;
@@ -135,7 +134,7 @@ public class PcfStateHelper {
 
     delegateService.queueTask(delegateTask);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .correlationIds(Arrays.asList(activityId))
         .stateExecutionData(stateExecutionData)
         .async(true)

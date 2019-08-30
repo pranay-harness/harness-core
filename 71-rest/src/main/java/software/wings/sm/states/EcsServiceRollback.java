@@ -6,7 +6,6 @@ import static java.util.Collections.singletonList;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.AWS_ECS_SERVICE_DEPLOY;
 import static software.wings.beans.command.EcsResizeParams.EcsResizeParamsBuilder.anEcsResizeParams;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.states.EcsServiceDeploy.ECS_SERVICE_DEPLOY;
 
 import com.google.inject.Inject;
@@ -121,7 +120,7 @@ public class EcsServiceRollback extends State {
     String delegateTaskId =
         ecsStateHelper.createAndQueueDelegateTaskForEcsServiceDeploy(deployDataBag, request, activity, delegateService);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .correlationIds(singletonList(activity.getUuid()))
         .stateExecutionData(executionData)

@@ -3,7 +3,6 @@ package software.wings.sm.states.k8s;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.K8S_TRAFFIC_SPLIT;
 
 import com.google.common.collect.ImmutableList;
@@ -104,7 +103,7 @@ public class K8sTrafficSplitState extends State {
       K8sStateExecutionData stateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
       stateExecutionData.setStatus(executionStatus);
 
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .stateExecutionData(context.getStateExecutionData())
           .executionStatus(executionStatus)
           .build();

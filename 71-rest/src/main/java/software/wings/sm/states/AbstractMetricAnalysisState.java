@@ -9,7 +9,6 @@ import static software.wings.common.VerificationConstants.LAMBDA_HOST_NAME;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.service.impl.security.SecretManagementDelegateServiceImpl.NUM_OF_RETRIES;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -230,7 +229,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           VerificationDataAnalysisResponse.builder().stateExecutionData(executionData).build();
       response.setExecutionStatus(ExecutionStatus.RUNNING);
       scheduleAnalysisCronJob(analysisContext, delegateTaskId);
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .async(true)
           .correlationIds(Collections.singletonList(executionData.getCorrelationId()))
           .executionStatus(ExecutionStatus.RUNNING)
@@ -247,7 +246,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       } else {
         getLogger().error("metric analysis state failed", ex);
       }
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .async(false)
           .correlationIds(Collections.singletonList(corelationId))
           .executionStatus(ExecutionStatus.ERROR)
@@ -290,7 +289,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           "for {} got failed execution response {}", context.getStateExecutionInstanceId(), executionResponse);
       continuousVerificationService.setMetaDataExecutionStatus(
           context.getStateExecutionInstanceId(), executionResponse.getExecutionStatus(), true);
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(executionResponse.getExecutionStatus())
           .stateExecutionData(executionResponse.getStateExecutionData())
           .errorMessage(executionResponse.getStateExecutionData().getErrorMsg())
@@ -337,7 +336,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
         if (!isResultPresent) {
           continuousVerificationService.setMetaDataExecutionStatus(
               executionResponse.getStateExecutionData().getStateExecutionInstanceId(), ExecutionStatus.FAILED, true);
-          return anExecutionResponse()
+          return ExecutionResponse.builder()
               .executionStatus(ExecutionStatus.FAILED)
               .stateExecutionData(executionResponse.getStateExecutionData())
               .build();
@@ -358,7 +357,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       metricAnalysisService.saveRawDataToGoogleDataStore(
           context.getAccountId(), context.getStateExecutionInstanceId(), executionStatus, getPhaseServiceId(context));
 
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(isQAVerificationPath(appService.get(context.getAppId()).getAccountId(), context.getAppId())
                   ? ExecutionStatus.SUCCESS
                   : executionStatus)
@@ -368,7 +367,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
     executionResponse.getStateExecutionData().setErrorMsg(
         "Analysis for minute " + analysisMinute + " failed to save in DB");
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .executionStatus(ExecutionStatus.ERROR)
         .stateExecutionData(executionResponse.getStateExecutionData())
         .build();
@@ -401,7 +400,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     wingsPersistence.saveIgnoringDuplicateKeys(Lists.newArrayList(metricAnalysisRecord));
     continuousVerificationService.setMetaDataExecutionStatus(context.getStateExecutionInstanceId(), status, true);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(false)
         .executionStatus(status)
         .stateExecutionData(executionData)

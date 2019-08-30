@@ -16,7 +16,6 @@ import static software.wings.beans.TaskType.AWS_AMI_ASYNC_TASK;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.common.Constants.ASG_COMMAND_NAME;
 import static software.wings.service.impl.aws.model.AwsConstants.PHASE_PARAM;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -292,7 +291,7 @@ public class AwsAmiServiceDeployState extends State {
         serviceSetupElement.getPreDeploymentData(), classicLbs, targetGroupArns, false,
         serviceSetupElement.getBaseScalingPolicyJSONs(), serviceSetupElement.getDesiredInstances());
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .stateExecutionData(awsAmiDeployStateExecutionData)
         .executionStatus(ExecutionStatus.SUCCESS)
@@ -462,7 +461,7 @@ public class AwsAmiServiceDeployState extends State {
         ExecutionStatus.SUCCESS.equals(executionStatus) ? CommandExecutionStatus.SUCCESS
                                                         : CommandExecutionStatus.FAILURE);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .stateExecutionData(awsAmiDeployStateExecutionData)
         .executionStatus(executionStatus)
         .errorMessage(errorMessage)

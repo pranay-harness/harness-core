@@ -17,7 +17,6 @@ import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.TaskType.ECS_COMMAND_TASK;
 import static software.wings.beans.command.EcsSetupParams.EcsSetupParamsBuilder.anEcsSetupParams;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.states.ContainerServiceSetup.DEFAULT_MAX;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -273,7 +272,7 @@ public class EcsStateHelper {
 
     delegateService.queueTask(delegateTask);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .correlationIds(Arrays.asList(activityId))
         .stateExecutionData(stateExecutionData)
         .async(true)
@@ -580,7 +579,7 @@ public class EcsStateHelper {
       executionData.setOldInstanceData(deployResponse.getOldInstanceData());
       executionData.setNewInstanceData(deployResponse.getNewInstanceData());
 
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .stateExecutionData(executionData)
           .executionStatus(executionStatus)
           .contextElement(listParam)
@@ -588,7 +587,7 @@ public class EcsStateHelper {
           .build();
     }
 
-    return anExecutionResponse().stateExecutionData(executionData).executionStatus(executionStatus).build();
+    return ExecutionResponse.builder().stateExecutionData(executionData).executionStatus(executionStatus).build();
   }
 
   public String createAndQueueDelegateTaskForEcsServiceDeploy(EcsDeployDataBag deployDataBag,

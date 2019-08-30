@@ -4,7 +4,6 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static java.util.Collections.singletonList;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
 import com.google.inject.Inject;
@@ -147,7 +146,7 @@ public class EcsServiceSetup extends State {
     String delegateTaskId =
         ecsStateHelper.createAndQueueDelegateTaskForEcsServiceSetUp(request, dataBag, activity, delegateService);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .correlationIds(singletonList(activity.getUuid()))
         .stateExecutionData(stateExecutionData)
@@ -193,7 +192,7 @@ public class EcsServiceSetup extends State {
 
     ecsStateHelper.populateFromDelegateResponse(setupExecutionData, executionData, containerServiceElement);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .stateExecutionData(executionData)
         .executionStatus(executionStatus)
         .contextElement(containerServiceElement)

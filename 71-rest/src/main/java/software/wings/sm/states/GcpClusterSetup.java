@@ -3,7 +3,6 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.api.ClusterElement.ClusterElementBuilder.aClusterElement;
 import static software.wings.api.GcpClusterExecutionData.GcpClusterExecutionDataBuilder.aGcpClusterExecutionData;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.GCP_CLUSTER_SETUP;
 
 import com.google.common.collect.ImmutableMap;
@@ -112,7 +111,7 @@ public class GcpClusterSetup extends State {
                                         .withInfraMappingId(phaseElement.getInfraMappingId())
                                         .build();
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .executionStatus(ExecutionStatus.SUCCESS)
         .contextElement(clusterElement)
         .notifyElement(clusterElement)

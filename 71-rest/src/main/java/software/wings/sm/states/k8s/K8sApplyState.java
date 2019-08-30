@@ -2,7 +2,6 @@ package software.wings.sm.states.k8s;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.K8S_APPLY;
 
 import com.google.inject.Inject;
@@ -131,7 +130,7 @@ public class K8sApplyState extends State implements K8sStateExecutor {
     stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
     stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
 
-    return anExecutionResponse().executionStatus(executionStatus).stateExecutionData(stateExecutionData).build();
+    return ExecutionResponse.builder().executionStatus(executionStatus).stateExecutionData(stateExecutionData).build();
   }
 
   @Override

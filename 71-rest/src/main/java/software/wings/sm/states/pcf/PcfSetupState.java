@@ -5,7 +5,6 @@ import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
 
@@ -340,7 +339,7 @@ public class PcfSetupState extends State {
 
     delegateService.queueTask(delegateTask);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .correlationIds(Arrays.asList(activity.getUuid()))
         .stateExecutionData(stateExecutionData)
         .async(true)
@@ -428,7 +427,7 @@ public class PcfSetupState extends State {
 
     PcfSetupContextElement pcfSetupContextElement = pcfSetupContextElementBuilder.build();
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .executionStatus(executionStatus)
         .errorMessage(executionResponse.getErrorMessage())
         .stateExecutionData(stateExecutionData)

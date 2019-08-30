@@ -1,7 +1,5 @@
 package software.wings.sm.states;
 
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -144,7 +142,7 @@ public class EcsBGUpdateListnerState extends State {
       stateExecutionData.setStatus(executionStatus);
       stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
 
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .stateExecutionData(stateExecutionData)
           .errorMessage(executionResponse.getErrorMessage())
           .executionStatus(executionStatus)

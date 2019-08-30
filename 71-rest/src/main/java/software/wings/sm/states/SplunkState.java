@@ -55,10 +55,10 @@ public class SplunkState extends HttpState {
 
     ExecutionResponse executionResponse = super.executeInternal(context, activityId);
 
-    executionResponse.setStateExecutionData(
-        SplunkStateExecutionData.builder().query(evaluatedQuery).assertionStatement(getAssertion()).build());
-
-    return executionResponse;
+    return executionResponse.toBuilder()
+        .stateExecutionData(
+            SplunkStateExecutionData.builder().query(evaluatedQuery).assertionStatement(getAssertion()).build())
+        .build();
   }
 
   @Override
@@ -69,14 +69,14 @@ public class SplunkState extends HttpState {
 
     SplunkStateExecutionData splunkStateExecutionData = (SplunkStateExecutionData) context.getStateExecutionData();
 
-    executionResponse.setStateExecutionData(SplunkStateExecutionData.builder()
-                                                .query(splunkStateExecutionData.getQuery())
-                                                .assertionStatement(getAssertion())
-                                                .assertionStatus(httpStateExecutionData.getAssertionStatus())
-                                                .response(httpStateExecutionData.getHttpResponseBody())
-                                                .build());
-
-    return executionResponse;
+    return executionResponse.toBuilder()
+        .stateExecutionData(SplunkStateExecutionData.builder()
+                                .query(splunkStateExecutionData.getQuery())
+                                .assertionStatement(getAssertion())
+                                .assertionStatus(httpStateExecutionData.getAssertionStatus())
+                                .response(httpStateExecutionData.getHttpResponseBody())
+                                .build())
+        .build();
   }
 
   /**

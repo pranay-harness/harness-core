@@ -9,7 +9,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.TaskType.CLOUD_FORMATION_TASK;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
@@ -226,7 +225,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
                         .build())
               .build();
       String delegateTaskId = delegateService.queueTask(delegateTask);
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .async(true)
           .correlationIds(Collections.singletonList(activityId))
           .delegateTaskId(delegateTaskId)
@@ -248,7 +247,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
 
     Optional<CloudFormationRollbackInfoElement> stackElementOptional = getRollbackElement(context);
     if (!stackElementOptional.isPresent()) {
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(SUCCESS)
           .errorMessage("No cloud formation rollback state found")
           .build();
@@ -316,7 +315,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
               .build();
     }
     String delegateTaskId = delegateService.queueTask(delegateTask);
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Collections.singletonList(activityId))
         .delegateTaskId(delegateTaskId)

@@ -3,7 +3,6 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static java.util.Arrays.asList;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.NEW_RELIC_DEPLOYMENT_MARKER;
 
 import com.google.inject.Inject;
@@ -162,7 +161,7 @@ public class NewRelicDeploymentMarkerState extends State {
         NewRelicMarkerExecutionData.builder().payload(body).evaluatedPayload(evaluatedBody).build();
     executionData.setStatus(ExecutionStatus.RUNNING);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Collections.singletonList(correlationId))
         .executionStatus(ExecutionStatus.RUNNING)
@@ -185,7 +184,7 @@ public class NewRelicDeploymentMarkerState extends State {
       analysisExecutionData.setErrorMsg(executionResponse.getErrorMessage());
       analysisExecutionData.setStatus(ExecutionStatus.FAILED);
 
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(ExecutionStatus.FAILED)
           .stateExecutionData(analysisExecutionData)
           .errorMessage(executionResponse.getErrorMessage())
@@ -193,7 +192,7 @@ public class NewRelicDeploymentMarkerState extends State {
     }
 
     analysisExecutionData.setStatus(ExecutionStatus.SUCCESS);
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .executionStatus(executionStatus)
         .stateExecutionData(analysisExecutionData)
 

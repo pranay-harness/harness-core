@@ -1,7 +1,6 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusData;
 
 import com.google.inject.Inject;
@@ -70,7 +69,7 @@ public class WaitState extends State {
                                  anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build()),
         duration, TimeUnit.SECONDS);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .correlationId(waitStateExecutionData.getResumeId())
         .stateExecutionData(waitStateExecutionData)

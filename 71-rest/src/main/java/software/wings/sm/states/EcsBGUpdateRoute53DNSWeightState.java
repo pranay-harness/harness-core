@@ -10,7 +10,6 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 import static software.wings.beans.Activity.Type.Command;
 import static software.wings.beans.TaskType.ECS_COMMAND_TASK;
 import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.AWS_ECS_UPDATE_ROUTE_53_DNS_WEIGHT;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.ECS_ROUTE53_DNS_WEIGHT_UPDATE;
 
 import com.google.inject.Inject;
@@ -97,7 +96,7 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
     ExecutionStatus executionStatus =
         CommandExecutionStatus.SUCCESS.equals(executionResponse.getCommandExecutionStatus()) ? SUCCESS : FAILED;
     activityService.updateStatus(activityId, context.getAppId(), executionStatus);
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .errorMessage(executionResponse.getErrorMessage())
         .executionStatus(executionStatus)
         .build();
@@ -188,7 +187,7 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
 
     delegateService.queueTask(delegateTask);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .stateExecutionData(executionData)
         .executionStatus(SUCCESS)

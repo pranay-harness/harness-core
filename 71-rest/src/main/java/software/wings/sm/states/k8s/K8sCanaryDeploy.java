@@ -2,7 +2,6 @@ package software.wings.sm.states.k8s;
 
 import static java.lang.Integer.parseInt;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.K8S_CANARY_DEPLOY;
 
 import com.google.inject.Inject;
@@ -146,7 +145,7 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
         }
       }
 
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(executionStatus)
           .stateExecutionData(context.getStateExecutionData())
           .build();
@@ -177,7 +176,7 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
             .canaryWorkload(k8sCanaryDeployResponse.getCanaryWorkload())
             .build());
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .executionStatus(executionStatus)
         .stateExecutionData(context.getStateExecutionData())
         .contextElement(instanceElementListParam)

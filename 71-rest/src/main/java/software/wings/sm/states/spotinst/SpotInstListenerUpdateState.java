@@ -3,7 +3,6 @@ package software.wings.sm.states.spotinst;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.SWAP_ROUTES_COMMAND_UNIT;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -127,7 +126,7 @@ public class SpotInstListenerUpdateState extends State {
         spotInstStateHelper.generateTimeOutForDelegateTask(spotInstTaskParameters.getTimeoutIntervalInMin()));
 
     delegateService.queueTask(task);
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .stateExecutionData(stateExecutionData)
         .correlationIds(Arrays.asList(activity.getUuid()))
         .async(true)
@@ -155,7 +154,7 @@ public class SpotInstListenerUpdateState extends State {
     stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
     stateExecutionData.setStatus(executionStatus);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .executionStatus(executionStatus)
         .stateExecutionData(stateExecutionData)
         .errorMessage(executionResponse.getErrorMessage())

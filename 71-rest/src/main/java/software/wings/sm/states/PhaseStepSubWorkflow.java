@@ -16,7 +16,6 @@ import static software.wings.api.AwsCodeDeployRequestElement.AwsCodeDeployReques
 import static software.wings.api.AwsLambdaContextElement.Builder.anAwsLambdaContextElement;
 import static software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBuilder.aPhaseStepExecutionData;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -69,6 +68,7 @@ import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.ExecutionStatusData;
 import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
@@ -122,8 +122,8 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     } else {
       List<ContextElement> rollbackRequiredParams = getRollbackRequiredParam(phaseStepType, phaseElement, contextIntf);
       ExecutionResponse spawningExecutionResponse = super.execute(contextIntf);
-      if (isNotEmpty(spawningExecutionResponse.getStateExecutionInstanceList())) {
-        for (StateExecutionInstance instance : spawningExecutionResponse.getStateExecutionInstanceList()) {
+      if (isNotEmpty(spawningExecutionResponse.getStateExecutionInstances())) {
+        for (StateExecutionInstance instance : spawningExecutionResponse.getStateExecutionInstances()) {
           if (isNotEmpty(rollbackRequiredParams)) {
             rollbackRequiredParams.forEach(p -> instance.getContextElements().push(p));
           }
@@ -132,13 +132,14 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       response = spawningExecutionResponse;
     }
 
-    response.setStateExecutionData(aPhaseStepExecutionData()
-                                       .withStepsInParallel(stepsInParallel)
-                                       .withDefaultFailureStrategy(defaultFailureStrategy)
-                                       .withFailureStrategies(failureStrategies)
-                                       .withPhaseStepType(phaseStepType)
-                                       .build());
-    return response;
+    return response.toBuilder()
+        .stateExecutionData(aPhaseStepExecutionData()
+                                .withStepsInParallel(stepsInParallel)
+                                .withDefaultFailureStrategy(defaultFailureStrategy)
+                                .withFailureStrategies(failureStrategies)
+                                .withPhaseStepType(phaseStepType)
+                                .build())
+        .build();
   }
 
   private List<ContextElement> getRollbackRequiredParam(
@@ -456,7 +457,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
-    ExecutionResponse.Builder executionResponseBuilder = anExecutionResponse();
+    ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
     if (phaseStepType == PhaseStepType.PRE_DEPLOYMENT || phaseStepType == PhaseStepType.POST_DEPLOYMENT) {
       ExecutionStatus executionStatus =
           ((ExecutionStatusData) response.values().iterator().next()).getExecutionStatus();
@@ -487,7 +488,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   }
 
   private void handleElementNotifyResponseData(PhaseElement phaseElement, Map<String, ResponseData> response,
-      ExecutionResponse.Builder executionResponseBuilder) {
+      ExecutionResponseBuilder executionResponseBuilder) {
     if (isEmpty(response)) {
       throw new InvalidRequestException("Missing response");
     }

@@ -6,7 +6,6 @@ import static java.util.Collections.singletonList;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.TaskType.AWS_AMI_ASYNC_TASK;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
 
@@ -162,7 +161,7 @@ public class AwsAmiSwitchRoutesState extends State {
             .build();
     delegateService.queueTask(delegateTask);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .stateExecutionData(executionData)
         .executionStatus(ExecutionStatus.SUCCESS)
@@ -174,7 +173,7 @@ public class AwsAmiSwitchRoutesState extends State {
     String activityId = response.keySet().iterator().next();
     AwsAmiSwitchRoutesResponse routesResponse = (AwsAmiSwitchRoutesResponse) response.values().iterator().next();
     activityService.updateStatus(activityId, context.getAppId(), routesResponse.getExecutionStatus());
-    return anExecutionResponse().executionStatus(routesResponse.getExecutionStatus()).build();
+    return ExecutionResponse.builder().executionStatus(routesResponse.getExecutionStatus()).build();
   }
 
   protected Activity createActivity(ExecutionContext executionContext) {

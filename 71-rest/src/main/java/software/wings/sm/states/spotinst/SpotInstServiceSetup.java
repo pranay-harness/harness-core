@@ -2,7 +2,6 @@ package software.wings.sm.states.spotinst;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.SPOTINST_SETUP;
 
 import com.google.inject.Inject;
@@ -103,7 +102,7 @@ public class SpotInstServiceSetup extends State {
 
     delegateService.queueTask(delegateTask);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .correlationIds(Arrays.asList(spotInstTaskParameters.getActivityId()))
         .stateExecutionData(spotinstSetupStateExecutionData)
         .async(true)
@@ -172,7 +171,7 @@ public class SpotInstServiceSetup extends State {
     // Add these details only if spotInstSetupTaskResponse is not NULL
     addDetailsForSuccessfulExecution(spotInstSetupContextElement, spotInstSetupTaskResponse);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .executionStatus(executionStatus)
         .errorMessage(executionResponse.getErrorMessage())
         .stateExecutionData(stateExecutionData)

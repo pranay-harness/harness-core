@@ -5,7 +5,6 @@ import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.TaskType.JIRA;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
 
@@ -105,7 +104,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
     renderExpressions(context);
 
     if (ExpressionEvaluator.containsVariablePattern(issueId)) {
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(FAILED)
           .errorMessage("Expression not rendered for issue Id: " + issueId)
           .stateExecutionData(JiraExecutionData.builder().activityId(activityId).build())
@@ -135,7 +134,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
     if (jiraAction.equals(JiraAction.UPDATE_TICKET)) {
       List<String> issueIds = parseExpression(issueId);
       if (EmptyPredicate.isEmpty(issueIds)) {
-        return anExecutionResponse()
+        return ExecutionResponse.builder()
             .executionStatus(FAILED)
             .errorMessage("No valid issueId after parsing: " + issueId)
             .stateExecutionData(JiraExecutionData.builder().activityId(activityId).build())
@@ -157,7 +156,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
                                     .build();
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Collections.singletonList(activityId))
         .delegateTaskId(delegateTaskId)
@@ -248,7 +247,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
       handleSweepingOutput(sweepingOutputService, context, sweepingOutputMap);
     }
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .stateExecutionData(jiraExecutionData)
         .executionStatus(jiraExecutionData.getExecutionStatus())
         .errorMessage(jiraExecutionData.getErrorMessage())

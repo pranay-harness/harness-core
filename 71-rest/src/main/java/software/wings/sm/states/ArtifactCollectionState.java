@@ -7,7 +7,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.common.Constants.DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -71,7 +70,7 @@ public class ArtifactCollectionState extends State {
     ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
     if (artifactStream == null) {
       logger.info("Artifact Stream {} might have been deleted", artifactStreamId);
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(ExecutionStatus.FAILED)
           .errorMessage("Artifact source might have been deleted. Please update with the right artifact source.")
           .build();
@@ -95,7 +94,7 @@ public class ArtifactCollectionState extends State {
       updateArtifactCollectionExecutionData(context, artifactCollectionExecutionData);
 
       addBuildExecutionSummary(context, artifactCollectionExecutionData, artifactStream);
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(ExecutionStatus.SUCCESS)
           .stateExecutionData(artifactCollectionExecutionData)
           .errorMessage("Collected artifact [" + lastCollectedArtifact.getBuildNo() + "] for artifact source ["
@@ -115,7 +114,7 @@ public class ArtifactCollectionState extends State {
 
     String resumeId = delayEventHelper.delay(60, Collections.emptyMap());
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .correlationIds(singletonList(resumeId))
         .stateExecutionData(artifactCollectionExecutionData)
@@ -146,7 +145,7 @@ public class ArtifactCollectionState extends State {
 
       String resumeId = delayEventHelper.delay(DELAY_TIME_IN_SEC, Collections.emptyMap());
 
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .async(true)
           .correlationIds(asList(resumeId))
           .stateExecutionData(artifactCollectionExecutionData)
@@ -160,7 +159,10 @@ public class ArtifactCollectionState extends State {
     updateArtifactCollectionExecutionData(context, artifactCollectionExecutionData);
 
     addBuildExecutionSummary(context, artifactCollectionExecutionData, artifactStream);
-    return anExecutionResponse().stateExecutionData(artifactCollectionExecutionData).executionStatus(SUCCESS).build();
+    return ExecutionResponse.builder()
+        .stateExecutionData(artifactCollectionExecutionData)
+        .executionStatus(SUCCESS)
+        .build();
   }
 
   private String getEvaluatedBuildNo(ExecutionContext context) {

@@ -26,7 +26,6 @@ import static software.wings.common.NotificationMessageResolver.NotificationMess
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_STATE_CHANGE_NOTIFICATION;
 import static software.wings.security.SecretManager.JWT_CATEGORY.EXTERNAL_SERVICE_SECRET;
 import static software.wings.service.impl.slack.SlackApprovalUtils.createSlackApprovalMessage;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.states.ApprovalState.ApprovalStateType.USER_GROUP;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -172,7 +171,7 @@ public class ApprovalState extends State {
                                                    .build();
 
     if (disable) {
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(SKIPPED)
           .errorMessage("Approval step is disabled. Approval is skipped.")
           .stateExecutionData(executionData)
@@ -308,7 +307,7 @@ public class ApprovalState extends State {
 
     try {
       approvalPolingService.save(approvalPollingJobEntity);
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .async(true)
           .executionStatus(PAUSED)
           .errorMessage("Waiting for Approval")
@@ -316,7 +315,7 @@ public class ApprovalState extends State {
           .stateExecutionData(executionData)
           .build();
     } catch (WingsException e) {
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(FAILED)
           .errorMessage("Failed to schedule Approval" + e.getMessage())
           .stateExecutionData(executionData)
@@ -330,7 +329,7 @@ public class ApprovalState extends State {
     jiraApprovalParams.setIssueId(context.renderExpression(jiraApprovalParams.getIssueId()));
 
     if (ExpressionEvaluator.containsVariablePattern(jiraApprovalParams.getIssueId())) {
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(FAILED)
           .errorMessage("Expression not rendered for Jira issue Id: " + jiraApprovalParams.getIssueId())
           .stateExecutionData(executionData)
@@ -348,7 +347,7 @@ public class ApprovalState extends State {
         jiraApprovalParams, app.getAccountId(), app.getAppId(), context.getWorkflowExecutionId(), approvalId);
 
     if (jiraExecutionData.getExecutionStatus().equals(FAILED)) {
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(FAILED)
           .errorMessage(jiraExecutionData.getErrorMessage())
           .stateExecutionData(executionData)
@@ -360,7 +359,7 @@ public class ApprovalState extends State {
     executionData.setCurrentStatus(jiraExecutionData.getCurrentStatus());
 
     if (jiraExecutionData.getCurrentStatus().equalsIgnoreCase(jiraApprovalParams.getApprovalValue())) {
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(SUCCESS)
           .errorMessage("Approval provided on ticket: " + jiraExecutionData.getIssueKey())
           .stateExecutionData(executionData)
@@ -369,7 +368,7 @@ public class ApprovalState extends State {
 
     if (jiraApprovalParams.getRejectionValue() != null
         && jiraExecutionData.getCurrentStatus().equalsIgnoreCase(jiraApprovalParams.getRejectionValue())) {
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(REJECTED)
           .errorMessage("Rejection provided on ticket: " + jiraExecutionData.getIssueKey())
           .stateExecutionData(executionData)
@@ -395,7 +394,7 @@ public class ApprovalState extends State {
             .build();
     try {
       approvalPolingService.save(approvalPollingJobEntity);
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .async(true)
           .executionStatus(PAUSED)
           .errorMessage(jiraExecutionData.getErrorMessage())
@@ -403,7 +402,7 @@ public class ApprovalState extends State {
           .stateExecutionData(executionData)
           .build();
     } catch (WingsException e) {
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(FAILED)
           .errorMessage("Failed to schedule Approval" + e.getMessage())
           .stateExecutionData(executionData)
@@ -417,7 +416,7 @@ public class ApprovalState extends State {
     servicenowApprovalParams.setIssueNumber(context.renderExpression(servicenowApprovalParams.getIssueNumber()));
 
     if (ExpressionEvaluator.containsVariablePattern(servicenowApprovalParams.getIssueNumber())) {
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(FAILED)
           .errorMessage("Expression not rendered for issue Number: " + servicenowApprovalParams.getIssueNumber())
           .stateExecutionData(executionData)
@@ -440,7 +439,7 @@ public class ApprovalState extends State {
       executionData.setTicketType(servicenowApprovalParams.getTicketType());
 
       if (serviceNowExecutionData.getCurrentState().equalsIgnoreCase(servicenowApprovalParams.getApprovalValue())) {
-        return anExecutionResponse()
+        return ExecutionResponse.builder()
             .executionStatus(SUCCESS)
             .errorMessage("Approval provided on ticket: " + servicenowApprovalParams.getIssueNumber())
             .stateExecutionData(executionData)
@@ -449,7 +448,7 @@ public class ApprovalState extends State {
 
       if (servicenowApprovalParams.getRejectionValue() != null
           && serviceNowExecutionData.getCurrentState().equalsIgnoreCase(servicenowApprovalParams.getRejectionValue())) {
-        return anExecutionResponse()
+        return ExecutionResponse.builder()
             .executionStatus(REJECTED)
             .errorMessage("Rejection provided on ticket: " + servicenowApprovalParams.getIssueNumber())
             .stateExecutionData(executionData)
@@ -457,7 +456,7 @@ public class ApprovalState extends State {
       }
 
     } catch (WingsException we) {
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(FAILED)
           .errorMessage(we.getParams().get("message").toString())
           .stateExecutionData(executionData)
@@ -485,7 +484,7 @@ public class ApprovalState extends State {
 
     try {
       approvalPolingService.save(approvalPollingJobEntity);
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .async(true)
           .executionStatus(PAUSED)
           .errorMessage("Waiting for approval on Ticket " + servicenowApprovalParams.getIssueNumber())
@@ -493,7 +492,7 @@ public class ApprovalState extends State {
           .stateExecutionData(executionData)
           .build();
     } catch (WingsException e) {
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(FAILED)
           .errorMessage("Failed to schedule Approval" + e.getMessage())
           .stateExecutionData(executionData)
@@ -507,7 +506,7 @@ public class ApprovalState extends State {
     executionData.setUserGroups(userGroups);
     updatePlaceholderValuesForSlackApproval(approvalId, accountId, placeholderValues, context);
     sendNotificationForUserGroupApproval(userGroups, appId, accountId, APPROVAL_NEEDED_NOTIFICATION, placeholderValues);
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .executionStatus(PAUSED)
         .correlationIds(asList(approvalId))
@@ -675,7 +674,7 @@ public class ApprovalState extends State {
     setPipelineVariables(context);
     approvalPolingService.delete(executionData.getApprovalId());
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .stateExecutionData(executionData)
         .executionStatus(approvalNotifyResponse.getStatus())
         .errorMessage(errorMessage)
@@ -694,7 +693,7 @@ public class ApprovalState extends State {
     // release
     JiraPollingJob.deleteJob(serviceJobScheduler, executionData.getApprovalId());
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .stateExecutionData(executionData)
         .executionStatus(approvalNotifyResponse.getStatus())
         .errorMessage(approvalNotifyResponse.getErrorMsg() + executionData.getIssueKey())
@@ -714,7 +713,7 @@ public class ApprovalState extends State {
     ServiceNowApprovalJob.deleteJob(serviceJobScheduler, executionData.getApprovalId());
 
     setPipelineVariables(context);
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .stateExecutionData(executionData)
         .executionStatus(approvalNotifyResponse.getStatus())
         .errorMessage(approvalNotifyResponse.getErrorMsg() + servicenowApprovalParams.getIssueNumber())
@@ -730,7 +729,7 @@ public class ApprovalState extends State {
           userGroups, app.getUuid(), app.getAccountId(), APPROVAL_STATE_CHANGE_NOTIFICATION, placeholderValues);
     }
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .stateExecutionData(executionData)
         .executionStatus(approvalNotifyResponse.getStatus())
         .build();

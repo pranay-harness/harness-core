@@ -15,7 +15,6 @@ import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.COMMAND;
 
 import com.google.common.collect.Lists;
@@ -495,7 +494,7 @@ public class CommandState extends State {
       return handleException(context, executionDataBuilder, activityId, appId, e);
     }
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Collections.singletonList(activityId))
         .stateExecutionData(executionDataBuilder.withDelegateTaskId(delegateTaskId).build())
@@ -901,7 +900,7 @@ public class CommandState extends State {
       return handleException(context, executionDataBuilder, activityId, appId, e);
     }
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Collections.singletonList(activityId))
         .stateExecutionData(executionDataBuilder.withDelegateTaskId(delegateTaskId).build())
@@ -919,7 +918,7 @@ public class CommandState extends State {
     }
     handleCommandException(context, activityId, appId);
     updateWorkflowExecutionStats(ExecutionStatus.FAILED, context);
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .executionStatus(ExecutionStatus.FAILED)
         .stateExecutionData(executionDataBuilder.build())
         .errorMessage(ExceptionUtils.getMessage(e))
@@ -1208,7 +1207,7 @@ public class CommandState extends State {
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     if (response.size() != 1) {
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(ExecutionStatus.FAILED)
           .errorMessage("Unexpected number of response data items")
           .build();
@@ -1217,7 +1216,7 @@ public class CommandState extends State {
     ResponseData notifyResponseData = response.values().iterator().next();
 
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .executionStatus(ExecutionStatus.FAILED)
           .errorMessage(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage())
           .build();
@@ -1247,7 +1246,7 @@ public class CommandState extends State {
         (CountsByStatuses) commandStateExecutionData.getExecutionSummary().get("breakdown").getValue());
     commandStateExecutionData.setDelegateMetaInfo(commandExecutionResult.getDelegateMetaInfo());
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .executionStatus(executionStatus)
         .errorMessage(commandExecutionResult.getErrorMessage())
         .stateExecutionData(commandStateExecutionData)

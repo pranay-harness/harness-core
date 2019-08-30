@@ -8,7 +8,6 @@ import static software.wings.api.CommandStateExecutionData.Builder.aCommandState
 import static software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder.anInstanceElementListParam;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -180,7 +179,7 @@ public abstract class ContainerServiceDeploy extends State {
               .infrastructureMappingId(contextData.infrastructureMappingId)
               .build());
 
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .async(true)
           .correlationIds(singletonList(waitId))
           .stateExecutionData(executionData)
@@ -275,7 +274,7 @@ public abstract class ContainerServiceDeploy extends State {
       executionData.setDelegateMetaInfo(executionResult.getDelegateMetaInfo());
     }
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .stateExecutionData(executionData)
         .executionStatus(status)
         .contextElement(listParam)

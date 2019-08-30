@@ -20,7 +20,6 @@ import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.TaskType.TERRAFORM_PROVISION_TASK;
 import static software.wings.service.intfc.FileService.FileBucket.TERRAFORM_STATE;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Maps;
@@ -224,7 +223,7 @@ public abstract class TerraformProvisionState extends State {
             .workspace(terraformExecutionData.getWorkspace())
             .build();
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .stateExecutionData(terraformExecutionData)
         .contextElement(inheritPlanElement)
         .notifyElement(inheritPlanElement)
@@ -243,7 +242,7 @@ public abstract class TerraformProvisionState extends State {
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
     saveUserInputs(context, terraformExecutionData, terraformProvisioner);
     if (terraformExecutionData.getExecutionStatus() == FAILED) {
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .stateExecutionData(terraformExecutionData)
           .executionStatus(terraformExecutionData.getExecutionStatus())
           .errorMessage(terraformExecutionData.getErrorMessage())
@@ -265,7 +264,7 @@ public abstract class TerraformProvisionState extends State {
       updateActivityStatus(activityId, context.getAppId(), terraformExecutionData.getExecutionStatus());
 
       // subsequent execution
-      return anExecutionResponse()
+      return ExecutionResponse.builder()
           .stateExecutionData(terraformExecutionData)
           .contextElement(outputInfoElement)
           .notifyElement(outputInfoElement)
@@ -506,7 +505,7 @@ public abstract class TerraformProvisionState extends State {
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
-    return anExecutionResponse()
+    return ExecutionResponse.builder()
         .async(true)
         .correlationIds(singletonList(activityId))
         .delegateTaskId(delegateTaskId)
