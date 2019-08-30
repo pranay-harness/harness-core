@@ -197,7 +197,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
   @Override
   public PageResponse<InfrastructureDefinition> list(PageRequest<InfrastructureDefinition> pageRequest) {
-    if (pageRequest.getUriInfo().getQueryParameters().containsKey("serviceId")) {
+    if (pageRequest.getUriInfo() != null && pageRequest.getUriInfo().getQueryParameters().containsKey("serviceId")) {
       applyServiceFilter(pageRequest);
     }
     return wingsPersistence.query(InfrastructureDefinition.class, pageRequest);
