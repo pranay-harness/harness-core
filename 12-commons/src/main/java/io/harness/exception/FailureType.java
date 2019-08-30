@@ -1,8 +1,5 @@
-package software.wings.beans;
+package io.harness.exception;
 
-/**
- * Created by rishi on 10/31/16.
- */
 public enum FailureType {
   CONNECTIVITY,
   AUTHENTICATION,
