@@ -45,6 +45,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -124,11 +125,22 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
   private boolean canAssignScopes(
       Delegate delegate, String appId, String envId, String infraMappingId, TaskGroup taskGroup) {
-    return (isEmpty(delegate.getIncludeScopes())
-               || (delegate.getIncludeScopes().stream().anyMatch(
+    List<DelegateScope> includeScopes = new ArrayList<>();
+    List<DelegateScope> excludeScopes = new ArrayList<>();
+
+    if (isNotEmpty(delegate.getIncludeScopes())) {
+      includeScopes = delegate.getIncludeScopes().stream().filter(Objects::nonNull).collect(toList());
+    }
+
+    if (isNotEmpty(delegate.getExcludeScopes())) {
+      excludeScopes = delegate.getExcludeScopes().stream().filter(Objects::nonNull).collect(toList());
+    }
+
+    return (isEmpty(includeScopes)
+               || (includeScopes.stream().anyMatch(
                       scope -> scopeMatch(scope, appId, envId, infraMappingId, taskGroup))))
-        && (isEmpty(delegate.getExcludeScopes())
-               || (delegate.getExcludeScopes().stream().noneMatch(
+        && (isEmpty(excludeScopes)
+               || (excludeScopes.stream().noneMatch(
                       scope -> scopeMatch(scope, appId, envId, infraMappingId, taskGroup))));
   }
 

@@ -40,6 +40,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 
 import java.time.Clock;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -514,5 +515,71 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     String delegateId = assignDelegateService.pickFirstAttemptDelegate(delegateTask);
 
     assertThat(delegateId).isEqualTo(DELEGATE_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testAssignDelegateWithNullIncludeScope() {
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .async(true)
+                                    .accountId(ACCOUNT_ID)
+                                    .appId(APP_ID)
+                                    .envId(ENV_ID)
+                                    .data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                                    .build();
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .uuid(DELEGATE_ID)
+                            .includeScopes(singletonList(null))
+                            .excludeScopes(emptyList())
+                            .build();
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testAssignDelegateWithNullExcludeScope() {
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .async(true)
+                                    .accountId(ACCOUNT_ID)
+                                    .appId(APP_ID)
+                                    .envId(ENV_ID)
+                                    .data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                                    .build();
+
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .uuid(DELEGATE_ID)
+                            .includeScopes(emptyList())
+                            .excludeScopes(singletonList(null))
+                            .build();
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testAssignDelegateWithMultipleIncludeScopes() {
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .async(true)
+                                    .accountId(ACCOUNT_ID)
+                                    .appId(APP_ID)
+                                    .envId(ENV_ID)
+                                    .data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                                    .build();
+
+    List<DelegateScope> includeScopes = new ArrayList<>();
+    includeScopes.add(null);
+    includeScopes.add(DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build());
+
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .uuid(DELEGATE_ID)
+                            .includeScopes(includeScopes)
+                            .excludeScopes(emptyList())
+                            .build();
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
   }
 }
