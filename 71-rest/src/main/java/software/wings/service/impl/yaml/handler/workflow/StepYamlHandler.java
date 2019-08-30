@@ -44,6 +44,7 @@ import software.wings.yaml.workflow.StepYaml;
 
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * @author rktummala on 10/28/17
@@ -139,7 +140,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
   @Override
   public StepYaml toYaml(GraphNode step, String appId) {
     Map<String, Object> properties = step.getProperties();
-    final Map<String, Object> outputProperties = Maps.newHashMap();
+    final Map<String, Object> outputProperties = new TreeMap<>();
     if (properties != null) {
       properties.forEach((name, value) -> {
         if (!shouldBeIgnored(name)) {
