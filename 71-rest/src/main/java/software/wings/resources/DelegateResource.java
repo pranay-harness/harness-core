@@ -54,6 +54,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
@@ -237,6 +238,7 @@ public class DelegateResource {
         delegate.setIncludeScopes(delegateScopes.getIncludeScopeIds()
                                       .stream()
                                       .map(s -> delegateScopeService.get(accountId, s))
+                                      .filter(Objects::nonNull)
                                       .collect(toList()));
       } else {
         delegate.setIncludeScopes(null);
@@ -245,6 +247,7 @@ public class DelegateResource {
         delegate.setExcludeScopes(delegateScopes.getExcludeScopeIds()
                                       .stream()
                                       .map(s -> delegateScopeService.get(accountId, s))
+                                      .filter(Objects::nonNull)
                                       .collect(toList()));
       } else {
         delegate.setExcludeScopes(null);
