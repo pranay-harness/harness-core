@@ -4,7 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static org.apache.commons.lang3.StringUtils.trim;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -98,7 +98,7 @@ public class SecretManagementResource {
       return new RestResponse<>(secretManager.listEncryptedSettingAttributes(accountId));
     } else {
       return new RestResponse<>(
-          secretManager.listEncryptedSettingAttributes(accountId, Lists.newArrayList(category.toUpperCase())));
+          secretManager.listEncryptedSettingAttributes(accountId, Sets.newHashSet(category.toUpperCase())));
     }
   }
 

@@ -37,7 +37,7 @@ import java.util.Date;
   }, options = @IndexOptions(name = "acctEncryptedDataIdx"))
 })
 public class SecretUsageLog extends Base {
-  @NotEmpty @Indexed private String encryptedDataId;
+  @NotEmpty private String encryptedDataId;
 
   @NotEmpty private String accountId;
 

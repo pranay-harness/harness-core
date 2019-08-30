@@ -40,6 +40,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.collect.TreeBasedTable;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
@@ -555,27 +556,34 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public Collection<SettingAttribute> listEncryptedSettingAttributes(String accountId) {
     return listEncryptedSettingAttributes(accountId,
-        Lists.newArrayList(SettingCategory.CLOUD_PROVIDER.name(), SettingCategory.CONNECTOR.name(),
+        Sets.newHashSet(SettingCategory.CLOUD_PROVIDER.name(), SettingCategory.CONNECTOR.name(),
             SettingCategory.SETTING.name(), SettingCategory.HELM_REPO.name()));
   }
 
   @Override
-  public Collection<SettingAttribute> listEncryptedSettingAttributes(String accountId, List<String> categories) {
+  public Collection<SettingAttribute> listEncryptedSettingAttributes(String accountId, Set<String> categories) {
     // 1. Fetch all setting attributes belonging to the specified category or all settings categories.
-    List<SettingAttribute> rv = new ArrayList<>();
+    List<SettingAttribute> settingAttributeList = new ArrayList<>();
     Set<String> settingAttributeIds = new HashSet<>();
-    try (HIterator<SettingAttribute> query = new HIterator<>(wingsPersistence.createQuery(SettingAttribute.class)
-                                                                 .filter(ACCOUNT_ID_KEY, accountId)
-                                                                 .field(SettingAttributeKeys.category)
-                                                                 .in(categories)
-                                                                 .fetch())) {
-      for (SettingAttribute settingAttribute : query) {
-        rv.add(settingAttribute);
-        settingAttributeIds.add(settingAttribute.getUuid());
-        if (settingAttribute.getValue() instanceof EncryptableSetting) {
-          maskEncryptedFields((EncryptableSetting) settingAttribute.getValue());
-        }
-      }
+
+    // Exclude STRING type of setting attribute as they are never displayed in secret management section.
+    Query<SettingAttribute> categoryQuery = wingsPersistence.createQuery(SettingAttribute.class)
+                                                .filter(ACCOUNT_ID_KEY, accountId)
+                                                .field(SettingAttributeKeys.category)
+                                                .in(categories)
+                                                .field(SettingAttribute.VALUE_TYPE_KEY)
+                                                .notIn(Lists.newArrayList(SettingVariableTypes.STRING));
+    loadSettingQueryResult(categoryQuery, settingAttributeIds, settingAttributeList);
+
+    // If SETTING category is included, then make sure WINRM related settings get loaded as it's category field is
+    // empty in persistence store and the filter need special handling.
+    if (categories.contains(SettingCategory.SETTING)) {
+      Query<SettingAttribute> winRmQuery =
+          wingsPersistence.createQuery(SettingAttribute.class)
+              .filter(ACCOUNT_ID_KEY, accountId)
+              .field(SettingAttribute.VALUE_TYPE_KEY)
+              .in(Lists.newArrayList(SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES));
+      loadSettingQueryResult(winRmQuery, settingAttributeIds, settingAttributeList);
     }
 
     // 2. Fetch children encrypted records associated with these setting attributes in a batch
@@ -595,16 +603,35 @@ public class SecretManagerImpl implements SecretManager {
     // 3. Set 'encryptionType' and 'encryptedBy' field of setting attributes based on children encrypted record
     // association
     Map<String, SecretManagerConfig> secretManagerConfigMap = getSecretManagerMap(accountId);
-    for (SettingAttribute settingAttribute : rv) {
+    // Create a new list, and only those setting attributes with encrypted record or in SETTING category will be
+    // retained.
+    List<SettingAttribute> finalList = new ArrayList<>();
+    for (SettingAttribute settingAttribute : settingAttributeList) {
       EncryptedData encryptedData = encryptedDataMap.get(settingAttribute.getUuid());
       if (encryptedData != null) {
         settingAttribute.setEncryptionType(encryptedData.getEncryptionType());
         settingAttribute.setEncryptedBy(
             getSecretManagerName(encryptedData.getKmsId(), encryptedData.getEncryptionType(), secretManagerConfigMap));
+        finalList.add(settingAttribute);
+      } else if (settingAttribute.getCategory() == SettingCategory.SETTING) {
+        finalList.add(settingAttribute);
       }
     }
 
-    return rv;
+    return finalList;
+  }
+
+  private void loadSettingQueryResult(
+      Query<SettingAttribute> query, Set<String> settingAttributeIds, List<SettingAttribute> settingAttributeList) {
+    try (HIterator<SettingAttribute> queryIter = new HIterator<>(query.fetch())) {
+      for (SettingAttribute settingAttribute : queryIter) {
+        settingAttributeList.add(settingAttribute);
+        settingAttributeIds.add(settingAttribute.getUuid());
+        if (settingAttribute.getValue() instanceof EncryptableSetting) {
+          maskEncryptedFields((EncryptableSetting) settingAttribute.getValue());
+        }
+      }
+    }
   }
 
   @Override

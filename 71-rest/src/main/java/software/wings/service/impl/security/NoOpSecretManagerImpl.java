@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Created by rsingh on 9/7/18.
@@ -95,7 +96,7 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public Collection<SettingAttribute> listEncryptedSettingAttributes(String accountId, List<String> categories) {
+  public Collection<SettingAttribute> listEncryptedSettingAttributes(String accountId, Set<String> categories) {
     return null;
   }
 

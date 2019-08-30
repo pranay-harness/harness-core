@@ -81,9 +81,17 @@ import javax.validation.Valid;
  * Created by anubhaw on 5/16/16.
  */
 @Entity(value = "settingAttributes")
-@Indexes(@Index(options = @IndexOptions(name = "locate", unique = true),
-    fields = { @Field("accountId")
-               , @Field("appId"), @Field("envId"), @Field("name"), @Field("value.type") }))
+@Indexes({
+  @Index(options = @IndexOptions(name = "locate", unique = true),
+      fields = { @Field("accountId")
+                 , @Field("appId"), @Field("envId"), @Field("name"), @Field("value.type") })
+  ,
+      @Index(options = @IndexOptions(name = "acctCatTypeIdx"),
+          fields = { @Field("accountId")
+                     , @Field("category"), @Field("value.type") }),
+      @Index(options = @IndexOptions(name = "acctValTypeIdx"), fields = { @Field("accountId")
+                                                                          , @Field("value.type") })
+})
 @HarnessExportableEntity
 @Data
 @EqualsAndHashCode(callSuper = false)
