@@ -43,7 +43,6 @@ import io.harness.context.GlobalContextData;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.eraro.ResponseMessage;
-import io.harness.exception.DelegateRetryableException;
 import io.harness.exception.ExplanationException;
 import io.harness.exception.FunctorException;
 import io.harness.exception.HintException;
@@ -187,7 +186,6 @@ public class HKryo extends Kryo {
     register(ResponseMessage.class, 5316);
     register(RestResponse.class, 5224);
 
-    register(DelegateRetryableException.class, 5521);
     register(ExplanationException.class, 5324);
     register(FunctorException.class, 5589);
     register(HintException.class, 5325);

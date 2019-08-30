@@ -5,9 +5,12 @@ import static java.util.stream.Collectors.joining;
 
 import io.harness.eraro.ResponseMessage;
 import io.harness.logging.ExceptionLogger;
+import lombok.extern.slf4j.Slf4j;
 
+import java.util.EnumSet;
 import javax.validation.ConstraintViolationException;
 
+@Slf4j
 public class ExceptionUtils {
   public static <T> T cause(Class<T> clazz, Throwable exception) {
     while (exception != null) {
@@ -17,6 +20,24 @@ public class ExceptionUtils {
       exception = exception.getCause();
     }
     return null;
+  }
+
+  public static EnumSet<FailureType> getFailureTypes(Throwable t) {
+    EnumSet<FailureType> failureTypes = EnumSet.noneOf(FailureType.class);
+
+    while (t != null) {
+      if (t instanceof WingsException) {
+        failureTypes.addAll(((WingsException) t).getFailureTypes());
+      }
+
+      t = t.getCause();
+    }
+
+    if (failureTypes.isEmpty()) {
+      logger.error("While determining the failureTypes, none was discovered for the following exception", t);
+    }
+
+    return failureTypes;
   }
 
   public static String getMessage(Throwable t) {

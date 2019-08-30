@@ -10,22 +10,22 @@ public class InvalidRequestException extends WingsException {
   private static final String MESSAGE_KEY = "message";
 
   public InvalidRequestException(String message) {
-    super(message, null, INVALID_REQUEST, Level.ERROR, null);
+    super(message, null, INVALID_REQUEST, Level.ERROR, null, null);
     super.param(MESSAGE_KEY, message);
   }
 
   public InvalidRequestException(String message, Throwable cause) {
-    super(message, cause, INVALID_REQUEST, Level.ERROR, null);
+    super(message, cause, INVALID_REQUEST, Level.ERROR, null, null);
     super.param(MESSAGE_KEY, message);
   }
 
   public InvalidRequestException(String message, EnumSet<ReportTarget> reportTargets) {
-    super(message, null, INVALID_REQUEST, Level.ERROR, reportTargets);
+    super(message, null, INVALID_REQUEST, Level.ERROR, reportTargets, null);
     super.param(MESSAGE_KEY, message);
   }
 
   public InvalidRequestException(String message, Throwable cause, EnumSet<ReportTarget> reportTargets) {
-    super(message, cause, INVALID_REQUEST, Level.ERROR, reportTargets);
+    super(message, cause, INVALID_REQUEST, Level.ERROR, reportTargets, null);
     super.param(MESSAGE_KEY, message);
   }
 }

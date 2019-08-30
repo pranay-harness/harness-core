@@ -12,7 +12,7 @@ public class KubernetesValuesException extends WingsException {
   }
 
   public KubernetesValuesException(String reason, Throwable cause) {
-    super(null, cause, KUBERNETES_VALUES_ERROR, Level.ERROR, null);
+    super(null, cause, KUBERNETES_VALUES_ERROR, Level.ERROR, null, null);
     super.param(REASON_ARG, reason);
   }
 }

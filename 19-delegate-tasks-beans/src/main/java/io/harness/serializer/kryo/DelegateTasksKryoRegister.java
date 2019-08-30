@@ -22,6 +22,7 @@ import io.harness.delegate.beans.executioncapability.TcpBasedExecutionCapability
 import io.harness.delegate.command.CommandExecutionData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.delegate.task.http.HttpTaskParameters;
@@ -47,6 +48,7 @@ import io.harness.serializer.KryoRegistrar;
 public class DelegateTasksKryoRegister implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
+    kryo.register(DelegateRetryableException.class, 5521);
     kryo.register(ShellScriptApprovalTaskParameters.class, 20001);
     kryo.register(HttpTaskParameters.class, 20002);
     kryo.register(ScriptType.class, 5253);

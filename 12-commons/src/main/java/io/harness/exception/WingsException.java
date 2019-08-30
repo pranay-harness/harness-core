@@ -66,13 +66,16 @@ public class WingsException extends RuntimeException {
 
   private Map<Class, Object> contextObjects = new HashMap<>();
 
+  private EnumSet<FailureType> failureTypes = EnumSet.noneOf(FailureType.class);
+
   @Builder
-  protected WingsException(
-      String message, Throwable cause, ErrorCode code, Level level, EnumSet<ReportTarget> reportTargets) {
+  protected WingsException(String message, Throwable cause, ErrorCode code, Level level,
+      EnumSet<ReportTarget> reportTargets, EnumSet<FailureType> failureTypes) {
     super(message == null ? code.name() : message, cause);
     this.code = code == null ? UNKNOWN_ERROR : code;
     this.level = level == null ? Level.ERROR : level;
     this.reportTargets = reportTargets == null ? USER_SRE : reportTargets;
+    this.failureTypes = failureTypes == null ? EnumSet.noneOf(FailureType.class) : failureTypes;
   }
 
   @Deprecated

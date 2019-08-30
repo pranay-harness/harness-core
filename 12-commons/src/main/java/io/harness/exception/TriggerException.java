@@ -8,6 +8,6 @@ import java.util.EnumSet;
 
 public class TriggerException extends WingsException {
   public TriggerException(String message, EnumSet<ReportTarget> reportTargets) {
-    super(message, null, INVALID_REQUEST, Level.ERROR, reportTargets);
+    super(message, null, INVALID_REQUEST, Level.ERROR, reportTargets, null);
   }
 }
