@@ -80,8 +80,6 @@ import software.wings.beans.command.Command.Builder;
 import software.wings.beans.command.CommandType;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
-import software.wings.scheduler.JiraPollingJob;
-import software.wings.scheduler.ServiceNowApprovalJob;
 import software.wings.security.SecretManager;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.JiraHelperService;
@@ -689,9 +687,6 @@ public class ApprovalState extends State {
     logger.info("Deleting job for approvalId: {}, workflowExecutionId: {} ", executionData.getApprovalId(),
         executionData.getWorkflowId());
     approvalPolingService.delete(executionData.getApprovalId());
-    // Todo: keeping this for backward compatibility and cleanup of old jobs. Can be removed a disconnected onprem
-    // release
-    JiraPollingJob.deleteJob(serviceJobScheduler, executionData.getApprovalId());
 
     return ExecutionResponse.builder()
         .stateExecutionData(executionData)
@@ -708,9 +703,6 @@ public class ApprovalState extends State {
     logger.info("Deleting job for approvalId: {}, workflowExecutionId: {} ", executionData.getApprovalId(),
         executionData.getWorkflowId());
     approvalPolingService.delete(executionData.getApprovalId());
-    // Todo: keeping this for backward compatibility and cleanup of old jobs. Can be removed a disconnected onprem
-    // release
-    ServiceNowApprovalJob.deleteJob(serviceJobScheduler, executionData.getApprovalId());
 
     setPipelineVariables(context);
     return ExecutionResponse.builder()
@@ -833,18 +825,11 @@ public class ApprovalState extends State {
   private void handleAbortEventJira(ExecutionContext context) {
     ApprovalStateExecutionData executionData = (ApprovalStateExecutionData) context.getStateExecutionData();
     approvalPolingService.delete(executionData.getApprovalId());
-    // Todo: keeping this for backward compatibility and cleanup of old jobs. Can be removed a disconnected onprem
-    // release
-    JiraPollingJob.deleteJob(serviceJobScheduler, executionData.getApprovalId());
   }
 
   private void handleAbortEventServiceNow(ExecutionContext context) {
     ApprovalStateExecutionData executionData = (ApprovalStateExecutionData) context.getStateExecutionData();
     approvalPolingService.delete(executionData.getApprovalId());
-
-    // Todo: keeping this for backward compatibility and cleanup of old jobs. Can be removed a disconnected onprem
-    // release
-    ServiceNowApprovalJob.deleteJob(serviceJobScheduler, executionData.getApprovalId());
   }
 
   @Override
