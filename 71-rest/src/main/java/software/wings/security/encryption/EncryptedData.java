@@ -50,8 +50,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 @HarnessExportableEntity
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Indexes({
-  @Index(fields = { @Field("name")
-                    , @Field("accountId") }, options = @IndexOptions(unique = true, name = "uniqueIdx"))
+  @Index(fields = { @Field("accountId")
+                    , @Field("name") }, options = @IndexOptions(unique = true, name = "acctNameIdx"))
   , @Index(fields = { @Field("accountId")
                       , @Field("kmsId") }, options = @IndexOptions(name = "acctKmsIdx"))
 })
@@ -70,7 +70,7 @@ public class EncryptedData extends Base implements EncryptedRecord, NameAccess {
 
   @NotEmpty @Default @Indexed private Set<String> parentIds = new HashSet<>();
 
-  @NotEmpty @Indexed private String accountId;
+  @NotEmpty private String accountId;
 
   @Default private boolean enabled = true;
 
