@@ -354,36 +354,40 @@ public class PcfClientImpl implements PcfClient {
     return processResult.getExitValue();
   }
 
-  private boolean doLogin(PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback)
+  boolean doLogin(PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback)
       throws IOException, InterruptedException, TimeoutException {
     executionLogCallback.saveExecutionLog("# Performing \"login\"");
-    ProcessExecutor processExecutor =
-        new ProcessExecutor()
-            .timeout(1, TimeUnit.MINUTES)
-            // echo $PASSWORD | cf login -a api.run.pivotal.io -o $ORG -s $SPACE --skip-ssl-validation -u $USER_NAME
-            .command("/bin/sh", "-c",
-                new StringBuilder(128)
-                    .append("echo ")
-                    .append(pcfRequestConfig.getPassword())
-                    .append(" | cf login -a ")
-                    .append(pcfRequestConfig.getEndpointUrl())
-                    .append(" -o ")
-                    .append(pcfRequestConfig.getOrgName())
-                    .append(" -s ")
-                    .append(pcfRequestConfig.getSpaceName())
-                    .append(" --skip-ssl-validation -u ")
-                    .append(pcfRequestConfig.getUserName())
-                    .toString())
-            .readOutput(true)
-            .redirectOutput(new LogOutputStream() {
-              @Override
-              protected void processLine(String line) {
-                executionLogCallback.saveExecutionLog(line);
-              }
-            });
+    String password = handlePwdForSpecialCharsForShell(pcfRequestConfig.getPassword());
+    ProcessExecutor processExecutor = new ProcessExecutor()
+                                          .timeout(1, TimeUnit.MINUTES)
+                                          .command("/bin/sh", "-c",
+                                              new StringBuilder(128)
+                                                  .append("cf login -a ")
+                                                  .append(pcfRequestConfig.getEndpointUrl())
+                                                  .append(" -o ")
+                                                  .append(pcfRequestConfig.getOrgName())
+                                                  .append(" -s ")
+                                                  .append(pcfRequestConfig.getSpaceName())
+                                                  .append(" --skip-ssl-validation -u ")
+                                                  .append(pcfRequestConfig.getUserName())
+                                                  .append(" -p ")
+                                                  .append(password)
+                                                  .toString())
+                                          .readOutput(true)
+                                          .redirectOutput(new LogOutputStream() {
+                                            @Override
+                                            protected void processLine(String line) {
+                                              executionLogCallback.saveExecutionLog(line);
+                                            }
+                                          });
     ProcessResult processResult = processExecutor.execute();
     executionLogCallback.saveExecutionLog(processResult.getExitValue() == 0 ? "# Login Successful" : "# Login Failed");
     return processResult.getExitValue() == 0;
+  }
+
+  String handlePwdForSpecialCharsForShell(String password) {
+    password = password.replace("\"", "\\\"");
+    return "\"" + password + "\"";
   }
 
   private void logManifestFile(String finalFilePath, ExecutionLogCallback executionLogCallback) {
