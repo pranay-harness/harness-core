@@ -44,6 +44,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.ExplanationException;
+import io.harness.exception.FailureType;
 import io.harness.exception.FunctorException;
 import io.harness.exception.HintException;
 import io.harness.exception.InvalidArgumentsException;
@@ -204,6 +205,7 @@ public class HKryo extends Kryo {
     register(GlobalContext.class, 1202);
     register(GlobalContextData.class, 1203);
     register(SocketException.class, 1204);
+    register(FailureType.class, 1205);
   }
 
   private Registration check(Registration registration, int id) {
