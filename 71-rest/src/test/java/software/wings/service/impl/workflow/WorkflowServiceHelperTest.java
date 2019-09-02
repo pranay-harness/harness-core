@@ -116,7 +116,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   public void testGenerateNewWorkflowPhaseStepsForECS_ReplicaStrategy() throws Exception {
     doReturn(Service.builder().uuid(SERVICE_ID).serviceCommands(null).build())
         .when(serviceResourceService)
-        .get(anyString(), anyString());
+        .getWithDetails(anyString(), anyString());
 
     EcsServiceSpecification specification = EcsServiceSpecification.builder().build();
     specification.setServiceSpecJson(null);
@@ -156,7 +156,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   public void testGenerateNewWorkflowPhaseStepsForECS_BG() throws Exception {
     doReturn(Service.builder().uuid(SERVICE_ID).serviceCommands(null).build())
         .when(serviceResourceService)
-        .get(anyString(), anyString());
+        .getWithDetails(anyString(), anyString());
 
     EcsServiceSpecification specification = EcsServiceSpecification.builder().build();
     specification.setServiceSpecJson(null);
@@ -176,7 +176,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   public void testGenerateNewWorkflowPhaseStepsForECS_DaemonStrategy() throws Exception {
     doReturn(Service.builder().uuid(SERVICE_ID).serviceCommands(null).build())
         .when(serviceResourceService)
-        .get(anyString(), anyString());
+        .getWithDetails(anyString(), anyString());
 
     EcsServiceSpecification serviceSpecification = EcsServiceSpecification.builder().build();
     serviceSpecification.setServiceSpecJson(null);
@@ -202,7 +202,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   public void testGenerateRollbackWorkflowPhaseForEcs_ReplicaStrategy() throws Exception {
     doReturn(Service.builder().uuid(SERVICE_ID).serviceCommands(null).build())
         .when(serviceResourceService)
-        .get(anyString(), anyString());
+        .getWithDetails(anyString(), anyString());
 
     EcsServiceSpecification serviceSpecification = EcsServiceSpecification.builder().build();
     serviceSpecification.setServiceSpecJson(null);
@@ -239,7 +239,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   public void testGenerateRollbackWorkflowPhaseForEcs_BG() {
     doReturn(Service.builder().uuid(SERVICE_ID).serviceCommands(null).build())
         .when(serviceResourceService)
-        .get(anyString(), anyString());
+        .getWithDetails(anyString(), anyString());
 
     EcsServiceSpecification serviceSpecification = EcsServiceSpecification.builder().build();
     serviceSpecification.setServiceSpecJson(null);
@@ -259,7 +259,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   public void testGenerateRollbackWorkflowPhaseForEcs_DaemonStrategy() throws Exception {
     doReturn(Service.builder().uuid(SERVICE_ID).serviceCommands(null).build())
         .when(serviceResourceService)
-        .get(anyString(), anyString());
+        .getWithDetails(anyString(), anyString());
 
     EcsServiceSpecification ecsServiceSpecification = EcsServiceSpecification.builder().build();
     ecsServiceSpecification.setServiceSpecJson(null);

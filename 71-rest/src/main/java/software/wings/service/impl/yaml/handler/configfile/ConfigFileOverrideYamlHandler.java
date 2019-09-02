@@ -87,7 +87,7 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
       ServiceTemplate serviceTemplate = serviceTemplateService.get(appId, bean.getTemplateId());
       notNullCheck("Service template is null for the given id:" + bean.getTemplateId(), serviceTemplate, USER);
       String serviceId = serviceTemplate.getServiceId();
-      Service service = serviceResourceService.get(appId, serviceId);
+      Service service = serviceResourceService.getWithDetails(appId, serviceId);
       notNullCheck("Service is null for the given id:" + serviceId, service, USER);
       serviceName = service.getName();
     } else {

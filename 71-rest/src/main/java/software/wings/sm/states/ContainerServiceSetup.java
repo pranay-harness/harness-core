@@ -134,7 +134,7 @@ public abstract class ContainerServiceSetup extends State {
       Application app = workflowStandardParams.getApp();
       Environment env = workflowStandardParams.getEnv();
 
-      Service service = serviceResourceService.get(app.getUuid(), serviceId);
+      Service service = serviceResourceService.getWithDetails(app.getUuid(), serviceId);
 
       logger.info("Setting up container service for account {}, app {}, service {}", app.getAccountId(), app.getUuid(),
           service.getName());

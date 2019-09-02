@@ -739,7 +739,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   public ServiceInstanceDashboard getServiceInstanceDashboard(String accountId, String appId, String serviceId) {
     List<CurrentActiveInstances> currentActiveInstances = getCurrentActiveInstances(accountId, appId, serviceId);
     List<DeploymentHistory> deploymentHistoryList = getDeploymentHistory(accountId, appId, serviceId);
-    Service service = serviceResourceService.get(appId, serviceId);
+    Service service = serviceResourceService.getWithDetails(appId, serviceId);
     Validator.notNullCheck("Service not found", service, USER);
     EntitySummary serviceSummary = getEntitySummary(service.getName(), serviceId, EntityType.SERVICE.name());
     return ServiceInstanceDashboard.builder()
@@ -868,7 +868,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
   private List<DeploymentHistory> getDeploymentHistory(String accountId, String appId, String serviceId) {
     List<DeploymentHistory> deploymentExecutionHistoryList = new ArrayList<>();
-    Service service = serviceResourceService.get(appId, serviceId);
+    Service service = serviceResourceService.getWithDetails(appId, serviceId);
     if (service == null) {
       return deploymentExecutionHistoryList;
     }

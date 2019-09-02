@@ -131,7 +131,7 @@ public class ServiceExpressionProcessorTest extends CategoryTest {
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(aWorkflowStandardParams().build());
     when(context.getContextElement(ContextElementType.SERVICE)).thenReturn(serviceCElement);
 
-    when(serviceResourceService.get(anyString(), anyString())).thenReturn(serviceC);
+    when(serviceResourceService.getWithDetails(anyString(), anyString())).thenReturn(serviceC);
 
     ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context);
     processor.setServiceResourceService(serviceResourceService);

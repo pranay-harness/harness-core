@@ -514,7 +514,8 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
     if (applicationManifest.getKind() != null && applicationManifest.getKind() == AppManifestKind.K8S_MANIFEST
         && applicationManifest.getServiceId() != null) {
-      Service service = serviceResourceService.get(applicationManifest.getAppId(), applicationManifest.getServiceId());
+      Service service =
+          serviceResourceService.getWithDetails(applicationManifest.getAppId(), applicationManifest.getServiceId());
       if (service != null && service.getDeploymentType() != null
           && service.getDeploymentType() == DeploymentType.HELM) {
         throw new InvalidRequestException("Local app manifest is not supported for helm service", USER);
@@ -672,7 +673,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
     List<ManifestFile> manifestFiles = manifestFilesFromGitFetchFilesResult(gitFetchFilesResult, prefixPath);
 
-    Service service = serviceResourceService.get(appId, appManifest.getServiceId());
+    Service service = serviceResourceService.getWithDetails(appId, appManifest.getServiceId());
     return yamlDirectoryService.generateManifestFileFolderNode(
         app.getAccountId(), service, manifestFiles, new DirectoryPath(MANIFEST_FILE_FOLDER));
   }

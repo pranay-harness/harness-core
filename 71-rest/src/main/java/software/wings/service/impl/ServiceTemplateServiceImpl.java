@@ -573,7 +573,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       return null;
     }
 
-    Service service = serviceResourceService.get(appId, serviceTemplate.getServiceId());
+    Service service = serviceResourceService.getWithDetails(appId, serviceTemplate.getServiceId());
     Environment env = environmentService.get(appId, envId, false);
 
     String configMapYaml = service.getConfigMapYaml();

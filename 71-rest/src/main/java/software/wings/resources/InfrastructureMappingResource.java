@@ -515,7 +515,7 @@ public class InfrastructureMappingResource {
 
   private void populateDeploymentTypeIfRequired(String appId, InfrastructureMapping infrastructureMapping) {
     if (isBlank(infrastructureMapping.getDeploymentType())) {
-      Service service = serviceResourceService.get(appId, infrastructureMapping.getServiceId());
+      Service service = serviceResourceService.getWithDetails(appId, infrastructureMapping.getServiceId());
       if (service == null || service.getDeploymentType() == null) {
         throw new InvalidRequestException("Deployment type cannot be empty");
       }

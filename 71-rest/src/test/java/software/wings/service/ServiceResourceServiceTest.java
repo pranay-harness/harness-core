@@ -354,7 +354,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   public void shouldGetService() {
     when(mockWingsPersistence.getWithAppId(Service.class, APP_ID, SERVICE_ID)).thenReturn(serviceBuilder.build());
     when(configService.getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID)).thenReturn(new ArrayList<>());
-    srs.get(APP_ID, SERVICE_ID);
+    srs.getWithDetails(APP_ID, SERVICE_ID);
     verify(mockWingsPersistence).getWithAppId(Service.class, APP_ID, SERVICE_ID);
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
   }

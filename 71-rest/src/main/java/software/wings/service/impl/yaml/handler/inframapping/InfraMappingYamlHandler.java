@@ -81,7 +81,7 @@ public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Ya
   }
 
   protected String getServiceName(String appId, String serviceId) {
-    Service service = serviceResourceService.get(appId, serviceId);
+    Service service = serviceResourceService.getWithDetails(appId, serviceId);
     notNullCheck("Service can't be found for Id:" + serviceId, service, USER);
     return service.getName();
   }

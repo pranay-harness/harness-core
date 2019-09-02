@@ -229,7 +229,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
   public void setup() throws IllegalAccessException {
     when(appService.get(APP_ID)).thenReturn(app);
     when(appService.getApplicationWithDefaults(APP_ID)).thenReturn(app);
-    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(service);
+    when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(service);
     when(serviceResourceService.get(SERVICE_ID)).thenReturn(service);
     when(artifactStreamServiceBindingService.listArtifactStreamIds(APP_ID, SERVICE_ID))
         .thenReturn(singletonList(ARTIFACT_STREAM_ID));

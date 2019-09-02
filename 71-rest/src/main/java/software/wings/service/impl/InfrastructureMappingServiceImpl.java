@@ -1909,7 +1909,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     Application app = appService.get(infrastructureMapping.getAppId());
     Environment env = envService.get(infrastructureMapping.getAppId(), infrastructureMapping.getEnvId(), false);
     Service service =
-        serviceResourceService.get(infrastructureMapping.getAppId(), infrastructureMapping.getServiceId());
+        serviceResourceService.getWithDetails(infrastructureMapping.getAppId(), infrastructureMapping.getServiceId());
 
     Map<String, Object> context = new HashMap<>();
     context.put("app", app);
@@ -2036,7 +2036,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     Application app = appService.get(infrastructureMapping.getAppId());
     Environment env = envService.get(infrastructureMapping.getAppId(), infrastructureMapping.getEnvId(), false);
     Service service =
-        serviceResourceService.get(infrastructureMapping.getAppId(), infrastructureMapping.getServiceId());
+        serviceResourceService.getWithDetails(infrastructureMapping.getAppId(), infrastructureMapping.getServiceId());
 
     Map<String, Object> context = new HashMap<>();
     context.put("app", app);
@@ -2096,7 +2096,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @Override
   public Map<DeploymentType, List<SettingVariableTypes>> listInfraTypes(String appId, String envId, String serviceId) {
-    Service service = serviceResourceService.get(appId, serviceId);
+    Service service = serviceResourceService.getWithDetails(appId, serviceId);
     ArtifactType artifactType = service.getArtifactType();
     Map<DeploymentType, List<SettingVariableTypes>> infraTypes = new HashMap<>();
 

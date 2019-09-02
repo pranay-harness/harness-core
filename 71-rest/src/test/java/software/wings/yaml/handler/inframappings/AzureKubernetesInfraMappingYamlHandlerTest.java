@@ -114,7 +114,7 @@ public class AzureKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandlerT
     when(containerService.validate(anyObject())).thenReturn(true);
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(containerService);
     when(serviceResourceService.getServiceByName(anyString(), anyString())).thenReturn(getService());
-    when(serviceResourceService.get(anyString(), anyString())).thenReturn(getService());
+    when(serviceResourceService.getWithDetails(anyString(), anyString())).thenReturn(getService());
     when(serviceTemplateService.getTemplateRefKeysByService(anyString(), anyString(), anyString()))
         .thenReturn(asList(new Key(ServiceTemplate.class, "serviceTemplates", SERVICE_ID)));
     when(serviceTemplateService.get(anyString(), anyString())).thenReturn(serviceTemplate);

@@ -190,7 +190,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     String deploymentType = Utils.getStringFromEnum(bean.getDeploymentType());
     String serviceName = null;
     if (isNotEmpty(bean.getServiceId())) {
-      Service service = serviceResourceService.get(appId, bean.getServiceId());
+      Service service = serviceResourceService.getWithDetails(appId, bean.getServiceId());
       serviceName = service != null ? service.getName() : null;
     }
 

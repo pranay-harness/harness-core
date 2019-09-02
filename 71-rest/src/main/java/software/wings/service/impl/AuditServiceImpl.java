@@ -562,7 +562,7 @@ public class AuditServiceImpl implements AuditService {
     try {
       if (entity instanceof ServiceVariable) {
         if (EntityType.SERVICE.name().equals(record.getAffectedResourceType())) {
-          entity = serviceResourceService.get(record.getAppId(), record.getAffectedResourceId());
+          entity = serviceResourceService.getWithDetails(record.getAppId(), record.getAffectedResourceId());
         } else if (EntityType.ENVIRONMENT.name().equals(record.getAffectedResourceType())) {
           entity = environmentService.get(record.getAppId(), record.getAffectedResourceId(), false);
         } else {

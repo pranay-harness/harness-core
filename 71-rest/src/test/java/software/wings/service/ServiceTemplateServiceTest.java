@@ -94,7 +94,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    */
   @Before
   public void setUp() throws Exception {
-    when(serviceResourceService.get(APP_ID, SERVICE_ID))
+    when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID))
         .thenReturn(Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build());
     when(wingsPersistence.createQuery(ServiceTemplate.class)).thenReturn(query);
     when(query.filter(any(), any())).thenReturn(query);

@@ -245,7 +245,7 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
 
   private <R> R obtainEntity(String appId, String envId, String entityId, String uuid, EntityType type) {
     if (type == EntityType.SERVICE) {
-      return (R) serviceResourceService.get(appId, entityId);
+      return (R) serviceResourceService.getWithDetails(appId, entityId);
     } else if (type == EntityType.SERVICE_TEMPLATE || type == EntityType.ENVIRONMENT) {
       String finalEnvId = null;
 

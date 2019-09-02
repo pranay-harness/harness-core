@@ -79,7 +79,7 @@ public class GcpClusterSetup extends State {
     SettingAttribute computeProviderSetting = settingsService.get(gcpInfraMapping.getComputeProviderSettingId());
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
         (EncryptableSetting) computeProviderSetting.getValue(), context.getAppId(), context.getWorkflowExecutionId());
-    String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
+    String serviceName = serviceResourceService.getWithDetails(app.getUuid(), serviceId).getName();
     if (isEmpty(zone)) {
       zone = "us-west1-a";
     }

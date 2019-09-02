@@ -48,7 +48,7 @@ public class ArtifactCollectionFailedAlert implements AlertData {
       title.append("of source ").append(artifactStream.getName()).append(' ');
       if (isNotBlank(appId) && !appId.equals(GLOBAL_APP_ID)) {
         if (isNotBlank(serviceId)) {
-          Service service = serviceResourceService.get(appId, serviceId);
+          Service service = serviceResourceService.getWithDetails(appId, serviceId);
           title.append("in service ").append(service.getName()).append(' ');
         }
         Application app = appService.get(appId);

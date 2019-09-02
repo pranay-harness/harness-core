@@ -398,7 +398,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         new Action(accountId, ActionType.CREATE_SERVICE));
 
     return LimitEnforcementUtils.withLimitCheck(checker, () -> {
-      Service originalService = get(appId, originalServiceId);
+      Service originalService = getWithDetails(appId, originalServiceId);
       Service clonedService = originalService.cloneInternal();
       clonedService.setName(service.getName());
       clonedService.setDescription(service.getDescription());
@@ -720,8 +720,13 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
-  public Service get(String appId, String serviceId) {
+  public Service getWithDetails(String appId, String serviceId) {
     return get(appId, serviceId, true);
+  }
+
+  @Override
+  public Service get(String appId, String serviceId) {
+    return get(appId, serviceId, false);
   }
 
   @Override
@@ -982,7 +987,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     ensureServiceCommandSafeToDelete(service, serviceCommand);
     deleteServiceCommand(service, serviceCommand, syncFromGit);
-    return get(service.getAppId(), service.getUuid());
+    return getWithDetails(service.getAppId(), service.getUuid());
   }
 
   private void deleteServiceCommand(Service service, ServiceCommand serviceCommand, boolean syncFromGit) {
@@ -1079,7 +1084,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public Service get(String appId, String serviceId, SetupStatus status) {
-    return get(appId, serviceId);
+    return getWithDetails(appId, serviceId);
   }
 
   @Override
@@ -1100,7 +1105,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     String appId = persistedContainerTask.getAppId();
     String accountId = appService.getAccountIdByAppId(appId);
-    Service service = get(appId, persistedContainerTask.getServiceId());
+    Service service = getWithDetails(appId, persistedContainerTask.getServiceId());
 
     Type type = isCreate ? Type.CREATE : Type.UPDATE;
     yamlPushService.pushYamlChangeSet(accountId, service, persistedContainerTask, type, containerTask.isSyncFromGit());
@@ -1117,7 +1122,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       return;
     }
 
-    Service service = get(appId, containerTask.getServiceId());
+    Service service = getWithDetails(appId, containerTask.getServiceId());
     if (wingsPersistence.delete(ContainerTask.class, appId, containerTaskId)) {
       yamlPushService.pushYamlChangeSet(accountId, service, containerTask, Type.DELETE, containerTask.isSyncFromGit());
     }
@@ -1172,7 +1177,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     String accountId = appService.getAccountIdByAppId(appId);
-    Service service = get(appId, ecsServiceSpecification.getServiceId());
+    Service service = getWithDetails(appId, ecsServiceSpecification.getServiceId());
 
     if (wingsPersistence.delete(EcsServiceSpecification.class, appId, ecsServiceSpecificationId)) {
       yamlPushService.pushYamlChangeSet(
@@ -1236,7 +1241,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     String appId = persistedHelmChartSpecification.getAppId();
     String accountId = appService.getAccountIdByAppId(appId);
-    Service service = get(appId, persistedHelmChartSpecification.getServiceId());
+    Service service = getWithDetails(appId, persistedHelmChartSpecification.getServiceId());
 
     Type type = isCreate ? Type.CREATE : Type.UPDATE;
     yamlPushService.pushYamlChangeSet(
@@ -1265,7 +1270,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     String appId = serviceSpecification.getAppId();
     String accountId = appService.getAccountIdByAppId(appId);
-    Service service = get(appId, serviceSpecification.getServiceId());
+    Service service = getWithDetails(appId, serviceSpecification.getServiceId());
 
     yamlPushService.pushYamlChangeSet(
         accountId, service, serviceSpecification, type, serviceSpecification.isSyncFromGit());
@@ -1286,7 +1291,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     String appId = helmChartSpecification.getAppId();
     String accountId = appService.getAccountIdByAppId(helmChartSpecification.getAppId());
-    Service service = get(appId, helmChartSpecification.getServiceId());
+    Service service = getWithDetails(appId, helmChartSpecification.getServiceId());
     wingsPersistence.delete(HelmChartSpecification.class, appId, helmChartSpecification.getUuid());
     yamlPushService.pushYamlChangeSet(
         accountId, service, helmChartSpecification, Type.DELETE, helmChartSpecification.isSyncFromGit());
@@ -1321,7 +1326,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     String appId = persistedPcfServiceSpecification.getAppId();
     String accountId = appService.getAccountIdByAppId(appId);
-    Service service = get(appId, persistedPcfServiceSpecification.getServiceId());
+    Service service = getWithDetails(appId, persistedPcfServiceSpecification.getServiceId());
 
     Type type = isCreate ? Type.CREATE : Type.UPDATE;
     yamlPushService.pushYamlChangeSet(
@@ -1339,7 +1344,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     String accountId = appService.getAccountIdByAppId(appId);
-    Service service = get(appId, pcfServiceSpecification.getServiceId());
+    Service service = getWithDetails(appId, pcfServiceSpecification.getServiceId());
 
     if (wingsPersistence.delete(PcfServiceSpecification.class, appId, pCFServiceSpecificationId)) {
       yamlPushService.pushYamlChangeSet(
@@ -1374,7 +1379,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     validateCommandName(serviceCommand.getCommand());
     addServiceCommand(appId, serviceId, serviceCommand, pushToYaml);
 
-    return get(appId, serviceId);
+    return getWithDetails(appId, serviceId);
   }
 
   @Override
@@ -1393,7 +1398,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       wingsPersistence.update(
           wingsPersistence.createQuery(ServiceCommand.class).filter(ID_KEY, serviceCommand.getUuid()), updateOperation);
     }
-    return get(appId, serviceId);
+    return getWithDetails(appId, serviceId);
   }
 
   private void validateCommandName(Command command) {
@@ -1505,7 +1510,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     yamlPushService.pushYamlChangeSet(
         accountId, savedServiceCommand, serviceCommand, Type.UPDATE, syncFromGit, isRename);
 
-    return get(appId, serviceId);
+    return getWithDetails(appId, serviceId);
   }
 
   private boolean updateLinkedTemplateServiceCommand(String appId, ServiceCommand serviceCommand,
@@ -1689,7 +1694,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         wingsPersistence.saveAndGet(UserDataSpecification.class, userDataSpecification);
     String appId = persistedUserDataSpec.getAppId();
     String accountId = appService.getAccountIdByAppId(appId);
-    Service service = get(appId, persistedUserDataSpec.getServiceId());
+    Service service = getWithDetails(appId, persistedUserDataSpec.getServiceId());
 
     Type type = isCreate ? Type.CREATE : Type.UPDATE;
     yamlPushService.pushYamlChangeSet(
@@ -1880,7 +1885,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         wingsPersistence.saveAndGet(LambdaSpecification.class, lambdaSpecification);
     String appId = persistedLambdaSpec.getAppId();
     String accountId = appService.getAccountIdByAppId(appId);
-    Service service = get(appId, persistedLambdaSpec.getServiceId());
+    Service service = getWithDetails(appId, persistedLambdaSpec.getServiceId());
 
     Type type = isCreate ? Type.CREATE : Type.UPDATE;
     yamlPushService.pushYamlChangeSet(
@@ -2394,7 +2399,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public Service getWithHelmValues(String appId, String serviceId, SetupStatus status) {
-    Service service = get(appId, serviceId);
+    Service service = getWithDetails(appId, serviceId);
 
     return updateServiceWithHelmValues(service);
   }

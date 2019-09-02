@@ -248,7 +248,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
       // TODO:: optimize this block.
       ServiceTemplate serviceTemplate = serviceTemplateService.get(
           instance.getAppId(), instance.getEnvId(), instance.getServiceTemplateId(), false, OBTAIN_VALUE);
-      Service service = serviceResourceService.get(instance.getAppId(), serviceTemplate.getServiceId());
+      Service service = serviceResourceService.getWithDetails(instance.getAppId(), serviceTemplate.getServiceId());
       Host host = hostService.getHostByEnv(instance.getAppId(), instance.getEnvId(), instance.getHostId());
       elements.add(convertToInstanceElement(instance, host, service, serviceTemplate));
     }

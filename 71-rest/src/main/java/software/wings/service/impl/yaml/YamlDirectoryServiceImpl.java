@@ -547,7 +547,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Override
   public DirectoryNode getApplicationManifestYamlFolderNode(
       @NotEmpty String accountId, @NotEmpty String appId, @NotEmpty String serviceId) {
-    Service service = serviceResourceService.get(appId, serviceId);
+    Service service = serviceResourceService.getWithDetails(appId, serviceId);
 
     return generateManifestFileFoldeNodeForServiceView(accountId, service);
   }
@@ -1830,7 +1830,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     Service service = null;
     Environment environment = null;
     if (isNotBlank(applicationManifest.getServiceId())) {
-      service = serviceResourceService.get(applicationManifest.getAppId(), applicationManifest.getServiceId());
+      service =
+          serviceResourceService.getWithDetails(applicationManifest.getAppId(), applicationManifest.getServiceId());
     }
     if (isNotBlank(applicationManifest.getEnvId())) {
       environment = environmentService.get(applicationManifest.getAppId(), applicationManifest.getEnvId(), true);

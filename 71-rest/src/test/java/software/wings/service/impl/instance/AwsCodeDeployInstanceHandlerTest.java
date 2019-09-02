@@ -169,7 +169,9 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
         .when(environmentService)
         .get(anyString(), anyString(), anyBoolean());
 
-    doReturn(Service.builder().name(SERVICE_NAME).build()).when(serviceResourceService).get(anyString(), anyString());
+    doReturn(Service.builder().name(SERVICE_NAME).build())
+        .when(serviceResourceService)
+        .getWithDetails(anyString(), anyString());
   }
 
   // 3 existing instances
