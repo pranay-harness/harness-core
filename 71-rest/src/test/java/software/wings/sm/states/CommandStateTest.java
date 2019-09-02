@@ -252,7 +252,7 @@ public class CommandStateTest extends WingsBaseTest {
    */
   @Before
   public void setUpMocks() throws IllegalAccessException {
-    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(SERVICE);
+    when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(SERVICE);
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, COMMAND_NAME))
         .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(command).build());
     when(appService.get(APP_ID)).thenReturn(anApplication().uuid(APP_ID).accountId(ACCOUNT_ID).name(APP_NAME).build());
@@ -330,7 +330,7 @@ public class CommandStateTest extends WingsBaseTest {
 
     verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START");
     verify(serviceResourceService).getFlattenCommandUnitList(APP_ID, SERVICE_ID, ENV_ID, "START");
-    verify(serviceResourceService).get(APP_ID, SERVICE_ID);
+    verify(serviceResourceService).getWithDetails(APP_ID, SERVICE_ID);
 
     verify(serviceInstanceService).get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
 
@@ -481,7 +481,7 @@ public class CommandStateTest extends WingsBaseTest {
         context, ImmutableMap.of(ACTIVITY_ID, CommandExecutionResult.builder().status(SUCCESS).build()));
 
     verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START");
-    verify(serviceResourceService).get(APP_ID, SERVICE_ID);
+    verify(serviceResourceService).getWithDetails(APP_ID, SERVICE_ID);
 
     verify(serviceInstanceService).get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
     verify(activityHelperService)
@@ -608,7 +608,7 @@ public class CommandStateTest extends WingsBaseTest {
 
     when(context.getArtifactForService(SERVICE_ID)).thenReturn(artifact);
 
-    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(SERVICE);
+    when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(SERVICE);
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START"))
         .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(command).build());
 
@@ -639,7 +639,7 @@ public class CommandStateTest extends WingsBaseTest {
                         .build());
 
     verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START");
-    verify(serviceResourceService).get(APP_ID, SERVICE_ID);
+    verify(serviceResourceService).getWithDetails(APP_ID, SERVICE_ID);
     verify(serviceInstanceService).get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
     verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "NON_EXISTENT_COMMAND");
     verify(serviceResourceService).getFlattenCommandUnitList(APP_ID, SERVICE_ID, ENV_ID, "START");

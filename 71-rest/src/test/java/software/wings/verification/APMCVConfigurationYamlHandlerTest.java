@@ -76,7 +76,7 @@ public class APMCVConfigurationYamlHandlerTest extends CategoryTest {
     FieldUtils.writeField(yamlHandler, "environmentService", environmentService, true);
 
     Service service = Service.builder().uuid(serviceId).name(serviceName).build();
-    when(serviceResourceService.get(appId, serviceId)).thenReturn(service);
+    when(serviceResourceService.getWithDetails(appId, serviceId)).thenReturn(service);
     when(serviceResourceService.getServiceByName(appId, serviceName)).thenReturn(service);
 
     Environment env = Environment.Builder.anEnvironment().uuid(envId).name(envName).build();

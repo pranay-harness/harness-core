@@ -175,7 +175,7 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
 
     when(serviceTemplateService.get(anyString(), anyString(), eq(TEMPLATE_ID), anyBoolean(), any()))
         .thenReturn(serviceTemplate);
-    when(serviceResourceServiceMock.get(anyString(), anyString()))
+    when(serviceResourceServiceMock.getWithDetails(anyString(), anyString()))
         .thenReturn(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build());
 
     instances.forEach(instance

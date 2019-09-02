@@ -195,7 +195,7 @@ public class WorkflowGenerator {
         infrastructureProvisionerGenerator.ensurePredefined(seed, owners, InfrastructureProvisioners.TERRAFORM_TEST);
 
     owners.obtainService(()
-                             -> serviceResourceService.get(infrastructureProvisioner.getAppId(),
+                             -> serviceResourceService.getWithDetails(infrastructureProvisioner.getAppId(),
                                  infrastructureProvisioner.getMappingBlueprints().iterator().next().getServiceId()));
 
     infrastructureMappingGenerator.ensurePredefined(seed, owners, InfrastructureMappings.TERRAFORM_AWS_SSH_TEST);

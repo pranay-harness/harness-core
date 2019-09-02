@@ -1599,7 +1599,7 @@ public class SecretTextTest extends WingsBaseTest {
               .isEqualTo(numOfServices * numOfServiceVariables - serviceVariableIndex);
           assertThat(newEncryptedData.getSearchTags().get(appName).get()).isEqualTo(serviceVariableIndex);
           String serviceId = serviceVariable.getEntityId();
-          String serviceName = serviceResourceService.get(appId, serviceId).getName();
+          String serviceName = serviceResourceService.getWithDetails(appId, serviceId).getName();
 
           if (j != numOfServiceVariables - 1) {
             assertThat(oldEncryptedData.getSearchTags().get(serviceName).get())
@@ -1641,7 +1641,7 @@ public class SecretTextTest extends WingsBaseTest {
           assertThat(newEncryptedData.getSearchTags().get(appName).get())
               .isEqualTo(numOfServices * numOfServiceVariables - serviceVariableIndex);
           String serviceId = serviceVariable.getEntityId();
-          String serviceName = serviceResourceService.get(appId, serviceId).getName();
+          String serviceName = serviceResourceService.getWithDetails(appId, serviceId).getName();
 
           if (j != numOfServiceVariables - 1) {
             assertThat(newEncryptedData.getSearchTags().get(serviceName).get())
@@ -1781,7 +1781,7 @@ public class SecretTextTest extends WingsBaseTest {
             String serviceTemplateId = serviceVariable.getEntityId();
             ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
             String serviceId = serviceTemplate.getServiceId();
-            String serviceName = serviceResourceService.get(appId, serviceId).getName();
+            String serviceName = serviceResourceService.getWithDetails(appId, serviceId).getName();
             if (j == numOfEnvs - 1 && k == numOfServiceVariables - 1) {
               assertThat(oldEncryptedData.getSearchTags().get(serviceName)).isNull();
             } else {
@@ -1824,7 +1824,7 @@ public class SecretTextTest extends WingsBaseTest {
             String serviceTemplateId = serviceVariable.getEntityId();
             ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
             String serviceId = serviceTemplate.getServiceId();
-            String serviceName = serviceResourceService.get(appId, serviceId).getName();
+            String serviceName = serviceResourceService.getWithDetails(appId, serviceId).getName();
 
             if (j == numOfEnvs - 1 && k == numOfServiceVariables - 1) {
               assertThat(newEncryptedData.getSearchTags().get(serviceName)).isNull();

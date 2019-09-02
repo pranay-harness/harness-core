@@ -687,7 +687,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
           if (targetServiceId == null) {
             continue;
           }
-          Service targetService = serviceResourceService.get(targetAppId, targetServiceId);
+          Service targetService = serviceResourceService.getWithDetails(targetAppId, targetServiceId);
           notNullCheck("Target Service", targetService, USER);
 
           String clonedEnvironmentUuid = clonedEnvironment.getUuid();

@@ -124,7 +124,7 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
     when(environmentService.get(APP_ID, ENV_ID)).thenReturn(environment);
 
     when(serviceResourceService.getServiceByName(anyString(), anyString())).thenReturn(service);
-    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(service);
+    when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(service);
 
     when(notificationSetupService.readNotificationGroupByName(anyString(), anyString())).thenReturn(notificationGroup);
     when(notificationSetupService.readNotificationGroup(anyString(), anyString())).thenReturn(notificationGroup);

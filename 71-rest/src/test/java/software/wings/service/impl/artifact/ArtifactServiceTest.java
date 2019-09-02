@@ -421,7 +421,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @Ignore("TODO: this test seems wrong, exposed after upgrading assertJ")
   public void shouldGetArtifactWithServices() {
-    when(serviceResourceService.get(APP_ID, SERVICE_ID))
+    when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID))
         .thenReturn(Service.builder().appId(APP_ID).artifactType(ArtifactType.WAR).uuid(SERVICE_ID).build());
     Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
     Artifact updatedArtifact = artifactService.get(savedArtifact.getUuid());

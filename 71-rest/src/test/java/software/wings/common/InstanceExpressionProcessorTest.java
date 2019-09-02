@@ -177,7 +177,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     SERVICE_TEMPLATE.setServiceId(SERVICE_ID);
     when(serviceTemplateServiceMock.get(anyString(), anyString(), anyString(), anyBoolean(), any()))
         .thenReturn(SERVICE_TEMPLATE);
-    when(serviceResourceServiceMock.get(anyString(), anyString()))
+    when(serviceResourceServiceMock.getWithDetails(anyString(), anyString()))
         .thenReturn(Service.builder().uuid("uuid1").name("svc1").build());
 
     instances.forEach(instance
@@ -418,7 +418,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
 
     when(serviceTemplateServiceMock.get(app.getAppId(), env.getUuid(), serviceTemplate.getUuid(), false, OBTAIN_VALUE))
         .thenReturn(serviceTemplate);
-    when(serviceResourceServiceMock.get(anyString(), anyString()))
+    when(serviceResourceServiceMock.getWithDetails(anyString(), anyString()))
         .thenReturn(Service.builder().uuid("uuid1").name("svc1").build());
 
     instances.forEach(instance

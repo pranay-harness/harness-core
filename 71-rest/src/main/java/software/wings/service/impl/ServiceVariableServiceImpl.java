@@ -463,7 +463,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     }
 
     if (!isEmpty(serviceId)) {
-      Service service = serviceResourceService.get(appId, serviceId);
+      Service service = serviceResourceService.getWithDetails(appId, serviceId);
       if (service != null) {
         encryptedData.addService(serviceId, service.getName());
       }
@@ -511,7 +511,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     }
 
     if (!isEmpty(serviceId)) {
-      encryptedData.removeService(serviceId, serviceResourceService.get(appId, serviceId).getName());
+      encryptedData.removeService(serviceId, serviceResourceService.getWithDetails(appId, serviceId).getName());
     }
 
     if (!isEmpty(envId) && !envId.equals(GLOBAL_ENV_ID)) {

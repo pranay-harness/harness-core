@@ -243,7 +243,7 @@ public abstract class InstanceHandler {
     Validator.notNullCheck("Application is null for the given appId: " + appId, application);
     Environment environment = environmentService.get(appId, infraMapping.getEnvId(), false);
     Validator.notNullCheck("Environment is null for the given id: " + infraMapping.getEnvId(), environment);
-    Service service = serviceResourceService.get(appId, infraMapping.getServiceId());
+    Service service = serviceResourceService.getWithDetails(appId, infraMapping.getServiceId());
     Validator.notNullCheck("Service is null for the given id: " + infraMapping.getServiceId(), service);
     String infraMappingType = infraMapping.getInfraMappingType();
 

@@ -136,7 +136,7 @@ public class AwsCodeDeployState extends State {
     Environment env = workflowStandardParams.getEnv();
 
     String envId = env.getUuid();
-    Service service = serviceResourceService.get(app.getUuid(), serviceId);
+    Service service = serviceResourceService.getWithDetails(app.getUuid(), serviceId);
     Command command =
         serviceResourceService.getCommandByName(app.getUuid(), serviceId, envId, getCommandName()).getCommand();
 

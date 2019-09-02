@@ -160,7 +160,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
         ServiceVariable parentServiceVariable =
             serviceVariableService.get(serviceVariable.getAppId(), parentServiceVariableId);
         String serviceId = parentServiceVariable.getEntityId();
-        Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceId);
+        Service service = serviceResourceService.getWithDetails(serviceVariable.getAppId(), serviceId);
         notNullCheck("Service not found for id: " + serviceId, service, USER);
         return service.getName();
       } else {
@@ -168,7 +168,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
             serviceTemplateService.get(serviceVariable.getAppId(), serviceVariable.getEntityId());
         notNullCheck("Service template not found for id: " + serviceVariable.getEntityId(), serviceTemplate, USER);
         String serviceId = serviceTemplate.getServiceId();
-        Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceId);
+        Service service = serviceResourceService.getWithDetails(serviceVariable.getAppId(), serviceId);
         notNullCheck("Service not found for id: " + serviceId, service, USER);
         return service.getName();
       }

@@ -60,7 +60,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
   public ArtifactStreamBinding create(
       @NotEmpty String appId, @NotEmpty String serviceId, ArtifactStreamBinding artifactStreamBinding) {
     // TODO: ASR: add validations for artifact streams - types, permissions, etc.
-    Service service = serviceResourceService.get(appId, serviceId);
+    Service service = serviceResourceService.getWithDetails(appId, serviceId);
     if (service == null) {
       throw new InvalidRequestException("Service does not exist", USER);
     }
@@ -100,7 +100,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
   public ArtifactStreamBinding update(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String name,
       ArtifactStreamBinding artifactStreamBinding) {
     // TODO: ASR: add validations for artifact streams - types, permissions, etc.
-    Service service = serviceResourceService.get(appId, serviceId);
+    Service service = serviceResourceService.getWithDetails(appId, serviceId);
     if (service == null) {
       throw new InvalidRequestException("Service does not exist", USER);
     }
@@ -141,7 +141,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
 
   @Override
   public void delete(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String name) {
-    Service service = serviceResourceService.get(appId, serviceId);
+    Service service = serviceResourceService.getWithDetails(appId, serviceId);
     if (service == null) {
       throw new InvalidRequestException("Service does not exist", USER);
     }

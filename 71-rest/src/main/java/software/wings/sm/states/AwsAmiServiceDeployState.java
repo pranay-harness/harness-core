@@ -158,7 +158,7 @@ public class AwsAmiServiceDeployState extends State {
 
     Application app = workflowStandardParams.getApp();
     Environment env = workflowStandardParams.getEnv();
-    Service service = serviceResourceService.get(app.getUuid(), serviceId);
+    Service service = serviceResourceService.getWithDetails(app.getUuid(), serviceId);
 
     Artifact artifact = ((DeploymentExecutionContext) context).getDefaultArtifactForService(serviceId);
     if (artifact == null) {
@@ -489,7 +489,7 @@ public class AwsAmiServiceDeployState extends State {
 
     String serviceId = phaseElement.getServiceElement().getUuid();
     Environment env = workflowStandardParams.getEnv();
-    Service service = serviceResourceService.get(app.getUuid(), serviceId);
+    Service service = serviceResourceService.getWithDetails(app.getUuid(), serviceId);
     Key<ServiceTemplate> serviceTemplateKey =
         serviceTemplateService.getTemplateRefKeysByService(app.getUuid(), serviceId, env.getUuid()).get(0);
 

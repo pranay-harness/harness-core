@@ -913,7 +913,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
 
     applicationManifest.setServiceId("testservice");
     Service service = Service.builder().build();
-    when(serviceResourceService.get(any(), any())).thenReturn(service);
+    when(serviceResourceService.getWithDetails(any(), any())).thenReturn(service);
     applicationManifestServiceImpl.validateLocalAppManifest(applicationManifest);
 
     service.setDeploymentType(DeploymentType.KUBERNETES);

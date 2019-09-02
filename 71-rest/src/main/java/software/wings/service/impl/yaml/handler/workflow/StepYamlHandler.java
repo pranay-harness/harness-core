@@ -210,7 +210,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
         return;
       case "serviceId":
         String serviceId = (String) objectValue;
-        Service service = serviceResourceService.get(appId, serviceId);
+        Service service = serviceResourceService.getWithDetails(appId, serviceId);
         notNullCheck("Service is null for the given id:" + serviceId, service, USER);
         outputProperties.put("serviceName", service.getName());
         return;

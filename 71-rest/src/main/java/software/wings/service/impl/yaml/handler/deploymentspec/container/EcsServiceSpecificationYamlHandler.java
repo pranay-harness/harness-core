@@ -25,7 +25,7 @@ public class EcsServiceSpecificationYamlHandler
 
   @Override
   public Yaml toYaml(EcsServiceSpecification bean, String appId) {
-    Service service = serviceResourceService.get(appId, bean.getServiceId());
+    Service service = serviceResourceService.getWithDetails(appId, bean.getServiceId());
     return Yaml.builder()
         .harnessApiVersion(getHarnessApiVersion())
         .type(YamlHandlerFactory.ECS_SERVICE_SPEC)

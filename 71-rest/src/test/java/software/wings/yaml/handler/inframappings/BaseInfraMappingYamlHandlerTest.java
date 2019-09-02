@@ -96,7 +96,7 @@ public class BaseInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(environment);
 
     when(serviceResourceService.getServiceByName(anyString(), anyString())).thenReturn(service);
-    when(serviceResourceService.get(anyString(), anyString())).thenReturn(service);
+    when(serviceResourceService.getWithDetails(anyString(), anyString())).thenReturn(service);
     when(serviceTemplateService.getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID))
         .thenReturn(singletonList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(aServiceTemplate().withUuid(TEMPLATE_ID).build());

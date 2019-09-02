@@ -348,7 +348,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .thenReturn(Environment.Builder.anEnvironment().uuid(ENV_ID).name(ENV_NAME).appId(APP_ID).build());
 
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(service);
-    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(service);
+    when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(service);
     when(serviceResourceService.fetchServicesByUuids(APP_ID, asList(SERVICE_ID))).thenReturn(asList(service));
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
         .thenReturn(anAwsInfrastructureMapping()
@@ -459,7 +459,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldCloneWorkflowAcrossApps() {
-    when(serviceResourceService.get(TARGET_APP_ID, TARGET_SERVICE_ID))
+    when(serviceResourceService.getWithDetails(TARGET_APP_ID, TARGET_SERVICE_ID))
         .thenReturn(Service.builder().uuid(TARGET_SERVICE_ID).artifactType(WAR).build());
     when(serviceResourceService.get(TARGET_APP_ID, TARGET_SERVICE_ID, false))
         .thenReturn(Service.builder().uuid(TARGET_SERVICE_ID).artifactType(WAR).build());
@@ -488,10 +488,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test(expected = WingsException.class)
   @Category(UnitTests.class)
   public void shouldCloneWorkflowAcrossAppsDifferentArtifactType() {
-    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(service);
+    when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(service);
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
         .thenReturn(Service.builder().uuid(SERVICE_ID).artifactType(DOCKER).build());
-    when(serviceResourceService.get(TARGET_APP_ID, TARGET_SERVICE_ID))
+    when(serviceResourceService.getWithDetails(TARGET_APP_ID, TARGET_SERVICE_ID))
         .thenReturn(Service.builder().uuid(TARGET_SERVICE_ID).artifactType(WAR).build());
     when(serviceResourceService.get(TARGET_APP_ID, TARGET_SERVICE_ID, false))
         .thenReturn(Service.builder().uuid(TARGET_SERVICE_ID).artifactType(WAR).build());
@@ -703,7 +703,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(serviceResourceService.get(APP_ID, SERVICE_ID, true))
         .thenReturn(Service.builder().uuid(SERVICE_ID).serviceCommands(ImmutableList.of(serviceCommand)).build());
 
-    when(serviceResourceService.get(APP_ID, SERVICE_ID))
+    when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID))
         .thenReturn(Service.builder().uuid(SERVICE_ID).serviceCommands(ImmutableList.of(serviceCommand)).build());
 
     Workflow workflow2 = workflowService.createWorkflow(constructBasicWorkflow());
@@ -2740,7 +2740,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldTestWorkflowHasSshInfraMapping() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(Service.builder().uuid(SERVICE_ID).build());
-    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(Service.builder().uuid(SERVICE_ID).build());
+    when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID))
+        .thenReturn(Service.builder().uuid(SERVICE_ID).build());
     when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.SSH);
     Workflow workflow1 = createCanaryWorkflow();
 
@@ -2759,7 +2760,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldTemplatizeAppDElkState() {
-    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(Service.builder().uuid(SERVICE_ID).build());
+    when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID))
+        .thenReturn(Service.builder().uuid(SERVICE_ID).build());
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(Service.builder().uuid(SERVICE_ID).build());
 
     Workflow workflow1 = constructCanaryWorkflowWithPhase();

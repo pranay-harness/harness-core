@@ -307,7 +307,7 @@ public class CommandState extends State {
 
       String serviceTemplateId = instanceElement.getServiceTemplateElement().getUuid();
       ServiceTemplate serviceTemplate = serviceTemplateService.get(appId, serviceTemplateId);
-      Service service = serviceResourceService.get(appId, serviceTemplate.getServiceId());
+      Service service = serviceResourceService.getWithDetails(appId, serviceTemplate.getServiceId());
       Host host =
           hostService.getHostByEnv(serviceInstance.getAppId(), serviceInstance.getEnvId(), serviceInstance.getHostId());
 
@@ -707,7 +707,7 @@ public class CommandState extends State {
     if (infrastructureMappingId != null) {
       infrastructureMapping = infrastructureMappingService.get(appId, infrastructureMappingId);
       if (infrastructureMapping != null) {
-        service = serviceResourceService.get(appId, infrastructureMapping.getServiceId());
+        service = serviceResourceService.getWithDetails(appId, infrastructureMapping.getServiceId());
         if (instanceElement == null) {
           serviceTemplate = serviceTemplateHelper.fetchServiceTemplate(infrastructureMapping);
         }

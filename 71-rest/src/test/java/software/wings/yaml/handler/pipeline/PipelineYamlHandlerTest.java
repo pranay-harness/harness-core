@@ -163,7 +163,7 @@ public class PipelineYamlHandlerTest extends BaseYamlHandlerTest {
 
     Service service = Service.builder().name(SERVICE_NAME).uuid(SERVICE_ID).artifactType(WAR).build();
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(service);
-    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(service);
+    when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(service);
     when(accountService.get(anyString())).thenReturn(account);
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_WORKFLOW)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_WORKFLOW));

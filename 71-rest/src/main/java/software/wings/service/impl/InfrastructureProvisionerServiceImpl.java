@@ -258,11 +258,12 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     }
 
     if (isNotEmpty(provisioner.getMappingBlueprints())) {
-      detailsBuilder.services(provisioner.getMappingBlueprints()
-                                  .stream()
-                                  .map(InfrastructureMappingBlueprint::getServiceId)
-                                  .map(serviceId -> serviceResourceService.get(provisioner.getAppId(), serviceId))
-                                  .collect(toMap(service -> service.getName(), service -> service.getUuid())));
+      detailsBuilder.services(
+          provisioner.getMappingBlueprints()
+              .stream()
+              .map(InfrastructureMappingBlueprint::getServiceId)
+              .map(serviceId -> serviceResourceService.getWithDetails(provisioner.getAppId(), serviceId))
+              .collect(toMap(service -> service.getName(), service -> service.getUuid())));
     }
 
     return detailsBuilder.build();

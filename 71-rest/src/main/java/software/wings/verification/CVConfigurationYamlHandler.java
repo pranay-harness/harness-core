@@ -40,7 +40,7 @@ public abstract class CVConfigurationYamlHandler<Y extends CVConfigurationYaml, 
 
     Application application = appService.get(bean.getAppId());
     Environment environment = environmentService.get(application.getUuid(), bean.getEnvId());
-    Service service = serviceResourceService.get(application.getUuid(), bean.getServiceId());
+    Service service = serviceResourceService.getWithDetails(application.getUuid(), bean.getServiceId());
 
     yaml.setHarnessApplicationName(application.getName());
     yaml.setEnvName(environment.getName());

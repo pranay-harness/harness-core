@@ -974,7 +974,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     // TODO: ASR: IMP: hack to make yaml push work as yaml changes require binding info but the binding info is deleted
     // in parallel
-    artifactStream.setService(serviceResourceService.get(appId, serviceId));
+    artifactStream.setService(serviceResourceService.getWithDetails(appId, serviceId));
 
     // NOTE: artifactStream and binding must be created atomically
     ArtifactStream savedArtifactStream = create(artifactStream, validate);
@@ -1010,7 +1010,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     // TODO: ASR: IMP: hack to make yaml push work as yaml changes require binding info but the binding info is deleted
     // in parallel
-    artifactStream.setService(serviceResourceService.get(appId, serviceId));
+    artifactStream.setService(serviceResourceService.getWithDetails(appId, serviceId));
 
     // NOTE: artifactStream and binding must be deleted atomically
     boolean retVal = delete(appId, artifactStream, forceDelete, syncFromGit);

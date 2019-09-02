@@ -2433,7 +2433,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Service service;
     switch (artifactVariable.getEntityType()) {
       case SERVICE:
-        service = serviceResourceService.get(appId, artifactVariable.getEntityId());
+        service = serviceResourceService.getWithDetails(appId, artifactVariable.getEntityId());
         if (service == null) {
           return displayInfo;
         }

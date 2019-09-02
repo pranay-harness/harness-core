@@ -201,7 +201,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     when(appService.get(APP_ID)).thenReturn(app);
     when(envService.get(APP_ID, ENV_ID, false)).thenReturn(env);
-    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(service);
+    when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(service);
     when(app.getName()).thenReturn(APP_NAME);
     when(env.getName()).thenReturn(ENV_NAME);
     when(service.getName()).thenReturn(SERVICE_NAME);

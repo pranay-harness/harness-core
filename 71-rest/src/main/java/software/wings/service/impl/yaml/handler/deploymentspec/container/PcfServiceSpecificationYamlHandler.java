@@ -26,7 +26,7 @@ public class PcfServiceSpecificationYamlHandler
 
   @Override
   public Yaml toYaml(PcfServiceSpecification bean, String appId) {
-    Service service = serviceResourceService.get(appId, bean.getServiceId());
+    Service service = serviceResourceService.getWithDetails(appId, bean.getServiceId());
     return Yaml.builder()
         .harnessApiVersion(getHarnessApiVersion())
         .type(DeploymentType.PCF.name())

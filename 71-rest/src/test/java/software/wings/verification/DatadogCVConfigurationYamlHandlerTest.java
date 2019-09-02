@@ -76,7 +76,7 @@ public class DatadogCVConfigurationYamlHandlerTest extends CategoryTest {
     when(environmentService.get(appId, envId)).thenReturn(env);
 
     Service service = Service.builder().uuid(serviceId).name(serviceName).build();
-    when(serviceResourceService.get(appId, serviceId)).thenReturn(service);
+    when(serviceResourceService.getWithDetails(appId, serviceId)).thenReturn(service);
     when(serviceResourceService.getServiceByName(appId, serviceName)).thenReturn(service);
 
     Application app = Application.Builder.anApplication().name(appName).uuid(appId).build();

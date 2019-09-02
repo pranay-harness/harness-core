@@ -575,7 +575,7 @@ public class YamlHelper {
 
   public String getServiceNameFromArtifactId(String applicationId, String artifactStreamId) {
     String serviceId = artifactStreamService.get(artifactStreamId).getServiceId();
-    return serviceResourceService.get(applicationId, serviceId).getName();
+    return serviceResourceService.getWithDetails(applicationId, serviceId).getName();
   }
 
   public ArtifactStream getArtifactStreamWithName(String applicationId, String serviceName, String artifactStreamName) {

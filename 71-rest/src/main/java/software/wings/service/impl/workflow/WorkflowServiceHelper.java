@@ -483,7 +483,7 @@ public class WorkflowServiceHelper {
 
   public void generateNewWorkflowPhaseStepsForSpotInstBlueGreen(
       String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
-    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+    Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
     if (serviceSetupRequired) {
@@ -535,7 +535,7 @@ public class WorkflowServiceHelper {
 
   public void generateNewWorkflowPhaseStepsForAWSAmiBlueGreen(
       String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired, boolean isDynamicInfrastructure) {
-    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+    Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
@@ -599,7 +599,7 @@ public class WorkflowServiceHelper {
   public void generateNewWorkflowPhaseStepsForAWSAmi(String appId, WorkflowPhase workflowPhase,
       boolean serviceSetupRequired, boolean isDynamicInfrastructure,
       OrchestrationWorkflowType orchestrationWorkflowType) {
-    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+    Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
 
@@ -648,7 +648,7 @@ public class WorkflowServiceHelper {
   }
 
   public void generateNewWorkflowPhaseStepsForAWSLambda(String appId, String envId, WorkflowPhase workflowPhase) {
-    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+    Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
@@ -668,7 +668,7 @@ public class WorkflowServiceHelper {
   }
 
   public void generateNewWorkflowPhaseStepsForAWSCodeDeploy(String appId, WorkflowPhase workflowPhase) {
-    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+    Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
@@ -719,7 +719,7 @@ public class WorkflowServiceHelper {
 
   public void generateNewWorkflowPhaseStepsForECS(String appId, WorkflowPhase workflowPhase,
       boolean serviceSetupRequired, OrchestrationWorkflowType orchestrationWorkflowType) {
-    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+    Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
@@ -788,7 +788,7 @@ public class WorkflowServiceHelper {
 
   public void generateNewWorkflowPhaseStepsForECSBlueGreenRoute53(
       String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
-    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+    Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
@@ -826,7 +826,7 @@ public class WorkflowServiceHelper {
 
   public void generateNewWorkflowPhaseStepsForECSBlueGreen(
       String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
-    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+    Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
@@ -955,7 +955,7 @@ public class WorkflowServiceHelper {
       throw new InvalidRequestException("DaemonSet and StatefulSet are not supported with Blue/Green Deployment", USER);
     }
 
-    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+    Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
@@ -1016,7 +1016,7 @@ public class WorkflowServiceHelper {
 
   public void generateNewWorkflowPhaseStepsForPCF(String appId, String envId, WorkflowPhase workflowPhase,
       boolean serviceSetupRequired, OrchestrationWorkflowType orchestrationWorkflowType) {
-    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+    Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
@@ -1051,7 +1051,7 @@ public class WorkflowServiceHelper {
 
   public void generateNewWorkflowPhaseStepsForHelm(
       String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
-    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+    Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
@@ -1069,7 +1069,7 @@ public class WorkflowServiceHelper {
 
   public void generateNewWorkflowPhaseStepsForKubernetes(String appId, WorkflowPhase workflowPhase,
       boolean serviceSetupRequired, OrchestrationWorkflowType orchestrationWorkflowType) {
-    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+    Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
@@ -1137,7 +1137,7 @@ public class WorkflowServiceHelper {
       throw new InvalidRequestException("DaemonSet and StatefulSet are not supported with Blue/Green Deployment", USER);
     }
 
-    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+    Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
@@ -1233,7 +1233,7 @@ public class WorkflowServiceHelper {
       throw new InvalidRequestException("Unsupported state type: " + stateType, USER);
     }
 
-    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+    Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
@@ -1562,7 +1562,7 @@ public class WorkflowServiceHelper {
   }
 
   public WorkflowPhase generateRollbackWorkflowPhaseForSSH(String appId, WorkflowPhase workflowPhase) {
-    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+    Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
     InfrastructureMapping infrastructureMapping =

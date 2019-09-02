@@ -105,6 +105,7 @@ public interface ServiceResourceService extends OwnedByApplication {
    * @param serviceId the service id
    * @return the service
    */
+  Service getWithDetails(@NotEmpty String appId, @NotEmpty String serviceId);
   Service get(@NotEmpty String appId, @NotEmpty String serviceId);
 
   /**

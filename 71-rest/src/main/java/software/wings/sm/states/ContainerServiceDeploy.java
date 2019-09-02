@@ -326,7 +326,7 @@ public abstract class ContainerServiceDeploy extends State {
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
       app = workflowStandardParams.getApp();
       env = workflowStandardParams.getEnv();
-      service = containerServiceDeploy.serviceResourceService.get(appId, serviceId);
+      service = containerServiceDeploy.serviceResourceService.getWithDetails(appId, serviceId);
       command = containerServiceDeploy.serviceResourceService
                     .getCommandByName(appId, serviceId, env.getUuid(), containerServiceDeploy.getCommandName())
                     .getCommand();
