@@ -9,7 +9,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.stream.Stream;
 
 public class DuplicateFieldException extends WingsException {
-  private static final String MESSAGE_KEY = "message";
+  private static final String MESSAGE_ARG = "message";
 
   public DuplicateFieldException(Pair<String, String> args) {
     super(null, null, DUPLICATE_FIELD, Level.ERROR, null, null);
@@ -18,6 +18,6 @@ public class DuplicateFieldException extends WingsException {
 
   public DuplicateFieldException(String message) {
     super(null, null, DUPLICATE_FIELD, Level.ERROR, null, null);
-    super.param(MESSAGE_KEY, message);
+    super.param(MESSAGE_ARG, message);
   }
 }
