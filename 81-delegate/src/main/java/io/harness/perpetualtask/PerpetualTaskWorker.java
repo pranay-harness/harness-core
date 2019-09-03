@@ -59,7 +59,7 @@ public class PerpetualTaskWorker implements Runnable {
   }
 
   public void updateAssignedTaskIds() {
-    logger.debug("Updating the list of assigned tasks..");
+    logger.info("Updating the list of assigned tasks.. {} ", delegateId);
     PerpetualTaskIdList list = serviceBlockingStub.listTaskIds(DelegateId.newBuilder().setId(delegateId).build());
     assignedTasks = new HashSet<>(list.getTaskIdsList());
   }
@@ -74,17 +74,21 @@ public class PerpetualTaskWorker implements Runnable {
   }
 
   protected void startTask(PerpetualTaskId taskId) throws Exception {
-    PerpetualTaskContext context = getTaskContext(taskId);
-    PerpetualTaskParams params = context.getTaskParams();
-    PerpetualTaskSchedule schedule = context.getTaskSchedule();
-    long interval = Durations.toSeconds(schedule.getInterval());
-    long timeout = Durations.toMillis(schedule.getTimeout());
+    try {
+      PerpetualTaskContext context = getTaskContext(taskId);
+      PerpetualTaskParams params = context.getTaskParams();
+      PerpetualTaskSchedule schedule = context.getTaskSchedule();
+      long interval = Durations.toSeconds(schedule.getInterval());
+      long timeout = Durations.toMillis(schedule.getTimeout());
 
-    PerpetualTaskFactory factory = factoryMap.get(getTaskType(params));
-    PerpetualTask task = factory.newTask(taskId, params);
-    runningTaskMap.put(taskId, task);
+      PerpetualTaskFactory factory = factoryMap.get(getTaskType(params));
+      PerpetualTask task = factory.newTask(taskId, params);
+      runningTaskMap.put(taskId, task);
 
-    Void v = simpleTimeLimiter.callWithTimeout(task, timeout, TimeUnit.MILLISECONDS, true);
+      Void v = simpleTimeLimiter.callWithTimeout(task, timeout, TimeUnit.MILLISECONDS, true);
+    } catch (Exception ex) {
+      logger.error("Exception is {} ", ex);
+    }
     // TODO: support interval
     // ScheduledFuture<?> taskHandle =
     //    scheduledService.scheduleAtFixedRate(taskFactory.newTask(taskId, params), 0, interval, TimeUnit.SECONDS);

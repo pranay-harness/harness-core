@@ -1,4 +1,4 @@
-package software.wings.delegatetasks.aws.perpetualtask;
+package io.harness.perpetualtask.ecs;
 
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_STOP;
@@ -6,9 +6,10 @@ import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_STOP;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import com.google.inject.assistedinject.Assisted;
 
 import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ecs.model.Attribute;
 import com.amazonaws.services.ecs.model.ContainerInstance;
 import com.amazonaws.services.ecs.model.ContainerInstanceStatus;
 import com.amazonaws.services.ecs.model.DesiredStatus;
@@ -33,9 +34,14 @@ import io.harness.event.payloads.Lifecycle.EventType;
 import io.harness.event.payloads.ReservedResource;
 import io.harness.exception.WingsException;
 import io.harness.grpc.utils.HTimestamps;
+import io.harness.perpetualtask.AbstractPerpetualTask;
+import io.harness.perpetualtask.PerpetualTaskId;
+import io.harness.perpetualtask.PerpetualTaskParams;
+import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
-import software.wings.service.impl.aws.model.AwsEcsListClusterServicesRequest;
+import software.wings.beans.AwsConfig;
 import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
 
@@ -53,38 +59,56 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Singleton
 @Slf4j
-public class EcsPerpetualTask {
-  @Inject private AwsEcsHelperServiceDelegate ecsHelperServiceDelegate;
-  @Inject private AwsEc2HelperServiceDelegate ec2ServiceDelegate;
-  @Inject EventPublisher eventPublisher;
+public class EcsPerpetualTask extends AbstractPerpetualTask {
+  private AwsEcsHelperServiceDelegate ecsHelperServiceDelegate;
+  private AwsEc2HelperServiceDelegate ec2ServiceDelegate;
+  private EventPublisher eventPublisher;
+  private EcsPerpetualTaskParams ecsPerpetualTaskParams;
 
   private Cache<String, EcsActiveInstancesCache> cache = Caffeine.newBuilder().build();
 
   private static final String INSTANCE_TERMINATED_NAME = "terminated";
+  private static final String ECS_OS_TYPE = "ecs.os-type";
 
-  public void run(AwsEcsListClusterServicesRequest awsEcsListClusterServicesRequest) {
+  @Inject
+  public EcsPerpetualTask(@Assisted PerpetualTaskId taskId, @Assisted PerpetualTaskParams params,
+      AwsEcsHelperServiceDelegate ecsHelperServiceDelegate, AwsEc2HelperServiceDelegate ec2ServiceDelegate,
+      EventPublisher eventPublisher) throws Exception {
+    super(taskId);
+    this.ecsHelperServiceDelegate = ecsHelperServiceDelegate;
+    this.ec2ServiceDelegate = ec2ServiceDelegate;
+    this.eventPublisher = eventPublisher;
+    this.ecsPerpetualTaskParams = params.getCustomizedParams().unpack(EcsPerpetualTaskParams.class);
+  }
+
+  @Override
+  public Void call() throws Exception {
     try {
-      logger.info("ECS Perpetual cluster service request");
+      String clusterName = ecsPerpetualTaskParams.getClusterName();
+      String region = ecsPerpetualTaskParams.getRegion();
+      logger.info("Task params cluster name {} region {} ", clusterName, region);
+      AwsConfig awsConfig = (AwsConfig) KryoUtils.asObject(ecsPerpetualTaskParams.getAwsConfig().toByteArray());
+      List<EncryptedDataDetail> encryptionDetails =
+          (List<EncryptedDataDetail>) KryoUtils.asObject(ecsPerpetualTaskParams.getEncryptionDetail().toByteArray());
       Instant startTime = Instant.now();
-      String clusterName = awsEcsListClusterServicesRequest.getCluster();
-      Instant lastProcessedTime = fetchLastProcessedTimestamp(clusterName);
-      List<ContainerInstance> containerInstances = listContainerInstances(awsEcsListClusterServicesRequest);
-      Set<String> instanceIds = fetchEc2InstanceIds(awsEcsListClusterServicesRequest, containerInstances);
-      List<Instance> instances = listEc2Instances(awsEcsListClusterServicesRequest, instanceIds);
 
+      Instant lastProcessedTime = fetchLastProcessedTimestamp(clusterName);
+      List<ContainerInstance> containerInstances =
+          listContainerInstances(clusterName, region, awsConfig, encryptionDetails);
+      Set<String> instanceIds = fetchEc2InstanceIds(clusterName, containerInstances);
+      List<Instance> instances = listEc2Instances(region, awsConfig, encryptionDetails, instanceIds);
       Map<String, String> taskArnServiceNameMap = new HashMap<>();
-      loadTaskArnServiceNameMap(awsEcsListClusterServicesRequest, taskArnServiceNameMap);
-      List<Task> tasks = listTask(awsEcsListClusterServicesRequest);
+      loadTaskArnServiceNameMap(clusterName, region, awsConfig, encryptionDetails, taskArnServiceNameMap);
+      List<Task> tasks = listTask(clusterName, region, awsConfig, encryptionDetails);
 
       Set<String> currentActiveEc2InstanceIds = new HashSet<>();
-      publishEc2InstanceEvent(clusterName, currentActiveEc2InstanceIds, instances);
+      publishEc2InstanceEvent(clusterName, region, currentActiveEc2InstanceIds, instances);
       Set<String> currentActiveContainerInstanceArns = getCurrentActiveContainerInstanceArns(containerInstances);
       publishContainerInstanceEvent(
-          clusterName, currentActiveContainerInstanceArns, lastProcessedTime, containerInstances);
+          clusterName, region, currentActiveContainerInstanceArns, lastProcessedTime, containerInstances);
       Set<String> currentActiveTaskArns = new HashSet<>();
-      publishTaskEvent(clusterName, currentActiveTaskArns, lastProcessedTime, tasks, taskArnServiceNameMap);
+      publishTaskEvent(clusterName, region, currentActiveTaskArns, lastProcessedTime, tasks, taskArnServiceNameMap);
 
       updateActiveInstanceCache(clusterName, currentActiveEc2InstanceIds, currentActiveContainerInstanceArns,
           currentActiveTaskArns, startTime);
@@ -93,6 +117,7 @@ public class EcsPerpetualTask {
     } catch (Exception ex) {
       throw new WingsException("Exception while executing task: ", ex);
     }
+    return null;
   }
 
   private void publishEcsClusterSyncEvent(String clusterName, Set<String> activeEc2InstanceIds,
@@ -109,17 +134,13 @@ public class EcsPerpetualTask {
     eventPublisher.publishMessage(ecsSyncEvent);
   }
 
-  private void publishTaskEvent(String clusterName, Set<String> currentActiveTaskArns, Instant lastProcessedTime,
-      List<Task> tasks, Map<String, String> taskArnServiceNameMap) {
+  private void publishTaskEvent(String clusterName, String region, Set<String> currentActiveTaskArns,
+      Instant lastProcessedTime, List<Task> tasks, Map<String, String> taskArnServiceNameMap) {
     Set<String> activeTaskArns = fetchActiveTaskArns(clusterName);
     logger.info("Active tasks {} task size {} ", activeTaskArns, tasks.size());
     publishMissingTaskLifecycleEvent(activeTaskArns, tasks);
 
     for (Task task : tasks) {
-      if (null != task.getStoppedAt() && taskStoppedEventRequired(lastProcessedTime, task, activeTaskArns)) {
-        publishTaskLifecycleEvent(task.getTaskArn(), task.getStoppedAt(), EVENT_TYPE_STOP);
-      }
-
       if (null == task.getStoppedAt()) {
         currentActiveTaskArns.add(task.getTaskArn());
       }
@@ -136,7 +157,8 @@ public class EcsPerpetualTask {
                                                                    .setTaskArn(task.getTaskArn())
                                                                    .setLaunchType(task.getLaunchType())
                                                                    .setClusterArn(task.getClusterArn())
-                                                                   .setDesiredStatus(task.getDesiredStatus());
+                                                                   .setDesiredStatus(task.getDesiredStatus())
+                                                                   .setRegion(region);
 
         if (null != taskArnServiceNameMap.get(task.getTaskArn())) {
           ecsTaskDescriptionBuilder.setServiceName(taskArnServiceNameMap.get(task.getTaskArn()));
@@ -150,8 +172,12 @@ public class EcsPerpetualTask {
                 .setEcsTaskDescription(ecsTaskDescriptionBuilder.build())
                 .setEcsTaskResource(ReservedResource.newBuilder().setCpu(cpu).setMemory(memory).build())
                 .build();
-        logger.info("Task published Message {} ", ecsTaskInfo.toString());
+        logger.debug("Task published Message {} ", ecsTaskInfo.toString());
         eventPublisher.publishMessage(ecsTaskInfo);
+      }
+
+      if (null != task.getStoppedAt() && taskStoppedEventRequired(lastProcessedTime, task, activeTaskArns)) {
+        publishTaskLifecycleEvent(task.getTaskArn(), task.getStoppedAt(), EVENT_TYPE_STOP);
       }
     }
   }
@@ -193,6 +219,7 @@ public class EcsPerpetualTask {
   private void publishTaskLifecycleEvent(String instanceId, Date date, EventType eventType) {
     EcsTaskLifecycle ecsTaskLifecycle =
         EcsTaskLifecycle.newBuilder().setLifecycle(createLifecycle(instanceId, date, eventType)).build();
+    logger.debug("Task Lifecycle event {} ", ecsTaskLifecycle.toString());
     eventPublisher.publishMessage(ecsTaskLifecycle);
   }
 
@@ -200,7 +227,7 @@ public class EcsPerpetualTask {
     return containerInstances.stream().map(ContainerInstance::getContainerInstanceArn).collect(Collectors.toSet());
   }
 
-  private void publishContainerInstanceEvent(String clusterName, Set<String> currentActiveArns,
+  private void publishContainerInstanceEvent(String clusterName, String region, Set<String> currentActiveArns,
       Instant lastProcessedTime, List<ContainerInstance> containerInstances) {
     logger.info("Container instance size is {} ", containerInstances.size());
     Set<String> activeContainerInstancesArns = fetchActiveContainerInstancesArns(clusterName);
@@ -220,6 +247,10 @@ public class EcsPerpetualTask {
         int memory = resourceMap.get("MEMORY").getIntegerValue();
         int cpu = resourceMap.get("CPU").getIntegerValue();
 
+        Map<String, Attribute> attributeMap = containerInstance.getAttributes().stream().collect(
+            Collectors.toMap(Attribute::getName, attribute -> attribute));
+        Attribute attribute = attributeMap.get(ECS_OS_TYPE);
+
         EcsContainerInstanceInfo ecsContainerInstanceInfo =
             EcsContainerInstanceInfo.newBuilder()
                 .setEcsContainerInstanceDescription(
@@ -227,6 +258,8 @@ public class EcsPerpetualTask {
                         .setClusterArn(clusterName)
                         .setContainerInstanceArn(containerInstance.getContainerInstanceArn())
                         .setEc2InstanceId(containerInstance.getEc2InstanceId())
+                        .setOperatingSystem(attribute.getValue())
+                        .setRegion(region)
                         .build())
                 .setEcsContainerInstanceResource(ReservedResource.newBuilder().setCpu(cpu).setMemory(memory).build())
                 .build();
@@ -250,7 +283,7 @@ public class EcsPerpetualTask {
   }
 
   private void publishEc2InstanceEvent(
-      String clusterName, Set<String> currentActiveEc2InstanceIds, List<Instance> instances) {
+      String clusterName, String region, Set<String> currentActiveEc2InstanceIds, List<Instance> instances) {
     logger.info("Instance list size is {} ", instances.size());
     Set<String> activeEc2InstanceIds = fetchActiveEc2InstanceIds(clusterName);
     logger.info("Active instance in cache {}", activeEc2InstanceIds);
@@ -273,7 +306,8 @@ public class EcsPerpetualTask {
                                                              .setInstanceId(instance.getInstanceId())
                                                              .setClusterArn(clusterName)
                                                              .setInstanceType(instance.getInstanceType())
-                                                             .setInstanceState(instanceStateBuilder.build());
+                                                             .setInstanceState(instanceStateBuilder.build())
+                                                             .setRegion(region);
 
         if (null != instance.getCapacityReservationId()) {
           ec2InstanceInfoBuilder.setCapacityReservationId(instance.getCapacityReservationId());
@@ -314,12 +348,13 @@ public class EcsPerpetualTask {
     }
   }
 
-  private List<Task> listTask(AwsEcsListClusterServicesRequest request) {
+  private List<Task> listTask(
+      String clusterName, String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
     List<DesiredStatus> desiredStatuses = listTaskDesiredStatus();
     List<Task> tasks = new ArrayList<>();
     for (DesiredStatus desiredStatus : desiredStatuses) {
-      tasks.addAll(ecsHelperServiceDelegate.listTasksForService(request.getAwsConfig(), request.getEncryptionDetails(),
-          request.getRegion(), request.getCluster(), null, desiredStatus));
+      tasks.addAll(ecsHelperServiceDelegate.listTasksForService(
+          awsConfig, encryptionDetails, region, clusterName, null, desiredStatus));
     }
     return tasks;
   }
@@ -332,14 +367,13 @@ public class EcsPerpetualTask {
     return new ArrayList<>(Arrays.asList(ContainerInstanceStatus.ACTIVE, ContainerInstanceStatus.DRAINING));
   }
 
-  private void loadTaskArnServiceNameMap(
-      AwsEcsListClusterServicesRequest request, Map<String, String> taskArnServiceNameMap) {
+  private void loadTaskArnServiceNameMap(String clusterName, String region, AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptionDetails, Map<String, String> taskArnServiceNameMap) {
     List<DesiredStatus> desiredStatuses = listTaskDesiredStatus();
-    for (Service service : listServices(request)) {
+    for (Service service : listServices(clusterName, region, awsConfig, encryptionDetails)) {
       for (DesiredStatus desiredStatus : desiredStatuses) {
-        List<String> taskArns =
-            ecsHelperServiceDelegate.listTasksArnForService(request.getAwsConfig(), request.getEncryptionDetails(),
-                request.getRegion(), request.getCluster(), service.getServiceArn(), desiredStatus);
+        List<String> taskArns = ecsHelperServiceDelegate.listTasksArnForService(
+            awsConfig, encryptionDetails, region, clusterName, service.getServiceArn(), desiredStatus);
         if (!CollectionUtils.isEmpty(taskArns)) {
           for (String taskArn : taskArns) {
             taskArnServiceNameMap.put(taskArn, service.getServiceArn());
@@ -349,30 +383,27 @@ public class EcsPerpetualTask {
     }
   }
 
-  private List<Service> listServices(AwsEcsListClusterServicesRequest request) {
-    return ecsHelperServiceDelegate.listServicesForCluster(
-        request.getAwsConfig(), request.getEncryptionDetails(), request.getRegion(), request.getCluster());
+  private List<Service> listServices(
+      String clusterName, String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
+    return ecsHelperServiceDelegate.listServicesForCluster(awsConfig, encryptionDetails, region, clusterName);
   }
 
   private List<ContainerInstance> listContainerInstances(
-      AwsEcsListClusterServicesRequest awsEcsListClusterServicesRequest) {
+      String clusterName, String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
     List<ContainerInstanceStatus> containerInstanceStatuses = listContainerInstanceStatus();
     List<ContainerInstance> containerInstances = new ArrayList<>();
     for (ContainerInstanceStatus containerInstanceStatus : containerInstanceStatuses) {
-      containerInstances.addAll(
-          ecsHelperServiceDelegate.listContainerInstancesForCluster(awsEcsListClusterServicesRequest.getAwsConfig(),
-              awsEcsListClusterServicesRequest.getEncryptionDetails(), awsEcsListClusterServicesRequest.getRegion(),
-              awsEcsListClusterServicesRequest.getCluster(), containerInstanceStatus));
+      containerInstances.addAll(ecsHelperServiceDelegate.listContainerInstancesForCluster(
+          awsConfig, encryptionDetails, region, clusterName, containerInstanceStatus));
     }
     return containerInstances;
   }
 
-  private Set<String> fetchEc2InstanceIds(
-      AwsEcsListClusterServicesRequest request, List<ContainerInstance> containerInstances) {
+  private Set<String> fetchEc2InstanceIds(String clusterName, List<ContainerInstance> containerInstances) {
     Set<String> instanceIds = new HashSet<>();
     if (!CollectionUtils.isEmpty(containerInstances)) {
       instanceIds = containerInstances.stream().map(ContainerInstance::getEc2InstanceId).collect(Collectors.toSet());
-      instanceIds.addAll(fetchActiveEc2InstanceIds(request.getCluster()));
+      instanceIds.addAll(fetchActiveEc2InstanceIds(clusterName));
     }
     return instanceIds;
   }
@@ -438,14 +469,18 @@ public class EcsPerpetualTask {
         Collections.emptySet(), Collections.emptySet(), Collections.emptySet(), Instant.now());
   }
 
-  private List<Instance> listEc2Instances(AwsEcsListClusterServicesRequest request, Set<String> instanceIds) {
+  private List<Instance> listEc2Instances(
+      String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, Set<String> instanceIds) {
     List<Instance> instances = new ArrayList<>();
     if (!CollectionUtils.isEmpty(instanceIds)) {
-      instances = ec2ServiceDelegate.listEc2Instances(
-          request.getAwsConfig(), request.getEncryptionDetails(), new ArrayList<>(instanceIds), request.getRegion());
+      instances =
+          ec2ServiceDelegate.listEc2Instances(awsConfig, encryptionDetails, new ArrayList<>(instanceIds), region);
       instances = instances.stream().filter(instance -> null != instance.getLaunchTime()).collect(Collectors.toList());
-      logger.info("Instances {} ", instances.toString());
+      logger.debug("Instances {} ", instances.toString());
     }
     return instances;
   }
+
+  @Override
+  public void stop() {}
 }

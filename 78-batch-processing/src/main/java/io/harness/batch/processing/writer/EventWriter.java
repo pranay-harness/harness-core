@@ -9,6 +9,8 @@ import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.service.intfc.ActiveInstanceService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.event.payloads.Lifecycle;
+import io.harness.exception.InvalidRequestException;
+import io.harness.grpc.utils.HTimestamps;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -47,7 +49,7 @@ public abstract class EventWriter {
   }
 
   protected void updateInstanceDataLifecycle(String accountId, String instanceId, Lifecycle lifecycle) {
-    Instant instanceTime = Instant.ofEpochMilli(lifecycle.getTimestamp().getSeconds() * 1000);
+    Instant instanceTime = HTimestamps.toInstant(lifecycle.getTimestamp());
     InstanceState currentInstanceState = null;
     InstanceState updateInstanceState = null;
 
@@ -67,6 +69,29 @@ public abstract class EventWriter {
       } else {
         logger.info("Received past duplicate event {} {} {} ", accountId, instanceId, lifecycle.toString());
       }
+    }
+  }
+
+  protected InstanceData fetchInstanceData(String accountId, String instanceId) {
+    InstanceData ec2InstanceData = instanceDataService.fetchInstanceData(accountId, instanceId);
+    if (null == ec2InstanceData) {
+      logger.error("Instance detail not present {} ", instanceId);
+      throw new InvalidRequestException("EC2 Instance detail not present");
+    }
+    return ec2InstanceData;
+  }
+
+  protected void handleLifecycleEvent(String accountId, Lifecycle lifecycle) {
+    String instanceId = lifecycle.getInstanceId();
+
+    boolean updateInstanceLifecycle = true;
+    if (lifecycle.getType().equals(EVENT_TYPE_STOP)) {
+      updateInstanceLifecycle = deleteActiveInstance(accountId, instanceId);
+    }
+
+    if (updateInstanceLifecycle) {
+      logger.info("Updating instance lifecycle {} ", instanceId);
+      updateInstanceDataLifecycle(accountId, instanceId, lifecycle);
     }
   }
 }

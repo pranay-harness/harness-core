@@ -41,4 +41,9 @@ public class InstanceDataServiceImpl implements InstanceDataService {
   public InstanceData fetchActiveInstanceData(String accountId, String instanceId, List<InstanceState> instanceState) {
     return instanceDataDao.fetchActiveInstanceData(accountId, instanceId, instanceState);
   }
+
+  @Override
+  public InstanceData fetchInstanceData(String accountId, String instanceId) {
+    return instanceDataDao.fetchInstanceData(accountId, instanceId);
+  }
 }

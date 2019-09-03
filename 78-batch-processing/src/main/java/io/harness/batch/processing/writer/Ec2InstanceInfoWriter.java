@@ -29,7 +29,7 @@ public class Ec2InstanceInfoWriter extends EventWriter implements ItemWriter<Pub
           Ec2InstanceInfo ec2InstanceInfo = (Ec2InstanceInfo) publishedMessage.getMessage();
           logger.debug("Message {} ", ec2InstanceInfo);
           String accountId = publishedMessage.getAccountId();
-          String clusterArn = ""; // ec2InstanceInfo.getClusterArn();
+          String clusterArn = ec2InstanceInfo.getClusterArn();
           String instanceId = ec2InstanceInfo.getInstanceId();
 
           boolean activeInstance = createActiveInstance(accountId, instanceId, clusterArn);
@@ -39,6 +39,7 @@ public class Ec2InstanceInfoWriter extends EventWriter implements ItemWriter<Pub
               String instanceFamily = ec2InstanceInfo.getInstanceType();
               Map<String, String> metaData = new HashMap<>();
               metaData.put(EcsCCMConstants.INSTANCE_FAMILY, instanceFamily);
+              metaData.put(EcsCCMConstants.REGION, ec2InstanceInfo.getRegion());
               instanceData = InstanceData.builder()
                                  .accountId(accountId)
                                  .instanceId(instanceId)

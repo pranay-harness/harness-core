@@ -12,4 +12,6 @@ public interface InstanceDataService {
   boolean updateInstanceState(InstanceData instanceData, Instant instant, InstanceState instanceState);
 
   InstanceData fetchActiveInstanceData(String accountId, String instanceId, List<InstanceState> instanceState);
+
+  InstanceData fetchInstanceData(String accountId, String instanceId);
 }
