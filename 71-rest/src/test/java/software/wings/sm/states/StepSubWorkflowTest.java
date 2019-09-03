@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.anyString;
@@ -8,7 +9,6 @@ import static org.mockito.Mockito.when;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
-import static software.wings.sm.ElementNotifyResponseData.Builder.anElementNotifyResponseData;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -36,6 +36,7 @@ import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.PhaseStepType;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatusData;
@@ -165,7 +166,8 @@ public class StepSubWorkflowTest extends WingsBaseTest {
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
     phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.INFRASTRUCTURE_NODE);
     Map<String, ResponseData> notifyResponse = new HashMap<>();
-    notifyResponse.put("key", anElementNotifyResponseData().addContextElement(serviceInstanceIdsParam).build());
+    notifyResponse.put(
+        "key", ElementNotifyResponseData.builder().contextElements(asList(serviceInstanceIdsParam)).build());
     Reflect.on(phaseStepSubWorkflow).set("workflowExecutionService", workflowExecutionService);
 
     ExecutionResponse response = phaseStepSubWorkflow.handleAsyncResponse(context, notifyResponse);
@@ -203,7 +205,8 @@ public class StepSubWorkflowTest extends WingsBaseTest {
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
     phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.CONTAINER_SETUP);
     Map<String, ResponseData> notifyResponse = new HashMap<>();
-    notifyResponse.put("key", anElementNotifyResponseData().addContextElement(containerServiceElement).build());
+    notifyResponse.put(
+        "key", ElementNotifyResponseData.builder().contextElements(asList(containerServiceElement)).build());
     Reflect.on(phaseStepSubWorkflow).set("workflowExecutionService", workflowExecutionService);
 
     ExecutionResponse response = phaseStepSubWorkflow.handleAsyncResponse(context, notifyResponse);
@@ -269,7 +272,8 @@ public class StepSubWorkflowTest extends WingsBaseTest {
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
     phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.CONTAINER_SETUP);
     Map<String, ResponseData> notifyResponse = new HashMap<>();
-    notifyResponse.put("key", anElementNotifyResponseData().addContextElement(containerServiceElement).build());
+    notifyResponse.put(
+        "key", ElementNotifyResponseData.builder().contextElements(asList(containerServiceElement)).build());
     Reflect.on(phaseStepSubWorkflow).set("workflowExecutionService", workflowExecutionService);
 
     ExecutionResponse response = phaseStepSubWorkflow.handleAsyncResponse(context, notifyResponse);
