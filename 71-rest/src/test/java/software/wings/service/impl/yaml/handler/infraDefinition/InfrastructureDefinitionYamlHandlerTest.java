@@ -130,7 +130,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
     doReturn(settingAttribute).when(mockSettingsService).getSettingAttributeByName(anyString(), anyString());
     doReturn(settingAttribute).when(mockSettingsService).get(anyString());
     doReturn("infra-def").when(mockYamlHelper).extractEntityNameFromYamlPath(anyString(), anyString(), anyString());
-    doReturn(service).when(serviceResourceService).getWithDetails(anyString(), anyString());
+    doReturn(service).when(serviceResourceService).get(anyString(), anyString());
     doReturn(service).when(serviceResourceService).getServiceByName(anyString(), anyString());
     doReturn(Optional.of(anApplication().uuid(APP_ID).build()))
         .when(mockYamlHelper)

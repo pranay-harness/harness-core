@@ -157,7 +157,7 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
   }
 
   private String getServiceName(String appId, String serviceId) {
-    Service service = serviceResourceService.getWithDetails(appId, serviceId);
+    Service service = serviceResourceService.get(appId, serviceId);
     notNullCheck("Service can't be found for Id:" + serviceId, service, USER);
     return service.getName();
   }
