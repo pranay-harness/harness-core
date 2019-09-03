@@ -252,7 +252,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) setupParams.getContainerTask();
       if (kubernetesContainerTask == null) {
         kubernetesContainerTask = new KubernetesContainerTask();
-        ContainerDefinition containerDefinition = ContainerDefinition.builder().memory(256).cpu(1).build();
+        ContainerDefinition containerDefinition = ContainerDefinition.builder().memory(256).cpu(1d).build();
         kubernetesContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
       }
 

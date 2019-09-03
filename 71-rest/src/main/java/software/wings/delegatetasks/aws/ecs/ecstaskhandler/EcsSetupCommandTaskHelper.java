@@ -140,7 +140,7 @@ public class EcsSetupCommandTaskHelper {
       software.wings.beans.container.ContainerDefinition containerDefinition =
           software.wings.beans.container.ContainerDefinition.builder()
               .memory(256)
-              .cpu(1)
+              .cpu(1d)
               .portMappings(emptyList())
               .build();
       ecsContainerTask.setContainerDefinitions(newArrayList(containerDefinition));

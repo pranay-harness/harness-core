@@ -258,7 +258,7 @@ public class EcsContainerTask extends ContainerTask {
     }
 
     if (harnessContainerDefinition.getCpu() != null) {
-      containerDefinition.setCpu(harnessContainerDefinition.getCpu());
+      containerDefinition.setCpu(harnessContainerDefinition.getCpu().intValue());
     }
 
     if (harnessContainerDefinition.getPortMappings() != null) {
