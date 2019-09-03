@@ -12,6 +12,4 @@ import java.util.List;
 public class ElementNotifyResponseData implements ExecutionStatusResponseData {
   private ExecutionStatus executionStatus;
   private List<ContextElement> contextElements;
-  private Long startTs;
-  private Long endTs;
 }
