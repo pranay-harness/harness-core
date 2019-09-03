@@ -189,9 +189,12 @@ public class ApprovalState extends State {
     populateApprovalAlert(approvalNeededAlert, context);
     alertService.openAlert(app.getAccountId(), app.getUuid(), ApprovalNeeded, approvalNeededAlert);
 
+    if (approvalStateType == null) {
+      approvalStateType = USER_GROUP;
+    }
     try {
       workflowNotificationHelper.sendApprovalNotification(
-          app.getAccountId(), APPROVAL_NEEDED_NOTIFICATION, placeholderValues, context);
+          app.getAccountId(), APPROVAL_NEEDED_NOTIFICATION, placeholderValues, context, approvalStateType);
     } catch (Exception e) {
       // catch exception so that failure to send notification doesn't affect rest of execution
       logger.error("Error sending approval notification. accountId={}", app.getAccountId(), e);
@@ -636,12 +639,11 @@ public class ApprovalState extends State {
       placeholderValues = getPlaceholderValues(context, "", approvalNotifyResponse.getStatus());
     }
 
-    workflowNotificationHelper.sendApprovalNotification(
-        app.getAccountId(), APPROVAL_STATE_CHANGE_NOTIFICATION, placeholderValues, context);
     if (approvalStateType == null) {
-      return handleAsyncUserGroup(
-          userGroups, placeholderValues, context, executionData, approvalNotifyResponse, isApprovalFromSlack);
+      approvalStateType = USER_GROUP;
     }
+    workflowNotificationHelper.sendApprovalNotification(
+        app.getAccountId(), APPROVAL_STATE_CHANGE_NOTIFICATION, placeholderValues, context, approvalStateType);
 
     switch (approvalStateType) {
       case JIRA:
@@ -748,6 +750,9 @@ public class ApprovalState extends State {
     }
 
     Map<String, String> placeholderValues;
+    if (approvalStateType == null) {
+      approvalStateType = USER_GROUP;
+    }
     if (currentTimeMillis >= (timeout + startTimeMillis)) {
       if (approvalType != null && approvalType.equalsIgnoreCase("PIPELINE")) {
         errorMsg = "Pipeline was not approved within " + Misc.getDurationString(getTimeoutMillis());
@@ -759,7 +764,7 @@ public class ApprovalState extends State {
       notificationMessageType = APPROVAL_EXPIRED_NOTIFICATION;
       placeholderValues = getPlaceholderValues(context, errorMsg);
       workflowNotificationHelper.sendApprovalNotification(
-          app.getAccountId(), notificationMessageType, placeholderValues, context);
+          app.getAccountId(), notificationMessageType, placeholderValues, context, approvalStateType);
     } else {
       if (approvalType != null && approvalType.equalsIgnoreCase("PIPELINE")) {
         errorMsg = "Pipeline was aborted";
@@ -774,15 +779,11 @@ public class ApprovalState extends State {
       String userName = (user != null && user.getName() != null) ? user.getName() : "System";
       placeholderValues = getPlaceholderValues(context, userName, ABORTED);
       workflowNotificationHelper.sendApprovalNotification(
-          app.getAccountId(), notificationMessageType, placeholderValues, context);
+          app.getAccountId(), notificationMessageType, placeholderValues, context, approvalStateType);
     }
 
     context.getStateExecutionData().setErrorMsg(errorMsg);
-    if (approvalStateType == null) {
-      sendNotificationForUserGroupApproval(
-          userGroups, app.getUuid(), app.getAccountId(), notificationMessageType, placeholderValues);
-      return;
-    }
+
     switch (approvalStateType) {
       case JIRA:
         handleAbortEventJira(context);

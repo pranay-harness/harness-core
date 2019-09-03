@@ -63,6 +63,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.ApprovalState.ApprovalStateType;
 import software.wings.sm.states.PhaseSubWorkflow;
 
 import java.net.URISyntaxException;
@@ -197,7 +198,7 @@ public class WorkflowNotificationHelper {
   }
 
   public void sendApprovalNotification(String accountId, NotificationMessageType notificationMessageType,
-      Map<String, String> placeHolderValues, ExecutionContext context) {
+      Map<String, String> placeHolderValues, ExecutionContext context, ApprovalStateType approvalStateType) {
     List<NotificationRule> rules = new LinkedList<>();
 
     Objects.requireNonNull(context, "Context can't be null. accountId=" + accountId);
@@ -209,6 +210,9 @@ public class WorkflowNotificationHelper {
         break;
 
       case PIPELINE:
+        if (approvalStateType.equals(ApprovalStateType.USER_GROUP)) {
+          break;
+        }
         UserGroup defaultUserGroup = userGroupService.getDefaultUserGroup(accountId);
         if (null == defaultUserGroup) {
           logger.error("There is no default user group. accountId={}", accountId);

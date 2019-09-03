@@ -75,6 +75,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.ApprovalState.ApprovalStateType;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -198,8 +199,8 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
 
     Mockito.verify(workflowNotificationHelper, Mockito.times(1))
-        .sendApprovalNotification(
-            Mockito.eq(ACCOUNT_ID), Mockito.eq(APPROVAL_NEEDED_NOTIFICATION), Mockito.anyMap(), Mockito.any());
+        .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(APPROVAL_NEEDED_NOTIFICATION), Mockito.anyMap(),
+            Mockito.any(), Mockito.eq(ApprovalStateType.USER_GROUP));
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
   }
 
@@ -219,8 +220,8 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
 
     Mockito.verify(workflowNotificationHelper, Mockito.times(1))
-        .sendApprovalNotification(
-            Mockito.eq(ACCOUNT_ID), Mockito.eq(APPROVAL_NEEDED_NOTIFICATION), Mockito.anyMap(), Mockito.any());
+        .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(APPROVAL_NEEDED_NOTIFICATION), Mockito.anyMap(),
+            Mockito.any(), Mockito.eq(ApprovalStateType.USER_GROUP));
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
   }
 
@@ -272,8 +273,8 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(context.getStateExecutionData().getErrorMsg()).contains("Pipeline was not approved within 36m");
 
     Mockito.verify(workflowNotificationHelper, Mockito.times(1))
-        .sendApprovalNotification(
-            Mockito.eq(ACCOUNT_ID), Mockito.eq(APPROVAL_EXPIRED_NOTIFICATION), Mockito.anyMap(), Mockito.any());
+        .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(APPROVAL_EXPIRED_NOTIFICATION), Mockito.anyMap(),
+            Mockito.any(), Mockito.eq(ApprovalStateType.USER_GROUP));
   }
 
   @Test
@@ -295,8 +296,8 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(context.getStateExecutionData().getErrorMsg()).contains("Workflow was not approved within 36m");
 
     Mockito.verify(workflowNotificationHelper, Mockito.times(1))
-        .sendApprovalNotification(
-            Mockito.eq(ACCOUNT_ID), Mockito.eq(APPROVAL_EXPIRED_NOTIFICATION), Mockito.anyMap(), Mockito.any());
+        .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(APPROVAL_EXPIRED_NOTIFICATION), Mockito.anyMap(),
+            Mockito.any(), Mockito.eq(ApprovalStateType.USER_GROUP));
   }
 
   @Test
@@ -318,8 +319,8 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(context.getStateExecutionData()).isNotNull();
     assertThat(context.getStateExecutionData().getErrorMsg()).contains("Pipeline was aborted");
     Mockito.verify(workflowNotificationHelper, Mockito.times(1))
-        .sendApprovalNotification(
-            Mockito.eq(ACCOUNT_ID), Mockito.eq(APPROVAL_STATE_CHANGE_NOTIFICATION), Mockito.anyMap(), Mockito.any());
+        .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(APPROVAL_STATE_CHANGE_NOTIFICATION),
+            Mockito.anyMap(), Mockito.any(), Mockito.eq(ApprovalStateType.USER_GROUP));
   }
 
   @Test
@@ -341,8 +342,8 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(context.getStateExecutionData()).isNotNull();
     assertThat(context.getStateExecutionData().getErrorMsg()).contains("Workflow was aborted");
     Mockito.verify(workflowNotificationHelper, Mockito.times(1))
-        .sendApprovalNotification(
-            Mockito.eq(ACCOUNT_ID), Mockito.eq(APPROVAL_STATE_CHANGE_NOTIFICATION), Mockito.anyMap(), Mockito.any());
+        .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(APPROVAL_STATE_CHANGE_NOTIFICATION),
+            Mockito.anyMap(), Mockito.any(), Mockito.eq(ApprovalStateType.USER_GROUP));
   }
 
   @Test
