@@ -16,7 +16,7 @@ public class ContainerDefinition {
   @Attributes(title = "PORT MAPPINGS") List<PortMapping> portMappings;
   @SchemaIgnore private String name;
   @Attributes(title = "Commands") private List<String> commands;
-  @Attributes(title = "CPU", required = true) private Integer cpu;
+  @Attributes(title = "CPU", required = true) private Double cpu;
   @DefaultValue("256") @Attributes(title = "MEMORY", required = true) private Integer memory;
   @Attributes(title = "LOG CONFIGURATION") private LogConfiguration logConfiguration;
   @Attributes(title = "STORAGE/VOLUME") private List<StorageConfiguration> storageConfigurations;
@@ -54,11 +54,11 @@ public class ContainerDefinition {
     this.storageConfigurations = storageConfigurations;
   }
 
-  public Integer getCpu() {
+  public Double getCpu() {
     return cpu;
   }
 
-  public void setCpu(Integer cpu) {
+  public void setCpu(Double cpu) {
     this.cpu = cpu;
   }
 
@@ -85,13 +85,13 @@ public class ContainerDefinition {
     List<PortMapping.Yaml> portMappings;
     private String name;
     private List<String> commands;
-    private Integer cpu;
+    private Double cpu;
     private Integer memory;
     private LogConfiguration.Yaml logConfiguration;
     private List<StorageConfiguration.Yaml> storageConfigurations;
 
     @Builder
-    public Yaml(List<PortMapping.Yaml> portMappings, String name, List<String> commands, Integer cpu, Integer memory,
+    public Yaml(List<PortMapping.Yaml> portMappings, String name, List<String> commands, Double cpu, Integer memory,
         LogConfiguration.Yaml logConfiguration, List<StorageConfiguration.Yaml> storageConfigurations) {
       this.portMappings = portMappings;
       this.name = name;

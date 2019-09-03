@@ -245,7 +245,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
         .thenReturn(serviceCommand);
 
     KubernetesContainerTask kubernetesContainerTask = new KubernetesContainerTask();
-    ContainerDefinition containerDefinition = ContainerDefinition.builder().memory(256).cpu(1).build();
+    ContainerDefinition containerDefinition = ContainerDefinition.builder().memory(256).cpu(1d).build();
     kubernetesContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
     when(serviceResourceService.getContainerTaskByDeploymentType(APP_ID, SERVICE_ID, DeploymentType.KUBERNETES.name()))
         .thenReturn(kubernetesContainerTask);
