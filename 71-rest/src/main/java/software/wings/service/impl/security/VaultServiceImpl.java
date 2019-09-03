@@ -31,6 +31,7 @@ import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptionType;
+import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.ResponseBody;
@@ -244,6 +245,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     vaultConfig.setBasePath(basePath);
     vaultConfig.setAccountId(accountId);
 
+    VaultConfig oldConfigForAudit = null;
     VaultConfig savedVaultConfig = null;
     boolean credentialChanged = true;
     if (!isEmpty(vaultConfig.getUuid())) {
@@ -262,6 +264,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
       // secret field un-decrypted version of saved KMS config
       savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
+      oldConfigForAudit = KryoUtils.clone(savedVaultConfig);
     }
 
     // Validate every time when secret manager config change submitted
@@ -274,6 +277,9 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       savedVaultConfig.setDefault(vaultConfig.isDefault());
       savedVaultConfig.setBasePath(vaultConfig.getBasePath());
       savedVaultConfig.setAppRoleId(vaultConfig.getAppRoleId());
+
+      // PL-3237: Audit secret manager config changes.
+      generateAuditForSecretManager(accountId, oldConfigForAudit, savedVaultConfig);
 
       return secretManagerConfigService.save(savedVaultConfig);
     }
@@ -304,6 +310,9 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
           saveSecretField(savedVaultConfig, vaultConfig, vaultConfigId, secretId, SECRET_ID_SECRET_NAME_SUFFIX);
       vaultConfig.setSecretId(secretIdEncryptedDataId);
     }
+
+    // PL-3237: Audit secret manager config changes.
+    generateAuditForSecretManager(accountId, oldConfigForAudit, vaultConfig);
 
     secretManagerConfigService.save(vaultConfig);
     return vaultConfigId;
@@ -362,7 +371,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
           vaultConfig.getSecretId(), vaultConfig.getName());
     }
 
-    return wingsPersistence.delete(SecretManagerConfig.class, vaultConfigId);
+    return deleteSecretManagerAndGenerateAudit(accountId, vaultConfig);
   }
 
   @Override

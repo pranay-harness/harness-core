@@ -15,6 +15,7 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
@@ -35,7 +36,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.KmsOperationException;
 import io.harness.exception.WingsException;
-import io.harness.queue.Queue;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.rule.RealMongo;
 import io.harness.rule.RepeatRule.Repeat;
@@ -55,7 +55,6 @@ import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.annotation.EncryptableSetting;
-import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.Activity;
@@ -66,6 +65,7 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.Event;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.Service;
@@ -83,10 +83,8 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.dl.WingsPersistence;
 import software.wings.features.api.PremiumFeature;
 import software.wings.resources.KmsResource;
-import software.wings.resources.SecretManagementResource;
 import software.wings.resources.ServiceVariableResource;
 import software.wings.security.EnvFilter;
 import software.wings.security.GenericEntityFilter;
@@ -100,12 +98,12 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.SettingValidationService;
 import software.wings.service.impl.UsageRestrictionsServiceImplTest;
 import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -144,27 +142,22 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class KmsTest extends WingsBaseTest {
   @Inject private KmsResource kmsResource;
-  @Inject private SecretManagementResource secretManagementResource;
   @Mock private AccountService accountService;
   @Inject @InjectMocks private KmsService kmsService;
   @Inject @InjectMocks private SecretManagerConfigService secretManagerConfigService;
-  @Inject private SecretManager secretManager;
-  @Inject private WingsPersistence wingsPersistence;
   @Inject private HarnessUserGroupService harnessUserGroupService;
-  @Inject private Queue<KmsTransitionEvent> transitionKmsQueue;
-  @Inject private ConfigService configService;
-  @Inject private EncryptionService encryptionService;
   @Inject private ManagerDecryptionService managerDecryptionService;
   @Inject private SettingsService settingsService;
   @Inject private SettingValidationService settingValidationService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private ServiceVariableResource serviceVariableResource;
   @Inject private SecretManagementDelegateService delegateService;
-  @Mock private SecretManagementDelegateService secretManagementDelegateService;
   @Mock private ContainerService containerService;
   @Mock private NewRelicService newRelicService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
+  @Mock private SecretManagementDelegateService secretManagementDelegateService;
   @Mock private PremiumFeature secretsManagementFeature;
+  @Mock protected AuditServiceHelper auditServiceHelper;
   private final int numOfEncryptedValsForKms = 3;
   private final String userEmail = "rsingh@harness.io";
   private final String userName = "raghu";
@@ -639,34 +632,8 @@ public class KmsTest extends WingsBaseTest {
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
     int numOfSettingAttributes = 5;
-    List<SettingAttribute> settingAttributes = new ArrayList<>();
-
-    for (int i = 0; i < numOfSettingAttributes; i++) {
-      String password = "password" + i;
-      final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
-      SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
-
-      settingAttributes.add(settingAttribute);
-    }
+    List<SettingAttribute> settingAttributes = getSettingAttributes(accountId, numOfSettingAttributes);
     wingsPersistence.save(settingAttributes);
-
-    assertThat(wingsPersistence.createQuery(SettingAttribute.class).count()).isEqualTo(numOfSettingAttributes);
-    assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
-        .isEqualTo(numOfEncryptedValsForKms + numOfSettingAttributes);
-    for (int i = 0; i < numOfSettingAttributes; i++) {
-      String id = settingAttributes.get(i).getUuid();
-      SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, id);
-      assertThat(savedAttribute).isEqualTo(settingAttributes.get(i));
-      AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttributes.get(i).getValue();
-      assertThat(appDynamicsConfig.getPassword()).isNull();
-
-      encryptionService.decrypt(
-          appDynamicsConfig, secretManager.getEncryptionDetails(appDynamicsConfig, workflowExecutionId, appId));
-      assertThat(new String(appDynamicsConfig.getPassword())).isEqualTo("password" + i);
-      Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(id);
-      assertThat(query.count()).isEqualTo(1);
-      assertThat(query.get().getKmsId()).isEqualTo(kmsConfig.getUuid());
-    }
 
     Collection<SecretManagerConfig> kmsConfigs =
         secretManagerConfigService.listSecretManagersByType(accountId, EncryptionType.KMS, true);
@@ -681,27 +648,14 @@ public class KmsTest extends WingsBaseTest {
     kmsResource.saveGlobalKmsConfig(accountId, kmsConfig);
 
     int numOfSettingAttributes1 = 5;
-    List<SettingAttribute> settingAttributes = new ArrayList<>();
-    for (int i = 0; i < numOfSettingAttributes1; i++) {
-      String password = "password" + i;
-      final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
-      SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
-
-      settingAttributes.add(settingAttribute);
-    }
+    List<SettingAttribute> settingAttributes = getSettingAttributes(accountId, numOfSettingAttributes1);
     wingsPersistence.save(settingAttributes);
 
     final String accountId2 = UUID.randomUUID().toString();
+    settingAttributes.clear();
 
     int numOfSettingAttributes2 = 7;
-    settingAttributes.clear();
-    for (int i = 0; i < numOfSettingAttributes2; i++) {
-      String password = "password" + i;
-      final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId2, password);
-      SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
-
-      settingAttributes.add(settingAttribute);
-    }
+    settingAttributes = getSettingAttributes(accountId2, numOfSettingAttributes2);
     wingsPersistence.save(settingAttributes);
 
     List<SecretManagerConfig> encryptionConfigs =
@@ -792,34 +746,6 @@ public class KmsTest extends WingsBaseTest {
     assertThat(secretChangeLog.getDescription()).isEqualTo("Changed password");
 
     secretChangeLog = changeLogs.get(1);
-    assertThat(secretChangeLog.getUser().getUuid()).isEqualTo(user.getUuid());
-    assertThat(secretChangeLog.getUser().getEmail()).isEqualTo(user.getEmail());
-    assertThat(secretChangeLog.getUser().getName()).isEqualTo(user.getName());
-    assertThat(secretChangeLog.getDescription()).isEqualTo("Created");
-
-    User user2 = User.Builder.anUser().withEmail(UUID.randomUUID().toString()).withName("user2").build();
-    wingsPersistence.save(user2);
-    UserThreadLocal.set(user2);
-    wingsPersistence.save(savedAttribute);
-
-    query = wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedAttributeId);
-    assertThat(query.count()).isEqualTo(1);
-
-    changeLogs = secretManager.getChangeLogs(accountId, savedAttributeId, SettingVariableTypes.APP_DYNAMICS);
-    assertThat(changeLogs).hasSize(3);
-    secretChangeLog = changeLogs.get(0);
-    assertThat(secretChangeLog.getUser().getUuid()).isEqualTo(user2.getUuid());
-    assertThat(secretChangeLog.getUser().getEmail()).isEqualTo(user2.getEmail());
-    assertThat(secretChangeLog.getUser().getName()).isEqualTo(user2.getName());
-    assertThat(secretChangeLog.getDescription()).isEqualTo("Changed password");
-
-    secretChangeLog = changeLogs.get(1);
-    assertThat(secretChangeLog.getUser().getUuid()).isEqualTo(user1.getUuid());
-    assertThat(secretChangeLog.getUser().getEmail()).isEqualTo(user1.getEmail());
-    assertThat(secretChangeLog.getUser().getName()).isEqualTo(user1.getName());
-    assertThat(secretChangeLog.getDescription()).isEqualTo("Changed password");
-
-    secretChangeLog = changeLogs.get(2);
     assertThat(secretChangeLog.getUser().getUuid()).isEqualTo(user.getUuid());
     assertThat(secretChangeLog.getUser().getEmail()).isEqualTo(user.getEmail());
     assertThat(secretChangeLog.getUser().getName()).isEqualTo(user.getName());
@@ -1057,8 +983,8 @@ public class KmsTest extends WingsBaseTest {
     assertThat(updatedAttribute.getAppId()).isEqualTo(updatedAppId);
     assertThat(updatedAttribute.getName()).isEqualTo(updatedName);
 
-    newAppDynamicsConfig.setPassword(null);
     assertThat(updatedAttribute.getValue()).isEqualTo(newAppDynamicsConfig);
+    newAppDynamicsConfig.setPassword(UUID.randomUUID().toString().toCharArray());
 
     assertThat(wingsPersistence.createQuery(SettingAttribute.class).count()).isEqualTo(1);
     assertThat(wingsPersistence.createQuery(EncryptedData.class).count()).isEqualTo(numOfEncryptedValsForKms + 1);
@@ -1071,7 +997,6 @@ public class KmsTest extends WingsBaseTest {
 
     query = wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedAttributeId);
     assertThat(query.count()).isEqualTo(1);
-    encryptedData = query.get();
 
     changeLogs = secretManager.getChangeLogs(accountId, savedAttributeId, SettingVariableTypes.APP_DYNAMICS);
     assertThat(changeLogs).hasSize(3);
@@ -1531,20 +1456,13 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void kmsEncryptionDeleteSettingAttribute() throws IOException {
+  public void kmsEncryptionDeleteSettingAttribute() {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
     int numOfSettingAttributes = 5;
-    List<SettingAttribute> settingAttributes = new ArrayList<>();
-    for (int i = 0; i < numOfSettingAttributes; i++) {
-      String password = UUID.randomUUID().toString();
-      final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
-      SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
-
-      wingsPersistence.save(settingAttribute);
-      settingAttributes.add(settingAttribute);
-    }
+    List<SettingAttribute> settingAttributes = getSettingAttributes(accountId, numOfSettingAttributes);
+    wingsPersistence.save(settingAttributes);
 
     assertThat(wingsPersistence.createQuery(SettingAttribute.class).count()).isEqualTo(numOfSettingAttributes);
     assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
@@ -1565,41 +1483,15 @@ public class KmsTest extends WingsBaseTest {
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
     int numOfSettingAttributes = 5;
-    List<SettingAttribute> settingAttributes = new ArrayList<>();
-    for (int i = 0; i < numOfSettingAttributes; i++) {
-      String password = UUID.randomUUID().toString();
-      final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
-      SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
-
+    List<SettingAttribute> settingAttributes = getSettingAttributes(accountId, numOfSettingAttributes);
+    for (SettingAttribute settingAttribute : settingAttributes) {
       wingsPersistence.save(settingAttribute);
-      settingAttributes.add(settingAttribute);
     }
+    validateSettingAttributes(settingAttributes, numOfEncryptedValsForKms + numOfSettingAttributes);
 
-    assertThat(wingsPersistence.createQuery(SettingAttribute.class).count()).isEqualTo(numOfSettingAttributes);
-    assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
-        .isEqualTo(numOfEncryptedValsForKms + numOfSettingAttributes);
-
-    for (int i = 0; i < numOfSettingAttributes; i++) {
-      wingsPersistence.delete(accountId, SettingAttribute.class, settingAttributes.get(i).getUuid());
-      assertThat(wingsPersistence.createQuery(SettingAttribute.class).count())
-          .isEqualTo(numOfSettingAttributes - (i + 1));
-      assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
-          .isEqualTo(numOfEncryptedValsForKms + numOfSettingAttributes - (i + 1));
-    }
-
+    settingAttributes = getSettingAttributes(accountId, numOfSettingAttributes);
     wingsPersistence.save(settingAttributes);
-    assertThat(wingsPersistence.createQuery(SettingAttribute.class).count()).isEqualTo(numOfSettingAttributes);
-    assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
-        .isEqualTo(numOfEncryptedValsForKms + numOfSettingAttributes);
-
-    for (int i = 0; i < numOfSettingAttributes; i++) {
-      wingsPersistence.delete(
-          SettingAttribute.class, settingAttributes.get(i).getAppId(), settingAttributes.get(i).getUuid());
-      assertThat(wingsPersistence.createQuery(SettingAttribute.class).count())
-          .isEqualTo(numOfSettingAttributes - (i + 1));
-      assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
-          .isEqualTo(numOfEncryptedValsForKms + numOfSettingAttributes - (i + 1));
-    }
+    validateSettingAttributes(settingAttributes, numOfEncryptedValsForKms + numOfSettingAttributes);
   }
 
   @Test
@@ -1609,15 +1501,8 @@ public class KmsTest extends WingsBaseTest {
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
     int numOfSettingAttributes = 5;
-    List<SettingAttribute> settingAttributes = new ArrayList<>();
-    for (int i = 0; i < numOfSettingAttributes; i++) {
-      String password = UUID.randomUUID().toString();
-      final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
-      SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
-
-      wingsPersistence.save(settingAttribute);
-      settingAttributes.add(settingAttribute);
-    }
+    List<SettingAttribute> settingAttributes = getSettingAttributes(accountId, numOfSettingAttributes);
+    wingsPersistence.save(settingAttributes);
 
     assertThat(wingsPersistence.createQuery(SettingAttribute.class).count()).isEqualTo(numOfSettingAttributes);
     assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
@@ -1669,18 +1554,8 @@ public class KmsTest extends WingsBaseTest {
     kmsResource.saveKmsConfig(accountId, KryoUtils.clone(kmsConfig));
 
     int numOfSettingAttributes = 5;
-    List<SettingAttribute> settingAttributes = new ArrayList<>();
-    for (int i = 0; i < numOfSettingAttributes; i++) {
-      String password = UUID.randomUUID().toString();
-      final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
-      SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
-
-      wingsPersistence.save(settingAttribute);
-      appDynamicsConfig.setPassword(null);
-      settingAttribute.setEncryptionType(EncryptionType.KMS);
-      settingAttribute.setEncryptedBy(kmsConfig.getName());
-      settingAttributes.add(settingAttribute);
-    }
+    List<SettingAttribute> settingAttributes = getSettingAttributes(accountId, numOfSettingAttributes);
+    wingsPersistence.save(settingAttributes);
 
     Collection<SettingAttribute> encryptedValues =
         secretManagementResource.listEncryptedSettingAttributes(accountId, null).getResource();
@@ -2827,11 +2702,10 @@ public class KmsTest extends WingsBaseTest {
     kmsResource.saveKmsConfig(accountId, fromConfig);
 
     String password = "password";
-    Set<String> attributeIds = new HashSet<>();
     AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
     SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
-    attributeIds.add(wingsPersistence.save(settingAttribute));
+    wingsPersistence.save(settingAttribute);
     List<EncryptedData> encryptedDataList = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
                                                 .filter("type", SettingVariableTypes.APP_DYNAMICS)
                                                 .asList();
@@ -2964,6 +2838,28 @@ public class KmsTest extends WingsBaseTest {
         assertThat(secretChangeLog.getDescription()).isEqualTo("Changed password");
       }
     }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void kms_Crud_shouldGenerate_Audit() {
+    KmsConfig kmsConfig = getKmsConfig();
+    kmsConfig.setAccountId(accountId);
+
+    String secretManagerId = kmsService.saveKmsConfig(accountId, KryoUtils.clone(kmsConfig));
+    verify(auditServiceHelper)
+        .reportForAuditingUsingAccountId(eq(accountId), eq(null), any(KmsConfig.class), eq(Event.Type.CREATE));
+
+    kmsConfig.setUuid(secretManagerId);
+    kmsConfig.setDefault(false);
+    kmsConfig.setName(kmsConfig.getName() + "_Updated");
+    kmsService.saveKmsConfig(accountId, KryoUtils.clone(kmsConfig));
+    verify(auditServiceHelper)
+        .reportForAuditingUsingAccountId(
+            eq(accountId), any(KmsConfig.class), any(KmsConfig.class), eq(Event.Type.UPDATE));
+
+    kmsService.deleteKmsConfig(accountId, secretManagerId);
+    verify(auditServiceHelper).reportDeleteForAuditingUsingAccountId(eq(accountId), any(KmsConfig.class));
   }
 
   private Thread startTransitionListener() throws IllegalAccessException {

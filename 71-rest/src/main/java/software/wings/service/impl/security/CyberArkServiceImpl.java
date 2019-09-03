@@ -21,11 +21,11 @@ import com.mongodb.DuplicateKeyException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptionType;
+import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.CyberArkConfig;
-import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.SyncTaskContext;
 import software.wings.features.SecretsManagementFeature;
 import software.wings.features.api.PremiumFeature;
@@ -96,6 +96,7 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
     cyberArkConfig.setAccountId(accountId);
     checkIfSecretsManagerConfigCanBeCreatedOrUpdated(accountId);
 
+    CyberArkConfig oldConfigForAudit = null;
     CyberArkConfig savedConfig = null;
     boolean credentialChanged = true;
     if (!isEmpty(cyberArkConfig.getUuid())) {
@@ -111,6 +112,7 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
 
       // Secret field un-decrypted version of saved config
       savedConfig = wingsPersistence.get(CyberArkConfig.class, cyberArkConfig.getUuid());
+      oldConfigForAudit = KryoUtils.clone(savedConfig);
     }
 
     // Validate every time when secret manager config change submitted
@@ -120,6 +122,10 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
       // update without client certificate or url changes
       savedConfig.setName(cyberArkConfig.getName());
       savedConfig.setDefault(cyberArkConfig.isDefault());
+
+      // PL-3237: Audit secret manager config changes.
+      generateAuditForSecretManager(accountId, oldConfigForAudit, savedConfig);
+
       return secretManagerConfigService.save(savedConfig);
     }
 
@@ -139,6 +145,9 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
     String clientCertEncryptedDataId = saveClientCertificateField(
         cyberArkConfig, secretsManagerConfigId, clientCertEncryptedData, CLIENT_CERTIFICATE_NAME_SUFFIX);
     cyberArkConfig.setClientCertificate(clientCertEncryptedDataId);
+
+    // PL-3237: Audit secret manager config changes.
+    generateAuditForSecretManager(accountId, oldConfigForAudit, cyberArkConfig);
 
     return secretManagerConfigService.save(cyberArkConfig);
   }
@@ -204,7 +213,7 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
           cyberArkConfig.getClientCertificate(), cyberArkConfig.getName());
     }
 
-    return wingsPersistence.delete(SecretManagerConfig.class, configId);
+    return deleteSecretManagerAndGenerateAudit(accountId, cyberArkConfig);
   }
 
   @Override

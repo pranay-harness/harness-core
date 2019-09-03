@@ -27,12 +27,12 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.KmsOperationException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptionType;
+import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.BaseFile;
 import software.wings.beans.KmsConfig;
-import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.SyncTaskContext;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
@@ -123,6 +123,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   private String saveKmsConfigInternal(String accountId, KmsConfig kmsConfig) {
     kmsConfig.setAccountId(accountId);
 
+    KmsConfig oldConfigForAudit = null;
     KmsConfig savedKmsConfig = null;
     boolean credentialChanged = true;
     if (isNotEmpty(kmsConfig.getUuid())) {
@@ -141,6 +142,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
       // secret field un-decrypted version of saved KMS config
       savedKmsConfig = wingsPersistence.get(KmsConfig.class, kmsConfig.getUuid());
+      oldConfigForAudit = KryoUtils.clone(savedKmsConfig);
     }
 
     // Validate every time when secret manager config change submitted
@@ -149,6 +151,9 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     if (!credentialChanged) {
       savedKmsConfig.setName(kmsConfig.getName());
       savedKmsConfig.setDefault(kmsConfig.isDefault());
+
+      // PL-3237: Audit secret manager config changes.
+      generateAuditForSecretManager(accountId, oldConfigForAudit, savedKmsConfig);
 
       return secretManagerConfigService.save(savedKmsConfig);
     }
@@ -195,6 +200,9 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     String arnKeyId = wingsPersistence.save(arnKeyData);
     kmsConfig.setKmsArn(arnKeyId);
 
+    // PL-3237: Audit secret manager config changes.
+    generateAuditForSecretManager(accountId, oldConfigForAudit, kmsConfig);
+
     String parentId = secretManagerConfigService.save(kmsConfig);
 
     accessKeyData.addParent(parentId);
@@ -223,11 +231,14 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       throw new KmsOperationException(message, USER_SRE);
     }
 
-    wingsPersistence.delete(KmsConfig.class, kmsConfigId);
-    wingsPersistence.delete(SecretManagerConfig.class, kmsConfigId);
+    KmsConfig kmsConfig = wingsPersistence.get(KmsConfig.class, kmsConfigId);
+    Preconditions.checkNotNull(kmsConfig, "no vault config found with id " + kmsConfigId);
+
     Query<EncryptedData> deleteQuery =
         wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(kmsConfigId);
-    return wingsPersistence.delete(deleteQuery);
+    wingsPersistence.delete(deleteQuery);
+
+    return deleteSecretManagerAndGenerateAudit(accountId, kmsConfig);
   }
 
   @Override

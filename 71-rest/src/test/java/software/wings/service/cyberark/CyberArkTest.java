@@ -8,6 +8,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -34,6 +35,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.CyberArkConfig;
+import software.wings.beans.Event.Type;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
@@ -41,20 +43,17 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.User;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.dl.WingsPersistence;
 import software.wings.features.api.PremiumFeature;
 import software.wings.resources.CyberArkResource;
-import software.wings.resources.SecretManagementResource;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.security.CyberArkService;
-import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalEncryptionService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
-import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.SecretManagerConfigService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
@@ -71,22 +70,19 @@ import java.util.UUID;
 @RunWith(Parameterized.class)
 public class CyberArkTest extends WingsBaseTest {
   @Inject private CyberArkResource cyberArkResource;
-  @Inject private SecretManagementResource secretManagementResource;
   @Mock private AccountService accountService;
   @Inject @InjectMocks private KmsService kmsService;
   @Inject @InjectMocks private CyberArkService cyberArkService;
   @Inject @InjectMocks private SecretManagerConfigService secretManagerConfigService;
   @Inject private LocalEncryptionService localEncryptionService;
-  @Inject private EncryptionService encryptionService;
-  @Inject private SecretManager secretManager;
-  @Inject private WingsPersistence wingsPersistence;
-  @Mock private SecretManagementDelegateService secretManagementDelegateService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
+  @Mock private SecretManagementDelegateService secretManagementDelegateService;
   @Mock private PremiumFeature secretsManagementFeature;
+  @Mock protected AuditServiceHelper auditServiceHelper;
   private final int numOfEncryptedValsForCyberArk = 1;
   private final int numOfEncryptedValsForCyberKms = 3;
   private final String userEmail = "mark.lu@harness.io";
-  private final String userName = "raghu";
+  private final String userName = "mark.lu";
   private final User user = User.Builder.anUser().withEmail(userEmail).withName(userName).build();
   private String userId;
   private String accountId;
@@ -304,16 +300,6 @@ public class CyberArkTest extends WingsBaseTest {
         wingsPersistence.get(EncryptedData.class, savedJenkinsConfig.getEncryptedToken());
     assertThat(encryptedTokenData).isNotNull();
     assertThat(encryptedTokenData.getType()).isEqualTo(SettingVariableTypes.JENKINS);
-    if (isGlobalKmsEnabled) {
-      assertThat(encryptedTokenData.getEncryptionType()).isEqualTo(EncryptionType.KMS);
-      assertThat(encryptedTokenData.getKmsId()).isEqualTo(kmsId);
-      decryptedValue = kmsService.decrypt(encryptedTokenData, accountId, kmsConfig);
-    } else {
-      assertThat(encryptedTokenData.getEncryptionType()).isEqualTo(EncryptionType.LOCAL);
-      decryptedValue = localEncryptionService.decrypt(encryptedTokenData, accountId, localEncryptionConfig);
-    }
-
-    assertThat(decryptedValue).isEqualTo(null);
   }
 
   @Test
@@ -346,6 +332,36 @@ public class CyberArkTest extends WingsBaseTest {
     assertThat(modifiedSavedConfig.getAppId()).isEqualTo(savedConfig.getAppId());
     assertThat(modifiedSavedConfig.getName()).isEqualTo(cyberArkConfig.getName());
     assertThat(modifiedSavedConfig.isDefault()).isEqualTo(false);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void cyberArkSecretManager_Crud_shouldGenerate_Audit() {
+    if (isGlobalKmsEnabled) {
+      verify(auditServiceHelper)
+          .reportForAuditingUsingAccountId(
+              eq(Account.GLOBAL_ACCOUNT_ID), eq(null), any(KmsConfig.class), eq(Type.CREATE));
+    }
+
+    String name = UUID.randomUUID().toString();
+    CyberArkConfig cyberArkConfig = getCyberArkConfig();
+    cyberArkConfig.setName(name);
+    cyberArkConfig.setAccountId(accountId);
+
+    String secretManagerId = cyberArkService.saveConfig(accountId, KryoUtils.clone(cyberArkConfig));
+    verify(auditServiceHelper)
+        .reportForAuditingUsingAccountId(eq(accountId), eq(null), any(CyberArkConfig.class), eq(Type.CREATE));
+
+    cyberArkConfig.setUuid(secretManagerId);
+    cyberArkConfig.setDefault(false);
+    cyberArkConfig.setName(cyberArkConfig.getName() + "_Updated");
+    cyberArkService.saveConfig(accountId, KryoUtils.clone(cyberArkConfig));
+    verify(auditServiceHelper)
+        .reportForAuditingUsingAccountId(
+            eq(accountId), any(CyberArkConfig.class), any(CyberArkConfig.class), eq(Type.UPDATE));
+
+    cyberArkService.deleteConfig(accountId, secretManagerId);
+    verify(auditServiceHelper).reportDeleteForAuditingUsingAccountId(eq(accountId), any(CyberArkConfig.class));
   }
 
   private CyberArkConfig saveCyberArkConfig() {

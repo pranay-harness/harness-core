@@ -1,15 +1,20 @@
 package software.wings;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
 import io.harness.MockableTestMixin;
 import io.harness.exception.KmsOperationException;
+import io.harness.queue.Queue;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
 import org.junit.Rule;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.Account;
 import software.wings.beans.Account.Builder;
 import software.wings.beans.AccountStatus;
@@ -22,13 +27,20 @@ import software.wings.beans.LicenseInfo;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.VaultConfig;
+import software.wings.dl.WingsPersistence;
+import software.wings.resources.SecretManagementResource;
 import software.wings.rules.WingsRule;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
+import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.UUID;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -43,6 +55,13 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
   // I am not absolutely sure why, but there is dependency between wings io.harness.rule and
   // MockitoJUnit io.harness.rule and they have to be listed in these order
   @Rule public WingsRule wingsRule = new WingsRule();
+
+  @Inject protected SecretManagementResource secretManagementResource;
+  @Inject protected SecretManager secretManager;
+  @Inject protected WingsPersistence wingsPersistence;
+  @Inject protected ConfigService configService;
+  @Inject protected EncryptionService encryptionService;
+  @Inject protected Queue<KmsTransitionEvent> transitionKmsQueue;
 
   protected EncryptedData encrypt(String accountId, char[] value, KmsConfig kmsConfig) throws Exception {
     if (kmsConfig.getAccessKey().equals("invalidKey")) {
@@ -193,6 +212,42 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
         .encryptedPassword(encryptedPassword)
         .accountname(UUID.randomUUID().toString())
         .build();
+  }
+
+  protected void validateSettingAttributes(
+      List<SettingAttribute> settingAttributes, int expectedNumOfEncryptedRecords) {
+    int numOfSettingAttributes = settingAttributes.size();
+    assertThat(wingsPersistence.createQuery(SettingAttribute.class).count()).isEqualTo(numOfSettingAttributes);
+    assertThat(wingsPersistence.createQuery(EncryptedData.class).count()).isEqualTo(expectedNumOfEncryptedRecords);
+
+    for (int i = 0; i < numOfSettingAttributes; i++) {
+      SettingAttribute settingAttribute = settingAttributes.get(i);
+      String id = settingAttribute.getUuid();
+      String appId = settingAttribute.getAppId();
+      SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, id);
+      assertThat(savedAttribute).isEqualTo(settingAttributes.get(i));
+      AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttributes.get(i).getValue();
+      assertThat(appDynamicsConfig.getPassword()).isNull();
+
+      encryptionService.decrypt(appDynamicsConfig, secretManager.getEncryptionDetails(appDynamicsConfig, null, appId));
+      assertThat(new String(appDynamicsConfig.getPassword())).isEqualTo("password_" + i);
+
+      wingsPersistence.delete(SettingAttribute.class, settingAttribute.getAppId(), settingAttribute.getUuid());
+    }
+
+    assertThat(wingsPersistence.createQuery(SettingAttribute.class).count()).isEqualTo(0);
+    assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
+        .isEqualTo(expectedNumOfEncryptedRecords - numOfSettingAttributes);
+  }
+
+  protected List<SettingAttribute> getSettingAttributes(String accountId, int numOfSettingAttributes) {
+    List<SettingAttribute> settingAttributes = new ArrayList<>();
+    for (int i = 0; i < numOfSettingAttributes; i++) {
+      String password = "password_" + i;
+      final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+      settingAttributes.add(getSettingAttribute(appDynamicsConfig));
+    }
+    return settingAttributes;
   }
 
   protected SettingAttribute getSettingAttribute(AppDynamicsConfig appDynamicsConfig) {

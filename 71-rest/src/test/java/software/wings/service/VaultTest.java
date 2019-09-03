@@ -25,7 +25,6 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import io.harness.queue.Queue;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.rule.RealMongo;
 import io.harness.rule.RepeatRule.Repeat;
@@ -49,7 +48,6 @@ import org.mockito.Mock;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.annotation.EncryptableSetting;
-import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.Activity;
@@ -57,6 +55,7 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.EntityType;
+import software.wings.beans.Event;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.Service;
@@ -72,20 +71,17 @@ import software.wings.beans.VaultConfig;
 import software.wings.beans.WorkflowExecution;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.dl.WingsPersistence;
 import software.wings.features.api.PremiumFeature;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.ConfigService;
-import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
-import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.SecretManagerConfigService;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -122,14 +118,10 @@ public class VaultTest extends WingsBaseTest {
   @Inject @InjectMocks private VaultService vaultService;
   @Inject @InjectMocks private KmsService kmsService;
   @Inject @InjectMocks private SecretManagerConfigService secretManagerConfigService;
-  @Inject private SecretManager secretManager;
-  @Inject private WingsPersistence wingsPersistence;
-  @Inject private ConfigService configService;
-  @Inject private EncryptionService encryptionService;
-  @Inject private Queue<KmsTransitionEvent> transitionKmsQueue;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private SecretManagementDelegateService secretManagementDelegateService;
   @Mock private PremiumFeature secretsManagementFeature;
+  @Mock protected AuditServiceHelper auditServiceHelper;
   private final String userEmail = "rsingh@harness.io";
   private final String userName = "raghu";
   private final User user = User.Builder.anUser().withEmail(userEmail).withName(userName).build();
@@ -635,33 +627,8 @@ public class VaultTest extends WingsBaseTest {
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
     int numOfSettingAttributes = 5;
-    List<SettingAttribute> settingAttributes = new ArrayList<>();
-    for (int i = 0; i < numOfSettingAttributes; i++) {
-      String password = "password" + i;
-      final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
-      SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
-
-      settingAttributes.add(settingAttribute);
-    }
+    List<SettingAttribute> settingAttributes = getSettingAttributes(accountId, numOfSettingAttributes);
     wingsPersistence.save(settingAttributes);
-
-    assertThat(wingsPersistence.createQuery(SettingAttribute.class).count()).isEqualTo(numOfSettingAttributes);
-    assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
-        .isEqualTo(numOfEncRecords + numOfSettingAttributes);
-    for (int i = 0; i < numOfSettingAttributes; i++) {
-      String id = settingAttributes.get(i).getUuid();
-      SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, id);
-      assertThat(savedAttribute).isEqualTo(settingAttributes.get(i));
-      AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttributes.get(i).getValue();
-      assertThat(appDynamicsConfig.getPassword()).isNull();
-
-      encryptionService.decrypt(
-          appDynamicsConfig, secretManager.getEncryptionDetails(appDynamicsConfig, workflowExecutionId, appId));
-      assertThat(new String(appDynamicsConfig.getPassword())).isEqualTo("password" + i);
-      Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(id);
-      assertThat(query.count()).isEqualTo(1);
-      assertThat(query.get().getKmsId()).isEqualTo(vaultConfig.getUuid());
-    }
 
     Collection<SecretManagerConfig> vaultConfigs =
         secretManagerConfigService.listSecretManagersByType(accountId, EncryptionType.VAULT, true);
@@ -721,6 +688,9 @@ public class VaultTest extends WingsBaseTest {
     User user2 = User.Builder.anUser().withEmail(UUID.randomUUID().toString()).withName("user2").build();
     wingsPersistence.save(user2);
     UserThreadLocal.set(user2);
+
+    ((AppDynamicsConfig) savedAttribute.getValue()).setUsername(UUID.randomUUID().toString());
+    ((AppDynamicsConfig) savedAttribute.getValue()).setPassword(UUID.randomUUID().toString().toCharArray());
     wingsPersistence.save(savedAttribute);
 
     query = wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedAttributeId);
@@ -1037,26 +1007,9 @@ public class VaultTest extends WingsBaseTest {
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
     int numOfSettingAttributes = 5;
-    List<SettingAttribute> settingAttributes = new ArrayList<>();
-    for (int i = 0; i < numOfSettingAttributes; i++) {
-      String password = UUID.randomUUID().toString();
-      final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
-      SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
-
-      wingsPersistence.save(settingAttribute);
-      settingAttributes.add(settingAttribute);
-    }
-
-    assertThat(wingsPersistence.createQuery(SettingAttribute.class).count()).isEqualTo(numOfSettingAttributes);
-    assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
-        .isEqualTo(numOfEncRecords + numOfSettingAttributes);
-    for (int i = 0; i < numOfSettingAttributes; i++) {
-      wingsPersistence.delete(settingAttributes.get(i));
-      assertThat(wingsPersistence.createQuery(SettingAttribute.class).count())
-          .isEqualTo(numOfSettingAttributes - (i + 1));
-      assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
-          .isEqualTo(numOfEncRecords + numOfSettingAttributes - (i + 1));
-    }
+    List<SettingAttribute> settingAttributes = getSettingAttributes(accountId, numOfSettingAttributes);
+    wingsPersistence.save(settingAttributes);
+    validateSettingAttributes(settingAttributes, numOfEncRecords + numOfSettingAttributes);
   }
 
   @Test
@@ -1066,41 +1019,15 @@ public class VaultTest extends WingsBaseTest {
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
     int numOfSettingAttributes = 5;
-    List<SettingAttribute> settingAttributes = new ArrayList<>();
-    for (int i = 0; i < numOfSettingAttributes; i++) {
-      String password = UUID.randomUUID().toString();
-      final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
-      SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
-
+    List<SettingAttribute> settingAttributes = getSettingAttributes(accountId, numOfSettingAttributes);
+    for (SettingAttribute settingAttribute : settingAttributes) {
       wingsPersistence.save(settingAttribute);
-      settingAttributes.add(settingAttribute);
     }
+    validateSettingAttributes(settingAttributes, numOfEncRecords + numOfSettingAttributes);
 
-    assertThat(wingsPersistence.createQuery(SettingAttribute.class).count()).isEqualTo(numOfSettingAttributes);
-    assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
-        .isEqualTo(numOfEncRecords + numOfSettingAttributes);
-
-    for (int i = 0; i < numOfSettingAttributes; i++) {
-      wingsPersistence.delete(accountId, SettingAttribute.class, settingAttributes.get(i).getUuid());
-      assertThat(wingsPersistence.createQuery(SettingAttribute.class).count())
-          .isEqualTo(numOfSettingAttributes - (i + 1));
-      assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
-          .isEqualTo(numOfEncRecords + numOfSettingAttributes - (i + 1));
-    }
-
+    settingAttributes = getSettingAttributes(accountId, numOfSettingAttributes);
     wingsPersistence.save(settingAttributes);
-    assertThat(wingsPersistence.createQuery(SettingAttribute.class).count()).isEqualTo(numOfSettingAttributes);
-    assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
-        .isEqualTo(numOfEncRecords + numOfSettingAttributes);
-
-    for (int i = 0; i < numOfSettingAttributes; i++) {
-      wingsPersistence.delete(
-          SettingAttribute.class, settingAttributes.get(i).getAppId(), settingAttributes.get(i).getUuid());
-      assertThat(wingsPersistence.createQuery(SettingAttribute.class).count())
-          .isEqualTo(numOfSettingAttributes - (i + 1));
-      assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
-          .isEqualTo(numOfEncRecords + numOfSettingAttributes - (i + 1));
-    }
+    validateSettingAttributes(settingAttributes, numOfEncRecords + numOfSettingAttributes);
   }
 
   @Test
@@ -1180,14 +1107,8 @@ public class VaultTest extends WingsBaseTest {
       vaultService.saveVaultConfig(accountId, fromConfig);
 
       int numOfSettingAttributes = 5;
-      for (int i = 0; i < numOfSettingAttributes; i++) {
-        String password = UUID.randomUUID().toString();
-        final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
-        SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
-
-        wingsPersistence.save(settingAttribute);
-        appDynamicsConfig.setPassword(null);
-      }
+      List<SettingAttribute> settingAttributes = getSettingAttributes(accountId, numOfSettingAttributes);
+      wingsPersistence.save(settingAttributes);
 
       Query<EncryptedData> query =
           wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, accountId);
@@ -1507,6 +1428,33 @@ public class VaultTest extends WingsBaseTest {
       }
       i++;
     }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void vaultSecretManager_Crud_shouldGenerate_Audit() {
+    if (isKmsEnabled) {
+      // Doesn't make any difference to run with KMS enabled...
+      return;
+    }
+
+    VaultConfig vaultConfig = getVaultConfig();
+    vaultConfig.setAccountId(accountId);
+
+    String secretManagerId = vaultService.saveVaultConfig(accountId, KryoUtils.clone(vaultConfig));
+    verify(auditServiceHelper)
+        .reportForAuditingUsingAccountId(eq(accountId), eq(null), any(VaultConfig.class), eq(Event.Type.CREATE));
+
+    vaultConfig.setUuid(secretManagerId);
+    vaultConfig.setDefault(false);
+    vaultConfig.setName(vaultConfig.getName() + "_Updated");
+    vaultService.saveVaultConfig(accountId, KryoUtils.clone(vaultConfig));
+    verify(auditServiceHelper)
+        .reportForAuditingUsingAccountId(
+            eq(accountId), any(VaultConfig.class), any(VaultConfig.class), eq(Event.Type.UPDATE));
+
+    vaultService.deleteVaultConfig(accountId, secretManagerId);
+    verify(auditServiceHelper).reportDeleteForAuditingUsingAccountId(eq(accountId), any(VaultConfig.class));
   }
 
   private Thread startTransitionListener() throws IllegalAccessException {

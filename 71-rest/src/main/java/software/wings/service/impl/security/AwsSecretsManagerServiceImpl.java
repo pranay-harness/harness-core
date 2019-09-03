@@ -33,11 +33,11 @@ import com.amazonaws.services.secretsmanager.model.ResourceNotFoundException;
 import com.mongodb.DuplicateKeyException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptionType;
+import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.AwsSecretsManagerConfig;
-import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.SyncTaskContext;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
@@ -143,6 +143,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
     checkIfSecretsManagerConfigCanBeCreatedOrUpdated(accountId);
     secretsManagerConfig.setAccountId(accountId);
 
+    AwsSecretsManagerConfig oldConfigForAudit = null;
     AwsSecretsManagerConfig savedSecretsManagerConfig = null;
     boolean credentialChanged = true;
     if (!isEmpty(secretsManagerConfig.getUuid())) {
@@ -155,6 +156,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
 
       // secret field un-decrypted version of saved AWS config
       savedSecretsManagerConfig = wingsPersistence.get(AwsSecretsManagerConfig.class, secretsManagerConfig.getUuid());
+      oldConfigForAudit = KryoUtils.clone(savedSecretsManagerConfig);
     }
 
     // Validate every time when secret manager config change submitted
@@ -165,6 +167,9 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
       savedSecretsManagerConfig.setName(secretsManagerConfig.getName());
       savedSecretsManagerConfig.setDefault(secretsManagerConfig.isDefault());
       savedSecretsManagerConfig.setSecretNamePrefix(secretsManagerConfig.getSecretNamePrefix());
+
+      // PL-3237: Audit secret manager config changes.
+      generateAuditForSecretManager(accountId, oldConfigForAudit, savedSecretsManagerConfig);
 
       return secretManagerConfigService.save(savedSecretsManagerConfig);
     }
@@ -185,6 +190,9 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
     String secretKeyEncryptedDataId =
         saveSecretField(secretsManagerConfig, secretsManagerConfigId, secretKeyEncryptedData, SECRET_KEY_NAME_SUFFIX);
     secretsManagerConfig.setSecretKey(secretKeyEncryptedDataId);
+
+    // PL-3237: Audit secret manager config changes.
+    generateAuditForSecretManager(accountId, oldConfigForAudit, secretsManagerConfig);
 
     return secretManagerConfigService.save(secretsManagerConfig);
   }
@@ -281,7 +289,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
           secretsManagerConfig.getSecretKey(), secretsManagerConfig.getName());
     }
 
-    return wingsPersistence.delete(SecretManagerConfig.class, configId);
+    return deleteSecretManagerAndGenerateAudit(accountId, secretsManagerConfig);
   }
 
   @Override
