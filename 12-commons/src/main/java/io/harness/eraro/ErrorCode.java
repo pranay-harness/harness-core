@@ -364,6 +364,7 @@ public enum ErrorCode {
 
   INVALID_DASHBOARD_UPDATE_REQUEST("Invalid Dashboard update request"),
 
+  DUPLICATE_FIELD,
   INVALID_AZURE_VAULT_CONFIGURATION,
   USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS("User not authorized due to usage restrictions"),
   ;

@@ -1,4 +1,4 @@
-package software.wings.service.intfc;
+package software.wings.service.impl.infrastructuredefinition;
 
 import static io.harness.beans.PageResponse.PageRequestBuilder;
 import static io.harness.beans.PageResponse.PageResponseBuilder;
@@ -56,6 +56,7 @@ import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
+import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -105,7 +106,6 @@ import software.wings.infra.AwsLambdaInfrastructure;
 import software.wings.infra.AwsLambdaInfrastructure.AwsLambdaInfrastructureKeys;
 import software.wings.infra.AzureInstanceInfrastructure;
 import software.wings.infra.CloudProviderInfrastructure;
-import software.wings.infra.FieldKeyValMapProvider;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.GoogleKubernetesEngine.GoogleKubernetesEngineKeys;
 import software.wings.infra.InfraDefinitionDetail;
@@ -126,8 +126,20 @@ import software.wings.service.impl.PcfHelperService;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
 import software.wings.service.impl.spotinst.SpotinstHelperServiceManager;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
+import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.InfrastructureProvider;
+import software.wings.service.intfc.InfrastructureProvisionerService;
+import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.TriggerService;
+import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
-import software.wings.service.intfc.aws.manager.AwsElbHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsRoute53HelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlPushService;
@@ -177,11 +189,10 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private AwsAsgHelperServiceManager awsAsgHelperServiceManager;
-
-  @Inject private AwsElbHelperServiceManager awsElbHelperServiceManager;
   @Inject private SpotinstHelperServiceManager spotinstHelperServiceManager;
   @Inject private Queue<PruneEvent> pruneQueue;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private InfrastructureDefinitionHelper infrastructureDefinitionHelper;
 
   private static Map<CloudProviderType, EnumSet<DeploymentType>> supportedCloudProviderDeploymentTypes =
       new HashMap<CloudProviderType, EnumSet<DeploymentType>>() {
@@ -485,7 +496,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     return infrastructureDefinition;
   }
 
-  void validateImmutableFields(
+  public void validateImmutableFields(
       InfrastructureDefinition newInfrastructureDefinition, InfrastructureDefinition oldInfraDefinition) {
     if (!oldInfraDefinition.getDeploymentType().equals(newInfrastructureDefinition.getDeploymentType())) {
       throw new InvalidRequestException("Deployment Type is immutable");
@@ -546,18 +557,31 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     if (context != null) {
       renderExpression(infrastructureDefinition, context);
     }
-    InfrastructureMapping infraMapping = existingInfraMapping(infrastructureDefinition, serviceId);
+
     InfrastructureMapping newInfraMapping = infrastructureDefinition.getInfraMapping();
+    InfrastructureMapping infraMapping =
+        infrastructureDefinitionHelper.existingInfraMapping(infrastructureDefinition, serviceId);
     newInfraMapping.setServiceId(serviceId);
     newInfraMapping.setAccountId(appService.getAccountIdByAppId(appId));
     newInfraMapping.setInfrastructureDefinitionId(infraDefinitionId);
-    if (infraMapping != null) {
+    newInfraMapping.setAutoPopulate(false);
+    newInfraMapping.setName(
+        infrastructureDefinitionHelper.getNameFromInfraDefinition(infrastructureDefinition, serviceId));
+    if (infraMapping == null) {
+      try {
+        return infrastructureMappingService.save(newInfraMapping);
+      } catch (DuplicateFieldException ex) {
+        logger.info("Trying to save but Existing InfraMapping Found. Updating........");
+        infraMapping = infrastructureDefinitionHelper.existingInfraMapping(infrastructureDefinition, serviceId);
+        newInfraMapping.setUuid(infraMapping.getUuid());
+        newInfraMapping.setName(infraMapping.getName());
+        return infrastructureMappingService.update(newInfraMapping);
+      }
+    } else {
+      logger.info("Existing InfraMapping Found Updating.....");
       newInfraMapping.setUuid(infraMapping.getUuid());
       newInfraMapping.setName(infraMapping.getName());
       return infrastructureMappingService.update(newInfraMapping);
-    } else {
-      newInfraMapping.setAutoPopulate(true);
-      return infrastructureMappingService.save(newInfraMapping);
     }
   }
 
@@ -693,36 +717,6 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
         .filter("envId", envId)
         .filter("name", infraDefName)
         .get();
-  }
-
-  @VisibleForTesting
-  private InfrastructureMapping existingInfraMapping(InfrastructureDefinition infraDefinition, String serviceId) {
-    Service service = serviceResourceService.get(infraDefinition.getAppId(), serviceId);
-    InfraMappingInfrastructureProvider infrastructure = infraDefinition.getInfrastructure();
-    Class<? extends InfrastructureMapping> mappingClass = infrastructure.getMappingClass();
-    Map<String, Object> queryMap = ((FieldKeyValMapProvider) infrastructure).getFieldMapForClass();
-    Query baseQuery = wingsPersistence.createQuery(mappingClass)
-                          .filter(InfrastructureMapping.APP_ID_KEY, infraDefinition.getAppId())
-                          .filter(InfrastructureMapping.ENV_ID_KEY, infraDefinition.getEnvId())
-                          .filter(InfrastructureMappingKeys.serviceId, serviceId)
-                          .filter(InfrastructureMappingKeys.infrastructureDefinitionId, infraDefinition.getUuid());
-
-    // TODO => Hackish Find a better way to handle V1 services
-    if (queryMap.containsKey("releaseName") && !service.isK8sV2()) {
-      queryMap.remove("releaseName");
-    }
-    queryMap.forEach(baseQuery::filter);
-    List<InfrastructureMapping> infrastructureMappings = baseQuery.asList();
-    if (isEmpty(infrastructureMappings)) {
-      return null;
-    } else {
-      if (infrastructureMappings.size() > 1) {
-        throw new InvalidRequestException(
-            format("More than 1 mappings found for infra definition : [%s]. Mappings : [%s", infraDefinition.toString(),
-                infrastructureMappings.toString()));
-      }
-      return infrastructureMappings.get(0);
-    }
   }
 
   private void validateInputs(String appId, String serviceId, String infraDefinitionId) {
