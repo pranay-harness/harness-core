@@ -12,6 +12,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.EntityType.APPLICATION;
 import static software.wings.beans.EntityType.ENVIRONMENT;
@@ -27,7 +28,9 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.common.Constants.WINGS_BACKUP_PATH;
 import static software.wings.common.Constants.WINGS_RUNTIME_PATH;
 import static software.wings.common.Constants.WINGS_STAGING_PATH;
+import static software.wings.service.impl.expression.ExpressionBuilder.ARTIFACT_FILE_NAME;
 import static software.wings.service.impl.expression.ExpressionBuilder.HTTP_URL;
+import static software.wings.service.impl.expression.ExpressionBuilder.INFRA_NAME;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.sm.StateType.AWS_CODEDEPLOY_STATE;
@@ -300,6 +303,10 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldGetWorkflowExpressions() {
+    List<Variable> userVariables = newArrayList(aVariable().name("name1").value("value1").build());
+    Workflow workflow = buildCanaryWorkflow(userVariables);
+
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
     PageRequest<ServiceVariable> serviceVariablePageRequest = aPageRequest()
                                                                   .withLimit(PageRequest.UNLIMITED)
                                                                   .addFilter("appId", EQ, APP_ID)
@@ -503,6 +510,34 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
     Set<String> expressions = builderService.listExpressions(APP_ID, WORKFLOW_ID, WORKFLOW, SERVICE_ID, COMMAND);
     assertThat(expressions).isNotNull();
     assertThat(expressions).contains("env.name");
+    assertThat(expressions).contains("workflow.variables.name1");
+    assertThat(expressions).contains(WINGS_STAGING_PATH);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetBuildWorkflowExpressions() {
+    List<Variable> userVariables = newArrayList(aVariable().name("name1").value("value1").build());
+    Workflow workflow = aWorkflow()
+                            .name(WORKFLOW_NAME)
+                            .appId(APP_ID)
+                            .workflowType(WorkflowType.ORCHESTRATION)
+                            .orchestrationWorkflow(aBuildOrchestrationWorkflow()
+                                                       .withUserVariables(userVariables)
+                                                       .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                                       .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                                       .build())
+                            .build();
+
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
+    when(serviceVariableService.list(serviceVariablePageRequest, MASKED)).thenReturn(serviceVariables);
+
+    Set<String> expressions = builderService.listExpressions(APP_ID, WORKFLOW_ID, WORKFLOW, SERVICE_ID, COMMAND);
+    assertThat(expressions).isNotNull();
+    assertThat(expressions).doesNotContain("env.name");
+    assertThat(expressions).doesNotContain(SERVICE_VARIABLE_NAME);
+    assertThat(expressions).doesNotContain(ARTIFACT_FILE_NAME);
+    assertThat(expressions).doesNotContain(INFRA_NAME);
     assertThat(expressions).contains("workflow.variables.name1");
     assertThat(expressions).contains(WINGS_STAGING_PATH);
   }

@@ -61,6 +61,7 @@ public abstract class ExpressionBuilder {
   protected static final String APP_NAME = "app.name";
   protected static final String APP_DESCRIPTION = "app.description";
 
+  protected static final String ARTIFACT_PREFIX = "artifact.";
   protected static final String ARTIFACT_DISPLAY_NAME = "artifact.displayName";
   protected static final String ARTIFACT_DESCRIPTION = "artifact.description";
   protected static final String ARTIFACT_BUILDNO = "artifact.buildNo";
@@ -96,8 +97,13 @@ public abstract class ExpressionBuilder {
   protected static final String ARTIFACT_SOURCE_REPOSITORY_NAME_SUFFIX =
       ".source." + ARTIFACT_SOURCE_REPOSITORY_NAME_KEY;
 
+  protected static final String ENV_PREFIX = "env.";
   protected static final String ENV_NAME = "env.name";
   protected static final String ENV_DESCRIPTION = "env.description";
+
+  protected static final String SERVICE_PREFIX = "service.";
+  protected static final String SERVICE_VARIABLE_PREFIX = "serviceVariable.";
+  protected static final String ENV_VARIABLE_PREFIX = "environmentVariable.";
 
   protected static final String SERVICE_NAME = "service.name";
   protected static final String SERVICE_DESCRIPTION = "service.description";
@@ -120,6 +126,7 @@ public abstract class ExpressionBuilder {
   protected static final String INSTANCE_HOSTNAME = "instance.hostName";
   protected static final String INSTANCE_HOST_PUBLICDNS = "instance.host.publicDns";
 
+  protected static final String INFRA_PREFIX = "infra.";
   protected static final String INFRA_KUBERNETES_NAMESPACE = "infra.kubernetes.namespace";
   protected static final String INFRA_KUBERNETES_INFRAID = "infra.kubernetes.infraId";
   protected static final String INFRA_HELM_SHORTID = "infra.helm.shortId";

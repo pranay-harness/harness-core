@@ -589,6 +589,7 @@ public class ArtifactServiceImpl implements ArtifactService {
     if (artifactStream.isMetadataOnly() || autoDownloaded.contains(artifactStream.getArtifactStreamType())) {
       return;
     }
+    // If it is Nexus Non Docker
     // TODO: ASR: update with accountId
     List<Artifact> toBeDeletedArtifacts = wingsPersistence.createQuery(Artifact.class, excludeAuthority)
                                               .project(ArtifactKeys.artifactFiles, true)
