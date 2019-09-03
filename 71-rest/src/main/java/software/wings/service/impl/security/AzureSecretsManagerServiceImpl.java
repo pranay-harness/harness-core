@@ -19,6 +19,7 @@ import com.mongodb.DuplicateKeyException;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptionType;
+import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
@@ -44,9 +45,10 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
   @Override
   public String saveAzureSecretsManagerConfig(String accountId, AzureVaultConfig azureVautConfig) {
     checkIfSecretsManagerConfigCanBeCreatedOrUpdated(accountId);
-    AzureVaultConfig savedAzureVaultConfig = null;
     azureVautConfig.setAccountId(accountId);
 
+    AzureVaultConfig oldConfigForAudit = null;
+    AzureVaultConfig savedAzureVaultConfig = null;
     boolean credentialChanged = false;
 
     if (isNotEmpty(azureVautConfig.getUuid())) {
@@ -61,6 +63,7 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
 
       // Secret fields un-decrypted azure config
       savedAzureVaultConfig = wingsPersistence.get(AzureVaultConfig.class, azureVautConfig.getUuid());
+      oldConfigForAudit = KryoUtils.clone(savedAzureVaultConfig);
     }
 
     // Validate every time when secret manager config change submitted
@@ -70,6 +73,9 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
       savedAzureVaultConfig.setName(azureVautConfig.getName());
       savedAzureVaultConfig.setDefault(azureVautConfig.isDefault());
       savedAzureVaultConfig.setVaultName(azureVautConfig.getVaultName());
+
+      // PL-3237: Audit secret manager config changes.
+      generateAuditForSecretManager(accountId, oldConfigForAudit, savedAzureVaultConfig);
 
       return secretManagerConfigService.save(savedAzureVaultConfig);
     }
@@ -90,6 +96,9 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
     String secretKeyEncryptedDataId =
         saveSecretField(azureVautConfig, secretsManagerConfigId, secretKeyEncryptedData, SECRET_KEY_NAME_SUFFIX);
     azureVautConfig.setSecretKey(secretKeyEncryptedDataId);
+
+    // PL-3237: Audit secret manager config changes.
+    generateAuditForSecretManager(accountId, oldConfigForAudit, azureVautConfig);
 
     return secretManagerConfigService.save(azureVautConfig);
   }
@@ -210,6 +219,6 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
       logger.info("Deleted encrypted auth token record {} associated with Azure Secrets Manager '{}'",
           azureVaultConfig.getSecretKey(), azureVaultConfig.getName());
     }
-    return wingsPersistence.delete(azureVaultConfig);
+    return deleteSecretManagerAndGenerateAudit(accountId, azureVaultConfig);
   }
 }

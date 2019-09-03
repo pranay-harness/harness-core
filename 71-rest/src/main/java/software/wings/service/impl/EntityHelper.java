@@ -46,6 +46,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.Pipeline;
+import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.ServiceVariable;
@@ -478,6 +479,15 @@ public class EntityHelper {
       affectedResourceId = dashboardSettings.getUuid();
       affectedResourceName = ResourceType.CUSTOM_DASHBOARD.name();
       affectedResourceType = ResourceType.CUSTOM_DASHBOARD.name();
+      affectedResourceOperation = type.name();
+    } else if (entity instanceof SecretManagerConfig) {
+      SecretManagerConfig secretManagerConfig = (SecretManagerConfig) entity;
+      entityType = ResourceType.SECRET_MANAGER.name();
+      entityName = secretManagerConfig.getName();
+      appId = Application.GLOBAL_APP_ID;
+      affectedResourceId = secretManagerConfig.getUuid();
+      affectedResourceName = ResourceType.SECRET_MANAGER.name();
+      affectedResourceType = ResourceType.SECRET_MANAGER.name();
       affectedResourceOperation = type.name();
     } else {
       logger.error(format("Unhandled class for auditing: [%s]", entity.getClass().getSimpleName()));

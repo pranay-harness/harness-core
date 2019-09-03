@@ -183,7 +183,7 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
           Query<EncryptedData> encryptedDataQuery = wingsPersistence.createQuery(EncryptedData.class)
                                                         .filter(EncryptedDataKeys.accountId, accountId)
                                                         .filter(EncryptedDataKeys.kmsId, secretManagerConfig.getUuid());
-          secretManagerConfig.setNumOfEncryptedValue(encryptedDataQuery.asKeyList().size());
+          secretManagerConfig.setNumOfEncryptedValue((int) encryptedDataQuery.count());
 
           switch (secretManagerConfig.getEncryptionType()) {
             case AWS_SECRETS_MANAGER:
