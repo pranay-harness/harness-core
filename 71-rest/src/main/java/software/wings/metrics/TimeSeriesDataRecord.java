@@ -213,7 +213,6 @@ public class TimeSeriesDataRecord implements GoogleDataStoreAware, UuidAware, Cr
   public GoogleDataStoreAware readFromCloudStorageEntity(com.google.cloud.datastore.Entity entity) {
     final TimeSeriesDataRecord dataRecord =
         TimeSeriesDataRecord.builder()
-            .stateType(StateType.valueOf(readString(entity, TimeSeriesMetricRecordKeys.stateType)))
             .workflowId(readString(entity, TimeSeriesMetricRecordKeys.workflowId))
             .workflowExecutionId(readString(entity, TimeSeriesMetricRecordKeys.workflowExecutionId))
             .serviceId(readString(entity, TimeSeriesMetricRecordKeys.serviceId))
@@ -230,6 +229,11 @@ public class TimeSeriesDataRecord implements GoogleDataStoreAware, UuidAware, Cr
     final String level = readString(entity, TimeSeriesMetricRecordKeys.level);
     if (isNotEmpty(level)) {
       dataRecord.setLevel(ClusterLevel.valueOf(level));
+    }
+
+    final String stateType = readString(entity, TimeSeriesMetricRecordKeys.stateType);
+    if (isNotEmpty(stateType)) {
+      dataRecord.setStateType(StateType.valueOf(stateType));
     }
 
     return dataRecord;
