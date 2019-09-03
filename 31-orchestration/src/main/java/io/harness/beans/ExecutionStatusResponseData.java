@@ -1,6 +1,5 @@
-package software.wings.sm;
+package io.harness.beans;
 
-import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ResponseData;
 
 /**

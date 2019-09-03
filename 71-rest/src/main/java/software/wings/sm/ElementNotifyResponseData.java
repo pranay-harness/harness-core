@@ -1,6 +1,7 @@
 package software.wings.sm;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.ExecutionStatusResponseData;
 import lombok.Getter;
 import lombok.Setter;
 
