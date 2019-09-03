@@ -9,7 +9,6 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.manifest.ManifestHelper.normalizeFolderPath;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.contains;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.HostElement.Builder.aHostElement;
@@ -40,6 +39,7 @@ import io.harness.k8s.model.K8sPod;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
@@ -101,6 +101,8 @@ import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.ApplicationManifestUtils;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -299,9 +301,31 @@ public class K8sStateHelper {
       ManifestFile manifestFile =
           applicationManifestService.getManifestFileByFileName(applicationManifest.getUuid(), values_filename);
       if (manifestFile != null) {
-        return contains(manifestFile.getFileContent(), "${artifact.");
+        return isValueToFindPresent(manifestFile.getFileContent(), "${artifact.");
       }
     }
+    return false;
+  }
+
+  private boolean isValueToFindPresent(String fileContent, String valueToFind) {
+    if (isBlank(fileContent)) {
+      return false;
+    }
+
+    try (LineIterator lineIterator = new LineIterator(new StringReader(fileContent))) {
+      while (lineIterator.hasNext()) {
+        String line = lineIterator.nextLine();
+        if (isBlank(line) || line.trim().charAt(0) == '#') {
+          continue;
+        }
+        if (line.contains(valueToFind)) {
+          return true;
+        }
+      }
+    } catch (IOException exception) {
+      return false;
+    }
+
     return false;
   }
 
