@@ -111,7 +111,7 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends Yaml, B ext
   }
 
   protected String getServiceName(String appId, String serviceId) {
-    Service service = serviceResourceService.getWithDetails(appId, serviceId);
+    Service service = serviceResourceService.get(appId, serviceId);
     notNullCheck("Invalid Service:" + serviceId, service, USER);
     return service.getName();
   }

@@ -328,7 +328,7 @@ public class InfrastructureDefinitionServiceTest extends WingsBaseTest {
     queryParams.put("serviceId", Collections.singletonList("s1"));
     queryParams.put("appId", Collections.singletonList("app1"));
     Service service = Service.builder().deploymentType(DeploymentType.SSH).build();
-    when(serviceResourceService.getWithDetails(anyString(), anyString())).thenReturn(service);
+    when(serviceResourceService.get(anyString(), anyString())).thenReturn(service);
     infrastructureDefinitionService.applyServiceFilter(pageRequest);
     assertThat(pageRequest.getFilters().size() == 2).isTrue();
   }

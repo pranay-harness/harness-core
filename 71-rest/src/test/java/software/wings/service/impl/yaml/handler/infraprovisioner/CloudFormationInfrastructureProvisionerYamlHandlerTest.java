@@ -71,7 +71,7 @@ public class CloudFormationInfrastructureProvisionerYamlHandlerTest extends Base
     doReturn(APP_ID).when(mockYamlHelper).getAppId(anyString(), anyString());
     doReturn(null).when(mockInfrastructureProvisionerService).getByName(anyString(), anyString());
     Service service = Service.builder().name("ServiceName").uuid(SERVICE_ID).build();
-    doReturn(service).when(mockServiceResourceService).getWithDetails(anyString(), anyString());
+    doReturn(service).when(mockServiceResourceService).get(anyString(), anyString());
     doReturn(service).when(mockServiceResourceService).getServiceByName(anyString(), anyString());
 
     handler.upsertFromYaml(changeContext, asList(changeContext));

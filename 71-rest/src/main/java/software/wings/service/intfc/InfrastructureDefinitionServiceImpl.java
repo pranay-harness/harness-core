@@ -218,7 +218,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       throw new InvalidRequestException("More than 1 app not supported for listing infra definitions");
     }
     String appId = appIds.get(0);
-    Service service = serviceResourceService.getWithDetails(appId, serviceId);
+    Service service = serviceResourceService.get(appId, serviceId);
     if (service == null) {
       throw new InvalidRequestException(format("No service exists for id : [%s]", serviceId));
     }
@@ -243,7 +243,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
                                   .addFilter(InfrastructureDefinitionKeys.envId, Operator.EQ, envId)
                                   .build();
     if (EmptyPredicate.isNotEmpty(serviceId)) {
-      Service service = serviceResourceService.getWithDetails(appId, serviceId);
+      Service service = serviceResourceService.get(appId, serviceId);
       if (service == null) {
         throw new InvalidRequestException(format("No service exists for id : [%s]", serviceId));
       }
@@ -695,7 +695,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
   @VisibleForTesting
   private InfrastructureMapping existingInfraMapping(InfrastructureDefinition infraDefinition, String serviceId) {
-    Service service = serviceResourceService.getWithDetails(infraDefinition.getAppId(), serviceId);
+    Service service = serviceResourceService.get(infraDefinition.getAppId(), serviceId);
     InfraMappingInfrastructureProvider infrastructure = infraDefinition.getInfrastructure();
     Class<? extends InfrastructureMapping> mappingClass = infrastructure.getMappingClass();
     Map<String, Object> queryMap = ((FieldKeyValMapProvider) infrastructure).getFieldMapForClass();
@@ -1355,7 +1355,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     Application app = appService.get(infrastructureDefinition.getAppId());
     Environment env =
         environmentService.get(infrastructureDefinition.getAppId(), infrastructureDefinition.getEnvId(), false);
-    Service service = serviceResourceService.getWithDetails(appId, serviceId);
+    Service service = serviceResourceService.get(appId, serviceId);
 
     Map<String, Object> context = new HashMap<>();
     context.put("app", app);
