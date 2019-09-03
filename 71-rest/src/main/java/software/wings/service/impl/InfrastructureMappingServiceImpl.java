@@ -37,7 +37,6 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.AZURE;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.utils.KubernetesConvention.DASH;
-import static software.wings.utils.Validator.duplicateCheck;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -51,6 +50,7 @@ import com.google.inject.Singleton;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.model.Tag;
 import com.microsoft.azure.management.compute.VirtualMachine;
+import com.mongodb.DuplicateKeyException;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
@@ -60,8 +60,10 @@ import io.harness.data.validator.EntityNameValidator;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
+import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.queue.Queue;
@@ -400,9 +402,18 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
 
     validateInfraMapping(infraMapping, fromYaml);
-
-    InfrastructureMapping savedInfraMapping = duplicateCheck(
-        () -> wingsPersistence.saveAndGet(InfrastructureMapping.class, infraMapping), "name", infraMapping.getName());
+    InfrastructureMapping savedInfraMapping;
+    try {
+      savedInfraMapping = wingsPersistence.saveAndGet(InfrastructureMapping.class, infraMapping);
+    } catch (DuplicateKeyException ex) {
+      throw new DuplicateFieldException(ex.getMessage());
+    } catch (Exception e) {
+      if (e.getCause() != null && e.getCause() instanceof DuplicateKeyException) {
+        throw new DuplicateFieldException(e.getCause().getMessage());
+      } else {
+        throw new UnexpectedException(ExceptionUtils.getMessage(e));
+      }
+    }
 
     String accountId = appService.getAccountIdByAppId(infraMapping.getAppId());
     if (!infraRefactor) {

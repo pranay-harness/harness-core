@@ -50,6 +50,7 @@ import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.GoogleKubernetesEngine.GoogleKubernetesEngineKeys;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.PhysicalInfra;
+import software.wings.service.impl.infrastructuredefinition.InfrastructureDefinitionServiceImpl;
 
 import java.util.Collections;
 import java.util.HashMap;
