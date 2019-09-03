@@ -15,7 +15,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
-import software.wings.sm.ExecutionStatusData;
+import software.wings.sm.ExecutionStatusResponseData;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
@@ -102,7 +102,8 @@ public class SubWorkflowState extends State {
 
   protected void handleStatusSummary(WorkflowExecutionService workflowExecutionService, ExecutionContext context,
       Map<String, ResponseData> response, ExecutionResponseBuilder executionResponseBuilder) {
-    ExecutionStatus executionStatus = ((ExecutionStatusData) response.values().iterator().next()).getExecutionStatus();
+    ExecutionStatus executionStatus =
+        ((ExecutionStatusResponseData) response.values().iterator().next()).getExecutionStatus();
     if (executionStatus != ExecutionStatus.SUCCESS) {
       executionResponseBuilder.executionStatus(executionStatus);
     }

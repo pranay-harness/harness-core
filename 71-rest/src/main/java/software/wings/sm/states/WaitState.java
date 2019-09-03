@@ -1,7 +1,6 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusData;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -14,6 +13,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.WaitStateExecutionData;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionStatusData;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 
@@ -66,7 +66,7 @@ public class WaitState extends State {
     //    jobScheduler.scheduleJob(job, trigger);
 
     executorService.schedule(new SimpleNotifier(waitNotifyEngine, waitStateExecutionData.getResumeId(),
-                                 anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build()),
+                                 ExecutionStatusData.builder().executionStatus(ExecutionStatus.SUCCESS).build()),
         duration, TimeUnit.SECONDS);
 
     return ExecutionResponse.builder()

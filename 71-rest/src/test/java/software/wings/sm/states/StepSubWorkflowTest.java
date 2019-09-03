@@ -9,7 +9,6 @@ import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.sm.ElementNotifyResponseData.Builder.anElementNotifyResponseData;
-import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusData;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -39,6 +38,7 @@ import software.wings.beans.PhaseStepType;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionStatusData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 
@@ -131,7 +131,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
     phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.PRE_DEPLOYMENT);
     Map<String, ResponseData> notifyResponse = new HashMap<>();
-    notifyResponse.put("", anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build());
+    notifyResponse.put("", ExecutionStatusData.builder().executionStatus(ExecutionStatus.SUCCESS).build());
     ExecutionResponse response = phaseStepSubWorkflow.handleAsyncResponse(context, notifyResponse);
     assertThat(response).isNotNull();
   }

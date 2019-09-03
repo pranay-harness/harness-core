@@ -69,7 +69,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
-import software.wings.sm.ExecutionStatusData;
+import software.wings.sm.ExecutionStatusResponseData;
 import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StateExecutionInstance;
@@ -460,7 +460,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
     if (phaseStepType == PhaseStepType.PRE_DEPLOYMENT || phaseStepType == PhaseStepType.POST_DEPLOYMENT) {
       ExecutionStatus executionStatus =
-          ((ExecutionStatusData) response.values().iterator().next()).getExecutionStatus();
+          ((ExecutionStatusResponseData) response.values().iterator().next()).getExecutionStatus();
       if (executionStatus != ExecutionStatus.SUCCESS) {
         executionResponseBuilder.executionStatus(executionStatus);
       }
