@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.FindOptions;
@@ -23,7 +24,10 @@ import software.wings.service.intfc.UserService;
 
 import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -90,16 +94,25 @@ public class ScimUserServiceImpl implements ScimUserService {
 
     String userName = user.getName();
 
-    String[] nameSplit = userName.split(" ", 2);
-    String firstName = nameSplit[0];
-    String lastName = nameSplit.length > 1 ? nameSplit[1] : firstName;
-
     userResource.setId(user.getUuid());
     userResource.setUserName(user.getEmail());
     userResource.setActive(true);
     userResource.setUserName(user.getEmail());
     userResource.setDisplayName(userName);
+
+    Map<String, String> nameMap = new HashMap<String, String>() {
+      {
+        put("givenName", user.getName());
+        put("familyName", user.getName());
+      }
+    };
+
     userResource.setActive(true);
+    Map<String, String> emailMap = new HashMap<String, String>() {
+      { put("value", user.getEmail()); }
+    };
+    userResource.setEmails(JsonUtils.asTree(Collections.singletonList(emailMap)));
+    userResource.setName(JsonUtils.asTree(nameMap));
     return userResource;
   }
 
