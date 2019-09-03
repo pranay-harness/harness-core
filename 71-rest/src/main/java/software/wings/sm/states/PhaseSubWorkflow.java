@@ -32,6 +32,7 @@ import software.wings.beans.Application;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.EntityType;
+import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
@@ -176,11 +177,17 @@ public class PhaseSubWorkflow extends SubWorkflowState {
         }
       }
     }
+    Environment env = ((ExecutionContextImpl) context).getEnv();
 
     if (service != null && infrastructureMapping != null
         && !service.getUuid().equals(infrastructureMapping.getServiceId())) {
       throw new InvalidRequestException("Service [" + service.getName()
           + "] is not associated with the Service Infrastructure [" + infrastructureMapping.getName() + "]");
+    }
+
+    if (env != null && infrastructureMapping != null && !env.getUuid().equals(infrastructureMapping.getEnvId())) {
+      throw new InvalidRequestException("InfraStructure [" + infrastructureMapping.getName()
+          + "] is not associated with the Environment [" + env.getName() + "]. Please Check Your Setup");
     }
 
     ExecutionResponseBuilder executionResponseBuilder =
