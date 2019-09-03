@@ -312,7 +312,7 @@ public class TriggerArtifactVariableHandler {
   }
 
   private void validateVariableName(String appId, String entityId, EntityType entityType, String variableName) {
-    if (isExpression(variableName)) {
+    if (isExpression(variableName) || isExpression(entityId)) {
       return;
     }
     switch (entityType) {
