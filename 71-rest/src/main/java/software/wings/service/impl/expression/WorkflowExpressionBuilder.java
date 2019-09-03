@@ -8,6 +8,7 @@ import static software.wings.beans.SubEntityType.NOTIFICATION_GROUP;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.OrchestrationWorkflowType;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SubEntityType;
 import software.wings.beans.VariableType;
@@ -42,18 +43,25 @@ public class WorkflowExpressionBuilder extends ExpressionBuilder {
   @Override
   public Set<String> getExpressions(
       String appId, String entityId, String serviceId, StateType stateType, SubEntityType subEntityType) {
-    Workflow workflow = workflowService.readWorkflow(appId, entityId);
     SortedSet<String> expressions = new TreeSet<>();
+    Workflow workflow = workflowService.readWorkflow(appId, entityId);
+    if (workflow == null || workflow.getOrchestrationWorkflow() == null) {
+      return expressions;
+    }
+    boolean isBuildWorkflow =
+        OrchestrationWorkflowType.BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
     if (subEntityType == null) {
       expressions = new TreeSet<>(getWorkflowVariableExpressions(workflow));
       if (isNotBlank(serviceId) && !serviceId.equalsIgnoreCase("All")) {
         expressions.addAll(getExpressions(appId, entityId, serviceId));
       } else {
         expressions.addAll(getExpressions(appId, entityId));
-        expressions.addAll(serviceExpressionBuilder.getServiceTemplateVariableExpressions(appId, "All", SERVICE));
-        if (workflow != null && workflow.getEnvId() != null) {
-          expressions.addAll(
-              environmentExpressionBuilder.getServiceTemplateVariableExpressions(appId, workflow.getEnvId()));
+        if (serviceId.equalsIgnoreCase("All")) {
+          expressions.addAll(serviceExpressionBuilder.getServiceTemplateVariableExpressions(appId, "All", SERVICE));
+          if (workflow != null && workflow.getEnvId() != null) {
+            expressions.addAll(
+                environmentExpressionBuilder.getServiceTemplateVariableExpressions(appId, workflow.getEnvId()));
+          }
         }
       }
       if (stateType != null) {
@@ -73,6 +81,20 @@ public class WorkflowExpressionBuilder extends ExpressionBuilder {
               environmentExpressionBuilder.getServiceTemplateVariableExpressions(appId, workflow.getEnvId()));
         }
       }
+    }
+
+    if (isBuildWorkflow) {
+      // Filter out env and service, artifact and service variable
+      SortedSet<String> filteredExpressions = new TreeSet<>();
+      expressions.forEach(s -> {
+        if (s.startsWith(SERVICE_PREFIX) || s.startsWith(ARTIFACT_PREFIX) || s.startsWith(SERVICE_VARIABLE_PREFIX)
+            || s.startsWith(ENV_VARIABLE_PREFIX) || s.startsWith(ENV_PREFIX) || s.startsWith(ARTIFACT_FILE_NAME)
+            || s.startsWith(INFRA_PREFIX)) {
+          return;
+        }
+        filteredExpressions.add(s);
+      });
+      return filteredExpressions;
     }
 
     return expressions;
