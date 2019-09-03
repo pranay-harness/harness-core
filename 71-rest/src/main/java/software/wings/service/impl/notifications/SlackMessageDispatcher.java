@@ -13,10 +13,12 @@ import com.google.inject.Singleton;
 import org.apache.commons.text.StrSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Notification;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.notification.SlackNotificationConfiguration;
 import software.wings.common.NotificationMessageResolver;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SlackNotificationService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -34,6 +36,7 @@ public class SlackMessageDispatcher {
   @Inject private SettingsService settingsService;
   @Inject private NotificationMessageResolver notificationMessageResolver;
   @Inject private SlackNotificationService slackNotificationService;
+  @Inject private FeatureFlagService featureFlagService;
 
   /**
    * This method is a bit deceiving. It just picks first slack config from DB and notifies that.
@@ -79,11 +82,20 @@ public class SlackMessageDispatcher {
       return;
     }
 
+    String accountId = notifications.get(0).getAccountId();
+
     List<String> messages = new ArrayList<>();
 
     for (Notification notification : notifications) {
       if (notification.getNotificationTemplateVariables().containsKey(SlackApprovalMessageKeys.MESSAGE_IDENTIFIER)) {
-        URL url = this.getClass().getResource(SlackApprovalMessageKeys.APPROVAL_MESSAGE_PAYLOAD_TEMPLATE);
+        // Enable this feature flag to allow user to approve via slack
+        boolean slackApprovalsFeatureFlag = featureFlagService.isEnabled(FeatureName.SLACK_APPROVALS, accountId);
+        URL url;
+        if (slackApprovalsFeatureFlag) {
+          url = this.getClass().getResource(SlackApprovalMessageKeys.APPROVAL_MESSAGE_PAYLOAD_TEMPLATE);
+        } else {
+          url = this.getClass().getResource(SlackApprovalMessageKeys.APPROVAL_MESSAGE_WITHOUT_BUTTONS_PAYLOAD_TEMPLATE);
+        }
         String approvalTemplate;
         StrSubstitutor sub = new StrSubstitutor(notification.getNotificationTemplateVariables());
         try {

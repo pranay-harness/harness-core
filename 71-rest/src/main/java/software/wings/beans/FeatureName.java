@@ -58,7 +58,8 @@ public enum FeatureName {
   TIME_RANGE_FREEZE_GOVERNANCE(Scope.PER_ACCOUNT),
   SCIM_INTEGRATION,
   GDS_TIME_SERIES_SAVE_PER_MINUTE,
-  TF_ALL; // TODO: Yogesh, Remove this once UI is done
+  TF_ALL, // TODO: Yogesh, Remove this once UI is done
+  SLACK_APPROVALS;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;

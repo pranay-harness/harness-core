@@ -1,7 +1,7 @@
 {
   "blocks" : [
     {
-      "text" : {"text" : "${approvalMessage}", "type" : "mrkdwn"},
+      "text" : {"text" : "${approvalMessage} \n*Approval Pending*, would you like to _approve_?", "type" : "mrkdwn"},
       "type" : "section"
     },
     {

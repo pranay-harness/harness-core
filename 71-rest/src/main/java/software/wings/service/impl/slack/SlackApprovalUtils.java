@@ -113,9 +113,7 @@ public class SlackApprovalUtils {
 
   public static String createSlackApprovalMessage(SlackApprovalParams slackApprovalParams, URL url) {
     Map<String, String> templateFillers = new HashMap<>();
-    if (slackApprovalParams.isPipeline()) {
-      templateFillers.put(SlackApprovalMessageKeys.PAUSED_STAGE_NAME, slackApprovalParams.getPausedStageName());
-    }
+    templateFillers.put(SlackApprovalMessageKeys.PAUSED_STAGE_NAME, slackApprovalParams.getPausedStageName());
     templateFillers.put(SlackApprovalMessageKeys.WORKFLOW_URL, slackApprovalParams.getWorkflowUrl());
     templateFillers.put(
         SlackApprovalMessageKeys.WORKFLOW_EXECUTION_NAME, slackApprovalParams.getWorkflowExecutionName());

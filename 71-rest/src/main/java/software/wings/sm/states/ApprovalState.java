@@ -527,6 +527,8 @@ public class ApprovalState extends State {
     if (isPipeline) {
       Pipeline pipeline = pipelineService.readPipeline(context.getAppId(), context.getWorkflowId(), true);
       pausedStageName = getPipelineStageName(pipeline, getName());
+    } else {
+      pausedStageName = context.getStateExecutionInstanceName();
     }
 
     Set<String> excludeFromAggregation = new HashSet<>();
@@ -586,8 +588,7 @@ public class ApprovalState extends State {
           this.getClass().getResource(SlackApprovalMessageKeys.WORKFLOW_APPROVAL_MESSAGE_TEMPLATE);
     }
 
-    String displayText = createSlackApprovalMessage(slackApprovalParams, notificationTemplateUrl)
-        + "\n*Approval Pending*, would you like to _approve_?";
+    String displayText = createSlackApprovalMessage(slackApprovalParams, notificationTemplateUrl);
     String buttonValue = customData.toString();
     buttonValue = StringEscapeUtils.escapeJson(buttonValue);
     placeHolderValues.put(SlackApprovalMessageKeys.SLACK_APPROVAL_PARAMS, buttonValue);

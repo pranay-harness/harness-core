@@ -5,6 +5,8 @@ public class SlackApprovalMessageKeys {
 
   public static final String MESSAGE_IDENTIFIER = "suppressTraditionalApprovalNotification";
   public static final String APPROVAL_MESSAGE_PAYLOAD_TEMPLATE = "/slack/approval-message.json";
+  public static final String APPROVAL_MESSAGE_WITHOUT_BUTTONS_PAYLOAD_TEMPLATE =
+      "/slack/approval-message-without-buttons.json";
   public static final String PIPELINE_APPROVAL_MESSAGE_TEMPLATE = "/slack/pipeline-approval-message.txt";
   public static final String WORKFLOW_APPROVAL_MESSAGE_TEMPLATE = "/slack/workflow-approval-message.txt";
   public static final String APPROVAL_EXPIRED_MESSAGE_TEMPLATE = "/slack/approval-expired-message.txt";
