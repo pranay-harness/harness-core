@@ -14,6 +14,7 @@ message Ec2InstanceInfo {
   string instance_lifecycle = 5;
   InstanceState instance_state = 6;
   string cluster_arn = 7;
+  string region = 8;
 }
 
 message InstanceState {

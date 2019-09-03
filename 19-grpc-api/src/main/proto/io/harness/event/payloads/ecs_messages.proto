@@ -19,6 +19,7 @@ message EcsTaskDescription {
   string container_instance_arn = 4;
   string launch_type = 5;
   string desired_status = 6;
+  string region = 7;
 }
 
 message EcsTaskLifecycle {
@@ -26,14 +27,16 @@ message EcsTaskLifecycle {
 }
 
 message ReservedResource {
-  int32 cpu = 1;
-  int32 memory = 2;
+  double cpu = 1;
+  double memory = 2;
 }
 
 message EcsContainerInstanceDescription {
   string container_instance_arn = 1;
   string cluster_arn = 2;
   string ec2_instance_id = 3;
+  string operating_system = 4;
+  string region = 5;
 }
 
 message EcsContainerInstanceInfo {

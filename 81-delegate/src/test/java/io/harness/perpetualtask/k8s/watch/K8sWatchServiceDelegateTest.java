@@ -32,7 +32,6 @@ public class K8sWatchServiceDelegateTest {
   @BeforeClass
   public static void setup() {
     // Injector injector = Guice.createInjector(new KubernetesClientFactoryModule());
-    // watchService = injector.getInstance(K8sWatchService.class);
   }
 
   @Test
@@ -40,7 +39,7 @@ public class K8sWatchServiceDelegateTest {
   @Category(IntegrationTests.class)
   @Ignore("This test currently depends on access to a valid local kubeconfig file.")
   public void testCreate() throws Exception {
-    logger.info("Test registering a WatchRequest in a WatchService..");
+    logger.info("Test registering a K8WatchPerpetualTaskClientParams in a WatchService..");
     K8sWatchTaskParams params = K8sWatchTaskParams.newBuilder().setK8SResourceKind("Pod").build();
 
     id = watchServiceDelegate.create(params);

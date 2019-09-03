@@ -13,4 +13,6 @@ public interface InstanceDataDao {
       InstanceData instanceData, Instant instant, String instantField, InstanceState instanceState);
 
   InstanceData fetchActiveInstanceData(String accountId, String instanceId, List<InstanceState> instanceState);
+
+  InstanceData fetchInstanceData(String accountId, String instanceId);
 }

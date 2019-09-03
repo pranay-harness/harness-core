@@ -8,6 +8,8 @@ import com.google.protobuf.Timestamp;
 
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.InstanceState;
+import io.harness.batch.processing.entities.ActiveInstance;
+import io.harness.batch.processing.entities.ActiveInstance.ActiveInstanceKeys;
 import io.harness.batch.processing.entities.BatchJobScheduledData;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.entities.InstanceData.InstanceDataKeys;
@@ -24,7 +26,6 @@ import io.harness.rule.OwnerRule.Owner;
 import lombok.val;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -38,7 +39,6 @@ import software.wings.integration.BaseIntegrationTest;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
 import java.util.List;
 
 @SpringBootTest
@@ -104,7 +104,6 @@ public class EcsJobIntegrationTest extends BaseIntegrationTest implements EcsEve
   @Test
   @Owner(emails = OwnerRule.HITESH)
   @Category(IntegrationTests.class)
-  @Ignore("TODO(Hitesh): Fix start & stop time to have millisecond precision.")
   public void shouldRunEcsJob() throws Exception {
     batchJobRunner.runJob(ecsJob, BatchJobType.ECS_EVENT, 1, ChronoUnit.DAYS);
 
@@ -119,10 +118,6 @@ public class EcsJobIntegrationTest extends BaseIntegrationTest implements EcsEve
     assertThat(HTimestamps.fromInstant(stoppedInstanceData.getUsageStopTime())).isEqualTo(INSTANCE_STOP_TIMESTAMP);
   }
 
-  private List<InstanceState> getStoppedInstanceState() {
-    return Collections.singletonList(InstanceState.STOPPED);
-  }
-
   @After
   public void clearCollection() {
     val batchJobDataDs = hPersistence.getDatastore(BatchJobScheduledData.class);
@@ -130,6 +125,9 @@ public class EcsJobIntegrationTest extends BaseIntegrationTest implements EcsEve
 
     val ds = hPersistence.getDatastore(InstanceData.class);
     ds.delete(ds.createQuery(InstanceData.class).filter(InstanceDataKeys.accountId, TEST_ACCOUNT_ID));
+
+    val activeDs = hPersistence.getDatastore(ActiveInstance.class);
+    activeDs.delete(activeDs.createQuery(ActiveInstance.class).filter(ActiveInstanceKeys.accountId, TEST_ACCOUNT_ID));
 
     val publishedMessageDs = hPersistence.getDatastore(PublishedMessage.class);
     publishedMessageDs.delete(

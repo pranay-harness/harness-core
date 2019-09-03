@@ -17,7 +17,7 @@ public class SamplePerpetualTask extends AbstractPerpetualTask {
 
   @Override
   public Void call() throws Exception {
-    logger.info("Hello " + country);
+    logger.info("Hello there !! {} ", country);
     return null;
   }
 

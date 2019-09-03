@@ -31,7 +31,7 @@ public class BatchJobRunner {
    */
   public void runJob(Job job, BatchJobType batchJobType, long duration, ChronoUnit chronoUnit) throws Exception {
     Instant startAt = batchJobScheduledDataService.fetchLastBatchJobScheduledTime(batchJobType);
-    Instant endAt = Instant.now().minus(10, ChronoUnit.MINUTES);
+    Instant endAt = Instant.now().plus(2, ChronoUnit.DAYS).minus(10, ChronoUnit.MINUTES);
     BatchJobScheduleTimeProvider batchJobScheduleTimeProvider =
         new BatchJobScheduleTimeProvider(startAt, endAt, duration, chronoUnit);
     Instant startInstant = startAt;

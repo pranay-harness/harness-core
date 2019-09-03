@@ -24,8 +24,8 @@ import org.mongodb.morphia.annotations.Id;
 public class PerpetualTaskRecord implements PersistentEntity, CreatedAtAware, UpdatedAtAware, UuidAware {
   @Id String uuid;
   String accountId;
-  String clientName;
-  String clientHandle; // unique identifier known to client
+  PerpetualTaskType perpetualTaskType;
+  PerpetualTaskClientContext clientContext;
   long intervalSeconds;
   long timeoutMillis;
   String delegateId;

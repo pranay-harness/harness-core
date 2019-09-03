@@ -1,4 +1,4 @@
-package software.wings.delegatetasks.aws.perpetualtask;
+package io.harness.perpetualtask.ecs;
 
 import lombok.Builder;
 import lombok.Data;

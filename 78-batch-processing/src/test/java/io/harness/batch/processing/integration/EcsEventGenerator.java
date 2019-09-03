@@ -1,19 +1,36 @@
 package io.harness.batch.processing.integration;
 
 import com.google.protobuf.Any;
+import com.google.protobuf.Message;
 import com.google.protobuf.Timestamp;
 
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.payloads.Ec2InstanceInfo;
 import io.harness.event.payloads.Ec2Lifecycle;
+import io.harness.event.payloads.EcsContainerInstanceDescription;
+import io.harness.event.payloads.EcsContainerInstanceInfo;
+import io.harness.event.payloads.EcsContainerInstanceLifecycle;
+import io.harness.event.payloads.EcsTaskDescription;
+import io.harness.event.payloads.EcsTaskInfo;
+import io.harness.event.payloads.EcsTaskLifecycle;
 import io.harness.event.payloads.InstanceState;
 import io.harness.event.payloads.Lifecycle;
 import io.harness.event.payloads.Lifecycle.EventType;
+import io.harness.event.payloads.ReservedResource;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public interface EcsEventGenerator {
+  double INSTANCE_CPU = 512;
   int INSTANCE_STATE_CODE = 16;
+  double INSTANCE_MEMORY = 1024;
   String INSTANCE_TYPE = "t2.small";
+  String OPERATING_SYSTEM = "linux";
   String INSTANCE_STATE_NAME = "running";
+  String DEFAULT_AWS_REGION = "us-east-1";
 
   default PublishedMessage getEc2InstanceInfoMessage(String instanceId, String accountId) {
     InstanceState instanceState =
@@ -24,13 +41,7 @@ public interface EcsEventGenerator {
                                           .setInstanceType(INSTANCE_TYPE)
                                           .setInstanceState(instanceState)
                                           .build();
-
-    Any payload = Any.pack(ec2InstanceInfo);
-    return PublishedMessage.builder()
-        .accountId(accountId)
-        .data(payload.toByteArray())
-        .type(ec2InstanceInfo.getClass().getName())
-        .build();
+    return getPublishedMessage(accountId, ec2InstanceInfo);
   }
 
   default PublishedMessage getEc2InstanceLifecycleMessage(
@@ -39,12 +50,85 @@ public interface EcsEventGenerator {
         Ec2Lifecycle.newBuilder()
             .setLifecycle(Lifecycle.newBuilder().setInstanceId(instanceId).setType(eventType).setTimestamp(timestamp))
             .build();
+    return getPublishedMessage(accountId, ec2Lifecycle);
+  }
 
-    Any payload = Any.pack(ec2Lifecycle);
+  default PublishedMessage getContainerInstanceLifecycleMessage(
+      Timestamp timestamp, EventType eventType, String instanceId, String accountId) {
+    EcsContainerInstanceLifecycle containerInstanceLifecycle =
+        EcsContainerInstanceLifecycle.newBuilder()
+            .setLifecycle(Lifecycle.newBuilder().setInstanceId(instanceId).setType(eventType).setTimestamp(timestamp))
+            .build();
+    return getPublishedMessage(accountId, containerInstanceLifecycle);
+  }
+
+  default PublishedMessage getTaskLifecycleMessage(
+      Timestamp timestamp, EventType eventType, String instanceId, String accountId) {
+    EcsTaskLifecycle taskLifecycle =
+        EcsTaskLifecycle.newBuilder()
+            .setLifecycle(Lifecycle.newBuilder().setInstanceId(instanceId).setType(eventType).setTimestamp(timestamp))
+            .build();
+    return getPublishedMessage(accountId, taskLifecycle);
+  }
+
+  default ReservedResource getReservedResource() {
+    return ReservedResource.newBuilder().setMemory(INSTANCE_MEMORY).setCpu(INSTANCE_CPU).build();
+  }
+
+  default PublishedMessage getContainerInstanceInfoMessage(
+      String containerInstanceArn, String instanceId, String clusterArn, String accountId) {
+    EcsContainerInstanceDescription containerInstanceDescription = EcsContainerInstanceDescription.newBuilder()
+                                                                       .setRegion(DEFAULT_AWS_REGION)
+                                                                       .setOperatingSystem(OPERATING_SYSTEM)
+                                                                       .setClusterArn(clusterArn)
+                                                                       .setEc2InstanceId(instanceId)
+                                                                       .setContainerInstanceArn(containerInstanceArn)
+                                                                       .build();
+    EcsContainerInstanceInfo ecsContainerInstanceInfo =
+        EcsContainerInstanceInfo.newBuilder()
+            .setEcsContainerInstanceDescription(containerInstanceDescription)
+            .setEcsContainerInstanceResource(getReservedResource())
+            .build();
+    return getPublishedMessage(accountId, ecsContainerInstanceInfo);
+  }
+
+  default PublishedMessage getTaskInfoMessage(String taskId, String serviceName, String launchType,
+      String containerInstanceArn, String clusterArn, String accountId) {
+    EcsTaskDescription ecsTaskDescription = EcsTaskDescription.newBuilder()
+                                                .setRegion(DEFAULT_AWS_REGION)
+                                                .setClusterArn(clusterArn)
+                                                .setContainerInstanceArn(containerInstanceArn)
+                                                .setTaskArn(taskId)
+                                                .setServiceName(serviceName)
+                                                .setLaunchType(launchType)
+                                                .build();
+
+    EcsTaskInfo ecsTaskInfo = EcsTaskInfo.newBuilder()
+                                  .setEcsTaskDescription(ecsTaskDescription)
+                                  .setEcsTaskResource(getReservedResource())
+                                  .build();
+    return getPublishedMessage(accountId, ecsTaskInfo);
+  }
+
+  default PublishedMessage getPublishedMessage(String accountId, Message message) {
+    Any payload = Any.pack(message);
     return PublishedMessage.builder()
         .accountId(accountId)
         .data(payload.toByteArray())
-        .type(ec2Lifecycle.getClass().getName())
+        .type(message.getClass().getName())
         .build();
+  }
+
+  default List<PublishedMessage> getMessageList(PublishedMessage publishedMessage) {
+    return Collections.singletonList(publishedMessage);
+  }
+
+  default List<io.harness.batch.processing.ccm.InstanceState> getActiveInstanceState() {
+    return new ArrayList<>(Arrays.asList(io.harness.batch.processing.ccm.InstanceState.INITIALIZING,
+        io.harness.batch.processing.ccm.InstanceState.RUNNING));
+  }
+
+  default List<io.harness.batch.processing.ccm.InstanceState> getStoppedInstanceState() {
+    return Collections.singletonList(io.harness.batch.processing.ccm.InstanceState.STOPPED);
   }
 }

@@ -46,4 +46,12 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
         .in(instanceState)
         .get();
   }
+
+  @Override
+  public InstanceData fetchInstanceData(String accountId, String instanceId) {
+    return hPersistence.createQuery(InstanceData.class)
+        .filter(InstanceDataKeys.accountId, accountId)
+        .filter(InstanceDataKeys.instanceId, instanceId)
+        .get();
+  }
 }

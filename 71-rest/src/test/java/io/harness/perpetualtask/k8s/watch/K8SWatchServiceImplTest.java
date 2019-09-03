@@ -11,7 +11,7 @@ import org.junit.experimental.categories.Category;
 import software.wings.integration.BaseIntegrationTest;
 
 public class K8SWatchServiceImplTest extends BaseIntegrationTest {
-  @Inject K8sWatchServiceImpl k8SWatchServiceImpl;
+  @Inject K8sWatchPerpetualTaskServiceClient k8SWatchPerpetualTaskServiceClient;
 
   @Test
   @Owner(emails = HANTANG)
@@ -22,7 +22,7 @@ public class K8SWatchServiceImplTest extends BaseIntegrationTest {
                                     //.setK8SClusterConfig();// TODO: create a default config
                                     .setK8SResourceKind("Pod")
                                     .build();
-    k8SWatchServiceImpl.create(params);
+    //    k8SWatchPerpetualTaskServiceClient.create(params);
     // TODO: verify that the task has been created
   }
 

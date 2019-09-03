@@ -36,6 +36,14 @@ public class EcsBatchConfiguration {
 
   @Autowired @Qualifier("ec2InstanceLifecycleWriter") private ItemWriter ec2InstanceLifecycleWriter;
 
+  @Autowired @Qualifier("ecsContainerInstanceInfoWriter") private ItemWriter ecsContainerInstanceInfoWriter;
+
+  @Autowired @Qualifier("ecsContainerInstanceLifecycleWriter") private ItemWriter ecsContainerInstanceLifecycleWriter;
+
+  @Autowired @Qualifier("ecsTaskInfoWriter") private ItemWriter ecsTaskInfoWriter;
+
+  @Autowired @Qualifier("ecsTaskLifecycleWriter") private ItemWriter ecsTaskLifecycleWriter;
+
   @Autowired @Qualifier("mongoEventReader") private EventReader mongoEventReader;
 
   @Bean
@@ -65,12 +73,69 @@ public class EcsBatchConfiguration {
   }
 
   @Bean
+  @StepScope
+  public ItemReader<PublishedMessage> ecsContainerInstanceInfoMessageReader(
+      @Value("#{jobParameters[startDate]}") Long startDate, @Value("#{jobParameters[endDate]}") Long endDate) {
+    try {
+      String messageType = EventTypeConstants.ECS_CONTAINER_INSTANCE_INFO;
+      return mongoEventReader.getEventReader(messageType, startDate, endDate);
+    } catch (Exception ex) {
+      logger.error("Exception ecsContainerInstanceInfoMessageReader ", ex);
+      return null;
+    }
+  }
+
+  @Bean
+  @StepScope
+  public ItemReader<PublishedMessage> ecsContainerInstanceLifecycleMessageReader(
+      @Value("#{jobParameters[startDate]}") Long startDate, @Value("#{jobParameters[endDate]}") Long endDate) {
+    try {
+      String messageType = EventTypeConstants.ECS_CONTAINER_INSTANCE_LIFECYCLE;
+      return mongoEventReader.getEventReader(messageType, startDate, endDate);
+    } catch (Exception ex) {
+      logger.error("Exception ecsContainerInstanceLifecycleMessageReader ", ex);
+      return null;
+    }
+  }
+
+  @Bean
+  @StepScope
+  public ItemReader<PublishedMessage> ecsTaskInfoMessageReader(
+      @Value("#{jobParameters[startDate]}") Long startDate, @Value("#{jobParameters[endDate]}") Long endDate) {
+    try {
+      String messageType = EventTypeConstants.ECS_TASK_INFO;
+      return mongoEventReader.getEventReader(messageType, startDate, endDate);
+    } catch (Exception ex) {
+      logger.error("Exception ecsTaskInfoMessageReader ", ex);
+      return null;
+    }
+  }
+
+  @Bean
+  @StepScope
+  public ItemReader<PublishedMessage> ecsTaskLifecycleMessageReader(
+      @Value("#{jobParameters[startDate]}") Long startDate, @Value("#{jobParameters[endDate]}") Long endDate) {
+    try {
+      String messageType = EventTypeConstants.ECS_TASK_LIFECYCLE;
+      return mongoEventReader.getEventReader(messageType, startDate, endDate);
+    } catch (Exception ex) {
+      logger.error("Exception ecsTaskLifecycleMessageReader ", ex);
+      return null;
+    }
+  }
+
+  @Bean
   @Qualifier(value = "ecsJob")
-  public Job ecsEventJob(Step ec2InstanceInfoStep, Step ec2InstanceLifecycleStep) {
+  public Job ecsEventJob(Step ec2InstanceInfoStep, Step ec2InstanceLifecycleStep, Step ecsContainerInstanceInfoStep,
+      Step ecsContainerInstanceLifecycleStep, Step ecsTaskInfoStep, Step ecsTaskLifecycleStep) {
     return jobBuilderFactory.get("ecsEventJob")
         .incrementer(new RunIdIncrementer())
         .start(ec2InstanceInfoStep)
         .next(ec2InstanceLifecycleStep)
+        .next(ecsContainerInstanceInfoStep)
+        .next(ecsContainerInstanceLifecycleStep)
+        .next(ecsTaskInfoStep)
+        .next(ecsTaskLifecycleStep)
         .build();
   }
 
@@ -95,6 +160,66 @@ public class EcsBatchConfiguration {
         .<PublishedMessage, PublishedMessage>chunk(BATCH_SIZE)
         .reader(ec2InstanceLifecycleMessageReader(null, null))
         .writer(ec2InstanceLifecycleWriter)
+        .faultTolerant()
+        .retryLimit(RETRY_LIMIT)
+        .retry(Exception.class)
+        .skipLimit(SKIP_BATCH_SIZE)
+        .skip(Exception.class)
+        .listener(ecsStepSkipListener)
+        .build();
+  }
+
+  @Bean
+  public Step ecsContainerInstanceInfoStep() {
+    return stepBuilderFactory.get("ecsContainerInstanceInfoStep")
+        .<PublishedMessage, PublishedMessage>chunk(BATCH_SIZE)
+        .reader(ecsContainerInstanceInfoMessageReader(null, null))
+        .writer(ecsContainerInstanceInfoWriter)
+        .faultTolerant()
+        .retryLimit(RETRY_LIMIT)
+        .retry(Exception.class)
+        .skipLimit(SKIP_BATCH_SIZE)
+        .skip(Exception.class)
+        .listener(ecsStepSkipListener)
+        .build();
+  }
+
+  @Bean
+  public Step ecsContainerInstanceLifecycleStep() {
+    return stepBuilderFactory.get("ecsContainerInstanceLifecycleStep")
+        .<PublishedMessage, PublishedMessage>chunk(BATCH_SIZE)
+        .reader(ecsContainerInstanceLifecycleMessageReader(null, null))
+        .writer(ecsContainerInstanceLifecycleWriter)
+        .faultTolerant()
+        .retryLimit(RETRY_LIMIT)
+        .retry(Exception.class)
+        .skipLimit(SKIP_BATCH_SIZE)
+        .skip(Exception.class)
+        .listener(ecsStepSkipListener)
+        .build();
+  }
+
+  @Bean
+  public Step ecsTaskInfoStep() {
+    return stepBuilderFactory.get("ecsTaskInfoStep")
+        .<PublishedMessage, PublishedMessage>chunk(BATCH_SIZE)
+        .reader(ecsTaskInfoMessageReader(null, null))
+        .writer(ecsTaskInfoWriter)
+        .faultTolerant()
+        .retryLimit(RETRY_LIMIT)
+        .retry(Exception.class)
+        .skipLimit(SKIP_BATCH_SIZE)
+        .skip(Exception.class)
+        .listener(ecsStepSkipListener)
+        .build();
+  }
+
+  @Bean
+  public Step ecsTaskLifecycleStep() {
+    return stepBuilderFactory.get("ecsTaskLifecycleStep")
+        .<PublishedMessage, PublishedMessage>chunk(BATCH_SIZE)
+        .reader(ecsTaskLifecycleMessageReader(null, null))
+        .writer(ecsTaskLifecycleWriter)
         .faultTolerant()
         .retryLimit(RETRY_LIMIT)
         .retry(Exception.class)
