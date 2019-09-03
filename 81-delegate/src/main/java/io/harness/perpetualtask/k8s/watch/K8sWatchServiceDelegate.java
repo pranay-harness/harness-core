@@ -43,6 +43,9 @@ public class K8sWatchServiceDelegate {
       case "Pod":
         watcher = new PodWatcher(client, eventPublisher);
         break;
+      case "Node":
+        watcher = new NodeWatcher(client, eventPublisher);
+        break;
       default:
         break;
     }

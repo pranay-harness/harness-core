@@ -49,3 +49,21 @@ message PodEvent {
   EventType type = 2;
   google.protobuf.Timestamp timestamp = 3;
 }
+
+message NodeInfo {
+  string uid = 1;
+  string name = 2;
+  google.protobuf.Timestamp creation_time = 3;
+  map<string, string> labels = 4;
+}
+
+message NodeEvent {
+  string uid = 1;
+  enum EventType {
+    EVENT_TYPE_INVALID = 0;
+    EVENT_TYPE_START = 1;
+    EVENT_TYPE_STOP = 2;
+  }
+  EventType type = 2;
+  google.protobuf.Timestamp event_time = 3;
+}
