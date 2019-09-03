@@ -577,10 +577,13 @@ public class SecretManagerImpl implements SecretManager {
 
     // If SETTING category is included, then make sure WINRM related settings get loaded as it's category field is
     // empty in persistence store and the filter need special handling.
-    if (categories.contains(SettingCategory.SETTING)) {
+    if (categories.contains(SettingCategory.SETTING.name())) {
+      // PL-3318: Some WINRM connection attribute does not have category field set SHOULD be included in the result set.
       Query<SettingAttribute> winRmQuery =
           wingsPersistence.createQuery(SettingAttribute.class)
               .filter(ACCOUNT_ID_KEY, accountId)
+              .field(SettingAttributeKeys.category)
+              .doesNotExist()
               .field(SettingAttribute.VALUE_TYPE_KEY)
               .in(Lists.newArrayList(SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES));
       loadSettingQueryResult(winRmQuery, settingAttributeIds, settingAttributeList);
