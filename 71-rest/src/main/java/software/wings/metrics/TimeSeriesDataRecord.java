@@ -184,7 +184,7 @@ public class TimeSeriesDataRecord implements GoogleDataStoreAware, UuidAware, Cr
                       .setKind(this.getClass().getAnnotation(Entity.class).value())
                       .newKey(generateUniqueKey());
     com.google.cloud.datastore.Entity.Builder recordBuilder = com.google.cloud.datastore.Entity.newBuilder(taskKey);
-    addFieldIfNotEmpty(recordBuilder, TimeSeriesMetricRecordKeys.stateExecutionId, stateType.name(), true);
+    addFieldIfNotEmpty(recordBuilder, TimeSeriesMetricRecordKeys.stateType, stateType.name(), true);
     addFieldIfNotEmpty(recordBuilder, TimeSeriesMetricRecordKeys.workflowId, workflowId, true);
     addFieldIfNotEmpty(recordBuilder, TimeSeriesMetricRecordKeys.workflowExecutionId, workflowExecutionId, false);
     addFieldIfNotEmpty(recordBuilder, TimeSeriesMetricRecordKeys.serviceId, serviceId, true);
