@@ -67,6 +67,8 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
     setUnset(updateOperations, "applications", delegateScope.getApplications());
     setUnset(updateOperations, "environments", delegateScope.getEnvironments());
     setUnset(updateOperations, "serviceInfrastructures", delegateScope.getServiceInfrastructures());
+    setUnset(updateOperations, "infrastructureDefinitions", delegateScope.getInfrastructureDefinitions());
+    setUnset(updateOperations, "services", delegateScope.getServices());
 
     Query<DelegateScope> query = wingsPersistence.createQuery(DelegateScope.class)
                                      .filter(DelegateScopeKeys.accountId, delegateScope.getAccountId())
