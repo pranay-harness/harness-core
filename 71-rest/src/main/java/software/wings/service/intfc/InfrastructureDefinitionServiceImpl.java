@@ -468,6 +468,8 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
           format("Infra Definition does not exist with id: [%s]", infrastructureDefinition.getUuid()));
     }
     validateImmutableFields(infrastructureDefinition, savedInfraDefinition);
+    infrastructureDefinition.setCreatedAt(savedInfraDefinition.getCreatedAt());
+    infrastructureDefinition.setCreatedBy(savedInfraDefinition.getCreatedBy());
     try {
       wingsPersistence.save(infrastructureDefinition);
     } catch (DuplicateKeyException ex) {
