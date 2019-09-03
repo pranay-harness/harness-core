@@ -25,4 +25,6 @@ public class ScimUser extends ScimBaseResource {
   private JsonNode emails;
   private JsonNode roles;
   private JsonNode name;
+  private JsonNode groups;
+  private JsonNode password;
 }
