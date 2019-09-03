@@ -161,7 +161,7 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
 
   @Override
   public String getCronDescription(String expression) {
-    return triggerServiceHelper.getCronDescription(expression);
+    return DeploymentTriggerServiceHelper.getCronDescription(expression);
   }
 
   @Override

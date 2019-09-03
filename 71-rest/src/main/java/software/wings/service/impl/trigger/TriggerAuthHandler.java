@@ -99,13 +99,13 @@ public class TriggerAuthHandler {
       if (isEmpty(templatizedEnvVariableName)) {
         return;
       }
-      validateAndAuthorizeEnvironment(trigger, existing, variables, triggerVariables);
+      validateAndAuthorizeEnvironment(trigger, existing, triggerVariables);
     }
   }
 
   private void validateAndAuthorizeEnvironment(
-      DeploymentTrigger trigger, boolean existing, List<Variable> variables, List<Variable> triggerVariables) {
-    Variable environmentVaribale = WorkflowServiceTemplateHelper.getEnvVariable(variables);
+      DeploymentTrigger trigger, boolean existing, List<Variable> triggerVariables) {
+    Variable environmentVaribale = WorkflowServiceTemplateHelper.getEnvVariable(triggerVariables);
     if (environmentVaribale == null || isEmpty(environmentVaribale.getValue())) {
       if (existing) {
         return;
