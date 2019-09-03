@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.ExecutionStatusResponseData;
 import io.harness.beans.PageResponse;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
@@ -69,7 +70,6 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
-import software.wings.sm.ExecutionStatusResponseData;
 import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StateExecutionInstance;

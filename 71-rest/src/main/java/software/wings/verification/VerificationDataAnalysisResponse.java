@@ -1,10 +1,10 @@
 package software.wings.verification;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.ExecutionStatusResponseData;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.sm.ExecutionStatusResponseData;
 
 @Data
 @Builder
