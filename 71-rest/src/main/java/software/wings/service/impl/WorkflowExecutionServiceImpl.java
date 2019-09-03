@@ -3237,23 +3237,20 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
-  public List<WorkflowExecution> getLatestExecutionsFor(String appId, String infraMappingId, int limit) {
-    try {
-      final List<WorkflowExecution> workflowExecutionList =
-          emptyIfNull(wingsPersistence.createQuery(WorkflowExecution.class)
-                          .filter(WorkflowExecutionKeys.appId, appId)
-                          .filter(WorkflowExecutionKeys.workflowType, ORCHESTRATION)
-                          .filter(WorkflowExecutionKeys.status, SUCCESS)
-                          .filter(WorkflowExecutionKeys.infraMappingIds, infraMappingId)
-                          .order(Sort.descending(WorkflowExecutionKeys.createdAt))
-                          .asList(new FindOptions().limit(limit)));
+  public List<WorkflowExecution> getLatestExecutionsFor(
+      String appId, String infraMappingId, int limit, List<String> fieldList, boolean forInclusion) {
+    final Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
+                                               .filter(WorkflowExecutionKeys.appId, appId)
+                                               .filter(WorkflowExecutionKeys.workflowType, ORCHESTRATION)
+                                               .filter(WorkflowExecutionKeys.status, SUCCESS)
+                                               .filter(WorkflowExecutionKeys.infraMappingIds, infraMappingId);
 
-      workflowExecutionList.forEach(we -> we.setStateMachine(null));
-      return workflowExecutionList;
-    } catch (Exception e) {
-      logger.error(format("Failed to fetch recent executions for inframapping [%s]", infraMappingId), e);
-    }
+    emptyIfNull(fieldList).forEach(field -> query.project(field, forInclusion));
 
-    return Collections.emptyList();
+    final List<WorkflowExecution> workflowExecutionList = emptyIfNull(
+        query.order(Sort.descending(WorkflowExecutionKeys.createdAt)).asList(new FindOptions().limit(limit)));
+
+    workflowExecutionList.forEach(we -> we.setStateMachine(null));
+    return workflowExecutionList;
   }
 }

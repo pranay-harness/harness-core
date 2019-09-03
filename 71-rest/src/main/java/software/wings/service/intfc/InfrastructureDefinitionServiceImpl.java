@@ -37,6 +37,7 @@ import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
@@ -88,6 +89,7 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SpotInstConfig;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
 import software.wings.dl.WingsPersistence;
@@ -786,7 +788,21 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   }
 
   private List<WorkflowExecution> getLatestWFEFor(String appId, String infraMappingId, int limit) {
-    return workflowExecutionService.getLatestExecutionsFor(appId, infraMappingId, limit);
+    try {
+      final ImmutableList<String> fieldList = ImmutableList.of(WorkflowExecutionKeys.appId,
+          WorkflowExecutionKeys.createdAt, WorkflowExecutionKeys.accountId, WorkflowExecutionKeys.envId,
+          WorkflowExecutionKeys.envIds, WorkflowExecutionKeys.infraDefinitionIds, WorkflowExecutionKeys.infraMappingIds,
+          WorkflowExecutionKeys.appName, WorkflowExecutionKeys.envName, WorkflowExecutionKeys.envType,
+          WorkflowExecutionKeys.workflowType, WorkflowExecutionKeys.status, WorkflowExecutionKeys.pipelineExecutionId,
+          WorkflowExecutionKeys.name, WorkflowExecutionKeys.triggeredBy, WorkflowExecutionKeys.orchestrationType,
+          WorkflowExecutionKeys.artifacts);
+
+      return workflowExecutionService.getLatestExecutionsFor(appId, infraMappingId, limit, fieldList, true);
+
+    } catch (Exception e) {
+      logger.error(format("Failed to fetch recent executions for inframapping [%s]", infraMappingId), e);
+    }
+    return Collections.emptyList();
   }
 
   @Override
