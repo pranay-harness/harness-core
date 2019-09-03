@@ -38,7 +38,6 @@ import static software.wings.beans.ExecutionScope.WORKFLOW;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.MANUAL_INTERVENTION_NEEDED_NOTIFICATION;
-import static software.wings.sm.ElementNotifyResponseData.Builder.anElementNotifyResponseData;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 import static software.wings.sm.ExecutionInterruptType.PAUSE_ALL;
 import static software.wings.sm.ExecutionInterruptType.RESUME_ALL;
@@ -100,6 +99,7 @@ import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.ElementNotifyResponseData.ElementNotifyResponseDataBuilder;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.states.BarrierState;
 import software.wings.sm.states.EnvState;
@@ -923,11 +923,12 @@ public class StateMachineExecutor implements StateInspectionListener {
   }
 
   private void notify(StateExecutionInstance stateExecutionInstance, ExecutionStatus status) {
-    ElementNotifyResponseData notifyResponseData = anElementNotifyResponseData().withExecutionStatus(status).build();
+    ElementNotifyResponseDataBuilder elementNotifyResponseDataBuilder =
+        ElementNotifyResponseData.builder().executionStatus(status);
     if (isNotEmpty(stateExecutionInstance.getNotifyElements())) {
-      notifyResponseData.setContextElements(stateExecutionInstance.getNotifyElements());
+      elementNotifyResponseDataBuilder.contextElements(stateExecutionInstance.getNotifyElements());
     }
-    waitNotifyEngine.notify(stateExecutionInstance.getNotifyId(), notifyResponseData);
+    waitNotifyEngine.notify(stateExecutionInstance.getNotifyId(), elementNotifyResponseDataBuilder.build());
   }
 
   private void handleSpawningStateExecutionInstances(
