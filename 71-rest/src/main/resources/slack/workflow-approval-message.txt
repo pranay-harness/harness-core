@@ -1,4 +1,5 @@
->*Workflow* : <${workflowUrl}|${workflowExecutionName}>
+>*Approval Step*: <${workflowUrl}|${pausedStageName}>
+>*Workflow* : ${workflowExecutionName}
 >*Application* : ${appName}
 >*Services* : ${services}
 >*Environments* : ${environments}
