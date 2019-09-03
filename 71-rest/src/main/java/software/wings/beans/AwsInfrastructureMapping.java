@@ -52,6 +52,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
   @Transient private String loadBalancerName;
   @Deprecated private String customName;
   private boolean usePublicDns;
+  private String hostConnectionType;
   private boolean provisionInstances;
   @Blueprint private AwsInstanceFilter awsInstanceFilter;
   @Blueprint private String autoScalingGroupName;
@@ -250,6 +251,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     private String connectionType;
     private String loadBalancer;
     private boolean usePublicDns;
+    private String hostConnectionType;
     private boolean provisionInstances;
     private String autoScalingGroup;
     private int desiredCapacity;
@@ -263,8 +265,8 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
         String infraMappingType, String deploymentType, String computeProviderName, String name, String restrictions,
         String expression, String region, String provisionerName, String connectionType, String loadBalancer,
-        boolean usePublicDns, boolean provisionInstances, String autoScalingGroup, int desiredCapacity,
-        List<String> vpcs, List<NameValuePair.Yaml> awsTags, String hostNameConvention,
+        boolean usePublicDns, String hostConnectionType, boolean provisionInstances, String autoScalingGroup,
+        int desiredCapacity, List<String> vpcs, List<NameValuePair.Yaml> awsTags, String hostNameConvention,
         Map<String, Object> blueprints) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
           computeProviderName, blueprints);
@@ -275,6 +277,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
       this.connectionType = connectionType;
       this.loadBalancer = loadBalancer;
       this.usePublicDns = usePublicDns;
+      this.hostConnectionType = hostConnectionType;
       this.provisionInstances = provisionInstances;
       this.autoScalingGroup = autoScalingGroup;
       this.desiredCapacity = desiredCapacity;
@@ -463,6 +466,14 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     this.usePublicDns = usePublicDns;
   }
 
+  public String getHostConnectionType() {
+    return hostConnectionType;
+  }
+
+  public void setHostConnectionType(String hostConnectionType) {
+    this.hostConnectionType = hostConnectionType;
+  }
+
   /**
    * Gets auto scaling group name.
    *
@@ -632,6 +643,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     private String loadBalancerName;
     private String customName;
     private boolean usePublicDns;
+    private String hostConnectionType;
     private String computeProviderSettingId;
     private boolean provisionInstances;
     private String envId;
@@ -829,6 +841,11 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
      */
     public Builder withUsePublicDns(boolean usePublicDns) {
       this.usePublicDns = usePublicDns;
+      return this;
+    }
+
+    public Builder withHostConnectionType(String hostConnectionType) {
+      this.hostConnectionType = hostConnectionType;
       return this;
     }
 
@@ -1035,6 +1052,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
       awsInfrastructureMapping.setCustomName(customName);
       awsInfrastructureMapping.setEntityYamlPath(entityYamlPath);
       awsInfrastructureMapping.setUsePublicDns(usePublicDns);
+      awsInfrastructureMapping.setHostConnectionType(hostConnectionType);
       awsInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
       awsInfrastructureMapping.setProvisionInstances(provisionInstances);
       awsInfrastructureMapping.setEnvId(envId);

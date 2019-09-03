@@ -57,6 +57,7 @@ public class AwsInfraMappingYamlHandler
     yaml.setExpression(bean.getRestrictionExpression());
     yaml.setLoadBalancer(bean.getLoadBalancerName());
     yaml.setUsePublicDns(bean.isUsePublicDns());
+    yaml.setHostConnectionType(bean.getHostConnectionType());
     yaml.setProvisionInstances(bean.isProvisionInstances());
     yaml.setAutoScalingGroup(bean.getAutoScalingGroupName());
     yaml.setDesiredCapacity(bean.getDesiredCapacity());
@@ -143,6 +144,7 @@ public class AwsInfraMappingYamlHandler
     bean.setLoadBalancerId(yaml.getLoadBalancer());
     bean.setLoadBalancerName(yaml.getLoadBalancer());
     bean.setUsePublicDns(yaml.isUsePublicDns());
+    bean.setHostConnectionType(yaml.getHostConnectionType());
     bean.setProvisionInstances(yaml.isProvisionInstances());
     bean.setAutoScalingGroupName(yaml.getAutoScalingGroup());
     bean.setDesiredCapacity(yaml.getDesiredCapacity());
@@ -161,17 +163,10 @@ public class AwsInfraMappingYamlHandler
   }
 
   private boolean avoidSettingHostConnAttributesToYaml(AwsInfrastructureMapping bean) {
-    if (isNotEmpty(bean.getProvisionerId()) && isEmpty(bean.getHostConnectionAttrs())) {
-      return true;
-    } else {
-      return false;
-    }
+    return isNotEmpty(bean.getProvisionerId()) && isEmpty(bean.getHostConnectionAttrs());
   }
 
   private boolean avoidSettingHostConnAttributesFromYaml(Yaml yaml) {
-    if (isEmpty(yaml.getConnectionType()) && isNotEmpty(yaml.getProvisionerName())) {
-      return true;
-    }
-    return false;
+    return isEmpty(yaml.getConnectionType()) && isNotEmpty(yaml.getProvisionerName());
   }
 }

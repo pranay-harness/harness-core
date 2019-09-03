@@ -39,6 +39,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionCredential.ExecutionType;
+import software.wings.beans.HostConnectionType;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
@@ -148,6 +149,7 @@ public class BasicSSHDeployment extends AbstractE2ETest {
                                                .withServiceTemplateId(serviceTemplateId)
                                                .withAwsInstanceFilter(AwsInstanceFilter.builder().build())
                                                .withUsePublicDns(true)
+                                               .withHostConnectionType(HostConnectionType.PUBLIC_DNS.name())
                                                .withAutoPopulate(true)
                                                .build();
 

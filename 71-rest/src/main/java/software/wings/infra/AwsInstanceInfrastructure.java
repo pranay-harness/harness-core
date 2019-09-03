@@ -45,6 +45,7 @@ public class AwsInstanceInfrastructure
   private String loadBalancerId;
   @Transient private String loadBalancerName;
   private boolean usePublicDns;
+  private String hostConnectionType;
   private AwsInstanceFilter awsInstanceFilter;
   private String autoScalingGroupName;
   private boolean setDesiredCapacity;
@@ -61,6 +62,7 @@ public class AwsInstanceInfrastructure
                                                          .withHostConnectionAttrs(hostConnectionAttrs)
                                                          .withLoadBalancerId(loadBalancerId)
                                                          .withUsePublicDns(usePublicDns)
+                                                         .withHostConnectionType(hostConnectionType)
                                                          .withAutoScalingGroupName(autoScalingGroupName)
                                                          .withSetDesiredCapacity(setDesiredCapacity)
                                                          .withDesiredCapacity(desiredCapacity)
@@ -167,6 +169,7 @@ public class AwsInstanceInfrastructure
     private String hostConnectionAttrsName;
     private String loadBalancerName;
     private boolean usePublicDns;
+    private String hostConnectionType;
     private boolean useAutoScalingGroup;
     private AwsInstanceFilter awsInstanceFilter;
     private String autoScalingGroupName;
@@ -177,17 +180,20 @@ public class AwsInstanceInfrastructure
 
     @Builder
     public Yaml(String type, String cloudProviderName, String region, String hostConnectionAttrsName,
-        String loadBalancerName, boolean usePublicDns, boolean useAutoScalingGroup, AwsInstanceFilter awsInstanceFilter,
-        String autoScalingGroupName, boolean setDesiredCapacity, int desiredCapacity, String hostNameConvention,
-        Map<String, String> expressions) {
+        String loadBalancerName, boolean usePublicDns, String hostConnectionType, boolean useAutoScalingGroup,
+        AwsInstanceFilter awsInstanceFilter, String autoScalingGroupName, boolean setDesiredCapacity,
+        int desiredCapacity, String hostNameConvention, Map<String, String> expressions) {
       super(type);
       setCloudProviderName(cloudProviderName);
       setRegion(region);
       setHostConnectionAttrsName(hostConnectionAttrsName);
       setLoadBalancerName(loadBalancerName);
       setUsePublicDns(usePublicDns);
+      setHostConnectionType(hostConnectionType);
       setUseAutoScalingGroup(useAutoScalingGroup);
+      setAutoScalingGroupName(autoScalingGroupName);
       setAwsInstanceFilter(awsInstanceFilter);
+      setSetDesiredCapacity(setDesiredCapacity);
       setDesiredCapacity(desiredCapacity);
       setHostNameConvention(hostNameConvention);
       setExpressions(expressions);

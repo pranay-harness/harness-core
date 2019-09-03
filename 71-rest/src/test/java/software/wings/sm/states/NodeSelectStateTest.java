@@ -41,6 +41,7 @@ import software.wings.WingsBaseTest;
 import software.wings.api.SelectedNodeExecutionData;
 import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.beans.HostConnectionType;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.PhysicalInfrastructureMapping;
@@ -81,6 +82,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
           .withInfraMappingType(InfrastructureMappingType.AWS_SSH.name())
           .withRegion(Regions.US_EAST_1.getName())
           .withUsePublicDns(true)
+          .withHostConnectionType(HostConnectionType.PUBLIC_DNS.name())
           .build();
 
   PhysicalInfrastructureMapping physicalInfrastructureMapping =

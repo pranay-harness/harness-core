@@ -98,6 +98,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
+import software.wings.beans.HostConnectionType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.PcfInfrastructureMapping;
@@ -656,17 +657,19 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldSelectServiceInstancesForAwsInfrastructure() {
-    AwsInfrastructureMapping awsInfrastructureMapping = anAwsInfrastructureMapping()
-                                                            .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
-                                                            .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
-                                                            .withAppId(APP_ID)
-                                                            .withEnvId(ENV_ID)
-                                                            .withComputeProviderType(AWS.name())
-                                                            .withUuid(INFRA_MAPPING_ID)
-                                                            .withServiceTemplateId(TEMPLATE_ID)
-                                                            .withRegion(Regions.US_EAST_1.getName())
-                                                            .withUsePublicDns(false)
-                                                            .build();
+    AwsInfrastructureMapping awsInfrastructureMapping =
+        anAwsInfrastructureMapping()
+            .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
+            .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
+            .withAppId(APP_ID)
+            .withEnvId(ENV_ID)
+            .withComputeProviderType(AWS.name())
+            .withUuid(INFRA_MAPPING_ID)
+            .withServiceTemplateId(TEMPLATE_ID)
+            .withRegion(Regions.US_EAST_1.getName())
+            .withUsePublicDns(false)
+            .withHostConnectionType(HostConnectionType.PRIVATE_DNS.name())
+            .build();
 
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
 
@@ -764,17 +767,19 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldListAwsComputeProviderHosts() {
-    AwsInfrastructureMapping awsInfrastructureMapping = anAwsInfrastructureMapping()
-                                                            .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
-                                                            .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
-                                                            .withAppId(APP_ID)
-                                                            .withEnvId(ENV_ID)
-                                                            .withComputeProviderType(AWS.name())
-                                                            .withUuid(INFRA_MAPPING_ID)
-                                                            .withServiceTemplateId(TEMPLATE_ID)
-                                                            .withRegion(Regions.US_EAST_1.getName())
-                                                            .withUsePublicDns(true)
-                                                            .build();
+    AwsInfrastructureMapping awsInfrastructureMapping =
+        anAwsInfrastructureMapping()
+            .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
+            .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
+            .withAppId(APP_ID)
+            .withEnvId(ENV_ID)
+            .withComputeProviderType(AWS.name())
+            .withUuid(INFRA_MAPPING_ID)
+            .withServiceTemplateId(TEMPLATE_ID)
+            .withRegion(Regions.US_EAST_1.getName())
+            .withUsePublicDns(true)
+            .withHostConnectionType(HostConnectionType.PUBLIC_DNS.name())
+            .build();
 
     when(serviceTemplateService.getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID))
         .thenReturn(singletonList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));

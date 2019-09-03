@@ -35,6 +35,7 @@ import software.wings.beans.AzureInfrastructureMapping;
 import software.wings.beans.AzureInfrastructureMapping.Builder;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
+import software.wings.beans.HostConnectionType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.InfrastructureProvisioner;
@@ -290,6 +291,7 @@ public class InfrastructureMappingGenerator {
             .withComputeProviderSettingId(awsTestSettingAttribute.getUuid())
             .withHostConnectionAttrs(devKeySettingAttribute.getUuid())
             .withUsePublicDns(true)
+            .withHostConnectionType(HostConnectionType.PUBLIC_DNS.name())
             .withRegion("us-east-1")
             .withAwsInstanceFilter(AwsInstanceFilter.builder().tags(tags).build())
             .build());
@@ -325,6 +327,7 @@ public class InfrastructureMappingGenerator {
             .withComputeProviderSettingId(awsTestSettingAttribute.getUuid())
             .withHostConnectionAttrs(devKeySettingAttribute.getUuid())
             .withUsePublicDns(true)
+            .withHostConnectionType(HostConnectionType.PUBLIC_DNS.name())
             .withRegion("us-east-1")
             .withAwsInstanceFilter(AwsInstanceFilter.builder().tags(tags).build())
             .build());
@@ -365,6 +368,7 @@ public class InfrastructureMappingGenerator {
             .withComputeProviderSettingId(awsTestSettingAttribute.getUuid())
             .withHostConnectionAttrs(devKeySettingAttribute.getUuid())
             .withUsePublicDns(true)
+            .withHostConnectionType(HostConnectionType.PUBLIC_DNS.name())
             .withAwsInstanceFilter(AwsInstanceFilter.builder().build())
             .build());
   }
@@ -427,7 +431,7 @@ public class InfrastructureMappingGenerator {
       infrastructureMappingType = random.nextObject(InfrastructureMappingType.class);
     }
 
-    InfrastructureMapping newInfrastructureMapping = null;
+    InfrastructureMapping newInfrastructureMapping;
     switch (infrastructureMappingType) {
       case AWS_SSH:
         AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
@@ -498,6 +502,7 @@ public class InfrastructureMappingGenerator {
         }
 
         builder.withUsePublicDns(awsInfrastructureMapping.isUsePublicDns());
+        builder.withHostConnectionType(awsInfrastructureMapping.getHostConnectionType());
 
         if (infrastructureMapping.getServiceTemplateId() != null) {
           builder.withServiceTemplateId(infrastructureMapping.getServiceTemplateId());
