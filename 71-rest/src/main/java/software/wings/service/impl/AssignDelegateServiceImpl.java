@@ -32,6 +32,7 @@ import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.DelegateScope;
 import software.wings.beans.FeatureName;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.TaskGroup;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
@@ -41,6 +42,7 @@ import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureMappingService;
 
 import java.time.Clock;
 import java.util.ArrayList;
@@ -66,6 +68,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   @Inject private Clock clock;
   @Inject private Injector injector;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private InfrastructureMappingService infrastructureMappingService;
 
   private LoadingCache<ImmutablePair<String, String>, Optional<DelegateConnectionResult>>
       delegateConnectionResultCache =
@@ -138,10 +141,10 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
     return (isEmpty(includeScopes)
                || (includeScopes.stream().anyMatch(
-                      scope -> scopeMatch(scope, appId, envId, infraMappingId, taskGroup))))
+                      scope -> scopeMatch(scope, appId, envId, infraMappingId, taskGroup, delegate.getAccountId()))))
         && (isEmpty(excludeScopes)
                || (excludeScopes.stream().noneMatch(
-                      scope -> scopeMatch(scope, appId, envId, infraMappingId, taskGroup))));
+                      scope -> scopeMatch(scope, appId, envId, infraMappingId, taskGroup, delegate.getAccountId()))));
   }
 
   private boolean canAssignTags(Delegate delegate, List<String> tags) {
@@ -151,7 +154,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   }
 
   private boolean scopeMatch(
-      DelegateScope scope, String appId, String envId, String infraMappingId, TaskGroup taskGroup) {
+      DelegateScope scope, String appId, String envId, String infraMappingId, TaskGroup taskGroup, String accountId) {
+    final boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId);
     if (!scope.isValid()) {
       logger.error("Delegate scope cannot be empty.");
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Delegate scope cannot be empty.");
@@ -171,8 +175,25 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     if (match && isNotEmpty(scope.getEnvironments())) {
       match = isNotBlank(envId) && scope.getEnvironments().contains(envId);
     }
-    if (match && isNotEmpty(scope.getServiceInfrastructures())) {
-      match = isNotBlank(infraMappingId) && scope.getServiceInfrastructures().contains(infraMappingId);
+
+    if (infraRefactor && (isNotEmpty(scope.getInfrastructureDefinitions()) || isNotEmpty(scope.getServices()))) {
+      InfrastructureMapping infrastructureMapping =
+          isNotBlank(infraMappingId) ? infrastructureMappingService.get(appId, infraMappingId) : null;
+      if (infrastructureMapping != null) {
+        if (match && isNotEmpty(scope.getInfrastructureDefinitions())) {
+          match = scope.getInfrastructureDefinitions().contains(infrastructureMapping.getInfrastructureDefinitionId());
+        }
+        if (match && isNotEmpty(scope.getServices())) {
+          match = scope.getInfrastructureDefinitions().contains(infrastructureMapping.getInfrastructureDefinitionId());
+        }
+      } else {
+        match = false;
+      }
+
+    } else {
+      if (match && isNotEmpty(scope.getServiceInfrastructures())) {
+        match = isNotBlank(infraMappingId) && scope.getServiceInfrastructures().contains(infraMappingId);
+      }
     }
 
     return match;
