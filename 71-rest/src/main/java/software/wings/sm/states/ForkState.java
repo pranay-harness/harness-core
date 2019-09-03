@@ -17,7 +17,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
-import software.wings.sm.ExecutionStatusData;
+import software.wings.sm.ExecutionStatusResponseData;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
@@ -106,7 +106,7 @@ public class ForkState extends State {
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
     for (Object status : response.values()) {
-      ExecutionStatus executionStatus = ((ExecutionStatusData) status).getExecutionStatus();
+      ExecutionStatus executionStatus = ((ExecutionStatusResponseData) status).getExecutionStatus();
       if (executionStatus != ExecutionStatus.SUCCESS) {
         executionResponseBuilder.executionStatus(executionStatus);
       }

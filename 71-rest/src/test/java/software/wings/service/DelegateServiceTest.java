@@ -27,7 +27,6 @@ import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.common.Constants.DELEGATE_DIR;
 import static software.wings.common.Constants.DOCKER_DELEGATE;
 import static software.wings.common.Constants.KUBERNETES_DELEGATE;
-import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusData;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
@@ -111,6 +110,7 @@ import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.sm.ExecutionStatusData;
 import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
 
 import java.io.ByteArrayInputStream;
@@ -420,13 +420,14 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
         DelegateTaskResponse.builder()
             .accountId(ACCOUNT_ID)
-            .response(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
+            .response(ExecutionStatusData.builder().executionStatus(ExecutionStatus.SUCCESS).build())
             .build());
     assertThat(
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get())
         .isEqualTo(null);
     verify(waitNotifyEngine)
-        .notify(delegateTask.getWaitId(), anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build());
+        .notify(
+            delegateTask.getWaitId(), ExecutionStatusData.builder().executionStatus(ExecutionStatus.SUCCESS).build());
   }
 
   @Test
@@ -448,7 +449,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
         DelegateTaskResponse.builder()
             .accountId(ACCOUNT_ID)
-            .response(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
+            .response(ExecutionStatusData.builder().executionStatus(ExecutionStatus.SUCCESS).build())
             .build());
     assertThat(
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get())
@@ -474,7 +475,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
         DelegateTaskResponse.builder()
             .accountId(ACCOUNT_ID)
-            .response(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
+            .response(ExecutionStatusData.builder().executionStatus(ExecutionStatus.SUCCESS).build())
             .build());
     delegateTask = wingsPersistence.get(DelegateTask.class, delegateTask.getUuid());
     assertThat(delegateTask.getStatus()).isEqualTo(DelegateTask.Status.FINISHED);
@@ -504,7 +505,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
         DelegateTaskResponse.builder()
             .accountId(ACCOUNT_ID)
-            .response(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
+            .response(ExecutionStatusData.builder().executionStatus(ExecutionStatus.SUCCESS).build())
             .responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE)
             .build());
     DelegateTask updatedDelegateTask =
@@ -541,7 +542,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
         DelegateTaskResponse.builder()
             .accountId(ACCOUNT_ID)
-            .response(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
+            .response(ExecutionStatusData.builder().executionStatus(ExecutionStatus.SUCCESS).build())
             .responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE)
             .build());
     DelegateTask updatedDelegateTask =

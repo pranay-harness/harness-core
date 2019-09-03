@@ -39,7 +39,6 @@ import static software.wings.sm.ExecutionInterruptType.RESUME;
 import static software.wings.sm.ExecutionInterruptType.RESUME_ALL;
 import static software.wings.sm.ExecutionInterruptType.RETRY;
 import static software.wings.sm.ExecutionInterruptType.ROLLBACK;
-import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusData;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -145,7 +144,7 @@ public class ExecutionInterruptManager {
         throw new WingsException(RESUME_ALL_ALREADY, USER);
       }
       seize(pauseAll);
-      waitNotifyEngine.notify(pauseAll.getUuid(), anExecutionStatusData().withExecutionStatus(SUCCESS).build());
+      waitNotifyEngine.notify(pauseAll.getUuid(), ExecutionStatusData.builder().executionStatus(SUCCESS).build());
     }
 
     executionInterrupt = wingsPersistence.saveAndGet(ExecutionInterrupt.class, executionInterrupt);

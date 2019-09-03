@@ -1,6 +1,8 @@
 package software.wings.sm;
 
 import io.harness.beans.ExecutionStatus;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,7 +10,8 @@ import java.util.List;
 /**
  * Created by rishi on 8/18/16.
  */
-public class ElementNotifyResponseData extends ExecutionStatusData {
+public class ElementNotifyResponseData implements ExecutionStatusResponseData {
+  @Getter @Setter private ExecutionStatus executionStatus;
   private List<ContextElement> contextElements;
   private Long startTs;
   private Long endTs;
