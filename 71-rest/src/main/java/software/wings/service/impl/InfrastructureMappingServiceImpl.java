@@ -549,6 +549,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         fieldsToRemove.add("loadBalancerId");
       }
       keyValuePairs.put("usePublicDns", awsInfrastructureMapping.isUsePublicDns());
+      if (awsInfrastructureMapping.getHostConnectionType() != null) {
+        keyValuePairs.put("hostConnectionType", awsInfrastructureMapping.getHostConnectionType());
+      } else {
+        fieldsToRemove.add("hostConnectionType");
+      }
       keyValuePairs.put("setDesiredCapacity", awsInfrastructureMapping.isSetDesiredCapacity());
       if (awsInfrastructureMapping.getHostNameConvention() != null) {
         keyValuePairs.put("hostNameConvention", awsInfrastructureMapping.getHostNameConvention());

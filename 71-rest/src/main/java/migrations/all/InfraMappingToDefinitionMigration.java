@@ -221,6 +221,7 @@ public class InfraMappingToDefinitionMigration implements Migration {
                 .loadBalancerId(awsSrc.getLoadBalancerId())
                 .loadBalancerName(awsSrc.getLoadBalancerName())
                 .usePublicDns(awsSrc.isUsePublicDns())
+                .hostConnectionType(awsSrc.getHostConnectionType())
                 .awsInstanceFilter(awsSrc.getAwsInstanceFilter())
                 .autoScalingGroupName(awsSrc.getAutoScalingGroupName())
                 .desiredCapacity(awsSrc.getDesiredCapacity())

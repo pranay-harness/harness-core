@@ -4,9 +4,13 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.govern.Switch.unhandled;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.HostElement.Builder.aHostElement;
+import static software.wings.beans.HostConnectionType.PRIVATE_DNS;
+import static software.wings.beans.HostConnectionType.PUBLIC_DNS;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 
 import com.google.inject.Inject;
@@ -35,6 +39,7 @@ import software.wings.api.HostElement;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.beans.HostConnectionType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
@@ -102,8 +107,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
 
                 return aHost()
                     .withHostName(awsUtils.getHostnameFromPrivateDnsName(instance.getPrivateDnsName()))
-                    .withPublicDns(awsInfrastructureMapping.isUsePublicDns() ? instance.getPublicDnsName()
-                                                                             : instance.getPrivateDnsName())
+                    .withPublicDns(computeHostConnectString(awsInfrastructureMapping, instance))
                     .withEc2Instance(instance)
                     .withAppId(awsInfrastructureMapping.getAppId())
                     .withEnvId(awsInfrastructureMapping.getEnvId())
@@ -125,7 +129,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         awsHosts.forEach(h -> {
           HostElement hostElement = aHostElement().withEc2Instance(h.getEc2Instance()).build();
 
-          final Map<String, Object> contextMap = new HashMap();
+          final Map<String, Object> contextMap = new HashMap<>();
           contextMap.put("host", hostElement);
           h.setHostName(
               awsUtils.getHostnameFromConvention(contextMap, awsInfrastructureMapping.getHostNameConvention()));
@@ -134,6 +138,33 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
       return aPageResponse().withResponse(awsHosts).build();
     }
     return aPageResponse().withResponse(emptyList()).build();
+  }
+
+  private String computeHostConnectString(AwsInfrastructureMapping awsInfrastructureMapping, Instance instance) {
+    String hostConnectString = "";
+    HostConnectionType hostConnectionType = isNotBlank(awsInfrastructureMapping.getHostConnectionType())
+        ? HostConnectionType.valueOf(awsInfrastructureMapping.getHostConnectionType())
+        : null;
+    if (hostConnectionType == null) {
+      hostConnectionType = awsInfrastructureMapping.isUsePublicDns() ? PUBLIC_DNS : PRIVATE_DNS;
+    }
+    switch (hostConnectionType) {
+      case PUBLIC_IP:
+        hostConnectString = instance.getPublicIpAddress();
+        break;
+      case PUBLIC_DNS:
+        hostConnectString = instance.getPublicDnsName();
+        break;
+      case PRIVATE_IP:
+        hostConnectString = instance.getPrivateIpAddress();
+        break;
+      case PRIVATE_DNS:
+        hostConnectString = instance.getPrivateDnsName();
+        break;
+      default:
+        unhandled(hostConnectionType);
+    }
+    return hostConnectString;
   }
 
   @Override
@@ -296,8 +327,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         .map(instance
             -> aHost()
                    .withHostName(awsUtils.getHostnameFromPrivateDnsName(instance.getPrivateDnsName()))
-                   .withPublicDns(infrastructureMapping.isUsePublicDns() ? instance.getPublicDnsName()
-                                                                         : instance.getPrivateDnsName())
+                   .withPublicDns(computeHostConnectString(infrastructureMapping, instance))
                    .withEc2Instance(instance)
                    .withAppId(infrastructureMapping.getAppId())
                    .withEnvId(infrastructureMapping.getEnvId())
