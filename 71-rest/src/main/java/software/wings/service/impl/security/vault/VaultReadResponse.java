@@ -1,4 +1,4 @@
-package software.wings.service.impl.security;
+package software.wings.service.impl.security.vault;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;

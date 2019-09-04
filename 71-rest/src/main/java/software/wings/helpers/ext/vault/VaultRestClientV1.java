@@ -7,7 +7,7 @@ import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
-import software.wings.service.impl.security.VaultReadResponse;
+import software.wings.service.impl.security.vault.VaultReadResponse;
 
 import java.util.Map;
 

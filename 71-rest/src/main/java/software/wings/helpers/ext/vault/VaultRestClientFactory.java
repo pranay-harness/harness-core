@@ -13,11 +13,11 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.VaultConfig;
-import software.wings.service.impl.security.VaultMetadataReadResponse;
-import software.wings.service.impl.security.VaultReadResponse;
-import software.wings.service.impl.security.VaultReadResponseV2;
-import software.wings.service.impl.security.VaultSecretMetadata;
-import software.wings.service.impl.security.VaultSecretValue;
+import software.wings.service.impl.security.vault.VaultMetadataReadResponse;
+import software.wings.service.impl.security.vault.VaultReadResponse;
+import software.wings.service.impl.security.vault.VaultReadResponseV2;
+import software.wings.service.impl.security.vault.VaultSecretMetadata;
+import software.wings.service.impl.security.vault.VaultSecretValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.IOException;

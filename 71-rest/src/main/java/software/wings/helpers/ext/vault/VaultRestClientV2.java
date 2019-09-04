@@ -7,9 +7,9 @@ import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
-import software.wings.service.impl.security.VaultMetadataReadResponse;
-import software.wings.service.impl.security.VaultReadResponseV2;
-import software.wings.service.impl.security.VaultSecretValue;
+import software.wings.service.impl.security.vault.VaultMetadataReadResponse;
+import software.wings.service.impl.security.vault.VaultReadResponseV2;
+import software.wings.service.impl.security.vault.VaultSecretValue;
 
 /**
  * It appears that the latest Vault (v0.11) was switched to use the v2 key/value secret engine by default. The endpoint

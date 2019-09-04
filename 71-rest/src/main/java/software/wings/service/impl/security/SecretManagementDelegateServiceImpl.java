@@ -75,8 +75,9 @@ import software.wings.helpers.ext.cyberark.CyberArkRestClientFactory;
 import software.wings.helpers.ext.vault.VaultRestClientFactory;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
-import software.wings.service.impl.security.VaultSecretMetadata.VersionMetadata;
 import software.wings.service.impl.security.cyberark.CyberArkReadResponse;
+import software.wings.service.impl.security.vault.VaultSecretMetadata;
+import software.wings.service.impl.security.vault.VaultSecretMetadata.VersionMetadata;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -281,12 +282,12 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           VersionMetadata versionMetadata = entry.getValue();
           final String changeDescription;
           final String changeTime;
-          if (versionMetadata.destroyed) {
+          if (versionMetadata.isDestroyed()) {
             changeDescription = "Deleted at version " + version + " in Vault";
-            changeTime = versionMetadata.deletionTime;
+            changeTime = versionMetadata.getDeletionTime();
           } else {
             changeDescription = version == 1 ? "Created in Vault" : "Updated to version " + version + " in Vault";
-            changeTime = versionMetadata.createdTime;
+            changeTime = versionMetadata.getCreatedTime();
           }
           SecretChangeLog changeLog = SecretChangeLog.builder()
                                           .accountId(vaultConfig.getAccountId())

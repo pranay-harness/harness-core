@@ -1,6 +1,6 @@
 package software.wings.helpers.ext.vault;
 
-import software.wings.service.impl.security.VaultSecretMetadata;
+import software.wings.service.impl.security.vault.VaultSecretMetadata;
 
 import java.io.IOException;
 
