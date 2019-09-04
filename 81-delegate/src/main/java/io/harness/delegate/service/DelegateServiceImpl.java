@@ -1421,7 +1421,7 @@ public class DelegateServiceImpl implements DelegateService {
     }
     logger.info("DelegateTask acquired - uuid: {}, accountId: {}, taskType: {}", delegateTask.getUuid(), accountId,
         delegateTask.getData().getTaskType());
-    Optional<LogSanitizer> sanitizer = getLogSanitizer(delegateTask);
+    Optional<LogSanitizer> sanitizer = getLogSanitizer(delegateTask.getData());
     DelegateRunnableTask delegateRunnableTask =
         TaskType.valueOf(delegateTask.getData().getTaskType())
             .getDelegateRunnableTask(delegateId, delegateTask,
@@ -1442,13 +1442,13 @@ public class DelegateServiceImpl implements DelegateService {
     logger.info("Task [{}] submitted for execution", delegateTask.getUuid());
   }
 
-  private Optional<LogSanitizer> getLogSanitizer(@NotNull DelegateTask delegateTask) {
+  private Optional<LogSanitizer> getLogSanitizer(@NotNull TaskData taskData) {
     String activityId = null;
     Map<String, String> secrets = new HashMap<>();
 
     // TODO: This gets secrets for Shell Script, Shell Script Provision, and Command only
     // When secret decryption is moved to delegate for each task then those secrets can be used instead.
-    Object[] parameters = delegateTask.getData().getParameters();
+    Object[] parameters = taskData.getParameters();
     if (parameters.length == 1 && parameters[0] instanceof TaskParameters) {
       if (parameters[0] instanceof ShellScriptParameters) {
         // Shell Script
