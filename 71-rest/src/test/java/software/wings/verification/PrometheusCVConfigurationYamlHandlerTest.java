@@ -2,6 +2,8 @@ package software.wings.verification;
 
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -149,10 +151,10 @@ public class PrometheusCVConfigurationYamlHandlerTest extends WingsBaseTest {
     mockYamlHelper();
 
     List<TimeSeries> timeSeriesList = new ArrayList<>();
-    String url = "jvm_memory_max_bytes{pod_name=\"$hostName\"}";
+    String url = "container_cpu_usage_seconds_total{container_name=\"harness-example\"}";
     timeSeriesList.add(TimeSeries.builder()
                            .metricName("Metric1")
-                           .metricType(MetricType.INFRA.name())
+                           .metricType(MetricType.ERROR.name())
                            .txnName("Test1")
                            .url(url)
                            .build());
@@ -161,8 +163,26 @@ public class PrometheusCVConfigurationYamlHandlerTest extends WingsBaseTest {
     Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestPrometheusConfig.yaml").build();
     changeContext.setChange(c);
     changeContext.setYaml(buildYaml(timeSeriesList));
-    PrometheusCVServiceConfiguration bean = yamlHandler.upsertFromYaml(changeContext, null);
+    try {
+      yamlHandler.upsertFromYaml(changeContext, null);
+      fail("parsed invalid metric list");
+    } catch (WingsException e) {
+      assertEquals("Test1 has error metrics [Metric1] and/or response time metrics [] but no throughput metrics.\n",
+          e.getMessage());
+    }
 
+    timeSeriesList.add(TimeSeries.builder()
+                           .metricName("Metric2")
+                           .metricType(MetricType.THROUGHPUT.name())
+                           .txnName("Test1")
+                           .url(url)
+                           .build());
+
+    changeContext = new ChangeContext<>();
+    c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestPrometheusConfig.yaml").build();
+    changeContext.setChange(c);
+    changeContext.setYaml(buildYaml(timeSeriesList));
+    PrometheusCVServiceConfiguration bean = yamlHandler.upsertFromYaml(changeContext, null);
     assertThat(bean.getName()).isEqualTo("TestPrometheusConfig");
     assertThat(bean.getAppId()).isEqualTo(appId);
     assertThat(bean.getEnvId()).isEqualTo(envId);

@@ -81,7 +81,7 @@ public class PrometheusCVConfigurationYamlHandler
   }
 
   private void validateTimeSeriesMetrics(List<TimeSeries> timeSeriesList) {
-    Map<String, String> invalidFields = validateTransactions(timeSeriesList, false);
+    Map<String, String> invalidFields = validateTransactions(timeSeriesList, true);
     if (EmptyPredicate.isNotEmpty(invalidFields)) {
       StringBuilder errorMsgBuilder = new StringBuilder();
       invalidFields.values().forEach(value -> {
