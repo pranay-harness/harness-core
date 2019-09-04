@@ -97,6 +97,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CVActivityLogService;
+import software.wings.service.intfc.verification.CVTaskService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -163,8 +164,9 @@ public abstract class AbstractAnalysisState extends State {
   @Inject @SchemaIgnore protected K8sStateHelper k8sStateHelper;
   @Inject private transient ExpressionEvaluator evaluator;
   @Inject private AccountService accountService;
-  @Inject @SchemaIgnore protected CVActivityLogService cvActivityLogService;
   @Inject private AwsAsgHelperServiceManager awsAsgHelperServiceManager;
+  @Inject protected CVActivityLogService cvActivityLogService;
+  @Inject protected CVTaskService cvTaskService;
 
   protected String hostnameField;
 
@@ -859,5 +861,9 @@ public abstract class AbstractAnalysisState extends State {
             + " minutes, Data will be collected for time range %t to %t waiting for " + DELAY_MINUTES
             + " Minutes before starting data collection.",
         dataCollectionStartTime, dataCollectionEndTimestampMillis(dataCollectionStartTime));
+  }
+
+  protected boolean isCVTaskEnqueuingEnabled(String accountId) {
+    return false;
   }
 }

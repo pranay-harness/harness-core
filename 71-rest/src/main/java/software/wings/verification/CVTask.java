@@ -1,6 +1,8 @@
 package software.wings.verification;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -12,6 +14,14 @@ import lombok.NonNull;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.PrePersist;
+import software.wings.common.VerificationConstants;
+import software.wings.service.impl.analysis.DataCollectionInfoV2;
+
+import java.time.OffsetDateTime;
+import java.util.Date;
 
 @Entity(value = "cvTasks", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "CVTaskKeys")
@@ -20,18 +30,27 @@ import org.mongodb.morphia.annotations.Id;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CVTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id private String uuid;
-  @NonNull private String accountId;
-  @NonNull private String cvConfigId;
-  @NonNull private ExecutionStatus status;
+
+  @NonNull @Indexed private String accountId;
+  private String cvConfigId;
+  @Indexed private String stateExecutionId;
+  private String nextTaskId;
+  @Indexed @NonNull private ExecutionStatus status;
 
   private long createdAt;
-  private long lastUpdatedAt;
+  @Indexed private long lastUpdatedAt;
 
   private int retryCount;
 
   private String exception;
   private int exceptionCode;
+  private long validAfter;
+  private String correlationId;
+  private DataCollectionInfoV2 dataCollectionInfo;
 
-  private long startMilliSec;
-  private long endMilliSec;
+  @JsonIgnore @SchemaIgnore @Indexed(options = @IndexOptions(expireAfterSeconds = 0)) private Date validUntil;
+  @PrePersist
+  public void onUpdate() {
+    validUntil = Date.from(OffsetDateTime.now().plusMonths(VerificationConstants.CV_TASK_TTL_MONTHS).toInstant());
+  }
 }

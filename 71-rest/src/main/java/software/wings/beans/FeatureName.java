@@ -59,8 +59,8 @@ public enum FeatureName {
   SCIM_INTEGRATION,
   GDS_TIME_SERIES_SAVE_PER_MINUTE,
   TF_ALL, // TODO: Yogesh, Remove this once UI is done
+  SPLUNK_CV_TASK,
   SLACK_APPROVALS;
-
   FeatureName() {
     scope = Scope.PER_ACCOUNT;
   }

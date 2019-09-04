@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import software.wings.api.PhaseElement;
+import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
@@ -23,7 +24,9 @@ import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
+import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
+import software.wings.service.impl.splunk.SplunkDataCollectionInfoV2;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
@@ -183,6 +186,30 @@ public class SplunkV2State extends AbstractLogAnalysisState {
     }
     return StringUtils.join(delegateTaskIds, ",");
   }
+  @Override
+  public DataCollectionInfoV2 createDataCollectionInfo(ExecutionContext context, Set<String> hosts) {
+    // TODO: see if this can be moved to base class.
+    // TODO: some common part needs to be refactored
+    final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
+    final SplunkConfig splunkConfig = (SplunkConfig) settingAttribute.getValue();
+    return SplunkDataCollectionInfoV2.builder()
+        .splunkConfig(splunkConfig)
+        .workflowExecutionId(context.getWorkflowExecutionId())
+        .stateExecutionId(context.getStateExecutionInstanceId())
+        .workflowId(context.getWorkflowId())
+        .accountId(appService.get(context.getAppId()).getAccountId())
+        .envId(envId)
+        .applicationId(context.getAppId())
+        .query(getRenderedQuery())
+        .hostnameField(getHostnameField())
+        .hosts(hosts)
+        .encryptedDataDetails(
+            secretManager.getEncryptionDetails(splunkConfig, context.getAppId(), context.getWorkflowExecutionId()))
+        .isAdvancedQuery(isAdvancedQuery)
+        .build();
+  }
 
   @Override
   public String getAnalysisServerConfigId() {
@@ -203,5 +230,10 @@ public class SplunkV2State extends AbstractLogAnalysisState {
   @Attributes(title = "Execute with previous steps")
   public boolean getExecuteWithPreviousSteps() {
     return super.isExecuteWithPreviousSteps();
+  }
+
+  @Override
+  protected boolean isCVTaskEnqueuingEnabled(String accountId) {
+    return featureFlagService.isEnabled(FeatureName.SPLUNK_CV_TASK, accountId);
   }
 }

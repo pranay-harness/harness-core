@@ -72,7 +72,6 @@ public class DataCollectionCallback implements NotifyCallback {
       activityLogger.error("Data collection failed with error " + result.getErrorMessage());
       sendErrorNotification(result.getErrorMessage());
     }
-
     alertIfNecessary(result.getStatus(), result.getErrorMessage());
   }
 

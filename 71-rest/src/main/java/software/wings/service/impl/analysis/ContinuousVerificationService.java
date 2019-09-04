@@ -60,4 +60,6 @@ public interface ContinuousVerificationService {
 
   List<ContinuousVerificationExecutionMetaData> getCVDeploymentData(
       PageRequest<ContinuousVerificationExecutionMetaData> pageRequest);
+
+  boolean collectCVData(String cvTaskId);
 }

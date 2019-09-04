@@ -111,6 +111,7 @@ import software.wings.delegatetasks.validation.SftpValidation;
 import software.wings.delegatetasks.validation.ShellScriptValidation;
 import software.wings.delegatetasks.validation.SmbValidation;
 import software.wings.delegatetasks.validation.SplunkValidation;
+import software.wings.delegatetasks.validation.SplunkValidationV2;
 import software.wings.delegatetasks.validation.StackDriverValidation;
 import software.wings.delegatetasks.validation.SumoValidation;
 import software.wings.delegatetasks.validation.TerraformValidation;
@@ -229,6 +230,8 @@ public enum TaskType {
   SPLUNK_CONFIGURATION_VALIDATE_TASK(TaskGroup.SPLUNK, ServiceImplDelegateTask.class, SplunkValidation.class),
   SPLUNK_GET_HOST_RECORDS(TaskGroup.SPLUNK, ServiceImplDelegateTask.class, SplunkValidation.class),
   SPLUNK_COLLECT_LOG_DATA(TaskGroup.SPLUNK, SplunkDataCollectionTask.class, SplunkValidation.class),
+  SPLUNK_COLLECT_LOG_DATAV2(
+      TaskGroup.SPLUNK, software.wings.delegatetasks.cv.LogDataCollectionTask.class, SplunkValidationV2.class),
   SPLUNK_COLLECT_24_7_LOG_DATA(TaskGroup.SPLUNK, SplunkDataCollectionTask.class, SplunkValidation.class),
   SUMO_COLLECT_LOG_DATA(TaskGroup.SUMO, SumoDataCollectionTask.class, SumoValidation.class),
   SUMO_VALIDATE_CONFIGURATION_TASK(TaskGroup.SUMO, ServiceImplDelegateTask.class, SumoValidation.class),

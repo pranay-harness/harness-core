@@ -37,6 +37,7 @@ import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.persistence.HIterator;
+import io.harness.rest.RestResponse;
 import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
@@ -47,6 +48,7 @@ import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateResults;
 import software.wings.api.InstanceElement;
 import software.wings.beans.ElementExecutionSummary;
+import software.wings.beans.FeatureName;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.dl.WingsPersistence;
@@ -1021,11 +1023,21 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   @Override
   public boolean isProcessingComplete(String query, String appId, String stateExecutionId, StateType type,
       int timeDurationMins, long collectionMinute, String accountId) {
-    if (PER_MINUTE_CV_STATES.contains(type) || GA_PER_MINUTE_CV_STATES.contains(type)) {
+    if (PER_MINUTE_CV_STATES.contains(type) || GA_PER_MINUTE_CV_STATES.contains(type)
+        || isCVTaskPerMinuteTaskEnabled(type, accountId)) {
       return getLastProcessedMinute(stateExecutionId) - collectionMinute >= timeDurationMins - 1;
     } else {
       return getLastProcessedMinute(stateExecutionId) >= timeDurationMins - 1;
     }
+  }
+  // TODO: remove this once everything is moved to cvTask
+  private boolean isCVTaskPerMinuteTaskEnabled(StateType stateType, String accountId) {
+    if (StateType.SPLUNKV2.equals(stateType)) {
+      RestResponse<Boolean> restResponse = managerClientHelper.callManagerWithRetry(
+          managerClient.isFeatureEnabled(FeatureName.SPLUNK_CV_TASK, accountId));
+      return restResponse.getResource();
+    }
+    return false;
   }
 
   @Override

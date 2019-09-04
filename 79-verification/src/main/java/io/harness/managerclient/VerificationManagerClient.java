@@ -63,6 +63,9 @@ public interface VerificationManagerClient {
   Call<RestResponse<Boolean>> triggerWorkflowDataCollection(
       @Query("analysisContextId") String contextId, @Query("startDataCollectionMinute") long collectionMinute);
 
+  @GET("apm" + VerificationConstants.COLLECT_CV_DATA)
+  Call<RestResponse<Boolean>> collectCVData(@Query("cvTaskId") String cvTaskId);
+
   @GET("harness-api-keys/validate")
   Call<RestResponse<Boolean>> validateHarnessApiKey(
       @Query("clientType") String clientType, @Query("apiKey") String apiKey);

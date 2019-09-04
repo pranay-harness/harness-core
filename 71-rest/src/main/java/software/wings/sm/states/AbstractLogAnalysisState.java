@@ -36,6 +36,7 @@ import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.CustomLogDataCollectionInfo;
 import software.wings.service.impl.analysis.DataCollectionInfo;
+import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
@@ -48,10 +49,13 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
+import software.wings.verification.CVTask;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.verification.log.LogsCVConfiguration;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -61,6 +65,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Created by rsingh on 7/6/17.
@@ -99,7 +104,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
   @Override
   public ExecutionResponse execute(ExecutionContext executionContext) {
-    String corelationId = UUID.randomUUID().toString();
+    String correlationId = UUID.randomUUID().toString();
     Logger activityLogger =
         cvActivityLogService.getLoggerByStateExecutionId(executionContext.getStateExecutionInstanceId());
     String delegateTaskId = null;
@@ -107,7 +112,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       renderedQuery = executionContext.renderExpression(query);
       getLogger().info("Executing {} state, id: {} ", getStateType(), executionContext.getStateExecutionInstanceId());
       cleanUpForRetry(executionContext);
-      AnalysisContext analysisContext = getLogAnalysisContext(executionContext, corelationId);
+      AnalysisContext analysisContext = getLogAnalysisContext(executionContext, correlationId);
       getLogger().info("id: {} context: {}", executionContext.getStateExecutionInstanceId(), analysisContext);
 
       if (!checkLicense(appService.getAccountIdByAppId(executionContext.getAppId()), StateType.valueOf(getStateType()),
@@ -207,9 +212,12 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       getLogger().info("triggering data collection for {} state, id: {} ", getStateType(),
           executionContext.getStateExecutionInstanceId());
 
-      // In case of predictive the data collection will be handled as per 24x7 logic
-      // Or in case when feature flag CV_DATA_COLLECTION_JOB is enabled. Delegate task creation will be every minute
-      if (isEligibleForPerMinuteTask(executionContext.getAccountId())) {
+      if (isCVTaskEnqueuingEnabled(executionContext.getAccountId())) {
+        getLogger().info("Data collection will be done with cv tasks.");
+        createCVTasks(executionContext, hostsToBeCollected, correlationId);
+      } else if (isEligibleForPerMinuteTask(executionContext.getAccountId())) {
+        // In case of predictive the data collection will be handled as per 24x7 logic
+        // Or in case when feature flag CV_DATA_COLLECTION_JOB is enabled. Delegate task creation will be every minute
         getLogger().info("Per Minute data collection will be done for triggering delegate task");
       } else {
         delegateTaskId = triggerAnalysisDataCollection(executionContext, executionData, hostsToBeCollected);
@@ -221,6 +229,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       analysisContext.setQuery(getRenderedQuery());
 
       scheduleAnalysisCronJob(analysisContext, delegateTaskId);
+
       return ExecutionResponse.builder()
           .async(true)
           .correlationIds(Collections.singletonList(analysisContext.getCorrelationId()))
@@ -228,6 +237,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           .errorMessage(responseMessage)
           .stateExecutionData(executionData)
           .delegateTaskId(delegateTaskId)
+
           .build();
     } catch (Exception ex) {
       getLogger().error("log analysis state failed ", ex);
@@ -235,9 +245,10 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       activityLogger.error("Data collection failed: " + ex.getMessage());
       continuousVerificationService.setMetaDataExecutionStatus(
           executionContext.getStateExecutionInstanceId(), ExecutionStatus.ERROR, true);
+
       return ExecutionResponse.builder()
           .async(false)
-          .correlationIds(Collections.singletonList(corelationId))
+          .correlationIds(Collections.singletonList(correlationId))
           .executionStatus(ExecutionStatus.ERROR)
           .errorMessage(ExceptionUtils.getMessage(ex))
           .stateExecutionData(VerificationStateAnalysisExecutionData.builder()
@@ -249,6 +260,33 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
                                   .build())
           .build();
     }
+  }
+
+  private List<String> createCVTasks(ExecutionContext context, Set<String> hosts, String correlationId) {
+    long startTime = dataCollectionStartTimestampMillis();
+    List<CVTask> cvTasks = new ArrayList<>();
+    for (int minute = 0; minute < Integer.parseInt(getTimeDuration()); minute++) {
+      long startTimeMSForCurrentMinute = startTime + Duration.ofMinutes(minute).toMillis();
+      DataCollectionInfoV2 dataCollectionInfo = createDataCollectionInfo(context, hosts);
+      dataCollectionInfo.setStartTime(Instant.ofEpochMilli(startTimeMSForCurrentMinute));
+      dataCollectionInfo.setEndTime(Instant.ofEpochMilli(startTimeMSForCurrentMinute + Duration.ofMinutes(1).toMillis()
+          - 1)); // both times are inclusive so making sure we don't collect duplicate logs.
+      CVTask cvTask = CVTask.builder()
+                          .accountId(context.getAccountId())
+                          .stateExecutionId(context.getStateExecutionInstanceId())
+                          .dataCollectionInfo(dataCollectionInfo)
+                          .correlationId(correlationId)
+                          .status(ExecutionStatus.WAITING)
+                          .validAfter(startTimeMSForCurrentMinute)
+                          .build();
+      cvTasks.add(cvTask);
+    }
+    cvTaskService.enqueueSequentialTasks(cvTasks);
+    return cvTasks.stream().map(cvTask -> cvTask.getUuid()).collect(Collectors.toList());
+  }
+
+  protected DataCollectionInfoV2 createDataCollectionInfo(ExecutionContext context, Set<String> hosts) {
+    throw new RuntimeException("Not implemented."); // TODO: this method needs to be abstract eventually.
   }
 
   protected abstract String triggerAnalysisDataCollection(
