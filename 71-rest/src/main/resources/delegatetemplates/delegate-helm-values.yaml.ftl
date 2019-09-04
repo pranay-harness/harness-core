@@ -30,3 +30,8 @@ watcherStorageUrl: ${watcherStorageUrl}
 watcherCheckLocation: ${watcherCheckLocation}
 delegateStorageUrl: ${delegateStorageUrl}
 delegateCheckLocation: ${delegateCheckLocation}
+<#if CCM_EVENT_COLLECTION??>
+publishTarget: ${publishTarget}
+publishAuthority: ${publishAuthority}
+queueFilePath: ${queueFilePath}
+</#if>

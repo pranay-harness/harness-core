@@ -345,4 +345,5 @@ techStacks:
   Monitoring-General:
     title: Connect to a verification provider
     url: https://docs.harness.io/article/r6ut6tldy0-verification-providers
-
+delegateConfigParams:
+  queueFilePath: /tmp/eventQueue

@@ -29,6 +29,7 @@ import io.harness.scheduler.SchedulerConfig;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Value;
 import software.wings.DataStorageMode;
 import software.wings.beans.DefaultSalesContacts;
 import software.wings.beans.UrlInfo;
@@ -105,6 +106,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("disabledCache") private Set<String> disabledCache;
   @JsonProperty("techStacks") private Map<String, UrlInfo> techStackLinks;
   @JsonProperty("grpcServerConfig") private GrpcServerConfig grpcServerConfig;
+  private DelegateConfigParams delegateConfigParams;
 
   private int applicationPort;
   private boolean sslEnabled;
@@ -188,5 +190,13 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
      * @return the resource path to uri mappings
      */
     @JsonIgnore public abstract Map<String, String> getResourcePathToUriMappings();
+  }
+
+  /**
+   * Data for templatizing delegate configuration.
+   */
+  @Value
+  public static class DelegateConfigParams {
+    private String queueFilePath;
   }
 }

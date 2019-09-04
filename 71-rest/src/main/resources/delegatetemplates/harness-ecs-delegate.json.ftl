@@ -46,6 +46,20 @@
           "name": "MANAGER_HOST_AND_PORT",
           "value": "${managerHostAndPort}"
         },
+<#if CCM_EVENT_COLLECTION??>
+        {
+          "name": "PUBLISH_TARGET",
+          "value": "${publishTarget}"
+        },
+        {
+          "name": "PUBLISH_AUTHORITY",
+          "value": "${publishAuthority}"
+        },
+        {
+          "name": "QUEUE_FILE_PATH",
+          "value": "${queueFilePath}"
+        },
+</#if>
         {
           "name": "POLL_FOR_TASKS",
           "value": "false"

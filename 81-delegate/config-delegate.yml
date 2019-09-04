@@ -8,5 +8,6 @@ doUpgrade: false
 pollForTasks: false
 description: description here
 publishTarget: localhost:9890
+publishAuthority: localhost
 queueFilePath: /tmp/eventQueue
 enablePerpetualTasks: false

@@ -26,6 +26,7 @@ import io.harness.delegate.message.MessageService;
 import io.harness.delegate.service.DelegateService;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.client.PublisherModule;
+import io.harness.event.client.PublisherModule.Config;
 import io.harness.managerclient.ManagerClientModule;
 import io.harness.perpetualtask.PerpetualTaskWorkerModule;
 import io.harness.serializer.KryoModule;
@@ -108,8 +109,12 @@ public class DelegateApplication {
         configuration.getAccountId(), configuration.getAccountSecret()));
     modules.add(new PerpetualTaskWorkerModule());
     modules.add(new KubernetesClientFactoryModule());
-    modules.add(new PublisherModule(
-        configuration.getPublishTarget(), configuration.getAccountId(), configuration.getQueueFilePath()));
+    modules.add(new PublisherModule(Config.builder()
+                                        .accountId(configuration.getAccountId())
+                                        .publishTarget(configuration.getPublishTarget())
+                                        .publishAuthority(configuration.getPublishAuthority())
+                                        .queueFilePath(configuration.getQueueFilePath())
+                                        .build()));
     modules.addAll(new DelegateModule().cumulativeDependencies());
 
     Injector injector = Guice.createInjector(modules);

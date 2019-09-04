@@ -39,6 +39,8 @@ public class DelegateConfiguration {
 
   private String publishTarget;
 
+  private String publishAuthority;
+
   private String queueFilePath;
 
   private String enablePerpetualTasks;

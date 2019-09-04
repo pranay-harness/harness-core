@@ -113,3 +113,28 @@ then
 else
     sed -i "s|_helmVersion_||" /opt/harness-delegate/start.sh
 fi
+
+if [[ -v "PUBLISH_TARGET" ]]; then
+    sed -i "s|_publishTarget_|${PUBLISH_TARGET}|" /opt/harness-delegate/start.sh
+    sed -i "s|_publishTarget_|${PUBLISH_TARGET}|" /opt/harness-delegate/delegate.sh
+else
+    sed -i "s|_publishTarget_||" /opt/harness-delegate/start.sh
+    sed -i "s|_publishTarget_||" /opt/harness-delegate/delegate.sh
+fi
+
+if [[ -v "PUBLISH_AUTHORITY" ]]; then
+    sed -i "s|_publishAuthority_|${PUBLISH_AUTHORITY}|" /opt/harness-delegate/start.sh
+    sed -i "s|_publishAuthority_|${PUBLISH_AUTHORITY}|" /opt/harness-delegate/delegate.sh
+else
+    sed -i "s|_publishAuthority_||" /opt/harness-delegate/start.sh
+    sed -i "s|_publishAuthority_||" /opt/harness-delegate/delegate.sh
+fi
+
+if [[ -v "QUEUE_FILE_PATH" ]]; then
+    sed -i "s|_queueFilePath_|${QUEUE_FILE_PATH}|" /opt/harness-delegate/start.sh
+    sed -i "s|_queueFilePath_|${QUEUE_FILE_PATH}|" /opt/harness-delegate/delegate.sh
+else
+    sed -i "s|_queueFilePath_||" /opt/harness-delegate/start.sh
+    sed -i "s|_queueFilePath_||" /opt/harness-delegate/delegate.sh
+fi
+
