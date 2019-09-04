@@ -1,5 +1,7 @@
 package software.wings.service.impl.apm;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
@@ -21,8 +23,9 @@ public class APMDataCollectionInfo implements TaskParameters, ExecutionCapabilit
   private String validationUrl;
   private Map<String, String> headers;
   private Map<String, String> options;
-  List<EncryptedDataDetail> encryptedDataDetails;
-  Map<String, List<APMMetricInfo>> metricEndpoints;
+  private List<EncryptedDataDetail> encryptedDataDetails;
+  private List<APMMetricInfo> canaryMetricInfos;
+  private Map<String, List<APMMetricInfo>> metricEndpoints;
   private Map<String, String> hosts;
   private StateType stateType;
   private long startTime;
@@ -41,5 +44,9 @@ public class APMDataCollectionInfo implements TaskParameters, ExecutionCapabilit
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(baseUrl));
+  }
+
+  public boolean isCanaryUrlPresent() {
+    return isNotEmpty(canaryMetricInfos);
   }
 }

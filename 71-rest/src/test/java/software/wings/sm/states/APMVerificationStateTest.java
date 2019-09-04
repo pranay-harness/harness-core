@@ -1,10 +1,13 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDER;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.states.APMVerificationState.URL_BODY_APPENDER;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -145,5 +148,83 @@ public class APMVerificationStateTest extends WingsBaseTest {
     apmVerificationState.setMetricCollectionInfos(Arrays.asList(info));
     Map<String, String> invalidFields = apmVerificationState.validateFields();
     assertThat(invalidFields.size() == 0).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testHostAndBaseline() {
+    String metricName = generateUuid();
+    APMVerificationState apmVerificationState = new APMVerificationState("dummy");
+    MetricCollectionInfo info = MetricCollectionInfo.builder()
+                                    .collectionUrl("This is a sample URL " + VERIFICATION_HOST_PLACEHOLDER)
+                                    .baselineCollectionUrl("some baseline url")
+                                    .metricName(metricName)
+                                    .build();
+    ResponseMapping mapping = ResponseMapping.builder()
+                                  .metricValueJsonPath("metricValue")
+                                  .timestampJsonPath("timestamp")
+                                  .txnNameFieldValue("txnName")
+                                  .build();
+    info.setResponseMapping(mapping);
+    apmVerificationState.setMetricCollectionInfos(Arrays.asList(info));
+    Map<String, String> invalidFields = apmVerificationState.validateFields();
+    assertEquals(1, invalidFields.size());
+    assertEquals("for " + metricName + " the collection url has " + VERIFICATION_HOST_PLACEHOLDER
+            + " and baseline collection url as well",
+        invalidFields.get("collectionUrl"));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testBaselineUrlHasHost() {
+    String metricName = generateUuid();
+    APMVerificationState apmVerificationState = new APMVerificationState("dummy");
+    MetricCollectionInfo info = MetricCollectionInfo.builder()
+                                    .collectionUrl("This is a sample URL")
+                                    .baselineCollectionUrl("some baseline url " + VERIFICATION_HOST_PLACEHOLDER)
+                                    .metricName(metricName)
+                                    .build();
+    ResponseMapping mapping = ResponseMapping.builder()
+                                  .metricValueJsonPath("metricValue")
+                                  .timestampJsonPath("timestamp")
+                                  .txnNameFieldValue("txnName")
+                                  .build();
+    info.setResponseMapping(mapping);
+    apmVerificationState.setMetricCollectionInfos(Arrays.asList(info));
+    Map<String, String> invalidFields = apmVerificationState.validateFields();
+    assertEquals(1, invalidFields.size());
+    assertEquals("Baseline url can only be set for canary verification strategy. For " + metricName
+            + " there is baseline url set " + VERIFICATION_HOST_PLACEHOLDER,
+        invalidFields.get("collectionUrl"));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testInvalidMultipleBaselineUrl() {
+    String metricName1 = generateUuid();
+    String metricName2 = generateUuid();
+    APMVerificationState apmVerificationState = new APMVerificationState("dummy");
+    MetricCollectionInfo info1 = MetricCollectionInfo.builder()
+                                     .collectionUrl("This is a sample URL")
+                                     .baselineCollectionUrl("some baseline url")
+                                     .metricName(metricName1)
+                                     .build();
+    MetricCollectionInfo info2 = MetricCollectionInfo.builder()
+                                     .collectionUrl("This is a sample URL " + VERIFICATION_HOST_PLACEHOLDER)
+                                     .metricName(metricName2)
+                                     .build();
+    ResponseMapping mapping = ResponseMapping.builder()
+                                  .metricValueJsonPath("metricValue")
+                                  .timestampJsonPath("timestamp")
+                                  .txnNameFieldValue("txnName")
+                                  .build();
+    info1.setResponseMapping(mapping);
+    info2.setResponseMapping(mapping);
+    apmVerificationState.setMetricCollectionInfos(Arrays.asList(info1, info2));
+    Map<String, String> invalidFields = apmVerificationState.validateFields();
+    assertEquals(1, invalidFields.size());
+    assertEquals("for " + metricName2 + " the url has " + VERIFICATION_HOST_PLACEHOLDER
+            + ". When configuring multi url verification all metrics should follow the same pattern.",
+        invalidFields.get("collectionUrl"));
   }
 }

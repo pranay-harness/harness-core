@@ -67,6 +67,7 @@ public final class Ansi {
   public static final Ansi Red = new Ansi(RED);
   public static final Ansi Green = new Ansi(GREEN);
   public static final Ansi Yellow = new Ansi(YELLOW);
+  public static final Ansi BackgroundYellow = new Ansi(BACKGROUND_YELLOW);
   public static final Ansi Blue = new Ansi(BLUE);
   public static final Ansi Magenta = new Ansi(MAGENTA);
   public static final Ansi Cyan = new Ansi(CYAN);

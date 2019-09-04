@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDER;
 import static software.wings.service.impl.apm.APMMetricInfo.ResponseMapper;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
@@ -17,6 +18,8 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.VerificationOperationException;
 import io.harness.exception.WingsException;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -52,12 +55,15 @@ import software.wings.verification.VerificationStateAnalysisExecutionData;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 public class APMVerificationState extends AbstractMetricAnalysisState {
@@ -155,26 +161,68 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
       invalidFields.put("Metric Collection Info", "Metric collection info should not be empty");
       return invalidFields;
     }
+    AtomicBoolean hasBaselineUrl = new AtomicBoolean(false);
     metricCollectionInfos.forEach(metricCollectionInfo -> {
-      if (isEmpty(metricCollectionInfo.getCollectionUrl())) {
-        invalidFields.put("collectionUrl", "Metric Collection URL is empty");
-      }
       if (isEmpty(metricCollectionInfo.getMetricName())) {
         invalidFields.put("metricName", "MetricName is empty");
+        return;
       }
+
+      if (isEmpty(metricCollectionInfo.getCollectionUrl())) {
+        invalidFields.put(
+            "collectionUrl", "Metric Collection URL is empty for metric " + metricCollectionInfo.getMetricName());
+        return;
+      }
+
       if (metricCollectionInfo.getResponseMapping() == null) {
         invalidFields.put("responseMapping",
-            "Valid JSON Mappings for the response have not been provided for " + metricCollectionInfo.metricName);
-      } else {
-        ResponseMapping mapping = metricCollectionInfo.getResponseMapping();
+            "Valid JSON Mappings for the response have not been provided for " + metricCollectionInfo.getMetricName());
+        return;
+      }
 
-        if (isEmpty(mapping.getMetricValueJsonPath())) {
-          invalidFields.put("metricValueJsonPath/timestampJsonPath",
-              "Metric value path is empty for " + metricCollectionInfo.metricName);
+      ResponseMapping mapping = metricCollectionInfo.getResponseMapping();
+
+      if (isEmpty(mapping.getMetricValueJsonPath())) {
+        invalidFields.put("metricValueJsonPath/timestampJsonPath",
+            "Metric value path is empty for " + metricCollectionInfo.getMetricName());
+        return;
+      }
+
+      if (isEmpty(mapping.getTxnNameFieldValue()) && isEmpty(mapping.getTxnNameJsonPath())) {
+        invalidFields.put("transactionName", "Transaction Name is empty for " + metricCollectionInfo.getMetricName());
+        return;
+      }
+
+      if (metricCollectionInfo.getCollectionUrl().contains(VERIFICATION_HOST_PLACEHOLDER)
+          && isNotEmpty(metricCollectionInfo.getBaselineCollectionUrl())) {
+        invalidFields.put("collectionUrl",
+            "for " + metricCollectionInfo.getMetricName() + " the collection url has " + VERIFICATION_HOST_PLACEHOLDER
+                + " and baseline collection url as well");
+        return;
+      }
+
+      if (hasBaselineUrl.get() && metricCollectionInfo.getCollectionUrl().contains(VERIFICATION_HOST_PLACEHOLDER)) {
+        invalidFields.put("collectionUrl",
+            "for " + metricCollectionInfo.getMetricName() + " the url has " + VERIFICATION_HOST_PLACEHOLDER
+                + ". When configuring multi url verification all metrics should follow the same pattern.");
+        return;
+      }
+
+      if (isNotEmpty(metricCollectionInfo.getBaselineCollectionUrl())) {
+        hasBaselineUrl.set(true);
+        if (!AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.equals(getComparisonStrategy())) {
+          invalidFields.put("collectionUrl",
+              "Baseline url can only be set for canary verification strategy. For "
+                  + metricCollectionInfo.getMetricName() + " there is baseline url set "
+                  + VERIFICATION_HOST_PLACEHOLDER);
+          return;
         }
 
-        if (isEmpty(mapping.getTxnNameFieldValue()) && isEmpty(mapping.getTxnNameJsonPath())) {
-          invalidFields.put("transactionName", "Transaction Name is empty for " + metricCollectionInfo.metricName);
+        if (metricCollectionInfo.getBaselineCollectionUrl().contains(VERIFICATION_HOST_PLACEHOLDER)) {
+          invalidFields.put("collectionUrl",
+              "for " + metricCollectionInfo.getMetricName() + " baseline url contains "
+                  + VERIFICATION_HOST_PLACEHOLDER);
+          return;
         }
       }
     });
@@ -182,19 +230,16 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     return invalidFields;
   }
 
-  public static Map<String, TimeSeriesMetricDefinition> metricDefinitions(
-      Map<String, List<APMMetricInfo>> metricInfos) {
+  private Map<String, TimeSeriesMetricDefinition> metricDefinitions(Collection<List<APMMetricInfo>> metricInfos) {
     Map<String, TimeSeriesMetricDefinition> metricTypeMap = new HashMap<>();
-    for (List<APMMetricInfo> metricInfoList : metricInfos.values()) {
-      for (APMMetricInfo metricInfo : metricInfoList) {
-        metricTypeMap.put(metricInfo.getMetricName(),
-            TimeSeriesMetricDefinition.builder()
-                .metricName(metricInfo.getMetricName())
-                .metricType(metricInfo.getMetricType())
-                .tags(Sets.newHashSet(metricInfo.getTag()))
-                .build());
-      }
-    }
+    metricInfos.forEach(metricInfoList
+        -> metricInfoList.forEach(metricInfo
+            -> metricTypeMap.put(metricInfo.getMetricName(),
+                TimeSeriesMetricDefinition.builder()
+                    .metricName(metricInfo.getMetricName())
+                    .metricType(metricInfo.getMetricType())
+                    .tags(Sets.newHashSet(metricInfo.getTag()))
+                    .build())));
     return metricTypeMap;
   }
 
@@ -245,9 +290,13 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     }
 
     final APMVerificationConfig apmConfig = (APMVerificationConfig) settingAttribute.getValue();
-    Map<String, List<APMMetricInfo>> apmMetricInfos = apmMetricInfos(context);
+    List<APMMetricInfo> canaryMetricInfos = getCanaryMetricInfos(context);
+    Map<String, List<APMMetricInfo>> apmMetricInfos =
+        isNotEmpty(canaryMetricInfos) ? new HashMap<>() : apmMetricInfos(context);
     metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.APM_VERIFICATION,
-        context.getStateExecutionInstanceId(), null, metricDefinitions(apmMetricInfos));
+        context.getStateExecutionInstanceId(), null,
+        metricDefinitions(
+            isNotEmpty(canaryMetricInfos) ? Collections.singletonList(canaryMetricInfos) : apmMetricInfos.values()));
     final long dataCollectionStartTimeStamp = dataCollectionStartTimestampMillis();
     String accountId = appService.get(context.getAppId()).getAccountId();
     final APMDataCollectionInfo dataCollectionInfo =
@@ -269,11 +318,13 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
             .dataCollectionFrequency(getDataCollectionRate())
             .dataCollectionTotalTime(Integer.parseInt(getTimeDuration()))
             .metricEndpoints(apmMetricInfos)
+            .canaryMetricInfos(canaryMetricInfos)
             .accountId(accountId)
             .strategy(getComparisonStrategy())
             .build();
 
     analysisContext.getTestNodes().put(TEST_HOST_NAME, DEFAULT_GROUP_NAME);
+    analysisContext.getControlNodes().put(CONTROL_HOST_NAME, DEFAULT_GROUP_NAME);
     if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
       for (int i = 1; i <= CANARY_DAYS_TO_COLLECT; ++i) {
         analysisContext.getControlNodes().put(CONTROL_HOST_NAME + "-" + i, DEFAULT_GROUP_NAME);
@@ -322,7 +373,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
                                      .metricName(metricCollectionInfo.getMetricName())
                                      .metricType(metricCollectionInfo.getMetricType())
                                      .method(metricCollectionInfo.getMethod())
-                                     .body(metricCollectionInfo.getCollectionBody())
+                                     .body(context.renderExpression(metricCollectionInfo.getCollectionBody()))
                                      .tag(metricCollectionInfo.getTag())
                                      .responseMappers(getResponseMappers(metricCollectionInfo))
                                      .build();
@@ -330,6 +381,50 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
       metricInfoMap.get(evaluatedUrl).add(metricInfo);
     }
     return metricInfoMap;
+  }
+
+  private List<APMMetricInfo> getCanaryMetricInfos(final ExecutionContext context) {
+    if (!AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.equals(getComparisonStrategy())) {
+      return Collections.emptyList();
+    }
+
+    List<APMMetricInfo> metricInfos = new ArrayList<>();
+    for (MetricCollectionInfo metricCollectionInfo : metricCollectionInfos) {
+      if (isEmpty(metricCollectionInfo.getBaselineCollectionUrl())) {
+        continue;
+      }
+      String testUrl = context.renderExpression(metricCollectionInfo.getCollectionUrl());
+      String controlUrl = context.renderExpression(metricCollectionInfo.getBaselineCollectionUrl());
+
+      if (metricCollectionInfo.getMethod() != null && metricCollectionInfo.getMethod().equals(Method.POST)) {
+        testUrl += URL_BODY_APPENDER + metricCollectionInfo.getCollectionBody();
+        controlUrl += URL_BODY_APPENDER + metricCollectionInfo.getCollectionBody();
+      }
+
+      metricInfos.add(APMMetricInfo.builder()
+                          .url(testUrl)
+                          .hostName(TEST_HOST_NAME)
+                          .metricName(metricCollectionInfo.getMetricName())
+                          .metricType(metricCollectionInfo.getMetricType())
+                          .method(metricCollectionInfo.getMethod())
+                          .body(context.renderExpression(metricCollectionInfo.getCollectionBody()))
+                          .tag(metricCollectionInfo.getTag())
+                          .responseMappers(getResponseMappers(metricCollectionInfo))
+                          .build());
+
+      metricInfos.add(APMMetricInfo.builder()
+                          .url(controlUrl)
+                          .hostName(CONTROL_HOST_NAME)
+                          .metricName(metricCollectionInfo.getMetricName())
+                          .metricType(metricCollectionInfo.getMetricType())
+                          .method(metricCollectionInfo.getMethod())
+                          .body(context.renderExpression(metricCollectionInfo.getCollectionBody()))
+                          .tag(metricCollectionInfo.getTag())
+                          .responseMappers(getResponseMappers(metricCollectionInfo))
+                          .build());
+    }
+    logger.info("for {} canaryInfo is {}", context.getStateExecutionInstanceId(), metricInfos);
+    return metricInfos;
   }
 
   private Map<String, ResponseMapper> getResponseMappers(MetricCollectionInfo metricCollectionInfo) {
@@ -378,6 +473,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     private MetricType metricType;
     private String tag;
     private String collectionUrl;
+    private String baselineCollectionUrl;
     private String collectionBody;
     private ResponseType responseType;
     private ResponseMapping responseMapping;
@@ -387,7 +483,20 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
       try {
         return collectionUrl.replaceAll("`", URLEncoder.encode("`", "UTF-8"));
       } catch (UnsupportedEncodingException e) {
-        throw new WingsException("Unsupported encoding exception while encoding backticks in " + collectionUrl);
+        throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR,
+            "Unsupported encoding exception while encoding backticks in " + collectionUrl);
+      }
+    }
+
+    public String getBaselineCollectionUrl() {
+      if (isEmpty(baselineCollectionUrl)) {
+        return null;
+      }
+      try {
+        return baselineCollectionUrl.replaceAll("`", URLEncoder.encode("`", "UTF-8"));
+      } catch (UnsupportedEncodingException e) {
+        throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR,
+            "Unsupported encoding exception while encoding backticks in " + baselineCollectionUrl);
       }
     }
   }
