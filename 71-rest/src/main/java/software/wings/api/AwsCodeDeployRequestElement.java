@@ -1,36 +1,21 @@
 package software.wings.api;
 
 import io.harness.context.ContextElementType;
+import lombok.Builder;
+import lombok.Value;
 import software.wings.beans.command.CodeDeployParams;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
 import java.util.Map;
 
-/**
- * Created by rishi on 6/26/17.
- */
+@Value
+@Builder
 public class AwsCodeDeployRequestElement implements ContextElement {
   public static final String AWS_CODE_DEPLOY_REQUEST_PARAM = "AWS_CODE_DEPLOY_REQUEST_PARAM";
 
   private CodeDeployParams codeDeployParams;
   private CodeDeployParams oldCodeDeployParams;
-
-  public CodeDeployParams getCodeDeployParams() {
-    return codeDeployParams;
-  }
-
-  public void setCodeDeployParams(CodeDeployParams codeDeployParams) {
-    this.codeDeployParams = codeDeployParams;
-  }
-
-  public CodeDeployParams getOldCodeDeployParams() {
-    return oldCodeDeployParams;
-  }
-
-  public void setOldCodeDeployParams(CodeDeployParams oldCodeDeployParams) {
-    this.oldCodeDeployParams = oldCodeDeployParams;
-  }
 
   @Override
   public ContextElementType getElementType() {
@@ -55,33 +40,5 @@ public class AwsCodeDeployRequestElement implements ContextElement {
   @Override
   public ContextElement cloneMin() {
     return this;
-  }
-
-  public static final class AwsCodeDeployRequestElementBuilder {
-    private CodeDeployParams codeDeployParams;
-    private CodeDeployParams oldCodeDeployParams;
-
-    private AwsCodeDeployRequestElementBuilder() {}
-
-    public static AwsCodeDeployRequestElementBuilder anAwsCodeDeployRequestElement() {
-      return new AwsCodeDeployRequestElementBuilder();
-    }
-
-    public AwsCodeDeployRequestElementBuilder withCodeDeployParams(CodeDeployParams codeDeployParams) {
-      this.codeDeployParams = codeDeployParams;
-      return this;
-    }
-
-    public AwsCodeDeployRequestElementBuilder withOldCodeDeployParams(CodeDeployParams oldCodeDeployParams) {
-      this.oldCodeDeployParams = oldCodeDeployParams;
-      return this;
-    }
-
-    public AwsCodeDeployRequestElement build() {
-      AwsCodeDeployRequestElement awsCodeDeployRequestElement = new AwsCodeDeployRequestElement();
-      awsCodeDeployRequestElement.setCodeDeployParams(codeDeployParams);
-      awsCodeDeployRequestElement.setOldCodeDeployParams(oldCodeDeployParams);
-      return awsCodeDeployRequestElement;
-    }
   }
 }
