@@ -209,6 +209,7 @@ import software.wings.verification.BugsnagCVConfigurationYamlHandler;
 import software.wings.verification.CVConfigurationYamlHandler;
 import software.wings.verification.CloudWatchCVConfigurationYamlHandler;
 import software.wings.verification.DatadogCvConfigurationYamlHandler;
+import software.wings.verification.DynatraceCVConfigurationYamlHandler;
 import software.wings.verification.ElkCVConfigurationYamlHandler;
 import software.wings.verification.LogsCVConfigurationYamlHandler;
 import software.wings.verification.NewRelicCVConfigurationYamlHandler;
@@ -379,6 +380,7 @@ public class YamlModule extends AbstractModule {
     cvConfigYamlHelperMapBinder.addBinding(StateType.APM_VERIFICATION.name()).to(APMCVConfigurationYamlHandler.class);
     cvConfigYamlHelperMapBinder.addBinding(StateType.STACK_DRIVER_LOG.name())
         .to(StackdriverCVConfigurationYamlHandler.class);
+    cvConfigYamlHelperMapBinder.addBinding(StateType.DYNA_TRACE.name()).to(DynatraceCVConfigurationYamlHandler.class);
 
     MapBinder<String, CollaborationProviderYamlHandler> collaborationProviderYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CollaborationProviderYamlHandler.class);

@@ -107,7 +107,7 @@ public class DynaTraceResourceIntegrationTest extends BaseIntegrationTest {
     serviceMethods.add("SERVICE_METHOD-9ACB771237BE05C6");
     serviceMethods.add("SERVICE_METHOD-DA487A489220E53D");
     return DynaTraceSetupTestNodeData.builder()
-        .serviceMethods(serviceMethods)
+        .serviceMethods(String.join("\n", serviceMethods))
         .appId(appId)
         .settingId(settingId)
         .instanceName("testHost")

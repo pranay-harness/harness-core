@@ -1,5 +1,6 @@
 package software.wings.service.impl.dynatrace;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
@@ -8,7 +9,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.WingsException;
+import io.harness.exception.VerificationOperationException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
@@ -24,6 +25,7 @@ import software.wings.service.intfc.dynatrace.DynaTraceService;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by Pranjal on 09/12/2018
@@ -59,13 +61,24 @@ public class DynaTraceServiceImpl implements DynaTraceService {
         return VerificationNodeDataSetupResponse.builder()
             .providerReachable(true)
             .dataForNode(response)
-            .loadResponse(VerificationLoadResponse.builder().isLoadPresent(true).build())
+            .loadResponse(VerificationLoadResponse.builder().isLoadPresent(isDataPresent(response)).build())
             .build();
       }
     } catch (Exception e) {
       logger.info("error getting metric data for node", e);
-      throw new WingsException(ErrorCode.DYNA_TRACE_ERROR)
-          .addParam("message", "Error in getting metric data for the node. " + e.getMessage());
+      throw new VerificationOperationException(
+          ErrorCode.DYNA_TRACE_ERROR, "Error in getting metric data for the node. " + e.getMessage());
     }
+  }
+
+  private boolean isDataPresent(List<DynaTraceMetricDataResponse> responses) {
+    AtomicBoolean isDataPresent = new AtomicBoolean(false);
+    responses.forEach(response -> {
+      if (isNotEmpty(response.getResult().getDataPoints())) {
+        isDataPresent.set(true);
+        return;
+      }
+    });
+    return isDataPresent.get();
   }
 }
