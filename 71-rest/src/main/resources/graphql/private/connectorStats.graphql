@@ -1,5 +1,10 @@
-enum ConnectorAggregation {
+enum ConnectorTypeAggregation {
   Type
+}
+
+input ConnectorAggregation {
+  typeAggregation: ConnectorTypeAggregation
+  tagAggregation: TagAggregation
 }
 
 extend type Query {

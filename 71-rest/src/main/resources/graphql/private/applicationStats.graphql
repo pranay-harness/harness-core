@@ -1,4 +1,8 @@
+input ApplicationAggregation {
+  tagAggregation: TagAggregation
+}
+
 extend type Query {
-  #Get deployment statistics for a Harness Application.
-  applicationStats: SinglePointData @dataFetcher(name: applicationStats)
+  #Get statistics for a Harness Application.
+  applicationStats(groupBy: [ApplicationAggregation]): SinglePointData @dataFetcher(name: applicationStats)
 }

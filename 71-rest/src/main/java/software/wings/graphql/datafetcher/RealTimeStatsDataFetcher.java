@@ -33,7 +33,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public abstract class RealTimeStatsDataFetcher<A, F, G, T, TG, S> extends AbstractStatsDataFetcher<A, F, G, T, TG, S> {
+public abstract class RealTimeStatsDataFetcher<A, F, G, S> extends AbstractStatsDataFetcher<A, F, G, S> {
   @Inject protected WingsPersistence wingsPersistence;
   @Inject protected NameService nameService;
 
@@ -120,13 +120,13 @@ public abstract class RealTimeStatsDataFetcher<A, F, G, T, TG, S> extends Abstra
     }
   }
 
-  protected abstract void populateFilters(List<F> filters, Query query);
+  protected abstract void populateFilters(String accountId, List<F> filters, Query query);
 
   @NotNull
   protected Query populateFilters(
       WingsPersistence wingsPersistence, String accountId, List<F> filters, Class entityClass) {
     Query query = utils.populateAccountFilter(wingsPersistence, accountId, entityClass);
-    populateFilters(filters, query);
+    populateFilters(accountId, filters, query);
     return query;
   }
 

@@ -24,7 +24,7 @@ import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesData;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesDataPoint.QLTimeSeriesDataPointBuilder;
-import software.wings.graphql.schema.type.aggregation.instance.QLInstanceAggregation;
+import software.wings.graphql.schema.type.aggregation.instance.QLInstanceEntityAggregation;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceFilter;
 import software.wings.graphql.utils.nameservice.NameResult;
 import software.wings.graphql.utils.nameservice.NameService;
@@ -52,7 +52,7 @@ public class InstanceTimeSeriesDataHelper {
 
   public QLStackedTimeSeriesData getTimeSeriesAggregatedData(String accountId,
       QLNoOpAggregateFunction aggregateFunction, List<QLInstanceFilter> filters, QLTimeSeriesAggregation groupByTime,
-      QLInstanceAggregation groupBy) {
+      QLInstanceEntityAggregation groupBy) {
     //    SELECT PERCENTILE_DISC(0.50) WITHIN GROUP (ORDER BY SUM_VALUE) AS CNT,
     //    time_bucket_gapfill('1 days',REPORTEDAT, '2019-08-03T10:35:10.248Z', '2019-08-10T10:35:10.248Z') AS
     //    GRP_BY_TIME, ENTITY_ID FROM (SELECT APPID AS ENTITY_ID, REPORTEDAT, SUM(INSTANCECOUNT) AS SUM_VALUE FROM
@@ -192,7 +192,7 @@ public class InstanceTimeSeriesDataHelper {
     }
   }
 
-  private String getSqlFieldName(QLInstanceAggregation aggregation) {
+  private String getSqlFieldName(QLInstanceEntityAggregation aggregation) {
     switch (aggregation) {
       case Application:
         return "APPID";
@@ -234,7 +234,7 @@ public class InstanceTimeSeriesDataHelper {
   }
 
   private void executeStackedTimeSeriesQuery(String accountId, String query,
-      List<QLStackedTimeSeriesDataPoint> stackedTimeSeriesDataPoints, QLInstanceAggregation groupBy) {
+      List<QLStackedTimeSeriesDataPoint> stackedTimeSeriesDataPoints, QLInstanceEntityAggregation groupBy) {
     int retryCount = 0;
     String entityType = groupBy.name();
     Multimap<String, QLReference> idRefMap = HashMultimap.create();

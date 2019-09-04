@@ -1,6 +1,11 @@
-enum ServiceAggregation {
+enum ServiceEntityAggregation {
   Application
   ArtifactType
+}
+
+input ServiceAggregation {
+  entityAggregation: ServiceEntityAggregation
+  tagAggregation: TagAggregation
 }
 
 extend type Query {

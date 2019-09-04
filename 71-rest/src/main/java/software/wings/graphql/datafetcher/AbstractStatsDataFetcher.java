@@ -10,6 +10,7 @@ import graphql.GraphQLContext;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 import io.harness.eraro.ResponseMessage;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ReportTarget;
 import io.harness.logging.ExceptionLogger;
@@ -34,21 +35,19 @@ import java.util.stream.Collectors;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
-public abstract class AbstractStatsDataFetcher<A, F, G, T, TG, S> implements DataFetcher {
+public abstract class AbstractStatsDataFetcher<A, F, G, S> implements DataFetcher {
   private static final String EXCEPTION_MSG_DELIMITER = ";; ";
   private static final String AGGREGATE_FUNCTION = "aggregateFunction";
   private static final String FILTERS = "filters";
   private static final String GROUP_BY = "groupBy";
-  private static final String GROUP_BY_TIME = "groupByTime";
-  private static final String GROUP_BY_TAG = "groupByTag";
   private static final String SORT_CRITERIA = "sortCriteria";
   private static final String GENERIC_EXCEPTION_MSG = "An error has occurred. Please contact the Harness support team.";
 
   @Inject protected DataFetcherUtils utils;
   public static final int MAX_RETRY = 3;
 
-  protected abstract QLData fetch(String accountId, A aggregateFunction, List<F> filters, List<G> groupBy,
-      T groupByTime, List<TG> groupByTag, List<S> sort);
+  protected abstract QLData fetch(
+      String accountId, A aggregateFunction, List<F> filters, List<G> groupBy, List<S> sort);
 
   @Override
   public final Object get(DataFetchingEnvironment dataFetchingEnvironment) {
@@ -58,23 +57,18 @@ public abstract class AbstractStatsDataFetcher<A, F, G, T, TG, S> implements Dat
       Class<A> aggregationFuncClass = (Class<A>) typeArguments[0];
       Class<F> filterClass = (Class<F>) typeArguments[1];
       Class<G> groupByClass = (Class<G>) typeArguments[2];
-      Class<T> groupByTimeClass = (Class<T>) typeArguments[3];
-      Class<TG> groupByTagClass = (Class<TG>) typeArguments[4];
-      Class<S> sortClass = (Class<S>) typeArguments[5];
+      Class<S> sortClass = (Class<S>) typeArguments[3];
 
       final A aggregateFunction = (A) fetchObject(dataFetchingEnvironment, AGGREGATE_FUNCTION, aggregationFuncClass);
       final List<F> filters = (List<F>) fetchObject(dataFetchingEnvironment, FILTERS, filterClass);
       final List<G> groupBy = (List<G>) fetchObject(dataFetchingEnvironment, GROUP_BY, groupByClass);
-      final T groupByTime = (T) fetchObject(dataFetchingEnvironment, GROUP_BY_TIME, groupByTimeClass);
-      final List<TG> groupByTag = (List<TG>) fetchObject(dataFetchingEnvironment, GROUP_BY_TAG, groupByTagClass);
       final List<S> sort = (List<S>) fetchObject(dataFetchingEnvironment, SORT_CRITERIA, sortClass);
-      result = fetch(utils.getAccountId(dataFetchingEnvironment), aggregateFunction, filters, groupBy, groupByTime,
-          groupByTag, sort);
+      result = fetch(utils.getAccountId(dataFetchingEnvironment), aggregateFunction, filters, groupBy, sort);
 
     } catch (WingsException ex) {
-      throw new WingsException(getCombinedErrorMessages(ex), ex, ex.getReportTargets());
+      throw new InvalidRequestException(getCombinedErrorMessages(ex), ex, ex.getReportTargets());
     } catch (Exception ex) {
-      throw new WingsException(GENERIC_EXCEPTION_MSG, WingsException.USER_SRE);
+      throw new InvalidRequestException(GENERIC_EXCEPTION_MSG, WingsException.USER_SRE);
     }
     return result;
   }

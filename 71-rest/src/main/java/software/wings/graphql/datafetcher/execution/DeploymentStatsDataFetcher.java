@@ -20,7 +20,7 @@ import com.healthmarketscience.sqlbuilder.UnaryCondition;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import io.fabric8.utils.Lists;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.exception.WingsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -68,12 +68,12 @@ import software.wings.graphql.schema.type.aggregation.QLTimeSeriesData.QLTimeSer
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesDataPoint.QLTimeSeriesDataPointBuilder;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentAggregation;
+import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentEntityAggregation;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentFilter;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentFilterType;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentSortCriteria;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentSortType;
 import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentTypeFilter;
-import software.wings.graphql.schema.type.aggregation.tag.QLTagAggregation;
 import software.wings.graphql.utils.nameservice.NameService;
 
 import java.sql.Connection;
@@ -89,13 +89,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
 public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeploymentAggregationFunction,
-    QLDeploymentFilter, QLDeploymentAggregation, QLTimeSeriesAggregation, QLTagAggregation, QLDeploymentSortCriteria> {
+    QLDeploymentFilter, QLDeploymentAggregation, QLDeploymentSortCriteria> {
   @Inject TimeScaleDBService timeScaleDBService;
   @Inject QLStatsHelper statsHelper;
   private DeploymentTableSchema schema = new DeploymentTableSchema();
@@ -103,21 +104,21 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
 
   @Override
   protected QLData fetch(String accountId, QLDeploymentAggregationFunction aggregateFunction,
-      List<QLDeploymentFilter> filters, List<QLDeploymentAggregation> groupBy, QLTimeSeriesAggregation groupByTime,
-      List<QLTagAggregation> tagAggregationList, List<QLDeploymentSortCriteria> sortCriteria) {
+      List<QLDeploymentFilter> filters, List<QLDeploymentAggregation> groupBy,
+      List<QLDeploymentSortCriteria> sortCriteria) {
     try {
       if (timeScaleDBService.isValid()) {
-        return getData(accountId, aggregateFunction, filters, groupBy, groupByTime, sortCriteria);
+        return getData(accountId, aggregateFunction, filters, groupBy, sortCriteria);
       } else {
-        return getMockData(groupBy, groupByTime);
+        return getMockData(getGroupByEntity(groupBy), getGroupByTime(groupBy));
       }
     } catch (Exception e) {
-      throw new WingsException(e);
+      throw new InvalidRequestException("Error while fetching deployment data", e);
     }
   }
 
   @Nullable
-  private QLData getMockData(List<QLDeploymentAggregation> groupBy, QLTimeSeriesAggregation groupByTime) {
+  private QLData getMockData(List<QLDeploymentEntityAggregation> groupBy, QLTimeSeriesAggregation groupByTime) {
     int groupBySize = groupBy != null ? groupBy.size() : 0;
     if (groupBySize == 0) {
       return StatsStubDataHelper.getSinglePointData();
@@ -139,18 +140,22 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
   }
 
   private QLData getData(@NotNull String accountId, QLDeploymentAggregationFunction aggregateFunction,
-      List<QLDeploymentFilter> filters, List<QLDeploymentAggregation> groupBy, QLTimeSeriesAggregation groupByTime,
+      List<QLDeploymentFilter> filters, List<QLDeploymentAggregation> groupBy,
       List<QLDeploymentSortCriteria> sortCriteria) {
     DeploymentStatsQueryMetaData queryData = null;
     boolean successful = false;
     int retryCount = 0;
+    List<QLDeploymentEntityAggregation> groupByEntity = getGroupByEntity(groupBy);
+    QLTimeSeriesAggregation groupByTime = getGroupByTime(groupBy);
+
+    preValidateInput(groupByEntity, groupByTime);
+
+    queryData = formQuery(accountId, aggregateFunction, filters, groupByEntity, groupByTime, sortCriteria);
+    logger.info("Query : [{}]", queryData.getQuery());
+
     while (!successful && retryCount < MAX_RETRY) {
       try (Connection connection = timeScaleDBService.getDBConnection();
            Statement statement = connection.createStatement()) {
-        preValidateInput(groupBy, groupByTime);
-        queryData = formQuery(accountId, aggregateFunction, filters, groupBy, groupByTime, sortCriteria);
-        logger.info("Query : [{}]", queryData.getQuery());
-
         long startTime = System.currentTimeMillis();
         ResultSet resultSet = statement.executeQuery(queryData.getQuery());
         successful = true;
@@ -180,6 +185,27 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
               retryCount);
         }
         retryCount++;
+      }
+    }
+    return null;
+  }
+
+  private List<QLDeploymentEntityAggregation> getGroupByEntity(List<QLDeploymentAggregation> groupBy) {
+    return groupBy != null ? groupBy.stream()
+                                 .filter(g -> g.getEntityAggregation() != null)
+                                 .map(QLDeploymentAggregation::getEntityAggregation)
+                                 .collect(Collectors.toList())
+                           : null;
+  }
+
+  private QLTimeSeriesAggregation getGroupByTime(List<QLDeploymentAggregation> groupBy) {
+    if (groupBy != null) {
+      Optional<QLTimeSeriesAggregation> first = groupBy.stream()
+                                                    .filter(g -> g.getTimeAggregation() != null)
+                                                    .map(QLDeploymentAggregation::getTimeAggregation)
+                                                    .findFirst();
+      if (first.isPresent()) {
+        return first.get();
       }
     }
     return null;
@@ -456,8 +482,8 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
   }
 
   protected DeploymentStatsQueryMetaData formQuery(String accountId, QLDeploymentAggregationFunction aggregateFunction,
-      List<QLDeploymentFilter> filters, List<QLDeploymentAggregation> groupBy, QLTimeSeriesAggregation groupByTime,
-      List<QLDeploymentSortCriteria> sortCriteria) {
+      List<QLDeploymentFilter> filters, List<QLDeploymentEntityAggregation> groupBy,
+      QLTimeSeriesAggregation groupByTime, List<QLDeploymentSortCriteria> sortCriteria) {
     DeploymentStatsQueryMetaDataBuilder queryMetaDataBuilder = DeploymentStatsQueryMetaData.builder();
     SelectQuery selectQuery = new SelectQuery();
 
@@ -648,13 +674,14 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
     return sortCriteria;
   }
 
-  private void preValidateInput(List<QLDeploymentAggregation> groupBy, QLTimeSeriesAggregation groupByTime) {
-    if (isValidGroupBy(groupBy) && groupBy.size() > 2) {
-      throw new RuntimeException("More than 2 group bys not supported + " + groupBy);
+  private void preValidateInput(
+      List<QLDeploymentEntityAggregation> groupByEntity, QLTimeSeriesAggregation groupByTime) {
+    if (isValidGroupBy(groupByEntity) && groupByEntity.size() > 2) {
+      throw new RuntimeException("More than 2 group bys not supported + " + groupByEntity);
     }
 
-    if (isValidGroupBy(groupBy) && isValidGroupByTime(groupByTime) && groupBy.size() > 1) {
-      throw new RuntimeException("For a time series aggregation, only a single groupBy is allowed");
+    if (isValidGroupBy(groupByEntity) && isValidGroupByTime(groupByTime) && groupByEntity.size() > 1) {
+      throw new RuntimeException("For a time series aggregation, only a single groupByEntity is allowed");
     }
   }
 
@@ -1005,8 +1032,8 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
   }
 
   private void decorateQueryWithGroupBy(List<DeploymentMetaDataFields> fieldNames, SelectQuery selectQuery,
-      List<QLDeploymentAggregation> groupBy, List<DeploymentMetaDataFields> groupByFields) {
-    for (QLDeploymentAggregation aggregation : groupBy) {
+      List<QLDeploymentEntityAggregation> groupBy, List<DeploymentMetaDataFields> groupByFields) {
+    for (QLDeploymentEntityAggregation aggregation : groupBy) {
       if (aggregation.getAggregationKind().equals(QLAggregationKind.SIMPLE)) {
         decorateSimpleGroupBy(fieldNames, selectQuery, aggregation, groupByFields);
       } else if (aggregation.getAggregationKind().equals(QLAggregationKind.ARRAY)) {
@@ -1016,7 +1043,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
   }
 
   private void decorateAggregateGroupBy(List<DeploymentMetaDataFields> fieldNames, SelectQuery selectQuery,
-      QLDeploymentAggregation aggregation, List<DeploymentMetaDataFields> groupByFields) {
+      QLDeploymentEntityAggregation aggregation, List<DeploymentMetaDataFields> groupByFields) {
     /*
      * Service, Environment, CloudProvider, Workflow
      * */
@@ -1055,7 +1082,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
   }
 
   private void decorateSimpleGroupBy(List<DeploymentMetaDataFields> fieldNames, SelectQuery selectQuery,
-      QLDeploymentAggregation aggregation, List<DeploymentMetaDataFields> groupByFields) {
+      QLDeploymentEntityAggregation aggregation, List<DeploymentMetaDataFields> groupByFields) {
     /**
      * Application, Status, Trigger, TriggeredBy, Pipeline
      */
@@ -1086,7 +1113,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
     groupByFields.add(DeploymentMetaDataFields.valueOf(groupBy.getName()));
   }
 
-  private boolean isValidGroupBy(List<QLDeploymentAggregation> groupBy) {
+  private boolean isValidGroupBy(List<QLDeploymentEntityAggregation> groupBy) {
     return EmptyPredicate.isNotEmpty(groupBy) && groupBy.size() <= 2;
   }
 

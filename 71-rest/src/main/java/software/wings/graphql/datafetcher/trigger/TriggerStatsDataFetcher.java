@@ -14,9 +14,8 @@ import software.wings.graphql.datafetcher.RealTimeStatsDataFetcher;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLNoOpAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
-import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
-import software.wings.graphql.schema.type.aggregation.tag.QLTagAggregation;
 import software.wings.graphql.schema.type.aggregation.trigger.QLTriggerAggregation;
+import software.wings.graphql.schema.type.aggregation.trigger.QLTriggerEntityAggregation;
 import software.wings.graphql.schema.type.aggregation.trigger.QLTriggerFilter;
 import software.wings.graphql.utils.nameservice.NameService;
 import software.wings.service.intfc.AppService;
@@ -26,18 +25,20 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class TriggerStatsDataFetcher extends RealTimeStatsDataFetcher<QLNoOpAggregateFunction, QLTriggerFilter,
-    QLTriggerAggregation, QLTimeSeriesAggregation, QLTagAggregation, QLNoOpSortCriteria> {
+    QLTriggerAggregation, QLNoOpSortCriteria> {
   @Inject private AppService appService;
   @Inject TriggerQueryHelper triggerQueryHelper;
 
   @Override
   protected QLData fetch(String accountId, QLNoOpAggregateFunction aggregateFunction, List<QLTriggerFilter> filters,
-      List<QLTriggerAggregation> groupBy, QLTimeSeriesAggregation groupByTime,
-      List<QLTagAggregation> tagAggregationList, List<QLNoOpSortCriteria> sortCriteria) {
+      List<QLTriggerAggregation> groupBy, List<QLNoOpSortCriteria> sortCriteria) {
     final Class entityClass = Trigger.class;
     List<String> groupByList = new ArrayList<>();
     if (isNotEmpty(groupBy)) {
-      groupByList = groupBy.stream().map(g -> g.name()).collect(Collectors.toList());
+      groupByList = groupBy.stream()
+                        .filter(g -> g != null && g.getEntityAggregation() != null)
+                        .map(g -> g.getEntityAggregation().name())
+                        .collect(Collectors.toList());
     }
     return getQLData(accountId, filters, entityClass, groupByList);
   }
@@ -52,13 +53,13 @@ public class TriggerStatsDataFetcher extends RealTimeStatsDataFetcher<QLNoOpAggr
   protected Query populateFilters(
       WingsPersistence wingsPersistence, String accountId, List<QLTriggerFilter> filters, Class entityClass) {
     Query query = wingsPersistence.createQuery(entityClass);
-    populateFilters(filters, query);
+    populateFilters(accountId, filters, query);
     populateAppIdFilter(accountId, query);
     return query;
   }
 
   protected String getAggregationFieldName(String aggregation) {
-    QLTriggerAggregation triggerAggregation = QLTriggerAggregation.valueOf(aggregation);
+    QLTriggerEntityAggregation triggerAggregation = QLTriggerEntityAggregation.valueOf(aggregation);
     switch (triggerAggregation) {
       case Application:
         return "appId";
@@ -68,7 +69,7 @@ public class TriggerStatsDataFetcher extends RealTimeStatsDataFetcher<QLNoOpAggr
   }
 
   @Override
-  protected void populateFilters(List<QLTriggerFilter> filters, Query query) {
+  protected void populateFilters(String accountId, List<QLTriggerFilter> filters, Query query) {
     triggerQueryHelper.setQuery(filters, query);
   }
 

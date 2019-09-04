@@ -15,10 +15,9 @@ import software.wings.graphql.datafetcher.SettingsAttributeStatsDataFetcher;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLNoOpAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
-import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.cloudprovider.QLCloudProviderAggregation;
 import software.wings.graphql.schema.type.aggregation.cloudprovider.QLCloudProviderFilter;
-import software.wings.graphql.schema.type.aggregation.tag.QLTagAggregation;
+import software.wings.graphql.schema.type.aggregation.cloudprovider.QLCloudProviderTypeAggregation;
 import software.wings.graphql.utils.nameservice.NameService;
 
 import java.util.ArrayList;
@@ -26,17 +25,19 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class CloudProviderStatsDataFetcher extends SettingsAttributeStatsDataFetcher<QLNoOpAggregateFunction,
-    QLCloudProviderFilter, QLCloudProviderAggregation, QLTimeSeriesAggregation, QLTagAggregation, QLNoOpSortCriteria> {
+    QLCloudProviderFilter, QLCloudProviderAggregation, QLNoOpSortCriteria> {
   @Inject CloudProviderQueryHelper cloudProviderQueryHelper;
   @Override
   protected QLData fetch(String accountId, QLNoOpAggregateFunction aggregateFunction,
       List<QLCloudProviderFilter> filters, List<QLCloudProviderAggregation> groupBy,
-      QLTimeSeriesAggregation groupByTime, List<QLTagAggregation> tagAggregationList,
       List<QLNoOpSortCriteria> sortCriteria) {
     final Class entityClass = SettingAttribute.class;
     List<String> groupByList = new ArrayList<>();
     if (isNotEmpty(groupBy)) {
-      groupByList = groupBy.stream().map(g -> g.name()).collect(Collectors.toList());
+      groupByList = groupBy.stream()
+                        .filter(g -> g != null && g.getTypeAggregation() != null)
+                        .map(g -> g.getTypeAggregation().name())
+                        .collect(Collectors.toList());
     }
     return getQLData(accountId, filters, entityClass, groupByList);
   }
@@ -51,7 +52,7 @@ public class CloudProviderStatsDataFetcher extends SettingsAttributeStatsDataFet
   }
 
   protected String getAggregationFieldName(String aggregation) {
-    QLCloudProviderAggregation cloudProviderAggregation = QLCloudProviderAggregation.valueOf(aggregation);
+    QLCloudProviderTypeAggregation cloudProviderAggregation = QLCloudProviderTypeAggregation.valueOf(aggregation);
     switch (cloudProviderAggregation) {
       case Type:
         return "value.type";
@@ -61,7 +62,7 @@ public class CloudProviderStatsDataFetcher extends SettingsAttributeStatsDataFet
   }
 
   @Override
-  protected void populateFilters(List<QLCloudProviderFilter> filters, Query query) {
+  protected void populateFilters(String accountId, List<QLCloudProviderFilter> filters, Query query) {
     cloudProviderQueryHelper.setQuery(filters, query);
   }
 
