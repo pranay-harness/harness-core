@@ -122,7 +122,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
   public void testList() {
     generateKey();
     PageRequest request = PageRequestBuilder.aPageRequest().addFilter("accountId", Operator.EQ, ACCOUNT_ID).build();
-    PageResponse pageResponse = apiKeyService.list(request, ACCOUNT_ID);
+    PageResponse pageResponse = apiKeyService.list(request, ACCOUNT_ID, false, false);
     assertThat(pageResponse.getResponse()).isNotEmpty();
   }
 

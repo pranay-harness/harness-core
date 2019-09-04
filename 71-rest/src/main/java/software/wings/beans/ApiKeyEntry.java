@@ -12,6 +12,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.security.UserGroup;
 import software.wings.jersey.JsonViews;
 
@@ -30,6 +31,6 @@ public class ApiKeyEntry implements PersistentEntity, UuidAccess, CreatedAtAcces
   @Indexed private long createdAt;
   @Indexed @NotEmpty private String accountId;
   @JsonView(JsonViews.Internal.class) @NotEmpty private char[] encryptedKey;
-  private transient String decryptedKey;
+  @Transient private String decryptedKey;
   @JsonView(JsonViews.Internal.class) @NotEmpty private String hashOfKey;
 }

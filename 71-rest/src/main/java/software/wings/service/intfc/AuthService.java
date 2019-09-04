@@ -6,10 +6,8 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.security.UserGroup;
-import software.wings.security.AppPermissionSummary;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestInfo;
 import software.wings.security.UserRestrictionInfo;
@@ -92,10 +90,7 @@ public interface AuthService extends OwnedByAccount {
   UserRestrictionInfo getUserRestrictionInfo(
       String accountId, User user, UserPermissionInfo userPermissionInfo, boolean cacheOnly);
 
-  Set<String> getAppPermissionsForUser(
-      String userId, String accountId, String appId, PermissionType permissionType, Action action);
-
-  AppPermissionSummary getAppPermissionSummaryForUser(String userId, String accountId, String appId);
+  void evictPermissionAndRestrictionCacheForUserGroup(UserGroup userGroup);
 
   void evictUserPermissionAndRestrictionCacheForAccount(String accountId, List<String> memberIds);
 
@@ -116,8 +111,6 @@ public interface AuthService extends OwnedByAccount {
   void checkIfUserAllowedToDeployToEnv(String appId, String envId);
 
   void checkIfUserCanCreateEnv(String appId, EnvironmentType envType);
-
-  void checkIfUserCanPerformDashboardAction(String dashboardId, Action action);
 
   void checkWorkflowPermissionsForEnv(String appId, Workflow workflow, Action action);
 

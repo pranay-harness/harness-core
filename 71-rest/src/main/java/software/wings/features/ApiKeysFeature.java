@@ -40,7 +40,7 @@ public class ApiKeysFeature extends AbstractPremiumFeature implements Compliance
     if (isUsageCompliantWithRestrictions(accountId, targetAccountType)) {
       return true;
     }
-    apiKeyService.deleteAll(accountId);
+    apiKeyService.deleteByAccountId(accountId);
 
     return isUsageCompliantWithRestrictions(accountId, targetAccountType);
   }
@@ -78,7 +78,6 @@ public class ApiKeysFeature extends AbstractPremiumFeature implements Compliance
 
   private List<ApiKeyEntry> getApiKeys(String accountId) {
     PageRequest<ApiKeyEntry> request = aPageRequest().addFilter(ApiKeyEntryKeys.accountId, EQ, accountId).build();
-
-    return apiKeyService.list(request, accountId).getResponse();
+    return apiKeyService.list(request, accountId, false, false).getResponse();
   }
 }
