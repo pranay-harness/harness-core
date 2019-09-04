@@ -30,6 +30,7 @@ import io.harness.expression.LateBindingMap;
 import io.harness.expression.LateBindingValue;
 import io.harness.expression.SecretString;
 import io.harness.expression.VariableResolverTracker;
+import io.harness.serializer.KryoUtils;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +45,7 @@ import software.wings.api.InfraMappingElement.Pcf;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceArtifactElement;
 import software.wings.beans.Application;
+import software.wings.beans.ArtifactVariable;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
@@ -303,10 +305,60 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     }
   }
 
+  private Map<String, Artifact> getArtifactMapForPhase() {
+    SweepingOutput sweepingOutputInput = prepareSweepingOutputBuilder(Scope.PHASE).name("artifacts").build();
+    SweepingOutput result = sweepingOutputService.find(sweepingOutputInput.getAppId(), sweepingOutputInput.getName(),
+        sweepingOutputInput.getPipelineExecutionId(), sweepingOutputInput.getWorkflowExecutionId(),
+        sweepingOutputInput.getPhaseExecutionId(), null);
+
+    if (result == null) {
+      return null;
+    }
+    return (Map<String, Artifact>) KryoUtils.asInflatedObject(result.getOutput());
+  }
+
+  private boolean isArtifactVariableForService(String serviceId, ArtifactVariable artifactVariable) {
+    switch (artifactVariable.getEntityType()) {
+      case SERVICE:
+        return artifactVariable.getEntityId().equals(serviceId);
+      case ENVIRONMENT:
+        if (isEmpty(artifactVariable.getOverriddenArtifactVariables())) {
+          return true;
+        }
+        for (ArtifactVariable overriddenArtifactVariable : artifactVariable.getOverriddenArtifactVariables()) {
+          if (isArtifactVariableForService(serviceId, overriddenArtifactVariable)) {
+            return true;
+          }
+        }
+        return false;
+      case WORKFLOW:
+        return true;
+      default:
+        return false;
+    }
+  }
+
   @Override
   public Map<String, Artifact> getArtifactsForService(String serviceId) {
     WorkflowStandardParams workflowStandardParams = getContextElement(ContextElementType.STANDARD);
-    return workflowStandardParams.getArtifactsForService(serviceId);
+
+    Map<String, Artifact> map = new HashMap<>();
+    List<ArtifactVariable> artifactVariables = workflowStandardParams.getWorkflowElement().getArtifactVariables();
+    Map<String, Artifact> artifactMapForPhase = getArtifactMapForPhase();
+    if (isNotEmpty(artifactVariables) && isNotEmpty(artifactMapForPhase)) {
+      for (ArtifactVariable artifactVariable : artifactVariables) {
+        if (!isArtifactVariableForService(serviceId, artifactVariable)) {
+          continue;
+        }
+
+        Artifact artifact = artifactMapForPhase.getOrDefault(artifactVariable.getName(), null);
+        // TODO: ASR: throw error if null?
+        if (artifact != null) {
+          map.put(artifactVariable.getName(), artifact);
+        }
+      }
+    }
+    return map;
   }
 
   @Override
