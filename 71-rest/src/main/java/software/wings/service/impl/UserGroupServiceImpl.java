@@ -348,7 +348,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     if (isNotEmpty(newMemberIds)) {
-      evictUserPermissionInfoCacheForUserGroup(
+      evictUserPermissionInfoCacheForUsers(
           userGroup.getAccountId(), newMemberIds.stream().distinct().collect(toList()));
     }
 
@@ -465,10 +465,10 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   private void evictUserPermissionInfoCacheForUserGroup(UserGroup userGroup) {
-    authService.evictUserPermissionAndRestrictionCacheForAccount(userGroup.getAccountId(), userGroup.getMemberIds());
+    authService.evictPermissionAndRestrictionCacheForUserGroup(userGroup);
   }
 
-  private void evictUserPermissionInfoCacheForUserGroup(String accountId, List<String> memberIds) {
+  private void evictUserPermissionInfoCacheForUsers(String accountId, List<String> memberIds) {
     authService.evictUserPermissionAndRestrictionCacheForAccount(accountId, memberIds);
   }
 

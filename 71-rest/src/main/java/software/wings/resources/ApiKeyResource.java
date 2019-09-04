@@ -72,7 +72,7 @@ public class ApiKeyResource {
   public RestResponse<PageResponse<ApiKeyEntry>> list(
       @NotEmpty @QueryParam("accountId") String accountId, @BeanParam PageRequest<ApiKeyEntry> pageRequest) {
     pageRequest.addFilter(ApiKeyEntryKeys.accountId, EQ, accountId);
-    return new RestResponse<>(apiKeyService.list(pageRequest, accountId));
+    return new RestResponse<>(apiKeyService.list(pageRequest, accountId, true, false));
   }
 
   @GET
@@ -96,13 +96,9 @@ public class ApiKeyResource {
 
   @DELETE
   public RestResponse<Map<String, Object>> deleteAll(@NotEmpty @QueryParam("accountId") String accountId) {
-    boolean deleted = apiKeyService.deleteAll(accountId);
-    if (!deleted) {
-      logger.error("API keys were not deleted. accountId={}", accountId);
-    }
-
+    apiKeyService.deleteByAccountId(accountId);
     Map<String, Object> status = new HashMap<>();
-    status.put("deleted", deleted);
+    status.put("deleted", true);
     return new RestResponse<>(status);
   }
 }

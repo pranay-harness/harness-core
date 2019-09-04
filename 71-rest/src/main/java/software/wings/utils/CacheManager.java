@@ -7,6 +7,7 @@ import com.google.inject.Singleton;
 
 import lombok.Builder;
 import lombok.Value;
+import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.User;
 import software.wings.beans.security.access.WhitelistConfig;
 import software.wings.security.UserPermissionInfo;
@@ -28,12 +29,14 @@ import javax.cache.expiry.ExpiryPolicy;
 @Singleton
 public class CacheManager {
   public static final String USER_CACHE = "userCache";
-
   private static final String HARNESS_API_KEY_CACHE = "harnessApiKeyCache";
   private static final String NEW_RELIC_APPLICATION_CACHE = "nrApplicationCache";
   private static final String TRIAL_EMAIL_CACHE = "trialEmailCache";
   private static final String USER_PERMISSION_CACHE = "userPermissionCache";
   private static final String USER_RESTRICTION_CACHE = "userRestrictionCache";
+  private static final String APIKEY_CACHE = "apiKeyCache";
+  private static final String APIKEY_PERMISSION_CACHE = "apiKeyPermissionCache";
+  private static final String APIKEY_RESTRICTION_CACHE = "apiKeyRestrictionCache";
   private static final String WHITELIST_CACHE = "whitelistCache";
 
   @Value
@@ -83,6 +86,11 @@ public class CacheManager {
     return getCache(USER_CACHE, String.class, User.class, AccessedExpiryPolicy.factoryOf(Duration.THIRTY_MINUTES));
   }
 
+  public Cache<String, ApiKeyEntry> getApiKeyCache() {
+    return getCache(
+        APIKEY_CACHE, String.class, ApiKeyEntry.class, AccessedExpiryPolicy.factoryOf(Duration.THIRTY_MINUTES));
+  }
+
   public Cache<String, NewRelicApplications> getNewRelicApplicationCache() {
     return getCache(NEW_RELIC_APPLICATION_CACHE, String.class, NewRelicApplications.class,
         AccessedExpiryPolicy.factoryOf(Duration.TEN_MINUTES));
@@ -98,6 +106,16 @@ public class CacheManager {
         AccessedExpiryPolicy.factoryOf(Duration.ONE_HOUR));
   }
 
+  public Cache<String, UserPermissionInfo> getApiKeyPermissionInfoCache() {
+    return getCache(APIKEY_PERMISSION_CACHE, String.class, UserPermissionInfo.class,
+        AccessedExpiryPolicy.factoryOf(Duration.ONE_HOUR));
+  }
+
+  public Cache<String, UserRestrictionInfo> getApiKeyRestrictionInfoCache() {
+    return getCache(APIKEY_RESTRICTION_CACHE, String.class, UserRestrictionInfo.class,
+        AccessedExpiryPolicy.factoryOf(Duration.ONE_HOUR));
+  }
+
   public Cache<String, WhitelistConfig> getWhitelistConfigCache() {
     return getCache(
         WHITELIST_CACHE, String.class, WhitelistConfig.class, AccessedExpiryPolicy.factoryOf(Duration.ONE_HOUR));
@@ -109,9 +127,29 @@ public class CacheManager {
       userCache.clear();
     }
 
+    Cache<String, ApiKeyEntry> apiKeyCache = getApiKeyCache();
+    if (apiKeyCache != null) {
+      apiKeyCache.clear();
+    }
+
     Cache<String, UserPermissionInfo> userPermissionInfoCache = getUserPermissionInfoCache();
     if (userPermissionInfoCache != null) {
       userPermissionInfoCache.clear();
+    }
+
+    Cache<String, UserRestrictionInfo> userRestrictionInfoCache = getUserRestrictionInfoCache();
+    if (userRestrictionInfoCache != null) {
+      userRestrictionInfoCache.clear();
+    }
+
+    Cache<String, UserPermissionInfo> apiKeyPermissionInfoCache = getApiKeyPermissionInfoCache();
+    if (apiKeyPermissionInfoCache != null) {
+      apiKeyPermissionInfoCache.clear();
+    }
+
+    Cache<String, UserRestrictionInfo> apiKeyRestrictionInfoCache = getApiKeyRestrictionInfoCache();
+    if (apiKeyRestrictionInfoCache != null) {
+      apiKeyRestrictionInfoCache.clear();
     }
 
     Cache<String, WhitelistConfig> whitelistConfigCache = getWhitelistConfigCache();

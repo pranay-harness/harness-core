@@ -194,7 +194,6 @@ public class AuthenticationFilter implements ContainerRequestFilter {
       UserThreadLocal.set(user);
       return true;
     }
-
     return false;
   }
 

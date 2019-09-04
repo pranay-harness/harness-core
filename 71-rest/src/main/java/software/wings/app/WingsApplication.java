@@ -390,6 +390,9 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     cacheManager.getUserCache();
     cacheManager.getUserPermissionInfoCache();
+    cacheManager.getUserRestrictionInfoCache();
+    cacheManager.getApiKeyPermissionInfoCache();
+    cacheManager.getApiKeyRestrictionInfoCache();
     cacheManager.getNewRelicApplicationCache();
     cacheManager.getWhitelistConfigCache();
 

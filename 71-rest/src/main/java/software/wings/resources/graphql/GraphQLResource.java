@@ -195,12 +195,11 @@ public class GraphQLResource {
         if (apiKeyEntry == null) {
           executionResult = getExecutionResultWithError(GraphQLConstants.INVALID_API_KEY);
         } else {
-          UserPermissionInfo userPermissionInfo =
-              authHandler.evaluateUserPermissionInfo(accountId, apiKeyEntry.getUserGroups(), null);
-          UserRestrictionInfo userRestrictionInfo =
-              authService.getUserRestrictionInfoFromDB(accountId, userPermissionInfo, apiKeyEntry.getUserGroups());
+          UserPermissionInfo apiKeyPermissions = apiKeyService.getApiKeyPermissions(apiKeyEntry, accountId);
+          UserRestrictionInfo apiKeyRestrictions =
+              apiKeyService.getApiKeyRestrictions(apiKeyEntry, apiKeyPermissions, accountId);
           executionResult = graphQL.execute(getExecutionInput(
-              userPermissionInfo, userRestrictionInfo, accountId, graphQLQuery, dataLoaderRegistryHelper));
+              apiKeyPermissions, apiKeyRestrictions, accountId, graphQLQuery, dataLoaderRegistryHelper));
         }
       }
     } catch (Exception ex) {
@@ -264,16 +263,15 @@ public class GraphQLResource {
         .build();
   }
 
-  private ExecutionInput getExecutionInput(UserPermissionInfo userPermissionInfo,
-      UserRestrictionInfo userRestrictionInfo, String accountId, GraphQLQuery graphQLQuery,
-      DataLoaderRegistryHelper dataLoaderRegistryHelper) {
+  private ExecutionInput getExecutionInput(UserPermissionInfo permissionInfo, UserRestrictionInfo restrictionInfo,
+      String accountId, GraphQLQuery graphQLQuery, DataLoaderRegistryHelper dataLoaderRegistryHelper) {
     return ExecutionInput.newExecutionInput()
         .query(graphQLQuery.getQuery())
         .variables(graphQLQuery.getVariables() == null ? Maps.newHashMap() : graphQLQuery.getVariables())
         .operationName(graphQLQuery.getOperationName())
         .dataLoaderRegistry(dataLoaderRegistryHelper.getDataLoaderRegistry())
         .context(GraphQLContext.newContext().of(
-            "accountId", accountId, "permissions", userPermissionInfo, "restrictions", userRestrictionInfo))
+            "accountId", accountId, "permissions", permissionInfo, "restrictions", restrictionInfo))
         .build();
   }
 }

@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.HAS;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -11,6 +12,7 @@ import static java.lang.System.currentTimeMillis;
 import static org.mindrot.jbcrypt.BCrypt.checkpw;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Charsets;
 import com.google.inject.Inject;
@@ -22,6 +24,8 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.UnauthorizedException;
 import io.harness.security.SimpleEncryption;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.ListUtils;
 import org.mindrot.jbcrypt.BCrypt;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -32,27 +36,41 @@ import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.ApiKeysFeature;
 import software.wings.features.api.RestrictedApi;
+import software.wings.security.UserPermissionInfo;
+import software.wings.security.UserRestrictionInfo;
+import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ApiKeyService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserGroupService;
+import software.wings.utils.CacheManager;
 import software.wings.utils.CryptoUtils;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
+import javax.cache.Cache;
 import javax.validation.executable.ValidateOnExecution;
 
 @Singleton
 @ValidateOnExecution
+@Slf4j
 public class ApiKeyServiceImpl implements ApiKeyService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
   @Inject private UserGroupService userGroupService;
+  @Inject private CacheManager cacheManager;
+  @Inject private AuthHandler authHandler;
+  @Inject private AuthService authService;
+  @Inject private ExecutorService executorService;
 
   private static String DELIMITER = "::";
 
@@ -89,6 +107,8 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     Validator.notNullCheck("uuid is null for the given api key entry", uuid, USER);
     Validator.notNullCheck(UserGroup.ACCOUNT_ID_KEY, accountId, USER);
 
+    ApiKeyEntry apiKeyEntryBeforeUpdate = get(uuid, accountId);
+
     UpdateOperations<ApiKeyEntry> operations = wingsPersistence.createUpdateOperations(ApiKeyEntry.class);
     setUnset(operations, "name", apiKeyEntry.getName());
     setUnset(operations, "userGroupIds", apiKeyEntry.getUserGroupIds());
@@ -97,7 +117,36 @@ public class ApiKeyServiceImpl implements ApiKeyService {
                                    .filter(ID_KEY, uuid)
                                    .filter(UserGroup.ACCOUNT_ID_KEY, accountId);
     wingsPersistence.update(query, operations);
-    return get(uuid, accountId);
+    ApiKeyEntry apiKeyEntryAfterUpdate = get(uuid, accountId);
+    boolean same =
+        ListUtils.isEqualList(apiKeyEntryBeforeUpdate.getUserGroupIds(), apiKeyEntryAfterUpdate.getUserGroupIds());
+    if (!same) {
+      evictApiKeyAndRebuildCache(apiKeyEntryAfterUpdate.getDecryptedKey(), accountId, true);
+    }
+    return apiKeyEntryAfterUpdate;
+  }
+
+  private void evictApiKeyAndRebuildCache(String apiKey, String accountId, boolean rebuild) {
+    Cache<String, ApiKeyEntry> apiKeyCache = cacheManager.getApiKeyCache();
+    Cache<String, UserPermissionInfo> apiKeyPermissionInfoCache = cacheManager.getApiKeyPermissionInfoCache();
+    Cache<String, UserRestrictionInfo> apiKeyRestrictionInfoCache = cacheManager.getApiKeyRestrictionInfoCache();
+
+    boolean apiKeyPresent = apiKeyCache.remove(apiKey);
+    boolean apiKeyPresentInPermissions = apiKeyPermissionInfoCache.remove(apiKey);
+    boolean apiKeyPresentInRestrictions = apiKeyRestrictionInfoCache.remove(apiKey);
+
+    if (rebuild) {
+      executorService.submit(() -> {
+        if (apiKeyPresent) {
+          // This call gets the permissions from cache, if present.
+          getApiKeyFromCacheOrDB(apiKey, accountId, true);
+        }
+
+        if (apiKeyPresentInPermissions || apiKeyPresentInRestrictions) {
+          rebuildPermissionsAndRestrictions(apiKey, accountId);
+        }
+      });
+    }
   }
 
   private void loadUserGroupsForApiKeys(List<ApiKeyEntry> apiKeyEntries, String accountId) {
@@ -148,9 +197,25 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   }
 
   @Override
-  public PageResponse<ApiKeyEntry> list(PageRequest<ApiKeyEntry> pageRequest, String accountId) {
+  public PageResponse<ApiKeyEntry> list(
+      PageRequest<ApiKeyEntry> pageRequest, String accountId, boolean loadUserGroups, boolean decrypt) {
+    pageRequest.addFilter("accountId", EQ, accountId);
     PageResponse<ApiKeyEntry> response = wingsPersistence.query(ApiKeyEntry.class, pageRequest);
-    loadUserGroupsForApiKeys(response.getResponse(), accountId);
+    if (response.isEmpty()) {
+      return response;
+    }
+
+    List<ApiKeyEntry> apiKeyEntryList = response.getResponse();
+    if (decrypt) {
+      apiKeyEntryList.forEach(apiKeyEntry -> {
+        String decryptedKey =
+            new String(getSimpleEncryption(apiKeyEntry.getAccountId()).decryptChars(apiKeyEntry.getEncryptedKey()));
+        apiKeyEntry.setDecryptedKey(decryptedKey);
+      });
+    }
+    if (loadUserGroups) {
+      loadUserGroupsForApiKeys(apiKeyEntryList, accountId);
+    }
     return response;
   }
 
@@ -160,7 +225,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
                             .filter(ApiKeyEntryKeys.accountId, accountId)
                             .filter(ID_KEY, uuid)
                             .get();
-    return buildApiKeyEntry(uuid, entry, false);
+    return buildApiKeyEntry(uuid, entry, true);
   }
 
   private ApiKeyEntry buildApiKeyEntry(String uuid, ApiKeyEntry entry, boolean details) {
@@ -192,30 +257,25 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
   @Override
   public void delete(String accountId, String uuid) {
+    ApiKeyEntry apiKeyEntry = get(uuid, accountId);
+    evictApiKeyAndRebuildCache(apiKeyEntry.getDecryptedKey(), accountId, false);
     wingsPersistence.delete(ApiKeyEntry.class, uuid);
   }
 
   @Override
-  public boolean deleteAll(String accountId) {
-    Query<ApiKeyEntry> query =
-        wingsPersistence.createQuery(ApiKeyEntry.class).filter(ApiKeyEntryKeys.accountId, accountId);
-
-    return wingsPersistence.delete(query);
-  }
-
-  @Override
   public void validate(String apiKey, String accountId) {
-    PageRequest<ApiKeyEntry> pageRequest = aPageRequest().addFilter(ApiKeyEntryKeys.accountId, EQ, accountId).build();
-    if (!wingsPersistence.query(ApiKeyEntry.class, pageRequest)
-             .getResponse()
-             .stream()
-             .anyMatch(apiKeyEntry -> checkpw(apiKey, apiKeyEntry.getHashOfKey()))) {
+    ApiKeyEntry apiKeyEntry = getApiKeyFromCacheOrDB(apiKey, accountId, true);
+    if (apiKeyEntry == null) {
       throw new UnauthorizedException("Invalid Api Key", USER);
     }
   }
 
   @Override
   public ApiKeyEntry getByKey(String key, String accountId, boolean details) {
+    return getApiKeyFromCacheOrDB(key, accountId, details);
+  }
+
+  private ApiKeyEntry getByKeyFromDB(String key, String accountId, boolean details) {
     PageRequest<ApiKeyEntry> pageRequest = aPageRequest().addFilter(ApiKeyEntryKeys.accountId, EQ, accountId).build();
     Optional<ApiKeyEntry> apiKeyEntryOptional = wingsPersistence.query(ApiKeyEntry.class, pageRequest)
                                                     .getResponse()
@@ -226,13 +286,160 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     if (apiKeyEntry == null) {
       return null;
     }
-
     return buildApiKeyEntry(apiKeyEntry.getUuid(), apiKeyEntry, details);
+  }
+
+  private ApiKeyEntry getApiKeyFromCacheOrDB(String apiKey, String accountId, boolean details) {
+    Cache<String, ApiKeyEntry> apiKeyCache = cacheManager.getApiKeyCache();
+    if (apiKeyCache == null) {
+      logger.warn("apiKeyCache is null. Fetch from DB");
+      return getByKeyFromDB(apiKey, accountId, details);
+    } else {
+      ApiKeyEntry apiKeyEntry;
+      try {
+        apiKeyEntry = apiKeyCache.get(apiKey);
+        if (apiKeyEntry == null) {
+          apiKeyEntry = getByKeyFromDB(apiKey, accountId, details);
+          notNullCheck("Api-key does not exist", apiKeyEntry, USER);
+          apiKeyCache.put(apiKeyEntry.getDecryptedKey(), apiKeyEntry);
+        }
+      } catch (Exception ex) {
+        // If there was any exception, remove that entry from cache
+        apiKeyCache.remove(apiKey);
+        apiKeyEntry = getByKeyFromDB(apiKey, accountId, details);
+        apiKeyCache.put(apiKeyEntry.getDecryptedKey(), apiKeyEntry);
+      }
+      return apiKeyEntry;
+    }
+  }
+
+  @Override
+  public UserPermissionInfo getApiKeyPermissions(ApiKeyEntry apiKeyEntry, String accountId) {
+    String apiKey = apiKeyEntry.getDecryptedKey();
+    Cache<String, UserPermissionInfo> apiKeyPermissionsCache = cacheManager.getApiKeyPermissionInfoCache();
+    if (apiKeyPermissionsCache == null) {
+      logger.warn("apiKey permissions cache is null. Fetch from DB");
+      return authHandler.evaluateUserPermissionInfo(accountId, apiKeyEntry.getUserGroups(), null);
+    } else {
+      UserPermissionInfo apiKeyPermissionInfo;
+      try {
+        apiKeyPermissionInfo = apiKeyPermissionsCache.get(apiKey);
+        if (apiKeyPermissionInfo == null) {
+          apiKeyPermissionInfo = authHandler.evaluateUserPermissionInfo(accountId, apiKeyEntry.getUserGroups(), null);
+          apiKeyPermissionsCache.put(apiKey, apiKeyPermissionInfo);
+        }
+      } catch (Exception ex) {
+        // If there was any exception, remove that entry from cache
+        apiKeyPermissionsCache.remove(apiKey);
+        apiKeyPermissionInfo = authHandler.evaluateUserPermissionInfo(accountId, apiKeyEntry.getUserGroups(), null);
+        apiKeyPermissionsCache.put(apiKey, apiKeyPermissionInfo);
+      }
+      return apiKeyPermissionInfo;
+    }
+  }
+
+  @Override
+  public UserRestrictionInfo getApiKeyRestrictions(
+      ApiKeyEntry apiKeyEntry, UserPermissionInfo userPermissionInfo, String accountId) {
+    String apiKey = apiKeyEntry.getDecryptedKey();
+    Cache<String, UserRestrictionInfo> apiKeyRestrictionInfoCache = cacheManager.getApiKeyRestrictionInfoCache();
+    if (apiKeyRestrictionInfoCache == null) {
+      logger.warn("apiKey restrictions cache is null. Fetch from DB");
+      return authService.getUserRestrictionInfoFromDB(accountId, userPermissionInfo, apiKeyEntry.getUserGroups());
+    } else {
+      UserRestrictionInfo apiKeyPermissionInfo;
+      try {
+        apiKeyPermissionInfo = apiKeyRestrictionInfoCache.get(apiKey);
+        if (apiKeyPermissionInfo == null) {
+          apiKeyPermissionInfo =
+              authService.getUserRestrictionInfoFromDB(accountId, userPermissionInfo, apiKeyEntry.getUserGroups());
+          apiKeyRestrictionInfoCache.put(apiKey, apiKeyPermissionInfo);
+        }
+      } catch (Exception ex) {
+        // If there was any exception, remove that entry from cache
+        apiKeyRestrictionInfoCache.remove(apiKey);
+        apiKeyPermissionInfo =
+            authService.getUserRestrictionInfoFromDB(accountId, userPermissionInfo, apiKeyEntry.getUserGroups());
+        apiKeyRestrictionInfoCache.put(apiKey, apiKeyPermissionInfo);
+      }
+      return apiKeyPermissionInfo;
+    }
   }
 
   @Override
   public void deleteByAccountId(String accountId) {
+    PageResponse<ApiKeyEntry> pageResponse = list(PageRequestBuilder.aPageRequest().build(), accountId, false, true);
+    List<ApiKeyEntry> apiKeyEntryList = pageResponse.getResponse();
     wingsPersistence.delete(
         wingsPersistence.createQuery(ApiKeyEntry.class).filter(ApiKeyEntryKeys.accountId, accountId));
+
+    apiKeyEntryList.forEach(apiKeyEntry -> evictApiKeyAndRebuildCache(apiKeyEntry.getDecryptedKey(), accountId, false));
+  }
+
+  @Override
+  public void evictAndRebuildPermissions(String accountId, boolean rebuild) {
+    Cache<String, UserPermissionInfo> permissionsCache = cacheManager.getApiKeyPermissionInfoCache();
+
+    PageResponse pageResponse = list(PageRequestBuilder.aPageRequest().build(), accountId, false, true);
+    List<ApiKeyEntry> apiKeyEntryList = pageResponse.getResponse();
+    if (isEmpty(apiKeyEntryList)) {
+      return;
+    }
+
+    Set<String> keys = new HashSet<>();
+
+    apiKeyEntryList.forEach(apiKeyEntry -> {
+      String apiKey = apiKeyEntry.getDecryptedKey();
+      boolean hasPermissions = permissionsCache.remove(apiKey);
+      if (hasPermissions) {
+        keys.add(apiKey);
+      }
+    });
+
+    if (rebuild) {
+      executorService.submit(() -> keys.forEach(key -> {
+        ApiKeyEntry apiKeyEntry = get(key, accountId);
+        // rebuild cache
+        getApiKeyPermissions(apiKeyEntry, accountId);
+      }));
+    }
+  }
+
+  @Override
+  public void evictAndRebuildPermissionsAndRestrictions(String accountId, boolean rebuild) {
+    PageResponse pageResponse = list(PageRequestBuilder.aPageRequest().build(), accountId, false, true);
+    List<ApiKeyEntry> apiKeyEntryList = pageResponse.getResponse();
+    evictAndRebuildPermissionsAndRestrictions(accountId, rebuild, apiKeyEntryList);
+  }
+
+  private void evictAndRebuildPermissionsAndRestrictions(
+      String accountId, boolean rebuild, List<ApiKeyEntry> apiKeyEntryList) {
+    if (isEmpty(apiKeyEntryList)) {
+      return;
+    }
+
+    apiKeyEntryList.forEach(
+        apiKeyEntry -> evictApiKeyAndRebuildCache(apiKeyEntry.getDecryptedKey(), accountId, rebuild));
+  }
+
+  private void rebuildPermissionsAndRestrictions(String apiKey, String accountId) {
+    ApiKeyEntry apiKeyEntry = getByKey(apiKey, accountId, true);
+    rebuildPermissionsAndRestrictions(apiKeyEntry);
+  }
+
+  private void rebuildPermissionsAndRestrictions(ApiKeyEntry apiKeyEntry) {
+    String accountId = apiKeyEntry.getAccountId();
+    // Load cache again
+    UserPermissionInfo permissions = getApiKeyPermissions(apiKeyEntry, accountId);
+    getApiKeyRestrictions(apiKeyEntry, permissions, accountId);
+  }
+
+  @Override
+  public void evictPermissionsAndRestrictionsForUserGroup(UserGroup userGroup) {
+    PageRequest<ApiKeyEntry> pageRequest =
+        PageRequestBuilder.aPageRequest().addFilter("userGroupIds", HAS, userGroup.getUuid()).build();
+    PageResponse pageResponse = list(pageRequest, userGroup.getAccountId(), false, true);
+    List<ApiKeyEntry> apiKeyEntryList = pageResponse.getResponse();
+    evictAndRebuildPermissionsAndRestrictions(userGroup.getAccountId(), true, apiKeyEntryList);
   }
 }

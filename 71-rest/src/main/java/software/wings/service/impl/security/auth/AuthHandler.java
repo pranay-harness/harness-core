@@ -1556,8 +1556,8 @@ public class AuthHandler {
     if (apiKeyEntry == null) {
       throw new WingsException(USER_NOT_AUTHORIZED);
     }
-    UserPermissionInfo userPermissionInfo =
-        authHandler.evaluateUserPermissionInfo(accountId, apiKeyEntry.getUserGroups(), null);
+
+    UserPermissionInfo userPermissionInfo = apiKeyService.getApiKeyPermissions(apiKeyEntry, accountId);
 
     logger.info("SCIM permissions: {}", userPermissionInfo.getAccountPermissionSummary().getPermissions());
     if (!userPermissionInfo.getAccountPermissionSummary().getPermissions().contains(USER_PERMISSION_MANAGEMENT)) {

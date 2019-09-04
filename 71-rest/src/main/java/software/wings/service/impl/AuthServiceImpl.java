@@ -13,7 +13,6 @@ import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -96,6 +95,7 @@ import software.wings.security.UserRestrictionInfo.UserRestrictionInfoBuilder;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.impl.security.auth.DashboardAuthHandler;
+import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
@@ -145,6 +145,7 @@ public class AuthServiceImpl implements AuthService {
   private WhitelistService whitelistService;
   private SSOSettingService ssoSettingService;
   @Inject private ExecutorService executorService;
+  @Inject private ApiKeyService apiKeyService;
   private AppService appService;
   private DashboardAuthHandler dashboardAuthHandler;
 
@@ -566,62 +567,6 @@ public class AuthServiceImpl implements AuthService {
     return getUserRestrictionInfoFromDB(accountId, user, userPermissionInfo);
   }
 
-  @Override
-  public Set<String> getAppPermissionsForUser(
-      String userId, String accountId, String appId, PermissionType permissionType, Action action) {
-    AppPermissionSummary appPermissionSummary = getAppPermissionSummaryForUser(userId, accountId, appId);
-    if (appPermissionSummary == null) {
-      return emptySet();
-    }
-
-    Map<Action, Set<String>> actionPermissionMap;
-    switch (permissionType) {
-      case SERVICE:
-        actionPermissionMap = appPermissionSummary.getServicePermissions();
-        break;
-      case ENV:
-        Map<Action, Set<EnvInfo>> envPermissions = appPermissionSummary.getEnvPermissions();
-        if (isEmpty(envPermissions)) {
-          return emptySet();
-        }
-
-        Set<EnvInfo> envInfos = envPermissions.get(action);
-        if (isEmpty(envInfos)) {
-          return emptySet();
-        }
-
-        return envInfos.stream().map(envInfo -> envInfo.getEnvId()).collect(toSet());
-      case WORKFLOW:
-        actionPermissionMap = appPermissionSummary.getWorkflowPermissions();
-        break;
-      case PIPELINE:
-        actionPermissionMap = appPermissionSummary.getPipelinePermissions();
-        break;
-      case DEPLOYMENT:
-        actionPermissionMap = appPermissionSummary.getDeploymentPermissions();
-        break;
-      case PROVISIONER:
-        actionPermissionMap = appPermissionSummary.getProvisionerPermissions();
-        break;
-      default:
-        logger.error("Unsupported permissionType {}", permissionType);
-        return emptySet();
-    }
-
-    if (isEmpty(actionPermissionMap)) {
-      return emptySet();
-    }
-
-    return actionPermissionMap.get(action);
-  }
-
-  @Override
-  public AppPermissionSummary getAppPermissionSummaryForUser(String userId, String accountId, String appId) {
-    UserPermissionInfo userPermissionInfo =
-        getUserPermissionInfo(accountId, userService.getUserFromCacheOrDB(userId), false);
-    return userPermissionInfo.getAppPermissionMapInternal().get(appId);
-  }
-
   private String getCacheKey(String accountId, String userId) {
     return accountId + "~" + userId;
   }
@@ -641,12 +586,15 @@ public class AuthServiceImpl implements AuthService {
         accountId, rebuildUserPermissionInfo, cacheManager.getUserPermissionInfoCache(), UserPermissionInfo.class);
     evictAndRebuild(
         accountId, rebuildUserRestrictionInfo, cacheManager.getUserRestrictionInfoCache(), UserRestrictionInfo.class);
+    apiKeyService.evictAndRebuildPermissionsAndRestrictions(
+        accountId, rebuildUserPermissionInfo || rebuildUserRestrictionInfo);
   }
 
   @Override
   public void evictUserPermissionCacheForAccount(String accountId, boolean rebuildUserPermissionInfo) {
     evictAndRebuild(
         accountId, rebuildUserPermissionInfo, cacheManager.getUserPermissionInfoCache(), UserPermissionInfo.class);
+    apiKeyService.evictAndRebuildPermissions(accountId, rebuildUserPermissionInfo);
   }
 
   private <T> void evictAndRebuild(String accountId, boolean rebuild, Cache<String, T> cache, Class<T> infoClass) {
@@ -708,6 +656,12 @@ public class AuthServiceImpl implements AuthService {
       return;
     }
     accountIds.forEach(accountId -> evictUserPermissionAndRestrictionCacheForAccount(accountId, memberIds));
+  }
+
+  @Override
+  public void evictPermissionAndRestrictionCacheForUserGroup(UserGroup userGroup) {
+    evictUserPermissionAndRestrictionCacheForAccount(userGroup.getAccountId(), userGroup.getMemberIds());
+    apiKeyService.evictPermissionsAndRestrictionsForUserGroup(userGroup);
   }
 
   @Override
@@ -1010,26 +964,6 @@ public class AuthServiceImpl implements AuthService {
     if (!envCreatePermissions.contains(envType)) {
       throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
     }
-  }
-
-  @Override
-  public void checkIfUserCanPerformDashboardAction(String dashboardId, Action action) {
-    User user = UserThreadLocal.get();
-    if (user == null) {
-      return;
-    }
-
-    Map<String, Set<io.harness.dashboard.Action>> dashboardPermissions =
-        user.getUserRequestContext().getUserPermissionInfo().getDashboardPermissions();
-    if (dashboardPermissions != null) {
-      Set<io.harness.dashboard.Action> actions = dashboardPermissions.get(dashboardId);
-      if (isNotEmpty(actions)) {
-        if (actions.contains(action)) {
-          return;
-        }
-      }
-    }
-    throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
   }
 
   @Override
