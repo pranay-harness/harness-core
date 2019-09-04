@@ -8,6 +8,7 @@ import com.google.inject.util.Modules;
 
 import io.harness.event.client.EventPublisher;
 import io.harness.event.client.PublisherModule;
+import io.harness.event.client.PublisherModule.Config;
 import io.harness.event.grpc.GrpcEventServer;
 import io.harness.factory.ClosingFactory;
 import io.harness.grpc.auth.AuthService;
@@ -32,8 +33,8 @@ import java.util.List;
 import java.util.UUID;
 
 public class EventServiceTestRule implements MethodRule, MongoRuleMixin, InjectorRuleMixin {
-  public static final String DEFAULT_ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
-  public static final String QUEUE_FILE_PATH =
+  static final String DEFAULT_ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
+  private static final String QUEUE_FILE_PATH =
       Paths.get(FileUtils.getTempDirectoryPath(), UUID.randomUUID().toString()).toString();
   private static final int PORT = 9890;
 
@@ -47,7 +48,12 @@ public class EventServiceTestRule implements MethodRule, MongoRuleMixin, Injecto
     AdvancedDatastore datastore = (AdvancedDatastore) morphia.createDatastore(mongoInfo.getClient(), databaseName());
     datastore.setQueryFactory(new QueryFactory());
     return ImmutableList.of(Modules
-                                .override(new PublisherModule("localhost:" + PORT, DEFAULT_ACCOUNT_ID, QUEUE_FILE_PATH),
+                                .override(new PublisherModule(Config.builder()
+                                                                  .publishTarget("localhost:" + PORT)
+                                                                  .publishAuthority("localhost")
+                                                                  .queueFilePath(QUEUE_FILE_PATH)
+                                                                  .accountId(DEFAULT_ACCOUNT_ID)
+                                                                  .build()),
                                     new EventServiceModule(EventServiceConfig.builder()
                                                                .certFilePath("cert.pem")
                                                                .keyFilePath("key.pem")

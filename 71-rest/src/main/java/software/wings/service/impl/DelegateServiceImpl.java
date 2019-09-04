@@ -21,7 +21,6 @@ import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
-import static java.util.Collections.EMPTY_LIST;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Comparator.comparingInt;
@@ -38,6 +37,7 @@ import static software.wings.beans.DelegateSequenceConfig.Builder.aDelegateSeque
 import static software.wings.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskAbortEvent;
 import static software.wings.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
 import static software.wings.beans.Event.Builder.anEvent;
+import static software.wings.beans.FeatureName.CCM_EVENT_COLLECTION;
 import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK;
 import static software.wings.beans.ServiceSecretKey.ServiceType.EVENT_SERVICE;
 import static software.wings.beans.TaskType.HOST_VALIDATION;
@@ -47,6 +47,8 @@ import static software.wings.common.Constants.DOCKER_DELEGATE;
 import static software.wings.common.Constants.ECS_DELEGATE;
 import static software.wings.common.Constants.KUBERNETES_DELEGATE;
 import static software.wings.common.Constants.MAX_DELEGATE_LAST_HEARTBEAT;
+import static software.wings.service.impl.EventsCollectionConfigExtractor.extractPublishAuthority;
+import static software.wings.service.impl.EventsCollectionConfigExtractor.extractPublishTarget;
 import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -183,6 +185,7 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -492,7 +495,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       return updateAllDelegatesIfECSType(delegate, updateOperations, "TAGS");
     } else {
       Delegate updatedDelegate = updateDelegate(delegate, updateOperations);
-      if (System.currentTimeMillis() - updatedDelegate.getLastHeartBeat() < 2 * 60 * 1000) {
+      if (System.currentTimeMillis() - updatedDelegate.getLastHeartBeat() < Duration.ofMinutes(2).toMillis()) {
         alertService.activeDelegateUpdated(updatedDelegate.getAccountId(), updatedDelegate.getUuid());
       }
 
@@ -513,7 +516,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       return updateAllDelegatesIfECSType(delegate, updateOperations, "SCOPES");
     } else {
       Delegate updatedDelegate = updateDelegate(delegate, updateOperations);
-      if (System.currentTimeMillis() - updatedDelegate.getLastHeartBeat() < 2 * 60 * 1000) {
+      if (System.currentTimeMillis() - updatedDelegate.getLastHeartBeat() < Duration.ofMinutes(2).toMillis()) {
         alertService.activeDelegateUpdated(updatedDelegate.getAccountId(), updatedDelegate.getUuid());
       }
       return updatedDelegate;
@@ -716,7 +719,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       if (delegateProfile != null) {
         params.put("delegateProfile", delegateProfile);
       }
-
+      if (featureFlagService.isEnabled(CCM_EVENT_COLLECTION, accountId)) {
+        params.put("CCM_EVENT_COLLECTION", "enabled");
+        params.put("publishTarget", extractPublishTarget(managerHost));
+        params.put("publishAuthority", extractPublishAuthority(managerHost));
+        params.put("queueFilePath", mainConfiguration.getDelegateConfigParams().getQueueFilePath());
+      }
       return params.build();
     }
 
@@ -1481,7 +1489,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     DelegatePackage delegatePackage = getDelegataePackageWithEncryptionConfig(task, task.getDelegateId());
     CapabilityHelper.embedCapabilitiesInDelegateTask(task,
         delegatePackage == null || isEmpty(delegatePackage.getEncryptionConfigs())
-            ? EMPTY_LIST
+            ? Collections.emptyList()
             : delegatePackage.getEncryptionConfigs().values());
 
     if (isNotEmpty(task.getExecutionCapabilities())) {
@@ -2540,7 +2548,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       if (updatedDelegate.getUuid().equals(delegate.getUuid())) {
         retVal.add(updatedDelegate);
       }
-      if (System.currentTimeMillis() - updatedDelegate.getLastHeartBeat() < 2 * 60 * 1000) {
+      if (System.currentTimeMillis() - updatedDelegate.getLastHeartBeat() < Duration.ofMinutes(2).toMillis()) {
         alertService.activeDelegateUpdated(updatedDelegate.getAccountId(), updatedDelegate.getUuid());
       }
     });

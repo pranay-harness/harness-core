@@ -86,6 +86,14 @@ spec:
           value: ${delegateName}
         - name: DELEGATE_PROFILE
           value: "${delegateProfile}"
+<#if CCM_EVENT_COLLECTION??>
+        - name: PUBLISH_TARGET
+          value: "${publishTarget}"
+        - name: PUBLISH_AUTHORITY
+          value: "${publishAuthority}"
+        - name: QUEUE_FILE_PATH
+          value: "${queueFilePath}"
+</#if>
         - name: PROXY_HOST
           value: ""
         - name: PROXY_PORT

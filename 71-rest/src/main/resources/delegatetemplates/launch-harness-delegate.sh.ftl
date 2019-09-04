@@ -20,4 +20,9 @@ sudo docker run -d --restart unless-stopped --hostname=$(hostname -f) \
 -e PROXY_MANAGER=true \
 -e POLL_FOR_TASKS=false \
 -e HELM_DESIRED_VERSION= \
+<#if CCM_EVENT_COLLECTION??>
+-e PUBLISH_TARGET=${publishTarget} \
+-e PUBLISH_AUTHORITY=${publishAuthority} \
+-e QUEUE_FILE_PATH=${queueFilePath} \
+</#if>
 ${delegateDockerImage}

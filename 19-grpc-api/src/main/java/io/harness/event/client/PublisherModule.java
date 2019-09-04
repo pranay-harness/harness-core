@@ -15,7 +15,9 @@ import io.harness.event.EventPublisherGrpc.EventPublisherBlockingStub;
 import io.harness.event.PublishMessage;
 import io.harness.grpc.auth.DelegateAuthCallCredentials;
 import io.harness.grpc.auth.EventServiceTokenGenerator;
+import lombok.Builder;
 import lombok.SneakyThrows;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.RollCycles;
@@ -23,19 +25,15 @@ import net.openhft.chronicle.queue.impl.RollingChronicleQueue;
 
 @Slf4j
 public class PublisherModule extends AbstractModule {
-  private final String publishTarget;
-  private final String accountId;
-  private final String queueFilePath;
+  private final Config config;
 
-  public PublisherModule(String publishTarget, String accountId, String queueFilePath) {
-    this.publishTarget = publishTarget;
-    this.accountId = accountId;
-    this.queueFilePath = queueFilePath;
+  public PublisherModule(Config config) {
+    this.config = config;
   }
 
   @Override
   protected void configure() {
-    if (publishTarget == null) {
+    if (config.publishTarget == null) {
       // EventPublisher optional for delegate start-up
       logger.info("EventPublisher configuration not present. Injecting Noop publisher");
       bind(EventPublisher.class)
@@ -52,7 +50,7 @@ public class PublisherModule extends AbstractModule {
   @Provides
   @Singleton
   RollingChronicleQueue chronicleQueue(FileDeletionManager fileDeletionManager) {
-    return ChronicleQueue.singleBuilder(queueFilePath)
+    return ChronicleQueue.singleBuilder(config.queueFilePath)
         .rollCycle(RollCycles.MINUTELY)
         .storeFileListener(fileDeletionManager)
         .build();
@@ -60,7 +58,7 @@ public class PublisherModule extends AbstractModule {
 
   @Provides
   CallCredentials callCredentials(EventServiceTokenGenerator eventServiceTokenGenerator) {
-    return new DelegateAuthCallCredentials(eventServiceTokenGenerator, accountId, true);
+    return new DelegateAuthCallCredentials(eventServiceTokenGenerator, config.accountId, true);
   }
 
   @Provides
@@ -68,12 +66,24 @@ public class PublisherModule extends AbstractModule {
   @SneakyThrows
   Channel channel() {
     SslContext sslContext = GrpcSslContexts.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
-    return NettyChannelBuilder.forTarget(publishTarget).sslContext(sslContext).build();
+    return NettyChannelBuilder.forTarget(config.publishTarget)
+        .overrideAuthority(config.publishAuthority)
+        .sslContext(sslContext)
+        .build();
   }
 
   @Provides
   @Singleton
   EventPublisherBlockingStub eventPublisherBlockingStub(Channel channel, CallCredentials callCredentials) {
     return EventPublisherGrpc.newBlockingStub(channel).withCallCredentials(callCredentials);
+  }
+
+  @Value
+  @Builder
+  public static class Config {
+    private final String publishTarget;
+    private final String publishAuthority;
+    private final String accountId;
+    private final String queueFilePath;
   }
 }

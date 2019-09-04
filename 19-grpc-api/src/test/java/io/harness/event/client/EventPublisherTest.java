@@ -22,6 +22,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.event.EventPublisherGrpc;
 import io.harness.event.EventPublisherGrpc.EventPublisherBlockingStub;
 import io.harness.event.PublishMessage;
+import io.harness.event.client.PublisherModule.Config;
 import io.harness.event.payloads.Lifecycle;
 import io.harness.event.payloads.Lifecycle.EventType;
 import io.harness.grpc.auth.EventServiceTokenGenerator;
@@ -50,20 +51,21 @@ public class EventPublisherTest {
   private final AtomicInteger messagesPublished = new AtomicInteger();
 
   private Injector injector = Guice.createInjector(
-      Modules.override(new PublisherModule("NOT_USED", "NOT_USED", QUEUE_FILE_PATH)).with(new AbstractModule() {
-        @Override
-        protected void configure() {}
+      Modules.override(new PublisherModule(Config.builder().queueFilePath(QUEUE_FILE_PATH).build()))
+          .with(new AbstractModule() {
+            @Override
+            protected void configure() {}
 
-        @Provides
-        @Singleton
-        EventPublisherBlockingStub eventPublisherBlockingStub() {
-          return EventPublisherGrpc.newBlockingStub(InProcessChannelBuilder.forName(SERVER_NAME).build());
-        }
-        @Provides
-        EventServiceTokenGenerator fakeTokenGenerator() {
-          return () -> "event-token";
-        }
-      }));
+            @Provides
+            @Singleton
+            EventPublisherBlockingStub eventPublisherBlockingStub() {
+              return EventPublisherGrpc.newBlockingStub(InProcessChannelBuilder.forName(SERVER_NAME).build());
+            }
+            @Provides
+            EventServiceTokenGenerator fakeTokenGenerator() {
+              return () -> "event-token";
+            }
+          }));
   @Inject private EventPublisherBlockingStub blockingStub;
   @Inject private RollingChronicleQueue chronicleQueue;
   @Inject private FileDeletionManager fileDeletionManager;
