@@ -360,22 +360,26 @@ public class SecretManagerImpl implements SecretManager {
     try {
       for (Field f : encryptedFields) {
         f.setAccessible(true);
+        Object fieldValue = f.get(object);
         Field encryptedRefField = getEncryptedRefField(f, object);
         encryptedRefField.setAccessible(true);
-        if (f.get(object) != null && !WingsReflectionUtils.isSetByYaml(object, encryptedRefField)) {
+        String encryptedRefFieldValue = (String) encryptedRefField.get(object);
+        boolean isSetByYaml = WingsReflectionUtils.isSetByYaml(object, encryptedRefField);
+        if (fieldValue != null && !isSetByYaml) {
           Preconditions.checkState(
-              encryptedRefField.get(object) == null, "both encrypted and non encrypted field set for " + object);
+              encryptedRefFieldValue == null, "both encrypted and non encrypted field set for " + object);
           encryptedDataDetails.add(EncryptedDataDetail.builder()
                                        .encryptedData(EncryptedRecordData.builder()
                                                           .encryptionType(LOCAL)
                                                           .encryptionKey(object.getAccountId())
-                                                          .encryptedValue((char[]) f.get(object))
+                                                          .encryptedValue((char[]) fieldValue)
                                                           .build())
                                        .fieldName(f.getName())
                                        .build());
-        } else {
-          String id = (String) encryptedRefField.get(object);
-          if (WingsReflectionUtils.isSetByYaml(object, encryptedRefField)) {
+        } else if (encryptedRefFieldValue != null) {
+          // PL-2902: Avoid decryption of null value encrypted fields.
+          String id = encryptedRefFieldValue;
+          if (isSetByYaml) {
             id = id.substring(id.indexOf(':') + 1);
           }
 
@@ -1465,7 +1469,7 @@ public class SecretManagerImpl implements SecretManager {
                                                  .filter(ENCRYPTED_VALUE_KEY, uuId)
                                                  .asList();
     if (!serviceVariables.isEmpty()) {
-      String reason = "Can't delete this secret because it is still being used in the Harness component(s): "
+      String reason = "Can't delete this secret because it is still being used in service variable(s): "
           + serviceVariables.stream().map(ServiceVariable::getName).collect(joining(", "))
           + ". Please remove the usages of this secret and try again.";
       throw new KmsOperationException(reason, USER);

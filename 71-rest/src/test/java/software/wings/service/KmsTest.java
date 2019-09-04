@@ -487,7 +487,7 @@ public class KmsTest extends WingsBaseTest {
 
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
-    assertThat(((ArtifactoryConfig) savedAttribute.getValue()).getEncryptedPassword()).isNotNull();
+    assertThat(((ArtifactoryConfig) savedAttribute.getValue()).getEncryptedPassword()).isNull();
     assertThat(((ArtifactoryConfig) savedAttribute.getValue()).getPassword()).isNull();
     encryptionService.decrypt((EncryptableSetting) savedAttribute.getValue(),
         secretManager.getEncryptionDetails((EncryptableSetting) savedAttribute.getValue(), workflowExecutionId, appId));
@@ -496,7 +496,7 @@ public class KmsTest extends WingsBaseTest {
     assertThat(((ArtifactoryConfig) savedAttribute.getValue()).getEncryptedPassword()).isNull();
     assertThat(((ArtifactoryConfig) savedAttribute.getValue()).getPassword()).isNull();
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class);
-    assertThat(query.count()).isEqualTo(1);
+    assertThat(query.count()).isEqualTo(0);
   }
 
   @Test
