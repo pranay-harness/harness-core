@@ -51,6 +51,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.states.PhaseStepSubWorkflow;
 import software.wings.sm.states.PhaseSubWorkflow;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -307,6 +308,19 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       return null;
     }
 
+    // we need at least one specific failure else we assume that we should apply in every case
+    if (isNotEmpty(failureStrategy.getFailureTypes())) {
+      if (isEmpty(executionEvent.getFailureTypes())) {
+        logger.error("Defaulting to accepting the action. "
+                + "the propagated failure types for phase: {}, state {} are unknown. ",
+            phaseSubWorkflow == null ? "n/a" : phaseSubWorkflow.getName(), executionEvent.getState().getName());
+      } else {
+        if (Collections.disjoint(executionEvent.getFailureTypes(), failureStrategy.getFailureTypes())) {
+          return null;
+        }
+      }
+    }
+
     RepairActionCode repairActionCode = failureStrategy.getRepairActionCode();
     if (repairActionCode == null) {
       return null;
@@ -519,6 +533,10 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
           getRollbackProvisionerAdviceIfNeeded(orchestrationWorkflow.getPreDeploymentSteps());
       if (rollbackProvisionerAdvice != null) {
         return rollbackProvisionerAdvice;
+      }
+
+      if (!orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().containsKey(phaseSubWorkflow.getId())) {
+        return null;
       }
 
       return anExecutionEventAdvice()

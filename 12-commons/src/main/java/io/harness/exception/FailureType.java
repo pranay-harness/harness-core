@@ -1,6 +1,8 @@
 package io.harness.exception;
 
 public enum FailureType {
+  EXPIRED,
+  DELEGATE_PROVISIONING,
   CONNECTIVITY,
   AUTHENTICATION,
   VERIFICATION_FAILURE,

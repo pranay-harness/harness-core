@@ -90,6 +90,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.CriticalExpressionEvaluationException;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.FailureType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
@@ -187,6 +188,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1676,7 +1678,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         logger.info("Task {}: {}", taskId, errorMessage);
         ResponseData response;
         if (delegateTask.isAsync()) {
-          response = ErrorNotifyResponseData.builder().errorMessage(errorMessage).build();
+          response = ErrorNotifyResponseData.builder()
+                         .failureTypes(EnumSet.<FailureType>of(FailureType.DELEGATE_PROVISIONING))
+                         .errorMessage(errorMessage)
+                         .build();
         } else {
           InvalidRequestException exception = new InvalidRequestException(errorMessage, USER);
           response = RemoteMethodReturnValueData.builder().exception(exception).build();
