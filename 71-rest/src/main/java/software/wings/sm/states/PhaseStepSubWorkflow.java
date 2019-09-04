@@ -12,7 +12,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
-import static software.wings.api.AwsCodeDeployRequestElement.AwsCodeDeployRequestElementBuilder.anAwsCodeDeployRequestElement;
 import static software.wings.api.AwsLambdaContextElement.Builder.anAwsLambdaContextElement;
 import static software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBuilder.aPhaseStepExecutionData;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
@@ -212,9 +211,9 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         }
         CommandStepExecutionSummary commandStepExecutionSummary = (CommandStepExecutionSummary) first.get();
         AwsCodeDeployRequestElement deployRequestElement =
-            anAwsCodeDeployRequestElement()
-                .withCodeDeployParams(commandStepExecutionSummary.getCodeDeployParams())
-                .withOldCodeDeployParams(commandStepExecutionSummary.getOldCodeDeployParams())
+            AwsCodeDeployRequestElement.builder()
+                .codeDeployParams(commandStepExecutionSummary.getCodeDeployParams())
+                .oldCodeDeployParams(commandStepExecutionSummary.getOldCodeDeployParams())
                 .build();
         return singletonList(deployRequestElement);
       }
