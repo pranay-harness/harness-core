@@ -14,6 +14,7 @@ import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.utils.AccountPermissionUtils;
 
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -57,7 +58,16 @@ public class KmsResource {
   @Path("/delete-kms")
   @Timed
   @ExceptionMetered
+  // TODO: Delete this method once UI switched to use the new endpoint below.
   public RestResponse<Boolean> deleteKmsConfig(
+      @QueryParam("accountId") final String accountId, @QueryParam("kmsConfigId") final String kmsConfigId) {
+    return new RestResponse<>(kmsService.deleteKmsConfig(accountId, kmsConfigId));
+  }
+
+  @DELETE
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> deleteKmsConfig2(
       @QueryParam("accountId") final String accountId, @QueryParam("kmsConfigId") final String kmsConfigId) {
     return new RestResponse<>(kmsService.deleteKmsConfig(accountId, kmsConfigId));
   }
