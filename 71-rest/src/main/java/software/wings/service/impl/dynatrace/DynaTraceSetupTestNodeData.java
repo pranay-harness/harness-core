@@ -9,8 +9,6 @@ import software.wings.api.InstanceElement;
 import software.wings.service.impl.analysis.SetupTestNodeData;
 import software.wings.sm.StateType;
 
-import java.util.Set;
-
 /**
  * Created by Pranjal on 09/12/2018
  */
@@ -19,12 +17,12 @@ import java.util.Set;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class DynaTraceSetupTestNodeData extends SetupTestNodeData {
-  private Set<String> serviceMethods;
+  private String serviceMethods;
 
   @Builder
   public DynaTraceSetupTestNodeData(String appId, String settingId, String instanceName, boolean isServiceLevel,
       InstanceElement instanceElement, String hostExpression, String workflowId, long fromTime, long toTime,
-      Set<String> serviceMethods, String guid) {
+      String serviceMethods, String guid) {
     super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid,
         StateType.DYNA_TRACE, fromTime, toTime);
     this.serviceMethods = serviceMethods;

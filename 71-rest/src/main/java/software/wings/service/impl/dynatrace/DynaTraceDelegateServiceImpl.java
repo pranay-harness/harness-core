@@ -64,7 +64,8 @@ public class DynaTraceDelegateServiceImpl implements DynaTraceDelegateService {
       DynaTraceMetricDataRequest dataRequest, List<EncryptedDataDetail> encryptedDataDetails,
       ThirdPartyApiCallLog apiCallLog) throws IOException {
     Preconditions.checkNotNull(apiCallLog);
-    apiCallLog.setTitle("Fetching metric data from " + dynaTraceConfig.getDynaTraceUrl());
+    apiCallLog.setTitle(
+        "Fetching metric data for " + dataRequest.getTimeseriesId() + " from " + dynaTraceConfig.getDynaTraceUrl());
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
                                      .name("url")
@@ -109,16 +110,17 @@ public class DynaTraceDelegateServiceImpl implements DynaTraceDelegateService {
       ThirdPartyApiCallLog thirdPartyApiCallLog) {
     final List<DynaTraceMetricDataResponse> metricDataResponses = new ArrayList<>();
     List<Callable<DynaTraceMetricDataResponse>> callables = new ArrayList<>();
-    for (DynaTraceTimeSeries timeSeries : Lists.newArrayList(DynaTraceTimeSeries.values())) {
+    for (DynaTraceTimeSeries timeSeries : Lists.newArrayList(DynaTraceTimeSeries.REQUEST_PER_MINUTE)) {
       callables.add(() -> {
-        DynaTraceMetricDataRequest dataRequest = DynaTraceMetricDataRequest.builder()
-                                                     .timeseriesId(timeSeries.getTimeseriesId())
-                                                     .entities(setupTestNodeData.getServiceMethods())
-                                                     .aggregationType(timeSeries.getAggregationType())
-                                                     .percentile(timeSeries.getPercentile())
-                                                     .startTimestamp(setupTestNodeData.getFromTime())
-                                                     .endTimestamp(setupTestNodeData.getToTime())
-                                                     .build();
+        DynaTraceMetricDataRequest dataRequest =
+            DynaTraceMetricDataRequest.builder()
+                .timeseriesId(timeSeries.getTimeseriesId())
+                .entities(DynatraceState.splitServiceMethods(setupTestNodeData.getServiceMethods()))
+                .aggregationType(timeSeries.getAggregationType())
+                .percentile(timeSeries.getPercentile())
+                .startTimestamp(setupTestNodeData.getFromTime())
+                .endTimestamp(setupTestNodeData.getToTime())
+                .build();
 
         DynaTraceMetricDataResponse metricDataResponse =
             fetchMetricData(config, dataRequest, encryptionDetails, thirdPartyApiCallLog);
