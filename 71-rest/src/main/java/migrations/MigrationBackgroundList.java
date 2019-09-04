@@ -9,7 +9,6 @@ import migrations.all.AddIsDefaultFlagToUserGroup;
 import migrations.all.AddOrchestrationToWorkflows;
 import migrations.all.AddStateMachineToWorkflowExecutions;
 import migrations.all.AddValidUntilToCommandLog;
-import migrations.all.AddValidUntilToTimeSeriesRawData;
 import migrations.all.AddValidUntilToWorkflowExecution;
 import migrations.all.ApiKeysSetNameMigration;
 import migrations.all.CleanupOrphanInstances;
@@ -105,7 +104,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(51, BaseMigration.class))
         .add(Pair.of(52, ApiKeysSetNameMigration.class))
         .add(Pair.of(53, DeleteStaleSlackConfigs.class))
-        .add(Pair.of(54, AddValidUntilToTimeSeriesRawData.class))
+        .add(Pair.of(54, BaseMigration.class))
         .build();
   }
 }
