@@ -80,10 +80,11 @@ public class AwsLambdaFunctionProcessor implements ExpressionProcessor {
       return null;
     }
 
+    List<AwsLambdaFunctionElement> awsLambdaFunctionElementList = new ArrayList<>();
     if (isEmpty(awsLambdaContextElement.getFunctionArns())) {
       logger.error("awsLambdaContextElement.getFunctionArns() is null or empty in the context");
+      return awsLambdaFunctionElementList;
     }
-    List<AwsLambdaFunctionElement> awsLambdaFunctionElementList = new ArrayList<>();
     awsLambdaContextElement.getFunctionArns().forEach(functionMeta -> {
       awsLambdaFunctionElementList.add(anAwsLambdaFunctionElement()
                                            .withUuid(functionMeta.getFunctionArn())

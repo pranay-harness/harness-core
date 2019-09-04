@@ -334,10 +334,10 @@ public class AwsLambdaHelperServiceDelegateImpl
           format("Created Function Code Sha256: [%s]", createFunctionResult.getCodeSha256()), INFO);
       logCallback.saveExecutionLog(format("Created Function ARN: [%s]", createFunctionResult.getFunctionArn()), INFO);
       createFunctionAlias(lambdaClient, functionName, createFunctionResult.getVersion(), evaluatedAliases, logCallback);
-      functionMeta = FunctionMeta.newBuilder()
-                         .withFunctionArn(createFunctionResult.getFunctionArn())
-                         .withFunctionName(createFunctionResult.getFunctionName())
-                         .withVersion(createFunctionResult.getVersion())
+      functionMeta = FunctionMeta.builder()
+                         .functionArn(createFunctionResult.getFunctionArn())
+                         .functionName(createFunctionResult.getFunctionName())
+                         .version(createFunctionResult.getVersion())
                          .build();
     } else {
       logCallback.saveExecutionLog(format("Function: [%s] exists. Update and Publish", functionName));
@@ -414,10 +414,10 @@ public class AwsLambdaHelperServiceDelegateImpl
       }
       tagExistingFunction(functionResult, functionParams.getFunctionTags(), logCallback, lambdaClient);
 
-      functionMeta = FunctionMeta.newBuilder()
-                         .withFunctionArn(publishVersionResult.getFunctionArn())
-                         .withFunctionName(publishVersionResult.getFunctionName())
-                         .withVersion(publishVersionResult.getVersion())
+      functionMeta = FunctionMeta.builder()
+                         .functionArn(publishVersionResult.getFunctionArn())
+                         .functionName(publishVersionResult.getFunctionName())
+                         .version(publishVersionResult.getVersion())
                          .build();
     }
     logCallback.saveExecutionLog(format("Successfully deployed lambda function: [%s]", functionName));

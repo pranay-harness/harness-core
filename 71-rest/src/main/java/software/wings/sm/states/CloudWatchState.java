@@ -149,9 +149,11 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
     Map<String, String> lambdaFunctions = new HashMap<>();
     if (shouldDoLambdaVerification && getDeploymentType(context).equals(DeploymentType.AWS_LAMBDA)) {
       AwsLambdaContextElement elements = context.getContextElement(ContextElementType.PARAM);
-      elements.getFunctionArns().forEach(contextElement -> {
-        lambdaFunctions.put(contextElement.getFunctionName(), contextElement.getFunctionArn());
-      });
+      if (isNotEmpty(elements.getFunctionArns())) {
+        elements.getFunctionArns().forEach(contextElement -> {
+          lambdaFunctions.put(contextElement.getFunctionName(), contextElement.getFunctionArn());
+        });
+      }
     }
 
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
