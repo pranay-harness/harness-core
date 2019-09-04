@@ -123,13 +123,17 @@ public class DashboardAuthHandler {
       if (isAccountAdmin(userPermissionInfo)) {
         dashboardSettings.setCanUpdate(true);
         dashboardSettings.setCanDelete(true);
-        return;
       }
 
       Set<Action> actions = dashboardPermissions.get(dashboardSettings.getUuid());
       if (isNotEmpty(actions)) {
-        dashboardSettings.setCanUpdate(actions.contains(Action.UPDATE));
-        dashboardSettings.setCanDelete(actions.contains(Action.DELETE));
+        // If user canUpdate/canDelete from account admin privilege. It should not be taken away because of
+        // shared dashboard settings.
+        dashboardSettings.setCanUpdate(dashboardSettings.isCanUpdate() || actions.contains(Action.UPDATE));
+        dashboardSettings.setCanDelete(dashboardSettings.isCanDelete() || actions.contains(Action.DELETE));
+        // PL-3325: Should single out explicitly shared custom dashboads, it's shared if not owner when
+        // it got permissions from shared user groups.
+        dashboardSettings.setShared(!dashboardSettings.isOwner());
       }
     });
   }

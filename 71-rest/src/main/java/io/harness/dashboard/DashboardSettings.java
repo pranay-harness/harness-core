@@ -36,6 +36,7 @@ public class DashboardSettings
   private String description;
   private String name;
   @Transient private boolean isOwner;
+  @Transient private boolean isShared;
   @Transient private boolean canUpdate;
   @Transient private boolean canDelete;
   private List<DashboardAccessPermissions> permissions;
