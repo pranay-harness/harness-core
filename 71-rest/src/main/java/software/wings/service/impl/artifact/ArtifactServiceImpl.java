@@ -9,6 +9,7 @@ import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -55,6 +56,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.BaseFile;
 import software.wings.beans.FeatureName;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactKeys;
@@ -106,7 +108,8 @@ public class ArtifactServiceImpl implements ArtifactService {
           ArtifactStreamType.ACR.name(), ArtifactStreamType.AMAZON_S3.name(), ArtifactStreamType.AMI.name());
 
   private static final String DEFAULT_ARTIFACT_FILE_NAME = "ArtifactFile";
-  private static final int ARTIFACT_RETENTION_SIZE = 25;
+
+  public static final int ARTIFACT_RETENTION_SIZE = 25;
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FileService fileService;
@@ -575,10 +578,10 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Override
   public void deleteArtifacts(int retentionSize) {
     try (HIterator<ArtifactStream> artifactStreams =
-             new HIterator(wingsPersistence.createQuery(ArtifactStream.class)
-                               .project(ArtifactStreamKeys.artifactStreamType, true)
-                               .project(ArtifactStreamKeys.metadataOnly, true)
-                               .fetch())) {
+             new HIterator<>(wingsPersistence.createQuery(ArtifactStream.class)
+                                 .project(ArtifactStreamKeys.artifactStreamType, true)
+                                 .project(ArtifactStreamKeys.metadataOnly, true)
+                                 .fetch())) {
       for (ArtifactStream artifactStream : artifactStreams) {
         deleteArtifactsWithContents(retentionSize, artifactStream);
       }
@@ -595,35 +598,75 @@ public class ArtifactServiceImpl implements ArtifactService {
                                               .project(ArtifactKeys.artifactFiles, true)
                                               .filter(ArtifactKeys.artifactStreamId, artifactStream.getUuid())
                                               .field(ArtifactKeys.contentStatus)
-                                              .hasAnyOf(asList(DOWNLOADED))
+                                              .hasAnyOf(singletonList(DOWNLOADED))
                                               .order(Sort.descending(CREATED_AT_KEY))
                                               .asList(new FindOptions().skip(retentionSize));
-    if (isNotEmpty(toBeDeletedArtifacts)) {
-      toBeDeletedArtifacts =
-          toBeDeletedArtifacts.stream().filter(artifact -> isNotEmpty(artifact.getArtifactFiles())).collect(toList());
-      logger.info("Deleting artifacts for artifactStreamId [{}] of size: [{}]", artifactStream.getUuid(),
-          toBeDeletedArtifacts.size());
-      deleteArtifacts(artifactStream.getUuid(), toBeDeletedArtifacts);
+    if (isEmpty(toBeDeletedArtifacts)) {
+      return;
     }
+
+    toBeDeletedArtifacts =
+        toBeDeletedArtifacts.stream().filter(artifact -> isNotEmpty(artifact.getArtifactFiles())).collect(toList());
+    if (isEmpty(toBeDeletedArtifacts)) {
+      return;
+    }
+
+    if (NEXUS.name().equals(artifactStream.getArtifactStreamType())) {
+      // NOTE: Do not delete artifacts from NEXUS artifact streams as we don't limit the count to
+      // ARTIFACT_RETENTION_SIZE while fetching builds from NEXUS. So artifacts can get collected and then deleted and
+      // collected again. This leads to duplicate collections for the same artifact and more importantly we can possibly
+      // execute 'On New Artifact' triggers on older artifacts. As a workaround for NEXUS artifact streams, we simply
+      // change the content status from DOWNLOADED to NOT_DOWNLOADED and delete the artifact files.
+      //
+      // NOTE: The repository format here is not docker as we have already filtered by artifactStream.isMetadataOnly and
+      // checked that the artifact has files.
+      List<String> toBeDeletedArtifactIds = toBeDeletedArtifacts.stream().map(Artifact::getUuid).collect(toList());
+      updateNexusStatusAfterDeletion(toBeDeletedArtifactIds);
+      deleteArtifactFiles(artifactStream.getUuid(), toBeDeletedArtifacts);
+      return;
+    }
+
+    logger.info("Deleting artifacts for artifactStreamId: [{}] of size: [{}]", artifactStream.getUuid(),
+        toBeDeletedArtifacts.size());
+    deleteArtifacts(artifactStream.getUuid(), toBeDeletedArtifacts);
+  }
+
+  private void updateNexusStatusAfterDeletion(List<String> toBeDeletedArtifactIds) {
+    Query<Artifact> query =
+        wingsPersistence.createQuery(Artifact.class, excludeAuthority).field(ID_KEY).in(toBeDeletedArtifactIds);
+    UpdateOperations<Artifact> ops = wingsPersistence.createUpdateOperations(Artifact.class);
+    setUnset(ops, ArtifactKeys.contentStatus, NOT_DOWNLOADED);
+    setUnset(ops, ArtifactKeys.artifactFiles, null);
+    wingsPersistence.update(query, ops);
   }
 
   private void deleteArtifacts(String artifactStreamId, List<Artifact> toBeDeletedArtifacts) {
     try {
-      List<String> artifactFileIds = toBeDeletedArtifacts.stream()
-                                         .flatMap(artifact -> artifact.getArtifactFiles().stream())
-                                         .filter(artifactFile -> artifactFile.getFileUuid() != null)
-                                         .map(artifactFile -> artifactFile.getFileUuid())
-                                         .collect(Collectors.toList());
+      List<String> artifactFileIds = getArtifactFileIds(toBeDeletedArtifacts);
       if (isNotEmpty(artifactFileIds)) {
         Object[] artifactIds = toBeDeletedArtifacts.stream().map(Artifact::getUuid).toArray();
         deleteArtifacts(artifactIds, artifactFileIds);
       }
     } catch (Exception ex) {
-      logger.warn(String.format("Failed to purge(delete) artifacts for artifactStreamId %s of size: %s",
-                      artifactStreamId, toBeDeletedArtifacts.size()),
+      logger.warn(String.format("Failed to delete artifacts for artifactStreamId: [%s] of size: [%s]", artifactStreamId,
+                      toBeDeletedArtifacts.size()),
           ex);
+      return;
     }
-    logger.info("Deleting artifacts for artifactStreamId {} of size: {} success", artifactStreamId,
+    logger.info("Successfully deleted artifacts for artifactStreamId: [{}] of size: [{}]", artifactStreamId,
+        toBeDeletedArtifacts.size());
+  }
+
+  private void deleteArtifactFiles(String artifactStreamId, List<Artifact> toBeDeletedArtifacts) {
+    try {
+      deleteArtifactFiles(getArtifactFileIds(toBeDeletedArtifacts));
+    } catch (Exception ex) {
+      logger.warn(String.format("Failed to delete artifacts for artifactStreamId: [%s] of size: [%s]", artifactStreamId,
+                      toBeDeletedArtifacts.size()),
+          ex);
+      return;
+    }
+    logger.info("Successfully deleted artifact files for artifactStreamId: [{}] of size: [{}]", artifactStreamId,
         toBeDeletedArtifacts.size());
   }
 
@@ -631,11 +674,24 @@ public class ArtifactServiceImpl implements ArtifactService {
     logger.info("Deleting artifactIds of artifacts {}", artifactIds);
     wingsPersistence.getCollection(DEFAULT_STORE, "artifacts")
         .remove(new BasicDBObject("_id", new BasicDBObject("$in", artifactIds)));
-    if (isNotEmpty(artifactFileIds)) {
-      for (String fileId : artifactFileIds) {
-        fileService.deleteFile(fileId, ARTIFACTS);
-      }
+    deleteArtifactFiles(artifactFileIds);
+  }
+
+  private void deleteArtifactFiles(List<String> artifactFileIds) {
+    if (isEmpty(artifactFileIds)) {
+      return;
     }
+    for (String fileId : artifactFileIds) {
+      fileService.deleteFile(fileId, ARTIFACTS);
+    }
+  }
+
+  private List<String> getArtifactFileIds(List<Artifact> artifacts) {
+    return artifacts.stream()
+        .flatMap(artifact -> artifact.getArtifactFiles().stream())
+        .filter(artifactFile -> artifactFile.getFileUuid() != null)
+        .map(BaseFile::getFileUuid)
+        .collect(Collectors.toList());
   }
 
   public Query<Artifact> prepareArtifactWithMetadataQuery(ArtifactStream artifactStream) {

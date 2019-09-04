@@ -8,6 +8,7 @@ import static io.harness.network.Http.connectableHttpUrl;
 import static java.util.stream.Collectors.toList;
 import static software.wings.helpers.ext.jenkins.JobDetails.JobParameter;
 import static software.wings.helpers.ext.jenkins.model.ParamPropertyType.BooleanParameterDefinition;
+import static software.wings.service.impl.artifact.ArtifactServiceImpl.ARTIFACT_RETENTION_SIZE;
 import static software.wings.utils.Validator.equalCheck;
 
 import com.google.common.collect.Lists;
@@ -61,7 +62,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   @Override
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       JenkinsConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    return getBuildDetails(artifactStreamAttributes, appId, config, encryptionDetails, 25);
+    return getBuildDetails(artifactStreamAttributes, appId, config, encryptionDetails, ARTIFACT_RETENTION_SIZE);
   }
 
   @Override

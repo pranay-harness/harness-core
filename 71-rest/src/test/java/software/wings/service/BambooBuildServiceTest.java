@@ -3,6 +3,7 @@ package software.wings.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
+import static software.wings.service.impl.artifact.ArtifactServiceImpl.ARTIFACT_RETENTION_SIZE;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_NAME;
@@ -56,7 +57,7 @@ public class BambooBuildServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldGetBuilds() {
-    when(bambooService.getBuilds(bambooConfig, null, BUILD_JOB_NAME, 25))
+    when(bambooService.getBuilds(bambooConfig, null, BUILD_JOB_NAME, ARTIFACT_RETENTION_SIZE))
         .thenReturn(
             Lists.newArrayList(aBuildDetails().withNumber("10").build(), aBuildDetails().withNumber("9").build()));
     List<BuildDetails> builds =

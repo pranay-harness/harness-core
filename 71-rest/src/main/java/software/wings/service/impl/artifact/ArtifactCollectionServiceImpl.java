@@ -17,6 +17,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
+import static software.wings.service.impl.artifact.ArtifactServiceImpl.ARTIFACT_RETENTION_SIZE;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -194,7 +195,8 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
         artifactStreamType, artifactStream.getSourceName());
     List<BuildDetails> builds;
     if (ARTIFACTORY.name().equals(artifactStreamType)) {
-      builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId(), 25);
+      builds =
+          buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId(), ARTIFACT_RETENTION_SIZE);
     } else {
       builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
     }

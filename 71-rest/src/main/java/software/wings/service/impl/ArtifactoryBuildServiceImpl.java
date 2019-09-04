@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.network.Http.connectableHttpUrl;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.service.impl.artifact.ArtifactServiceImpl.ARTIFACT_RETENTION_SIZE;
 import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.Validator.equalCheck;
 
@@ -57,7 +58,7 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
       } else {
         return artifactoryService.getFilePaths(artifactoryConfig, encryptionDetails,
             artifactStreamAttributes.getJobName(), artifactStreamAttributes.getArtifactPattern(),
-            artifactStreamAttributes.getRepositoryType(), limit == -1 ? 25 : limit);
+            artifactStreamAttributes.getRepositoryType(), limit == -1 ? ARTIFACT_RETENTION_SIZE : limit);
       }
     } else {
       if (artifactStreamAttributes.getRepositoryType().equals(RepositoryType.docker.name())) {
@@ -66,7 +67,7 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
       } else {
         return artifactoryService.getFilePaths(artifactoryConfig, encryptionDetails,
             artifactStreamAttributes.getJobName(), artifactStreamAttributes.getArtifactPattern(),
-            artifactStreamAttributes.getRepositoryType(), limit == -1 ? 25 : limit);
+            artifactStreamAttributes.getRepositoryType(), limit == -1 ? ARTIFACT_RETENTION_SIZE : limit);
       }
     }
   }
