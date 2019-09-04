@@ -3,7 +3,9 @@ package software.wings.sm;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.govern.Switch.unhandled;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.ServiceVariable.Type.TEXT;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
@@ -11,6 +13,7 @@ import static software.wings.sm.ContextElement.ARTIFACT;
 import static software.wings.sm.ContextElement.ENVIRONMENT_VARIABLE;
 import static software.wings.sm.ContextElement.SAFE_DISPLAY_SERVICE_VARIABLE;
 import static software.wings.sm.ContextElement.SERVICE_VARIABLE;
+import static software.wings.utils.KubernetesConvention.getNormalizedInfraMappingIdLabelValue;
 
 import com.google.common.base.Splitter;
 import com.google.inject.Inject;
@@ -30,15 +33,27 @@ import io.harness.expression.VariableResolverTracker;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Key;
+import software.wings.api.DeploymentType;
+import software.wings.api.InfraMappingElement;
+import software.wings.api.InfraMappingElement.Helm;
+import software.wings.api.InfraMappingElement.InfraMappingElementBuilder;
+import software.wings.api.InfraMappingElement.Kubernetes;
+import software.wings.api.InfraMappingElement.Pcf;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceArtifactElement;
 import software.wings.beans.Application;
+import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.DeploymentExecutionContext;
+import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.FeatureName;
+import software.wings.beans.GcpKubernetesInfrastructureMapping;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
@@ -54,6 +69,8 @@ import software.wings.service.impl.SweepingOutputServiceImpl;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode;
 import software.wings.service.intfc.ServiceVariableService;
@@ -90,6 +107,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   @Inject private transient ManagerDecryptionService managerDecryptionService;
   @Inject private transient ManagerExpressionEvaluator evaluator;
   @Inject private transient SecretManager secretManager;
+  @Inject private transient InfrastructureMappingService infrastructureMappingService;
+  @Inject private transient ServiceResourceService serviceResourceService;
   @Inject private transient ServiceTemplateService serviceTemplateService;
   @Inject private transient ServiceVariableService serviceVariableService;
   @Inject private transient SettingsService settingsService;
@@ -880,5 +899,78 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     final SweepingOutputBuilder sweepingOutputBuilder = SweepingOutputServiceImpl.prepareSweepingOutputBuilder(
         getAppId(), pipelineExecutionId, workflowExecutionId, phaseExecutionId, stateExecutionId, sweepingOutputScope);
     return sweepingOutputBuilder.uuid(generateUuid());
+  }
+
+  public void populateNamespaceInInfraMappingElement(
+      InfrastructureMapping infrastructureMapping, InfraMappingElementBuilder builder) {
+    DeploymentType deploymentType =
+        serviceResourceService.getDeploymentType(infrastructureMapping, null, infrastructureMapping.getServiceId());
+
+    if ((DeploymentType.KUBERNETES.equals(deploymentType)) || (DeploymentType.HELM.equals(deploymentType))) {
+      String namespace = null;
+
+      if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
+        namespace = ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getNamespace();
+      } else if (infrastructureMapping instanceof AzureKubernetesInfrastructureMapping) {
+        namespace = ((AzureKubernetesInfrastructureMapping) infrastructureMapping).getNamespace();
+      } else if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
+        namespace = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getNamespace();
+      } else {
+        unhandled(infrastructureMapping.getInfraMappingType());
+      }
+
+      if (isBlank(namespace)) {
+        namespace = "default";
+      }
+
+      builder.kubernetes(Kubernetes.builder()
+                             .namespace(namespace)
+                             .infraId(getNormalizedInfraMappingIdLabelValue(infrastructureMapping.getUuid()))
+                             .build());
+    }
+  }
+
+  public void populateDeploymentSpecificInfoInInfraMappingElement(
+      InfrastructureMapping infrastructureMapping, PhaseElement phaseElement, InfraMappingElementBuilder builder) {
+    String infraMappingId = phaseElement.getInfraMappingId();
+
+    if (DeploymentType.PCF.name().equals(phaseElement.getDeploymentType())) {
+      PcfInfrastructureMapping pcfInfrastructureMapping = (PcfInfrastructureMapping) infrastructureMapping;
+
+      String route = isNotEmpty(pcfInfrastructureMapping.getRouteMaps())
+          ? pcfInfrastructureMapping.getRouteMaps().get(0)
+          : StringUtils.EMPTY;
+      String tempRoute = isNotEmpty(pcfInfrastructureMapping.getTempRouteMap())
+          ? pcfInfrastructureMapping.getTempRouteMap().get(0)
+          : StringUtils.EMPTY;
+
+      builder.pcf(Pcf.builder().route(route).tempRoute(tempRoute).build());
+    } else if (DeploymentType.HELM.name().equals(phaseElement.getDeploymentType())) {
+      builder.helm(Helm.builder()
+                       .shortId(infraMappingId.substring(0, 7).toLowerCase().replace('-', 'z').replace('_', 'z'))
+                       .build());
+    }
+  }
+
+  public InfraMappingElement fetchInfraMappingElement() {
+    PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+
+    if (phaseElement == null) {
+      return null;
+    }
+
+    String appId = getAppId();
+    String infraMappingId = phaseElement.getInfraMappingId();
+
+    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
+    if (infrastructureMapping == null) {
+      return null;
+    }
+
+    InfraMappingElementBuilder builder = InfraMappingElement.builder().name(infrastructureMapping.getName());
+    populateNamespaceInInfraMappingElement(infrastructureMapping, builder);
+    populateDeploymentSpecificInfoInInfraMappingElement(infrastructureMapping, phaseElement, builder);
+
+    return builder.build();
   }
 }
