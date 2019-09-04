@@ -55,6 +55,7 @@ public enum WebhookSource {
 
   public enum BitBucketEventType {
     PING("Ping", "ping", WebhookEventType.PING),
+    DIAGNOSTICS_PING("Diagnostics Ping", "diagnostics:ping", WebhookEventType.PING),
     ALL("All", "all", WebhookEventType.ANY),
 
     ANY("Any", "any", WebhookEventType.ANY),

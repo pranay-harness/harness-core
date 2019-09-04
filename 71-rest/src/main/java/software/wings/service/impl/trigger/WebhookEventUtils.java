@@ -1,6 +1,7 @@
 package software.wings.service.impl.trigger;
 
 import static io.harness.exception.WingsException.USER;
+import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -21,6 +22,7 @@ import com.google.inject.Singleton;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.trigger.PayloadSource.Type;
+import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
 import software.wings.beans.trigger.WebhookSource.GitHubEventType;
@@ -275,5 +277,31 @@ public class WebhookEventUtils {
       logger.warn(format("Failed to validate push event for %s with headers %s", webhookSource, httpHeaders));
       throw ex;
     }
+  }
+
+  public boolean isGitPingEvent(HttpHeaders httpHeaders) {
+    WebhookSource webhookSource = obtainWebhookSource(httpHeaders);
+    WebhookEventType webhookEventType = null;
+
+    switch (webhookSource) {
+      case BITBUCKET:
+        BitBucketEventType bitBucketEventType = getBitBucketEventType(httpHeaders);
+        if (bitBucketEventType != null) {
+          webhookEventType = bitBucketEventType.getEventType();
+        }
+        break;
+
+      case GITHUB:
+        GitHubEventType gitHubEventType = getGitHubEventType(httpHeaders);
+        if (gitHubEventType != null) {
+          webhookEventType = gitHubEventType.getEventType();
+        }
+        break;
+
+      default:
+        noop();
+    }
+
+    return WebhookEventType.PING.equals(webhookEventType);
   }
 }
