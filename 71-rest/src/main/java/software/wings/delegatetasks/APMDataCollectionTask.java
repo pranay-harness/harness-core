@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.common.VerificationConstants.URL_STRING;
+import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDER;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
@@ -198,8 +199,8 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
         result = result.replace("${end_time_seconds}", String.valueOf(endTime / 1000L));
       }
 
-      if (result.contains("${host}")) {
-        result = result.replace("${host}", host);
+      if (result.contains(VERIFICATION_HOST_PLACEHOLDER)) {
+        result = result.replace(VERIFICATION_HOST_PLACEHOLDER, host);
       }
 
       Matcher matcher = pattern.matcher(result);
@@ -221,7 +222,8 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       long endTime = Timestamp.currentMinuteBoundary();
       currentEndTime = endTime;
 
-      if (TEST_HOST_NAME.equals(host) && strategy == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
+      if (!dataCollectionInfo.isCanaryUrlPresent() && TEST_HOST_NAME.equals(host)
+          && strategy == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
         for (int i = 0; i <= CANARY_DAYS_TO_COLLECT; i++) {
           String hostName = getHostNameForTestControl(i);
           long thisEndTime = endTime - TimeUnit.DAYS.toMillis(i);
@@ -328,16 +330,13 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
         AnalysisComparisonStrategy strategy) throws IOException {
       // OkHttp seems to have issues encoding backtick, so explictly encoding it.
       String[] urlAndBody = initialUrl.split(URL_BODY_APPENDER);
-      String body = "";
       initialUrl = urlAndBody[0];
-      if (urlAndBody.length > 1) {
-        body = urlAndBody[1];
-      }
+      final String body = urlAndBody.length > 1 ? urlAndBody[1] : "";
       if (initialUrl.contains("`")) {
         try {
           initialUrl = initialUrl.replaceAll("`", URLEncoder.encode("`", "UTF-8"));
         } catch (Exception e) {
-          logger.warn("Unsupported exception caught when encoding a back-tick");
+          logger.warn("Unsupported exception caught when encoding a back-tick", e);
         }
       }
       List<APMResponseParser.APMResponseData> responses = new ArrayList<>();
@@ -347,7 +346,33 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
       String hostKey = fetchHostKey(optionsBiMap);
       List<Callable<APMResponseParser.APMResponseData>> callabels = new ArrayList<>();
-      if (!isEmpty(hostKey) || initialUrl.contains("${host}") || (isNotEmpty(body) && body.contains("${host}"))) {
+      if (dataCollectionInfo.isCanaryUrlPresent()) {
+        dataCollectionInfo.getCanaryMetricInfos().forEach(canaryMetricInfo -> {
+          String url =
+              resolveDollarReferences(canaryMetricInfo.getUrl(), canaryMetricInfo.getHostName(), strategy).get(0);
+
+          List<String> resolvedBodies = resolveDollarReferences(body, TEST_HOST_NAME, strategy);
+          if (isEmpty(body)) {
+            callabels.add(
+                ()
+                    -> new APMResponseParser.APMResponseData(canaryMetricInfo.getHostName(), DEFAULT_GROUP_NAME,
+                        collect(getAPMRestClient(baseUrl).collect(url, headersBiMap, optionsBiMap), baseUrl + url),
+                        metricInfos));
+
+          } else {
+            resolvedBodies.forEach(resolvedBody -> {
+              callabels.add(
+                  ()
+                      -> new APMResponseParser.APMResponseData(canaryMetricInfo.getHostName(), DEFAULT_GROUP_NAME,
+                          collect(getAPMRestClient(baseUrl).postCollect(
+                                      url, headersBiMap, optionsBiMap, new JSONObject(resolvedBody).toMap()),
+                              baseUrl + url),
+                          metricInfos));
+            });
+          }
+        });
+      } else if (!isEmpty(hostKey) || initialUrl.contains(VERIFICATION_HOST_PLACEHOLDER)
+          || (isNotEmpty(body) && body.contains(VERIFICATION_HOST_PLACEHOLDER))) {
         if (initialUrl.contains(BATCH_TEXT)) {
           List<String> urlList = resolveBatchHosts(initialUrl);
           for (String url : urlList) {
@@ -481,6 +506,12 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
           TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
 
           List<APMResponseParser.APMResponseData> apmResponseDataList = new ArrayList<>();
+          if (isNotEmpty(dataCollectionInfo.getCanaryMetricInfos())) {
+            apmResponseDataList.addAll(collect(dataCollectionInfo.getBaseUrl(), dataCollectionInfo.getHeaders(),
+                dataCollectionInfo.getOptions(), dataCollectionInfo.getBaseUrl(),
+                dataCollectionInfo.getCanaryMetricInfos(), dataCollectionInfo.getStrategy()));
+          }
+
           for (Map.Entry<String, List<APMMetricInfo>> metricInfoEntry :
               dataCollectionInfo.getMetricEndpoints().entrySet()) {
             apmResponseDataList.addAll(collect(dataCollectionInfo.getBaseUrl(), dataCollectionInfo.getHeaders(),

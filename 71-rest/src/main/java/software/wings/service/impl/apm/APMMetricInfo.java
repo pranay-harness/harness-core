@@ -17,6 +17,8 @@ public class APMMetricInfo {
   private String tag;
   private Method method;
   private String body;
+  private String url;
+  private String hostName;
 
   @Data
   @Builder

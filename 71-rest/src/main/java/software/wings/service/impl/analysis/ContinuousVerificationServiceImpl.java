@@ -26,6 +26,7 @@ import static software.wings.common.VerificationConstants.ERROR_METRIC_NAMES;
 import static software.wings.common.VerificationConstants.HEARTBEAT_METRIC_NAME;
 import static software.wings.common.VerificationConstants.NEW_RELIC_DEEPLINK_FORMAT;
 import static software.wings.common.VerificationConstants.PROMETHEUS_DEEPLINK_FORMAT;
+import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDER;
 import static software.wings.common.VerificationConstants.getLogAnalysisStates;
 import static software.wings.common.VerificationConstants.getMetricAnalysisStates;
 import static software.wings.resources.PrometheusResource.renderFetchQueries;
@@ -49,6 +50,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.VerificationOperationException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -1360,7 +1362,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           return getLogNodeDataForDatadog(accountId, (DataDogSetupTestNodeData) fetchConfig);
         case APM_VERIFICATION:
           if (isEmpty(serverConfigId) || fetchConfig == null) {
-            throw new WingsException("Invalid Parameters passed while trying to get test data for APM");
+            throw new VerificationOperationException(
+                ErrorCode.APM_CONFIGURATION_ERROR, "Invalid Parameters passed while trying to get test data for APM");
           }
           SettingAttribute settingAttribute = settingsService.get(serverConfigId);
           APMFetchConfig apmFetchConfig = (APMFetchConfig) fetchConfig;
@@ -1377,10 +1380,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
           return getVerificationNodeDataResponse(accountId, apmValidateCollectorConfig, apmFetchConfig.getGuid());
         default:
-          throw new WingsException("Invalid StateType provided" + type);
+          throw new VerificationOperationException(
+              ErrorCode.APM_CONFIGURATION_ERROR, "Invalid StateType provided" + type);
       }
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR, USER).addParam("reason", e.getMessage());
+      throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, e.getMessage(), e, USER);
     }
   }
 
@@ -1412,8 +1416,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     // loop for each metric
     for (Entry<String, List<APMMetricInfo>> entry : metricInfoByQuery.entrySet()) {
       String url = entry.getKey();
-      if (url.contains("${host}")) {
-        url = url.replace("${host}", config.getInstanceElement().getHostName());
+      if (url.contains(VERIFICATION_HOST_PLACEHOLDER)) {
+        url = url.replace(VERIFICATION_HOST_PLACEHOLDER, config.getInstanceElement().getHostName());
       }
       apmValidateCollectorConfig.setUrl(url);
       VerificationNodeDataSetupResponse verificationNodeDataSetupResponse =

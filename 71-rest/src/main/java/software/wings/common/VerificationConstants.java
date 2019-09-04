@@ -81,6 +81,7 @@ public class VerificationConstants {
   public static final String IS_EXPERIMENTAL = "isExperimental";
   public static final String URL_STRING = "Url";
   public static final String CONNECTOR = ":";
+  public static final String VERIFICATION_HOST_PLACEHOLDER = "${host}";
 
   public static final String STATIC_CLOUD_WATCH_METRIC_URL = "/configs/cloudwatch_metrics.yml";
 
