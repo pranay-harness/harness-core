@@ -59,6 +59,7 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.FailureType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
@@ -459,7 +460,11 @@ public class StateMachineExecutor implements StateInspectionListener {
         MapperUtils.mapObject(stateExecutionInstance.getStateParams(), currentState);
       }
       injector.injectMembers(currentState);
-      invokeAdvisors(context, currentState);
+      invokeAdvisors(ExecutionEvent.builder()
+                         .failureTypes(EnumSet.noneOf(FailureType.class))
+                         .context(context)
+                         .state(currentState)
+                         .build());
       executionResponse = currentState.execute(context);
 
       final Map<String, Map<Object, Integer>> usage = context.getVariableResolverTracker().getUsage();
@@ -489,15 +494,16 @@ public class StateMachineExecutor implements StateInspectionListener {
     }
   }
 
-  private ExecutionEventAdvice invokeAdvisors(ExecutionContextImpl context, State state) {
-    List<ExecutionEventAdvisor> advisors = context.getStateExecutionInstance().getExecutionEventAdvisors();
+  private ExecutionEventAdvice invokeAdvisors(ExecutionEvent executionEvent) {
+    List<ExecutionEventAdvisor> advisors =
+        executionEvent.getContext().getStateExecutionInstance().getExecutionEventAdvisors();
     if (isEmpty(advisors)) {
       return null;
     }
 
     ExecutionEventAdvice executionEventAdvice = null;
     for (ExecutionEventAdvisor advisor : advisors) {
-      executionEventAdvice = advisor.onExecutionEvent(ExecutionEvent.builder().context(context).state(state).build());
+      executionEventAdvice = advisor.onExecutionEvent(executionEvent);
     }
     return executionEventAdvice;
   }
@@ -544,7 +550,11 @@ public class StateMachineExecutor implements StateInspectionListener {
           throw new WingsException("updateStateExecutionData failed", WingsException.NOBODY);
         }
       }
-      invokeAdvisors(context, currentState);
+      invokeAdvisors(ExecutionEvent.builder()
+                         .failureTypes(executionResponse.getFailureTypes())
+                         .context(context)
+                         .state(currentState)
+                         .build());
       if (status == RUNNING) {
         handleSpawningStateExecutionInstances(sm, stateExecutionInstance, executionResponse);
       }
@@ -557,7 +567,11 @@ public class StateMachineExecutor implements StateInspectionListener {
         return reloadStateExecutionInstanceAndCheckStatus(stateExecutionInstance);
       }
 
-      ExecutionEventAdvice executionEventAdvice = invokeAdvisors(context, currentState);
+      ExecutionEventAdvice executionEventAdvice = invokeAdvisors(ExecutionEvent.builder()
+                                                                     .failureTypes(executionResponse.getFailureTypes())
+                                                                     .context(context)
+                                                                     .state(currentState)
+                                                                     .build());
       if (executionEventAdvice != null) {
         return handleExecutionEventAdvice(context, stateExecutionInstance, status, executionEventAdvice);
       } else if (isPositiveStatus(status)) {
@@ -770,7 +784,12 @@ public class StateMachineExecutor implements StateInspectionListener {
     }
 
     try {
-      ExecutionEventAdvice executionEventAdvice = invokeAdvisors(context, currentState);
+      ExecutionEventAdvice executionEventAdvice =
+          invokeAdvisors(ExecutionEvent.builder()
+                             .failureTypes(ExceptionUtils.getFailureTypes(exception))
+                             .context(context)
+                             .state(currentState)
+                             .build());
       if (executionEventAdvice != null) {
         return handleExecutionEventAdvice(context, stateExecutionInstance, FAILED, executionEventAdvice);
       }
@@ -910,7 +929,12 @@ public class StateMachineExecutor implements StateInspectionListener {
       currentState.handleAbortEvent(context);
       updated = updateStateExecutionData(
           stateExecutionInstance, null, finalStatus, null, singletonList(DISCONTINUING), null, null, null);
-      invokeAdvisors(context, currentState);
+
+      invokeAdvisors(ExecutionEvent.builder()
+                         .failureTypes(EnumSet.<FailureType>of(FailureType.EXPIRED))
+                         .context(context)
+                         .state(currentState)
+                         .build());
 
       endTransition(context, stateExecutionInstance, finalStatus, null);
     } catch (Exception e) {
