@@ -26,6 +26,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.encryption.Encrypted;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.EncryptDecryptException;
 import io.harness.exception.WingsException;
 import io.harness.mongo.MongoPersistence;
 import io.harness.mongo.PageController;
@@ -155,14 +156,14 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
                       .findFirst()
                       .orElse(null);
         if (f == null) {
-          throw new WingsException("Field " + entry.getKey() + " not found for update on class " + cls.getName());
+          throw new EncryptDecryptException(
+              "Field " + entry.getKey() + " not found for update on class " + cls.getName());
         }
         if (f.getAnnotation(Encrypted.class) != null) {
           try {
             EncryptableSetting object = (EncryptableSetting) savedObject;
 
             if (shouldEncryptWhileUpdating(f, object, keyValuePairs, entityId)) {
-              String accountId = object.getAccountId();
               Field encryptedField = getEncryptedRefField(f, object);
               String encryptedId = encrypt(object, (char[]) value, encryptedField, null);
               updateParentIfNecessary(object, entityId);
@@ -171,7 +172,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
               continue;
             }
           } catch (IllegalAccessException ex) {
-            throw new WingsException("Failed to encrypt secret", ex);
+            throw new EncryptDecryptException("Failed to encrypt secret", ex);
           }
         }
       }
@@ -416,13 +417,30 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
         char[] secret = (char[]) f.get(object);
         Field encryptedField = getEncryptedRefField(f, object);
         encryptedField.setAccessible(true);
-        encrypt(object, secret, encryptedField, savedObject);
-        f.set(object, null);
+        // PL-3210: Avoid encrypt/decrypt null fields.
+        if (secret == null) {
+          String secretId = (String) encryptedField.get(object);
+          if (isSetByYaml(object, encryptedField)) {
+            // In YAML update/import case, the encrypted field is having secret manager prefix.
+            // Those prefix need to be stripped and only the UUID part be preserved.
+            EncryptedData encryptedData = secretManager.getEncryptedDataFromYamlRef(secretId, object.getAccountId());
+            if (encryptedData == null) {
+              throw new EncryptDecryptException("Invalid YAML secret reference: " + secretId);
+            } else {
+              // Update the YAML secret reference to the real secret UUID.
+              secretId = encryptedData.getUuid();
+            }
+          }
+          encryptedField.set(object, secretId);
+        } else {
+          encrypt(object, secret, encryptedField, savedObject);
+          f.set(object, null);
+        }
       }
     } catch (SecurityException e) {
-      throw new WingsException("Security exception in encrypt", e);
+      throw new EncryptDecryptException("Security exception in encrypt", e);
     } catch (IllegalAccessException e) {
-      throw new WingsException("Illegal access exception in encrypt", e);
+      throw new EncryptDecryptException("Illegal access exception in encrypt", e);
     }
   }
 
@@ -431,14 +449,6 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
     encryptedField.setAccessible(true);
     Field decryptedField = getDecryptedField(encryptedField, object);
     decryptedField.setAccessible(true);
-
-    // yaml ref case
-    if (isSetByYaml(object, encryptedField)) {
-      EncryptedData encryptedData =
-          secretManager.getEncryptedDataFromYamlRef((String) encryptedField.get(object), object.getAccountId());
-      encryptedField.set(object, encryptedData.getUuid());
-      return encryptedData.getUuid();
-    }
 
     if (isReferencedSecretText(object, encryptedField)) {
       encryptedField.set(object, String.valueOf(secret));
@@ -566,7 +576,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
       try {
         encryptedId = (String) encryptedField.get(object);
       } catch (IllegalAccessException e) {
-        throw new WingsException("Could not delete referenced record", e);
+        throw new EncryptDecryptException("Could not delete referenced record", e);
       }
 
       if (isBlank(encryptedId)) {

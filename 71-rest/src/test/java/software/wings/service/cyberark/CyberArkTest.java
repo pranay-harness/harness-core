@@ -276,7 +276,7 @@ public class CyberArkTest extends WingsBaseTest {
 
     List<EncryptedDataDetail> encryptedDataDetails =
         secretManager.getEncryptionDetails(savedJenkinsConfig, accountId, null);
-    assertThat(encryptedDataDetails).hasSize(2);
+    assertThat(encryptedDataDetails).hasSize(1);
 
     char[] decryptedValue;
 
@@ -296,10 +296,7 @@ public class CyberArkTest extends WingsBaseTest {
     assertThat(decryptedValue).isNotNull();
     assertThat(new String(decryptedValue)).isEqualTo(new String(jenkinsConfig.getPassword()));
 
-    EncryptedData encryptedTokenData =
-        wingsPersistence.get(EncryptedData.class, savedJenkinsConfig.getEncryptedToken());
-    assertThat(encryptedTokenData).isNotNull();
-    assertThat(encryptedTokenData.getType()).isEqualTo(SettingVariableTypes.JENKINS);
+    assertThat(savedJenkinsConfig.getEncryptedToken()).isNull();
   }
 
   @Test
