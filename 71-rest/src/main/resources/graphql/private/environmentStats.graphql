@@ -1,6 +1,11 @@
-enum EnvironmentAggregation {
+enum EnvironmentEntityAggregation {
   Application
   EnvironmentType
+}
+
+input EnvironmentAggregation {
+  entityAggregation: EnvironmentEntityAggregation
+  tagAggregation: TagAggregation
 }
 
 extend type Query {

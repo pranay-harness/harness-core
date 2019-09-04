@@ -22,7 +22,7 @@ import software.wings.graphql.schema.type.aggregation.QLTimeAggregationType;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
-import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentAggregation;
+import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentEntityAggregation;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentFilter;
 import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentTypeFilter;
 
@@ -73,7 +73,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
             .build();
     DeploymentStatsQueryMetaData queryMetaData = dataFetcher.formQuery(DeploymentStatsDataFetcherTestKeys.ACCOUNTID,
         null, Arrays.asList(arrayIdFilter, beforeTimeFilter, afterTimeFilter, arrayStringFilter, arrayEnvTypeFilter),
-        Arrays.asList(QLDeploymentAggregation.Application), null, null);
+        Arrays.asList(QLDeploymentEntityAggregation.Application), null, null);
 
     Assertions.assertThat(queryMetaData.getQuery())
         .isEqualTo(
@@ -92,7 +92,8 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
     queryMetaData = dataFetcher.formQuery(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
         Arrays.asList(arrayIdFilter, beforeTimeFilter, afterTimeFilter, arrayStringFilter, arrayEnvTypeFilter),
-        Arrays.asList(QLDeploymentAggregation.Application, QLDeploymentAggregation.Environment), null, null);
+        Arrays.asList(QLDeploymentEntityAggregation.Application, QLDeploymentEntityAggregation.Environment), null,
+        null);
 
     Assertions.assertThat(queryMetaData.getQuery())
         .isEqualTo(
@@ -101,7 +102,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
     queryMetaData = dataFetcher.formQuery(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
         Arrays.asList(arrayIdFilter, beforeTimeFilter, afterTimeFilter, arrayStringFilter, arrayEnvTypeFilter),
-        Arrays.asList(QLDeploymentAggregation.Application),
+        Arrays.asList(QLDeploymentEntityAggregation.Application),
         QLTimeSeriesAggregation.builder()
             .timeAggregationType(QLTimeAggregationType.HOUR)
             .timeAggregationValue(1)

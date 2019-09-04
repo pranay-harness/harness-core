@@ -1,5 +1,10 @@
-enum TriggerAggregation {
+enum TriggerEntityAggregation {
   Application
+}
+
+input TriggerAggregation {
+  entityAggregation: TriggerEntityAggregation
+  tagAggregation: TagAggregation
 }
 
 extend type Query {

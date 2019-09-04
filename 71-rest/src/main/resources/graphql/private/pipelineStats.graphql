@@ -1,5 +1,10 @@
-enum PipelineAggregation {
+enum PipelineEntityAggregation {
   Application
+}
+
+input PipelineAggregation {
+  entityAggregation: PipelineEntityAggregation
+  tagAggregation: TagAggregation
 }
 
 extend type Query {

@@ -1,28 +1,15 @@
 package software.wings.graphql.schema.type.aggregation.deployment;
 
-import software.wings.graphql.schema.type.aggregation.QLAggregationKind;
+import lombok.Builder;
+import lombok.Value;
+import software.wings.graphql.schema.type.aggregation.Aggregation;
+import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
+import software.wings.graphql.schema.type.aggregation.tag.QLTagAggregation;
 
-public enum QLDeploymentAggregation {
-  Application(QLAggregationKind.SIMPLE),
-  Service(QLAggregationKind.ARRAY),
-  Environment(QLAggregationKind.ARRAY),
-  EnvironmentType(QLAggregationKind.ARRAY),
-  CloudProvider(QLAggregationKind.ARRAY),
-  Status(QLAggregationKind.SIMPLE),
-  TriggeredBy(QLAggregationKind.SIMPLE),
-  Trigger(QLAggregationKind.SIMPLE),
-  Workflow(QLAggregationKind.ARRAY),
-  Pipeline(QLAggregationKind.SIMPLE);
-
-  QLAggregationKind aggregationKind;
-
-  QLDeploymentAggregation(QLAggregationKind aggregationKind) {
-    this.aggregationKind = aggregationKind;
-  }
-
-  QLDeploymentAggregation() {}
-
-  public QLAggregationKind getAggregationKind() {
-    return aggregationKind;
-  }
+@Value
+@Builder
+public class QLDeploymentAggregation implements Aggregation {
+  private QLDeploymentEntityAggregation entityAggregation;
+  private QLTimeSeriesAggregation timeAggregation;
+  private QLTagAggregation tagAggregation;
 }

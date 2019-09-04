@@ -1,4 +1,4 @@
-enum DeploymentAggregation {
+enum DeploymentEntityAggregation {
   Application
   Service
   Environment
@@ -50,13 +50,18 @@ enum DurationAggregateOperation {
   MAX
 }
 
+input DeploymentAggregation {
+  entityAggregation: DeploymentEntityAggregation
+  timeAggregation: TimeSeriesAggregation
+  tagAggregation: TagAggregation
+}
+
 extend type Query {
   #Get statistics about one or multiple deployments.
   deploymentStats(
     aggregateFunction: DeploymentAggregationFunction
     filters: [DeploymentFilter]
     groupBy: [DeploymentAggregation]
-    groupByTime: TimeSeriesAggregation
     sortCriteria: [DeploymentSortCriteria]
   ): Data @dataFetcher(name: deploymentStats)
 }

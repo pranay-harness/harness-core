@@ -54,7 +54,7 @@ public class InstanceConnectionDataFetcher
     if (isEmpty(filters)) {
       return;
     }
-    instanceMongoHelper.setQuery(filters, query);
+    instanceMongoHelper.setQuery(getAccountId(), filters, query);
   }
 
   @Override

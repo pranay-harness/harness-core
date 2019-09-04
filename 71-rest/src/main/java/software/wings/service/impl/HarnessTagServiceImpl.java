@@ -33,6 +33,7 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.validation.Update;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotBlank;
+import org.mongodb.morphia.query.Query;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
@@ -43,6 +44,7 @@ import software.wings.beans.HarnessTagLink.HarnessTagLinkKeys;
 import software.wings.beans.User;
 import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
+import software.wings.graphql.schema.type.aggregation.QLEntityType;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -67,6 +69,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -636,12 +639,28 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   }
 
   @Override
-  public Set<HarnessTagLink> getTagLinks(EntityType entityType, List<String> entityIds, String key) {
-    return null;
+  public Set<HarnessTagLink> getTagLinks(String accountId, EntityType entityType, List<String> entityIds, String key) {
+    List<HarnessTagLink> harnessTagLinks = wingsPersistence.createQuery(HarnessTagLink.class)
+                                               .filter(HarnessTagLinkKeys.accountId, accountId)
+                                               .field(HarnessTagLinkKeys.entityId)
+                                               .in(entityIds)
+                                               .filter(HarnessTagLinkKeys.entityType, entityType)
+                                               .filter(HarnessTagLinkKeys.key, key)
+                                               .asList();
+    return new HashSet<>(harnessTagLinks);
   }
 
   @Override
-  public Set<String> getEntityIdsWithTag(String key, EntityType entityType, String value) {
-    return null;
+  public Set<String> getEntityIdsWithTag(String accountId, String key, QLEntityType entityType, List<String> values) {
+    Query<HarnessTagLink> query = wingsPersistence.createQuery(HarnessTagLink.class)
+                                      .filter(HarnessTagLinkKeys.accountId, accountId)
+                                      .filter(HarnessTagLinkKeys.entityType, entityType.name())
+                                      .filter(HarnessTagLinkKeys.key, key);
+    if (isNotEmpty(values)) {
+      query.field(HarnessTagLinkKeys.value).in(values);
+    }
+
+    List<HarnessTagLink> harnessTagLinks = query.project("entityId", true).asList();
+    return harnessTagLinks.stream().map(HarnessTagLink::getEntityId).collect(Collectors.toSet());
   }
 }

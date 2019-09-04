@@ -16,10 +16,9 @@ import software.wings.graphql.datafetcher.SettingsAttributeStatsDataFetcher;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLNoOpAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
-import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.connector.QLConnectorAggregation;
 import software.wings.graphql.schema.type.aggregation.connector.QLConnectorFilter;
-import software.wings.graphql.schema.type.aggregation.tag.QLTagAggregation;
+import software.wings.graphql.schema.type.aggregation.connector.QLConnectorTypeAggregation;
 import software.wings.graphql.utils.nameservice.NameService;
 
 import java.util.ArrayList;
@@ -27,17 +26,19 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ConnectorStatsDataFetcher extends SettingsAttributeStatsDataFetcher<QLNoOpAggregateFunction,
-    QLConnectorFilter, QLConnectorAggregation, QLTimeSeriesAggregation, QLTagAggregation, QLNoOpSortCriteria> {
+    QLConnectorFilter, QLConnectorAggregation, QLNoOpSortCriteria> {
   @Inject ConnectorQueryHelper connectorQueryHelper;
 
   @Override
   protected QLData fetch(String accountId, QLNoOpAggregateFunction aggregateFunction, List<QLConnectorFilter> filters,
-      List<QLConnectorAggregation> groupBy, QLTimeSeriesAggregation groupByTime,
-      List<QLTagAggregation> tagAggregationList, List<QLNoOpSortCriteria> sortCriteria) {
+      List<QLConnectorAggregation> groupBy, List<QLNoOpSortCriteria> sortCriteria) {
     final Class entityClass = SettingAttribute.class;
     List<String> groupByList = new ArrayList<>();
     if (isNotEmpty(groupBy)) {
-      groupByList = groupBy.stream().map(g -> g.name()).collect(Collectors.toList());
+      groupByList = groupBy.stream()
+                        .filter(g -> g != null && g.getTypeAggregation() != null)
+                        .map(g -> g.getTypeAggregation().name())
+                        .collect(Collectors.toList());
     }
     return getQLData(accountId, filters, entityClass, groupByList);
   }
@@ -53,12 +54,12 @@ public class ConnectorStatsDataFetcher extends SettingsAttributeStatsDataFetcher
   }
 
   @Override
-  protected void populateFilters(List<QLConnectorFilter> filters, Query query) {
+  protected void populateFilters(String accountId, List<QLConnectorFilter> filters, Query query) {
     connectorQueryHelper.setQuery(filters, query);
   }
 
   protected String getAggregationFieldName(String aggregation) {
-    QLConnectorAggregation connectorAggregation = QLConnectorAggregation.valueOf(aggregation);
+    QLConnectorTypeAggregation connectorAggregation = QLConnectorTypeAggregation.valueOf(aggregation);
     switch (connectorAggregation) {
       case Type:
         return "value.type";
