@@ -1,301 +1,305 @@
 #!/usr/bin/env bash
+
+yq delete -i /opt/harness/config.yml server.adminConnectors
+yq delete -i /opt/harness/config.yml server.applicationConnectors[0]
+
 if [[ -v "LOGGING_LEVEL" ]]; then
-    sed -i "s|level: INFO|level: ${LOGGING_LEVEL}|" /opt/harness/config.yml
+    yq write -i /opt/harness/config.yml logging.level $LOGGING_LEVEL
 fi
-sed -i "s|type: h2|type: http|" /opt/harness/config.yml
+
 if [[ -v "SERVER_PORT" ]]; then
-    sed -i "s|port: 9090|port: ${SERVER_PORT}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml server.applicationConnectors[0].port $SERVER_PORT
+else
+  yq write -i /opt/harness/config.yml server.applicationConnectors[0].port 9090
 fi
-sed -i 's|keyStorePath: keystore.jks||' /opt/harness/config.yml
-sed -i 's|keyStorePassword: password||' /opt/harness/config.yml
-sed -i "s|trustStorePath: \${JAVA_HOME}/jre/lib/security/cacerts||" /opt/harness/config.yml
-sed -i 's|certAlias: localhost||' /opt/harness/config.yml
-sed -i 's|validateCerts: false||' /opt/harness/config.yml
 
 if [[ -v "UI_SERVER_URL" ]]; then
-    sed -i "s|url: https://localhost:8000|url: ${UI_SERVER_URL}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml portal.url $UI_SERVER_URL
 fi
 
 if [[ -v "ALLOWED_ORIGINS" ]]; then
-    sed -i "s|allowedOrigins:.*|allowedOrigins: ${ALLOWED_ORIGINS}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml portal.allowedOrigins $ALLOWED_ORIGINS
 fi
 
 if [[ -v "MONGO_URI" ]]; then
-    sed -i "s|uri: mongodb://localhost:27017/harness|uri: ${MONGO_URI}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml mongo.uri ${MONGO_URI/\\\&/\&}
 fi
 
 if [[ -v "MONGO_LOCK_URI" ]]; then
-    sed -i "s|#locksUri: mongodb://localhost:27017/impermanent|locksUri: ${MONGO_LOCK_URI}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml mongo.locksUri ${MONGO_LOCK_URI/\\\&/\&}
 fi
 
-if [[ "${SKIP_LOGS}" == "true" ]]; then
-    sed -i "s|9a3e6eac4dcdbdc41a93ca99100537df||" /opt/harness/config.yml
+if [[ "$SKIP_LOGS" == "true" ]]; then
+  yq delete -i /opt/harness/config.yml server.requestLog.appenders[0]
+  yq delete -i /opt/harness/config.yml logging.appenders[1]
 elif [[ -v "LOGDNA_KEY" ]]; then
-    sed -i "s|9a3e6eac4dcdbdc41a93ca99100537df|${LOGDNA_KEY}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml server.requestLog.appenders[0].key $LOGDNA_KEY
+  yq write -i /opt/harness/config.yml logging.appenders[1].key $LOGDNA_KEY
 fi
 
 if [[ -v "WATCHER_METADATA_URL" ]]; then
-    sed -i "s|watcherMetadataUrl:.*|watcherMetadataUrl: ${WATCHER_METADATA_URL}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml watcherMetadataUrl $WATCHER_METADATA_URL
 fi
 
 if [[ -v "DELEGATE_METADATA_URL" ]]; then
-    sed -i "s|delegateMetadataUrl:.*|delegateMetadataUrl: ${DELEGATE_METADATA_URL}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml delegateMetadataUrl $DELEGATE_METADATA_URL
 fi
 
 if [[ -v "API_URL" ]]; then
-    sed -i "s|apiUrl:|apiUrl: ${API_URL}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml apiUrl $API_URL
 fi
 
 if [[ -v "ENV_PATH" ]]; then
-    sed -i "s|envPath:|envPath: ${ENV_PATH}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml envPath $ENV_PATH
 fi
 
 if [[ -v "DEPLOY_MODE" ]]; then
-    sed -i "s|deployMode: AWS|deployMode: ${DEPLOY_MODE}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml deployMode $DEPLOY_MODE
 fi
 
 if [[ -v "KUBECTL_VERSION" ]]; then
-    sed -i "s|kubectlVersion:.*|kubectlVersion: ${KUBECTL_VERSION}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml kubectlVersion $KUBECTL_VERSION
 fi
 
-sed -i "s|91b01067de772de3a12d99bddeab84d82a9f05c8|${NEWRELIC_LICENSE_KEY}|" /opt/harness/newrelic.yml
+yq write -i /opt/harness/newrelic.yml common.license_key $NEWRELIC_LICENSE_KEY
 
-if [[ "${DISABLE_NEW_RELIC}" == "true" ]]; then
-    sed -i "s|agent_enabled: true|agent_enabled: false|" /opt/harness/newrelic.yml
+if [[ "$DISABLE_NEW_RELIC" == "true" ]]; then
+  yq write -i /opt/harness/newrelic.yml common.agent_enabled false
 fi
 
 if [[ -v "jwtPasswordSecret" ]]; then
-    sed -i "s|a8SGF1CQMHN6pnCJgz32kLn1tebrXnw6MtWto8xI|${jwtPasswordSecret}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml portal.jwtPasswordSecret $jwtPasswordSecret
 fi
 
 if [[ -v "jwtExternalServiceSecret" ]]; then
-    sed -i "s|nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ|${jwtExternalServiceSecret}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml portal.jwtExternalServiceSecret $jwtExternalServiceSecret
 fi
 
 if [[ -v "jwtZendeskSecret" ]]; then
-    sed -i "s|RdL7j9ZdCz6TVSHO7obJRS6ywYLJjH8tdfPP39i4MbevKjVo|${jwtZendeskSecret}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml portal.jwtZendeskSecret $jwtZendeskSecret
 fi
 
 if [[ -v "jwtMultiAuthSecret" ]]; then
-    sed -i "s|5E1YekVGldTSS5Kt0GHlyWrJ6fJHmee9nXSBssefAWSOgdMwAvvbvJalnYENZ0H0EealN0CxHh34gUCN|${jwtMultiAuthSecret}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml portal.jwtMultiAuthSecret $jwtMultiAuthSecret
 fi
 
 if [[ -v "jwtSsoRedirectSecret" ]]; then
-    sed -i "s|qY4GXZAlPJQPEV8JCPTNhgmDmnHZSAgorzGxvOY03Xptr8N9xDfAYbwGohr2pCRLfFG69vBQaNpeTjcV|${jwtSsoRedirectSecret}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml portal.jwtSsoRedirectSecret $jwtSsoRedirectSecret
 fi
 
 if [[ -v "jwtAuthSecret" ]]; then
-    sed -i "s|dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq|${jwtAuthSecret}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml portal.jwtAuthSecret $jwtAuthSecret
 fi
 
 if [[ -v "jwtMarketPlaceSecret" ]]; then
-    sed -i "s|NqlqtztOXgJSQeVocN74TLnldqNjdyZM8DyNwaAioOt7M3piQsDILSqUQEh2qhdTadh21HKVxnXuuGfh|${jwtMarketPlaceSecret}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml portal.jwtMarketPlaceSecret $jwtMarketPlaceSecret
 fi
 
 if [[ -v "jwtIdentityServiceSecret" ]]; then
-    sed -i "s|HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU=|${jwtIdentityServiceSecret}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml portal.jwtIdentityServiceSecret $jwtIdentityServiceSecret
 fi
 
 if [[ -v "FEATURES" ]]; then
-    sed -i "s|featuresEnabled:|featuresEnabled: ${FEATURES}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml featuresEnabled $FEATURES
 fi
 
 if [[ -v "SAMPLE_TARGET_ENV" ]]; then
-    sed -i "s|sampleTargetEnv:|sampleTargetEnv: ${SAMPLE_TARGET_ENV}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml sampleTargetEnv $SAMPLE_TARGET_ENV
 fi
 
 if [[ -v "SAMPLE_TARGET_STATUS_HOST" ]]; then
-    sed -i "s|sampleTargetStatusHost:|sampleTargetStatusHost: ${SAMPLE_TARGET_STATUS_HOST}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml sampleTargetStatusHost $SAMPLE_TARGET_STATUS_HOST
 fi
 
 if [[ -v "COMPANYNAME" ]]; then
-   sed -i "s|manager-saas|manager-${COMPANYNAME}-${DEPLOY_MODE}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml server.requestLog.appenders[0].programName manager-${COMPANYNAME}-${DEPLOY_MODE}-accesslogs
+  yq write -i /opt/harness/config.yml logging.appenders[1].programName manager-${COMPANYNAME}-${DEPLOY_MODE}
 fi
 
 if [[ -v "GLOBAL_WHITELIST" ]]; then
-    sed -i "s|filters: 127.0.0.1/8|filters: ${GLOBAL_WHITELIST}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml globalWhitelistConfig.filters $GLOBAL_WHITELIST
 fi
 
 if [[ -v "SMTP_HOST" ]]; then
-    sed -i "s|host_placeholder|${SMTP_HOST}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml smtp.host $SMTP_HOST
 fi
 
 if [[ -v "SMTP_USERNAME" ]]; then
-    sed -i "s|smtp_username_placeholder|${SMTP_USERNAME}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml smtp.username $SMTP_USERNAME
 fi
 
 if [[ -v "SMTP_PASSWORD" ]]; then
-    sed -i "s|smtp_password_placeholder|${SMTP_PASSWORD}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml smtp.password $SMTP_PASSWORD
 fi
 
 if [[ -v "MARKETO_ENABLED" ]]; then
-    sed -i "s|enabled: false #marketoConfigEnable|enabled: ${MARKETO_ENABLED}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml marketoConfig.enabled $MARKETO_ENABLED
 fi
 
 if [[ -v "MARKETO_URL" ]]; then
-    sed -i "s|marketo_url_place_holder|${MARKETO_URL}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml marketoConfig.url $MARKETO_URL
 fi
 
 if [[ -v "MARKETO_CLIENT_ID" ]]; then
-    sed -i "s|marketo_client_id|${MARKETO_CLIENT_ID}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml marketoConfig.clientId $MARKETO_CLIENT_ID
 fi
 
 if [[ -v "MARKETO_CLIENT_SECRET" ]]; then
-    sed -i "s|marketo_client_secret|${MARKETO_CLIENT_SECRET}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml marketoConfig.clientSecret $MARKETO_CLIENT_SECRET
 fi
 
 if [[ -v "SEGMENT_ENABLED" ]]; then
-    sed -i "s|enabled: false #segmentConfigEnable|enabled: ${SEGMENT_ENABLED}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml segmentConfig.enabled $SEGMENT_ENABLED
 fi
 
 if [[ -v "SEGMENT_URL" ]]; then
-    sed -i "s|segment_url_place_holder|${SEGMENT_URL}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml segmentConfig.url $SEGMENT_URL
 fi
 
 if [[ -v "SEGMENT_APIKEY" ]]; then
-    sed -i "s|segment_api_key|${SEGMENT_APIKEY}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml segmentConfig.apiKey $SEGMENT_APIKEY
 fi
 
 if [[ -v "DELEGATE_DOCKER_IMAGE" ]]; then
-    sed -i "s|delegateDockerImage:.*|delegateDockerImage: ${DELEGATE_DOCKER_IMAGE}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml portal.delegateDockerImage $DELEGATE_DOCKER_IMAGE
 fi
 
 if [[ -v "EXECUTION_LOG_DATA_STORE" ]]; then
-    sed -i "s|executionLogStorageMode: MONGO|executionLogStorageMode: ${EXECUTION_LOG_DATA_STORE}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml executionLogStorageMode $EXECUTION_LOG_DATA_STORE
 fi
 
 if [[ -v "FILE_STORAGE" ]]; then
-    sed -i "s|fileStorageMode: MONGO|fileStorageMode: ${FILE_STORAGE}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml fileStorageMode $FILE_STORAGE
 fi
 
 if [[ -v "CLUSTER_NAME" ]]; then
-    sed -i "s|clusterName:|clusterName: ${CLUSTER_NAME}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml clusterName $CLUSTER_NAME
 fi
 
 if [[ -v "BACKGROUND_SCHEDULER_CLUSTERED" ]]; then
-    sed -i "s|clustered: true #backgroundScheduler|clustered: ${BACKGROUND_SCHEDULER_CLUSTERED}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml backgroundScheduler.clustered $BACKGROUND_SCHEDULER_CLUSTERED
 fi
 
 if [[ -v "ALLOW_TRIAL_REGISTRATION" ]]; then
-    sed -i "s|trialRegistrationAllowed: true|trialRegistrationAllowed: ${ALLOW_TRIAL_REGISTRATION}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml trialRegistrationAllowed $ALLOW_TRIAL_REGISTRATION
 fi
 
 if [[ -v "GITHUB_OAUTH_CLIENT" ]]; then
-    sed -i "s|githubClientId|${GITHUB_OAUTH_CLIENT}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml githubConfig.clientId $GITHUB_OAUTH_CLIENT
 fi
 
 if [[ -v "GITHUB_OAUTH_SECRET" ]]; then
-    sed -i "s|githubClientSecret|${GITHUB_OAUTH_SECRET}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml githubConfig.clientSecret $GITHUB_OAUTH_SECRET
 fi
 
 if [[ -v "GITHUB_OAUTH_CALLBACK_URL" ]]; then
-    sed -i "s|githubCallbackUrl|${GITHUB_OAUTH_CALLBACK_URL}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml githubConfig.callbackUrl $GITHUB_OAUTH_CALLBACK_URL
 fi
 
 if [[ -v "AZURE_OAUTH_CLIENT" ]]; then
-    sed -i "s|azureClientId|${AZURE_OAUTH_CLIENT}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml azureConfig.clientId $AZURE_OAUTH_CLIENT
 fi
 
 if [[ -v "AZURE_OAUTH_SECRET" ]]; then
-    sed -i "s|azureClientSecret|${AZURE_OAUTH_SECRET}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml azureConfig.clientSecret $AZURE_OAUTH_SECRET
 fi
 
 if [[ -v "AZURE_OAUTH_CALLBACK_URL" ]]; then
-    sed -i "s|azureCallbackUrl|${AZURE_OAUTH_CALLBACK_URL}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml azureConfig.callbackUrl $AZURE_OAUTH_CALLBACK_URL
 fi
 
 if [[ -v "GOOGLE_OAUTH_CLIENT" ]]; then
-    sed -i "s|googleClientId|${GOOGLE_OAUTH_CLIENT}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml googleConfig.clientId $GOOGLE_OAUTH_CLIENT
 fi
 
 if [[ -v "GOOGLE_OAUTH_SECRET" ]]; then
-    sed -i "s|googleClientSecret|${GOOGLE_OAUTH_SECRET}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml googleConfig.clientSecret $GOOGLE_OAUTH_SECRET
 fi
 
 if [[ -v "GOOGLE_OAUTH_CALLBACK_URL" ]]; then
-    sed -i "s|googleCallbackUrl|${GOOGLE_OAUTH_CALLBACK_URL}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml googleConfig.callbackUrl $GOOGLE_OAUTH_CALLBACK_URL
 fi
 
 if [[ -v "BITBUCKET_OAUTH_CLIENT" ]]; then
-    sed -i "s|bitbucketClientId|${BITBUCKET_OAUTH_CLIENT}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml bitbucketConfig.clientId $BITBUCKET_OAUTH_CLIENT
 fi
 
 if [[ -v "BITBUCKET_OAUTH_SECRET" ]]; then
-    sed -i "s|bitbucketClientSecret|${BITBUCKET_OAUTH_SECRET}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml bitbucketConfig.clientSecret $BITBUCKET_OAUTH_SECRET
 fi
 
 if [[ -v "BITBUCKET_OAUTH_CALLBACK_URL" ]]; then
-    sed -i "s|bitbucketCallbackUrl|${BITBUCKET_OAUTH_CALLBACK_URL}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml bitbucketConfig.callbackUrl $BITBUCKET_OAUTH_CALLBACK_URL
 fi
 
 if [[ -v "GITLAB_OAUTH_CLIENT" ]]; then
-    sed -i "s|gitlabClientId|${GITLAB_OAUTH_CLIENT}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml gitlabConfig.clientId $GITLAB_OAUTH_CLIENT
 fi
 
 if [[ -v "GITLAB_OAUTH_SECRET" ]]; then
-    sed -i "s|gitlabClientSecret|${GITLAB_OAUTH_SECRET}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml gitlabConfig.clientSecret $GITLAB_OAUTH_SECRET
 fi
 
 if [[ -v "GITLAB_OAUTH_CALLBACK_URL" ]]; then
-    sed -i "s|gitlabCallbackUrl|${GITLAB_OAUTH_CALLBACK_URL}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml gitlabConfig.callbackUrl $GITLAB_OAUTH_CALLBACK_URL
 fi
 
 if [[ -v "LINKEDIN_OAUTH_CLIENT" ]]; then
-    sed -i "s|linkedinClientId|${LINKEDIN_OAUTH_CLIENT}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml linkedinConfig.clientId $LINKEDIN_OAUTH_CLIENT
 fi
 
 if [[ -v "LINKEDIN_OAUTH_SECRET" ]]; then
-    sed -i "s|linkedinClientSecret|${LINKEDIN_OAUTH_SECRET}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml linkedinConfig.clientSecret $LINKEDIN_OAUTH_SECRET
 fi
 
 if [[ -v "LINKEDIN_OAUTH_CALLBACK_URL" ]]; then
-    sed -i "s|linkedinCallbackUrl|${LINKEDIN_OAUTH_CALLBACK_URL}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml linkedinConfig.callbackUrl $LINKEDIN_OAUTH_CALLBACK_URL
 fi
 
 if [[ -v "AWS_MARKETPLACE_ACCESSKEY" ]]; then
-    sed -i "s|awsMktPlaceAccessKeyPlaceHolder|${AWS_MARKETPLACE_ACCESSKEY}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml mktPlaceConfig.awsAccessKey $AWS_MARKETPLACE_ACCESSKEY
 fi
 
 if [[ -v "AWS_MARKETPLACE_SECRETKEY" ]]; then
-    sed -i "s|awsMktPlaceSecretKeyPlaceHolder|${AWS_MARKETPLACE_SECRETKEY}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml mktPlaceConfig.awsSecretKey $AWS_MARKETPLACE_SECRETKEY
 fi
 
 if [[ -v "AWS_MARKETPLACE_PRODUCTCODE" ]]; then
-    sed -i "s|awsMktPlaceProductCodePlaceHolder|${AWS_MARKETPLACE_PRODUCTCODE}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml mktPlaceConfig.awsMarketPlaceProductCode $AWS_MARKETPLACE_PRODUCTCODE
 fi
 
 if [[ -v "ALLOW_BLACKLISTED_EMAIL_DOMAINS" ]]; then
-    sed -i "s|blacklistedEmailDomainsAllowed: true|blacklistedEmailDomainsAllowed: ${ALLOW_BLACKLISTED_EMAIL_DOMAINS}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml blacklistedEmailDomainsAllowed $ALLOW_BLACKLISTED_EMAIL_DOMAINS
 fi
 
 if [[ -v "TIMESCALEDB_URI" ]]; then
-    sed -i "s|timescaledbUrl:|timescaledbUrl: ${TIMESCALEDB_URI}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml timescaledb.timescaledbUrl $TIMESCALEDB_URI
 fi
 
 if [[ -v "TIMESCALEDB_USERNAME" ]]; then
-    sed -i "s|timescaledbUsername:|timescaledbUsername: ${TIMESCALEDB_USERNAME}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml timescaledb.timescaledbUsername $TIMESCALEDB_USERNAME
 fi
 
 if [[ -v "TIMESCALEDB_PASSWORD" ]]; then
-    sed -i "s|timescaledbPassword:|timescaledbPassword: ${TIMESCALEDB_PASSWORD}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml timescaledb.timescaledbPassword $TIMESCALEDB_PASSWORD
 fi
 
 if [[ -v "TIMESCALEDB_CONNECT_TIMEOUT" ]]; then
-    sed -i "s|connectTimeout: 10|connectTimeout: ${TIMESCALEDB_CONNECT_TIMEOUT}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml timescaledb.connectTimeout $TIMESCALEDB_CONNECT_TIMEOUT
 fi
 
 if [[ -v "TIMESCALEDB_SOCKET_TIMEOUT" ]]; then
-    sed -i "s|socketTimeout: 30|socketTimeout: ${TIMESCALEDB_SOCKET_TIMEOUT}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml timescaledb.socketTimeout $TIMESCALEDB_SOCKET_TIMEOUT
 fi
 
 if [[ -v "TIMESCALEDB_LOGUNCLOSED" ]]; then
-    sed -i "s|logUnclosedConnections: false|logUnclosedConnections: ${TIMESCALEDB_LOGUNCLOSED}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml timescaledb.logUnclosedConnections $TIMESCALEDB_LOGUNCLOSED
 fi
 
 if [[ -v "TIMESCALEDB_LOGGERLEVEL" ]]; then
-    sed -i "s|loggerLevel: OFF|loggerLevel: ${TIMESCALEDB_LOGGERLEVEL}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml timescaledb.loggerLevel $TIMESCALEDB_LOGGERLEVEL
 fi
 
 if [[ -v "STACK_DRIVER_LOGGING_ENABLED" ]]; then
-    sed -i "s|stackdriverLogEnabled: false|stackdriverLogEnabled: ${STACK_DRIVER_LOGGING_ENABLED}|" /opt/harness/config.yml
+  yq write -i /opt/harness/config.yml logging.appenders[2].stackdriverLogEnabled $STACK_DRIVER_LOGGING_ENABLED
 fi
