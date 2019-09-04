@@ -2,17 +2,15 @@ package software.wings.api.cloudformation;
 
 import io.harness.context.ContextElementType;
 import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Value;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
 import java.util.Map;
 
-@Data
+@Value
 @Builder
-@EqualsAndHashCode(callSuper = true)
-public class CloudFormationDeleteStackElement extends CloudFormationElement {
+public class CloudFormationDeleteStackElement implements CloudFormationElement {
   @Override
   public ContextElementType getElementType() {
     return ContextElementType.CLOUD_FORMATION_DEPROVISION;
