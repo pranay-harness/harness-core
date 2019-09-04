@@ -1,4 +1,4 @@
-package software.wings.service.impl.security;
+package software.wings.service.impl.security.vault;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -18,6 +18,7 @@ public class VaultSecretMetadata {
   @JsonProperty("updated_time") String updatedTime;
   private Map<Integer, VersionMetadata> versions;
 
+  @Data
   public static class VersionMetadata {
     @JsonProperty("created_time") String createdTime;
     @JsonProperty("deletion_time") String deletionTime;

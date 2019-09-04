@@ -18,10 +18,6 @@ import static software.wings.service.intfc.security.SecretManager.SECRET_NAME_KE
 
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -34,7 +30,6 @@ import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
-import okhttp3.ResponseBody;
 import okhttp3.logging.HttpLoggingInterceptor;
 import okhttp3.logging.HttpLoggingInterceptor.Level;
 import org.mongodb.morphia.query.CountOptions;
@@ -51,6 +46,8 @@ import software.wings.helpers.ext.vault.VaultSysAuthRestClient;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.security.encryption.SecretChangeLog;
+import software.wings.service.impl.security.vault.SysMount;
+import software.wings.service.impl.security.vault.SysMountsResponse;
 import software.wings.service.impl.security.vault.VaultAppRoleLoginRequest;
 import software.wings.service.impl.security.vault.VaultAppRoleLoginResponse;
 import software.wings.service.impl.security.vault.VaultAppRoleLoginResult;
@@ -67,6 +64,7 @@ import java.nio.CharBuffer;
 import java.time.Duration;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -529,8 +527,11 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     return result;
   }
 
-  int getVaultSecretEngineVersion(VaultConfig vaultConfig) throws IOException {
-    OkHttpClient httpClient = Http.getUnsafeOkHttpClient(vaultConfig.getVaultUrl(), 10, 10);
+  private int getVaultSecretEngineVersion(VaultConfig vaultConfig) throws IOException {
+    HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
+    loggingInterceptor.setLevel(Level.NONE);
+    OkHttpClient httpClient =
+        Http.getUnsafeOkHttpClientBuilder(vaultConfig.getVaultUrl(), 10, 10).addInterceptor(loggingInterceptor).build();
 
     final Retrofit retrofit = new Retrofit.Builder()
                                   .baseUrl(vaultConfig.getVaultUrl())
@@ -539,55 +540,37 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
                                   .build();
     VaultSysAuthRestClient restClient = retrofit.create(VaultSysAuthRestClient.class);
 
-    Response<ResponseBody> response = restClient.getAll(vaultConfig.getAuthToken()).execute();
+    Response<SysMountsResponse> response = restClient.getAllMounts(vaultConfig.getAuthToken()).execute();
 
     int version = 2;
     if (response.isSuccessful()) {
-      version = parseSecretEngineVersionFromSysMountsJson(response.body().string());
+      SysMount sysMount = getMountPointWithFallback(vaultConfig, response.body());
+      if (sysMount != null && sysMount.getOptions() != null) {
+        version = sysMount.getOptions().getVersion();
+      }
     }
 
     return version;
   }
 
-  /**
-   * Parsing the /secret/option/version integer value of the of full sys mounts output JSON from the
-   * Vault /v1/secret/sys/mounts REST API call. Sample snippet of the output call is:
-   * <p>
-   * {
-   * "secret/": {
-   * "accessor": "kv_7fa3b4ad",
-   * "config": {
-   * "default_lease_ttl": 0,
-   * "force_no_cache": false,
-   * "max_lease_ttl": 0,
-   * "plugin_name": ""
-   * },
-   * "description": "key\/value secret storage",
-   * "local": false,
-   * "options": {
-   * "version": "2"
-   * },
-   * "seal_wrap": false,
-   * "type": "kv"
-   * }
-   * }
-   */
-  static int parseSecretEngineVersionFromSysMountsJson(String jsonResponse) {
-    int version = 1;
+  private SysMount getMountPointWithFallback(VaultConfig vaultConfig, SysMountsResponse sysMountsResponse) {
+    Map<String, SysMount> sysMounts = sysMountsResponse.getData();
+    SysMount sysMount = sysMounts.get(DEFAULT_SECRET_MOUNT_POINT);
+    logger.info("Found Vault sys mount points: {}", sysMounts.keySet());
 
-    JsonParser jsonParser = new JsonParser();
-    JsonElement responseElement = jsonParser.parse(jsonResponse);
-    JsonObject sysMountsObject = responseElement.getAsJsonObject();
-    JsonObject secretObject = sysMountsObject.getAsJsonObject("secret/");
-    if (secretObject != null) {
-      JsonObject optionsObject = secretObject.getAsJsonObject("options");
-      if (optionsObject != null) {
-        JsonPrimitive versionObject = optionsObject.getAsJsonPrimitive("version");
-        if (versionObject != null) {
-          version = versionObject.getAsInt();
+    if (sysMount == null || sysMount.getOptions() == null) {
+      sysMount = sysMounts.get(DEFAULT_HARNESS_MOUNT_POINT);
+      if (sysMount == null || sysMount.getOptions() == null) {
+        String basePath = vaultConfig.getBasePath();
+        if (isNotEmpty(basePath)) {
+          String[] parts = basePath.split(PATH_SEPARATOR);
+          String mountPoint = parts[0] + PATH_SEPARATOR;
+          sysMount = sysMounts.get(mountPoint);
         }
       }
     }
-    return version;
+
+    logger.info("Matched Vault sys mount point: {}", sysMount);
+    return sysMount;
   }
 }
