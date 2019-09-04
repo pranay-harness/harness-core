@@ -2,7 +2,6 @@ package software.wings.common;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.api.AwsLambdaContextElement.AWS_LAMBDA_REQUEST_PARAM;
-import static software.wings.api.AwsLambdaFunctionElement.Builder.anAwsLambdaFunctionElement;
 
 import io.harness.context.ContextElementType;
 import lombok.extern.slf4j.Slf4j;
@@ -86,12 +85,12 @@ public class AwsLambdaFunctionProcessor implements ExpressionProcessor {
       return awsLambdaFunctionElementList;
     }
     awsLambdaContextElement.getFunctionArns().forEach(functionMeta -> {
-      awsLambdaFunctionElementList.add(anAwsLambdaFunctionElement()
-                                           .withUuid(functionMeta.getFunctionArn())
-                                           .withName(functionMeta.getFunctionName())
-                                           .withAwsConfig(awsLambdaContextElement.getAwsConfig())
-                                           .withFunctionArn(functionMeta)
-                                           .withRegion(awsLambdaContextElement.getRegion())
+      awsLambdaFunctionElementList.add(AwsLambdaFunctionElement.builder()
+                                           .uuid(functionMeta.getFunctionArn())
+                                           .name(functionMeta.getFunctionName())
+                                           .awsConfig(awsLambdaContextElement.getAwsConfig())
+                                           .functionArn(functionMeta)
+                                           .region(awsLambdaContextElement.getRegion())
                                            .build());
     });
     return awsLambdaFunctionElementList;
