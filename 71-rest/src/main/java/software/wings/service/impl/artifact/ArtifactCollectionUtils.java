@@ -21,6 +21,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
+import static software.wings.service.impl.artifact.ArtifactServiceImpl.ARTIFACT_RETENTION_SIZE;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -523,8 +524,9 @@ public class ArtifactCollectionUtils {
   }
 
   public static int getLimit(String artifactStreamType, BuildSourceRequestType requestType) {
-    return ARTIFACTORY.name().equals(artifactStreamType) && BuildSourceRequestType.GET_BUILDS.equals(requestType) ? 25
-                                                                                                                  : -1;
+    return ARTIFACTORY.name().equals(artifactStreamType) && BuildSourceRequestType.GET_BUILDS.equals(requestType)
+        ? ARTIFACT_RETENTION_SIZE
+        : -1;
   }
 
   public BuildSourceParameters getBuildSourceParameters(
