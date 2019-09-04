@@ -174,12 +174,12 @@ public class AwsLambdaState extends State {
     String region = wfResponse.getRegion();
     stateExecutionData.setAliases(aliases);
     stateExecutionData.setTags(tags);
-    AwsLambdaContextElement awsLambdaContextElement = AwsLambdaContextElement.Builder.anAwsLambdaContextElement()
-                                                          .withAwsConfig(awsConfig)
-                                                          .withAliases(aliases)
-                                                          .withTags(tags)
-                                                          .withRegion(region)
-                                                          .withFunctionArns(functionMetas)
+    AwsLambdaContextElement awsLambdaContextElement = AwsLambdaContextElement.builder()
+                                                          .awsConfig(awsConfig)
+                                                          .aliases(aliases)
+                                                          .tags(tags)
+                                                          .region(region)
+                                                          .functionArns(functionMetas)
                                                           .build();
 
     return ExecutionResponse.builder()
@@ -278,10 +278,10 @@ public class AwsLambdaState extends State {
       logService.batchedSave(singletonList(logBuilder.but().withLogLine("No Lambda function to deploy.").build()));
       activityService.updateStatus(activity.getUuid(), activity.getAppId(), SUCCESS);
       List<FunctionMeta> functionArns = new ArrayList<>();
-      AwsLambdaContextElement awsLambdaContextElement = AwsLambdaContextElement.Builder.anAwsLambdaContextElement()
-                                                            .withAwsConfig((AwsConfig) cloudProviderSetting.getValue())
-                                                            .withRegion(region)
-                                                            .withFunctionArns(functionArns)
+      AwsLambdaContextElement awsLambdaContextElement = AwsLambdaContextElement.builder()
+                                                            .awsConfig((AwsConfig) cloudProviderSetting.getValue())
+                                                            .region(region)
+                                                            .functionArns(functionArns)
                                                             .build();
       return ExecutionResponse.builder()
           .stateExecutionData(executionDataBuilder.build())

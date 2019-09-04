@@ -12,7 +12,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
-import static software.wings.api.AwsLambdaContextElement.Builder.anAwsLambdaContextElement;
 import static software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBuilder.aPhaseStepExecutionData;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
 
@@ -226,9 +225,9 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
           return null;
         }
         CommandStepExecutionSummary commandStepExecutionSummary = (CommandStepExecutionSummary) first.get();
-        return singletonList(anAwsLambdaContextElement()
-                                 .withAliases(commandStepExecutionSummary.getAliases())
-                                 .withTags(commandStepExecutionSummary.getTags())
+        return singletonList(AwsLambdaContextElement.builder()
+                                 .aliases(commandStepExecutionSummary.getAliases())
+                                 .tags(commandStepExecutionSummary.getTags())
                                  .build());
       }
       case AMI_DEPLOY_AUTOSCALING_GROUP: {
