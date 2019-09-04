@@ -638,6 +638,11 @@ public class YamlGitServiceImpl implements YamlGitService {
       throw new InvalidRequestException("Git connector not found with webhook token " + webhookToken, USER);
     }
 
+    boolean gitPingEvent = webhookEventUtils.isGitPingEvent(headers);
+    if (gitPingEvent) {
+      return "Found ping event. Only push events are supported";
+    }
+
     String branchName = obtainBranchFromPayload(yamlWebHookPayload, headers);
     if (isEmpty(branchName)) {
       logger.info(
