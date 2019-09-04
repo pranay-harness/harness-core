@@ -1,31 +1,31 @@
 xxxxxxxx
   applicationConnectors:
-    - type: h2
-      port: 9090
-      keyStorePath: keystore.jks
-      keyStorePassword: password
-      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
-      certAlias: localhost
-      validateCerts: false
-      maxRequestHeaderSize: 100KiB
-    - type: http
-      port: 3457
-      maxRequestHeaderSize: 100KiB
+  - type: h2
+    port: 9090
+    keyStorePath: keystore.jks
+    keyStorePassword: password
+    trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+    certAlias: localhost
+    validateCerts: false
+    maxRequestHeaderSize: 100KiB
+  - type: http
+    port: 3457
+    maxRequestHeaderSize: 100KiB
   adminConnectors:
-    - type: h2
-      port: 9091
-      keyStorePath: keystore.jks
-      keyStorePassword: password
-      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
-      certAlias: localhost
-      validateCerts: false
+  - type: h2
+    port: 9091
+    keyStorePath: keystore.jks
+    keyStorePassword: password
+    trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+    certAlias: localhost
+    validateCerts: false
   requestLog:
     appenders:
-      - type: rest-log
-        name: rest-accesslogs-appender
-        threshold: TRACE
-        key: 9a3e6eac4dcdbdc41a93ca99100537df
-        programName: manager-saas-accesslogs
+    - type: rest-log
+      name: rest-accesslogs-appender
+      threshold: TRACE
+      key: 9a3e6eac4dcdbdc41a93ca99100537df
+      programName: manager-saas-accesslogs
 
 backgroundScheduler:
   schedulerName: automation_background_scheduler
@@ -48,7 +48,7 @@ trialRegistrationAllowed: true
 blacklistedEmailDomainsAllowed: true
 executionLogStorageMode: MONGO
 fileStorageMode: MONGO
-clusterName:
+clusterName: ""
 
 mktPlaceConfig:
   awsAccessKey: awsMktPlaceAccessKeyPlaceHolder
@@ -111,10 +111,10 @@ globalWhitelistConfig:
 defaultSalesContacts:
   enabled: false
   accountTypeDefaults:
-    - accountType: TRIAL
-      emailIds: se@harness.io
-    - accountType: PAID
-      emailIds: csm@harness.io
+  - accountType: TRIAL
+    emailIds: se@harness.io
+  - accountType: PAID
+    emailIds: csm@harness.io
 
 supportEmail: support@harness.io
 
@@ -130,25 +130,25 @@ logging:
     com.novemberain.quartz.mongodb.TriggerRunner: "OFF"
     org.glassfish.jersey.server.ServerRuntime.Responder: "OFF"
   appenders:
-    - type: console
-      threshold: TRACE
-      target: STDOUT
-      logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %blue(%X{executionId}) %cyan(%logger) - %msg %n"
-    - type: rest-log
-      threshold: TRACE
-      logFormat: "%blue([${VERSION}]) %green([%thread]) %highlight(%-5level) %blue(%X{executionId}) %cyan(%logger) - %msg %n"
-      key: 9a3e6eac4dcdbdc41a93ca99100537df
-      programName: manager-saas
-    - type: gke-console
-      threshold: TRACE
-      target: STDOUT
-      logFormat: "%blue([${VERSION}]) %green([%thread]) %highlight(%-5level) %blue(%X{executionId}) %cyan(%logger) - %msg %n"
-      stackdriverLogEnabled: false
+  - type: console
+    threshold: TRACE
+    target: STDOUT
+    logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %blue(%X{executionId}) %cyan(%logger) - %msg %n"
+  - type: rest-log
+    threshold: TRACE
+    logFormat: "%blue([${VERSION}]) %green([%thread]) %highlight(%-5level) %blue(%X{executionId}) %cyan(%logger) - %msg %n"
+    key: 9a3e6eac4dcdbdc41a93ca99100537df
+    programName: manager-saas
+  - type: gke-console
+    threshold: TRACE
+    target: STDOUT
+    logFormat: "%blue([${VERSION}]) %green([%thread]) %highlight(%-5level) %blue(%X{executionId}) %cyan(%logger) - %msg %n"
+    stackdriverLogEnabled: false
 
 timescaledb:
-  timescaledbUrl:
-  timescaledbUsername:
-  timescaledbPassword:
+  timescaledbUrl: ""
+  timescaledbUsername: ""
+  timescaledbPassword: ""
   connectTimeout: 10
   socketTimeout: 30
   logUnclosedConnections: false
@@ -166,9 +166,9 @@ mongo:
 
 watcherMetadataUrl: https://ci.harness.io/storage/wingswatchers/watcherci.txt
 delegateMetadataUrl: https://ci.harness.io/storage/wingsdelegates/delegateci.txt
-apiUrl:
+apiUrl: ""
 deployMode: AWS
-envPath:
+envPath: ""
 
 kubectlVersion: v1.13.2
 
@@ -189,11 +189,11 @@ portal:
 
 disabledCache: []
 
-featuresEnabled:
+featuresEnabled: ""
 
-sampleTargetEnv:
+sampleTargetEnv: ""
 
-sampleTargetStatusHost:
+sampleTargetStatusHost: ""
 
 awsRegionIdToName:
   us-east-1: US East (N. Virginia)
@@ -211,50 +211,51 @@ awsRegionIdToName:
   ca-central-1: Canada (Central)
   ap-south-1: Asia Pacific (Mumbai)
   sa-east-1: South America (São Paulo)
-  us-gov-west-1: GovCloud
+  us-gov-east-1: GovCloud (US-East)
+  us-gov-west-1: GovCloud (US-West)
   cn-north-1: China North (Beijing)
-  cn-northwest-1: China (Ningxia),
+  cn-northwest-1: China (Ningxia)
 
 awsInstanceTypes:
-  - t2.nano
-  - t2.micro
-  - t2.small
-  - t2.medium
-  - t2.large
-  - m3.medium
-  - m3.large
-  - m3.xlarge
-  - m3.2xlarge
-  - m4.large
-  - m4.xlarge
-  - m4.2xlarge
-  - m4.4xlarge
-  - m4.10xlarge
-  - c4.large
-  - c4.xlarge
-  - c4.2xlarge
-  - c4.4xlarge
-  - c4.8xlarge
-  - c3.large
-  - c3.xlarge
-  - c3.2xlarge
-  - c3.4xlarge
-  - c3.8xlarge
-  - r3.large
-  - r3.xlarge
-  - r3.2xlarge
-  - r3.4xlarge
-  - r3.8xlarge
-  - g2.2xlarge
-  - g2.8xlarge
-  - i2.xlarge
-  - i2.2xlarge
-  - i2.4xlarge
-  - i2.8xlarge
-  - d2.xlarge
-  - d2.2xlarge
-  - d2.4xlarge
-  - d2.8xlarge
+- t2.nano
+- t2.micro
+- t2.small
+- t2.medium
+- t2.large
+- m3.medium
+- m3.large
+- m3.xlarge
+- m3.2xlarge
+- m4.large
+- m4.xlarge
+- m4.2xlarge
+- m4.4xlarge
+- m4.10xlarge
+- c4.large
+- c4.xlarge
+- c4.2xlarge
+- c4.4xlarge
+- c4.8xlarge
+- c3.large
+- c3.xlarge
+- c3.2xlarge
+- c3.4xlarge
+- c3.8xlarge
+- r3.large
+- r3.xlarge
+- r3.2xlarge
+- r3.4xlarge
+- r3.8xlarge
+- g2.2xlarge
+- g2.8xlarge
+- i2.xlarge
+- i2.2xlarge
+- i2.4xlarge
+- i2.8xlarge
+- d2.xlarge
+- d2.2xlarge
+- d2.4xlarge
+- d2.8xlarge
 
 techStacks:
   Deployment-Kubernetes:
