@@ -432,6 +432,11 @@
             <artifactId>expiringmap</artifactId>
         </dependency>
         <dependency>
+            <groupId>net.jodah</groupId>
+            <artifactId>failsafe</artifactId>
+            <version>2.2.0</version>
+        </dependency>
+        <dependency>
             <groupId>net.rcarz</groupId>
             <artifactId>jira-client</artifactId>
         </dependency>

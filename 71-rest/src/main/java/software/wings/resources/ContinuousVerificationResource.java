@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static software.wings.common.VerificationConstants.COLLECT_CV_DATA;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
 
@@ -94,5 +95,13 @@ public class ContinuousVerificationResource {
     logger.info(
         "Trigger Data Collection for workflow with contextId {}, CollectionMinute {}", contextId, collectionMinute);
     return new RestResponse<>(cvManagerService.collectCVDataForWorkflow(contextId, collectionMinute));
+  }
+
+  @GET
+  @Path(COLLECT_CV_DATA)
+  @Timed
+  @LearningEngineAuth
+  public RestResponse<Boolean> collectCVData(@QueryParam("cvTaskId") String cvTaskId) {
+    return new RestResponse<>(cvManagerService.collectCVData(cvTaskId));
   }
 }

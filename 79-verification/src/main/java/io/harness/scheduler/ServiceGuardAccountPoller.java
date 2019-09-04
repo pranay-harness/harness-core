@@ -3,7 +3,9 @@ package io.harness.scheduler;
 import static io.harness.jobs.sg247.collection.ServiceGuardDataCollectionJob.SERVICE_GUARD_DATA_COLLECTION_CRON;
 import static io.harness.jobs.sg247.logs.ServiceGuardLogAnalysisJob.SERVICE_GUARD_LOG_ANALYSIS_CRON;
 import static io.harness.jobs.sg247.timeseries.ServiceGuardTimeSeriesAnalysisJob.SERVICE_GUARD_TIME_SERIES_ANALYSIS_CRON;
+import static io.harness.jobs.workflow.collection.CVDataCollectionJob.CV_TASK_CRON;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL;
+import static software.wings.common.VerificationConstants.CV_TASK_CRON_POLL_INTERVAL_SEC;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -16,6 +18,7 @@ import io.harness.jobs.VerificationJob;
 import io.harness.jobs.sg247.collection.ServiceGuardDataCollectionJob;
 import io.harness.jobs.sg247.logs.ServiceGuardLogAnalysisJob;
 import io.harness.jobs.sg247.timeseries.ServiceGuardTimeSeriesAnalysisJob;
+import io.harness.jobs.workflow.collection.CVDataCollectionJob;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.service.intfc.ContinuousVerificationService;
@@ -112,6 +115,7 @@ public class ServiceGuardAccountPoller {
       scheduleServiceGuardDataCollectionsCronsJobs(account.getUuid());
       scheduleServiceGuardTimeSeriesCronJobs(account.getUuid());
       scheduleServiceGuardLogCronJobs(account.getUuid());
+      scheduleCVTaskCronJobs(account.getUuid());
     });
   }
 
@@ -185,6 +189,30 @@ public class ServiceGuardAccountPoller {
     logger.info("Scheduled Log data collection Cron Job for Account : {}, with details : {}", accountId, job);
   }
 
+  private void scheduleCVTaskCronJobs(String accountId) {
+    if (jobScheduler.checkExists(accountId, CV_TASK_CRON)) {
+      return;
+    }
+    Date startDate = new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(1));
+    JobDetail job = JobBuilder.newJob(CVDataCollectionJob.class)
+                        .withIdentity(accountId, CV_TASK_CRON)
+                        .usingJobData("timestamp", System.currentTimeMillis())
+                        .usingJobData("accountId", accountId)
+                        .build();
+
+    Trigger trigger = TriggerBuilder.newTrigger()
+                          .withIdentity(accountId, CV_TASK_CRON)
+                          .withSchedule(SimpleScheduleBuilder.simpleSchedule()
+                                            .withIntervalInSeconds(CV_TASK_CRON_POLL_INTERVAL_SEC)
+                                            .withMisfireHandlingInstructionNowWithExistingCount()
+                                            .repeatForever())
+                          .startAt(startDate)
+                          .build();
+
+    jobScheduler.scheduleJob(job, trigger);
+    logger.info("Scheduled Log data collection Cron Job for Account : {}, with details : {}", accountId, job);
+  }
+
   public void deleteCrons(List<Account> disabledAccounts) {
     logger.info("Deleting crons for " + disabledAccounts.size() + " accounts");
     disabledAccounts.forEach(account -> {
@@ -200,6 +228,10 @@ public class ServiceGuardAccountPoller {
 
       if (jobScheduler.checkExists(account.getUuid(), SERVICE_GUARD_LOG_ANALYSIS_CRON)) {
         jobScheduler.deleteJob(account.getUuid(), SERVICE_GUARD_LOG_ANALYSIS_CRON);
+        logger.info("Deleting crons for account {} ", account.getUuid());
+      }
+      if (jobScheduler.checkExists(account.getUuid(), CV_TASK_CRON)) {
+        jobScheduler.deleteJob(account.getUuid(), CV_TASK_CRON);
         logger.info("Deleting crons for account {} ", account.getUuid());
       }
     });

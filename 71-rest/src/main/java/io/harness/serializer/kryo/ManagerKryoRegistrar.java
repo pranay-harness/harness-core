@@ -590,6 +590,7 @@ import software.wings.service.impl.servicenow.ServiceNowDelegateServiceImpl;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowMetaDTO;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
+import software.wings.service.impl.splunk.SplunkDataCollectionInfoV2;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackDriverLogDataCollectionInfo;
@@ -645,6 +646,8 @@ import software.wings.utils.RepositoryFormat;
 import software.wings.utils.RepositoryType;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.yaml.gitSync.YamlGitConfig;
+
+import java.time.Instant;
 
 public class ManagerKryoRegistrar implements KryoRegistrar {
   @Override
@@ -1337,5 +1340,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(LogEntryOperation.class, 7232);
     kryo.register(MonitoredResource.class, 7233);
     kryo.register(LogEntrySourceLocation.class, 7234);
+    kryo.register(Instant.class, 7235);
+    kryo.register(SplunkDataCollectionInfoV2.class, 7236);
   }
 }

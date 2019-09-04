@@ -133,6 +133,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CV24x7DashboardService;
 import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.service.intfc.verification.CVConfigurationService;
+import software.wings.service.intfc.verification.CVTaskService;
 import software.wings.settings.SettingValue;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateExecutionData;
@@ -148,6 +149,7 @@ import software.wings.sm.states.NewRelicState;
 import software.wings.utils.Misc;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfiguration.CVConfigurationKeys;
+import software.wings.verification.CVTask;
 import software.wings.verification.HeatMap;
 import software.wings.verification.HeatMapResolution;
 import software.wings.verification.TimeSeriesOfMetric;
@@ -219,6 +221,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ContinuousVerificationService continuousVerificationService;
   @Inject private CVActivityLogService cvActivityLogService;
+  @Inject private CVTaskService cvTaskService;
 
   private static final int PAGE_LIMIT = 999;
   private static final int START_OFFSET = 0;
@@ -1667,6 +1670,14 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
   }
 
+  @Override
+  public boolean collectCVData(String cvTaskId) {
+    CVTask cvTask = cvTaskService.getCVTask(cvTaskId);
+    DelegateTask delegateTask = createDataCollectionDelegateTask(cvTask);
+    delegateService.queueTask(delegateTask);
+    return true;
+  }
+
   private StateExecutionData getExecutionData(CVConfiguration cvConfiguration, String waitId, int timeDuration) {
     return VerificationStateAnalysisExecutionData.builder()
         .appId(cvConfiguration.getAppId())
@@ -1957,6 +1968,16 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         new Object[] {dataCollectionInfo}, config.getEnvId());
   }
 
+  private DelegateTask createDataCollectionDelegateTask(CVTask cvTask) {
+    DataCollectionInfoV2 dataCollectionInfo = cvTask.getDataCollectionInfo();
+    DelegateTask delegateTask = createDelegateTask(dataCollectionInfo.getTaskType(), dataCollectionInfo.getAccountId(),
+        dataCollectionInfo.getApplicationId(), cvTask.getUuid(), new Object[] {dataCollectionInfo},
+        dataCollectionInfo.getEnvId());
+    waitNotifyEngine.waitForAll(
+        DataCollectionCallbackV2.builder().cvTaskId(cvTask.getUuid()).build(), cvTask.getUuid());
+
+    return delegateTask;
+  }
   private DelegateTask createDataCollectionDelegateTask(
       LogsCVConfiguration config, String waitId, long startTime, long endTime) {
     String stateExecutionId = CV_24x7_STATE_EXECUTION + "-" + config.getUuid();

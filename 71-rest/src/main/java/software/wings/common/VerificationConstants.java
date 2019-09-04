@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 public class VerificationConstants {
   public static final long ML_RECORDS_TTL_MONTHS = 6;
+  public static final long CV_TASK_TTL_MONTHS = 1;
   /*
     New Relic constants
      */
@@ -32,6 +33,7 @@ public class VerificationConstants {
   public static final String NOTIFY_VERIFICATION_STATE = "/notify-verification-state";
   public static final String NOTIFY_WORKFLOW_VERIFICATION_STATE = "/notify-workflow-verification-state";
   public static final String COLLECT_24_7_DATA = "/collect-24-7-data";
+  public static final String COLLECT_CV_DATA = "/collect-cv-data";
   public static final String COLLECT_DATA = "/collect-data";
   public static final String CHECK_STATE_VALID = "/state-valid";
   public static final String GET_DEPLOYMENTS_24_7 = "/cv24-7-deployment-list";
@@ -115,6 +117,7 @@ public class VerificationConstants {
   public static final int CRON_POLL_INTERVAL_IN_MINUTES = 15;
   public static final int PREDECTIVE_HISTORY_MINUTES = 120;
   public static final long CRON_POLL_INTERVAL = TimeUnit.MINUTES.toSeconds(CRON_POLL_INTERVAL_IN_MINUTES); // in seconds
+  public static final int CV_TASK_CRON_POLL_INTERVAL_SEC = 10;
   public static final int DEFAULT_DATA_COLLECTION_INTERVAL_IN_SECONDS = 60;
   public static final int DEFAULT_LE_AUTOSCALE_DATA_COLLECTION_INTERVAL_IN_SECONDS = 60;
   public static final int CV_CONFIGURATION_VALID_LIMIT_IN_DAYS = 7;

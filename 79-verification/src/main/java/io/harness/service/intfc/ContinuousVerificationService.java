@@ -33,4 +33,10 @@ public interface ContinuousVerificationService {
 
   void triggerLogAnalysisAlertIfNecessary(
       String cvConfigId, LogMLAnalysisRecord mlAnalysisResponse, int analysisMinute);
+
+  void processNextCVTasks(String accountId);
+
+  void expireLongRunningCVTasks(String accountId);
+
+  void retryCVTasks(String accountId);
 }

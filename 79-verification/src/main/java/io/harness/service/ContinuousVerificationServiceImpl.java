@@ -78,6 +78,7 @@ import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.verification.CVTaskService;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
+import software.wings.verification.CVTask;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.verification.log.LogsCVConfiguration;
@@ -90,6 +91,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -1352,6 +1354,29 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 .build()));
       }
     });
+  }
+
+  @Override
+  public void processNextCVTasks(String accountId) {
+    while (true) {
+      Optional<CVTask> cvTask = cvTaskService.getNextTask(accountId);
+      if (cvTask.isPresent()) {
+        verificationManagerClientHelper.callManagerWithRetry(
+            verificationManagerClient.collectCVData(cvTask.get().getUuid()));
+      } else {
+        break;
+      }
+    }
+  }
+
+  @Override
+  public void expireLongRunningCVTasks(String accountId) {
+    cvTaskService.expireLongRunningTasks(accountId);
+  }
+
+  @Override
+  public void retryCVTasks(String accountId) {
+    cvTaskService.retryTasks(accountId);
   }
 
   private boolean shouldThrowAlert(CVConfiguration cvConfiguration) {
