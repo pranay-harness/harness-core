@@ -252,8 +252,6 @@ public class KubernetesSetupTest extends WingsBaseTest {
     on(workflowStandardParams).set("appService", appService);
     on(workflowStandardParams).set("environmentService", environmentService);
     on(workflowStandardParams).set("artifactService", artifactService);
-    on(workflowStandardParams).set("infrastructureMappingService", infrastructureMappingService);
-    on(workflowStandardParams).set("serviceResourceService", serviceResourceService);
     on(workflowStandardParams).set("serviceTemplateService", serviceTemplateService);
     on(workflowStandardParams).set("configuration", configuration);
     on(workflowStandardParams).set("artifactStreamService", artifactStreamService);
@@ -289,6 +287,8 @@ public class KubernetesSetupTest extends WingsBaseTest {
     when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean(), anySet()))
         .thenReturn(WorkflowExecution.builder().build());
     context = new ExecutionContextImpl(stateExecutionInstance);
+    on(context).set("infrastructureMappingService", infrastructureMappingService);
+    on(context).set("serviceResourceService", serviceResourceService);
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
@@ -459,6 +459,8 @@ public class KubernetesSetupTest extends WingsBaseTest {
             .addStateExecutionData(aCommandStateExecutionData().withContainerSetupParams(setupParams).build())
             .build();
     ExecutionContext context = new ExecutionContextImpl(stateExecutionInstance);
+    on(context).set("infrastructureMappingService", infrastructureMappingService);
+    on(context).set("serviceResourceService", serviceResourceService);
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
     CommandExecutionResult result =

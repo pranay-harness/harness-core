@@ -236,10 +236,14 @@ public class HelmDeployStateTest extends WingsBaseTest {
     on(workflowStandardParams).set("appService", appService);
     on(workflowStandardParams).set("environmentService", environmentService);
     on(workflowStandardParams).set("featureFlagService", featureFlagService);
+
+    on(context).set("infrastructureMappingService", infrastructureMappingService);
+    on(context).set("serviceResourceService", serviceResourceService);
     on(context).set("artifactService", artifactService);
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
     on(context).set("featureFlagService", featureFlagService);
+
     when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
   }
 

@@ -267,8 +267,6 @@ public class CloudFormationStateTest extends WingsBaseTest {
     on(workflowStandardParams).set("configuration", configuration);
     on(workflowStandardParams).set("artifactStreamService", artifactStreamService);
     on(workflowStandardParams).set("accountService", accountService);
-    on(workflowStandardParams).set("infrastructureMappingService", infrastructureMappingService);
-    on(workflowStandardParams).set("serviceResourceService", serviceResourceService);
     on(workflowStandardParams).set("artifactStreamServiceBindingService", artifactStreamServiceBindingService);
     on(workflowStandardParams).set("featureFlagService", featureFlagService);
 
@@ -298,6 +296,9 @@ public class CloudFormationStateTest extends WingsBaseTest {
     context = new ExecutionContextImpl(stateExecutionInstance);
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
+    on(context).set("infrastructureMappingService", infrastructureMappingService);
+    on(context).set("serviceResourceService", serviceResourceService);
+
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
     //    when(evaluator.substitute(anyString(), anyMap(), anyString())).thenAnswer(i -> i.getArguments()[0]);
     PortalConfig portalConfig = new PortalConfig();

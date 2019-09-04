@@ -253,6 +253,8 @@ public class KubernetesDeployTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldExecute() {
+    on(context).set("infrastructureMappingService", infrastructureMappingService);
+    on(context).set("serviceResourceService", serviceResourceService);
     on(context).set("serviceTemplateService", serviceTemplateService);
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);

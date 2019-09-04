@@ -210,7 +210,6 @@ public class PcfSetupStateTest extends WingsBaseTest {
     on(workflowStandardParams).set("serviceTemplateService", serviceTemplateService);
     on(workflowStandardParams).set("configuration", configuration);
     on(workflowStandardParams).set("artifactStreamService", artifactStreamService);
-    on(workflowStandardParams).set("serviceResourceService", serviceResourceService);
     on(workflowStandardParams).set("artifactStreamServiceBindingService", artifactStreamServiceBindingService);
     on(workflowStandardParams).set("featureFlagService", featureFlagService);
 
@@ -244,14 +243,15 @@ public class PcfSetupStateTest extends WingsBaseTest {
     FieldUtils.writeField(pcfSetupState, "secretManager", secretManager, true);
     FieldUtils.writeField(pcfSetupState, "olderActiveVersionCountToKeep", 3, true);
     FieldUtils.writeField(pcfSetupState, "pcfStateHelper", new PcfStateHelper(), true);
-    FieldUtils.writeField(workflowStandardParams, "infrastructureMappingService", infrastructureMappingService, true);
-    FieldUtils.writeField(workflowStandardParams, "serviceResourceService", serviceResourceService, true);
     when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean(), anySet()))
         .thenReturn(WorkflowExecution.builder().build());
     context = new ExecutionContextImpl(stateExecutionInstance);
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
     on(context).set("featureFlagService", featureFlagService);
+    on(context).set("serviceResourceService", serviceResourceService);
+    on(context).set("infrastructureMappingService", infrastructureMappingService);
+
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
     when(evaluator.substitute(anyString(), anyMap(), any(VariableResolverTracker.class), anyString()))
         .thenAnswer(i -> i.getArguments()[0]);

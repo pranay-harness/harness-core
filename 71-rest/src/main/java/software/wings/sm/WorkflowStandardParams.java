@@ -3,13 +3,10 @@ package software.wings.sm;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.RandomUtils.nextInt;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.common.Constants.DEPLOYMENT_TRIGGERED_BY;
 import static software.wings.common.Constants.PHASE_PARAM;
-import static software.wings.utils.KubernetesConvention.getNormalizedInfraMappingIdLabelValue;
 
 import com.google.inject.Inject;
 
@@ -22,15 +19,9 @@ import io.harness.context.ContextElementType;
 import io.harness.serializer.KryoUtils;
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.api.DeploymentType;
 import software.wings.api.InfraMappingElement;
-import software.wings.api.InfraMappingElement.Helm;
-import software.wings.api.InfraMappingElement.InfraMappingElementBuilder;
-import software.wings.api.InfraMappingElement.Kubernetes;
-import software.wings.api.InfraMappingElement.Pcf;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
@@ -40,17 +31,11 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.ArtifactVariable;
-import software.wings.beans.AzureKubernetesInfrastructureMapping;
-import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.FeatureName;
-import software.wings.beans.GcpKubernetesInfrastructureMapping;
-import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.artifact.Artifact;
-import software.wings.common.Constants;
 import software.wings.common.InstanceExpressionProcessor;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -59,8 +44,6 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
-import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -92,11 +75,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
 
   @Inject private transient ArtifactStreamService artifactStreamService;
 
-  @Inject private transient InfrastructureMappingService infrastructureMappingService;
-
   @Inject private transient WorkflowExecutionService workflowExecutionService;
-
-  @Inject private transient ServiceResourceService serviceResourceService;
 
   @Inject private transient ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
@@ -173,7 +152,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
       map.put(DEPLOYMENT_TRIGGERED_BY, currentUser.getName());
     }
 
-    infraMappingElement = fetchInfraMappingElement(context);
+    infraMappingElement = context.fetchInfraMappingElement();
     if (infraMappingElement != null) {
       map.put(INFRA, infraMappingElement);
     }
@@ -207,79 +186,6 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
       return uriBuilder.toString();
     } catch (URISyntaxException e) {
       return baseUrl;
-    }
-  }
-
-  public InfraMappingElement fetchInfraMappingElement(ExecutionContext context) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-
-    if (phaseElement == null) {
-      return null;
-    }
-
-    String appId = context.getAppId();
-    String infraMappingId = phaseElement.getInfraMappingId();
-
-    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
-    if (infrastructureMapping == null) {
-      return null;
-    }
-
-    InfraMappingElementBuilder builder = InfraMappingElement.builder().name(infrastructureMapping.getName());
-    populateNamespaceInInfraMappingElement(infrastructureMapping, builder);
-    populateDeploymentSpecificInfoInInfraMappingElement(infrastructureMapping, phaseElement, builder);
-
-    return builder.build();
-  }
-
-  private void populateNamespaceInInfraMappingElement(
-      InfrastructureMapping infrastructureMapping, InfraMappingElementBuilder builder) {
-    DeploymentType deploymentType =
-        serviceResourceService.getDeploymentType(infrastructureMapping, null, infrastructureMapping.getServiceId());
-
-    if ((DeploymentType.KUBERNETES.equals(deploymentType)) || (DeploymentType.HELM.equals(deploymentType))) {
-      String namespace = null;
-
-      if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
-        namespace = ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getNamespace();
-      } else if (infrastructureMapping instanceof AzureKubernetesInfrastructureMapping) {
-        namespace = ((AzureKubernetesInfrastructureMapping) infrastructureMapping).getNamespace();
-      } else if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
-        namespace = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getNamespace();
-      } else {
-        unhandled(infrastructureMapping.getInfraMappingType());
-      }
-
-      if (isBlank(namespace)) {
-        namespace = "default";
-      }
-
-      builder.kubernetes(Kubernetes.builder()
-                             .namespace(namespace)
-                             .infraId(getNormalizedInfraMappingIdLabelValue(infrastructureMapping.getUuid()))
-                             .build());
-    }
-  }
-
-  private void populateDeploymentSpecificInfoInInfraMappingElement(
-      InfrastructureMapping infrastructureMapping, PhaseElement phaseElement, InfraMappingElementBuilder builder) {
-    String infraMappingId = phaseElement.getInfraMappingId();
-
-    if (DeploymentType.PCF.name().equals(phaseElement.getDeploymentType())) {
-      PcfInfrastructureMapping pcfInfrastructureMapping = (PcfInfrastructureMapping) infrastructureMapping;
-
-      String route = isNotEmpty(pcfInfrastructureMapping.getRouteMaps())
-          ? pcfInfrastructureMapping.getRouteMaps().get(0)
-          : StringUtils.EMPTY;
-      String tempRoute = isNotEmpty(pcfInfrastructureMapping.getTempRouteMap())
-          ? pcfInfrastructureMapping.getTempRouteMap().get(0)
-          : StringUtils.EMPTY;
-
-      builder.pcf(Pcf.builder().route(route).tempRoute(tempRoute).build());
-    } else if (DeploymentType.HELM.name().equals(phaseElement.getDeploymentType())) {
-      builder.helm(Helm.builder()
-                       .shortId(infraMappingId.substring(0, 7).toLowerCase().replace('-', 'z').replace('_', 'z'))
-                       .build());
     }
   }
 
@@ -489,7 +395,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
 
   public InfraMappingElement getInfraMappingElement(ExecutionContext context) {
     if (infraMappingElement == null) {
-      fetchInfraMappingElement(context);
+      context.fetchInfraMappingElement();
     }
     return infraMappingElement;
   }

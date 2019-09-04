@@ -198,7 +198,6 @@ public class ExecutionContextImplTest extends WingsBaseTest {
         .thenReturn(singletonList(ARTIFACT_STREAM_ID));
     on(std).set("artifactService", artifactService);
     on(std).set("serviceTemplateService", serviceTemplateService);
-    on(std).set("serviceResourceService", serviceResourceService);
     on(std).set("artifactStreamServiceBindingService", artifactStreamServiceBindingService);
   }
 
