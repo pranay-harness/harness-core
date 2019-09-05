@@ -80,7 +80,7 @@ public class ServiceGuardAccountPoller {
               accounts.stream()
                   .filter(account
                       -> account.getLicenseInfo() == null
-                          || ((account.getLicenseInfo() != null)
+                          || ((account.getLicenseInfo() != null && account.getLicenseInfo().getAccountStatus() != null)
                                  && (account.getLicenseInfo().getAccountStatus().equals(AccountStatus.ACTIVE)
                                         && (account.getLicenseInfo().getAccountType().equals(AccountType.TRIAL)
                                                || account.getLicenseInfo().getAccountType().equals(AccountType.PAID)))))
