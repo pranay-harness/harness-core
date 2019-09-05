@@ -66,7 +66,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
     when(workflowStandardParams.getElementType()).thenReturn(ContextElementType.STANDARD);
     context = new ExecutionContextImpl(stateExecutionInstance, null, injector);
     context.pushContextElement(workflowStandardParams);
-    context.pushContextElement(aHostElement().withHostName("localhost").build());
+    context.pushContextElement(aHostElement().hostName("localhost").build());
   }
 
   @Test

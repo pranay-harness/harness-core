@@ -671,7 +671,7 @@ public class K8sStateHelper {
         .map(podDetails -> {
           return anInstanceElement()
               .withUuid(podDetails.getName())
-              .withHost(aHostElement().withHostName(podDetails.getName()).withIp(podDetails.getPodIP()).build())
+              .withHost(aHostElement().hostName(podDetails.getName()).ip(podDetails.getPodIP()).build())
               .withHostName(podDetails.getName())
               .withDisplayName(podDetails.getName())
               .withPodName(podDetails.getName())

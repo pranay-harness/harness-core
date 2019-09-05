@@ -246,7 +246,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
             .toTime(toTime)
             .fromTime(toTime - TimeUnit.MINUTES.toMillis(120))
             .instanceElement(anInstanceElement()
-                                 .withHost(HostElement.Builder.aHostElement().withHostName(node.getHost()).build())
+                                 .withHost(HostElement.Builder.aHostElement().hostName(node.getHost()).build())
                                  .build())
             .build();
 

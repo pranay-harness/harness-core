@@ -75,9 +75,9 @@ public class ContainerDeploymentManagerHelper {
     if (isNotEmpty(containerInfos)) {
       for (ContainerInfo containerInfo : containerInfos) {
         HostElement hostElement = aHostElement()
-                                      .withHostName(containerInfo.getHostName())
-                                      .withIp(containerInfo.getIp())
-                                      .withEc2Instance(containerInfo.getEc2Instance())
+                                      .hostName(containerInfo.getHostName())
+                                      .ip(containerInfo.getIp())
+                                      .ec2Instance(containerInfo.getEc2Instance())
                                       .build();
         InstanceElement instanceElement = anInstanceElement()
                                               .withUuid(containerInfo.getContainerId())

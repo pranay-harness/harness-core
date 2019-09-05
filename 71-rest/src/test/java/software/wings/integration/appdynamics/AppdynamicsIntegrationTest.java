@@ -264,10 +264,9 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
                   .instanceName(generateUuid())
                   .hostExpression("${host.hostName}")
                   .workflowId(workflowId)
-                  .instanceElement(
-                      anInstanceElement()
-                          .withHost(HostElement.Builder.aHostElement().withHostName(node.getName()).build())
-                          .build())
+                  .instanceElement(anInstanceElement()
+                                       .withHost(HostElement.Builder.aHostElement().hostName(node.getName()).build())
+                                       .build())
                   .build();
           target = client.target(API_BASE + "/appdynamics/node-data?accountId=" + accountId);
           RestResponse<VerificationNodeDataSetupResponse> metricResponse =

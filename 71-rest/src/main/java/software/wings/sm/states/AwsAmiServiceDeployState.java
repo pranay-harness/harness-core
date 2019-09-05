@@ -522,11 +522,11 @@ public class AwsAmiServiceDeployState extends State {
                                 .build();
                 Host savedHost = hostService.saveHost(host);
                 HostElement hostElement = aHostElement()
-                                              .withUuid(savedHost.getUuid())
-                                              .withPublicDns(instance.getPublicDnsName())
-                                              .withIp(instance.getPrivateIpAddress())
-                                              .withEc2Instance(instance)
-                                              .withInstanceId(instance.getInstanceId())
+                                              .uuid(savedHost.getUuid())
+                                              .publicDns(instance.getPublicDnsName())
+                                              .ip(instance.getPrivateIpAddress())
+                                              .ec2Instance(instance)
+                                              .instanceId(instance.getInstanceId())
                                               .build();
 
                 final Map<String, Object> contextMap = context.asMap();

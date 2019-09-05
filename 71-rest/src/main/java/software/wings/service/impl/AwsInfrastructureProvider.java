@@ -127,7 +127,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
           && !awsInfrastructureMapping.getHostNameConvention().equals(
                  InfrastructureConstants.DEFAULT_AWS_HOST_NAME_CONVENTION)) {
         awsHosts.forEach(h -> {
-          HostElement hostElement = aHostElement().withEc2Instance(h.getEc2Instance()).build();
+          HostElement hostElement = aHostElement().ec2Instance(h.getEc2Instance()).build();
 
           final Map<String, Object> contextMap = new HashMap<>();
           contextMap.put("host", hostElement);
@@ -206,7 +206,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
           && !awsInstanceInfrastructure.getHostNameConvention().equals(
                  InfrastructureConstants.DEFAULT_AWS_HOST_NAME_CONVENTION)) {
         awsHosts.forEach(h -> {
-          HostElement hostElement = aHostElement().withEc2Instance(h.getEc2Instance()).build();
+          HostElement hostElement = aHostElement().ec2Instance(h.getEc2Instance()).build();
 
           final Map<String, Object> contextMap = new HashMap();
           contextMap.put("host", hostElement);

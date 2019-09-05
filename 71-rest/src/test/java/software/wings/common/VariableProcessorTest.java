@@ -71,7 +71,7 @@ public class VariableProcessorTest extends CategoryTest {
     InstanceElement instanceElement =
         anInstanceElement()
             .withServiceTemplateElement(aServiceTemplateElement().withUuid(TEMPLATE_ID).build())
-            .withHost(aHostElement().withUuid(HOST_ID).build())
+            .withHost(aHostElement().uuid(HOST_ID).build())
             .build();
 
     assertThat(variableProcessor.getVariables(new ArrayDeque<>(asList(workflowStandardParams, instanceElement)), null))

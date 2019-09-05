@@ -130,7 +130,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
         Host host =
             aHost().withEc2Instance(ec2Instance).withAppId(appId).withEnvId(envId).withHostName(generateUuid()).build();
         String hostId = wingsPersistence.save(host);
-        HostElement hostElement = aHostElement().withHostName(generateUuid()).withUuid(hostId).build();
+        HostElement hostElement = aHostElement().hostName(generateUuid()).uuid(hostId).build();
         instanceElements.add(
             anInstanceStatusSummary().withInstanceElement(anInstanceElement().withHost(hostElement).build()).build());
         hostElements.put(hostId, hostElement);
