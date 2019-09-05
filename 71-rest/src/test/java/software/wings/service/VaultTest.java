@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
@@ -20,6 +21,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_F
 
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
@@ -87,6 +89,7 @@ import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManagerConfigService;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.UsageRestrictions;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -1457,6 +1460,47 @@ public class VaultTest extends WingsBaseTest {
 
     vaultService.deleteVaultConfig(accountId, secretManagerId);
     verify(auditServiceHelper).reportDeleteForAuditingUsingAccountId(eq(accountId), any(VaultConfig.class));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void secretText_createdBeforeLocalEncryption_shouldBeReturned() throws Exception {
+    VaultConfig vaultConfig = getVaultConfig();
+    vaultConfig.setAccountId(accountId);
+    vaultService.saveVaultConfig(accountId, KryoUtils.clone(vaultConfig));
+
+    String secretName = UUID.randomUUID().toString();
+    secretManager.saveSecret(accountId, secretName, "MySecret", null, new UsageRestrictions());
+
+    PageRequest<EncryptedData> pageRequest =
+        aPageRequest()
+            .withLimit(UNLIMITED)
+            .addFilter("accountId", Operator.EQ, accountId)
+            .addFilter("type", Operator.IN, new Object[] {SettingVariableTypes.SECRET_TEXT.name()})
+            .build();
+
+    // The above created secret text should be returned by the list secrets call.
+    PageResponse<EncryptedData> response = secretManager.listSecrets(accountId, pageRequest, null, null, true);
+    assertThat(response.getResponse()).isNotEmpty();
+    assertThat(response.getResponse().size()).isEqualTo(1);
+    EncryptedData encryptedData = response.getResponse().get(0);
+    assertThat(encryptedData.getName()).isEqualTo(secretName);
+    assertThat(encryptedData.getEncryptedBy()).isNotEmpty();
+
+    // Enable local encryption on this account.
+    Account account = accountService.get(accountId);
+    account.setLocalEncryptionEnabled(true);
+    wingsPersistence.save(account);
+
+    // The old secret should still be returned by the list secrets call.
+    response = secretManager.listSecrets(accountId, pageRequest, null, null, true);
+    assertThat(response.getResponse()).isNotEmpty();
+    assertThat(response.getResponse().size()).isEqualTo(1);
+
+    // But the secret manager field will be null instead.
+    encryptedData = response.getResponse().get(0);
+    assertThat(encryptedData.getName()).isEqualTo(secretName);
+    assertThat(encryptedData.getEncryptedBy()).isNull();
   }
 
   @Test
