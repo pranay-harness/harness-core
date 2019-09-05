@@ -3,13 +3,13 @@ package io.harness.event.app;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
-import io.harness.event.grpc.GrpcEventServer;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.govern.ProviderModule;
 import io.harness.mongo.MongoConfig;
@@ -69,14 +69,14 @@ public class EventServiceApplication {
 
     Injector injector = Guice.createInjector(modules);
 
-    GrpcEventServer server = injector.getInstance(GrpcEventServer.class);
-    server.initialize();
+    ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
+    serviceManager.awaitHealthy();
     logger.info("Server startup complete");
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       logger.info("Shutting down server...");
-      server.shutdown();
+      serviceManager.stopAsync().awaitStopped();
     }));
-    server.awaitTermination();
+    serviceManager.awaitStopped();
     logger.info("Server shutdown complete");
     LogManager.shutdown();
   }

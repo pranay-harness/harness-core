@@ -1,5 +1,6 @@
 package io.harness.grpc.auth;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 
 import io.grpc.Context;
@@ -12,6 +13,8 @@ import io.grpc.ServerInterceptor;
 import io.grpc.Status;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Set;
+
 /**
  * {@link ServerInterceptor} that validates the delegate token, and populates context with accountId before calling the
  * rpc implementation on server-side.
@@ -19,6 +22,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DelegateAuthServerInterceptor implements ServerInterceptor {
   private static final ServerCall.Listener NOOP_LISTENER = new ServerCall.Listener() {};
+  private static final Set<String> EXCLUDED_SERVICES =
+      ImmutableSet.of("grpc.health.v1.Health", "grpc.reflection.v1alpha.ServerReflection");
+
   private final AuthService authService;
 
   @Inject
@@ -29,6 +35,9 @@ public class DelegateAuthServerInterceptor implements ServerInterceptor {
   @Override
   public <ReqT, RespT> Listener<ReqT> interceptCall(
       ServerCall<ReqT, RespT> call, Metadata metadata, ServerCallHandler<ReqT, RespT> next) {
+    if (excluded(call)) {
+      return Contexts.interceptCall(Context.current(), call, metadata, next);
+    }
     String accountId = metadata.get(DelegateAuthCallCredentials.ACCOUNT_ID_METADATA_KEY);
     String token = metadata.get(DelegateAuthCallCredentials.TOKEN_METADATA_KEY);
     @SuppressWarnings("unchecked") Listener<ReqT> noopListener = NOOP_LISTENER;
@@ -52,5 +61,9 @@ public class DelegateAuthServerInterceptor implements ServerInterceptor {
       return noopListener;
     }
     return Contexts.interceptCall(ctx, call, metadata, next);
+  }
+
+  private <RespT, ReqT> boolean excluded(ServerCall<ReqT, RespT> call) {
+    return EXCLUDED_SERVICES.contains(call.getMethodDescriptor().getServiceName());
   }
 }

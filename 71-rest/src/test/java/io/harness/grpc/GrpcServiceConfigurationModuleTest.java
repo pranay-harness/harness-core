@@ -3,6 +3,7 @@ package io.harness.grpc;
 import static io.harness.rule.OwnerRule.HANTANG;
 
 import com.google.common.io.Resources;
+import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -32,7 +33,7 @@ import javax.validation.Validator;
 
 @Slf4j
 @RunWith(JUnit4.class)
-public class GrpcServerModuleTest extends BaseIntegrationTest {
+public class GrpcServiceConfigurationModuleTest extends BaseIntegrationTest {
   final ObjectMapper objectMapper = Jackson.newObjectMapper();
   final Validator validator = Validators.newValidator();
   final YamlConfigurationFactory<MainConfiguration> factory =
@@ -54,11 +55,8 @@ public class GrpcServerModuleTest extends BaseIntegrationTest {
       }
     });
     modules.add(new PerpetualTaskServiceModule());
-    modules.add(new GrpcServerModule());
+    modules.add(new GrpcServiceConfigurationModule(configuration.getGrpcServerConfig()));
     Injector injector = Guice.createInjector(modules);
-
-    GrpcServer server = injector.getInstance(GrpcServer.class);
-    server.initialize();
-    server.awaitTermination();
+    injector.getInstance(ServiceManager.class).startAsync().awaitHealthy();
   }
 }

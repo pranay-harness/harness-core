@@ -1,7 +1,9 @@
-plainTextPort: 9889
-securePort: 9890
-keyFilePath: key.pem
-certFilePath: cert.pem
+connectors:
+  - port: 9889
+    secure: true
+    keyFilePath: key.pem
+    certFilePath: cert.pem
+  - port: 9890
 mongo:
   uri: mongodb://localhost:27017/harness
 

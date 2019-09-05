@@ -1,11 +1,11 @@
 package io.harness.grpc;
 
+import io.harness.grpc.server.Connector;
 import lombok.Data;
+
+import java.util.List;
 
 @Data
 public class GrpcServerConfig {
-  int plainTextPort;
-  int tlsPort;
-  String keyFile;
-  String certFile;
+  private List<Connector> connectors;
 }

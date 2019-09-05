@@ -38,12 +38,13 @@ public class DelegateAuthCallCredentials extends CallCredentials {
       applier.fail(Status.UNAUTHENTICATED.withDescription(
           "Including delegate credentials require channel with PRIVACY_AND_INTEGRITY security level. Observed security level: "
           + security));
+    } else {
+      String token = eventServiceTokenGenerator.getEventServiceToken();
+      Metadata headers = new Metadata();
+      headers.put(ACCOUNT_ID_METADATA_KEY, accountId);
+      headers.put(TOKEN_METADATA_KEY, token);
+      applier.apply(headers);
     }
-    String token = eventServiceTokenGenerator.getEventServiceToken();
-    Metadata headers = new Metadata();
-    headers.put(ACCOUNT_ID_METADATA_KEY, accountId);
-    headers.put(TOKEN_METADATA_KEY, token);
-    applier.apply(headers);
   }
 
   @Override
