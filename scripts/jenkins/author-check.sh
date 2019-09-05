@@ -64,7 +64,7 @@ git log -1000 --oneline --format='%aN <%aE>' | sort -u |\
     grep -iv "^Vaibhav Tulsyan <vaibhav.tulsyan@harness.io>$" |\
     grep -iv "^Venkatesh Kotrike <venkatesh.kotrike@harness.io>$" |\
     grep -iv "^Vikas Naiyar <vikas.naiyar@harness.io>$" |\
-    grep -iv "^Yogesh Chauhan <yogesh.chauhan@harness.io>$"` || echo
+    grep -iv "^Yogesh Chauhan <yogesh.chauhan@harness.io>$"` || :
 
 if [ ! -z "$UNKNOWN_USERS" ]
 then
@@ -74,7 +74,10 @@ then
 fi
 
 
-EXCEPTIONS="^`cat .mailmap | cut -c 51- | awk '{print}' ORS='\\\\|'`--dummy thing to absorb the last delimiter--$"
+EXCEPTIONS="^`cat .mailmap |\
+    cut -c 51- |\
+    grep -v -e '^$' |\
+    awk '{print}' ORS='\\\\|'`--dummy thing to absorb the last delimiter--$"
 
 mv .mailmap .mailmap.tmp
 
@@ -82,7 +85,7 @@ EXECPTION_COMMITS=`git log --oneline --format='%aN <%aE>' | grep -i "$EXCEPTIONS
 
 mv .mailmap.tmp .mailmap
 
-echo $EXECPTION_COMMITS
+echo $EXECPTION_COMMITS exceptions
 
 if [ $EXECPTION_COMMITS -gt 198 ]
 then
