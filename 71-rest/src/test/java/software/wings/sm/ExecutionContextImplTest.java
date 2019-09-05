@@ -6,7 +6,6 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Mockito.when;
-import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -256,7 +255,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
 
     on(context).set("serviceTemplateService", serviceTemplateService);
 
-    final PhaseElement phaseElement = aPhaseElement().withServiceElement(svc).build();
+    final PhaseElement phaseElement = PhaseElement.builder().serviceElement(svc).build();
     injector.injectMembers(phaseElement);
     context.pushContextElement(phaseElement);
 
@@ -294,7 +293,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
 
     on(context).set("serviceTemplateService", serviceTemplateService);
 
-    final PhaseElement phaseElement = aPhaseElement().withServiceElement(svc).build();
+    final PhaseElement phaseElement = PhaseElement.builder().serviceElement(svc).build();
     injector.injectMembers(phaseElement);
     context.pushContextElement(phaseElement);
 
@@ -352,7 +351,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
             .withWorkflowElement(WorkflowElement.builder().pipelineDeploymentUuid(pipelineExecutionId).build())
             .build());
     stateExecutionInstance.getContextElements().add(
-        aPhaseElement().withAppId(appId).withUuid(phaseId).withPhaseName(phaseName).build());
+        PhaseElement.builder().appId(appId).uuid(phaseId).phaseName(phaseName).build());
     return new ExecutionContextImpl(stateExecutionInstance);
   }
 

@@ -16,7 +16,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -156,11 +155,11 @@ public class HelmDeployStateTest extends WingsBaseTest {
   private ServiceElement serviceElement = aServiceElement().withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
 
   @InjectMocks
-  private PhaseElement phaseElement = aPhaseElement()
-                                          .withUuid(generateUuid())
-                                          .withServiceElement(serviceElement)
-                                          .withInfraMappingId(INFRA_MAPPING_ID)
-                                          .withDeploymentType(DeploymentType.HELM.name())
+  private PhaseElement phaseElement = PhaseElement.builder()
+                                          .uuid(generateUuid())
+                                          .serviceElement(serviceElement)
+                                          .infraMappingId(INFRA_MAPPING_ID)
+                                          .deploymentType(DeploymentType.HELM.name())
                                           .build();
 
   private StateExecutionInstance stateExecutionInstance =

@@ -33,7 +33,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
-import software.wings.api.PhaseElement.PhaseElementBuilder;
+import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
@@ -125,8 +125,8 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
     when(stateExecutionInstance.getStateExecutionMap()).thenReturn(Collections.emptyMap());
 
     ExecutionContext context = spy(new ExecutionContextImpl(stateExecutionInstance));
-    doReturn(PhaseElementBuilder.aPhaseElement()
-                 .withServiceElement(ServiceElement.Builder.aServiceElement().withUuid("serviceA").build())
+    doReturn(PhaseElement.builder()
+                 .serviceElement(ServiceElement.Builder.aServiceElement().withUuid("serviceA").build())
                  .build())
         .when(context)
         .getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);

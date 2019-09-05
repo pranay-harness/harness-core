@@ -43,7 +43,7 @@ import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.Scheduler;
-import software.wings.api.PhaseElement.PhaseElementBuilder;
+import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.EntityType;
@@ -692,8 +692,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
     stateExecutionInstance.setExecutionUuid(workflowExecutionId);
     stateExecutionInstance.getContextElements().push(
-        PhaseElementBuilder.aPhaseElement()
-            .withServiceElement(ServiceElement.Builder.aServiceElement().withUuid(serviceId).build())
+        PhaseElement.builder()
+            .serviceElement(ServiceElement.Builder.aServiceElement().withUuid(serviceId).build())
             .build());
     wingsPersistence.save(stateExecutionInstance);
 
@@ -1035,8 +1035,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     stateExecutionInstance.setUuid(stateExecutionId);
     stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
     stateExecutionInstance.getContextElements().push(
-        PhaseElementBuilder.aPhaseElement()
-            .withServiceElement(ServiceElement.Builder.aServiceElement().withUuid(serviceId).build())
+        PhaseElement.builder()
+            .serviceElement(ServiceElement.Builder.aServiceElement().withUuid(serviceId).build())
             .build());
     wingsPersistence.save(stateExecutionInstance);
 

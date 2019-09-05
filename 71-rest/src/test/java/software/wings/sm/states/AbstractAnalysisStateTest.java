@@ -12,7 +12,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
-import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder.aPhaseExecutionData;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
@@ -36,6 +35,7 @@ import software.wings.WingsBaseTest;
 import software.wings.api.CanaryWorkflowStandardParams;
 import software.wings.api.DeploymentType;
 import software.wings.api.InstanceElement;
+import software.wings.api.PhaseElement;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.Environment;
@@ -137,9 +137,9 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     wingsPersistence.save(workflowExecution);
 
     ExecutionContext context = spy(new ExecutionContextImpl(new StateExecutionInstance()));
-    doReturn(aPhaseElement()
-                 .withInfraMappingId(infraMappingId)
-                 .withServiceElement(aServiceElement().withUuid("serviceA").build())
+    doReturn(PhaseElement.builder()
+                 .infraMappingId(infraMappingId)
+                 .serviceElement(aServiceElement().withUuid("serviceA").build())
                  .build())
         .when(context)
         .getContextElement(ContextElementType.PARAM, PHASE_PARAM);
@@ -216,7 +216,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
             .withElementStatusSummary(Lists.newArrayList(
                 anElementExecutionSummary()
                     .withContextElement(
-                        aPhaseElement().withServiceElement(aServiceElement().withUuid("serviceA").build()).build())
+                        PhaseElement.builder().serviceElement(aServiceElement().withUuid("serviceA").build()).build())
                     .withInstanceStatusSummaries(Lists.newArrayList(
                         anInstanceStatusSummary()
                             .withInstanceElement(anInstanceElement().withHostName("serviceA-0.harness.com").build())
@@ -232,9 +232,9 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     ExecutionContext context = spy(new ExecutionContextImpl(stateExecutionInstance));
     when(stateExecutionInstance.getStateExecutionMap()).thenReturn(stateExecutionDataMap);
 
-    doReturn(aPhaseElement()
-                 .withInfraMappingId(infraMappingId)
-                 .withServiceElement(aServiceElement().withUuid("serviceA").build())
+    doReturn(PhaseElement.builder()
+                 .infraMappingId(infraMappingId)
+                 .serviceElement(aServiceElement().withUuid("serviceA").build())
                  .build())
         .when(context)
         .getContextElement(ContextElementType.PARAM, PHASE_PARAM);
@@ -286,7 +286,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     CanaryWorkflowStandardParams params = Mockito.mock(CanaryWorkflowStandardParams.class);
     doReturn(instanceElements).when(params).getInstances();
     when(context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM))
-        .thenReturn(aPhaseElement().withInfraMappingId(UUID.randomUUID().toString()).build());
+        .thenReturn(PhaseElement.builder().infraMappingId(UUID.randomUUID().toString()).build());
     when(context.getAppId()).thenReturn(appId);
 
     doReturn(params).when(context).getContextElement(ContextElementType.STANDARD);
@@ -330,7 +330,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     CanaryWorkflowStandardParams params = Mockito.mock(CanaryWorkflowStandardParams.class);
     doReturn(instanceElements).when(params).getInstances();
     when(context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM))
-        .thenReturn(aPhaseElement().withInfraMappingId(UUID.randomUUID().toString()).build());
+        .thenReturn(PhaseElement.builder().infraMappingId(UUID.randomUUID().toString()).build());
     when(context.getAppId()).thenReturn(appId);
 
     doReturn(params).when(context).getContextElement(ContextElementType.STANDARD);

@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
-import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
@@ -63,9 +62,9 @@ public class StepSubWorkflowTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldExecutePreDeployStep() {
     PhaseElement phaseElement =
-        aPhaseElement()
-            .withUuid(generateUuid())
-            .withServiceElement(aServiceElement().withUuid(generateUuid()).withName("service1").build())
+        PhaseElement.builder()
+            .uuid(generateUuid())
+            .serviceElement(aServiceElement().withUuid(generateUuid()).withName("service1").build())
             .build();
     StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
                                                         .displayName(STATE_NAME)
@@ -93,7 +92,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldValidateContainerDeploy() {
     ServiceElement serviceElement = aServiceElement().withUuid(generateUuid()).withName("service1").build();
-    PhaseElement phaseElement = aPhaseElement().withUuid(generateUuid()).withServiceElement(serviceElement).build();
+    PhaseElement phaseElement = PhaseElement.builder().uuid(generateUuid()).serviceElement(serviceElement).build();
     StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
                                                         .displayName(STATE_NAME)
                                                         .addContextElement(workflowStandardParams)
@@ -151,10 +150,10 @@ public class StepSubWorkflowTest extends WingsBaseTest {
                                                           .build();
 
     ServiceElement serviceElement = aServiceElement().withUuid(serviceId).withName("service1").build();
-    PhaseElement phaseElement = aPhaseElement()
-                                    .withUuid(generateUuid())
-                                    .withServiceElement(serviceElement)
-                                    .withDeploymentType(DeploymentType.SSH.name())
+    PhaseElement phaseElement = PhaseElement.builder()
+                                    .uuid(generateUuid())
+                                    .serviceElement(serviceElement)
+                                    .deploymentType(DeploymentType.SSH.name())
                                     .build();
     StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
                                                         .displayName(STATE_NAME)
@@ -187,10 +186,10 @@ public class StepSubWorkflowTest extends WingsBaseTest {
 
     String serviceId = generateUuid();
     ServiceElement serviceElement = aServiceElement().withUuid(serviceId).withName("service1").build();
-    PhaseElement phaseElement = aPhaseElement()
-                                    .withUuid(generateUuid())
-                                    .withServiceElement(serviceElement)
-                                    .withDeploymentType(DeploymentType.ECS.name())
+    PhaseElement phaseElement = PhaseElement.builder()
+                                    .uuid(generateUuid())
+                                    .serviceElement(serviceElement)
+                                    .deploymentType(DeploymentType.ECS.name())
                                     .build();
 
     ContainerServiceElement containerServiceElement =
@@ -223,10 +222,10 @@ public class StepSubWorkflowTest extends WingsBaseTest {
 
     String serviceId = generateUuid();
     ServiceElement serviceElement = aServiceElement().withUuid(serviceId).withName("service1").build();
-    PhaseElement phaseElement = aPhaseElement()
-                                    .withUuid(generateUuid())
-                                    .withServiceElement(serviceElement)
-                                    .withDeploymentType(DeploymentType.ECS.name())
+    PhaseElement phaseElement = PhaseElement.builder()
+                                    .uuid(generateUuid())
+                                    .serviceElement(serviceElement)
+                                    .deploymentType(DeploymentType.ECS.name())
                                     .build();
 
     StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
@@ -254,10 +253,10 @@ public class StepSubWorkflowTest extends WingsBaseTest {
 
     String serviceId = generateUuid();
     ServiceElement serviceElement = aServiceElement().withUuid(serviceId).withName("service1").build();
-    PhaseElement phaseElement = aPhaseElement()
-                                    .withUuid(generateUuid())
-                                    .withServiceElement(serviceElement)
-                                    .withDeploymentType(DeploymentType.KUBERNETES.name())
+    PhaseElement phaseElement = PhaseElement.builder()
+                                    .uuid(generateUuid())
+                                    .serviceElement(serviceElement)
+                                    .deploymentType(DeploymentType.KUBERNETES.name())
                                     .build();
 
     ContainerServiceElement containerServiceElement =
@@ -290,10 +289,10 @@ public class StepSubWorkflowTest extends WingsBaseTest {
 
     String serviceId = generateUuid();
     ServiceElement serviceElement = aServiceElement().withUuid(serviceId).withName("service1").build();
-    PhaseElement phaseElement = aPhaseElement()
-                                    .withUuid(generateUuid())
-                                    .withServiceElement(serviceElement)
-                                    .withDeploymentType(DeploymentType.KUBERNETES.name())
+    PhaseElement phaseElement = PhaseElement.builder()
+                                    .uuid(generateUuid())
+                                    .serviceElement(serviceElement)
+                                    .deploymentType(DeploymentType.KUBERNETES.name())
                                     .build();
 
     StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()

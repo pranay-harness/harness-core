@@ -2,7 +2,6 @@ package software.wings.sm.states.pcf;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
-import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
@@ -44,11 +43,11 @@ public class PcfStateTestHelper {
   }
 
   public PhaseElement getPhaseElement(ServiceElement serviceElement) {
-    return aPhaseElement()
-        .withUuid(generateUuid())
-        .withServiceElement(serviceElement)
-        .withInfraMappingId(INFRA_MAPPING_ID)
-        .withDeploymentType(DeploymentType.PCF.name())
+    return PhaseElement.builder()
+        .uuid(generateUuid())
+        .serviceElement(serviceElement)
+        .infraMappingId(INFRA_MAPPING_ID)
+        .deploymentType(DeploymentType.PCF.name())
         .build();
   }
 

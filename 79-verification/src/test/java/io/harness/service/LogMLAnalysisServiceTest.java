@@ -41,7 +41,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import retrofit2.Call;
 import retrofit2.Response;
-import software.wings.api.PhaseElement.PhaseElementBuilder;
+import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.beans.FeatureName;
 import software.wings.beans.WorkflowExecution;
@@ -1069,8 +1069,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     stateExecutionInstance.setExecutionUuid(workflowExecutionId);
     stateExecutionInstance.setStatus(ExecutionStatus.ABORTED);
     stateExecutionInstance.getContextElements().push(
-        PhaseElementBuilder.aPhaseElement()
-            .withServiceElement(ServiceElement.Builder.aServiceElement().withUuid(serviceId).build())
+        PhaseElement.builder()
+            .serviceElement(ServiceElement.Builder.aServiceElement().withUuid(serviceId).build())
             .build());
     wingsPersistence.save(stateExecutionInstance);
 
