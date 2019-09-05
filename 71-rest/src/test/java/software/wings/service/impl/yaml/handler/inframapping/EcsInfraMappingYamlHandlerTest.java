@@ -4,7 +4,6 @@ import static io.harness.exception.WingsException.ReportTarget.REST_API;
 import static java.util.Arrays.asList;
 import static junit.framework.TestCase.fail;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -30,6 +29,7 @@ import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.scheduler.PersistentScheduler;
+import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -162,9 +162,11 @@ public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
       fail();
     } catch (Exception e) {
       WingsException wingsException = (WingsException) e;
-      assertEquals("Invalid argument(s): Failed to parse yaml for EcsInfraMapping: name, App: " + APP_ID
-              + ", For Fargate Launch type, VpcId  -  SubnetIds  - SecurityGroupIds are required, can not be blank",
-          ExceptionLogger.getResponseMessageList(wingsException, REST_API).get(0).getMessage());
+      Assertions
+          .assertThat("Invalid argument(s): Failed to parse yaml for EcsInfraMapping: name, App: " + APP_ID
+              + ", For Fargate Launch type, VpcId  -  SubnetIds  - SecurityGroupIds are required,"
+              + " can not be blank")
+          .isEqualTo(ExceptionLogger.getResponseMessageList(wingsException, REST_API).get(0).getMessage());
     }
   }
 

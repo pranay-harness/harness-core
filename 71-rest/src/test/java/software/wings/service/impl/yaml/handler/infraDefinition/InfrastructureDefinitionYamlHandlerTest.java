@@ -1,7 +1,6 @@
 package software.wings.service.impl.yaml.handler.infraDefinition;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -21,6 +20,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.io.FileUtils;
+import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -247,7 +247,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
       yamlFile =
           new File(getClass().getClassLoader().getResource(resourcePath + PATH_DELIMITER + yamlFileName).toURI());
     } catch (URISyntaxException e) {
-      fail("Unable to find yaml file " + yamlFileName);
+      Assertions.fail("Unable to find yaml file " + yamlFileName);
     }
     assertThat(yamlFile).isNotNull();
     String yamlString = FileUtils.readFileToString(yamlFile, "UTF-8");
