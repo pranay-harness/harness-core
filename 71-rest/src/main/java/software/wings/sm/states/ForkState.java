@@ -1,7 +1,6 @@
 package software.wings.sm.states;
 
 import static org.apache.commons.lang3.StringUtils.abbreviate;
-import static software.wings.api.ForkElement.Builder.aForkElement;
 
 import com.google.common.base.Joiner;
 
@@ -61,7 +60,7 @@ public class ForkState extends State {
     forkStateExecutionData.setForkStateNames(forkStateNames);
     forkStateExecutionData.setElements(new ArrayList<>());
     for (String state : forkStateNames) {
-      ForkElement element = aForkElement().withStateName(state).withParentId(stateExecutionInstance.getUuid()).build();
+      ForkElement element = ForkElement.builder().stateName(state).parentId(stateExecutionInstance.getUuid()).build();
       StateExecutionInstance childStateExecutionInstance = KryoUtils.clone(stateExecutionInstance);
       childStateExecutionInstance.setStateParams(null);
 
