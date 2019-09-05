@@ -18,6 +18,7 @@ import static software.wings.common.VerificationConstants.VERIFICATION_METRIC_LA
 import static software.wings.utils.CacheManager.USER_CACHE;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -53,9 +54,8 @@ import io.harness.event.listener.EventListener;
 import io.harness.event.usagemetrics.EventsModuleHelper;
 import io.harness.exception.WingsException;
 import io.harness.govern.ProviderModule;
-import io.harness.grpc.GrpcServer;
 import io.harness.grpc.GrpcServerConfig;
-import io.harness.grpc.GrpcServerModule;
+import io.harness.grpc.GrpcServiceConfigurationModule;
 import io.harness.health.HealthService;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
@@ -304,7 +304,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         return configuration.getGrpcServerConfig();
       }
     });
-    modules.addAll(new GrpcServerModule().cumulativeDependencies());
+    modules.add(new GrpcServiceConfigurationModule(configuration.getGrpcServerConfig()));
 
     Injector injector = Guice.createInjector(modules);
 
@@ -417,7 +417,9 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     injector.getInstance(EventsModuleHelper.class).initialize();
     if (injector.getInstance(FeatureFlagService.class).isGlobalEnabled(PERPETUAL_TASK_SERVICE)) {
-      injector.getInstance(GrpcServer.class).initialize();
+      ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
+      serviceManager.awaitHealthy();
+      Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
     }
     logger.info("Leaving startup maintenance mode");
     MaintenanceController.resetForceMaintenance();

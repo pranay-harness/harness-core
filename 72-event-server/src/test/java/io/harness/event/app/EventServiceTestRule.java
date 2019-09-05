@@ -1,6 +1,7 @@
 package io.harness.event.app;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -9,10 +10,10 @@ import com.google.inject.util.Modules;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.client.PublisherModule;
 import io.harness.event.client.PublisherModule.Config;
-import io.harness.event.grpc.GrpcEventServer;
 import io.harness.factory.ClosingFactory;
 import io.harness.grpc.auth.AuthService;
 import io.harness.grpc.auth.EventServiceTokenGenerator;
+import io.harness.grpc.server.Connector;
 import io.harness.module.TestMongoModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.QueryFactory;
@@ -47,28 +48,26 @@ public class EventServiceTestRule implements MethodRule, MongoRuleMixin, Injecto
     morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
     AdvancedDatastore datastore = (AdvancedDatastore) morphia.createDatastore(mongoInfo.getClient(), databaseName());
     datastore.setQueryFactory(new QueryFactory());
-    return ImmutableList.of(Modules
-                                .override(new PublisherModule(Config.builder()
-                                                                  .publishTarget("localhost:" + PORT)
-                                                                  .publishAuthority("localhost")
-                                                                  .queueFilePath(QUEUE_FILE_PATH)
-                                                                  .accountId(DEFAULT_ACCOUNT_ID)
-                                                                  .build()),
-                                    new EventServiceModule(EventServiceConfig.builder()
-                                                               .certFilePath("cert.pem")
-                                                               .keyFilePath("key.pem")
-                                                               .securePort(PORT)
-                                                               .build()),
-                                    new TestMongoModule(datastore, null))
+    return ImmutableList.of(
+        Modules
+            .override(new PublisherModule(Config.builder()
+                                              .publishTarget("localhost:" + PORT)
+                                              .publishAuthority("localhost")
+                                              .queueFilePath(QUEUE_FILE_PATH)
+                                              .accountId(DEFAULT_ACCOUNT_ID)
+                                              .build()),
+                new EventServiceModule(
+                    EventServiceConfig.builder().connector(new Connector(PORT, true, "cert.pem", "key.pem")).build()),
+                new TestMongoModule(datastore, null))
 
-                                // TODO(avmohan): Remove this once [CCM-47] is done.
-                                .with(new AbstractModule() {
-                                  @Override
-                                  protected void configure() {
-                                    bind(EventServiceTokenGenerator.class).toInstance(() -> "dummy");
-                                    bind(AuthService.class).toInstance(token -> {});
-                                  }
-                                }));
+            // TODO(avmohan): Remove this once [CCM-47] is done.
+            .with(new AbstractModule() {
+              @Override
+              protected void configure() {
+                bind(EventServiceTokenGenerator.class).toInstance(() -> "dummy");
+                bind(AuthService.class).toInstance(token -> {});
+              }
+            }));
   }
 
   @Override
@@ -88,13 +87,12 @@ public class EventServiceTestRule implements MethodRule, MongoRuleMixin, Injecto
 
   @Override
   public void initialize(Injector injector, List<Module> modules) {
-    injector.getInstance(GrpcEventServer.class).initialize();
+    injector.getInstance(ServiceManager.class).startAsync().awaitHealthy();
   }
 
   @Override
   public void destroy(Injector injector, List<Module> modules) throws Exception {
     injector.getInstance(EventPublisher.class).shutdown();
-    injector.getInstance(GrpcEventServer.class).shutdown();
-    injector.getInstance(GrpcEventServer.class).awaitTermination();
+    injector.getInstance(ServiceManager.class).stopAsync().awaitStopped();
   }
 }

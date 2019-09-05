@@ -155,10 +155,12 @@ timescaledb:
   loggerLevel: OFF
 
 grpcServerConfig:
-  plainTextPort: 9879
-  tlsPort: 9880
-  keyFile: key.pem
-  certFile: cert.pem
+  connectors:
+    - port: 9880
+      secure: true
+      keyFilePath: key.pem
+      certFilePath: cert.pem
+    - port: 9879
 
 mongo:
   uri: mongodb://localhost:27017/harness
