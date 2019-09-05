@@ -9,7 +9,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.api.ForkElement.Builder.aForkElement;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -22,6 +21,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.api.ForkElement;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.EntityType;
 import software.wings.beans.HostConnectionAttributes;
@@ -204,7 +204,7 @@ public class StateMachineExecutionSimulator {
         cloned.setStateParams(null);
         cloned.setDisplayName(child.getName());
         cloned.setContextElement(
-            aForkElement().withStateName(childStateName).withParentId(stateExecutionInstance.getUuid()).build());
+            ForkElement.builder().stateName(childStateName).parentId(stateExecutionInstance.getUuid()).build());
         ExecutionContextImpl childContext =
             (ExecutionContextImpl) executionContextFactory.createExecutionContext(cloned, stateMachine);
         extrapolateProgress(
