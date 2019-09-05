@@ -37,7 +37,7 @@ git log -1000 --oneline --format='%aN <%aE>' | sort -u |\
     grep -iv "^Parnian Zargham <parnian@harness.io>$" |\
     grep -iv "^Pooja Singhal <pooja.singhal@harness.io>$" |\
     grep -iv "^Pranjal Kumar <pranjal@harness.io>$" |\
-    grep -iv "^Prashant Pal <50949177+ppal31@users.noreply.github.com>$"|\
+    grep -iv "^Prashant Pal <prashant.pal@harness.io>$"|\
     grep -iv "^Praveen Kambam Sugavanam <praveen.sugavanam@harness.io>$" |\
     grep -iv "^Puneet Saraswat <puneet.saraswat@harness.io>$" |\
     grep -iv "^Raghvendra Singh <raghu@harness.io>$" |\
@@ -64,9 +64,8 @@ git log -1000 --oneline --format='%aN <%aE>' | sort -u |\
     grep -iv "^Vaibhav Tulsyan <vaibhav.tulsyan@harness.io>$" |\
     grep -iv "^Venkatesh Kotrike <venkatesh.kotrike@harness.io>$" |\
     grep -iv "^Vikas Naiyar <vikas.naiyar@harness.io>$" |\
-    grep -iv "^Yogesh Chauhan <yogesh.chauhan@harness.io>$"` || echo "All clear"
+    grep -iv "^Yogesh Chauhan <yogesh.chauhan@harness.io>$"` || echo
 
-    
 if [ ! -z "$UNKNOWN_USERS" ]
 then
     echo "Unknown user name and/or email"
@@ -74,32 +73,21 @@ then
     exit 1
 fi
 
-git config --global log.mailmap false
 
-EXCEPTIONS="Abhijith V Mohan <abhijith.vmohan@gmail.com>"
-EXCEPTIONS="$EXCEPTIONS\|Aman <aman.singh@harness.io>"
-EXCEPTIONS="$EXCEPTIONS\|aman-iitj <aman.singh@harness.io>"
-EXCEPTIONS="$EXCEPTIONS\|Duc Nguyen <duc@wings.software>"
-EXCEPTIONS="$EXCEPTIONS\|hannah-tang <hannah.tang@harness.io>"
-EXCEPTIONS="$EXCEPTIONS\|harshjain12 <49689464+harshjain12@users.noreply.github.com>"
-EXCEPTIONS="$EXCEPTIONS\|hitesharinga <51195474+hitesharinga@users.noreply.github.com>"
-EXCEPTIONS="$EXCEPTIONS\|hitesharinga <hitesh.aringa@harness.io>"
-EXCEPTIONS="$EXCEPTIONS\|K Rohit Reddy <rohit.reddy@harness.io>"
-EXCEPTIONS="$EXCEPTIONS\|kjoshi12345 <kamal.joshi@harness.io>"
-EXCEPTIONS="$EXCEPTIONS\|michael-katz <48811122+michael-katz@users.noreply.github.com>"
-EXCEPTIONS="$EXCEPTIONS\|poojaSinghal <pooja.singhal@harness.io>"
-EXCEPTIONS="$EXCEPTIONS\|pranjal-harness <pranjal@harness.io>"
-EXCEPTIONS="$EXCEPTIONS\|Prashant Pal <50949177+ppal31@users.noreply.github.com>"
-EXCEPTIONS="$EXCEPTIONS\|rohit kumar <rohit.kumar@harness.io>"
-EXCEPTIONS="$EXCEPTIONS\|swamy-harness <46276030+swamy-harness@users.noreply.github.com>"
-EXCEPTIONS="$EXCEPTIONS\|Vaibhav Tulsyan <xennygrimmato@gmail.com>"
-EXCEPTIONS="$EXCEPTIONS\|vaibhavtulsyan <vaibhav.tulsyan@harness.io>"
-EXCEPTIONS="$EXCEPTIONS\|yogesh-chauhan <yogesh.chauhan@harness.io>"
+EXCEPTIONS="^`cat .mailmap | cut -c 51- | awk '{print}' ORS='\\\\|'`--dummy thing to absorb the last delimiter--$"
 
-EXECPTION_COMMITS=`git log --oneline --format='%aN <%aE>' | grep -i "^$EXCEPTIONS$" | wc -l`
+mv .mailmap .mailmap.tmp
 
-if [ $EXECPTION_COMMITS -gt 202 ]
+EXECPTION_COMMITS=`git log --oneline --format='%aN <%aE>' | grep -i "$EXCEPTIONS" | wc -l`
+
+mv .mailmap.tmp .mailmap
+
+echo $EXECPTION_COMMITS
+
+if [ $EXECPTION_COMMITS -gt 198 ]
 then
     echo "You bringing commit with excepted author that is no longer allowed"
     exit 1
 fi
+
+echo "all clear"
