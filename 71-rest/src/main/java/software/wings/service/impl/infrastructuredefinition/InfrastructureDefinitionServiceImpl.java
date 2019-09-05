@@ -713,9 +713,9 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Override
   public InfrastructureDefinition getInfraDefByName(String appId, String envId, String infraDefName) {
     return wingsPersistence.createQuery(InfrastructureDefinition.class)
-        .filter("appId", appId)
-        .filter("envId", envId)
-        .filter("name", infraDefName)
+        .filter(InfrastructureDefinitionKeys.appId, appId)
+        .filter(InfrastructureDefinitionKeys.envId, envId)
+        .filter(InfrastructureDefinitionKeys.name, infraDefName)
         .get();
   }
 
