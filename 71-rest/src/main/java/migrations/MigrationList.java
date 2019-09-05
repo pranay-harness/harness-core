@@ -101,6 +101,7 @@ import migrations.all.SetIsDeletedFlagForInstances;
 import migrations.all.SetNamespaceInContainerInstanceInfo;
 import migrations.all.SetNamespaceToKubernetesInstanceInfo;
 import migrations.all.SetRollbackFlagToWorkflows;
+import migrations.all.SettingAttributesCategoryMigration;
 import migrations.all.SweepingPhaseMigration;
 import migrations.all.SweepingStateMigration;
 import migrations.all.SystemTemplateGalleryMigration;
@@ -279,6 +280,7 @@ public class MigrationList {
         .add(Pair.of(276, BaseMigration.class))
         .add(Pair.of(277, SweepingStateMigration.class))
         .add(Pair.of(278, DatadogCustomMetricMigration.class))
+        .add(Pair.of(279, SettingAttributesCategoryMigration.class))
         .build();
   }
 }
