@@ -149,7 +149,7 @@ public class HttpStateTest extends WingsBaseTest {
     when(workflowStandardParams.getElementType()).thenReturn(ContextElementType.STANDARD);
     context = new ExecutionContextImpl(stateExecutionInstance, null, injector);
     context.pushContextElement(workflowStandardParams);
-    context.pushContextElement(aHostElement().withHostName("localhost").build());
+    context.pushContextElement(aHostElement().hostName("localhost").build());
 
     EmbeddedUser currentUser = EmbeddedUser.builder().name("test").email("test@harness.io").build();
     workflowStandardParams.setCurrentUser(currentUser);
@@ -384,7 +384,7 @@ public class HttpStateTest extends WingsBaseTest {
 
     context.pushContextElement(
         anInstanceElement()
-            .withHost(aHostElement().withHostName("localhost").build())
+            .withHost(aHostElement().hostName("localhost").build())
             .withServiceTemplateElement(
                 aServiceTemplateElement()
                     .withName(TEMPLATE_NAME)
@@ -568,7 +568,7 @@ public class HttpStateTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldFailOnConnectTimeout() {
-    context.pushContextElement(aHostElement().withHostName("www.google.com").build());
+    context.pushContextElement(aHostElement().hostName("www.google.com").build());
 
     ExecutionResponse response =
         getHttpState(httpStateBuilder.but().withUrl("http://${host.hostName}:81/health/status"), context)

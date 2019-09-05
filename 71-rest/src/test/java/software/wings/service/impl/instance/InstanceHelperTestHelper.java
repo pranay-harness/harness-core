@@ -45,10 +45,10 @@ public class InstanceHelperTestHelper {
                                     .withStatus(ExecutionStatus.SUCCESS)
                                     .withInstanceElement(InstanceElement.Builder.anInstanceElement()
                                                              .withHost(HostElement.Builder.aHostElement()
-                                                                           .withUuid("host_1")
-                                                                           .withHostName("hostName1")
-                                                                           .withInstanceId("instance1")
-                                                                           .withPublicDns("instance1")
+                                                                           .uuid("host_1")
+                                                                           .hostName("hostName1")
+                                                                           .instanceId("instance1")
+                                                                           .publicDns("instance1")
                                                                            .build())
                                                              .withUuid("instance_1")
                                                              .build())
@@ -58,10 +58,10 @@ public class InstanceHelperTestHelper {
                                     .withStatus(ExecutionStatus.SUCCESS)
                                     .withInstanceElement(InstanceElement.Builder.anInstanceElement()
                                                              .withHost(HostElement.Builder.aHostElement()
-                                                                           .withUuid("host_2")
-                                                                           .withHostName("hostName2")
-                                                                           .withInstanceId("instance2")
-                                                                           .withPublicDns("instance2")
+                                                                           .uuid("host_2")
+                                                                           .hostName("hostName2")
+                                                                           .instanceId("instance2")
+                                                                           .publicDns("instance2")
                                                                            .build())
                                                              .withUuid("instance_2")
                                                              .build())
@@ -77,7 +77,7 @@ public class InstanceHelperTestHelper {
             .withStatus(ExecutionStatus.SUCCESS)
             .withInstanceElement(
                 InstanceElement.Builder.anInstanceElement()
-                    .withHost(HostElement.Builder.aHostElement().withEc2Instance(InstanceHelperTest.instance1).build())
+                    .withHost(HostElement.Builder.aHostElement().ec2Instance(InstanceHelperTest.instance1).build())
                     .withUuid("instance_1")
                     .build())
             .build());
@@ -87,7 +87,7 @@ public class InstanceHelperTestHelper {
             .withStatus(ExecutionStatus.SUCCESS)
             .withInstanceElement(
                 InstanceElement.Builder.anInstanceElement()
-                    .withHost(HostElement.Builder.aHostElement().withEc2Instance(InstanceHelperTest.instance2).build())
+                    .withHost(HostElement.Builder.aHostElement().ec2Instance(InstanceHelperTest.instance2).build())
                     .withUuid("instance_2")
                     .build())
             .build());
@@ -123,7 +123,7 @@ public class InstanceHelperTestHelper {
             .withStatus(ExecutionStatus.SUCCESS)
             .withInstanceElement(
                 InstanceElement.Builder.anInstanceElement()
-                    .withHost(HostElement.Builder.aHostElement().withEc2Instance(InstanceHelperTest.instance1).build())
+                    .withHost(HostElement.Builder.aHostElement().ec2Instance(InstanceHelperTest.instance1).build())
                     .withUuid("instance_1")
                     .build())
             .build());
@@ -133,7 +133,7 @@ public class InstanceHelperTestHelper {
             .withStatus(ExecutionStatus.SUCCESS)
             .withInstanceElement(
                 InstanceElement.Builder.anInstanceElement()
-                    .withHost(HostElement.Builder.aHostElement().withEc2Instance(InstanceHelperTest.instance2).build())
+                    .withHost(HostElement.Builder.aHostElement().ec2Instance(InstanceHelperTest.instance2).build())
                     .withUuid("instance_2")
                     .build())
             .build());

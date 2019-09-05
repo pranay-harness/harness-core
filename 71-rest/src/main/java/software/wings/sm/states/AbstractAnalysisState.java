@@ -317,7 +317,7 @@ public abstract class AbstractAnalysisState extends State {
               hosts.put(context.renderExpression(hostnameTemplate,
                             StateExecutionContext.builder()
                                 .contextElements(Lists.newArrayList(
-                                    aHostElement().withHostName(pod.getName()).withIp(pod.getPodIP()).build()))
+                                    aHostElement().hostName(pod.getName()).ip(pod.getPodIP()).build()))
                                 .build()),
                   DEFAULT_GROUP_NAME);
             }
@@ -372,8 +372,7 @@ public abstract class AbstractAnalysisState extends State {
                       .contextElements(Lists.newArrayList(
                           anInstanceElement()
                               .withHostName(serviceHost)
-                              .withHost(
-                                  aHostElement().withHostName(serviceHost).withIp(podNameToIp.get(serviceHost)).build())
+                              .withHost(aHostElement().hostName(serviceHost).ip(podNameToIp.get(serviceHost)).build())
                               .build()))
                       .build()),
               DEFAULT_GROUP_NAME);
@@ -488,9 +487,9 @@ public abstract class AbstractAnalysisState extends State {
                                                .withPodName(containerInfo.getPodName())
                                                .withWorkloadName(containerInfo.getWorkloadName())
                                                .withHost(aHostElement()
-                                                             .withHostName(containerInfo.getHostName())
-                                                             .withIp(containerInfo.getIp())
-                                                             .withEc2Instance(containerInfo.getEc2Instance())
+                                                             .hostName(containerInfo.getHostName())
+                                                             .ip(containerInfo.getIp())
+                                                             .ec2Instance(containerInfo.getEc2Instance())
                                                              .build())
                                                .withEcsContainerDetails(containerInfo.getEcsContainerDetails())
                                                .build()))
@@ -611,7 +610,7 @@ public abstract class AbstractAnalysisState extends State {
             } else {
               rv.put(context.renderExpression(hostnameTemplate,
                          StateExecutionContext.builder()
-                             .contextElements(Lists.newArrayList(aHostElement().withHostName(pcfHostName).build()))
+                             .contextElements(Lists.newArrayList(aHostElement().hostName(pcfHostName).build()))
                              .build()),
                   DEFAULT_GROUP_NAME);
             }
@@ -656,9 +655,9 @@ public abstract class AbstractAnalysisState extends State {
             hosts.put(context.renderExpression(hostNameExpression,
                           StateExecutionContext.builder()
                               .contextElements(Lists.newArrayList(aHostElement()
-                                                                      .withHostName(instance.getPrivateDnsName())
-                                                                      .withIp(instance.getPrivateIpAddress())
-                                                                      .withEc2Instance(instance)
+                                                                      .hostName(instance.getPrivateDnsName())
+                                                                      .ip(instance.getPrivateIpAddress())
+                                                                      .ec2Instance(instance)
                                                                       .build()))
                               .build()),
                 DEFAULT_GROUP_NAME);
@@ -778,9 +777,9 @@ public abstract class AbstractAnalysisState extends State {
       return;
     }
     instanceElement.setHost(aHostElement()
-                                .withHostName(host.getHostName())
-                                .withEc2Instance(host.getEc2Instance())
-                                .withPublicDns(host.getPublicDns())
+                                .hostName(host.getHostName())
+                                .ec2Instance(host.getEc2Instance())
+                                .publicDns(host.getPublicDns())
                                 .build());
   }
 

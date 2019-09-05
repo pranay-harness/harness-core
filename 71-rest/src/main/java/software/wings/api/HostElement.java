@@ -128,11 +128,11 @@ public class HostElement implements ContextElement {
   @Override
   public ContextElement cloneMin() {
     return aHostElement()
-        .withUuid(uuid)
-        .withHostName(hostName)
-        .withIp(ip)
-        .withPublicDns(publicDns)
-        .withInstanceId(instanceId)
+        .uuid(uuid)
+        .hostName(hostName)
+        .ip(ip)
+        .publicDns(publicDns)
+        .instanceId(instanceId)
         //        .withEc2Instance(ec2Instance)
         .build();
   }
@@ -152,37 +152,37 @@ public class HostElement implements ContextElement {
       return new Builder();
     }
 
-    public Builder withUuid(String uuid) {
+    public Builder uuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    public Builder withHostName(String hostName) {
+    public Builder hostName(String hostName) {
       this.hostName = hostName;
       return this;
     }
 
-    public Builder withIp(String ip) {
+    public Builder ip(String ip) {
       this.ip = ip;
       return this;
     }
 
-    public Builder withInstanceId(String instanceId) {
+    public Builder instanceId(String instanceId) {
       this.instanceId = instanceId;
       return this;
     }
 
-    public Builder withPublicDns(String publicDns) {
+    public Builder publicDns(String publicDns) {
       this.publicDns = publicDns;
       return this;
     }
 
-    public Builder withEc2Instance(Instance ec2Instance) {
+    public Builder ec2Instance(Instance ec2Instance) {
       this.ec2Instance = ec2Instance;
       return this;
     }
 
-    public Builder withProperties(Map<String, Object> properties) {
+    public Builder properties(Map<String, Object> properties) {
       this.properties = properties;
       return this;
     }

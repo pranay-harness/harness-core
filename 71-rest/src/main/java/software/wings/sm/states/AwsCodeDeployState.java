@@ -308,10 +308,10 @@ public class AwsCodeDeployState extends State {
       List<InstanceElement> instanceElements = new ArrayList<>();
       commandExecutionData.getInstances().forEach(instance -> {
         HostElement hostElement = aHostElement()
-                                      .withPublicDns(instance.getPublicDnsName())
-                                      .withIp(instance.getPrivateIpAddress())
-                                      .withEc2Instance(instance)
-                                      .withInstanceId(instance.getInstanceId())
+                                      .publicDns(instance.getPublicDnsName())
+                                      .ip(instance.getPrivateIpAddress())
+                                      .ec2Instance(instance)
+                                      .instanceId(instance.getInstanceId())
                                       .build();
 
         final Map<String, Object> contextMap = context.asMap();
