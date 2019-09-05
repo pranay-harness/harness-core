@@ -10,7 +10,6 @@ import static io.harness.encryption.EncryptionReflectUtils.getEncryptedFields;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static io.harness.eraro.ErrorCode.CYBERARK_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
-import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION;
 import static io.harness.exception.WingsException.USER;
@@ -2257,7 +2256,8 @@ public class SecretManagerImpl implements SecretManager {
     } else if (secretManagerConfigMap.containsKey(kmsId)) {
       return secretManagerConfigMap.get(kmsId).getName();
     } else {
-      throw new WingsException(GENERAL_ERROR, "Secret manager with id " + kmsId + " doesn't exist!");
+      logger.warn("Secret manager with id {} and type {} can't be resolved.", kmsId, encryptionType);
+      return null;
     }
   }
 
