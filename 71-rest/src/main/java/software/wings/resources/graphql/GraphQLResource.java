@@ -168,9 +168,11 @@ public class GraphQLResource {
       return getExecutionResultWithError(GraphQLConstants.INVALID_API_KEY).toSpecification();
     }
 
-    if (checkRateLimit(accountId)) {
-      return getExecutionResultWithError(String.format(GraphQLConstants.RATE_LIMIT_REACHED, accountId))
-          .toSpecification();
+    if (!featureFlagService.isEnabled(FeatureName.GRAPHQL_STRESS_TESTING, accountId)) {
+      if (checkRateLimit(accountId)) {
+        return getExecutionResultWithError(String.format(GraphQLConstants.RATE_LIMIT_REACHED, accountId))
+            .toSpecification();
+      }
     }
 
     if (!featureFlagService.isEnabled(FeatureName.GRAPHQL, accountId)
