@@ -1,7 +1,6 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.api.ClusterElement.ClusterElementBuilder.aClusterElement;
 import static software.wings.api.GcpClusterExecutionData.GcpClusterExecutionDataBuilder.aGcpClusterExecutionData;
 import static software.wings.sm.StateType.GCP_CLUSTER_SETUP;
 
@@ -104,11 +103,11 @@ public class GcpClusterSetup extends State {
             .put("masterPwd", "admin")
             .build());
 
-    ClusterElement clusterElement = aClusterElement()
-                                        .withUuid(serviceId)
-                                        .withName(zoneCluster)
-                                        .withDeploymentType(DeploymentType.KUBERNETES)
-                                        .withInfraMappingId(phaseElement.getInfraMappingId())
+    ClusterElement clusterElement = ClusterElement.builder()
+                                        .uuid(serviceId)
+                                        .name(zoneCluster)
+                                        .deploymentType(DeploymentType.KUBERNETES)
+                                        .infraMappingId(phaseElement.getInfraMappingId())
                                         .build();
 
     return ExecutionResponse.builder()
