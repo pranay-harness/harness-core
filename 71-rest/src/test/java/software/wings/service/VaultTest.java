@@ -65,9 +65,11 @@ import software.wings.beans.ServiceVariable.OverrideType;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.User;
 import software.wings.beans.VaultConfig;
+import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.WorkflowExecution;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -1455,6 +1457,29 @@ public class VaultTest extends WingsBaseTest {
 
     vaultService.deleteVaultConfig(accountId, secretManagerId);
     verify(auditServiceHelper).reportDeleteForAuditingUsingAccountId(eq(accountId), any(VaultConfig.class));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void WinRmConnections_shouldBeReturned_in_listSettingAttributes() {
+    VaultConfig fromConfig = getVaultConfig(VAULT_TOKEN);
+    vaultService.saveVaultConfig(accountId, fromConfig);
+
+    final String password = UUID.randomUUID().toString();
+    WinRmConnectionAttributes winRmConnectionAttributes = getWinRmConnectionAttribute(accountId, password);
+    SettingAttribute settingAttribute = getSettingAttribute(winRmConnectionAttributes);
+    SettingAttribute savedAttribute = settingsService.save(settingAttribute);
+
+    SettingAttribute savedSettingAttribute = wingsPersistence.get(SettingAttribute.class, savedAttribute.getUuid());
+    assertThat(savedSettingAttribute).isNotNull();
+    assertThat(savedSettingAttribute.getCategory()).isEqualTo(SettingCategory.SETTING);
+
+    Collection<SettingAttribute> encryptedValues =
+        secretManagementResource.listEncryptedSettingAttributes(accountId, SettingCategory.SETTING.name())
+            .getResource();
+    assertThat(encryptedValues).isNotEmpty();
+    assertThat(encryptedValues.size()).isEqualTo(1);
+    assertThat(encryptedValues.iterator().next().getCategory()).isEqualTo(SettingCategory.SETTING);
   }
 
   private Thread startTransitionListener() throws IllegalAccessException {

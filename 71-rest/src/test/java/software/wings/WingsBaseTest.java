@@ -27,12 +27,15 @@ import software.wings.beans.LicenseInfo;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.VaultConfig;
+import software.wings.beans.WinRmConnectionAttributes;
+import software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme;
 import software.wings.dl.WingsPersistence;
 import software.wings.resources.SecretManagementResource;
 import software.wings.rules.WingsRule;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -62,6 +65,7 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
   @Inject protected ConfigService configService;
   @Inject protected EncryptionService encryptionService;
   @Inject protected Queue<KmsTransitionEvent> transitionKmsQueue;
+  @Inject protected SettingsService settingsService;
 
   protected EncryptedData encrypt(String accountId, char[] value, KmsConfig kmsConfig) throws Exception {
     if (kmsConfig.getAccessKey().equals("invalidKey")) {
@@ -277,6 +281,29 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
         .withValue(jenkinsConfig)
         .withAppId(UUID.randomUUID().toString())
         .withCategory(SettingCategory.CONNECTOR)
+        .withEnvId(UUID.randomUUID().toString())
+        .withName(UUID.randomUUID().toString())
+        .build();
+  }
+
+  protected WinRmConnectionAttributes getWinRmConnectionAttribute(String accountId, String password) {
+    return WinRmConnectionAttributes.builder()
+        .accountId(accountId)
+        .password(password.toCharArray())
+        .authenticationScheme(AuthenticationScheme.NTLM)
+        .port(5164)
+        .skipCertChecks(true)
+        .useSSL(true)
+        .username("mark.lu")
+        .build();
+  }
+
+  protected SettingAttribute getSettingAttribute(WinRmConnectionAttributes winRmConnectionAttributes) {
+    return SettingAttribute.Builder.aSettingAttribute()
+        .withAccountId(winRmConnectionAttributes.getAccountId())
+        .withValue(winRmConnectionAttributes)
+        .withAppId(UUID.randomUUID().toString())
+        .withCategory(SettingCategory.SETTING)
         .withEnvId(UUID.randomUUID().toString())
         .withName(UUID.randomUUID().toString())
         .build();

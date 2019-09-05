@@ -45,6 +45,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.SPLUNK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.SPOT_INST;
 import static software.wings.settings.SettingValue.SettingVariableTypes.STRING;
 import static software.wings.settings.SettingValue.SettingVariableTypes.SUMO;
+import static software.wings.settings.SettingValue.SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES;
 
 import com.google.common.collect.Lists;
 
@@ -125,7 +126,8 @@ public class SettingAttribute extends Base implements NameAccess {
         BUG_SNAG, DATA_DOG, APM_VERIFICATION, PROMETHEUS, ELB, SLACK, DOCKER, ECR, GCR, NEXUS, ARTIFACTORY, AMAZON_S3,
         GCS, GIT, SMB, JIRA, SFTP, SERVICENOW, CUSTOM)),
 
-    SETTING(Lists.newArrayList(HOST_CONNECTION_ATTRIBUTES, BASTION_HOST_CONNECTION_ATTRIBUTES, STRING)),
+    SETTING(Lists.newArrayList(
+        HOST_CONNECTION_ATTRIBUTES, BASTION_HOST_CONNECTION_ATTRIBUTES, STRING, WINRM_CONNECTION_ATTRIBUTES)),
 
     HELM_REPO(Lists.newArrayList(HTTP_HELM_REPO, AMAZON_S3_HELM_REPO, GCS_HELM_REPO));
 
