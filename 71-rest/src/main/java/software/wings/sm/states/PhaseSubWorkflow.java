@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
-import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder.aPhaseExecutionData;
 
 import com.google.inject.Inject;
@@ -251,16 +250,16 @@ public class PhaseSubWorkflow extends SubWorkflowState {
       InfrastructureMapping infrastructureMapping) {
     StateExecutionInstance spawningInstance = super.getSpawningInstance(stateExecutionInstance);
 
-    PhaseElementBuilder phaseElementBuilder = aPhaseElement()
-                                                  .withUuid(getId())
-                                                  .withPhaseName(stateExecutionInstance.getDisplayName())
-                                                  .withAppId(stateExecutionInstance.getAppId())
-                                                  .withPhaseNameForRollback(phaseNameForRollback);
+    PhaseElementBuilder phaseElementBuilder = PhaseElement.builder()
+                                                  .uuid(getId())
+                                                  .phaseName(stateExecutionInstance.getDisplayName())
+                                                  .appId(stateExecutionInstance.getAppId())
+                                                  .phaseNameForRollback(phaseNameForRollback);
 
     if (service != null) {
       ServiceElement serviceElement = new ServiceElement();
       MapperUtils.mapObject(service, serviceElement);
-      phaseElementBuilder.withServiceElement(serviceElement);
+      phaseElementBuilder.serviceElement(serviceElement);
     }
 
     String accountId = context.getAccountId();
@@ -269,15 +268,15 @@ public class PhaseSubWorkflow extends SubWorkflowState {
       DeploymentType deploymentType =
           serviceResourceService.getDeploymentType(infrastructureMapping, null, infrastructureMapping.getServiceId());
 
-      phaseElementBuilder.withDeploymentType(deploymentType.name()).withInfraMappingId(infrastructureMapping.getUuid());
+      phaseElementBuilder.deploymentType(deploymentType.name()).infraMappingId(infrastructureMapping.getUuid());
     }
 
     if (stateExecutionInstance.getRollbackPhaseName() != null) {
-      phaseElementBuilder.withPhaseNameForRollback(stateExecutionInstance.getRollbackPhaseName());
+      phaseElementBuilder.phaseNameForRollback(stateExecutionInstance.getRollbackPhaseName());
     }
 
     if (isNotEmpty(getVariableOverrides())) {
-      phaseElementBuilder.withVariableOverrides(getVariableOverrides());
+      phaseElementBuilder.variableOverrides(getVariableOverrides());
     }
 
     PhaseElement phaseElement = phaseElementBuilder.build();

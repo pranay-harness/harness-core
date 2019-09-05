@@ -18,7 +18,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
-import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -160,11 +159,11 @@ public class KubernetesDeployTest extends WingsBaseTest {
                                                               .build();
   private ServiceElement serviceElement = aServiceElement().withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
   @InjectMocks
-  private PhaseElement phaseElement = aPhaseElement()
-                                          .withUuid(generateUuid())
-                                          .withServiceElement(serviceElement)
-                                          .withInfraMappingId(INFRA_MAPPING_ID)
-                                          .withDeploymentType(DeploymentType.KUBERNETES.name())
+  private PhaseElement phaseElement = PhaseElement.builder()
+                                          .uuid(generateUuid())
+                                          .serviceElement(serviceElement)
+                                          .infraMappingId(INFRA_MAPPING_ID)
+                                          .deploymentType(DeploymentType.KUBERNETES.name())
                                           .build();
   private StateExecutionInstance stateExecutionInstance =
       aStateExecutionInstance()

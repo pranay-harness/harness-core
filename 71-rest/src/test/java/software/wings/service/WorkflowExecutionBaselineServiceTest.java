@@ -5,7 +5,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
-import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
@@ -25,6 +24,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
+import software.wings.api.PhaseElement;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.User;
@@ -676,7 +676,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       when(workflowStandardParams.getEnv()).thenReturn(anEnvironment().uuid(envId).build());
       when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
       when(executionContext.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM))
-          .thenReturn(aPhaseElement().withServiceElement(aServiceElement().withUuid(serviceId).build()).build());
+          .thenReturn(PhaseElement.builder().serviceElement(aServiceElement().withUuid(serviceId).build()).build());
       when(stateMachineExecutor.getExecutionContext(appId, workflowExecutionId, stateExecutionId))
           .thenReturn(executionContext);
     }

@@ -20,7 +20,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
-import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.api.SimpleWorkflowParam.Builder.aSimpleWorkflowParam;
@@ -207,7 +206,7 @@ public class CommandStateTest extends WingsBaseTest {
   private static WorkflowStandardParams workflowStandardParams =
       aWorkflowStandardParams().withAppId(APP_ID).withEnvId(ENV_ID).build();
   private static final SimpleWorkflowParam SIMPLE_WORKFLOW_PARAM = aSimpleWorkflowParam().build();
-  private static final PhaseElement PHASE_ELEMENT = aPhaseElement().withInfraMappingId(INFRA_MAPPING_ID).build();
+  private static final PhaseElement PHASE_ELEMENT = PhaseElement.builder().infraMappingId(INFRA_MAPPING_ID).build();
   private static final String PHASE_PARAM = "PHASE_PARAM";
   private static final String WINDOWS_RUNTIME_PATH = "WINDOWS_RUNTIME_PATH";
 

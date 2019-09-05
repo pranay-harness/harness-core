@@ -14,7 +14,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
-import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
@@ -174,12 +173,12 @@ public class CloudFormationStateTest extends WingsBaseTest {
   private ServiceElement serviceElement = aServiceElement().withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
 
   @InjectMocks
-  private PhaseElement phaseElement = aPhaseElement()
-                                          .withUuid(generateUuid())
-                                          .withServiceElement(serviceElement)
-                                          .withInfraMappingId(INFRA_MAPPING_ID)
-                                          .withAppId(APP_ID)
-                                          .withDeploymentType(DeploymentType.SSH.name())
+  private PhaseElement phaseElement = PhaseElement.builder()
+                                          .uuid(generateUuid())
+                                          .serviceElement(serviceElement)
+                                          .infraMappingId(INFRA_MAPPING_ID)
+                                          .appId(APP_ID)
+                                          .deploymentType(DeploymentType.SSH.name())
                                           .build();
 
   private StateExecutionInstance stateExecutionInstance =
