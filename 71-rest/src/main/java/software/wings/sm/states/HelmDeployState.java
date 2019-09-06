@@ -603,7 +603,7 @@ public class HelmDeployState extends State {
         return;
       }
 
-      InfraMappingElement infraMappingElement = workflowStandardParams.getInfraMappingElement(context);
+      InfraMappingElement infraMappingElement = context.fetchInfraMappingElement();
       if (infraMappingElement != null && infraMappingElement.getHelm() != null) {
         infraMappingElement.getHelm().setReleaseName(helmReleaseName);
       }

@@ -10,6 +10,7 @@ import io.harness.beans.SweepingOutput.SweepingOutputBuilder;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
 import software.wings.api.InfraMappingElement;
+import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
 import software.wings.beans.ErrorStrategy;
 import software.wings.settings.SettingValue;
@@ -84,4 +85,6 @@ public interface ExecutionContext {
   SweepingOutputBuilder prepareSweepingOutputBuilder(SweepingOutput.Scope sweepingOutputScope);
 
   InfraMappingElement fetchInfraMappingElement();
+
+  ServiceElement fetchServiceElement();
 }
