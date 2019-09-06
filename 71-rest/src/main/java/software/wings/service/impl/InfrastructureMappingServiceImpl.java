@@ -2089,6 +2089,16 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
+  public List<InfrastructureMapping> getInfraMappingLinkedToInfraDefinition(String appId, String infraDefinitionId) {
+    return wingsPersistence.createQuery(InfrastructureMapping.class)
+        .field(InfrastructureMappingKeys.appId)
+        .equal(appId)
+        .field(InfrastructureMappingKeys.infrastructureDefinitionId)
+        .equal(infraDefinitionId)
+        .asList();
+  }
+
+  @Override
   public List<Host> getAutoScaleGroupNodes(String appId, String infraMappingId, String workflowExecutionId) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
     notNullCheck("Infra Mapping", infrastructureMapping);

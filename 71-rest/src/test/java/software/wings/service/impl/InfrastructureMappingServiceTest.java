@@ -7,8 +7,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.fail;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -1170,9 +1168,9 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     try {
       infrastructureMappingService.validateGcpInfraMapping(gcpKubernetesInfrastructureMapping);
-      fail("Should throw exception");
+      Assertions.fail("Should throw exception");
     } catch (InvalidRequestException ex) {
-      assertTrue(ExceptionUtils.getMessage(ex).contains("Release name"));
+      Assertions.assertThat(ExceptionUtils.getMessage(ex)).contains("Release name");
     }
   }
 }

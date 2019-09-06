@@ -5,8 +5,7 @@ import static java.lang.String.format;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.WingsException;
+import io.harness.exception.FileReadException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
@@ -35,8 +34,7 @@ public class GitUtilsDelegate {
       List<String> data = Files.readAllLines(jsonPath);
       return String.join("\n", data);
     } catch (IOException ex) {
-      throw new WingsException(ErrorCode.GENERAL_ERROR, WingsException.USER)
-          .addParam("message", format("Could not read %s at given branch/commitId", path));
+      throw new FileReadException(format("Could not read %s at given branch/commitId", path));
     }
   }
 
