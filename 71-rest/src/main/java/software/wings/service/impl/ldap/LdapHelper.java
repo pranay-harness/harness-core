@@ -342,10 +342,16 @@ public class LdapHelper {
         return LdapResponse.builder().status(Status.SUCCESS).message(LdapConstants.AUTHENTICATION_SUCCESS).build();
       } else {
         if (response.getResultCode() != null && response.getAuthenticationResultCode() != null) {
-          logger.info("LDAP auth failed with response: identifier:[%s],authenticationResultCode:[%s],resultCode:[%s]",
+          logger.info("LDAP auth failed with response: identifier:[{}],authenticationResultCode:[{}],resultCode:[{}]",
               identifier, response.getAuthenticationResultCode(), response.getResultCode().name());
+        } else if (response.getResultCode() != null) {
+          logger.info("LDAP auth failed with response: identifier:[{}],authenticationResultCode:[{}],resultCode:[{}]",
+              identifier, response.getAuthenticationResultCode(), response.getResultCode().name());
+        } else if (response.getAuthenticationResultCode() != null) {
+          logger.info("LDAP auth failed with response: identifier:[{}],authenticationResultCode:[{}]", identifier,
+              response.getAuthenticationResultCode());
         } else {
-          logger.info("LDAP auth failed, response not available for identifier:[%s]", identifier);
+          logger.info("LDAP auth failed, response not available for identifier:[{}]", identifier);
         }
         return LdapResponse.builder()
             .status(Status.FAILURE)
@@ -353,7 +359,7 @@ public class LdapHelper {
             .build();
       }
     } catch (LdapException e) {
-      logger.error(String.format("Ldap authentication failed for identifier: [%s] and Ldap display Name: [%s]",
+      logger.error(String.format("Ldap authentication failed for identifier: [{}] and Ldap display Name: [{}]",
                        identifier, ldapUserConfig.getDisplayNameAttr()),
           e);
       return LdapResponse.builder()
