@@ -33,8 +33,9 @@ public class SmbBuildServiceImpl implements SmbBuildService {
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       SmbConfig smbConfig, List<EncryptedDataDetail> encryptionDetails) {
     String artifactName = artifactStreamAttributes.getArtifactName();
-    return smbService.getBuildDetails(
-        smbConfig, encryptionDetails, Lists.newArrayList(artifactName), artifactName.contains("*"));
+    return wrapNewBuildsWithLabels(smbService.getBuildDetails(smbConfig, encryptionDetails,
+                                       Lists.newArrayList(artifactName), artifactName.contains("*")),
+        artifactStreamAttributes, smbConfig, encryptionDetails);
   }
 
   @Override

@@ -196,6 +196,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   private List<BuildDetails> getBuildDetails(String appId, String artifactStreamId, String settingId, int limit) {
     ArtifactStream artifactStream = getArtifactStream(artifactStreamId);
     if (CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
+      // Labels not needed for custom artifact source.
       return customBuildSourceService.getBuilds(artifactStreamId);
     }
     SettingAttribute settingAttribute = settingsService.get(settingId);
@@ -221,7 +222,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
         artifactStreamAttributes);
   }
 
-  protected List<BuildDetails> getBuildDetails(String appId, int limit, SettingAttribute settingAttribute,
+  private List<BuildDetails> getBuildDetails(String appId, int limit, SettingAttribute settingAttribute,
       SettingValue settingValue, List<EncryptedDataDetail> encryptedDataDetails, String artifactStreamType,
       ArtifactStreamAttributes artifactStreamAttributes) {
     if (limit != -1 && (ARTIFACTORY.name().equals(artifactStreamType) || GCS.name().equals(artifactStreamType))) {
@@ -259,11 +260,8 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
-
     Service service = artifactStreamServiceBindingService.getService(appId, artifactStream.getUuid(), true);
-
     ArtifactStreamAttributes artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
-
     if (AMAZON_S3.name().equals(artifactStream.getArtifactStreamType())) {
       return getBuildService(settingAttribute, appId, artifactStream.getArtifactStreamType())
           .getLastSuccessfulBuild(appId, artifactStreamAttributes, settingValue, encryptedDataDetails);
@@ -412,14 +410,10 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Override
   public BuildDetails getLastSuccessfulBuild(String artifactStreamId, String settingId) {
     ArtifactStream artifactStream = getArtifactStream(artifactStreamId);
-
     SettingAttribute settingAttribute = settingsService.get(settingId);
-
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
-
     ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
-
     if (AMAZON_S3.name().equals(artifactStream.getArtifactStreamType())) {
       return getBuildService(settingAttribute, artifactStream.getArtifactStreamType())
           .getLastSuccessfulBuild(

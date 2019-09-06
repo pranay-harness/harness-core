@@ -44,11 +44,20 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.ARTIFACTORY.name());
-    return getBuilds(appId, artifactStreamAttributes, artifactoryConfig, encryptionDetails, 200);
+    return wrapNewBuildsWithLabels(
+        getBuilds(appId, artifactStreamAttributes, artifactoryConfig, encryptionDetails, 200), artifactStreamAttributes,
+        artifactoryConfig, encryptionDetails);
   }
 
   @Override
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
+      ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, int limit) {
+    return wrapNewBuildsWithLabels(
+        getBuildsInternal(appId, artifactStreamAttributes, artifactoryConfig, encryptionDetails, limit),
+        artifactStreamAttributes, artifactoryConfig, encryptionDetails);
+  }
+
+  private List<BuildDetails> getBuildsInternal(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, int limit) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.ARTIFACTORY.name());
     if (!appId.equals(GLOBAL_APP_ID)) {

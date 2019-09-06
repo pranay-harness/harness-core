@@ -62,13 +62,16 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   @Override
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       JenkinsConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    return getBuildDetails(artifactStreamAttributes, appId, config, encryptionDetails, ARTIFACT_RETENTION_SIZE);
+    return wrapNewBuildsWithLabels(
+        getBuildDetails(artifactStreamAttributes, appId, config, encryptionDetails, ARTIFACT_RETENTION_SIZE),
+        artifactStreamAttributes, config, encryptionDetails);
   }
 
   @Override
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       JenkinsConfig config, List<EncryptedDataDetail> encryptionDetails, int limit) {
-    return getBuildDetails(artifactStreamAttributes, appId, config, encryptionDetails, limit);
+    return wrapNewBuildsWithLabels(getBuildDetails(artifactStreamAttributes, appId, config, encryptionDetails, limit),
+        artifactStreamAttributes, config, encryptionDetails);
   }
 
   private List<BuildDetails> getBuildDetails(ArtifactStreamAttributes artifactStreamAttributes, String appId,
@@ -132,11 +135,12 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.JENKINS.name());
-
     encryptionService.decrypt(jenkinsConfig, encryptionDetails);
     Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
     try {
-      return jenkins.getLastSuccessfulBuildForJob(artifactStreamAttributes.getJobName());
+      return wrapLastSuccessfulBuildWithLabels(
+          jenkins.getLastSuccessfulBuildForJob(artifactStreamAttributes.getJobName()), artifactStreamAttributes,
+          jenkinsConfig, encryptionDetails);
     } catch (WingsException e) {
       throw e;
     } catch (IOException ex) {

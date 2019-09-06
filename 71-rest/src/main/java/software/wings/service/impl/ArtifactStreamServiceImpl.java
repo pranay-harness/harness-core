@@ -591,9 +591,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   private void ensureArtifactStreamSafeToDelete(String appId, String artifactStreamId, String accountId) {
     if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-      validateTriggerUsages(appId, artifactStreamId);
+      validateTriggerUsages(accountId, appId, artifactStreamId);
     } else if (appId.equals(GLOBAL_APP_ID)) {
-      validateTriggerUsages(appId, artifactStreamId);
+      validateTriggerUsages(accountId, appId, artifactStreamId);
       validateServiceVariableUsages(artifactStreamId);
       validateWorkflowUsages(artifactStreamId);
     }
@@ -620,12 +620,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         format("Artifact Stream linked to Workflows [%s]", Joiner.on(", ").join(workflowNames)), USER);
   }
 
-  private void validateTriggerUsages(String appId, String artifactStreamId) {
+  private void validateTriggerUsages(String accountId, String appId, String artifactStreamId) {
     List<String> triggerNames;
-    String accountId = appService.getAccountIdByAppId(appId);
-
     if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-      triggerNames = deploymentTriggerService.getTriggersHasArtifactStreamAction(appId, artifactStreamId);
+      triggerNames = deploymentTriggerService.getTriggersHasArtifactStreamAction(accountId, appId, artifactStreamId);
     } else {
       List<Trigger> triggers = triggerService.getTriggersHasArtifactStreamAction(appId, artifactStreamId);
       if (isEmpty(triggers)) {
@@ -634,9 +632,11 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       triggerNames = triggers.stream().map(Trigger::getName).collect(toList());
     }
 
-    throw new InvalidRequestException(
-        format("Artifact Stream associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)),
-        USER);
+    if (isNotEmpty(triggerNames)) {
+      throw new InvalidRequestException(
+          format("Artifact Stream associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)),
+          USER);
+    }
   }
 
   @Override

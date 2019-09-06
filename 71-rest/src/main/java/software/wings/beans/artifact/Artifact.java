@@ -62,6 +62,7 @@ public class Artifact extends Base {
   private String artifactStreamId;
   private String artifactSourceName;
   private Map<String, String> metadata = Maps.newHashMap();
+  private Map<String, String> labels = Maps.newHashMap();
   @NotEmpty private String displayName;
   private String revision;
   private List<String> serviceIds = new ArrayList<>();
@@ -290,6 +291,7 @@ public class Artifact extends Base {
     private String artifactStreamId;
     private String artifactSourceName;
     private Map<String, String> metadata = Maps.newHashMap();
+    private Map<String, String> labels = Maps.newHashMap();
     private String displayName;
     private String revision;
     private List<String> serviceIds = new ArrayList<>();
@@ -327,6 +329,11 @@ public class Artifact extends Base {
 
     public Builder withMetadata(Map<String, String> metadata) {
       this.metadata = metadata;
+      return this;
+    }
+
+    public Builder withLabels(Map<String, String> labels) {
+      this.labels = labels;
       return this;
     }
 
@@ -435,6 +442,7 @@ public class Artifact extends Base {
           .withArtifactStreamId(artifactStreamId)
           .withArtifactSourceName(artifactSourceName)
           .withMetadata(metadata)
+          .withLabels(labels)
           .withDisplayName(displayName)
           .withRevision(revision)
           .withServiceIds(serviceIds)
@@ -462,6 +470,7 @@ public class Artifact extends Base {
       artifact.setArtifactStreamId(artifactStreamId);
       artifact.setArtifactSourceName(artifactSourceName);
       artifact.setMetadata(metadata);
+      artifact.setLabels(labels);
       artifact.setDisplayName(displayName);
       artifact.setRevision(revision);
       artifact.setServiceIds(serviceIds);

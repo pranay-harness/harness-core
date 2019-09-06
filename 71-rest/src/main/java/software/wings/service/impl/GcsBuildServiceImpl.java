@@ -36,7 +36,8 @@ public class GcsBuildServiceImpl implements GcsBuildService {
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.GCS.name());
-    return getBuilds(appId, artifactStreamAttributes, gcpConfig, encryptionDetails, 100);
+    return wrapNewBuildsWithLabels(getBuilds(appId, artifactStreamAttributes, gcpConfig, encryptionDetails, 100),
+        artifactStreamAttributes, gcpConfig, encryptionDetails);
   }
 
   @Override
@@ -44,8 +45,10 @@ public class GcsBuildServiceImpl implements GcsBuildService {
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, int limit) {
     String artifactName = artifactStreamAttributes.getArtifactName();
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.GCS.name());
-    return gcsService.getArtifactsBuildDetails(gcpConfig, encryptionDetails, artifactStreamAttributes,
-        Lists.newArrayList(artifactName), artifactName.contains("*"), limit);
+    return wrapNewBuildsWithLabels(
+        gcsService.getArtifactsBuildDetails(gcpConfig, encryptionDetails, artifactStreamAttributes,
+            Lists.newArrayList(artifactName), artifactName.contains("*"), limit),
+        artifactStreamAttributes, gcpConfig, encryptionDetails);
   }
 
   @Override

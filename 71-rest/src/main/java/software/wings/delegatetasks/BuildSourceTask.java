@@ -1,5 +1,8 @@
 package software.wings.delegatetasks;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
+
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -57,6 +60,10 @@ public class BuildSourceTask extends AbstractDelegateRunnableTask {
       SettingValue settingValue = buildSourceRequest.getSettingValue();
       BuildService service = getBuildService(artifactStreamType);
       ArtifactStreamAttributes artifactStreamAttributes = buildSourceRequest.getArtifactStreamAttributes();
+      artifactStreamAttributes.setCollection(buildSourceRequest.isCollection());
+      if (isNotEmpty(buildSourceRequest.getSavedBuildDetailsKeys())) {
+        artifactStreamAttributes.setSavedBuildDetailsKeys(buildSourceRequest.getSavedBuildDetailsKeys());
+      }
       String appId = buildSourceRequest.getAppId();
       List<EncryptedDataDetail> encryptedDataDetails = buildSourceRequest.getEncryptedDataDetails();
       BuildSourceRequestType buildSourceRequestType = buildSourceRequest.getBuildSourceRequestType();
@@ -67,16 +74,17 @@ public class BuildSourceTask extends AbstractDelegateRunnableTask {
           buildDetails = service.getBuilds(artifactStreamAttributes);
         } else {
           boolean enforceLimitOnResults =
-              limit != -1 && "ARTIFACTORY".equals(artifactStreamType); // TODO: supported for Artifactory only
+              limit != -1 && ARTIFACTORY.name().equals(artifactStreamType); // TODO: supported for Artifactory only
           buildDetails = enforceLimitOnResults
               ? service.getBuilds(appId, artifactStreamAttributes, settingValue, encryptedDataDetails, limit)
               : service.getBuilds(appId, artifactStreamAttributes, settingValue, encryptedDataDetails);
         }
-
       } else {
         BuildDetails lastSuccessfulBuild =
             service.getLastSuccessfulBuild(appId, artifactStreamAttributes, settingValue, encryptedDataDetails);
-        buildDetails.add(lastSuccessfulBuild);
+        if (lastSuccessfulBuild != null) {
+          buildDetails.add(lastSuccessfulBuild);
+        }
       }
 
       return BuildSourceExecutionResponse.builder()

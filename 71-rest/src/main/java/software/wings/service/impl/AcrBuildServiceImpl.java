@@ -31,7 +31,8 @@ public class AcrBuildServiceImpl implements AcrBuildService {
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.ACR.name());
-    return acrService.getBuilds(azureConfig, encryptionDetails, artifactStreamAttributes, 50);
+    return wrapNewBuildsWithLabels(acrService.getBuilds(azureConfig, encryptionDetails, artifactStreamAttributes, 50),
+        artifactStreamAttributes, azureConfig, encryptionDetails);
   }
 
   @Override

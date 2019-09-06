@@ -35,7 +35,9 @@ public class EcrClassicBuildServiceImpl implements EcrClassicBuildService {
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       EcrConfig ecrConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ECR.name());
-    return ecrClassicService.getBuilds(ecrConfig, encryptionDetails, artifactStreamAttributes.getImageName(), 50);
+    return wrapNewBuildsWithLabels(
+        ecrClassicService.getBuilds(ecrConfig, encryptionDetails, artifactStreamAttributes.getImageName(), 50),
+        artifactStreamAttributes, ecrConfig, encryptionDetails);
   }
 
   @Override

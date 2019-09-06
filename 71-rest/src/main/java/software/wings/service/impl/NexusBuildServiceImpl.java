@@ -63,6 +63,12 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   @Override
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    return wrapNewBuildsWithLabels(getBuildsInternal(appId, artifactStreamAttributes, config, encryptionDetails),
+        artifactStreamAttributes, config, encryptionDetails);
+  }
+
+  private List<BuildDetails> getBuildsInternal(String appId, ArtifactStreamAttributes artifactStreamAttributes,
+      NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.NEXUS.name());
     if (!appId.equals(GLOBAL_APP_ID)) {
       if (artifactStreamAttributes.getArtifactType() != null
@@ -132,8 +138,10 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.NEXUS.name());
-    return nexusService.getLatestVersion(config, encryptionDetails, artifactStreamAttributes.getJobName(),
-        artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName());
+    return wrapLastSuccessfulBuildWithLabels(
+        nexusService.getLatestVersion(config, encryptionDetails, artifactStreamAttributes.getJobName(),
+            artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName()),
+        artifactStreamAttributes, config, encryptionDetails);
   }
 
   @Override

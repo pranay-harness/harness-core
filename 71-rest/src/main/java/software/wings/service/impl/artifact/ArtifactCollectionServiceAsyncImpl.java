@@ -3,7 +3,6 @@ package software.wings.service.impl.artifact;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -29,7 +28,6 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataBuilder;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SettingAttribute;
@@ -55,7 +53,6 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.PermitService;
 import software.wings.service.intfc.SettingsService;
 
-import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -78,7 +75,10 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
   @Inject private PermitService permitService;
   @Inject private AlertService alertService;
 
-  public static final Duration timeout = Duration.ofMinutes(10);
+  // Default timeout of 1 minutes.
+  private static final long DEFAULT_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
+  // With Labels timeout of 2 minutes.
+  private static final long WITH_LABELS_TIMEOUT = TimeUnit.MINUTES.toMillis(2);
 
   public static final List<String> metadataOnlyStreams =
       Collections.unmodifiableList(asList(DOCKER.name(), ECR.name(), GCR.name(), NEXUS.name(), AMI.name(), ACR.name(),
@@ -88,16 +88,19 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
   public Artifact collectArtifact(String artifactStreamId, BuildDetails buildDetails) {
     ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
     if (artifactStream == null) {
-      throw new WingsException("Artifact Stream was deleted", USER);
+      throw new InvalidRequestException("Artifact stream was deleted", USER);
     }
-    final Artifact artifact = artifactService.create(artifactCollectionUtils.getArtifact(artifactStream, buildDetails));
+
+    final Artifact savedArtifact =
+        artifactService.create(artifactCollectionUtils.getArtifact(artifactStream, buildDetails));
     if (artifactStream.getFailedCronAttempts() != 0) {
-      artifactStreamService.updateFailedCronAttempts(artifactStream.getAccountId(), artifact.getArtifactStreamId(), 0);
+      artifactStreamService.updateFailedCronAttempts(
+          artifactStream.getAccountId(), savedArtifact.getArtifactStreamId(), 0);
       permitService.releasePermitByKey(artifactStream.getUuid());
       alertService.closeAlert(artifactStream.getAccountId(), null, AlertType.ARTIFACT_COLLECTION_FAILED,
           ArtifactCollectionFailedAlert.builder().artifactStreamId(artifactStream.getUuid()).build());
     }
-    return artifact;
+    return savedArtifact;
   }
 
   @Override
@@ -111,19 +114,12 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
     BuildSourceParameters buildSourceRequest;
 
     String waitId = generateUuid();
-    final TaskDataBuilder dataBuilder =
-        TaskData.builder().taskType(TaskType.BUILD_SOURCE_TASK.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT);
+    final TaskDataBuilder dataBuilder = TaskData.builder().taskType(TaskType.BUILD_SOURCE_TASK.name());
     DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder().async(true).appId(GLOBAL_APP_ID).waitId(waitId);
 
     if (CUSTOM.name().equals(artifactStreamType)) {
-      // Defaulting to the 60 secs
       ArtifactStreamAttributes artifactStreamAttributes =
           artifactCollectionUtils.renderCustomArtifactScriptString((CustomArtifactStream) artifactStream);
-
-      long timeout = isEmpty(artifactStreamAttributes.getCustomScriptTimeout())
-          ? Long.parseLong(CustomArtifactStream.DEFAULT_SCRIPT_TIME_OUT)
-          : Long.parseLong(artifactStreamAttributes.getCustomScriptTimeout());
-
       accountId = artifactStreamAttributes.getAccountId();
       BuildSourceRequestType requestType = BuildSourceRequestType.GET_BUILDS;
 
@@ -135,6 +131,8 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
               .artifactStreamType(artifactStreamType)
               .buildSourceRequestType(requestType)
               .limit(ArtifactCollectionUtils.getLimit(artifactStream.getArtifactStreamType(), requestType))
+              .isCollection(true)
+              .savedBuildDetailsKeys(artifactCollectionUtils.getArtifactsKeys(artifactStream, artifactStreamAttributes))
               .build();
 
       List<String> tags = ((CustomArtifactStream) artifactStream).getTags();
@@ -143,8 +141,12 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
         tags = tags.stream().filter(EmptyPredicate::isNotEmpty).distinct().collect(toList());
       }
 
-      delegateTaskBuilder.tags(tags);
+      // Set timeout. Labels are not fetched for CUSTOM artifact streams.
+      long timeout = isEmpty(artifactStreamAttributes.getCustomScriptTimeout())
+          ? Long.parseLong(CustomArtifactStream.DEFAULT_SCRIPT_TIME_OUT)
+          : Long.parseLong(artifactStreamAttributes.getCustomScriptTimeout());
       dataBuilder.parameters(new Object[] {buildSourceRequest}).timeout(timeout);
+      delegateTaskBuilder.tags(tags);
     } else {
       SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
       if (settingAttribute == null) {
@@ -175,8 +177,16 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
       }
 
       accountId = settingAttribute.getAccountId();
-      buildSourceRequest = artifactCollectionUtils.getBuildSourceParameters(artifactStream, settingAttribute);
-      dataBuilder.parameters(new Object[] {buildSourceRequest}).timeout(TimeUnit.MINUTES.toMillis(1));
+      buildSourceRequest =
+          artifactCollectionUtils.getBuildSourceParameters(artifactStream, settingAttribute, true, true);
+
+      // Set timeout.
+      long timeout = DEFAULT_TIMEOUT;
+      if (DOCKER.name().equals(artifactStreamType)) {
+        // Update timeout if collecting labels.
+        timeout = WITH_LABELS_TIMEOUT;
+      }
+      dataBuilder.parameters(new Object[] {buildSourceRequest}).timeout(timeout);
       delegateTaskBuilder.tags(awsCommandHelper.getAwsConfigTagsFromSettingAttribute(settingAttribute));
     }
 

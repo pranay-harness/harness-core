@@ -18,7 +18,9 @@ public class CustomBuildServiceImpl implements CustomBuildService {
 
   @DelegateTaskType(TaskType.CUSTOM_GET_BUILDS)
   public List<BuildDetails> getBuilds(ArtifactStreamAttributes artifactStreamAttributes) {
-    return customRepositoryService.getBuilds(artifactStreamAttributes);
+    // NOTE: Custom artifact stream doesn't support labels so the last two arguments can be null.
+    return wrapNewBuildsWithLabels(
+        customRepositoryService.getBuilds(artifactStreamAttributes), artifactStreamAttributes, null, null);
   }
 
   @DelegateTaskType(TaskType.CUSTOM_VALIDATE_ARTIFACT_STREAM)

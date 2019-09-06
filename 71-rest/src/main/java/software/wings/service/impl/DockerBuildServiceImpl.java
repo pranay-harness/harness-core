@@ -36,8 +36,9 @@ public class DockerBuildServiceImpl implements DockerBuildService {
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), DOCKER.name());
-    return dockerRegistryService.getBuilds(
-        dockerConfig, encryptionDetails, artifactStreamAttributes.getImageName(), 250);
+    return wrapNewBuildsWithLabels(
+        dockerRegistryService.getBuilds(dockerConfig, encryptionDetails, artifactStreamAttributes.getImageName(), 250),
+        artifactStreamAttributes, dockerConfig, encryptionDetails);
   }
 
   @Override
@@ -104,5 +105,13 @@ public class DockerBuildServiceImpl implements DockerBuildService {
   public List<String> getArtifactPathsByStreamType(
       DockerConfig config, List<EncryptedDataDetail> encryptionDetails, String streamType) {
     throw new InvalidRequestException("Operation not supported by Docker Build Service", WingsException.USER);
+  }
+
+  @Override
+  public List<Map<String, String>> getLabels(ArtifactStreamAttributes artifactStreamAttributes, List<String> buildNos,
+      DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, long deadline) {
+    equalCheck(artifactStreamAttributes.getArtifactStreamType(), DOCKER.name());
+    return dockerRegistryService.getLabels(
+        dockerConfig, encryptionDetails, artifactStreamAttributes.getImageName(), buildNos, deadline);
   }
 }

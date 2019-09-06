@@ -9,6 +9,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
+import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
@@ -33,6 +34,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.network.Http;
+import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
@@ -65,6 +67,7 @@ import software.wings.beans.container.ImageDetails.ImageDetailsBuilder;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.template.artifactsource.CustomRepositoryMapping.AttributeMapping;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters;
+import software.wings.delegatetasks.buildsource.BuildSourceParameters.BuildSourceParametersBuilder;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters.BuildSourceRequestType;
 import software.wings.expression.SecretFunctor;
 import software.wings.helpers.ext.azure.AzureHelperService;
@@ -72,6 +75,7 @@ import software.wings.helpers.ext.ecr.EcrClassicService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -86,9 +90,14 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryType;
 import software.wings.utils.Validator;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
@@ -105,6 +114,7 @@ public class ArtifactCollectionUtils {
   @Inject private ExpressionEvaluator evaluator;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Inject private ArtifactService artifactService;
   @Inject private FeatureFlagService featureFlagService;
 
   @Transient
@@ -138,6 +148,9 @@ public class ArtifactCollectionUtils {
     }
     if (accountId != null) {
       builder.withAccountId(accountId);
+    }
+    if (isNotEmpty(buildDetails.getLabels())) {
+      builder.withLabels(buildDetails.getLabels());
     }
     return builder.build();
   }
@@ -480,7 +493,17 @@ public class ArtifactCollectionUtils {
     return aBuildDetails().withNumber(tag).withMetadata(metadata).withBuildUrl(tagUrl + tag).build();
   }
 
-  public static ArtifactStreamAttributes getArtifactStreamAttributes(ArtifactStream artifactStream, Service service) {
+  private ArtifactStreamAttributes getArtifactStreamAttributes(ArtifactStream artifactStream, boolean isMultiArtifact) {
+    if (isMultiArtifact) {
+      return artifactStream.fetchArtifactStreamAttributes();
+    } else {
+      Service service =
+          artifactStreamServiceBindingService.getService(artifactStream.fetchAppId(), artifactStream.getUuid(), true);
+      return getArtifactStreamAttributes(artifactStream, service);
+    }
+  }
+
+  private static ArtifactStreamAttributes getArtifactStreamAttributes(ArtifactStream artifactStream, Service service) {
     ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
     artifactStreamAttributes.setArtifactType(service.getArtifactType());
     return artifactStreamAttributes;
@@ -529,37 +552,151 @@ public class ArtifactCollectionUtils {
         : -1;
   }
 
-  public BuildSourceParameters getBuildSourceParameters(
-      ArtifactStream artifactStream, SettingAttribute settingAttribute) {
+  public BuildSourceParameters getBuildSourceParameters(ArtifactStream artifactStream,
+      SettingAttribute settingAttribute, boolean isCollection, boolean withSavedBuildDetailsKeys) {
     String artifactStreamType = artifactStream.getArtifactStreamType();
     SettingValue settingValue = settingAttribute.getValue();
-
     List<EncryptedDataDetail> encryptedDataDetails =
         secretManager.getEncryptionDetails((EncryptableSetting) settingValue, null, null);
 
-    ArtifactStreamAttributes artifactStreamAttributes;
-    BuildSourceRequestType requestType;
     String appId = artifactStream.fetchAppId();
     boolean multiArtifact =
         featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, settingAttribute.getAccountId());
+    ArtifactStreamAttributes artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, multiArtifact);
+    BuildSourceRequestType requestType;
     if (multiArtifact) {
-      artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
       requestType = getRequestType(artifactStream);
     } else {
-      Service service = artifactStreamServiceBindingService.getService(appId, artifactStream.getUuid(), true);
-      artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
-      requestType = getRequestType(artifactStream, service.getArtifactType());
+      requestType = getRequestType(artifactStream, artifactStreamAttributes.getArtifactType());
     }
 
-    return BuildSourceParameters.builder()
-        .accountId(settingAttribute.getAccountId())
-        .appId(appId)
-        .artifactStreamAttributes(artifactStreamAttributes)
-        .artifactStreamType(artifactStreamType)
-        .settingValue(settingValue)
-        .encryptedDataDetails(encryptedDataDetails)
-        .buildSourceRequestType(requestType)
-        .limit(getLimit(artifactStream.getArtifactStreamType(), requestType))
-        .build();
+    BuildSourceParametersBuilder buildSourceParametersBuilder =
+        BuildSourceParameters.builder()
+            .accountId(settingAttribute.getAccountId())
+            .appId(appId)
+            .artifactStreamAttributes(artifactStreamAttributes)
+            .artifactStreamType(artifactStreamType)
+            .settingValue(settingValue)
+            .encryptedDataDetails(encryptedDataDetails)
+            .buildSourceRequestType(requestType)
+            .limit(getLimit(artifactStream.getArtifactStreamType(), requestType))
+            .isCollection(isCollection);
+    if (withSavedBuildDetailsKeys) {
+      buildSourceParametersBuilder.savedBuildDetailsKeys(getArtifactsKeys(artifactStream, artifactStreamAttributes));
+    }
+    return buildSourceParametersBuilder.build();
+  }
+
+  /**
+   * getArtifactsKeys returns a set of Artifact keys so that they can be compared against incoming BuildDetails objects.
+   *
+   * @param artifactStream           the artifact stream
+   * @param artifactStreamAttributes the artifact stream attributes - used only for ARTIFACTORY
+   * @return the set of artifact keys
+   */
+  Set<String> getArtifactsKeys(ArtifactStream artifactStream, ArtifactStreamAttributes artifactStreamAttributes) {
+    if (artifactStream == null || artifactStream.getArtifactStreamType() == null) {
+      return Collections.emptySet();
+    }
+
+    String artifactStreamType = artifactStream.getArtifactStreamType();
+    Function<Artifact, String> keyFn = getArtifactKeyFn(artifactStreamType, artifactStreamAttributes);
+    Set<String> artifactKeys = new HashSet<>();
+    try (HIterator<Artifact> artifacts =
+             new HIterator<>(artifactService.prepareArtifactWithMetadataQuery(artifactStream).fetch())) {
+      for (Artifact artifact : artifacts) {
+        String key = keyFn.apply(artifact);
+        if (key != null) {
+          artifactKeys.add(key);
+        }
+      }
+    }
+    return artifactKeys;
+  }
+
+  /**
+   * getArtifactKeyFn returns a function that can extract a unique key for an Artifact object so that it can be compared
+   * with a BuildDetails object.
+   *
+   * @param artifactStreamType       the artifact stream type
+   * @param artifactStreamAttributes the artifact stream attributes - used only for ARTIFACTORY
+   * @return the function that can used to get the key for an Artifact
+   */
+  private static Function<Artifact, String> getArtifactKeyFn(
+      String artifactStreamType, ArtifactStreamAttributes artifactStreamAttributes) {
+    if (AMI.name().equals(artifactStreamType)) {
+      return Artifact::getRevision;
+    } else if (isGenericArtifactStream(artifactStreamType, artifactStreamAttributes)) {
+      return Artifact::getArtifactPath;
+    } else {
+      return Artifact::getBuildNo;
+    }
+  }
+
+  /**
+   * getNewBuildDetails returns new BuildDetails after removing Artifact already present in DB.
+   *
+   * @param savedBuildDetailsKeys    the artifact keys for artifacts already stored in DB
+   * @param buildDetails             the new build details fetched from third-party repo
+   * @param artifactStreamType       the artifact stream type
+   * @param artifactStreamAttributes the artifact stream attributes - used only for ARTIFACTORY
+   * @return the new build details
+   */
+  public static List<BuildDetails> getNewBuildDetails(Set<String> savedBuildDetailsKeys,
+      List<BuildDetails> buildDetails, String artifactStreamType, ArtifactStreamAttributes artifactStreamAttributes) {
+    if (isEmpty(buildDetails)) {
+      return Collections.emptyList();
+    }
+    if (isEmpty(savedBuildDetailsKeys)) {
+      return buildDetails;
+    }
+
+    Function<BuildDetails, String> keyFn = getBuildDetailsKeyFn(artifactStreamType, artifactStreamAttributes);
+    return buildDetails.stream()
+        .filter(singleBuildDetails -> !savedBuildDetailsKeys.contains(keyFn.apply(singleBuildDetails)))
+        .collect(Collectors.toList());
+  }
+
+  /**
+   * getBuildDetailsKeyFn returns a function that can extract a unique key for a BuildDetails object so that it can be
+   * compared with an Artifact object.
+   *
+   * @param artifactStreamType       the artifact stream type
+   * @param artifactStreamAttributes the artifact stream attributes - used only for ARTIFACTORY
+   * @return the function that can used to get the key for a BuildDetails
+   */
+  private static Function<BuildDetails, String> getBuildDetailsKeyFn(
+      String artifactStreamType, ArtifactStreamAttributes artifactStreamAttributes) {
+    if (AMI.name().equals(artifactStreamType)) {
+      return BuildDetails::getRevision;
+    } else if (isGenericArtifactStream(artifactStreamType, artifactStreamAttributes)) {
+      return BuildDetails::getArtifactPath;
+    } else {
+      return BuildDetails::getNumber;
+    }
+  }
+
+  /**
+   * isGenericArtifactStream returns true if we need to compare artifact paths to check if two artifacts - one stored in
+   * our DB and one from an artifact repo - are different.
+   *
+   * @param artifactStreamType       the artifact stream type
+   * @param artifactStreamAttributes the artifact stream attributes - used only for ARTIFACTORY
+   * @return true, if generic artifact stream - uses artifact path as key
+   */
+  private static boolean isGenericArtifactStream(
+      String artifactStreamType, ArtifactStreamAttributes artifactStreamAttributes) {
+    if (AMAZON_S3.name().equals(artifactStreamType)) {
+      return true;
+    }
+    if (ARTIFACTORY.name().equals(artifactStreamType)) {
+      if (artifactStreamAttributes.getArtifactType() != null
+          && artifactStreamAttributes.getArtifactType().equals(ArtifactType.DOCKER)) {
+        return false;
+      }
+      return artifactStreamAttributes.getRepositoryType() == null
+          || !artifactStreamAttributes.getRepositoryType().equals(RepositoryType.docker.name());
+    }
+    return false;
   }
 }

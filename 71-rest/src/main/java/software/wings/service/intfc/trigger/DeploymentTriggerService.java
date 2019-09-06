@@ -60,7 +60,7 @@ public interface DeploymentTriggerService
 
   List<String> getTriggersHasWorkflowAction(String appId, String workflowId);
 
-  List<String> getTriggersHasArtifactStreamAction(String appId, String artifactStreamId);
+  List<String> getTriggersHasArtifactStreamAction(String accountId, String appId, String artifactStreamId);
 
   WorkflowExecution triggerExecutionByWebHook(DeploymentTrigger deploymentTrigger, Map<String, String> parameters,
       List<TriggerArtifactVariable> artifactVariables, TriggerExecution triggerExecution);

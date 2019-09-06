@@ -35,8 +35,10 @@ public class EcrBuildServiceImpl implements EcrBuildService {
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ECR.name());
-    return ecrService.getBuilds(awsConfig, encryptionDetails, artifactStreamAttributes.getRegion(),
-        artifactStreamAttributes.getImageName(), 50);
+    return wrapNewBuildsWithLabels(
+        ecrService.getBuilds(awsConfig, encryptionDetails, artifactStreamAttributes.getRegion(),
+            artifactStreamAttributes.getImageName(), 50),
+        artifactStreamAttributes, awsConfig, encryptionDetails);
   }
 
   @Override
