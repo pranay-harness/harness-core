@@ -3,6 +3,7 @@ package io.harness.generator;
 import static io.harness.beans.SweepingOutput.Scope.PHASE;
 import static io.harness.beans.SweepingOutput.Scope.PIPELINE;
 import static io.harness.beans.SweepingOutput.Scope.WORKFLOW;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.InfrastructureMappingGenerator.InfrastructureMappings.AWS_SSH_TEST;
 import static io.harness.generator.ResourceConstraintGenerator.ResourceConstraints.GENERIC_ASAP_TEST;
@@ -481,11 +482,21 @@ public class WorkflowGenerator {
     if (workflow.getInfraMappingId() != null) {
       builder.infraMappingId(workflow.getInfraMappingId());
     }
+
+    if (isNotEmpty(workflow.getInfraDefinitionId())) {
+      builder.infraDefinitionId(workflow.getInfraDefinitionId());
+    }
     if (workflow.getCreatedBy() != null) {
       builder.createdBy(workflow.getCreatedBy());
     } else {
       builder.createdBy(owners.obtainUser());
     }
+
+    if (workflow.getTemplateExpressions() != null) {
+      builder.templateExpressions(workflow.getTemplateExpressions());
+    }
+
+    builder.templatized(workflow.isTemplatized());
 
     final Workflow finalWorkflow = builder.build();
 

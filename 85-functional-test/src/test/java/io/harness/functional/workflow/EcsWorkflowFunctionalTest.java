@@ -25,6 +25,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
+import io.harness.functional.WorkflowUtils;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.EnvironmentGenerator;
@@ -83,6 +84,7 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Inject private SettingGenerator settingGenerator;
   @Inject private WorkflowService workflowService;
   @Inject private ArtifactStreamManager artifactStreamManager;
+  @Inject private WorkflowUtils workflowUtils;
 
   final Seed seed = new Seed(0);
   Owners owners;
@@ -218,35 +220,9 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
 
   private Workflow getEcsEc2TypeCanaryWorkflow() {
     List<PhaseStep> phaseSteps1 = new ArrayList<>();
-    phaseSteps1.add(aPhaseStep(CONTAINER_SETUP, SETUP_CONTAINER_CONSTANT)
-                        .addStep(GraphNode.builder()
-                                     .id(generateUuid())
-                                     .type(ECS_SERVICE_SETUP.name())
-                                     .name(ECS_SERVICE_SETUP_CONSTANT)
-                                     .properties(ImmutableMap.<String, Object>builder()
-                                                     .put("fixedInstances", "2")
-                                                     .put("useLoadBalancer", false)
-                                                     .put("ecsServiceName", "${app.name}__${service.name}__CANARY")
-                                                     .put("desiredInstanceCount", "fixedInstances")
-                                                     .put("resizeStrategy", ResizeStrategy.DOWNSIZE_OLD_FIRST)
-                                                     .put("serviceSteadyStateTimeout", 10)
-                                                     .build())
-                                     .build())
-                        .build());
 
-    phaseSteps1.add(aPhaseStep(CONTAINER_DEPLOY, DEPLOY_CONTAINERS_CONSTANT)
-                        .addStep(GraphNode.builder()
-                                     .id(generateUuid())
-                                     .type(ECS_SERVICE_DEPLOY.name())
-                                     .name(UPGRADE_CONTAINERS_CONSTANT)
-                                     .properties(ImmutableMap.<String, Object>builder()
-                                                     .put("instanceUnitType", "PERCENTAGE")
-                                                     .put("instanceCount", 50)
-                                                     .put("downsizeInstanceUnitType", "PERCENTAGE")
-                                                     .put("downsizeInstanceCount", 50)
-                                                     .build())
-                                     .build())
-                        .build());
+    phaseSteps1.add(workflowUtils.ecsContainerSetupPhaseStep());
+    phaseSteps1.add(workflowUtils.ecsContainerDeployPhaseStep());
 
     phaseSteps1.add(aPhaseStep(WRAP_UP, WRAP_UP_CONSTANT).build());
 

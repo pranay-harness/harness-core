@@ -2,14 +2,18 @@ package io.harness.testframework.framework.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.common.collect.ImmutableMap;
+
 import software.wings.beans.Account;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
+import software.wings.beans.Workflow;
 import software.wings.beans.security.UserGroup;
 import software.wings.sm.StateType;
 import software.wings.sm.states.ApprovalState.ApprovalStateType;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,5 +60,21 @@ public class PipelineUtils {
     pipelineStageElements.add(pipelineStageElement);
     executionStage.setPipelineStageElements(pipelineStageElements);
     return executionStage;
+  }
+
+  public static PipelineStage createPipelineStageWithWorkflow(
+      String name, Workflow workflow, Map<String, String> workflowVariables, boolean parallel) {
+    ImmutableMap<String, Object> properties =
+        ImmutableMap.<String, Object>of("envId", workflow.getEnvId(), "workflowId", workflow.getUuid());
+    return PipelineStage.builder()
+        .name(name)
+        .parallel(parallel)
+        .pipelineStageElements(Arrays.asList(PipelineStageElement.builder()
+                                                 .name(name)
+                                                 .type(StateType.ENV_STATE.toString())
+                                                 .properties(properties)
+                                                 .workflowVariables(workflowVariables)
+                                                 .build()))
+        .build();
   }
 }

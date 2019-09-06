@@ -1,28 +1,64 @@
 package io.harness.functional;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
+import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
+import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
+import static software.wings.beans.PhaseStepType.WRAP_UP;
+import static software.wings.beans.RollingOrchestrationWorkflow.RollingOrchestrationWorkflowBuilder.aRollingOrchestrationWorkflow;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
+import static software.wings.sm.StateType.AWS_NODE_SELECT;
+import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
+import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
+import com.google.api.client.util.Lists;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.exception.WingsException;
+import org.apache.commons.lang3.StringUtils;
 import org.awaitility.Awaitility;
+import software.wings.api.DeploymentType;
+import software.wings.beans.EntityType;
 import software.wings.beans.GraphNode;
+import software.wings.beans.PhaseStep;
+import software.wings.beans.PhaseStepType;
+import software.wings.beans.ResizeStrategy;
+import software.wings.beans.Service;
+import software.wings.beans.TemplateExpression;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.WorkflowExecutionService;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class WorkflowUtils {
   private static final long TEST_TIMEOUT_IN_MINUTES = 3;
+
+  static final String SETUP_CONTAINER_CONSTANT = "Setup Container";
+  static final String PRE_DEPLOYMENT_CONSTANT = "Pre-Deployment";
+  static final String ECS_DAEMON_SERVICE_SETUP_NAME = "ECS Daemon Service Setup";
+  static final String POST_DEPLOYMENT_CONSTANT = "Post-Deployment";
+  static final String WRAP_UP_CONSTANT = "Wrap Up";
+  static final String ECS_SERVICE_SETUP_CONSTANT = "ECS Service Setup";
+  static final String UPGRADE_CONTAINERS_CONSTANT = "Upgrade Containers";
+  static final String DEPLOY_CONTAINERS_CONSTANT = "Deploy Containers";
+  static final String SELECT_NODES_CONSTANT = "Select Node";
 
   @Inject private WorkflowExecutionService workflowExecutionService;
 
@@ -40,6 +76,7 @@ public class WorkflowUtils {
           "workflow execution did not succeed. Final status: " + finalWorkflowExecution.getStatus());
     }
   }
+
   public static Workflow buildCanaryWorkflowPostDeploymentStep(String name, String envId, GraphNode graphNode) {
     return aWorkflow()
         .name(name)
@@ -51,6 +88,7 @@ public class WorkflowUtils {
                                    .build())
         .build();
   }
+
   public Workflow buildCanaryWorkflowPostDeploymentStep(String name, String envId) {
     return aWorkflow()
         .name(name)
@@ -60,6 +98,175 @@ public class WorkflowUtils {
                                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
                                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
                                    .build())
+        .build();
+  }
+
+  public Workflow getCanaryK8sWorkflow(
+      String name, Service service, InfrastructureDefinition infrastructureDefinition) {
+    return aWorkflow()
+        .name(name + System.currentTimeMillis())
+        .appId(service.getAppId())
+        .envId(infrastructureDefinition.getEnvId())
+        .serviceId(service.getUuid())
+        .infraDefinitionId(infrastructureDefinition.getUuid())
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .sample(true)
+        .orchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
+        .build();
+  }
+
+  public Workflow getBasicEcsEc2TypeWorkflow(
+      String name, Service service, InfrastructureDefinition infrastructureDefinition) {
+    List<PhaseStep> phaseSteps = new ArrayList<>();
+
+    phaseSteps.add(ecsContainerSetupPhaseStep());
+    phaseSteps.add(ecsContainerDeployPhaseStep());
+    phaseSteps.add(aPhaseStep(WRAP_UP, WRAP_UP_CONSTANT).build());
+
+    return aWorkflow()
+        .name(name + System.currentTimeMillis())
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .appId(service.getAppId())
+        .envId(infrastructureDefinition.getEnvId())
+        .infraDefinitionId(infrastructureDefinition.getUuid())
+        .serviceId(service.getUuid())
+        .orchestrationWorkflow(
+            aBuildOrchestrationWorkflow()
+                .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, PRE_DEPLOYMENT_CONSTANT).build())
+                .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, POST_DEPLOYMENT_CONSTANT).build())
+                .addWorkflowPhase(aWorkflowPhase()
+                                      .serviceId(service.getUuid())
+                                      .deploymentType(DeploymentType.ECS)
+                                      .daemonSet(false)
+                                      .infraDefinitionId(infrastructureDefinition.getUuid())
+                                      .infraDefinitionName(infrastructureDefinition.getName())
+                                      .phaseSteps(phaseSteps)
+                                      .build())
+                .build())
+        .build();
+  }
+
+  public PhaseStep ecsContainerDeployPhaseStep() {
+    return aPhaseStep(CONTAINER_DEPLOY, DEPLOY_CONTAINERS_CONSTANT)
+        .addStep(GraphNode.builder()
+                     .id(generateUuid())
+                     .type(ECS_SERVICE_DEPLOY.name())
+                     .name(UPGRADE_CONTAINERS_CONSTANT)
+                     .properties(ImmutableMap.<String, Object>builder()
+                                     .put("instanceUnitType", "PERCENTAGE")
+                                     .put("instanceCount", 100)
+                                     .put("downsizeInstanceUnitType", "PERCENTAGE")
+                                     .put("downsizeInstanceCount", 0)
+                                     .build())
+                     .build())
+        .build();
+  }
+
+  public PhaseStep ecsContainerSetupPhaseStep() {
+    return aPhaseStep(CONTAINER_SETUP, SETUP_CONTAINER_CONSTANT)
+        .addStep(GraphNode.builder()
+                     .id(generateUuid())
+                     .type(ECS_SERVICE_SETUP.name())
+                     .name(ECS_SERVICE_SETUP_CONSTANT)
+                     .properties(ImmutableMap.<String, Object>builder()
+                                     .put("fixedInstances", "1")
+                                     .put("useLoadBalancer", false)
+                                     .put("ecsServiceName", "${app.name}__${service.name}__BASIC")
+                                     .put("desiredInstanceCount", "fixedInstances")
+                                     .put("resizeStrategy", ResizeStrategy.DOWNSIZE_OLD_FIRST)
+                                     .put("serviceSteadyStateTimeout", 10)
+                                     .build())
+                     .build())
+        .build();
+  }
+
+  public Workflow createCanaryAwsSshWorkflow(
+      String name, Service service, InfrastructureDefinition infrastructureDefinition) {
+    name = Joiner.on(StringUtils.EMPTY).join(name, System.currentTimeMillis());
+
+    List<PhaseStep> phaseSteps = Lists.newArrayList();
+    phaseSteps.add(aPhaseStep(PhaseStepType.SELECT_NODE, PhaseStepType.SELECT_NODE.name())
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(AWS_NODE_SELECT.name())
+                                    .name(SELECT_NODES_CONSTANT)
+                                    .properties(ImmutableMap.<String, Object>builder()
+                                                    .put("instanceUnitType", "PERCENTAGE")
+                                                    .put("instanceCount", 100)
+                                                    .put("specificHosts", false)
+                                                    .build())
+                                    .build())
+                       .build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.DISABLE_SERVICE, PhaseStepType.DISABLE_SERVICE.name()).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.DEPLOY_SERVICE, PhaseStepType.DEPLOY_SERVICE.name()).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.ENABLE_SERVICE, PhaseStepType.ENABLE_SERVICE.name()).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, PhaseStepType.VERIFY_SERVICE.name()).build());
+    phaseSteps.add(aPhaseStep(WRAP_UP, WRAP_UP_CONSTANT).build());
+    Workflow workflow =
+        aWorkflow()
+            .name(name)
+            .appId(service.getAppId())
+            .serviceId(service.getUuid())
+            .envId(infrastructureDefinition.getEnvId())
+            .infraDefinitionId(infrastructureDefinition.getUuid())
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                    .withWorkflowPhases(Arrays.asList(aWorkflowPhase()
+                                                          .serviceId(service.getUuid())
+                                                          .infraDefinitionId(infrastructureDefinition.getUuid())
+                                                          .phaseSteps(phaseSteps)
+                                                          .build()))
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                    .build())
+            .build();
+
+    return workflow;
+  }
+
+  public Workflow getRollingK8sTemplatizedWorkflow(
+      String name, Service service, InfrastructureDefinition defaultInfrastructureDefinition) {
+    TemplateExpression templateExpressionForEnv = getTemplateExpressionsForEnv();
+    TemplateExpression templateExpressionForInfraDefinition =
+        getTemplateExpressionsForInfraDefinition("${InfraDefinition_Kubernetes}");
+
+    Workflow workflow =
+        aWorkflow()
+            .name(name + System.currentTimeMillis())
+            .appId(service.getAppId())
+            .envId(defaultInfrastructureDefinition.getEnvId())
+            .infraDefinitionId(defaultInfrastructureDefinition.getUuid())
+            .serviceId(service.getUuid())
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(aRollingOrchestrationWorkflow().build())
+            .templatized(true)
+            .templateExpressions(Arrays.asList(templateExpressionForEnv, templateExpressionForInfraDefinition))
+            .build();
+    return workflow;
+  }
+
+  private TemplateExpression getTemplateExpressionsForEnv() {
+    Map<String, Object> metaData =
+        ImmutableMap.<String, Object>builder().put("entityType", EntityType.ENVIRONMENT.name()).build();
+    return TemplateExpression.builder()
+        .fieldName("envId")
+        .expression("${Environment}")
+        .mandatory(true)
+        .expressionAllowed(false)
+        .metadata(metaData)
+        .build();
+  }
+
+  private TemplateExpression getTemplateExpressionsForInfraDefinition(String expression) {
+    Map<String, Object> metaData =
+        ImmutableMap.<String, Object>builder().put("entityType", EntityType.INFRASTRUCTURE_DEFINITION.name()).build();
+    return TemplateExpression.builder()
+        .fieldName("infraDefinitionId")
+        .expression(expression)
+        .mandatory(true)
+        .expressionAllowed(false)
+        .metadata(metaData)
         .build();
   }
 }

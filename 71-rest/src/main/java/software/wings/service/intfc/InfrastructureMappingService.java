@@ -64,6 +64,8 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
 
   InfrastructureMapping getInfraMappingByName(String appId, String envId, String name);
 
+  List<InfrastructureMapping> getInfraMappingLinkedToInfraDefinition(String appId, String infraDefinitionId);
+
   // TODO => Remove this comment once fully migrated
   // Remove all NeedsMigration Conmmecnt after migration
 
