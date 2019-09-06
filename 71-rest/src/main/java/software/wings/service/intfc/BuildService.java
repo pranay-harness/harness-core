@@ -1,5 +1,10 @@
 package software.wings.service.intfc;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.Integer.min;
+import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
+
 import com.google.common.collect.Lists;
 
 import io.harness.exception.WingsException;
@@ -7,14 +12,19 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
+import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryFormat;
 import software.wings.utils.RepositoryType;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Created by peeyushaggarwal on 5/13/16.
@@ -246,5 +256,65 @@ public interface BuildService<T> {
       jobNames.add(job.getJobName());
     }
     return jobNames;
+  }
+
+  default List<Map<String, String>> getLabels(ArtifactStreamAttributes artifactStreamAttributes, List<String> buildNos,
+      T config, List<EncryptedDataDetail> encryptionDetails, long deadline) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * wrapNewBuildsWithLabels removes build details already present in DB and collects labels if necessary.
+   */
+  default List<BuildDetails> wrapNewBuildsWithLabels(List<BuildDetails> buildDetails,
+      ArtifactStreamAttributes artifactStreamAttributes, T config, List<EncryptedDataDetail> encryptionDetails) {
+    // NOTE: config and encryptionDetails are used only for fetching labels.
+    // Filter out new build details that are not saved already in our DB.
+    buildDetails = ArtifactCollectionUtils.getNewBuildDetails(artifactStreamAttributes.getSavedBuildDetailsKeys(),
+        buildDetails, artifactStreamAttributes.getArtifactStreamType(), artifactStreamAttributes);
+    return wrapBuildDetailsWithLabels(buildDetails, artifactStreamAttributes, config, encryptionDetails);
+  }
+
+  /**
+   * wrapLastSuccessfulBuildWithLabels removes build details already present in DB and collects labels if necessary.
+   */
+  default BuildDetails wrapLastSuccessfulBuildWithLabels(BuildDetails buildDetails,
+      ArtifactStreamAttributes artifactStreamAttributes, T config, List<EncryptedDataDetail> encryptionDetails) {
+    if (buildDetails == null) {
+      return null;
+    }
+    List<BuildDetails> buildDetailsList = wrapNewBuildsWithLabels(
+        Collections.singletonList(buildDetails), artifactStreamAttributes, config, encryptionDetails);
+    return isEmpty(buildDetailsList) ? null : buildDetailsList.get(0);
+  }
+
+  /**
+   * wrapBuildDetailsWithLabels is a helper function for wrapNewBuildsWithLabels and wrapLastSuccessfulBuildWithLabels.
+   */
+  default List<BuildDetails> wrapBuildDetailsWithLabels(List<BuildDetails> buildDetails,
+      ArtifactStreamAttributes artifactStreamAttributes, T config, List<EncryptedDataDetail> encryptionDetails) {
+    if (isEmpty(buildDetails) || !artifactStreamAttributes.isCollection()
+        || !DOCKER.name().equals(artifactStreamAttributes.getArtifactStreamType())) {
+      return buildDetails;
+    }
+
+    // Timeout of 45 secs for collecting labels.
+    long deadline = (new Date()).getTime() + 45 * 1000;
+    // Collect labels for DOCKER.
+    List<String> buildNos = buildDetails.stream().map(BuildDetails::getNumber).collect(Collectors.toList());
+    List<Map<String, String>> labelsList =
+        getLabels(artifactStreamAttributes, buildNos, config, encryptionDetails, deadline);
+    int minSize = min(buildNos.size(), labelsList.size());
+    if (minSize > 0) {
+      for (int i = 0; i < minSize; i++) {
+        if (isNotEmpty(labelsList.get(i))) {
+          buildDetails.get(i).setLabels(labelsList.get(i));
+        }
+      }
+    }
+    if (minSize < buildNos.size()) {
+      return new ArrayList<>(buildDetails.subList(0, minSize));
+    }
+    return buildDetails;
   }
 }

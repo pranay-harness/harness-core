@@ -1,7 +1,6 @@
 package software.wings.helpers.ext.docker;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
@@ -12,7 +11,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -22,6 +23,7 @@ import net.jodah.expiringmap.ExpiringMap;
 import okhttp3.Credentials;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
@@ -38,7 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 
 /**
  * Created by anubhaw on 1/6/17.
@@ -48,6 +50,7 @@ import java.util.stream.Collectors;
 public class DockerRegistryServiceImpl implements DockerRegistryService {
   @Inject private EncryptionService encryptionService;
   @Inject private DockerPublicRegistryProcessor dockerPublicRegistryProcessor;
+  @Inject private DockerRegistryUtils dockerRegistryUtils;
 
   private ExpiringMap<String, String> cachedBearerTokens = ExpiringMap.builder().variableExpiration().build();
 
@@ -75,8 +78,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
             dockerPublicRegistryProcessor.getBuilds(dockerConfig, encryptionDetails, imageName, maxNumberOfBuilds);
       }
     } catch (Exception e) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, WingsException.USER, e)
-          .addParam("message", ExceptionUtils.getMessage(e));
+      throw new ArtifactServerException(ExceptionUtils.getMessage(e), e, WingsException.USER);
     }
     return buildDetails;
   }
@@ -95,7 +97,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
         throw new WingsException(INVALID_CREDENTIAL, WingsException.USER);
       }
     }
-    checkValidImage(imageName, response);
+    DockerRegistryUtils.checkValidImage(imageName, response);
     DockerImageTagResponse dockerImageTagResponse = response.body();
     if (dockerImageTagResponse == null || isEmpty(dockerImageTagResponse.getTags())) {
       logger.warn("There are no tags available for the imageName {}", imageName);
@@ -135,13 +137,6 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     return buildDetails;
   }
 
-  private void checkValidImage(String imageName, Response<DockerImageTagResponse> response) {
-    if (response.code() == 404) { // Page not found
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
-          .addParam("args", "Image name [" + imageName + "] does not exist in Docker Registry.");
-    }
-  }
-
   private List<BuildDetails> processBuildResponse(
       DockerImageTagResponse dockerImageTagResponse, DockerConfig dockerConfig, String imageName) {
     String tagUrl = dockerConfig.getDockerRegistryUrl().endsWith("/")
@@ -164,6 +159,20 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
               .build();
         })
         .collect(toList());
+  }
+
+  @Override
+  public List<Map<String, String>> getLabels(DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails,
+      String imageName, List<String> buildNos, long deadline) {
+    if (!dockerConfig.hasCredentials()) {
+      return dockerPublicRegistryProcessor.getLabels(dockerConfig, encryptionDetails, imageName, buildNos, deadline);
+    }
+
+    DockerRegistryRestClient registryRestClient = getDockerRegistryRestClient(dockerConfig, encryptionDetails);
+    String authHeader = Credentials.basic(dockerConfig.getUsername(), new String(dockerConfig.getPassword()));
+    Function<Headers, String> getToken =
+        headers -> getToken(dockerConfig, encryptionDetails, headers, registryRestClient);
+    return dockerRegistryUtils.getLabels(registryRestClient, getToken, authHeader, imageName, buildNos, deadline);
   }
 
   @Override
@@ -193,12 +202,12 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
         response = registryRestClient.listImageTags("Bearer " + token, imageName).execute();
       }
       if (!isSuccessful(response)) {
-        // image not found or user doesn't have permission to list image tags
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
-            .addParam("args", "Image name [" + imageName + "] does not exist in Docker registry.");
+        // Image not found or user doesn't have permission to list image tags.
+        throw new InvalidArgumentsException(
+            ImmutablePair.of("code", "Image name [" + imageName + "] does not exist in Docker registry."), null, USER);
       }
     } catch (IOException e) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER, e).addParam("message", e.getMessage());
+      throw new ArtifactServerException(ExceptionUtils.getMessage(e), e, USER);
     }
     return true;
   }
@@ -252,7 +261,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
   private DockerRegistryToken fetchToken(
       DockerRegistryRestClient registryRestClient, String basicAuthHeader, String authHeaderValue) {
     try {
-      Map<String, String> tokens = extractAuthChallengeTokens(authHeaderValue);
+      Map<String, String> tokens = DockerRegistryUtils.extractAuthChallengeTokens(authHeaderValue);
       if (tokens != null) {
         DockerRegistryToken registryToken =
             registryRestClient
@@ -266,28 +275,6 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       }
     } catch (IOException e) {
       logger.warn("Exception occurred while fetching token", e);
-    }
-    return null;
-  }
-
-  private Map<String, String> extractAuthChallengeTokens(String authHeaderValue) {
-    // Bearer realm="xxx",service="yyy",scope="zzz"
-
-    if (authHeaderValue != null) {
-      String[] headerParts = authHeaderValue.split(" ");
-
-      if (headerParts.length == 2 && "Bearer".equals(headerParts[0])) {
-        Map<String, String> tokens =
-            Arrays.stream(headerParts[1].split(","))
-                .map(token -> token.split("="))
-                .collect(Collectors.toMap(s -> s[0], s -> s[1].substring(1, s[1].length() - 1)));
-        if (tokens.size() == 3 && tokens.get("realm") != null && tokens.get("service") != null
-            && tokens.get("scope") != null) {
-          return tokens;
-        } else if (tokens.size() == 2 && tokens.get("realm") != null && tokens.get("service") != null) {
-          return tokens;
-        }
-      }
     }
     return null;
   }

@@ -16,6 +16,7 @@ import software.wings.utils.ArtifactType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Data
 @Builder
@@ -56,6 +57,10 @@ public class ArtifactStreamAttributes implements ExecutionCapabilityDemander {
   private String buildNoPath;
   private Map<String, String> artifactAttributes;
   private boolean customAttributeMappingNeeded;
+
+  // These fields are used only during artifact collection and cleanup.
+  private boolean isCollection;
+  private Set<String> savedBuildDetailsKeys;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {

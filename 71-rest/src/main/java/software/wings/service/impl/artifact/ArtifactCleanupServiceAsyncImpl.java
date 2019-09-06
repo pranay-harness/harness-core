@@ -63,7 +63,8 @@ public class ArtifactCleanupServiceAsyncImpl implements ArtifactCleanupService {
       }
 
       accountId = settingAttribute.getAccountId();
-      buildSourceRequest = artifactCollectionUtils.getBuildSourceParameters(artifactStream, settingAttribute);
+      buildSourceRequest =
+          artifactCollectionUtils.getBuildSourceParameters(artifactStream, settingAttribute, false, false);
       delegateTaskBuilder.accountId(accountId);
       dataBuilder.parameters(new Object[] {buildSourceRequest}).timeout(TimeUnit.MINUTES.toMillis(1));
       delegateTaskBuilder.tags(awsCommandHelper.getAwsConfigTagsFromSettingAttribute(settingAttribute));

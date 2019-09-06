@@ -5,12 +5,14 @@ import software.wings.beans.DockerConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by anubhaw on 1/6/17.
  */
 public interface DockerRegistryService {
   int MAX_NO_OF_TAGS_PER_IMAGE = 10000;
+
   /**
    * Gets builds.
    *
@@ -21,6 +23,17 @@ public interface DockerRegistryService {
    */
   List<BuildDetails> getBuilds(
       DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, String imageName, int maxNumberOfBuilds);
+
+  /**
+   * Gets labels.
+   *
+   * @param dockerConfig the docker config
+   * @param imageName    the image name
+   * @param tags         the image tags to find labels of
+   * @return the builds
+   */
+  List<Map<String, String>> getLabels(DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails,
+      String imageName, List<String> tags, long deadline);
 
   /**
    * Gets last successful build.

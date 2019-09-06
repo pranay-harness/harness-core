@@ -1,6 +1,8 @@
 package software.wings.service.impl.trigger;
 
 import static io.harness.exception.WingsException.USER;
+import static io.harness.persistence.HQuery.excludeAuthority;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.trigger.Condition.Type.NEW_ARTIFACT;
 import static software.wings.beans.trigger.Condition.Type.PIPELINE_COMPLETION;
 import static software.wings.beans.trigger.Condition.Type.SCHEDULED;
@@ -14,6 +16,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event;
 import software.wings.beans.WorkflowExecution;
@@ -196,10 +199,15 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
 
   @Override
   public void pruneByArtifactStream(String appId, String artifactStreamId) {
-    List<DeploymentTrigger> deploymentTriggers = wingsPersistence.createQuery(DeploymentTrigger.class)
-                                                     .filter(DeploymentTriggerKeys.appId, appId)
-                                                     .filter(DeploymentTriggerKeys.type, NEW_ARTIFACT)
-                                                     .asList()
+    Query<DeploymentTrigger> query;
+    if (GLOBAL_APP_ID.equals(appId)) {
+      query = wingsPersistence.createQuery(DeploymentTrigger.class, excludeAuthority);
+    } else {
+      query = wingsPersistence.createQuery(DeploymentTrigger.class).filter(DeploymentTriggerKeys.appId, appId);
+    }
+    query.filter(DeploymentTriggerKeys.type, NEW_ARTIFACT);
+
+    List<DeploymentTrigger> deploymentTriggers = query.asList()
                                                      .stream()
                                                      .filter(deploymentTrigger
                                                          -> ((ArtifactCondition) deploymentTrigger.getCondition())
@@ -270,18 +278,24 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
         .map(DeploymentTrigger::getName)
         .collect(Collectors.toList());
   }
+
   @Override
-  public List<String> getTriggersHasArtifactStreamAction(String appId, String artifactStreamId) {
-    return wingsPersistence.createQuery(DeploymentTrigger.class)
-        .filter(DeploymentTriggerKeys.appId, appId)
-        .filter(DeploymentTriggerKeys.type, NEW_ARTIFACT)
-        .asList()
+  public List<String> getTriggersHasArtifactStreamAction(String accountId, String appId, String artifactStreamId) {
+    Query<DeploymentTrigger> query =
+        wingsPersistence.createQuery(DeploymentTrigger.class).filter(DeploymentTriggerKeys.type, NEW_ARTIFACT);
+    if (GLOBAL_APP_ID.equals(appId)) {
+      query.filter(DeploymentTriggerKeys.accountId, accountId);
+    } else {
+      query.filter(DeploymentTriggerKeys.appId, appId);
+    }
+    return query.asList()
         .stream()
         .filter(deploymentTrigger
             -> ((ArtifactCondition) deploymentTrigger.getCondition()).getArtifactStreamId().equals(artifactStreamId))
         .map(DeploymentTrigger::getName)
         .collect(Collectors.toList());
   }
+
   public WorkflowExecution triggerExecutionByWebHook(DeploymentTrigger deploymentTrigger,
       Map<String, String> parameters, List<TriggerArtifactVariable> artifactVariables,
       TriggerExecution triggerExecution) {

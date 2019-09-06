@@ -35,8 +35,10 @@ public class AmazonS3BuildServiceImpl implements AmazonS3BuildService {
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
     String artifactName = artifactStreamAttributes.getArtifactName();
-    return amazonS3Service.getArtifactsBuildDetails(awsConfig, encryptionDetails, artifactStreamAttributes.getJobName(),
-        Lists.newArrayList(artifactName), artifactName.contains("*"));
+    return wrapNewBuildsWithLabels(
+        amazonS3Service.getArtifactsBuildDetails(awsConfig, encryptionDetails, artifactStreamAttributes.getJobName(),
+            Lists.newArrayList(artifactName), artifactName.contains("*")),
+        artifactStreamAttributes, awsConfig, encryptionDetails);
   }
 
   @Override

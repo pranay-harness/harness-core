@@ -37,15 +37,18 @@ public class BambooBuildServiceImpl implements BambooBuildService {
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.BAMBOO.name());
-    return bambooService.getBuilds(
-        bambooConfig, encryptionDetails, artifactStreamAttributes.getJobName(), ARTIFACT_RETENTION_SIZE);
+    return wrapNewBuildsWithLabels(bambooService.getBuilds(bambooConfig, encryptionDetails,
+                                       artifactStreamAttributes.getJobName(), ARTIFACT_RETENTION_SIZE),
+        artifactStreamAttributes, bambooConfig, encryptionDetails);
   }
 
   @Override
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, int limit) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.BAMBOO.name());
-    return bambooService.getBuilds(bambooConfig, encryptionDetails, artifactStreamAttributes.getJobName(), limit);
+    return wrapNewBuildsWithLabels(
+        bambooService.getBuilds(bambooConfig, encryptionDetails, artifactStreamAttributes.getJobName(), limit),
+        artifactStreamAttributes, bambooConfig, encryptionDetails);
   }
 
   @Override
@@ -76,8 +79,9 @@ public class BambooBuildServiceImpl implements BambooBuildService {
   public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.BAMBOO.name());
-
-    return bambooService.getLastSuccessfulBuild(bambooConfig, encryptionDetails, artifactStreamAttributes.getJobName());
+    return wrapLastSuccessfulBuildWithLabels(
+        bambooService.getLastSuccessfulBuild(bambooConfig, encryptionDetails, artifactStreamAttributes.getJobName()),
+        artifactStreamAttributes, bambooConfig, encryptionDetails);
   }
 
   @Override

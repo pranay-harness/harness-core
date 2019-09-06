@@ -3,6 +3,7 @@ package software.wings.helpers.ext.docker;
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
+import retrofit2.http.Headers;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 import retrofit2.http.Url;
@@ -16,6 +17,10 @@ public interface DockerRegistryRestClient {
   Call<DockerRegistryToken> getToken(@Header("Authorization") String basicAuthHeader, @Url String url,
       @Query("service") String service, @Query("scope") String scope);
 
+  @GET
+  Call<DockerRegistryToken> getPublicToken(
+      @Url String url, @Query("service") String service, @Query("scope") String scope);
+
   @GET("/v2/{imageName}/tags/list")
   Call<DockerImageTagResponse> listImageTags(
       @Header("Authorization") String bearerAuthHeader, @Path(value = "imageName", encoded = true) String imageName);
@@ -24,6 +29,11 @@ public interface DockerRegistryRestClient {
 
   @GET
   Call<DockerImageTagResponse> listImageTagsByUrl(@Header("Authorization") String bearerAuthHeader, @Url String url);
+
+  @Headers("Accept: application/vnd.docker.distribution.manifest.v1+json")
+  @GET("/v2/{imageName}/manifests/{tag}")
+  Call<DockerImageManifestResponse> getImageManifest(@Header("Authorization") String bearerAuthHeader,
+      @Path(value = "imageName", encoded = true) String imageName, @Path(value = "tag", encoded = true) String tag);
 
   @GET("/v2/repositories/{imageName}/tags")
   Call<DockerPublicImageTagResponse> listPublicImageTags(@Path(value = "imageName", encoded = true) String imageName,

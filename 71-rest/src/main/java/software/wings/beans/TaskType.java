@@ -143,6 +143,7 @@ public enum TaskType {
   BAMBOO_GET_PLANS(TaskGroup.BAMBOO, ServiceImplDelegateTask.class, BambooValidation.class),
   BAMBOO_VALIDATE_ARTIFACT_SERVER(TaskGroup.BAMBOO, ServiceImplDelegateTask.class, BambooValidation.class),
   DOCKER_GET_BUILDS(TaskGroup.DOCKER, ServiceImplDelegateTask.class, DockerValidation.class),
+  DOCKER_GET_LABELS(TaskGroup.DOCKER, ServiceImplDelegateTask.class, DockerValidation.class),
   DOCKER_VALIDATE_ARTIFACT_SERVER(TaskGroup.DOCKER, ServiceImplDelegateTask.class, DockerValidation.class),
   DOCKER_VALIDATE_ARTIFACT_STREAM(TaskGroup.DOCKER, ServiceImplDelegateTask.class, DockerValidation.class),
   ECR_GET_BUILDS(TaskGroup.ECR, ServiceImplDelegateTask.class, AwsConnectionValidation.class),
