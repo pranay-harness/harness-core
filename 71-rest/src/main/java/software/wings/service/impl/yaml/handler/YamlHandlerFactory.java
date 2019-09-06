@@ -541,7 +541,7 @@ public class YamlHandlerFactory {
         "ManifestFile", "ApplicationManifest", "CustomArtifactStream", "AppDynamicsCVServiceConfiguration",
         "CloudWatchCVServiceConfiguration", "NewRelicCVServiceConfiguration", "DatadogCVServiceConfiguration",
         "PrometheusCVServiceConfiguration", "BugsnagCVConfiguration", "ElkCVConfiguration", "LogsCVConfiguration",
-        "AzureInfrastructureMapping", "InfrastructureDefinition");
+        "AzureInfrastructureMapping", "InfrastructureDefinition", "ShellScriptInfrastructureProvisioner");
   }
 
   private static List<String> obtainLeafEntitiesWithFeatureFlag() {
@@ -559,6 +559,6 @@ public class YamlHandlerFactory {
         "ApplicationManifest", "CustomArtifactStream", "AppDynamicsCVServiceConfiguration",
         "CloudWatchCVServiceConfiguration", "NewRelicCVServiceConfiguration", "DatadogCVServiceConfiguration",
         "PrometheusCVServiceConfiguration", "BugsnagCVConfiguration", "ElkCVConfiguration", "LogsCVConfiguration",
-        "AzureInfrastructureMapping", "InfrastructureDefinition");
+        "AzureInfrastructureMapping", "InfrastructureDefinition", "ShellScriptInfrastructureProvisioner");
   }
 }
