@@ -461,11 +461,11 @@ public class GitClientImpl implements GitClient {
       if (remoteRefUpdate.getStatus() == OK || remoteRefUpdate.getStatus() == UP_TO_DATE) {
         return GitPushResult.builder().refUpdate(refUpdate).build();
       } else {
-        String errorMsg = format("Unable to push changes to git repository. "
+        String errorMsg = format("Unable to push changes to git repository [%s]. "
                 + "Status reported by Remote is: %s and message is: %s. "
                 + "Other info: Force push: %s. Fast forward: %s",
-            remoteRefUpdate.getStatus(), remoteRefUpdate.getMessage(), remoteRefUpdate.isForceUpdate(),
-            remoteRefUpdate.isFastForward());
+            gitConfig.getRepoUrl(), remoteRefUpdate.getStatus(), remoteRefUpdate.getMessage(),
+            remoteRefUpdate.isForceUpdate(), remoteRefUpdate.isFastForward());
         logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + errorMsg);
         throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, errorMsg).addParam("message", errorMsg);
       }
