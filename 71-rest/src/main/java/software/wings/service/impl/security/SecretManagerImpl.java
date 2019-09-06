@@ -46,7 +46,7 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
-import com.segment.analytics.messages.TrackMessage;
+import com.segment.analytics.messages.GroupMessage;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -2267,15 +2267,14 @@ public class SecretManagerImpl implements SecretManager {
       // PL-3102: Publish default secret manager type for each account, piggy-back on the validate secret manager config
       // job.
       if (encryptionConfig.isDefault()) {
-        TrackMessage.Builder messageBuilder =
-            TrackMessage.builder(EventType.SECRET_MANAGER_TYPE.name())
+        GroupMessage.Builder messageBuilder =
+            GroupMessage.builder(EventType.SECRET_MANAGER_TYPE.name())
                 .anonymousId(accountId)
-                .properties(
-                    new ImmutableMap.Builder<String, Object>()
-                        .put(ACCOUNT_ID_KEY, accountId)
-                        .put(TRAIT_DEFAULT_SECRET_MANAGER, encryptionConfig.getEncryptionType().name())
-                        .put(TRAIT_IS_GLOBAL, Objects.equals(GLOBAL_ACCOUNT_ID, encryptionConfig.getAccountId()))
-                        .build());
+                .traits(new ImmutableMap.Builder<String, Object>()
+                            .put(ACCOUNT_ID_KEY, accountId)
+                            .put(TRAIT_DEFAULT_SECRET_MANAGER, encryptionConfig.getEncryptionType().name())
+                            .put(TRAIT_IS_GLOBAL, Objects.equals(GLOBAL_ACCOUNT_ID, encryptionConfig.getAccountId()))
+                            .build());
 
         segmentClientBuilder.getInstance().enqueue(messageBuilder);
       }
