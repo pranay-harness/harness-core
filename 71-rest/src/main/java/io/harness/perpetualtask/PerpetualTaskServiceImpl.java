@@ -6,11 +6,16 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.util.Durations;
 
+import io.grpc.Context;
+import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.perpetualtask.PerpetualTaskRecord.PerpetualTaskRecordKeys;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 import software.wings.dl.WingsPersistence;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -18,7 +23,12 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class PerpetualTaskServiceImpl implements PerpetualTaskService {
-  @Inject private WingsPersistence persistence;
+  private final WingsPersistence persistence;
+
+  @Inject
+  public PerpetualTaskServiceImpl(WingsPersistence persistence) {
+    this.persistence = persistence;
+  }
 
   @Override
   public String createTask(PerpetualTaskType perpetualTaskType, String accountId,
@@ -39,6 +49,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
                                      .clientContext(clientContext)
                                      .timeoutMillis(Durations.toMillis(schedule.getTimeout()))
                                      .intervalSeconds(schedule.getInterval().getSeconds())
+                                     .lastHeartbeat(Instant.now().toEpochMilli())
                                      .delegateId("")
                                      .build();
 
@@ -70,6 +81,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
 
   @Override
   public List<String> listTaskIds(String delegateId) {
+    logger.info("Account id is: {}", DelegateAuthServerInterceptor.ACCOUNT_ID_CTX_KEY.get(Context.current()));
     List<PerpetualTaskRecord> records = persistence.createQuery(PerpetualTaskRecord.class)
                                             .field(PerpetualTaskRecordKeys.accountId)
                                             .equal(GLOBAL_ACCOUNT_ID)
@@ -83,5 +95,18 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
   @Override
   public PerpetualTaskRecord getTask(String taskId) {
     return persistence.createQuery(PerpetualTaskRecord.class).field(PerpetualTaskRecordKeys.uuid).equal(taskId).get();
+  }
+
+  @Override
+  public boolean updateHeartbeat(String taskId, long heartbeatMillis) {
+    PerpetualTaskRecord task = getTask(taskId);
+    if (null == task || task.getLastHeartbeat() > heartbeatMillis) {
+      return false;
+    }
+    UpdateOperations<PerpetualTaskRecord> taskUpdateOperations =
+        persistence.createUpdateOperations(PerpetualTaskRecord.class)
+            .set(PerpetualTaskRecordKeys.lastHeartbeat, heartbeatMillis);
+    UpdateResults update = persistence.update(task, taskUpdateOperations);
+    return update.getUpdatedCount() > 0;
   }
 }

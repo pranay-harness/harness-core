@@ -7,7 +7,10 @@ import com.google.protobuf.Message;
 import com.google.protobuf.util.Durations;
 
 import io.grpc.stub.StreamObserver;
+import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.DelegateId;
+import io.harness.perpetualtask.HeartbeatRequest;
+import io.harness.perpetualtask.HeartbeatResponse;
 import io.harness.perpetualtask.PerpetualTaskContext;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskIdList;
@@ -54,8 +57,22 @@ public class PerpetualTaskServiceGrpc
                                          .build();
 
     PerpetualTaskContext perpetualTaskContext =
-        PerpetualTaskContext.newBuilder().setTaskParams(params).setTaskSchedule(schedule).build();
+        PerpetualTaskContext.newBuilder()
+            .setTaskParams(params)
+            .setTaskSchedule(schedule)
+            .setHeartbeatTimestamp(HTimestamps.fromMillis(perpetualTaskRecord.getLastHeartbeat()))
+            .build();
     responseObserver.onNext(perpetualTaskContext);
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void publishHeartbeat(HeartbeatRequest request, StreamObserver<HeartbeatResponse> responseObserver) {
+    String taskId = request.getId();
+    long heartbeatMillis = HTimestamps.toInstant(request.getHeartbeatTimestamp()).toEpochMilli();
+
+    perpetualTaskService.updateHeartbeat(taskId, heartbeatMillis);
+    responseObserver.onNext(HeartbeatResponse.newBuilder().build());
     responseObserver.onCompleted();
   }
 }

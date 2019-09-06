@@ -24,7 +24,7 @@ import io.harness.event.PublishMessage;
 import io.harness.event.PublishRequest;
 import io.harness.event.PublishResponse;
 import io.harness.event.payloads.Lifecycle;
-import io.harness.grpc.auth.DelegateAuthCallCredentials;
+import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
@@ -61,7 +61,7 @@ public class EventPublisherServerImplTest {
   @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldPersistMessages() {
-    Context.current().withValue(DelegateAuthCallCredentials.ACCOUNT_ID_CTX_KEY, TEST_ACC_ID).run(() -> {
+    Context.current().withValue(DelegateAuthServerInterceptor.ACCOUNT_ID_CTX_KEY, TEST_ACC_ID).run(() -> {
       @SuppressWarnings("unchecked") // Casting as we can't use List<PublishedMessage> as the class type.
       ArgumentCaptor<List<PublishedMessage>> captor = ArgumentCaptor.forClass((Class) List.class);
       PublishRequest publishRequest = PublishRequest.newBuilder()
@@ -99,7 +99,7 @@ public class EventPublisherServerImplTest {
     RuntimeException exception = new RuntimeException("Persistence error");
     when(hPersistence.save(anyListOf(PublishedMessage.class))).thenThrow(exception);
     ArgumentCaptor<StatusException> captor = ArgumentCaptor.forClass(StatusException.class);
-    Context.current().withValue(DelegateAuthCallCredentials.ACCOUNT_ID_CTX_KEY, TEST_ACC_ID).run(() -> {
+    Context.current().withValue(DelegateAuthServerInterceptor.ACCOUNT_ID_CTX_KEY, TEST_ACC_ID).run(() -> {
       publisherServer.publish(PublishRequest.newBuilder().build(), observer);
       verify(observer).onError(captor.capture());
       assertThat(captor.getValue().getStatus().getCode()).isEqualTo(Code.INTERNAL);

@@ -25,6 +25,14 @@ public class HTimestamps {
     return Instant.ofEpochSecond(timestamp.getSeconds(), timestamp.getNanos());
   }
 
+  public Timestamp fromMillis(long epoch) {
+    return fromInstant(Instant.ofEpochMilli(epoch));
+  }
+
+  public long toMillis(Timestamp timestamp) {
+    return toInstant(timestamp).toEpochMilli();
+  }
+
   public Timestamp fromDate(Date date) {
     return fromInstant(date.toInstant());
   }

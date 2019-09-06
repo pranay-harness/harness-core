@@ -29,6 +29,7 @@ public class PerpetualTaskRecord implements PersistentEntity, CreatedAtAware, Up
   long intervalSeconds;
   long timeoutMillis;
   String delegateId;
+  long lastHeartbeat;
   long createdAt;
   long lastUpdatedAt;
 }

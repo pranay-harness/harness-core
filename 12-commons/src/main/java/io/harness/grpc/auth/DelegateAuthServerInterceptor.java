@@ -21,6 +21,7 @@ import java.util.Set;
  */
 @Slf4j
 public class DelegateAuthServerInterceptor implements ServerInterceptor {
+  public static final Context.Key<String> ACCOUNT_ID_CTX_KEY = Context.key("accountId");
   private static final ServerCall.Listener NOOP_LISTENER = new ServerCall.Listener() {};
   private static final Set<String> EXCLUDED_SERVICES =
       ImmutableSet.of("grpc.health.v1.Health", "grpc.reflection.v1alpha.ServerReflection");
@@ -54,7 +55,7 @@ public class DelegateAuthServerInterceptor implements ServerInterceptor {
     Context ctx;
     try {
       authService.validateToken(token);
-      ctx = Context.current().withValue(DelegateAuthCallCredentials.ACCOUNT_ID_CTX_KEY, accountId);
+      ctx = Context.current().withValue(ACCOUNT_ID_CTX_KEY, accountId);
     } catch (Exception e) {
       logger.warn("Token verification failed. Unauthenticated");
       call.close(Status.UNAUTHENTICATED.withDescription(e.getMessage()).withCause(e), metadata);

@@ -3,6 +3,7 @@ package io.harness.event.client;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import io.grpc.CallCredentials;
 import io.grpc.Channel;
@@ -61,6 +62,7 @@ public class PublisherModule extends AbstractModule {
     return new DelegateAuthCallCredentials(eventServiceTokenGenerator, config.accountId, true);
   }
 
+  @Named("event-server-channel")
   @Provides
   @Singleton
   @SneakyThrows
@@ -74,7 +76,8 @@ public class PublisherModule extends AbstractModule {
 
   @Provides
   @Singleton
-  EventPublisherBlockingStub eventPublisherBlockingStub(Channel channel, CallCredentials callCredentials) {
+  EventPublisherBlockingStub eventPublisherBlockingStub(
+      @Named("event-server-channel") Channel channel, CallCredentials callCredentials) {
     return EventPublisherGrpc.newBlockingStub(channel).withCallCredentials(callCredentials);
   }
 

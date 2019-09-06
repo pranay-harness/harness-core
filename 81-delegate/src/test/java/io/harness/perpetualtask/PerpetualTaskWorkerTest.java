@@ -19,7 +19,7 @@ import software.wings.delegatetasks.k8s.client.KubernetesClientFactoryModule;
 @RunWith(JUnit4.class)
 @Slf4j
 public class PerpetualTaskWorkerTest {
-  PerpetualTaskWorker worker;
+  private PerpetualTaskWorker worker;
 
   @Before
   public void setUp() throws Exception {
@@ -44,8 +44,8 @@ public class PerpetualTaskWorkerTest {
   public void testGetTaskContext() {
     worker.updateAssignedTaskIds();
     PerpetualTaskId taskId = worker.getAssignedTaskIds().iterator().next();
-    PerpetualTaskContext context = worker.getTaskContext(taskId);
-    logger.info(context.toString());
+    //    PerpetualTaskContext context = worker.getTaskContext(taskId);
+    //    logger.info(context.toString());
   }
 
   @Test

@@ -1,9 +1,9 @@
 connectors:
-  - port: 9889
+  - port: 9890
     secure: true
     keyFilePath: key.pem
     certFilePath: cert.pem
-  - port: 9890
+  - port: 9889
 mongo:
   uri: mongodb://localhost:27017/harness
 
