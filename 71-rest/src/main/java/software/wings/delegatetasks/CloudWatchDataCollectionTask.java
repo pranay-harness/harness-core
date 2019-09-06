@@ -116,7 +116,7 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
       int retry = 0;
       while (!completed.get() && retry < RETRIES) {
         try {
-          logger.info("running data collection for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
+          logger.info("Running data collection for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
               dataCollectionMinute);
           dataCollectionInfo.setDataCollectionMinute(dataCollectionMinute);
 
@@ -142,10 +142,10 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
           if (!saveMetrics(dataCollectionInfo.getAwsConfig().getAccountId(), dataCollectionInfo.getApplicationId(),
                   dataCollectionInfo.getStateExecutionId(), recordsToSave)) {
             retry = RETRIES;
-            taskResult.setErrorMessage("Cannot save new cloud watch metric records to Harness. Server returned error");
-            throw new RuntimeException("Cannot save new cloud watch metric records to Harness. Server returned error");
+            taskResult.setErrorMessage("Cannot save new CloudWatch metric records to Harness");
+            throw new RuntimeException("Cannot save new CloudWatch metric records to Harness");
           }
-          logger.info("Sent {} cloud watch metric records to the server for minute {}", recordsToSave.size(),
+          logger.info("Sent {} CloudWatch metric records to the server for minute {}.", recordsToSave.size(),
               getDataCollectionMinuteForHeartbeat(is247Task));
 
           dataCollectionMinute++;
@@ -153,7 +153,7 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
           if (dataCollectionMinute >= dataCollectionInfo.getCollectionTime() || is247Task) {
             // We are done with all data collection, so setting task status to success and quitting.
             logger.info(
-                "Completed CloudWatch collection task. So setting task status to success and quitting. StateExecutionId {}",
+                "Completed CloudWatch collection task, so setting task status to success and quitting for StateExecutionId {}",
                 dataCollectionInfo.getStateExecutionId());
             completed.set(true);
             taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
@@ -161,7 +161,7 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
           break;
         } catch (Throwable ex) {
           if (!(ex instanceof Exception) || ++retry >= RETRIES) {
-            logger.error("error fetching metrics for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
+            logger.error("Error fetching metrics for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
                 dataCollectionMinute, ex);
             taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
             completed.set(true);
@@ -170,7 +170,7 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
             if (retry == 1) {
               taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
             }
-            logger.warn("error fetching cloud watch metrics for minute " + dataCollectionMinute + ". retrying in "
+            logger.warn("Error fetching CloudWatch metrics for minute " + dataCollectionMinute + ". retrying in "
                     + RETRY_SLEEP + "s",
                 ex);
             sleep(RETRY_SLEEP);
@@ -179,12 +179,12 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
       }
       if (taskResult.getStatus().equals(DataCollectionTaskStatus.FAILURE)) {
         completed.set(true);
-        taskResult.setErrorMessage("error fetching cloud watch metrics for minute " + dataCollectionMinute);
-        logger.error("error fetching cloud watch metrics for minute " + dataCollectionMinute);
+        taskResult.setErrorMessage("Error fetching cloud watch metrics for minute " + dataCollectionMinute);
+        logger.error("Error fetching CloudWatch metrics for minute " + dataCollectionMinute);
       }
 
       if (completed.get()) {
-        logger.info("Shutting down cloud watch data collection");
+        logger.info("Shutting down CloudWatch data collection");
         shutDownCollection();
         return;
       }
@@ -253,11 +253,10 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
                                 collectionStartTime, createApiCallLog(dataCollectionInfo.getStateExecutionId()),
                                 is247Task, hostStartTimeMap))));
       }
-      logger.info("fetching cloud watch metrics for {} strategy {} for min {}",
-          dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getAnalysisComparisonStrategy(),
-          dataCollectionMinute);
+      logger.info("Fetching CloudWatch metrics for {} strategy {} for min {}", dataCollectionInfo.getStateExecutionId(),
+          dataCollectionInfo.getAnalysisComparisonStrategy(), dataCollectionMinute);
       List<Optional<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> results = executeParallel(callables);
-      logger.info("done fetching cloud watch metrics for {} strategy {} for min {}",
+      logger.info("Done fetching CloudWatch metrics for {} strategy {} for min {}",
           dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getAnalysisComparisonStrategy(),
           dataCollectionMinute);
       results.forEach(result -> {
