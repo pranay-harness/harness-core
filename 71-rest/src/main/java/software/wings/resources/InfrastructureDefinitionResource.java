@@ -22,6 +22,7 @@ import software.wings.infra.InfraDefinitionDetail;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
@@ -62,6 +63,7 @@ public class InfrastructureDefinitionResource {
   @Path("details")
   @Timed
   @ExceptionMetered
+  @ExternalFacingApiAuth
   @AuthRule(permissionType = ENV, action = READ)
   public RestResponse<PageResponse<InfraDefinitionDetail>> listDetails(
       @BeanParam PageRequest<InfrastructureDefinition> pageRequest, @NotEmpty @QueryParam("appId") String appId,
