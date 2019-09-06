@@ -47,6 +47,7 @@ import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
@@ -110,6 +111,7 @@ public class WorkflowResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.WORKFLOW, action = Action.READ)
+  @ExternalFacingApiAuth
   public RestResponse<PageResponse<Workflow>> list(@QueryParam("appId") String appId,
       @BeanParam PageRequest<Workflow> pageRequest,
       @QueryParam("previousExecutionsCount") Integer previousExecutionsCount,
@@ -187,6 +189,7 @@ public class WorkflowResource {
   @Path("{workflowId}")
   @Timed
   @ExceptionMetered
+  @ExternalFacingApiAuth
   public RestResponse<Workflow> read(@QueryParam("appId") String appId, @PathParam("workflowId") String workflowId,
       @QueryParam("version") Integer version,
       @QueryParam("withArtifactStreamSummary") @DefaultValue("false") boolean withArtifactStreamSummary) {
