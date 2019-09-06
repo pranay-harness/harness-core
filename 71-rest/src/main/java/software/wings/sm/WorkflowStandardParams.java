@@ -6,7 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.RandomUtils.nextInt;
 import static software.wings.common.Constants.DEPLOYMENT_TRIGGERED_BY;
-import static software.wings.common.Constants.PHASE_PARAM;
 
 import com.google.inject.Inject;
 
@@ -20,9 +19,7 @@ import org.apache.http.client.utils.URIBuilder;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.InfraMappingElement;
 import software.wings.api.InstanceElement;
-import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
-import software.wings.api.ServiceTemplateElement;
 import software.wings.api.WorkflowElement;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
@@ -83,7 +80,6 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
   private String envId;
   private List<String> artifactIds;
   private WorkflowElement workflowElement;
-  private transient InfraMappingElement infraMappingElement;
 
   // TODO: centralized in-memory executionCredential and special encrypted mapping
   private ExecutionCredential executionCredential;
@@ -148,12 +144,12 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
       map.put(DEPLOYMENT_TRIGGERED_BY, currentUser.getName());
     }
 
-    infraMappingElement = context.fetchInfraMappingElement();
+    InfraMappingElement infraMappingElement = context.fetchInfraMappingElement();
     if (infraMappingElement != null) {
       map.put(INFRA, infraMappingElement);
     }
 
-    ServiceElement serviceElement = fetchServiceElement(context);
+    ServiceElement serviceElement = context.fetchServiceElement();
     if (serviceElement == null) {
       if (isNotEmpty(artifactIds)) {
         Artifact artifact = artifactService.get(artifactIds.get(0));
@@ -185,23 +181,6 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     }
   }
 
-  private ServiceElement fetchServiceElement(ExecutionContext context) {
-    ServiceElement serviceElement = context.getContextElement(ContextElementType.SERVICE);
-    if (serviceElement != null) {
-      return serviceElement;
-    }
-
-    ServiceTemplateElement serviceTemplateElement = context.getContextElement(ContextElementType.SERVICE_TEMPLATE);
-    if (serviceTemplateElement != null) {
-      return serviceTemplateElement.getServiceElement();
-    }
-
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PHASE_PARAM);
-    if (phaseElement != null) {
-      return phaseElement.getServiceElement();
-    }
-    return null;
-  }
   /**
    * {@inheritDoc}
    */
@@ -389,12 +368,6 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     return workflowElement;
   }
 
-  public InfraMappingElement getInfraMappingElement(ExecutionContext context) {
-    if (infraMappingElement == null) {
-      context.fetchInfraMappingElement();
-    }
-    return infraMappingElement;
-  }
   /**
    * Sets workflow element.
    *
@@ -402,10 +375,6 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
    */
   public void setWorkflowElement(WorkflowElement workflowElement) {
     this.workflowElement = workflowElement;
-  }
-
-  public void setInfraMappingElementElement(InfraMappingElement infraMappingElementElement) {
-    this.infraMappingElement = infraMappingElementElement;
   }
 
   public Map<String, String> getWorkflowVariables() {
@@ -547,7 +516,6 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     private EmbeddedUser currentUser;
     private boolean excludeHostsWithSameArtifact;
     private WorkflowElement workflowElement;
-    private InfraMappingElement infraMappingElement;
     private boolean notifyTriggeredUserOnly;
 
     private Builder() {}
@@ -665,7 +633,6 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
       workflowStandardParams.setExcludeHostsWithSameArtifact(excludeHostsWithSameArtifact);
       workflowStandardParams.setNotifyTriggeredUserOnly(notifyTriggeredUserOnly);
       workflowStandardParams.setWorkflowElement(workflowElement);
-      workflowStandardParams.setInfraMappingElementElement(infraMappingElement);
       return workflowStandardParams;
     }
   }

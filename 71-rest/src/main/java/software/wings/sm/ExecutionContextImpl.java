@@ -44,6 +44,8 @@ import software.wings.api.InfraMappingElement.Kubernetes;
 import software.wings.api.InfraMappingElement.Pcf;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceArtifactElement;
+import software.wings.api.ServiceElement;
+import software.wings.api.ServiceTemplateElement;
 import software.wings.beans.Application;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
@@ -1004,6 +1006,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     }
   }
 
+  @Override
   public InfraMappingElement fetchInfraMappingElement() {
     PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
 
@@ -1024,5 +1027,24 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     populateDeploymentSpecificInfoInInfraMappingElement(infrastructureMapping, phaseElement, builder);
 
     return builder.build();
+  }
+
+  @Override
+  public ServiceElement fetchServiceElement() {
+    ServiceElement serviceElement = getContextElement(ContextElementType.SERVICE);
+    if (serviceElement != null) {
+      return serviceElement;
+    }
+
+    ServiceTemplateElement serviceTemplateElement = getContextElement(ContextElementType.SERVICE_TEMPLATE);
+    if (serviceTemplateElement != null) {
+      return serviceTemplateElement.getServiceElement();
+    }
+
+    PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, PHASE_PARAM);
+    if (phaseElement != null) {
+      return phaseElement.getServiceElement();
+    }
+    return null;
   }
 }
