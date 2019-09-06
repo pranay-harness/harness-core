@@ -76,7 +76,7 @@ public class EcsPerpetualTaskServiceClient implements PerpetualTaskServiceClient
                                                         .setEncryptionDetail(encryptionDetailBytes)
                                                         .setAwsConfig(awsConfigBytes)
                                                         .build();
-    logger.info("Get Task params {} ", ecsPerpetualTaskParams.toString());
+    logger.debug("Get Task params {} ", ecsPerpetualTaskParams.toString());
     return ecsPerpetualTaskParams;
   }
 }

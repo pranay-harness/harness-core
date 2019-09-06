@@ -1,7 +1,6 @@
 package io.harness.grpc.auth;
 
 import io.grpc.CallCredentials;
-import io.grpc.Context;
 import io.grpc.Metadata;
 import io.grpc.SecurityLevel;
 import io.grpc.Status;
@@ -17,7 +16,6 @@ public class DelegateAuthCallCredentials extends CallCredentials {
   static final Metadata.Key<String> TOKEN_METADATA_KEY = Metadata.Key.of("token", Metadata.ASCII_STRING_MARSHALLER);
   static final Metadata.Key<String> ACCOUNT_ID_METADATA_KEY =
       Metadata.Key.of("accountId", Metadata.ASCII_STRING_MARSHALLER);
-  public static final Context.Key<String> ACCOUNT_ID_CTX_KEY = Context.key("accountId");
 
   private final EventServiceTokenGenerator eventServiceTokenGenerator;
   private final String accountId;

@@ -1,6 +1,7 @@
 package io.harness.grpc.utils;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
+import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
@@ -31,6 +32,14 @@ public class HTimestampsTest {
   public void testRoundTripToDate() {
     Date now = new Date(System.currentTimeMillis());
     assertThat(HTimestamps.toDate(HTimestamps.fromDate(now))).isEqualTo(now);
+  }
+
+  @Test
+  @Owner(emails = HITESH)
+  @Category(UnitTests.class)
+  public void testRoundTripToMillis() {
+    long currentMillis = Instant.now().toEpochMilli();
+    assertThat(HTimestamps.toMillis(HTimestamps.fromMillis(currentMillis))).isEqualTo(currentMillis);
   }
 
   @Test

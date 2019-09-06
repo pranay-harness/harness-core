@@ -11,4 +11,6 @@ public interface PerpetualTaskService {
   List<String> listTaskIds(String delegateId);
 
   PerpetualTaskRecord getTask(String taskId);
+
+  boolean updateHeartbeat(String taskId, long heartbeatMillis);
 }

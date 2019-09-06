@@ -6,10 +6,12 @@ option java_multiple_files = true;
 
 import "google/protobuf/any.proto";
 import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
 
 service PerpetualTaskService {
   rpc ListTaskIds(DelegateId) returns (PerpetualTaskIdList);
   rpc GetTaskContext(PerpetualTaskId) returns (PerpetualTaskContext);
+  rpc PublishHeartbeat(HeartbeatRequest) returns (HeartbeatResponse);
 }
 
 // params are tracked in client/ownerService
@@ -30,6 +32,7 @@ message PerpetualTaskId {
 message PerpetualTaskContext {
   PerpetualTaskParams task_params = 1;
   PerpetualTaskSchedule task_schedule = 2;
+  google.protobuf.Timestamp heartbeat_timestamp = 3;
 }
 
 message DelegateId {
@@ -39,3 +42,10 @@ message DelegateId {
 message PerpetualTaskIdList {
   repeated PerpetualTaskId task_ids = 1;
 }
+
+message HeartbeatRequest {
+  string id = 1;
+  google.protobuf.Timestamp heartbeat_timestamp = 2;
+}
+
+message HeartbeatResponse {}

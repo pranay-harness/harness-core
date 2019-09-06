@@ -10,7 +10,7 @@ import io.grpc.stub.StreamObserver;
 import io.harness.event.EventPublisherGrpc;
 import io.harness.event.PublishRequest;
 import io.harness.event.PublishResponse;
-import io.harness.grpc.auth.DelegateAuthCallCredentials;
+import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +30,7 @@ public class EventPublisherServerImpl extends EventPublisherGrpc.EventPublisherI
   @Override
   public void publish(PublishRequest request, StreamObserver<PublishResponse> responseObserver) {
     logger.info("Received publish request");
-    String accountId = requireNonNull(DelegateAuthCallCredentials.ACCOUNT_ID_CTX_KEY.get(Context.current()));
+    String accountId = requireNonNull(DelegateAuthServerInterceptor.ACCOUNT_ID_CTX_KEY.get(Context.current()));
     List<PublishedMessage> publishedMessages = request.getMessagesList()
                                                    .stream()
                                                    .map(publishMessage

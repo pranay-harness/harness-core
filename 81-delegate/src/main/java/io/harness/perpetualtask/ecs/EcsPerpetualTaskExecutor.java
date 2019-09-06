@@ -6,7 +6,7 @@ import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_STOP;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
+import com.google.inject.Singleton;
 
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ecs.model.Attribute;
@@ -34,7 +34,7 @@ import io.harness.event.payloads.Lifecycle.EventType;
 import io.harness.event.payloads.ReservedResource;
 import io.harness.exception.WingsException;
 import io.harness.grpc.utils.HTimestamps;
-import io.harness.perpetualtask.AbstractPerpetualTask;
+import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskParams;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -46,7 +46,6 @@ import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -59,32 +58,22 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Singleton
 @Slf4j
-public class EcsPerpetualTask extends AbstractPerpetualTask {
-  private AwsEcsHelperServiceDelegate ecsHelperServiceDelegate;
-  private AwsEc2HelperServiceDelegate ec2ServiceDelegate;
-  private EventPublisher eventPublisher;
-  private EcsPerpetualTaskParams ecsPerpetualTaskParams;
+public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
+  @Inject private AwsEcsHelperServiceDelegate ecsHelperServiceDelegate;
+  @Inject private AwsEc2HelperServiceDelegate ec2ServiceDelegate;
+  @Inject private EventPublisher eventPublisher;
 
   private Cache<String, EcsActiveInstancesCache> cache = Caffeine.newBuilder().build();
 
   private static final String INSTANCE_TERMINATED_NAME = "terminated";
   private static final String ECS_OS_TYPE = "ecs.os-type";
 
-  @Inject
-  public EcsPerpetualTask(@Assisted PerpetualTaskId taskId, @Assisted PerpetualTaskParams params,
-      AwsEcsHelperServiceDelegate ecsHelperServiceDelegate, AwsEc2HelperServiceDelegate ec2ServiceDelegate,
-      EventPublisher eventPublisher) throws Exception {
-    super(taskId);
-    this.ecsHelperServiceDelegate = ecsHelperServiceDelegate;
-    this.ec2ServiceDelegate = ec2ServiceDelegate;
-    this.eventPublisher = eventPublisher;
-    this.ecsPerpetualTaskParams = params.getCustomizedParams().unpack(EcsPerpetualTaskParams.class);
-  }
-
   @Override
-  public Void call() throws Exception {
+  public boolean startTask(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) throws Exception {
     try {
+      EcsPerpetualTaskParams ecsPerpetualTaskParams = getTaskParams(params);
       String clusterName = ecsPerpetualTaskParams.getClusterName();
       String region = ecsPerpetualTaskParams.getRegion();
       logger.info("Task params cluster name {} region {} ", clusterName, region);
@@ -93,7 +82,7 @@ public class EcsPerpetualTask extends AbstractPerpetualTask {
           (List<EncryptedDataDetail>) KryoUtils.asObject(ecsPerpetualTaskParams.getEncryptionDetail().toByteArray());
       Instant startTime = Instant.now();
 
-      Instant lastProcessedTime = fetchLastProcessedTimestamp(clusterName);
+      Instant lastProcessedTime = fetchLastProcessedTimestamp(clusterName, heartbeatTime);
       List<ContainerInstance> containerInstances =
           listContainerInstances(clusterName, region, awsConfig, encryptionDetails);
       Set<String> instanceIds = fetchEc2InstanceIds(clusterName, containerInstances);
@@ -117,7 +106,11 @@ public class EcsPerpetualTask extends AbstractPerpetualTask {
     } catch (Exception ex) {
       throw new WingsException("Exception while executing task: ", ex);
     }
-    return null;
+    return true;
+  }
+
+  private EcsPerpetualTaskParams getTaskParams(PerpetualTaskParams params) throws Exception {
+    return params.getCustomizedParams().unpack(EcsPerpetualTaskParams.class);
   }
 
   private void publishEcsClusterSyncEvent(String clusterName, Set<String> activeEc2InstanceIds,
@@ -428,12 +421,12 @@ public class EcsPerpetualTask extends AbstractPerpetualTask {
     }
   }
 
-  private Instant fetchLastProcessedTimestamp(String clusterName) {
+  private Instant fetchLastProcessedTimestamp(String clusterName, Instant heartbeatTime) {
     EcsActiveInstancesCache ecsActiveInstancesCache = cache.getIfPresent(clusterName);
     if (null != ecsActiveInstancesCache && null != ecsActiveInstancesCache.getLastProcessedTimestamp()) {
       return ecsActiveInstancesCache.getLastProcessedTimestamp();
     } else {
-      return Instant.now().minus(150, ChronoUnit.DAYS);
+      return heartbeatTime;
     }
   }
 
@@ -482,5 +475,9 @@ public class EcsPerpetualTask extends AbstractPerpetualTask {
   }
 
   @Override
-  public void stop() {}
+  public boolean stopTask(PerpetualTaskId taskId, PerpetualTaskParams params) throws Exception {
+    EcsPerpetualTaskParams taskParams = getTaskParams(params);
+    cache.invalidate(taskParams.getClusterName());
+    return true;
+  }
 }
