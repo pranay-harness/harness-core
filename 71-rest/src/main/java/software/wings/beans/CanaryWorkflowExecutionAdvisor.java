@@ -6,6 +6,7 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.OrchestrationWorkflowType.ROLLING;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Collections.disjoint;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
@@ -25,6 +26,7 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
+import io.harness.exception.FailureType;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.PhaseElement;
@@ -51,10 +53,10 @@ import software.wings.sm.StateType;
 import software.wings.sm.states.PhaseStepSubWorkflow;
 import software.wings.sm.states.PhaseSubWorkflow;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Created by rishi on 1/24/17.
@@ -278,12 +280,14 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
           }
         }
         if (phaseStep != null && isNotEmpty(phaseStep.getFailureStrategies())) {
-          FailureStrategy failureStrategy = rollbackStrategy(phaseStep.getFailureStrategies(), state);
+          FailureStrategy failureStrategy = selectTopMatchingStrategy(
+              phaseStep.getFailureStrategies(), executionEvent.getFailureTypes(), state.getName());
           return computeExecutionEventAdvice(
               orchestrationWorkflow, failureStrategy, executionEvent, null, stateExecutionInstance);
         }
       }
-      FailureStrategy failureStrategy = rollbackStrategy(orchestrationWorkflow.getFailureStrategies(), state);
+      FailureStrategy failureStrategy = selectTopMatchingStrategy(
+          orchestrationWorkflow.getFailureStrategies(), executionEvent.getFailureTypes(), state.getName());
 
       return computeExecutionEventAdvice(
           orchestrationWorkflow, failureStrategy, executionEvent, phaseSubWorkflow, stateExecutionInstance);
@@ -306,19 +310,6 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       StateExecutionInstance stateExecutionInstance) {
     if (failureStrategy == null) {
       return null;
-    }
-
-    // we need at least one specific failure else we assume that we should apply in every case
-    if (isNotEmpty(failureStrategy.getFailureTypes())) {
-      if (isEmpty(executionEvent.getFailureTypes())) {
-        logger.error("Defaulting to accepting the action. "
-                + "the propagated failure types for phase: {}, state {} are unknown. ",
-            phaseSubWorkflow == null ? "n/a" : phaseSubWorkflow.getName(), executionEvent.getState().getName());
-      } else {
-        if (Collections.disjoint(executionEvent.getFailureTypes(), failureStrategy.getFailureTypes())) {
-          return null;
-        }
-      }
     }
 
     RepairActionCode repairActionCode = failureStrategy.getRepairActionCode();
@@ -565,22 +556,49 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         .build();
   }
 
-  private FailureStrategy rollbackStrategy(List<FailureStrategy> failureStrategies, State state) {
+  public static FailureStrategy selectTopMatchingStrategy(
+      List<FailureStrategy> failureStrategies, Set<FailureType> failureTypes, String stateName) {
+    final FailureStrategy failureStrategy =
+        selectTopMatchingStrategyInternal(failureStrategies, failureTypes, stateName);
+
+    if (failureStrategy != null && isNotEmpty(failureStrategy.getFailureTypes()) && isEmpty(failureTypes)) {
+      logger.error("Defaulting to accepting the action. "
+              + "the propagated failure types for state {} are unknown. ",
+          stateName);
+    }
+
+    return failureStrategy;
+  }
+
+  private static FailureStrategy selectTopMatchingStrategyInternal(
+      List<FailureStrategy> failureStrategies, Set<FailureType> failureTypes, String stateName) {
     if (isEmpty(failureStrategies)) {
       return null;
     }
 
     List<FailureStrategy> filteredFailureStrategies =
         failureStrategies.stream()
-            .filter(f -> isNotEmpty(f.getSpecificSteps()) && f.getSpecificSteps().contains(state.getName()))
+            .filter(failureStrategy -> {
+              // we need at least one specific failure else we assume that we should apply in every case
+              if (isEmpty(failureStrategy.getFailureTypes())) {
+                return true;
+              }
+              // we need at least one failure type returned from the error to filter out
+              if (isEmpty(failureTypes)) {
+                return true;
+              }
+              return !disjoint(failureTypes, failureStrategy.getFailureTypes());
+            })
             .collect(toList());
 
+    filteredFailureStrategies = filteredFailureStrategies.stream()
+                                    .filter(failureStrategy
+                                        -> isEmpty(failureStrategy.getSpecificSteps())
+                                            || failureStrategy.getSpecificSteps().contains(stateName))
+                                    .collect(toList());
+
     if (filteredFailureStrategies.isEmpty()) {
-      filteredFailureStrategies =
-          failureStrategies.stream().filter(f -> isEmpty(f.getSpecificSteps())).collect(toList());
-      if (filteredFailureStrategies.isEmpty()) {
-        return null;
-      }
+      return null;
     }
 
     Optional<FailureStrategy> rollbackStrategy =
