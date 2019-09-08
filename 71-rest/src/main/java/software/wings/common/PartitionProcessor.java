@@ -112,10 +112,11 @@ public interface PartitionProcessor {
         List<ContextElement> elementPart =
             new ArrayList<>(elements.subList(ind, Math.min(ind + count, elements.size())));
         ind += count;
-        PartitionElement pe = new PartitionElement();
-        pe.setPartitionElements(elementPart);
-        pe.setName("Phase " + partitionIndex);
-        pe.setUuid("Phase-" + partitionIndex);
+        PartitionElement pe = PartitionElement.builder()
+                                  .partitionElements(elementPart)
+                                  .name("Phase " + partitionIndex)
+                                  .uuid("Phase-" + partitionIndex)
+                                  .build();
         partitionIndex++;
         partLists.add(pe);
       }
