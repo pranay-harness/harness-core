@@ -27,6 +27,7 @@ import migrations.all.InitWorkflowCounters;
 import migrations.all.LogAnalysisAddExecutionIdMigration;
 import migrations.all.LogAnalysisBaselineMigration;
 import migrations.all.MarkSendMailFlagAsTrueInUserGroup;
+import migrations.all.MigrateDelegateScopes;
 import migrations.all.MigrateLogDataRecordsToGoogle;
 import migrations.all.MigrateTimeSeriesRawDataToGoogle;
 import migrations.all.NoOpMigration;
@@ -108,6 +109,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(54, BaseMigration.class))
         .add(Pair.of(55, InfraMappingToDefinitionMigration.class))
         .add(Pair.of(56, BaseMigration.class))
+        .add(Pair.of(57, MigrateDelegateScopes.class))
         .build();
   }
 }

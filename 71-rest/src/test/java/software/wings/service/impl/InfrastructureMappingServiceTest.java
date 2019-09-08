@@ -1162,7 +1162,6 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     GcpKubernetesInfrastructureMapping gcpKubernetesInfrastructureMapping =
         GcpKubernetesInfrastructureMapping.builder()
             .clusterName("cluster")
-            .namespace("namespace")
             .deploymentType(DeploymentType.KUBERNETES.name())
             .build();
 
@@ -1170,7 +1169,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
       infrastructureMappingService.validateGcpInfraMapping(gcpKubernetesInfrastructureMapping);
       Assertions.fail("Should throw exception");
     } catch (InvalidRequestException ex) {
-      Assertions.assertThat(ExceptionUtils.getMessage(ex)).contains("Release name");
+      Assertions.assertThat(ExceptionUtils.getMessage(ex)).contains("Namespace");
     }
   }
 }
