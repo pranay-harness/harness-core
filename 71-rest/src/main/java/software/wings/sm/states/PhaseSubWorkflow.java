@@ -134,16 +134,19 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, context.getAccountId());
 
     if (infraRefactor) {
-      if (serviceIdExpression == null) {
+      if (serviceId != null) {
         service = serviceResourceService.get(app.getAppId(), serviceId, false);
         Validator.notNullCheck("Service might have been deleted", service, USER);
       }
-      if (infraDefinitionIdExpression == null) {
-        infrastructureMapping = infrastructureDefinitionService.getInfraMapping(
-            app.getAppId(), service.getUuid(), infraDefinitionId, context);
-      } else {
-        infrastructureMapping = infrastructureDefinitionService.getInfraMapping(
-            app.getAppId(), service.getUuid(), infrastructureDefinition.getUuid(), context);
+
+      if (service != null) {
+        if (infraDefinitionIdExpression == null) {
+          infrastructureMapping = infrastructureDefinitionService.getInfraMapping(
+              app.getAppId(), service.getUuid(), infraDefinitionId, context);
+        } else {
+          infrastructureMapping = infrastructureDefinitionService.getInfraMapping(
+              app.getAppId(), service.getUuid(), infrastructureDefinition.getUuid(), context);
+        }
       }
 
       if (infrastructureMapping != null) {
@@ -185,7 +188,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     }
 
     ExecutionResponseBuilder executionResponseBuilder = getSpawningExecutionResponse(
-        context, workflowStandardParams, service, infrastructureMapping, infraDefinitionId);
+        context, workflowStandardParams, service, infrastructureMapping, infrastructureDefinition);
 
     PhaseExecutionDataBuilder phaseExecutionDataBuilder = aPhaseExecutionData();
     if (infrastructureMapping != null) {
@@ -226,13 +229,13 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
   private ExecutionResponseBuilder getSpawningExecutionResponse(ExecutionContext context,
       WorkflowStandardParams workflowStandardParams, Service service, InfrastructureMapping infrastructureMapping,
-      String infraDefinitionId) {
+      InfrastructureDefinition infrastructureDefinition) {
     ExecutionContextImpl contextImpl = (ExecutionContextImpl) context;
     StateExecutionInstance stateExecutionInstance = contextImpl.getStateExecutionInstance();
     List<String> correlationIds = new ArrayList<>();
 
-    StateExecutionInstance childStateExecutionInstance = getSpawningInstance(
-        context, workflowStandardParams, stateExecutionInstance, service, infrastructureMapping, infraDefinitionId);
+    StateExecutionInstance childStateExecutionInstance = getSpawningInstance(context, workflowStandardParams,
+        stateExecutionInstance, service, infrastructureMapping, infrastructureDefinition);
     correlationIds.add(stateExecutionInstance.getUuid());
 
     return ExecutionResponse.builder()
@@ -243,7 +246,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
   private StateExecutionInstance getSpawningInstance(ExecutionContext context,
       WorkflowStandardParams workflowStandardParams, StateExecutionInstance stateExecutionInstance, Service service,
-      InfrastructureMapping infrastructureMapping, String infraDefinitionId) {
+      InfrastructureMapping infrastructureMapping, InfrastructureDefinition infrastructureDefinition) {
     StateExecutionInstance spawningInstance = super.getSpawningInstance(stateExecutionInstance);
 
     PhaseElementBuilder phaseElementBuilder = PhaseElement.builder()
@@ -251,8 +254,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
                                                   .phaseName(stateExecutionInstance.getDisplayName())
                                                   .appId(stateExecutionInstance.getAppId())
                                                   .workflowExecutionId(context.getWorkflowExecutionId())
-                                                  .phaseNameForRollback(phaseNameForRollback)
-                                                  .infraDefinitionId(infraDefinitionId);
+                                                  .phaseNameForRollback(phaseNameForRollback);
 
     if (service != null) {
       ServiceElement serviceElement = new ServiceElement();
@@ -264,10 +266,10 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
     boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, context.getAccountId());
 
-    if (infraRefactor) {
-      InfrastructureDefinition infrastructureDefinition =
-          infrastructureDefinitionService.get(context.getAppId(), infraDefinitionId);
+    // Not null check is for build Workflow
+    if (infraRefactor && infrastructureDefinition != null) {
       phaseElementBuilder.deploymentType(infrastructureDefinition.getDeploymentType().name());
+      phaseElementBuilder.infraDefinitionId(infrastructureDefinition.getUuid());
     } else if (infrastructureMapping != null) {
       DeploymentType deploymentType =
           serviceResourceService.getDeploymentType(infrastructureMapping, null, infrastructureMapping.getServiceId());
