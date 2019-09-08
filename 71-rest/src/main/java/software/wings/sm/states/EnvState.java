@@ -8,7 +8,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static java.util.Arrays.asList;
 import static software.wings.api.EnvStateExecutionData.Builder.anEnvStateExecutionData;
-import static software.wings.api.ServiceArtifactElement.ServiceArtifactElementBuilder.aServiceArtifactElement;
 import static software.wings.api.ServiceArtifactVariableElement.ServiceArtifactVariableElementBuilder.aServiceArtifactVariableElement;
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
@@ -35,6 +34,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ArtifactCollectionExecutionData;
 import software.wings.api.EnvStateExecutionData;
+import software.wings.api.ServiceArtifactElement;
 import software.wings.api.ServiceArtifactVariableElement;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.DeploymentExecutionContext;
@@ -342,12 +342,12 @@ public class EnvState extends State {
         if (isNotEmpty(artifacts)) {
           List<ContextElement> artifactElements = new ArrayList<>();
           artifacts.forEach(artifact
-              -> artifactElements.add(aServiceArtifactElement()
-                                          .withUuid(artifact.getUuid())
-                                          .withName(artifact.getDisplayName())
-                                          .withServiceIds(artifactStreamServiceBindingService.listServiceIds(
-                                              artifact.getArtifactStreamId()))
-                                          .build()));
+              -> artifactElements.add(
+                  ServiceArtifactElement.builder()
+                      .uuid(artifact.getUuid())
+                      .name(artifact.getDisplayName())
+                      .serviceIds(artifactStreamServiceBindingService.listServiceIds(artifact.getArtifactStreamId()))
+                      .build()));
           executionResponseBuilder.contextElements(artifactElements);
         }
       } else {

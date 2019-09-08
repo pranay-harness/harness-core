@@ -2,14 +2,14 @@ package software.wings.api;
 
 import io.harness.context.ContextElementType;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Value;
 import software.wings.common.Constants;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
 import java.util.Map;
 
-@Data
+@Value
 @Builder
 public class RouteUpdateRollbackElement implements ContextElement {
   @Override
