@@ -10,6 +10,7 @@ import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentType;
+import software.wings.api.PhaseElement;
 import software.wings.beans.HostValidationRequest;
 import software.wings.beans.HostValidationResponse;
 import software.wings.beans.InfrastructureMapping;
@@ -40,12 +41,14 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
   void validateInfraMapping(@Valid InfrastructureMapping infraMapping, boolean fromYaml);
 
   @ValidationGroups(Create.class) InfrastructureMapping save(@Valid InfrastructureMapping infrastructureMapping);
+
   @ValidationGroups(Create.class)
   InfrastructureMapping save(@Valid InfrastructureMapping infrastructureMapping, boolean fromYaml);
 
   InfrastructureMapping get(String appId, String infraMappingId);
 
   @ValidationGroups(Update.class) InfrastructureMapping update(@Valid InfrastructureMapping infrastructureMapping);
+
   @ValidationGroups(Update.class)
   InfrastructureMapping update(@Valid InfrastructureMapping infrastructureMapping, boolean fromYaml);
 
@@ -145,7 +148,9 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
   Map<String, String> listAwsIamRoles(String appId, String infraMappingId);
 
   Set<String> listTags(String appId, String computeProviderId, String region);
+
   Set<String> listAzureTags(String appId, String computeProviderId, String subscriptionId);
+
   Set<String> listAzureResourceGroups(String appId, String computeProviderId, String subscriptionId);
 
   List<String> listAutoScalingGroups(String appId, String computeProviderId, String region);
@@ -186,4 +191,7 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
   List<String> fetchCloudProviderIds(String appId, List<String> infraMappingIds);
 
   List<InfrastructureMapping> listInfraMappings(@NotEmpty String appId, @NotEmpty String envId);
+
+  void saveInfrastructureMappingToSweepingOutput(
+      String appId, String workflowExecutionId, PhaseElement phaseElement, String infraStructureMappingId);
 }

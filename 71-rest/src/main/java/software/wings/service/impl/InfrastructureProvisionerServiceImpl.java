@@ -21,6 +21,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -47,6 +48,7 @@ import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.Key;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentType;
+import software.wings.api.PhaseElement;
 import software.wings.api.TerraformExecutionData;
 import software.wings.beans.BlueprintProperty;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
@@ -74,6 +76,9 @@ import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructurePro
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
+import software.wings.infra.InfrastructureDefinition;
+import software.wings.infra.PhysicalInfra;
+import software.wings.infra.ProvisionerAware;
 import software.wings.prune.PruneEvent;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.aws.model.AwsCFTemplateParamsData;
@@ -90,10 +95,12 @@ import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.aws.manager.AwsCFHelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.utils.Validator;
 
@@ -105,6 +112,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.core.StreamingOutput;
@@ -133,6 +141,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private HarnessTagService harnessTagService;
   @Inject private ResourceLookupService resourceLookupService;
+  @Inject private WorkflowExecutionService workflowExecutionService;
 
   @Override
   @ValidationGroups(Create.class)
@@ -438,7 +447,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       boolean infraRefactor) {
     Map<String, Object> propertyNameEvaluatedMap = new HashMap<>();
     for (NameValuePair property : properties) {
-      if (property.getValue() == null) {
+      if (isEmpty(property.getValue())) {
         continue;
       }
       if (infraRefactor && !property.getValue().contains("$")) {
@@ -483,7 +492,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   public void regenerateInfrastructureMappings(String provisionerId, ExecutionContext context,
       Map<String, Object> outputs, Optional<ManagerExecutionLogCallback> executionLogCallbackOptional,
       Optional<String> region) {
-    final InfrastructureProvisioner infrastructureProvisioner = get(context.getAppId(), provisionerId);
+    String appId = context.getAppId();
+    final InfrastructureProvisioner infrastructureProvisioner = get(appId, provisionerId);
 
     final Map<String, Object> contextMap = context.asMap();
     contextMap.put(infrastructureProvisioner.variableKey(), outputs);
@@ -492,7 +502,27 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     boolean featureFlagEnabled =
         featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infrastructureProvisioner.getAccountId());
 
-    if (!featureFlagEnabled) {
+    if (featureFlagEnabled) {
+      String infraMappingId = getInfraMappingId(context);
+      String infraDefinitionId = getInfraDefinitionId(context);
+      if (isEmpty(infraMappingId) && isNotEmpty(infraDefinitionId)) {
+        // Inside deployment phase, but mapping not yet generated
+        InfrastructureDefinition infrastructureDefinition =
+            infrastructureDefinitionService.get(appId, infraDefinitionId);
+        Map<String, Object> resolvedExpressions =
+            resolveExpressions(infrastructureDefinition, contextMap, infrastructureProvisioner);
+        ((ProvisionerAware) infrastructureDefinition.getInfrastructure())
+            .applyExpressions(resolvedExpressions, appId, infrastructureDefinition.getEnvId(), infraDefinitionId);
+        InfrastructureMapping infrastructureMapping =
+            infrastructureDefinitionService.getInfrastructureMapping(getServiceId(context), infrastructureDefinition);
+        PhaseElement phaseElement =
+            context.getContextElement(ContextElementType.PARAM, ExecutionContextImpl.PHASE_PARAM);
+        infrastructureMappingService.saveInfrastructureMappingToSweepingOutput(
+            appId, context.getWorkflowExecutionId(), phaseElement, infrastructureMapping.getUuid());
+        workflowExecutionService.appendInfraMappingId(
+            appId, context.getWorkflowExecutionId(), infrastructureMapping.getUuid());
+      }
+    } else {
       try (HIterator<InfrastructureMapping> infrastructureMappings = new HIterator<>(
                wingsPersistence.createQuery(InfrastructureMapping.class)
                    .filter(InfrastructureMapping.APP_ID_KEY, infrastructureProvisioner.getAppId())
@@ -528,10 +558,19 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     }
   }
 
-  private void updateInfraMapping(InfrastructureMapping infrastructureMapping, Map<String, Object> resolvedBlueprints) {
-    infrastructureMapping.applyProvisionerVariables(resolvedBlueprints, null,
-        featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infrastructureMapping.getAccountId()));
-    infrastructureMappingService.update(infrastructureMapping);
+  private String getServiceId(ExecutionContext context) {
+    return ((PhaseElement) context.getContextElement(ContextElementType.PARAM, ExecutionContextImpl.PHASE_PARAM))
+        .getServiceElement()
+        .getUuid();
+  }
+
+  private String getInfraDefinitionId(ExecutionContext context) {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, ExecutionContextImpl.PHASE_PARAM);
+    return phaseElement == null ? null : phaseElement.getInfraDefinitionId();
+  }
+
+  private String getInfraMappingId(ExecutionContext context) {
+    return context.fetchInfraMappingId();
   }
 
   @VisibleForTesting
@@ -794,5 +833,49 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     Log.Builder logBuilder =
         Log.Builder.aLog().withCommandUnitName(commandUnitName).withAppId(appId).withActivityId(activityId);
     return new ManagerExecutionLogCallback(logService, logBuilder, activityId);
+  }
+
+  @Override
+  public Map<String, Object> resolveExpressions(InfrastructureDefinition infrastructureDefinition,
+      Map<String, Object> contextMap, InfrastructureProvisioner infrastructureProvisioner) {
+    List<BlueprintProperty> properties = getBlueprintProperties(infrastructureDefinition);
+    addProvisionerKeys(properties, infrastructureProvisioner);
+    return resolveProperties(contextMap, properties, Optional.empty(), Optional.empty(), true);
+  }
+
+  void addProvisionerKeys(List<BlueprintProperty> properties, InfrastructureProvisioner infrastructureProvisioner) {
+    if (infrastructureProvisioner instanceof ShellScriptInfrastructureProvisioner) {
+      properties.forEach(property -> {
+        property.setValue(format("${%s.%s}", infrastructureProvisioner.variableKey(), property.getValue()));
+        property.getFields().forEach(field -> field.setValue(format("${%s}", field.getValue())));
+      });
+    }
+  }
+
+  List<BlueprintProperty> getBlueprintProperties(InfrastructureDefinition infrastructureDefinition) {
+    List<BlueprintProperty> properties = new ArrayList<>();
+    Map<String, String> expressions =
+        ((ProvisionerAware) infrastructureDefinition.getInfrastructure()).getExpressions();
+    if (infrastructureDefinition.getInfrastructure() instanceof PhysicalInfra) {
+      BlueprintProperty hostArrayPathProperty = BlueprintProperty.builder()
+                                                    .name(PhysicalInfra.hostArrayPath)
+                                                    .value(expressions.get(PhysicalInfra.hostArrayPath))
+                                                    .build();
+      List<NameValuePair> fields =
+          expressions.entrySet()
+              .stream()
+              .filter(expression -> !expression.getKey().equals(PhysicalInfra.hostArrayPath))
+              .map(expression -> NameValuePair.builder().name(expression.getKey()).value(expression.getValue()).build())
+              .collect(Collectors.toList());
+      hostArrayPathProperty.setFields(fields);
+      properties.add(hostArrayPathProperty);
+
+    } else {
+      expressions.entrySet()
+          .stream()
+          .map(expression -> BlueprintProperty.builder().name(expression.getKey()).value(expression.getValue()).build())
+          .forEach(properties::add);
+    }
+    return properties;
   }
 }

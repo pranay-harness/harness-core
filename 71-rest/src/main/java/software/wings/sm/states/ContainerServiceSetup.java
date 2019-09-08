@@ -141,7 +141,7 @@ public abstract class ContainerServiceSetup extends State {
           serviceResourceService.getContainerTaskByDeploymentType(app.getUuid(), serviceId, getDeploymentType());
 
       InfrastructureMapping infrastructureMapping =
-          infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
+          infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
       if (!(infrastructureMapping instanceof ContainerInfrastructureMapping)
           || !isValidInfraMapping(infrastructureMapping)) {
         throw new InvalidRequestException("Invalid infrastructure type");
@@ -433,7 +433,7 @@ public abstract class ContainerServiceSetup extends State {
     Optional<ClusterElement> contextElement =
         context.<ClusterElement>getContextElementList(ContextElementType.CLUSTER)
             .stream()
-            .filter(clusterElement -> phaseElement.getInfraMappingId().equals(clusterElement.getInfraMappingId()))
+            .filter(clusterElement -> context.fetchInfraMappingId().equals(clusterElement.getInfraMappingId()))
             .findFirst();
 
     return contextElement.isPresent() ? contextElement.get().getName() : "";

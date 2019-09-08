@@ -287,8 +287,7 @@ public class CommandState extends State {
 
     InstanceElement instanceElement = context.getContextElement(ContextElementType.INSTANCE);
 
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PHASE_PARAM);
-    String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
+    String infrastructureMappingId = context.fetchInfraMappingId();
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infrastructureMappingId);
 
     updateWorkflowExecutionStatsInProgress(context);
@@ -701,7 +700,7 @@ public class CommandState extends State {
 
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PHASE_PARAM);
 
-    String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
+    String infrastructureMappingId = context.fetchInfraMappingId();
     InfrastructureMapping infrastructureMapping = null;
     Service service = null;
     if (infrastructureMappingId != null) {

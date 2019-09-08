@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptyList;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_AMI_ALL_PHASE_ROLLBACK_NAME;
-import static software.wings.service.impl.aws.model.AwsConstants.PHASE_PARAM;
 
 import com.google.common.collect.Lists;
 
@@ -23,7 +22,6 @@ import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.AwsAmiDeployStateExecutionData;
 import software.wings.api.ContainerServiceData;
 import software.wings.api.InstanceElement;
-import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
@@ -80,11 +78,10 @@ public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
       newAsgFinalDesiredCount = newContainerServiceData.getPreviousCount();
     }
 
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PHASE_PARAM);
     Activity activity = crateActivity(context);
 
     AwsAmiInfrastructureMapping infrastructureMapping = (AwsAmiInfrastructureMapping) infrastructureMappingService.get(
-        activity.getAppId(), phaseElement.getInfraMappingId());
+        activity.getAppId(), context.fetchInfraMappingId());
     SettingAttribute cloudProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
 
     String region = infrastructureMapping.getRegion();

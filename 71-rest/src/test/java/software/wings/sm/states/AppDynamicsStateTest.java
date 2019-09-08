@@ -125,7 +125,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
 
     when(executionContext.getContextElement(ContextElementType.PARAM, AbstractAnalysisStateTest.PHASE_PARAM))
         .thenReturn(phaseElement);
-    when(phaseElement.getInfraMappingId()).thenReturn(infraMappingId);
+    when(executionContext.fetchInfraMappingId()).thenReturn(infraMappingId);
     when(executionContext.getAppId()).thenReturn(appId);
     when(infraMappingService.get(anyString(), anyString()))
         .thenReturn(anAwsInfrastructureMapping().withDeploymentType(DeploymentType.AWS_CODEDEPLOY.name()).build());

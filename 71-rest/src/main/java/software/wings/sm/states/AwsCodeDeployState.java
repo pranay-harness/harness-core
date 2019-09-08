@@ -141,7 +141,7 @@ public class AwsCodeDeployState extends State {
 
     CodeDeployInfrastructureMapping infrastructureMapping =
         (CodeDeployInfrastructureMapping) infrastructureMappingService.get(
-            app.getUuid(), phaseElement.getInfraMappingId());
+            app.getUuid(), context.fetchInfraMappingId());
 
     SettingAttribute cloudProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
@@ -297,7 +297,7 @@ public class AwsCodeDeployState extends State {
 
     CodeDeployInfrastructureMapping infrastructureMapping =
         (CodeDeployInfrastructureMapping) infrastructureMappingService.get(
-            app.getUuid(), phaseElement.getInfraMappingId());
+            app.getUuid(), context.fetchInfraMappingId());
 
     InstanceElementListParam instanceElementListParam = InstanceElementListParam.builder().build();
     List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();

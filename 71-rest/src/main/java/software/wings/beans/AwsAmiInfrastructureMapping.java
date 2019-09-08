@@ -68,7 +68,7 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
       throw new InvalidRequestException("Provisioning ONLY supported for AWS_ASG type AMI deployments");
     }
 
-    if (!AWS_ASG_AMI.equals(nodeFilteringType)) {
+    if (!featureFlagEnabled && !AWS_ASG_AMI.equals(nodeFilteringType)) {
       // Should never happen
       throw new InvalidRequestException(format("Unidentified: [%s] node filtering type", nodeFilteringType.name()));
     }
@@ -85,30 +85,29 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
       String key = entry.getKey();
       Object value = entry.getValue();
       switch (key) {
-        case "region": {
+        case "region":
           setRegion((String) value);
           break;
-        }
-        case "baseAsg": {
+        case "baseAsg":
+        case "autoScalingGroupName":
           setAutoScalingGroupName((String) value);
           break;
-        }
-        case "classicLbs": {
+        case "classicLoadBalancers":
+        case "classicLbs":
           setClassicLoadBalancers(getList(value));
           break;
-        }
-        case "targetGroups": {
+        case "targetGroups":
+        case "targetGroupArns":
           setTargetGroupArns(getList(value));
           break;
-        }
-        case "stageClassicLbs": {
+        case "stageClassicLbs":
+        case "stageClassicLoadBalancers":
           setStageClassicLoadBalancers(getList(value));
           break;
-        }
-        case "stageTargetGroups": {
+        case "stageTargetGroups":
+        case "stageTargetGroupArns":
           setStageTargetGroupArns(getList(value));
           break;
-        }
         default: {
           throw new InvalidRequestException(
               format("Unidentified: [%s] key in properties map for Ami Asg deployment", key));

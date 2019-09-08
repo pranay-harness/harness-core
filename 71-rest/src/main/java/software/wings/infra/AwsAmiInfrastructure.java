@@ -75,7 +75,7 @@ public class AwsAmiInfrastructure
         .withStageClassicLoadBalancers(stageClassicLoadBalancers)
         .withStageTargetGroupArns(stageTargetGroupArns)
         .withInfraMappingType(InfrastructureMappingType.AWS_AMI.name())
-        .withAmiDeploymentType(getAmiDeploymentType())
+        .withAmiDeploymentType(amiDeploymentType)
         .withSpotinstCloudProvider(spotinstCloudProvider)
         .withSpotinstElastiGroupJson(spotinstElastiGroupJson)
         .build();

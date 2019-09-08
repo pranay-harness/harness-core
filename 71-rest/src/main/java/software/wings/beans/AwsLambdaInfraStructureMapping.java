@@ -97,6 +97,7 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
           }
           break;
         case "securityGroups":
+        case "securityGroupIds":
           try {
             setSecurityGroupIds(getList(entry.getValue()));
           } catch (ClassCastException e) {

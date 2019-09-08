@@ -144,7 +144,7 @@ public class StateExecutionServiceImpl implements StateExecutionService {
 
   @Override
   public List<ServiceInstance> getHostExclusionList(
-      StateExecutionInstance stateExecutionInstance, PhaseElement phaseElement) {
+      StateExecutionInstance stateExecutionInstance, PhaseElement phaseElement, String infraMappingId) {
     List<ServiceInstance> hostExclusionList = new ArrayList<>();
 
     List<StateExecutionData> previousPhaseExecutionsData =
@@ -157,8 +157,7 @@ public class StateExecutionServiceImpl implements StateExecutionService {
 
     for (StateExecutionData stateExecutionData : previousPhaseExecutionsData) {
       PhaseExecutionData phaseExecutionData = (PhaseExecutionData) stateExecutionData;
-      if (phaseElement != null && phaseElement.getInfraMappingId() != null
-          && !phaseExecutionData.getInfraMappingId().equals(phaseElement.getInfraMappingId())) {
+      if (infraMappingId != null && !phaseExecutionData.getInfraMappingId().equals(infraMappingId)) {
         continue;
       }
       PhaseExecutionSummary phaseExecutionSummary = phaseExecutionData.getPhaseExecutionSummary();

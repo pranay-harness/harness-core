@@ -40,6 +40,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -49,9 +50,11 @@ import com.amazonaws.regions.Regions;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutput;
 import io.harness.beans.TriggeredBy;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.serializer.KryoUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -88,6 +91,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.common.InfrastructureConstants;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
@@ -109,6 +113,7 @@ import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -129,6 +134,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
   public static final String ENV_ID_CF = "abcdefgh";
   public static final String INFRA_PROV_ID = "12345678";
   public static final String EXPECTED_SUFFIX = "abcdefgh12345678";
+  private static final String PHASE_NAME = "phaseName";
 
   @Mock private SettingsService settingsService;
   @Mock private DelegateService delegateService;
@@ -151,6 +157,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
   @Inject @InjectMocks private TemplateExpressionProcessor templateExpressionProcessor;
   @Mock private ExecutionContextImpl executionContext;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private SweepingOutputService sweepingOutputService;
 
   @InjectMocks
   private CloudFormationCreateStackState cloudFormationCreateStackState = new CloudFormationCreateStackState("name");
@@ -179,6 +186,8 @@ public class CloudFormationStateTest extends WingsBaseTest {
                                           .infraMappingId(INFRA_MAPPING_ID)
                                           .appId(APP_ID)
                                           .deploymentType(DeploymentType.SSH.name())
+                                          .workflowExecutionId(WORKFLOW_EXECUTION_ID)
+                                          .phaseName(PHASE_NAME)
                                           .build();
 
   private StateExecutionInstance stateExecutionInstance =
@@ -223,6 +232,17 @@ public class CloudFormationStateTest extends WingsBaseTest {
       asList(ServiceVariable.builder().type(Type.TEXT).name("VAR_1").value("value1".toCharArray()).build(),
           ServiceVariable.builder().type(Type.ENCRYPTED_TEXT).name("VAR_2").value("*******".toCharArray()).build());
 
+  private String outputName = InfrastructureConstants.PHASE_INFRA_MAPPING_KEY + phaseElement.getUuid();
+  private SweepingOutput sweepingOutput = SweepingOutput.builder()
+                                              .appId(APP_ID)
+                                              .name(outputName)
+                                              .uuid(generateUuid())
+                                              .workflowExecutionId(WORKFLOW_EXECUTION_ID)
+                                              .stateExecutionId(null)
+                                              .pipelineExecutionId(null)
+                                              .output(KryoUtils.asDeflatedBytes(INFRA_MAPPING_ID))
+                                              .build();
+
   @Before
   public void setup() throws IllegalAccessException {
     when(infrastructureProvisionerService.get(anyString(), anyString()))
@@ -251,6 +271,9 @@ public class CloudFormationStateTest extends WingsBaseTest {
     when(artifactStreamServiceBindingService.listArtifactStreamIds(SERVICE_ID))
         .thenReturn(singletonList(ARTIFACT_STREAM_ID));
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(env);
+    when(sweepingOutputService.find(APP_ID, outputName, null, phaseElement.getWorkflowExecutionId(),
+             phaseElement.getPhaseExecutionIdForSweepingOutput(), null))
+        .thenReturn(sweepingOutput);
 
     ServiceCommand serviceCommand =
         aServiceCommand()
@@ -297,6 +320,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
     on(context).set("evaluator", evaluator);
     on(context).set("infrastructureMappingService", infrastructureMappingService);
     on(context).set("serviceResourceService", serviceResourceService);
+    on(context).set("sweepingOutputService", sweepingOutputService);
 
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
     //    when(evaluator.substitute(anyString(), anyMap(), anyString())).thenAnswer(i -> i.getArguments()[0]);

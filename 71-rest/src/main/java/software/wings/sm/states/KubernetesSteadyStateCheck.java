@@ -26,7 +26,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.KubernetesSteadyStateCheckExecutionData;
-import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
@@ -38,7 +37,6 @@ import software.wings.beans.TaskType;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.container.KubernetesSteadyStateCheckParams;
 import software.wings.beans.container.Label;
-import software.wings.common.Constants;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.container.ContainerMasterUrlHelper;
 import software.wings.service.impl.ContainerServiceParams;
@@ -88,13 +86,12 @@ public class KubernetesSteadyStateCheck extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     try {
-      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
       Application app = appService.get(context.getAppId());
       Environment env = workflowStandardParams.getEnv();
       ContainerInfrastructureMapping containerInfraMapping =
           (ContainerInfrastructureMapping) infrastructureMappingService.get(
-              app.getUuid(), phaseElement.getInfraMappingId());
+              app.getUuid(), context.fetchInfraMappingId());
 
       if (CollectionUtils.isEmpty(labels)) {
         throw new InvalidRequestException("Labels cannot be empty.");

@@ -191,7 +191,7 @@ public class AwsAmiServiceSetup extends State {
     Service service = serviceResourceService.getWithDetails(app.getUuid(), serviceId);
 
     AwsAmiInfrastructureMapping infrastructureMapping =
-        (AwsAmiInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
+        (AwsAmiInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
 
     SettingAttribute cloudProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(

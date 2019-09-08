@@ -33,14 +33,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.BambooExecutionData;
 import software.wings.api.InstanceElement;
-import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Application;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.TaskType;
-import software.wings.common.Constants;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.SecretManager;
@@ -178,9 +176,7 @@ public class BambooState extends State {
     }
 
     final String finalPlanName = evaluatedPlanName;
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-
-    String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
+    String infrastructureMappingId = context.fetchInfraMappingId();
 
     DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)

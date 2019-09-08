@@ -1,8 +1,10 @@
 package software.wings.service.impl.infrastructuredefinition;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.google.inject.Inject;
 
-import io.harness.data.structure.EmptyPredicate;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.jetbrains.annotations.NotNull;
@@ -29,17 +31,20 @@ class InfrastructureDefinitionHelper {
                                       .append(infrastructureDefinition.getUuid());
     InfraMappingInfrastructureProvider infrastructure = infrastructureDefinition.getInfrastructure();
     Map<String, Object> queryMap = ((FieldKeyValMapProvider) infrastructure).getFieldMapForClass();
-    queryMap.forEach((k, v) -> stringBuilder.append(v.toString()));
+    if (isNotEmpty(queryMap)) {
+      queryMap.entrySet()
+          .stream()
+          .filter(entry -> entry.getValue() != null)
+          .map(entry -> entry.getValue().toString())
+          .forEach(stringBuilder::append);
+    }
     return DigestUtils.sha1Hex(stringBuilder.toString());
   }
 
   InfrastructureMapping existingInfraMapping(InfrastructureDefinition infraDefinition, String serviceId) {
     Query baseQuery = getQuery(infraDefinition, serviceId);
     List<InfrastructureMapping> infrastructureMappings = baseQuery.asList();
-    if (EmptyPredicate.isEmpty(infrastructureMappings)) {
-      return null;
-    }
-    return infrastructureMappings.get(0);
+    return isEmpty(infrastructureMappings) ? null : infrastructureMappings.get(0);
   }
 
   @NotNull

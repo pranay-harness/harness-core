@@ -24,7 +24,6 @@ import software.wings.api.AwsLambdaContextElement.FunctionMeta;
 import software.wings.api.AwsLambdaExecutionData;
 import software.wings.api.AwsLambdaFunctionElement;
 import software.wings.api.CommandStateExecutionData;
-import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
@@ -34,7 +33,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.LambdaTestEvent;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
-import software.wings.common.Constants;
 import software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionRequest;
 import software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionResponse;
 import software.wings.service.impl.aws.model.AwsLambdaRequest;
@@ -76,13 +74,12 @@ public class AwsLambdaVerification extends State {
     String activityId = createActivity(context);
     AwsLambdaExecutionData awsLambdaExecutionData = new AwsLambdaExecutionData();
     try {
-      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
       Application app = workflowStandardParams.getApp();
 
       AwsLambdaInfraStructureMapping infrastructureMapping =
           (AwsLambdaInfraStructureMapping) infrastructureMappingService.get(
-              app.getUuid(), phaseElement.getInfraMappingId());
+              app.getUuid(), context.fetchInfraMappingId());
 
       SettingAttribute cloudProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
       AwsConfig awsConfig = (AwsConfig) cloudProviderSetting.getValue();

@@ -13,12 +13,10 @@ import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
-import software.wings.api.PhaseElement;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
-import software.wings.common.Constants;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisTolerance;
@@ -157,8 +155,7 @@ public class SplunkV2State extends AbstractLogAnalysisState {
               .build();
 
       String waitId = generateUuid();
-      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-      String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
+      String infrastructureMappingId = context.fetchInfraMappingId();
       delegateTasks.add(DelegateTask.builder()
                             .async(true)
                             .accountId(appService.get(context.getAppId()).getAccountId())

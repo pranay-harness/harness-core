@@ -233,7 +233,7 @@ public class PcfSetupState extends State {
     }
 
     PcfInfrastructureMapping pcfInfrastructureMapping =
-        (PcfInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
+        (PcfInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
 
     Activity activity = createActivity(context, artifact, artifactStream);
 

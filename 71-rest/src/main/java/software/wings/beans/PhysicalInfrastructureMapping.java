@@ -57,6 +57,7 @@ public class PhysicalInfrastructureMapping extends PhysicalInfrastructureMapping
       for (Entry<String, Object> entry : hostAttributes.entrySet()) {
         switch (entry.getKey()) {
           case "Hostname":
+          case "hostname":
             host.setHostName((String) hostAttributes.get(entry.getKey()));
             host.setPublicDns((String) hostAttributes.get(entry.getKey()));
             break;

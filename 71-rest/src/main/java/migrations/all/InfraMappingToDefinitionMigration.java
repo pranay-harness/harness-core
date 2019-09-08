@@ -85,6 +85,7 @@ public class InfraMappingToDefinitionMigration implements Migration {
   @Inject private SetInfraDefinitionTriggers setInfraDefinitionTriggers;
   @Inject private SetInfraDefinitionPipelines setInfraDefinitionPipelines;
   @Inject private SetInfraDefinitionWorkflows setInfraDefinitionWorkflows;
+  @Inject private MigrateDelegateScopesToInfraDefinition migrateDelegateScopesToInfraDefinition;
 
   private final String DEBUG_LINE = " INFRA_MAPPING_MIGRATION: ";
   private final String accountId = "kmpySmUISimoRrJL6NL73w";
@@ -168,6 +169,7 @@ public class InfraMappingToDefinitionMigration implements Migration {
     setInfraDefinitionTriggers.migrate(account);
     setInfraDefinitionPipelines.migrate(account);
     setInfraDefinitionWorkflows.migrate(account);
+    migrateDelegateScopesToInfraDefinition.migrate(account);
 
     logger.info(StringUtils.join(DEBUG_LINE, "Finished Infra mapping migration for accountId ", accountId));
   }

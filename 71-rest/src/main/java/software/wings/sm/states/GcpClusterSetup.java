@@ -70,7 +70,7 @@ public class GcpClusterSetup extends State {
     String env = workflowStandardParams.getEnv().getName();
 
     InfrastructureMapping infrastructureMapping =
-        infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
+        infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
     if (!(infrastructureMapping instanceof GcpKubernetesInfrastructureMapping)) {
       throw new InvalidRequestException("Invalid infrastructure type");
     }
@@ -107,7 +107,7 @@ public class GcpClusterSetup extends State {
                                         .uuid(serviceId)
                                         .name(zoneCluster)
                                         .deploymentType(DeploymentType.KUBERNETES)
-                                        .infraMappingId(phaseElement.getInfraMappingId())
+                                        .infraMappingId(context.fetchInfraMappingId())
                                         .build();
 
     return ExecutionResponse.builder()

@@ -1,5 +1,6 @@
 package software.wings.sm.states.pcf;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -34,12 +35,15 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.URL;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutput;
 import io.harness.category.element.UnitTests;
 import io.harness.expression.VariableResolverTracker;
+import io.harness.serializer.KryoUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,6 +68,7 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.common.InfrastructureConstants;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
@@ -76,6 +81,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
@@ -102,6 +108,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
   @Mock private VariableProcessor variableProcessor;
   @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private EncryptionService encryptionService;
+  @Mock private SweepingOutputService sweepingOutputService;
   private PcfStateTestHelper pcfStateTestHelper = new PcfStateTestHelper();
   public static final String ORG = "ORG";
   public static final String SPACE = "SPACE";
@@ -124,6 +131,16 @@ public class PcfDeployStateTest extends WingsBaseTest {
           .build();
   private ExecutionContextImpl context;
 
+  private String outputName = InfrastructureConstants.PHASE_INFRA_MAPPING_KEY + phaseElement.getUuid();
+  private SweepingOutput sweepingOutput = SweepingOutput.builder()
+                                              .appId(APP_ID)
+                                              .name(outputName)
+                                              .uuid(generateUuid())
+                                              .workflowExecutionId(WORKFLOW_EXECUTION_ID)
+                                              .stateExecutionId(null)
+                                              .pipelineExecutionId(null)
+                                              .output(KryoUtils.asDeflatedBytes(INFRA_MAPPING_ID))
+                                              .build();
   /**
    * Set up.
    */
@@ -175,6 +192,9 @@ public class PcfDeployStateTest extends WingsBaseTest {
     when(evaluator.substitute(anyString(), anyMap(), any(VariableResolverTracker.class), anyString()))
         .thenAnswer(i -> i.getArguments()[0]);
     doReturn(null).when(encryptionService).decrypt(any(), any());
+    when(sweepingOutputService.find(APP_ID, outputName, null, phaseElement.getWorkflowExecutionId(),
+             phaseElement.getPhaseExecutionIdForSweepingOutput(), null))
+        .thenReturn(sweepingOutput);
   }
 
   @Test
@@ -182,6 +202,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
   public void testExecute() {
     on(context).set("serviceTemplateService", serviceTemplateService);
     on(context).set("variableProcessor", variableProcessor);
+    on(context).set("sweepingOutputService", sweepingOutputService);
     on(context).set("evaluator", evaluator);
 
     pcfDeployState.setInstanceCount(50);

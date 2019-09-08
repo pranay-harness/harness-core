@@ -620,8 +620,7 @@ public class HelmDeployState extends State {
     Artifact artifact = ((DeploymentExecutionContext) context).getDefaultArtifactForService(serviceElement.getUuid());
 
     ContainerInfrastructureMapping containerInfraMapping =
-        (ContainerInfrastructureMapping) infrastructureMappingService.get(
-            app.getUuid(), phaseElement.getInfraMappingId());
+        (ContainerInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
 
     String releaseName = obtainHelmReleaseNamePrefix(context);
     updateHelmReleaseNameInInfraMappingElement(context, releaseName);
@@ -981,7 +980,7 @@ public class HelmDeployState extends State {
       ExecutionContext context, String appId, String activityId) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PHASE_PARAM);
     ContainerInfrastructureMapping containerInfraMapping =
-        (ContainerInfrastructureMapping) infrastructureMappingService.get(appId, phaseElement.getInfraMappingId());
+        (ContainerInfrastructureMapping) infrastructureMappingService.get(appId, context.fetchInfraMappingId());
 
     String releaseName = obtainHelmReleaseNamePrefix(context);
     ContainerServiceParams containerServiceParams =

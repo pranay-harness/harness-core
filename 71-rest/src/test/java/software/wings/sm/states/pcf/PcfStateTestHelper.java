@@ -15,6 +15,7 @@ import static software.wings.utils.WingsTestConstants.PCF_SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import com.google.common.collect.Lists;
 
@@ -37,6 +38,7 @@ import java.util.List;
 public class PcfStateTestHelper {
   public static final String ORG = "ORG";
   public static final String SPACE = "SPACE";
+  public static final String PHASE_NAME = "phaseName";
 
   public ServiceElement getServiceElement() {
     return aServiceElement().withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
@@ -48,6 +50,8 @@ public class PcfStateTestHelper {
         .serviceElement(serviceElement)
         .infraMappingId(INFRA_MAPPING_ID)
         .deploymentType(DeploymentType.PCF.name())
+        .workflowExecutionId(WORKFLOW_EXECUTION_ID)
+        .phaseName(PHASE_NAME)
         .build();
   }
 

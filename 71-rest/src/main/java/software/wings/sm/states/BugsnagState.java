@@ -16,12 +16,10 @@ import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
-import software.wings.api.PhaseElement;
 import software.wings.beans.BugsnagConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
-import software.wings.common.Constants;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisTolerance;
@@ -222,8 +220,7 @@ public class BugsnagState extends AbstractLogAnalysisState {
     // Create the delegate task and send it over.
 
     String waitId = generateUuid();
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
+    String infrastructureMappingId = context.fetchInfraMappingId();
     DelegateTask delegateTask =
         DelegateTask.builder()
             .async(true)

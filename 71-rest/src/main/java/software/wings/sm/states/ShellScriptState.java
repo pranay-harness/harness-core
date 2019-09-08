@@ -37,7 +37,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Property;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
-import software.wings.api.PhaseElement;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.AwsConfig;
@@ -55,7 +54,6 @@ import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.beans.delegation.ShellScriptParameters.ShellScriptParametersBuilder;
 import software.wings.beans.template.TemplateUtils;
-import software.wings.common.Constants;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.impl.ContainerServiceParams;
@@ -235,8 +233,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
         ScriptStateExecutionData.builder().activityId(activityId).build();
     scriptStateExecutionData.setTemplateVariable(
         templateUtils.processTemplateVariables(context, getTemplateVariables()));
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
+    String infrastructureMappingId = context.fetchInfraMappingId();
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = (workflowStandardParams == null || workflowStandardParams.getEnv() == null)

@@ -1,5 +1,6 @@
 package software.wings.sm.states.pcf;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -44,14 +45,17 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.URL;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutput;
 import io.harness.category.element.UnitTests;
 import io.harness.expression.VariableResolverTracker;
+import io.harness.serializer.KryoUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -83,6 +87,7 @@ import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.PcfServiceSpecification;
+import software.wings.common.InfrastructureConstants;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.pcf.request.PcfCommandRouteUpdateRequest;
@@ -97,6 +102,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -114,6 +120,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   private static final String BASE_URL = "https://env.harness.io/";
   public static final String ORG = "ORG";
   public static final String SPACE = "SPACE";
+  private static final String PHASE_NAME = "phaseName";
 
   @Mock private SettingsService settingsService;
   @Mock private DelegateService delegateService;
@@ -131,6 +138,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   @Mock private VariableProcessor variableProcessor;
   @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private ServiceHelper serviceHelper;
+  @Mock private SweepingOutputService sweepingOutputService;
   private PcfStateTestHelper pcfStateTestHelper = new PcfStateTestHelper();
 
   @InjectMocks private MapRouteState pcfRouteSwapState = new MapRouteState("name");
@@ -180,13 +188,26 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
       asList(ServiceVariable.builder().type(Type.TEXT).name("VAR_1").value("value1".toCharArray()).build(),
           ServiceVariable.builder().type(Type.ENCRYPTED_TEXT).name("VAR_2").value("*******".toCharArray()).build());
 
+  private String outputName = InfrastructureConstants.PHASE_INFRA_MAPPING_KEY + phaseElement.getUuid();
+  private SweepingOutput sweepingOutput = SweepingOutput.builder()
+                                              .appId(APP_ID)
+                                              .name(outputName)
+                                              .uuid(generateUuid())
+                                              .workflowExecutionId(WORKFLOW_EXECUTION_ID)
+                                              .stateExecutionId(null)
+                                              .pipelineExecutionId(null)
+                                              .output(KryoUtils.asDeflatedBytes(INFRA_MAPPING_ID))
+                                              .build();
+
   @Before
   public void setup() throws IllegalAccessException {
     when(appService.get(APP_ID)).thenReturn(app);
     when(appService.getApplicationWithDefaults(APP_ID)).thenReturn(app);
     when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(service);
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(env);
-
+    when(sweepingOutputService.find(APP_ID, outputName, null, phaseElement.getWorkflowExecutionId(),
+             phaseElement.getPhaseExecutionIdForSweepingOutput(), null))
+        .thenReturn(sweepingOutput);
     ServiceCommand serviceCommand =
         aServiceCommand()
             .withCommand(aCommand().withCommandType(CommandType.SETUP).withName("Setup Service Cluster").build())
@@ -271,6 +292,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
 
   private void test_pcfAPP_Switch_Infra_routes() {
     on(context).set("serviceTemplateService", serviceTemplateService);
+    on(context).set("sweepingOutputService", sweepingOutputService);
     ExecutionResponse executionResponse = pcfRouteSwapState.execute(context);
 
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
@@ -317,6 +339,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     pcfRouteSwapState.setRoute("${" + INFRA_TEMP_ROUTE + "}");
 
     on(context).set("serviceTemplateService", serviceTemplateService);
+    on(context).set("sweepingOutputService", sweepingOutputService);
     ExecutionResponse executionResponse = pcfRouteSwapState.execute(context);
 
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
@@ -360,6 +383,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     pcfRouteSwapState.setRoute("${" + INFRA_ROUTE + "}");
 
     on(context).set("serviceTemplateService", serviceTemplateService);
+    on(context).set("sweepingOutputService", sweepingOutputService);
     ExecutionResponse executionResponse = pcfRouteSwapState.execute(context);
 
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
@@ -405,6 +429,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     pcfRouteSwapState.setRoute("${" + INFRA_TEMP_ROUTE + "}");
 
     on(context).set("serviceTemplateService", serviceTemplateService);
+    on(context).set("sweepingOutputService", sweepingOutputService);
     ExecutionResponse executionResponse = pcfRouteSwapState.execute(context);
 
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
@@ -445,6 +470,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExecute_pcfAPP_Switch_BG_routes() {
     on(context).set("serviceTemplateService", serviceTemplateService);
+    on(context).set("sweepingOutputService", sweepingOutputService);
     ExecutionResponse executionResponse = pcfSwitchBlueGreenRoutes.execute(context);
 
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);

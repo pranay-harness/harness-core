@@ -63,6 +63,7 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
+import software.wings.common.InfrastructureConstants;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.expression.SecretFunctor;
@@ -986,7 +987,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   public void populateDeploymentSpecificInfoInInfraMappingElement(
       InfrastructureMapping infrastructureMapping, PhaseElement phaseElement, InfraMappingElementBuilder builder) {
-    String infraMappingId = phaseElement.getInfraMappingId();
+    String infraMappingId = fetchInfraMappingId();
 
     if (DeploymentType.PCF.name().equals(phaseElement.getDeploymentType())) {
       PcfInfrastructureMapping pcfInfrastructureMapping = (PcfInfrastructureMapping) infrastructureMapping;
@@ -1009,14 +1010,11 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   @Override
   public InfraMappingElement fetchInfraMappingElement() {
     PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-
-    if (phaseElement == null) {
+    String infraMappingId = fetchInfraMappingId();
+    if (infraMappingId == null) {
       return null;
     }
-
     String appId = getAppId();
-    String infraMappingId = phaseElement.getInfraMappingId();
-
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
     if (infrastructureMapping == null) {
       return null;
@@ -1046,5 +1044,18 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       return phaseElement.getServiceElement();
     }
     return null;
+  }
+
+  @Override
+  public String fetchInfraMappingId() {
+    PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+
+    if (phaseElement == null) {
+      return null;
+    }
+    SweepingOutput sweepingOutput =
+        sweepingOutputService.find(getAppId(), InfrastructureConstants.PHASE_INFRA_MAPPING_KEY + phaseElement.getUuid(),
+            null, phaseElement.getWorkflowExecutionId(), phaseElement.getPhaseExecutionIdForSweepingOutput(), null);
+    return sweepingOutput == null ? null : (String) KryoUtils.asInflatedObject(sweepingOutput.getOutput());
   }
 }

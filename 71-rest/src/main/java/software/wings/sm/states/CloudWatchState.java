@@ -22,11 +22,9 @@ import org.slf4j.Logger;
 import software.wings.api.AwsLambdaContextElement;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
-import software.wings.api.PhaseElement;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
-import software.wings.common.Constants;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.AwsHelperService;
@@ -228,8 +226,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
     }
 
     String waitId = generateUuid();
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
+    String infrastructureMappingId = context.fetchInfraMappingId();
     DelegateTask delegateTask =
         DelegateTask.builder()
             .async(true)

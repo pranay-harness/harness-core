@@ -96,10 +96,6 @@ public class ExecutionEventListener extends QueueListener<ExecutionEvent> {
         }
       }
 
-      if (isNotEmpty(message.getInfraDefinitionIds())) {
-        runningQuery.field(WorkflowExecutionKeys.infraDefinitionIds).in(message.getInfraDefinitionIds());
-      }
-
       WorkflowExecution runningWorkflowExecutions = runningQuery.get();
 
       if (runningWorkflowExecutions != null) {
@@ -124,10 +120,6 @@ public class ExecutionEventListener extends QueueListener<ExecutionEvent> {
         if (isNotEmpty(message.getInfraDefinitionIds())) {
           queueQuery.field(WorkflowExecutionKeys.infraDefinitionIds).in(message.getInfraDefinitionIds());
         }
-      }
-
-      if (isNotEmpty(message.getInfraDefinitionIds())) {
-        queueQuery.field(WorkflowExecutionKeys.infraDefinitionIds).in(message.getInfraDefinitionIds());
       }
 
       WorkflowExecution workflowExecution = queueQuery.get();

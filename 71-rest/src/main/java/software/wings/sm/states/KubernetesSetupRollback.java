@@ -70,7 +70,7 @@ public class KubernetesSetupRollback extends ContainerServiceSetup {
         context.<ContainerServiceElement>getContextElementList(ContextElementType.CONTAINER_SERVICE)
             .stream()
             .filter(cse -> phaseElement.getDeploymentType().equals(cse.getDeploymentType().name()))
-            .filter(cse -> phaseElement.getInfraMappingId().equals(cse.getInfraMappingId()))
+            .filter(cse -> context.fetchInfraMappingId().equals(cse.getInfraMappingId()))
             .findFirst()
             .orElse(ContainerServiceElement.builder().build());
 

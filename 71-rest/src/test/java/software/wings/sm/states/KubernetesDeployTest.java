@@ -48,16 +48,19 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import com.google.common.collect.Lists;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutput;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.expression.VariableResolverTracker;
+import io.harness.serializer.KryoUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -88,6 +91,7 @@ import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.KubernetesResizeParams;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.common.InfrastructureConstants;
 import software.wings.common.VariableProcessor;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
@@ -104,6 +108,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
@@ -121,6 +126,7 @@ import java.util.Map;
  */
 public class KubernetesDeployTest extends WingsBaseTest {
   private static final String KUBERNETES_CONTROLLER_NAME = "kubernetes-rc-name.1";
+  private static final String PHASE_NAME = "phaseName";
 
   @Mock private SettingsService settingsService;
   @Mock private DelegateService delegateService;
@@ -141,6 +147,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
   @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private AwsCommandHelper mockAwsCommandHelper;
+  @Mock private SweepingOutputService sweepingOutputService;
 
   @InjectMocks
   private KubernetesDeploy kubernetesDeploy = aKubernetesDeploy(STATE_NAME)
@@ -164,6 +171,8 @@ public class KubernetesDeployTest extends WingsBaseTest {
                                           .serviceElement(serviceElement)
                                           .infraMappingId(INFRA_MAPPING_ID)
                                           .deploymentType(DeploymentType.KUBERNETES.name())
+                                          .workflowExecutionId(WORKFLOW_EXECUTION_ID)
+                                          .phaseName(PHASE_NAME)
                                           .build();
   private StateExecutionInstance stateExecutionInstance =
       aStateExecutionInstance()
@@ -184,6 +193,17 @@ public class KubernetesDeployTest extends WingsBaseTest {
           .addStateExecutionData(new PhaseStepExecutionData())
           .build();
 
+  private String outputName = InfrastructureConstants.PHASE_INFRA_MAPPING_KEY + phaseElement.getUuid();
+  private SweepingOutput sweepingOutput = SweepingOutput.builder()
+                                              .appId(APP_ID)
+                                              .name(outputName)
+                                              .uuid(generateUuid())
+                                              .workflowExecutionId(WORKFLOW_EXECUTION_ID)
+                                              .stateExecutionId(null)
+                                              .pipelineExecutionId(null)
+                                              .output(KryoUtils.asDeflatedBytes(INFRA_MAPPING_ID))
+                                              .build();
+
   private Application app = anApplication().uuid(APP_ID).name(APP_NAME).build();
   private Environment env = anEnvironment().appId(APP_ID).uuid(ENV_ID).name(ENV_NAME).build();
   private Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build();
@@ -203,6 +223,9 @@ public class KubernetesDeployTest extends WingsBaseTest {
     when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(service);
     when(artifactStreamServiceBindingService.listArtifactStreamIds(SERVICE_ID)).thenReturn(new ArrayList<>());
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(env);
+    when(sweepingOutputService.find(APP_ID, outputName, null, phaseElement.getWorkflowExecutionId(),
+             phaseElement.getPhaseExecutionIdForSweepingOutput(), null))
+        .thenReturn(sweepingOutput);
 
     ServiceCommand serviceCommand =
         aServiceCommand()
@@ -252,6 +275,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldExecute() {
+    on(context).set("sweepingOutputService", sweepingOutputService);
     on(context).set("infrastructureMappingService", infrastructureMappingService);
     on(context).set("serviceResourceService", serviceResourceService);
     on(context).set("serviceTemplateService", serviceTemplateService);

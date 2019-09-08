@@ -1,5 +1,6 @@
 package software.wings.sm.states.pcf;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -40,14 +41,17 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.URL;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutput;
 import io.harness.category.element.UnitTests;
 import io.harness.expression.VariableResolverTracker;
+import io.harness.serializer.KryoUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -82,6 +86,7 @@ import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.PcfServiceSpecification;
+import software.wings.common.InfrastructureConstants;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
@@ -100,6 +105,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -134,6 +140,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private ServiceHelper serviceHelper;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private SweepingOutputService sweepingOutputService;
 
   private PcfStateTestHelper pcfStateTestHelper = new PcfStateTestHelper();
 
@@ -174,6 +181,17 @@ public class PcfSetupStateTest extends WingsBaseTest {
               PcfConfig.builder().endpointUrl(URL).password(PASSWORD).username(USER_NAME).accountId(ACCOUNT_ID).build())
           .build();
 
+  private String outputName = InfrastructureConstants.PHASE_INFRA_MAPPING_KEY + phaseElement.getUuid();
+  private SweepingOutput sweepingOutput = SweepingOutput.builder()
+                                              .appId(APP_ID)
+                                              .name(outputName)
+                                              .uuid(generateUuid())
+                                              .workflowExecutionId(WORKFLOW_EXECUTION_ID)
+                                              .stateExecutionId(null)
+                                              .pipelineExecutionId(null)
+                                              .output(KryoUtils.asDeflatedBytes(INFRA_MAPPING_ID))
+                                              .build();
+
   private List<ServiceVariable> serviceVariableList =
       asList(ServiceVariable.builder().type(Type.TEXT).name("VAR_1").value("value1".toCharArray()).build(),
           ServiceVariable.builder().type(Type.ENCRYPTED_TEXT).name("VAR_2").value("value2".toCharArray()).build());
@@ -193,6 +211,9 @@ public class PcfSetupStateTest extends WingsBaseTest {
     when(artifactStreamServiceBindingService.listArtifactStreamIds(SERVICE_ID))
         .thenReturn(singletonList(ARTIFACT_STREAM_ID));
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(env);
+    when(sweepingOutputService.find(APP_ID, outputName, null, phaseElement.getWorkflowExecutionId(),
+             phaseElement.getPhaseExecutionIdForSweepingOutput(), null))
+        .thenReturn(sweepingOutput);
 
     ServiceCommand serviceCommand =
         aServiceCommand()
@@ -251,6 +272,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
     on(context).set("featureFlagService", featureFlagService);
     on(context).set("serviceResourceService", serviceResourceService);
     on(context).set("infrastructureMappingService", infrastructureMappingService);
+    on(context).set("sweepingOutputService", sweepingOutputService);
 
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
     when(evaluator.substitute(anyString(), anyMap(), any(VariableResolverTracker.class), anyString()))

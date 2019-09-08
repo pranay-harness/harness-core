@@ -207,8 +207,7 @@ public class AwsLambdaState extends State {
         serviceResourceService.getCommandByName(app.getUuid(), serviceId, envId, getCommandName()).getCommand();
 
     AwsLambdaInfraStructureMapping infrastructureMapping =
-        (AwsLambdaInfraStructureMapping) infrastructureMappingService.get(
-            app.getUuid(), phaseElement.getInfraMappingId());
+        (AwsLambdaInfraStructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
 
     SettingAttribute cloudProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     String region = infrastructureMapping.getRegion();

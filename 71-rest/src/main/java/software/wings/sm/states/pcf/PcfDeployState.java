@@ -138,12 +138,12 @@ public class PcfDeployState extends State {
     Environment env = workflowStandardParams.getEnv();
 
     PcfInfrastructureMapping pcfInfrastructureMapping =
-        (PcfInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
+        (PcfInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
 
     PcfSetupContextElement pcfSetupContextElement =
         context.<PcfSetupContextElement>getContextElementList(ContextElementType.PCF_SERVICE_SETUP)
             .stream()
-            .filter(cse -> phaseElement.getInfraMappingId().equals(cse.getInfraMappingId()))
+            .filter(cse -> context.fetchInfraMappingId().equals(cse.getInfraMappingId()))
             .findFirst()
             .orElse(PcfSetupContextElement.builder().build());
 

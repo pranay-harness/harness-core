@@ -119,7 +119,7 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
         context.<ContainerServiceElement>getContextElementList(ContextElementType.CONTAINER_SERVICE)
             .stream()
             .filter(cse -> phaseElement.getDeploymentType().equals(cse.getDeploymentType().name()))
-            .filter(cse -> phaseElement.getInfraMappingId().equals(cse.getInfraMappingId()))
+            .filter(cse -> context.fetchInfraMappingId().equals(cse.getInfraMappingId()))
             .findFirst();
     if (!containerServiceElementOptional.isPresent()) {
       throw new InvalidRequestException("No container service element found while swap route 53 END weights state");
@@ -129,7 +129,7 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
     Activity activity = createActivity(context);
     Application application = appService.get(context.getAppId());
     EcsInfrastructureMapping infrastructureMapping = (EcsInfrastructureMapping) infrastructureMappingService.get(
-        application.getUuid(), phaseElement.getInfraMappingId());
+        application.getUuid(), context.fetchInfraMappingId());
     SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
     List<EncryptedDataDetail> encryptedDetails =
