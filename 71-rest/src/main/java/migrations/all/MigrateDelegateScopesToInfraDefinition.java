@@ -23,10 +23,9 @@ public class MigrateDelegateScopesToInfraDefinition {
   public void migrate(Account account) {
     logger.info("Running infra migration for Delegate Scopes.Retrieving applications for accountId: "
         + account.getAccountName());
-    try (HIterator<DelegateScope> scopes =
-             new HIterator<>(wingsPersistence.createQuery(DelegateScope.class)
-                                 .filter(DelegateScopeKeys.accountId, account.getAccountName())
-                                 .fetch())) {
+    try (HIterator<DelegateScope> scopes = new HIterator<>(wingsPersistence.createQuery(DelegateScope.class)
+                                                               .filter(DelegateScopeKeys.accountId, account.getUuid())
+                                                               .fetch())) {
       logger.info("[Delegate Scoping Migration]: Updating Delegate Scopes.");
       while (scopes.hasNext()) {
         DelegateScope scope = scopes.next();

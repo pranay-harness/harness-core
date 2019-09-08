@@ -29,8 +29,9 @@ import java.util.Optional;
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "GcpKubernetesInfrastructureMappingKeys")
 public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureMapping {
+  private static final String INFRA_KUBERNETES_INFRAID_EXPRESSION = "${infra.kubernetes.infraId}";
   @Attributes(title = "Namespace") @Blueprint private String namespace;
-  @Trimmed private String releaseName;
+  @Trimmed private String releaseName = INFRA_KUBERNETES_INFRAID_EXPRESSION;
   private String masterUrl;
 
   /**
@@ -79,6 +80,10 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
     }
   }
 
+  public String getReleaseName() {
+    return isEmpty(releaseName) ? INFRA_KUBERNETES_INFRAID_EXPRESSION : releaseName;
+  }
+
   @SchemaIgnore
   @Override
   public String getDefaultName() {
@@ -103,7 +108,7 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
     private String accountId;
     private String clusterName;
     private String namespace;
-    private String releaseName;
+    private String releaseName = INFRA_KUBERNETES_INFRAID_EXPRESSION;
     private String uuid;
     private EmbeddedUser createdBy;
     private long createdAt;
