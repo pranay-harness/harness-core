@@ -12,7 +12,6 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
-import static software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder.anInstanceElementListParam;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.TaskType.ECS_COMMAND_TASK;
 import static software.wings.beans.command.EcsSetupParams.EcsSetupParamsBuilder.anEcsSetupParams;
@@ -574,7 +573,8 @@ public class EcsStateHelper {
 
       List<InstanceElement> instanceElements =
           instanceStatusSummaries.stream().map(InstanceStatusSummary::getInstanceElement).collect(toList());
-      InstanceElementListParam listParam = anInstanceElementListParam().withInstanceElements(instanceElements).build();
+      InstanceElementListParam listParam =
+          InstanceElementListParam.builder().instanceElements(instanceElements).build();
 
       executionData.setOldInstanceData(deployResponse.getOldInstanceData());
       executionData.setNewInstanceData(deployResponse.getNewInstanceData());

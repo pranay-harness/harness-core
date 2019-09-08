@@ -5,7 +5,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
-import static software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder.anInstanceElementListParam;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.common.Constants.ARTIFACT_S3_BUCKET_EXPRESSION;
@@ -300,7 +299,7 @@ public class AwsCodeDeployState extends State {
         (CodeDeployInfrastructureMapping) infrastructureMappingService.get(
             app.getUuid(), phaseElement.getInfraMappingId());
 
-    InstanceElementListParam instanceElementListParam = anInstanceElementListParam().build();
+    InstanceElementListParam instanceElementListParam = InstanceElementListParam.builder().build();
     List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
     if (commandExecutionResult != null && commandExecutionResult.getCommandExecutionData() != null) {
       CodeDeployCommandExecutionData commandExecutionData =
@@ -338,7 +337,7 @@ public class AwsCodeDeployState extends State {
                                         .withStatus(ExecutionStatus.SUCCESS)
                                         .build());
       });
-      instanceElementListParam = anInstanceElementListParam().withInstanceElements(instanceElements).build();
+      instanceElementListParam = InstanceElementListParam.builder().instanceElements(instanceElements).build();
       commandStateExecutionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
       commandStateExecutionData.setCodeDeployDeploymentId(commandExecutionData.getDeploymentId());
       commandStateExecutionData.setDelegateMetaInfo(commandExecutionResult.getDelegateMetaInfo());

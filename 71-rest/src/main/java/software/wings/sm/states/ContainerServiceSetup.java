@@ -5,7 +5,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
-import static software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder.anInstanceElementListParam;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 
 import com.google.inject.Inject;
@@ -287,13 +286,13 @@ public abstract class ContainerServiceSetup extends State {
         buildContainerServiceElement(context, executionResult, status, imageDetails);
 
     InstanceElementListParam instanceElementListParam =
-        anInstanceElementListParam()
-            .withInstanceElements(Optional
-                                      .ofNullable(executionData.getNewInstanceStatusSummaries()
-                                                      .stream()
-                                                      .map(InstanceStatusSummary::getInstanceElement)
-                                                      .collect(toList()))
-                                      .orElse(emptyList()))
+        InstanceElementListParam.builder()
+            .instanceElements(Optional
+                                  .ofNullable(executionData.getNewInstanceStatusSummaries()
+                                                  .stream()
+                                                  .map(InstanceStatusSummary::getInstanceElement)
+                                                  .collect(toList()))
+                                  .orElse(emptyList()))
             .build();
 
     if (executionResult != null) {

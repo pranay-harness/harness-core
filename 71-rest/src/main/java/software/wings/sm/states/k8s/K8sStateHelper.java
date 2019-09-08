@@ -43,7 +43,6 @@ import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
-import software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder;
 import software.wings.api.PhaseElement;
 import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sStateExecutionData;
@@ -601,9 +600,7 @@ public class K8sStateHelper {
   }
 
   public InstanceElementListParam getInstanceElementListParam(List<K8sPod> podDetailsList) {
-    return InstanceElementListParamBuilder.anInstanceElementListParam()
-        .withInstanceElements(getInstanceElementList(podDetailsList))
-        .build();
+    return InstanceElementListParam.builder().instanceElements(getInstanceElementList(podDetailsList)).build();
   }
 
   public List<InstanceStatusSummary> getInstanceStatusSummaries(

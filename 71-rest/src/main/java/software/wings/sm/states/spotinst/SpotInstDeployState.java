@@ -30,7 +30,6 @@ import io.harness.spotinst.model.SpotInstConstants;
 import lombok.Getter;
 import lombok.Setter;
 import software.wings.api.InstanceElementListParam;
-import software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
@@ -204,8 +203,8 @@ public class SpotInstDeployState extends State {
             stateExecutionData.getAppId(), stateExecutionData.getInfraId());
 
     InstanceElementListParam instanceElementListParam =
-        InstanceElementListParamBuilder.anInstanceElementListParam()
-            .withInstanceElements(awsStateHelper.generateInstanceElements(
+        InstanceElementListParam.builder()
+            .instanceElements(awsStateHelper.generateInstanceElements(
                 spotInstDeployTaskResponse.getEc2InstancesAdded(), awsAmiInfrastructureMapping, context))
             .build();
 

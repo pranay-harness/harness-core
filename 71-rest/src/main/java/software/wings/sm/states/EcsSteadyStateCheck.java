@@ -28,7 +28,6 @@ import lombok.Getter;
 import lombok.Setter;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
-import software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder;
 import software.wings.api.PhaseElement;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.beans.Activity;
@@ -158,7 +157,7 @@ public class EcsSteadyStateCheck extends State {
       List<InstanceElement> instanceElements =
           instanceStatusSummaries.stream().map(InstanceStatusSummary::getInstanceElement).collect(toList());
       InstanceElementListParam instanceElementListParam =
-          InstanceElementListParamBuilder.anInstanceElementListParam().withInstanceElements(instanceElements).build();
+          InstanceElementListParam.builder().instanceElements(instanceElements).build();
 
       return ExecutionResponse.builder()
           .executionStatus(ecsSteadyStateCheckResponse.getExecutionStatus())
