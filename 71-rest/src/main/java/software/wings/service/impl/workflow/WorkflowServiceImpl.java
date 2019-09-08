@@ -3601,11 +3601,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
       if (isEmpty(workflowExecutions)) {
         logger.info("Did not find a successful execution for {}. ", workflowId);
-        return singletonList(
-            InstanceElement.Builder.anInstanceElement()
-                .withHostName(
-                    "No succesful workflow execution found for this workflow. Please run the workflow to get deployed nodes")
-                .build());
+        return singletonList(InstanceElement.Builder.anInstanceElement()
+                                 .hostName("No successful workflow execution found for this workflow. "
+                                     + "Please run the workflow to get deployed nodes")
+                                 .build());
       }
 
       for (WorkflowExecution workflowExecution : workflowExecutions) {
@@ -3633,11 +3632,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     } while (workflowExecutions.size() >= PageRequest.DEFAULT_PAGE_SIZE);
 
     logger.info("No nodes were found in any execution for workflow {}", workflowId);
-    return singletonList(
-        InstanceElement.Builder.anInstanceElement()
-            .withHostName(
-                "No workflow execution found with deployed nodes for this workflow. Please run the workflow to get deployed nodes")
-            .build());
+    return singletonList(InstanceElement.Builder.anInstanceElement()
+                             .hostName("No workflow execution found with deployed nodes for this workflow. "
+                                 + "Please run the workflow to get deployed nodes")
+                             .build());
   }
 
   @Override

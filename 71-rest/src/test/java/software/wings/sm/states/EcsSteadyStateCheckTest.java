@@ -139,10 +139,9 @@ public class EcsSteadyStateCheckTest extends WingsBaseTest {
             .executionStatus(ExecutionStatus.SUCCESS)
             .containerInfoList(singletonList(ContainerInfo.builder().hostName("host").containerId("cid").build()))
             .build());
-    doReturn(
-        singletonList(anInstanceStatusSummary()
-                          .withInstanceElement(anInstanceElement().withHostName("host").withDisplayName("disp").build())
-                          .build()))
+    doReturn(singletonList(anInstanceStatusSummary()
+                               .withInstanceElement(anInstanceElement().hostName("host").displayName("disp").build())
+                               .build()))
         .when(mockContainerDeploymentManagerHelper)
         .getInstanceStatusSummaries(any(), anyList());
     ExecutionResponse response = check.handleAsyncResponse(mockContext, delegateResponse);

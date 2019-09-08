@@ -80,15 +80,15 @@ public class ContainerDeploymentManagerHelper {
                                       .ec2Instance(containerInfo.getEc2Instance())
                                       .build();
         InstanceElement instanceElement = anInstanceElement()
-                                              .withUuid(containerInfo.getContainerId())
-                                              .withDockerId(containerInfo.getContainerId())
-                                              .withHostName(containerInfo.getHostName())
-                                              .withHost(hostElement)
-                                              .withServiceTemplateElement(serviceTemplateElement)
-                                              .withDisplayName(containerInfo.getContainerId())
-                                              .withPodName(containerInfo.getPodName())
-                                              .withWorkloadName(containerInfo.getWorkloadName())
-                                              .withEcsContainerDetails(containerInfo.getEcsContainerDetails())
+                                              .uuid(containerInfo.getContainerId())
+                                              .dockerId(containerInfo.getContainerId())
+                                              .hostName(containerInfo.getHostName())
+                                              .host(hostElement)
+                                              .serviceTemplateElement(serviceTemplateElement)
+                                              .displayName(containerInfo.getContainerId())
+                                              .podName(containerInfo.getPodName())
+                                              .workloadName(containerInfo.getWorkloadName())
+                                              .ecsContainerDetails(containerInfo.getEcsContainerDetails())
                                               .build();
         ExecutionStatus status =
             containerInfo.getStatus() == Status.SUCCESS ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;

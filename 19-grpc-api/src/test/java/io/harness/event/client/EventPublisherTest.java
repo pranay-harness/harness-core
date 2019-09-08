@@ -109,7 +109,7 @@ public class EventPublisherTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN)
+  @Owner(emails = AVMOHAN, intermittent = true)
   @Category(UnitTests.class)
   public void testNoMessageLossWithErrorProneServer() throws Exception {
     fakeService.setErrorProne(true);

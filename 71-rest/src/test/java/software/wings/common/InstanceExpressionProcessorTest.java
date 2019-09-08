@@ -509,9 +509,9 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getApp()).thenReturn(app);
     when(context.getEnv()).thenReturn(env);
-    InstanceElement i1 = anInstanceElement().withUuid(generateUuid()).build();
-    InstanceElement i2 = anInstanceElement().withUuid(generateUuid()).build();
-    InstanceElement i3 = anInstanceElement().withUuid(generateUuid()).build();
+    InstanceElement i1 = anInstanceElement().uuid(generateUuid()).build();
+    InstanceElement i2 = anInstanceElement().uuid(generateUuid()).build();
+    InstanceElement i3 = anInstanceElement().uuid(generateUuid()).build();
     PartitionElement pe = PartitionElement.builder().partitionElements(Lists.newArrayList(i1, i2, i3)).build();
     when(context.getContextElementList(ContextElementType.PARTITION)).thenReturn(Lists.newArrayList(pe));
 

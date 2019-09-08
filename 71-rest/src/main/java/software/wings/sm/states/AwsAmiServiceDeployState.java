@@ -533,14 +533,14 @@ public class AwsAmiServiceDeployState extends State {
                 String hostName = awsHelperService.getHostnameFromConvention(contextMap, "");
                 hostElement.setHostName(hostName);
                 return anInstanceElement()
-                    .withUuid(instance.getInstanceId())
-                    .withHostName(hostName)
-                    .withDisplayName(instance.getPublicDnsName())
-                    .withHost(hostElement)
-                    .withServiceTemplateElement(aServiceTemplateElement()
-                                                    .withUuid(serviceTemplateKey.getId().toString())
-                                                    .withServiceElement(phaseElement.getServiceElement())
-                                                    .build())
+                    .uuid(instance.getInstanceId())
+                    .hostName(hostName)
+                    .displayName(instance.getPublicDnsName())
+                    .host(hostElement)
+                    .serviceTemplateElement(aServiceTemplateElement()
+                                                .withUuid(serviceTemplateKey.getId().toString())
+                                                .withServiceElement(phaseElement.getServiceElement())
+                                                .build())
                     .build();
               })
               .collect(toList());

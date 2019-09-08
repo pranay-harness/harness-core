@@ -265,7 +265,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
                   .hostExpression("${host.hostName}")
                   .workflowId(workflowId)
                   .instanceElement(anInstanceElement()
-                                       .withHost(HostElement.Builder.aHostElement().hostName(node.getName()).build())
+                                       .host(HostElement.Builder.aHostElement().hostName(node.getName()).build())
                                        .build())
                   .build();
           target = client.target(API_BASE + "/appdynamics/node-data?accountId=" + accountId);

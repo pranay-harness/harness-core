@@ -384,14 +384,14 @@ public class HttpStateTest extends WingsBaseTest {
 
     context.pushContextElement(
         anInstanceElement()
-            .withHost(aHostElement().hostName("localhost").build())
-            .withServiceTemplateElement(
+            .host(aHostElement().hostName("localhost").build())
+            .serviceTemplateElement(
                 aServiceTemplateElement()
                     .withName(TEMPLATE_NAME)
                     .withUuid(TEMPLATE_ID)
                     .withServiceElement(aServiceElement().withName(SERVICE_NAME).withUuid(SERVICE_ID).build())
                     .build())
-            .withUuid(SERVICE_INSTANCE_ID)
+            .uuid(SERVICE_INSTANCE_ID)
             .build());
 
     ExecutionResponse response =

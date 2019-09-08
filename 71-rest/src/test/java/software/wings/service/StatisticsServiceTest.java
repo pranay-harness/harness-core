@@ -159,7 +159,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
         asList(anElementExecutionSummary()
                    .withInstanceStatusSummaries(
                        asList(anInstanceStatusSummary()
-                                  .withInstanceElement(anInstanceElement().withUuid(generateUuid()).build())
+                                  .withInstanceElement(anInstanceElement().uuid(generateUuid()).build())
                                   .build()))
                    .build());
 
@@ -191,7 +191,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
         asList(anElementExecutionSummary()
                    .withInstanceStatusSummaries(
                        asList(anInstanceStatusSummary()
-                                  .withInstanceElement(anInstanceElement().withUuid(generateUuid()).build())
+                                  .withInstanceElement(anInstanceElement().uuid(generateUuid()).build())
                                   .build()))
                    .build());
 
