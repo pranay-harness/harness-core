@@ -512,8 +512,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     InstanceElement i1 = anInstanceElement().withUuid(generateUuid()).build();
     InstanceElement i2 = anInstanceElement().withUuid(generateUuid()).build();
     InstanceElement i3 = anInstanceElement().withUuid(generateUuid()).build();
-    PartitionElement pe = new PartitionElement();
-    pe.setPartitionElements(Lists.newArrayList(i1, i2, i3));
+    PartitionElement pe = PartitionElement.builder().partitionElements(Lists.newArrayList(i1, i2, i3)).build();
     when(context.getContextElementList(ContextElementType.PARTITION)).thenReturn(Lists.newArrayList(pe));
 
     InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
