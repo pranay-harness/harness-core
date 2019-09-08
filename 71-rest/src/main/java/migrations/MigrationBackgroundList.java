@@ -19,6 +19,7 @@ import migrations.all.DeleteStaleThirdPartyApiCallLogsMigration;
 import migrations.all.ExplodeLogMLFeedbackRecordsMigration;
 import migrations.all.FetchAndSaveAccounts;
 import migrations.all.FetchAndSaveAccounts2;
+import migrations.all.InfraMappingToDefinitionMigration;
 import migrations.all.InitInfraProvisionerCounters;
 import migrations.all.InitPipelineCounters;
 import migrations.all.InitServiceCounters;
@@ -105,6 +106,8 @@ public class MigrationBackgroundList {
         .add(Pair.of(52, ApiKeysSetNameMigration.class))
         .add(Pair.of(53, DeleteStaleSlackConfigs.class))
         .add(Pair.of(54, BaseMigration.class))
+        .add(Pair.of(55, InfraMappingToDefinitionMigration.class))
+        .add(Pair.of(56, BaseMigration.class))
         .build();
   }
 }
