@@ -8,7 +8,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static java.util.Arrays.asList;
 import static software.wings.api.EnvStateExecutionData.Builder.anEnvStateExecutionData;
-import static software.wings.api.ServiceArtifactVariableElement.ServiceArtifactVariableElementBuilder.aServiceArtifactVariableElement;
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.common.Constants.ENV_STATE_TIMEOUT_MILLIS;
@@ -361,15 +360,14 @@ public class EnvState extends State {
                 (ArtifactCollectionExecutionData) stateExecutionInstance.fetchStateExecutionData();
 
             Artifact artifact = artifactService.get(artifactCollectionExecutionData.getArtifactId());
-            artifactElements.add(
-                aServiceArtifactVariableElement()
-                    .withUuid(artifact.getUuid())
-                    .withName(artifact.getDisplayName())
-                    .withEntityType(artifactCollectionExecutionData.getEntityType())
-                    .withEntityId(artifactCollectionExecutionData.getEntityId())
-                    .withServiceId(artifactCollectionExecutionData.getServiceId())
-                    .withArtifactVariableName(artifactCollectionExecutionData.getArtifactVariableName())
-                    .build());
+            artifactElements.add(ServiceArtifactVariableElement.builder()
+                                     .uuid(artifact.getUuid())
+                                     .name(artifact.getDisplayName())
+                                     .entityType(artifactCollectionExecutionData.getEntityType())
+                                     .entityId(artifactCollectionExecutionData.getEntityId())
+                                     .serviceId(artifactCollectionExecutionData.getServiceId())
+                                     .artifactVariableName(artifactCollectionExecutionData.getArtifactVariableName())
+                                     .build());
           });
 
           executionResponseBuilder.contextElements(artifactElements);

@@ -236,7 +236,7 @@ public class DataGenService {
     //    SettingAttribute smtpSettingAttribute =
     //        aSettingAttribute()
     //            .withCategory(SettingCategory.CONNECTOR)
-    //            .withName("SMTP")
+    //            .name("SMTP")
     //            .withAccountId(account.getUuid())
     //            .withValue(SmtpConfig.builder()
     //                           .accountId(account.getUuid())
