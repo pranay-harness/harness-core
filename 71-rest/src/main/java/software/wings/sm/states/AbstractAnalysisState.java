@@ -366,15 +366,14 @@ public abstract class AbstractAnalysisState extends State {
         if (isEmpty(hostnameTemplate)) {
           hosts.put(serviceHost, DEFAULT_GROUP_NAME);
         } else {
-          hosts.put(
-              context.renderExpression(hostnameTemplate,
-                  StateExecutionContext.builder()
-                      .contextElements(Lists.newArrayList(
-                          anInstanceElement()
-                              .withHostName(serviceHost)
-                              .withHost(aHostElement().hostName(serviceHost).ip(podNameToIp.get(serviceHost)).build())
-                              .build()))
-                      .build()),
+          hosts.put(context.renderExpression(hostnameTemplate,
+                        StateExecutionContext.builder()
+                            .contextElements(Lists.newArrayList(
+                                anInstanceElement()
+                                    .hostName(serviceHost)
+                                    .host(aHostElement().hostName(serviceHost).ip(podNameToIp.get(serviceHost)).build())
+                                    .build()))
+                            .build()),
               DEFAULT_GROUP_NAME);
         }
       });
@@ -481,18 +480,17 @@ public abstract class AbstractAnalysisState extends State {
           ? containerInfo.getContainerId()
           : context.renderExpression(getHostnameTemplate(),
                 StateExecutionContext.builder()
-                    .contextElements(
-                        Lists.newArrayList(anInstanceElement()
-                                               .withHostName(containerInfo.getHostName())
-                                               .withPodName(containerInfo.getPodName())
-                                               .withWorkloadName(containerInfo.getWorkloadName())
-                                               .withHost(aHostElement()
-                                                             .hostName(containerInfo.getHostName())
-                                                             .ip(containerInfo.getIp())
-                                                             .ec2Instance(containerInfo.getEc2Instance())
-                                                             .build())
-                                               .withEcsContainerDetails(containerInfo.getEcsContainerDetails())
-                                               .build()))
+                    .contextElements(Lists.newArrayList(anInstanceElement()
+                                                            .hostName(containerInfo.getHostName())
+                                                            .podName(containerInfo.getPodName())
+                                                            .workloadName(containerInfo.getWorkloadName())
+                                                            .host(aHostElement()
+                                                                      .hostName(containerInfo.getHostName())
+                                                                      .ip(containerInfo.getIp())
+                                                                      .ec2Instance(containerInfo.getEc2Instance())
+                                                                      .build())
+                                                            .ecsContainerDetails(containerInfo.getEcsContainerDetails())
+                                                            .build()))
                     .build());
       map.put(evaluatedHost, DEFAULT_GROUP_NAME);
     }

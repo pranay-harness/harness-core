@@ -321,14 +321,14 @@ public class AwsCodeDeployState extends State {
         hostElement.setHostName(hostName);
         InstanceElement instanceElement =
             anInstanceElement()
-                .withUuid(instance.getInstanceId())
-                .withHostName(hostName)
-                .withDisplayName(instance.getPublicDnsName())
-                .withHost(hostElement)
-                .withServiceTemplateElement(aServiceTemplateElement()
-                                                .withUuid(serviceTemplateKey.getId().toString())
-                                                .withServiceElement(phaseElement.getServiceElement())
-                                                .build())
+                .uuid(instance.getInstanceId())
+                .hostName(hostName)
+                .displayName(instance.getPublicDnsName())
+                .host(hostElement)
+                .serviceTemplateElement(aServiceTemplateElement()
+                                            .withUuid(serviceTemplateKey.getId().toString())
+                                            .withServiceElement(phaseElement.getServiceElement())
+                                            .build())
                 .build();
         instanceElements.add(instanceElement);
 

@@ -167,7 +167,7 @@ public class InstanceElement implements ContextElement {
   @Override
   public ContextElement cloneMin() {
     InstanceElement instanceElement =
-        anInstanceElement().withUuid(uuid).withDisplayName(displayName).withHostName(hostName).build();
+        anInstanceElement().uuid(uuid).displayName(displayName).hostName(hostName).build();
     if (host != null) {
       instanceElement.setHost((HostElement) host.cloneMin());
     }
@@ -223,62 +223,62 @@ public class InstanceElement implements ContextElement {
       return new Builder();
     }
 
-    public Builder withEcsContainerDetails(EcsContainerDetails ecsContainerDetails) {
+    public Builder ecsContainerDetails(EcsContainerDetails ecsContainerDetails) {
       this.ecsContainerDetails = ecsContainerDetails;
       return this;
     }
 
-    public Builder withUuid(String uuid) {
+    public Builder uuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    public Builder withDisplayName(String displayName) {
+    public Builder displayName(String displayName) {
       this.displayName = displayName;
       return this;
     }
 
-    public Builder withHostName(String hostName) {
+    public Builder hostName(String hostName) {
       this.hostName = hostName;
       return this;
     }
 
-    public Builder withDockerId(String dockerId) {
+    public Builder dockerId(String dockerId) {
       this.dockerId = dockerId;
       return this;
     }
 
-    public Builder withHost(HostElement host) {
+    public Builder host(HostElement host) {
       this.host = host;
       return this;
     }
 
-    public Builder withServiceTemplateElement(ServiceTemplateElement serviceTemplateElement) {
+    public Builder serviceTemplateElement(ServiceTemplateElement serviceTemplateElement) {
       this.serviceTemplateElement = serviceTemplateElement;
       return this;
     }
 
-    public Builder withPodName(String podName) {
+    public Builder podName(String podName) {
       this.podName = podName;
       return this;
     }
 
-    public Builder withWorkloadName(String workloadName) {
+    public Builder workloadName(String workloadName) {
       this.workloadName = workloadName;
       return this;
     }
 
     public Builder but() {
       return anInstanceElement()
-          .withUuid(uuid)
-          .withDisplayName(displayName)
-          .withHostName(hostName)
-          .withDockerId(dockerId)
-          .withHost(host)
-          .withServiceTemplateElement(serviceTemplateElement)
-          .withPodName(podName)
-          .withWorkloadName(workloadName)
-          .withEcsContainerDetails(ecsContainerDetails);
+          .uuid(uuid)
+          .displayName(displayName)
+          .hostName(hostName)
+          .dockerId(dockerId)
+          .host(host)
+          .serviceTemplateElement(serviceTemplateElement)
+          .podName(podName)
+          .workloadName(workloadName)
+          .ecsContainerDetails(ecsContainerDetails);
     }
 
     public InstanceElement build() {

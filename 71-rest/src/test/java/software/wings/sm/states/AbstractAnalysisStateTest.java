@@ -110,7 +110,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
       for (int i = 0; i < 5; ++i) {
         instanceStatusSummaryList.add(
             anInstanceStatusSummary()
-                .withInstanceElement(anInstanceElement().withHostName(service + "-" + i + ".harness.com").build())
+                .withInstanceElement(anInstanceElement().hostName(service + "-" + i + ".harness.com").build())
                 .build());
       }
       elementExecutionSummary.add(anElementExecutionSummary()
@@ -183,7 +183,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
       for (int i = 0; i < 5; ++i) {
         instanceStatusSummaryList.add(
             anInstanceStatusSummary()
-                .withInstanceElement(anInstanceElement().withHostName(service + "-" + i + ".harness.com").build())
+                .withInstanceElement(anInstanceElement().hostName(service + "-" + i + ".harness.com").build())
                 .build());
       }
       elementExecutionSummary.add(anElementExecutionSummary()
@@ -220,10 +220,10 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
                         PhaseElement.builder().serviceElement(aServiceElement().withUuid("serviceA").build()).build())
                     .withInstanceStatusSummaries(Lists.newArrayList(
                         anInstanceStatusSummary()
-                            .withInstanceElement(anInstanceElement().withHostName("serviceA-0.harness.com").build())
+                            .withInstanceElement(anInstanceElement().hostName("serviceA-0.harness.com").build())
                             .build(),
                         anInstanceStatusSummary()
-                            .withInstanceElement(anInstanceElement().withHostName("serviceA-1.harness.com").build())
+                            .withInstanceElement(anInstanceElement().hostName("serviceA-1.harness.com").build())
                             .build()))
                     .build()))
             .build();
@@ -278,11 +278,8 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   public void testGetCanaryNewNodes() throws NoSuchAlgorithmException, KeyManagementException, IllegalAccessException {
     List<InstanceElement> instanceElements = new ArrayList<>();
     for (int i = 0; i < 5; ++i) {
-      instanceElements.add(anInstanceElement()
-                               .withHostName("serviceA"
-                                   + "-" + i + ".harness.com")
-                               .withWorkloadName("workload-" + i)
-                               .build());
+      instanceElements.add(
+          anInstanceElement().hostName("serviceA-" + i + ".harness.com").workloadName("workload-" + i).build());
     }
     ExecutionContext context = Mockito.mock(ExecutionContext.class);
     CanaryWorkflowStandardParams params = Mockito.mock(CanaryWorkflowStandardParams.class);
@@ -323,11 +320,8 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.HELM);
     List<InstanceElement> instanceElements = new ArrayList<>();
     for (int i = 0; i < 5; ++i) {
-      instanceElements.add(anInstanceElement()
-                               .withHostName("serviceA"
-                                   + "-" + i + ".harness.com")
-                               .withWorkloadName("workload-" + i)
-                               .build());
+      instanceElements.add(
+          anInstanceElement().hostName("serviceA-" + i + ".harness.com").workloadName("workload-" + i).build());
     }
     ExecutionContext context = Mockito.mock(ExecutionContext.class);
     CanaryWorkflowStandardParams params = Mockito.mock(CanaryWorkflowStandardParams.class);

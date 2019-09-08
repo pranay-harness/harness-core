@@ -66,10 +66,10 @@ public class AwsStateHelper {
                 String hostName = awsHelperService.getHostnameFromConvention(contextMap, "");
                 hostElement.setHostName(hostName);
                 return anInstanceElement()
-                    .withUuid(instance.getInstanceId())
-                    .withHostName(hostName)
-                    .withDisplayName(instance.getPublicDnsName())
-                    .withHost(hostElement)
+                    .uuid(instance.getInstanceId())
+                    .hostName(hostName)
+                    .displayName(instance.getPublicDnsName())
+                    .host(hostElement)
                     .build();
               })
               .collect(toList());

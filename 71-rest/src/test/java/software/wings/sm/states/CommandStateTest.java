@@ -291,8 +291,8 @@ public class CommandStateTest extends WingsBaseTest {
         .thenReturn(aServiceElement().withUuid(SERVICE_ID).build());
     when(context.getContextElement(ContextElementType.INSTANCE))
         .thenReturn(anInstanceElement()
-                        .withUuid(SERVICE_INSTANCE_ID)
-                        .withServiceTemplateElement(aServiceTemplateElement().withUuid(TEMPLATE_ID).build())
+                        .uuid(SERVICE_INSTANCE_ID)
+                        .serviceTemplateElement(aServiceTemplateElement().withUuid(TEMPLATE_ID).build())
                         .build());
     when(context.renderExpression(anyString())).thenAnswer(invocationOnMock -> invocationOnMock.getArguments()[0]);
     when(context.getServiceVariables()).thenReturn(emptyMap());

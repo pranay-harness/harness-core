@@ -110,8 +110,8 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
 
     ServiceElement service = aServiceElement().withUuid(generateUuid()).withName("service1").build();
     List<InstanceElement> instances =
-        Lists.newArrayList(anInstanceElement().withUuid(generateUuid()).withDisplayName("instance1").build(),
-            anInstanceElement().withUuid(generateUuid()).withDisplayName("instance2").build());
+        Lists.newArrayList(anInstanceElement().uuid(generateUuid()).displayName("instance1").build(),
+            anInstanceElement().uuid(generateUuid()).displayName("instance2").build());
     stateMachineExecutionSimulator.setExecutionContextFactory(
         new ExecutionContextFactoryTest(app, env, service, instances));
 
@@ -164,8 +164,8 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
     Environment env = anEnvironment().name("DEV").uuid(generateUuid()).appId(app.getUuid()).build();
 
     ServiceElement service = aServiceElement().withUuid(generateUuid()).withName("service1").build();
-    InstanceElement inst1 = anInstanceElement().withUuid(generateUuid()).withDisplayName("instance1").build();
-    InstanceElement inst2 = anInstanceElement().withUuid(generateUuid()).withDisplayName("instance2").build();
+    InstanceElement inst1 = anInstanceElement().uuid(generateUuid()).displayName("instance1").build();
+    InstanceElement inst2 = anInstanceElement().uuid(generateUuid()).displayName("instance2").build();
 
     List<InstanceElement> instances = Lists.newArrayList(inst1, inst2);
     stateMachineExecutionSimulator.setExecutionContextFactory(
@@ -194,14 +194,14 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
                                      .uuid(generateUuid())
                                      .displayName(s4.getName())
                                      .parentInstanceId(si3.getUuid())
-                                     .contextElement(anInstanceElement().withDisplayName(inst1.getName()).build())
+                                     .contextElement(anInstanceElement().displayName(inst1.getName()).build())
                                      .status(ExecutionStatus.SUCCESS)
                                      .build();
     StateExecutionInstance si5 = aStateExecutionInstance()
                                      .uuid(generateUuid())
                                      .displayName(s5.getName())
                                      .parentInstanceId(si3.getUuid())
-                                     .contextElement(anInstanceElement().withDisplayName(inst1.getName()).build())
+                                     .contextElement(anInstanceElement().displayName(inst1.getName()).build())
                                      .status(ExecutionStatus.RUNNING)
                                      .build();
 
@@ -261,8 +261,8 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
     Environment env = anEnvironment().name("DEV").uuid(generateUuid()).appId(app.getUuid()).build();
 
     ServiceElement service = aServiceElement().withUuid(generateUuid()).withName("service1").build();
-    InstanceElement inst1 = anInstanceElement().withUuid(generateUuid()).withDisplayName("instance1").build();
-    InstanceElement inst2 = anInstanceElement().withUuid(generateUuid()).withDisplayName("instance2").build();
+    InstanceElement inst1 = anInstanceElement().uuid(generateUuid()).displayName("instance1").build();
+    InstanceElement inst2 = anInstanceElement().uuid(generateUuid()).displayName("instance2").build();
 
     List<InstanceElement> instances = Lists.newArrayList(inst1, inst2);
     stateMachineExecutionSimulator.setExecutionContextFactory(
@@ -291,14 +291,14 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
                                      .uuid(generateUuid())
                                      .displayName(s4.getName())
                                      .parentInstanceId(si3.getUuid())
-                                     .contextElement(anInstanceElement().withDisplayName(inst1.getName()).build())
+                                     .contextElement(anInstanceElement().displayName(inst1.getName()).build())
                                      .status(ExecutionStatus.FAILED)
                                      .build();
     StateExecutionInstance si6 = aStateExecutionInstance()
                                      .uuid(generateUuid())
                                      .displayName(s6.getName())
                                      .parentInstanceId(si3.getUuid())
-                                     .contextElement(anInstanceElement().withDisplayName(inst1.getName()).build())
+                                     .contextElement(anInstanceElement().displayName(inst1.getName()).build())
                                      .status(ExecutionStatus.SUCCESS)
                                      .build();
 
@@ -306,14 +306,14 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
                                       .uuid(generateUuid())
                                       .displayName(s4.getName())
                                       .parentInstanceId(si3.getUuid())
-                                      .contextElement(anInstanceElement().withDisplayName(inst2.getName()).build())
+                                      .contextElement(anInstanceElement().displayName(inst2.getName()).build())
                                       .status(ExecutionStatus.SUCCESS)
                                       .build();
     StateExecutionInstance si52 = aStateExecutionInstance()
                                       .uuid(generateUuid())
                                       .displayName(s5.getName())
                                       .parentInstanceId(si3.getUuid())
-                                      .contextElement(anInstanceElement().withDisplayName(inst2.getName()).build())
+                                      .contextElement(anInstanceElement().displayName(inst2.getName()).build())
                                       .status(ExecutionStatus.RUNNING)
                                       .build();
 

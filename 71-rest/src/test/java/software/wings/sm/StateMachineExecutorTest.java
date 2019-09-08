@@ -844,7 +844,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldCleanForRetry() {
-    List<ContextElement> originalNotifyElements = asList(anInstanceElement().withDisplayName("foo").build());
+    List<ContextElement> originalNotifyElements = asList(anInstanceElement().displayName("foo").build());
 
     String prevStateExecutionInstanceId = wingsPersistence.save(
         aStateExecutionInstance().appId("appId").displayName("state0").notifyElements(originalNotifyElements).build());
@@ -854,7 +854,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     stateExecutionMap.put("state1", new StateExecutionData());
 
     List<ContextElement> notifyElements =
-        asList(anInstanceElement().withDisplayName("bar").build(), originalNotifyElements.get(0));
+        asList(anInstanceElement().displayName("bar").build(), originalNotifyElements.get(0));
 
     StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
                                                         .appId("appId")

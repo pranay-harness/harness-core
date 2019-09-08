@@ -666,11 +666,11 @@ public class K8sStateHelper {
     return podList.stream()
         .map(podDetails -> {
           return anInstanceElement()
-              .withUuid(podDetails.getName())
-              .withHost(aHostElement().hostName(podDetails.getName()).ip(podDetails.getPodIP()).build())
-              .withHostName(podDetails.getName())
-              .withDisplayName(podDetails.getName())
-              .withPodName(podDetails.getName())
+              .uuid(podDetails.getName())
+              .host(aHostElement().hostName(podDetails.getName()).ip(podDetails.getPodIP()).build())
+              .hostName(podDetails.getName())
+              .displayName(podDetails.getName())
+              .podName(podDetails.getName())
               .build();
         })
         .collect(Collectors.toList());
