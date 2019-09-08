@@ -88,7 +88,7 @@ public class InfraMappingToDefinitionMigration implements Migration {
   @Inject private MigrateDelegateScopesToInfraDefinition migrateDelegateScopesToInfraDefinition;
 
   private final String DEBUG_LINE = " INFRA_MAPPING_MIGRATION: ";
-  private final String accountId = "kmpySmUISimoRrJL6NL73w";
+  private final String accountId = "zEaak-FLS425IEO7OLzMUg";
 
   public void migrate() {
     logger.info(StringUtils.join(DEBUG_LINE, "Starting Infra Definition migration for accountId ", accountId));
