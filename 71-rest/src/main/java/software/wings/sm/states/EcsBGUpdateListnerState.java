@@ -85,13 +85,13 @@ public class EcsBGUpdateListnerState extends State {
     Environment environment = workflowStandardParams.getEnv();
 
     EcsInfrastructureMapping infrastructureMapping = (EcsInfrastructureMapping) infrastructureMappingService.get(
-        application.getUuid(), phaseElement.getInfraMappingId());
+        application.getUuid(), context.fetchInfraMappingId());
 
     ContainerServiceElement containerElement =
         context.<ContainerServiceElement>getContextElementList(ContextElementType.CONTAINER_SERVICE)
             .stream()
             .filter(cse -> phaseElement.getDeploymentType().equals(cse.getDeploymentType().name()))
-            .filter(cse -> phaseElement.getInfraMappingId().equals(cse.getInfraMappingId()))
+            .filter(cse -> context.fetchInfraMappingId().equals(cse.getInfraMappingId()))
             .findFirst()
             .orElse(ContainerServiceElement.builder().build());
 

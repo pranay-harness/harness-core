@@ -144,6 +144,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     nodeSelectState.setInstanceCount(3);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
     when(context.getAppId()).thenReturn(APP_ID);
+    when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
     when(contextElement.getUuid()).thenReturn(instance1.getUuid());
     when(serviceInstanceArtifactParam.getInstanceArtifactMap())
         .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
@@ -170,6 +171,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     nodeSelectState.setInstanceCount(3);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
     when(context.getAppId()).thenReturn(APP_ID);
+    when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
     when(context.getOrchestrationWorkflowType()).thenReturn(OrchestrationWorkflowType.ROLLING);
     when(contextElement.getUuid()).thenReturn(instance1.getUuid());
     when(serviceInstanceArtifactParam.getInstanceArtifactMap())
@@ -197,6 +199,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     nodeSelectState.setInstanceCount(3);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalInfrastructureMapping);
     when(context.getAppId()).thenReturn(APP_ID);
+    when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
     when(contextElement.getUuid()).thenReturn(instance1.getUuid());
     when(serviceInstanceArtifactParam.getInstanceArtifactMap())
         .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
@@ -227,6 +230,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     nodeSelectState.setInstanceCount(3);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
     when(context.getAppId()).thenReturn(APP_ID);
+    when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
     when(contextElement.getUuid()).thenReturn(instance1.getUuid());
     when(serviceInstanceArtifactParam.getInstanceArtifactMap())
         .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
@@ -251,6 +255,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(infrastructureMappingService.selectServiceInstances(anyString(), anyString(), anyString(), any()))
         .thenReturn(emptyList());
     when(context.getAppId()).thenReturn(APP_ID);
+    when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
     when(contextElement.getUuid()).thenReturn(instance1.getUuid());
     when(serviceInstanceArtifactParam.getInstanceArtifactMap())
         .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
@@ -282,6 +287,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(infrastructureMappingService.listHostDisplayNames(anyString(), anyString(), anyString()))
         .thenReturn(emptyList());
     when(context.getAppId()).thenReturn(APP_ID);
+    when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
     when(contextElement.getUuid()).thenReturn(instance1.getUuid());
     when(serviceInstanceArtifactParam.getInstanceArtifactMap())
         .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));

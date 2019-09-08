@@ -115,7 +115,7 @@ public class SpotInstStateHelper {
     serviceSetup.setUseCurrentRunningCount(false);
 
     AwsAmiInfrastructureMapping awsAmiInfrastructureMapping =
-        (AwsAmiInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
+        (AwsAmiInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
 
     Activity activity = createActivity(context, artifact, serviceSetup.getStateType(), SPOTINST_SERVICE_SETUP_COMMAND,
         CommandUnitType.SPOTINST_SETUP,

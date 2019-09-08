@@ -142,11 +142,12 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
             return null;
           }
 
-          List<ServiceInstance> hostExclusionList = stateExecutionService.getHostExclusionList(
-              ((ExecutionContextImpl) context).getStateExecutionInstance(), phaseElement);
+          List<ServiceInstance> hostExclusionList =
+              stateExecutionService.getHostExclusionList(((ExecutionContextImpl) context).getStateExecutionInstance(),
+                  phaseElement, context.fetchInfraMappingId());
 
           String infraMappingId;
-          if (phaseElement == null || phaseElement.getInfraMappingId() == null) {
+          if (context.fetchInfraMappingId() == null) {
             List<InfrastructureMapping> resolvedInfraMappings;
             if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, workflow.getAccountId())) {
               resolvedInfraMappings = infrastructureMappingService.getInfraStructureMappingsByUuids(
@@ -165,7 +166,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
             }
             infraMappingId = resolvedInfraMappings.get(0).getUuid();
           } else {
-            infraMappingId = phaseElement.getInfraMappingId();
+            infraMappingId = context.fetchInfraMappingId();
           }
           ServiceInstanceSelectionParams.Builder selectionParams =
               aServiceInstanceSelectionParams().withExcludedServiceInstanceIds(

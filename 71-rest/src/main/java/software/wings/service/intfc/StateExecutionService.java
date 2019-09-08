@@ -27,7 +27,8 @@ public interface StateExecutionService {
 
   PageResponse<StateExecutionInstance> list(PageRequest<StateExecutionInstance> pageRequest);
 
-  List<ServiceInstance> getHostExclusionList(StateExecutionInstance stateExecutionInstance, PhaseElement phaseElement);
+  List<ServiceInstance> getHostExclusionList(
+      StateExecutionInstance stateExecutionInstance, PhaseElement phaseElement, String infraMappingId);
 
   StateExecutionData phaseStateExecutionData(String appId, String executionUuid, String phaseName);
 

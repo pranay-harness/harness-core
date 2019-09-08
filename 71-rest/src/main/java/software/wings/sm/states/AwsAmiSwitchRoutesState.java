@@ -23,7 +23,6 @@ import lombok.Getter;
 import lombok.Setter;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.AwsAmiSwitchRoutesStateExecutionData;
-import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
@@ -33,7 +32,6 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
-import software.wings.common.Constants;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesRequest;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesResponse;
 import software.wings.service.intfc.ActivityService;
@@ -101,10 +99,9 @@ public class AwsAmiSwitchRoutesState extends State {
 
   protected ExecutionResponse executeInternal(ExecutionContext context, boolean rollback) throws InterruptedException {
     Activity activity = createActivity(context);
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     AmiServiceSetupElement serviceSetupElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
     AwsAmiInfrastructureMapping infrastructureMapping = (AwsAmiInfrastructureMapping) infrastructureMappingService.get(
-        activity.getAppId(), phaseElement.getInfraMappingId());
+        activity.getAppId(), context.fetchInfraMappingId());
     SettingAttribute cloudProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     String region = infrastructureMapping.getRegion();
     AwsConfig awsConfig = (AwsConfig) cloudProviderSetting.getValue();

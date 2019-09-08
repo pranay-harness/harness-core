@@ -41,7 +41,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.InstanceElement;
 import software.wings.api.JenkinsExecutionData;
-import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
@@ -52,7 +51,6 @@ import software.wings.beans.JenkinsSubTaskType;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.command.JenkinsTaskParams;
-import software.wings.common.Constants;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SweepingOutputService;
@@ -250,8 +248,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
               context.renderExpression(filePathAssertionEntry.getFilePath()), filePathAssertionEntry.getAssertion()));
     }
 
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
+    String infrastructureMappingId = context.fetchInfraMappingId();
     JenkinsTaskParams jenkinsTaskParams = JenkinsTaskParams.builder()
                                               .jenkinsConfig(jenkinsConfig)
                                               .encryptedDataDetails(secretManager.getEncryptionDetails(
@@ -323,8 +320,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
         ? null
         : workflowStandardParams.getEnv().getUuid();
 
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
+    String infrastructureMappingId = context.fetchInfraMappingId();
 
     String accountId = ((ExecutionContextImpl) context).getApp().getAccountId();
     JenkinsConfig jenkinsConfig = (JenkinsConfig) context.getGlobalSettingValue(accountId, jenkinsConfigId);

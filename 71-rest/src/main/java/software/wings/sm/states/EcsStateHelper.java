@@ -413,7 +413,7 @@ public class EcsStateHelper {
     ContainerTask containerTask =
         serviceResourceService.getContainerTaskByDeploymentType(app.getUuid(), serviceId, DeploymentType.ECS.name());
     InfrastructureMapping infrastructureMapping =
-        infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
+        infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
     if (!(infrastructureMapping instanceof EcsInfrastructureMapping)) {
       throw new InvalidRequestException("Invalid infrastructure type");
     }
@@ -545,7 +545,7 @@ public class EcsStateHelper {
         context.<ContainerServiceElement>getContextElementList(ContextElementType.CONTAINER_SERVICE)
             .stream()
             .filter(cse -> phaseElement.getDeploymentType().equals(cse.getDeploymentType().name()))
-            .filter(cse -> phaseElement.getInfraMappingId().equals(cse.getInfraMappingId()))
+            .filter(cse -> context.fetchInfraMappingId().equals(cse.getInfraMappingId()))
             .findFirst()
             .orElse(ContainerServiceElement.builder().build());
     containerElement.setPrevAutoscalarsAlreadyRemoved(true);
@@ -622,7 +622,7 @@ public class EcsStateHelper {
     String serviceId = phaseElement.getServiceElement().getUuid();
     Service svc = serviceResourceService.getWithDetails(app.getUuid(), serviceId);
     InfrastructureMapping infrastructureMapping =
-        infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
+        infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
     if (!(infrastructureMapping instanceof EcsInfrastructureMapping)) {
       throw new InvalidRequestException(
           format("Invalid infrmapping type: [%s]", infrastructureMapping.getClass().getName()));
@@ -641,7 +641,7 @@ public class EcsStateHelper {
         context.<ContainerServiceElement>getContextElementList(ContextElementType.CONTAINER_SERVICE)
             .stream()
             .filter(cse -> phaseElement.getDeploymentType().equals(cse.getDeploymentType().name()))
-            .filter(cse -> phaseElement.getInfraMappingId().equals(cse.getInfraMappingId()))
+            .filter(cse -> context.fetchInfraMappingId().equals(cse.getInfraMappingId()))
             .findFirst()
             .orElse(ContainerServiceElement.builder().build());
     ContainerRollbackRequestElement rollbackElement = context.getContextElement(

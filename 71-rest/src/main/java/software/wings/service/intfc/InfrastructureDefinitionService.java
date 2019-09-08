@@ -37,6 +37,8 @@ public interface InfrastructureDefinitionService extends OwnedByEnvironment {
   InfrastructureMapping getInfraMapping(
       String appId, String serviceId, String infraDefinitionId, ExecutionContext context);
 
+  InfrastructureMapping getInfrastructureMapping(String serviceId, InfrastructureDefinition infrastructureDefinition);
+
   boolean isDynamicInfrastructure(String appId, String infraDefinitionId);
 
   List<String> fetchCloudProviderIds(String appId, List<String> infraDefinitionIds);

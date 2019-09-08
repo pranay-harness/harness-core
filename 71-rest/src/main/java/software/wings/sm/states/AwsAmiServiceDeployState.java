@@ -15,7 +15,6 @@ import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.TaskType.AWS_AMI_ASYNC_TASK;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.common.Constants.ASG_COMMAND_NAME;
-import static software.wings.service.impl.aws.model.AwsConstants.PHASE_PARAM;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -206,13 +205,12 @@ public class AwsAmiServiceDeployState extends State {
 
   protected ExecutionResponse executeInternal(ExecutionContext context) {
     Activity activity = crateActivity(context);
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PHASE_PARAM);
     AmiServiceSetupElement serviceSetupElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
     boolean blueGreen = serviceSetupElement.isBlueGreen();
 
     AwsAmiDeployStateExecutionData awsAmiDeployStateExecutionData;
     AwsAmiInfrastructureMapping infrastructureMapping = (AwsAmiInfrastructureMapping) infrastructureMappingService.get(
-        activity.getAppId(), phaseElement.getInfraMappingId());
+        activity.getAppId(), context.fetchInfraMappingId());
     SettingAttribute cloudProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
 
     String region = infrastructureMapping.getRegion();
@@ -486,7 +484,7 @@ public class AwsAmiServiceDeployState extends State {
     Validator.notNullCheck("Activity", activity);
 
     AwsAmiInfrastructureMapping infrastructureMapping = (AwsAmiInfrastructureMapping) infrastructureMappingService.get(
-        activity.getAppId(), phaseElement.getInfraMappingId());
+        activity.getAppId(), context.fetchInfraMappingId());
 
     String serviceId = phaseElement.getServiceElement().getUuid();
     Environment env = workflowStandardParams.getEnv();

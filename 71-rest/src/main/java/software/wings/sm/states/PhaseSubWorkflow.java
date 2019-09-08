@@ -131,7 +131,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
         }
       }
     }
-    boolean infraRefactor = infraDefinitionId != null || infraDefinitionIdExpression != null;
+    boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, context.getAccountId());
 
     if (infraRefactor) {
       if (serviceIdExpression == null) {
@@ -146,8 +146,10 @@ public class PhaseSubWorkflow extends SubWorkflowState {
             app.getAppId(), service.getUuid(), infrastructureDefinition.getUuid(), context);
       }
 
-      workflowExecutionService.appendInfraMappingId(
-          app.getAppId(), context.getWorkflowExecutionId(), infrastructureMapping.getUuid());
+      if (infrastructureMapping != null) {
+        workflowExecutionService.appendInfraMappingId(
+            app.getAppId(), context.getWorkflowExecutionId(), infrastructureMapping.getUuid());
+      }
       if (workflowStandardParams.getWorkflowElement() != null) {
         workflowExecutionService.updateWorkflowElementWithLastGoodReleaseInfo(
             context.getAppId(), workflowStandardParams.getWorkflowElement(), context.getWorkflowExecutionId());
@@ -164,16 +166,9 @@ public class PhaseSubWorkflow extends SubWorkflowState {
           Validator.notNullCheck("Service might have been deleted", service, USER);
         }
       }
-      if (infraMappingIdExpression == null) {
-        if (infraDefinitionId != null) {
-          infrastructureMapping =
-              infrastructureDefinitionService.getInfraMapping(app.getAppId(), serviceId, infraDefinitionId, context);
-          //        infrastructureMapping = infrastructureMappingService.get(app.getAppId(), infraMappingId);
-          Validator.notNullCheck("Service Infrastructure might have been deleted", infrastructureMapping, USER);
-        } else if (infraMappingId != null) {
-          infrastructureMapping = infrastructureMappingService.get(app.getAppId(), infraMappingId);
-          Validator.notNullCheck("Service Infrastructure might have been deleted", infrastructureMapping, USER);
-        }
+      if (infraMappingIdExpression == null && infraMappingId != null) {
+        infrastructureMapping = infrastructureMappingService.get(app.getAppId(), infraMappingId);
+        Validator.notNullCheck("Service Infrastructure might have been deleted", infrastructureMapping, USER);
       }
     }
     Environment env = ((ExecutionContextImpl) context).getEnv();
@@ -189,8 +184,8 @@ public class PhaseSubWorkflow extends SubWorkflowState {
           + "] is not associated with the Environment [" + env.getName() + "]. Please Check Your Setup");
     }
 
-    ExecutionResponseBuilder executionResponseBuilder =
-        getSpawningExecutionResponse(context, workflowStandardParams, service, infrastructureMapping);
+    ExecutionResponseBuilder executionResponseBuilder = getSpawningExecutionResponse(
+        context, workflowStandardParams, service, infrastructureMapping, infraDefinitionId);
 
     PhaseExecutionDataBuilder phaseExecutionDataBuilder = aPhaseExecutionData();
     if (infrastructureMapping != null) {
@@ -230,13 +225,14 @@ public class PhaseSubWorkflow extends SubWorkflowState {
   }
 
   private ExecutionResponseBuilder getSpawningExecutionResponse(ExecutionContext context,
-      WorkflowStandardParams workflowStandardParams, Service service, InfrastructureMapping infrastructureMapping) {
+      WorkflowStandardParams workflowStandardParams, Service service, InfrastructureMapping infrastructureMapping,
+      String infraDefinitionId) {
     ExecutionContextImpl contextImpl = (ExecutionContextImpl) context;
     StateExecutionInstance stateExecutionInstance = contextImpl.getStateExecutionInstance();
     List<String> correlationIds = new ArrayList<>();
 
-    StateExecutionInstance childStateExecutionInstance =
-        getSpawningInstance(context, workflowStandardParams, stateExecutionInstance, service, infrastructureMapping);
+    StateExecutionInstance childStateExecutionInstance = getSpawningInstance(
+        context, workflowStandardParams, stateExecutionInstance, service, infrastructureMapping, infraDefinitionId);
     correlationIds.add(stateExecutionInstance.getUuid());
 
     return ExecutionResponse.builder()
@@ -247,14 +243,16 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
   private StateExecutionInstance getSpawningInstance(ExecutionContext context,
       WorkflowStandardParams workflowStandardParams, StateExecutionInstance stateExecutionInstance, Service service,
-      InfrastructureMapping infrastructureMapping) {
+      InfrastructureMapping infrastructureMapping, String infraDefinitionId) {
     StateExecutionInstance spawningInstance = super.getSpawningInstance(stateExecutionInstance);
 
     PhaseElementBuilder phaseElementBuilder = PhaseElement.builder()
                                                   .uuid(getId())
                                                   .phaseName(stateExecutionInstance.getDisplayName())
                                                   .appId(stateExecutionInstance.getAppId())
-                                                  .phaseNameForRollback(phaseNameForRollback);
+                                                  .workflowExecutionId(context.getWorkflowExecutionId())
+                                                  .phaseNameForRollback(phaseNameForRollback)
+                                                  .infraDefinitionId(infraDefinitionId);
 
     if (service != null) {
       ServiceElement serviceElement = new ServiceElement();
@@ -264,10 +262,15 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
     String accountId = context.getAccountId();
 
-    if (infrastructureMapping != null) {
+    boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, context.getAccountId());
+
+    if (infraRefactor) {
+      InfrastructureDefinition infrastructureDefinition =
+          infrastructureDefinitionService.get(context.getAppId(), infraDefinitionId);
+      phaseElementBuilder.deploymentType(infrastructureDefinition.getDeploymentType().name());
+    } else if (infrastructureMapping != null) {
       DeploymentType deploymentType =
           serviceResourceService.getDeploymentType(infrastructureMapping, null, infrastructureMapping.getServiceId());
-
       phaseElementBuilder.deploymentType(deploymentType.name()).infraMappingId(infrastructureMapping.getUuid());
     }
 
@@ -283,6 +286,11 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
     spawningInstance.getContextElements().push(phaseElement);
     spawningInstance.setContextElement(phaseElement);
+
+    if (infrastructureMapping != null) {
+      infrastructureMappingService.saveInfrastructureMappingToSweepingOutput(stateExecutionInstance.getAppId(),
+          context.getWorkflowExecutionId(), phaseElement, infrastructureMapping.getUuid());
+    }
 
     if (!isRollback() && featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
       WorkflowExecution workflowExecution =

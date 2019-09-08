@@ -92,10 +92,10 @@ public abstract class NodeSelectState extends State {
 
       PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
       String serviceId = phaseElement.getServiceElement().getUuid();
-      String infraMappingId = phaseElement.getInfraMappingId();
+      String infraMappingId = context.fetchInfraMappingId();
 
       List<ServiceInstance> hostExclusionList = stateExecutionService.getHostExclusionList(
-          ((ExecutionContextImpl) context).getStateExecutionInstance(), phaseElement);
+          ((ExecutionContextImpl) context).getStateExecutionInstance(), phaseElement, context.fetchInfraMappingId());
 
       List<String> excludedServiceInstanceIds =
           hostExclusionList.stream().map(ServiceInstance::getUuid).distinct().collect(toList());

@@ -92,10 +92,10 @@ public class EcsSteadyStateCheck extends State {
       Application app = appService.get(context.getAppId());
       Environment env = workflowStandardParams.getEnv();
       InfrastructureMapping infrastructureMapping =
-          infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
+          infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
       if (!(infrastructureMapping instanceof EcsInfrastructureMapping)) {
         throw new InvalidRequestException(
-            String.format("Infrmapping with id: %s is not Ecs inframapping", phaseElement.getInfraMappingId()));
+            String.format("Infrmapping with id: %s is not Ecs inframapping", context.fetchInfraMappingId()));
       }
       EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
       Activity activity = createActivity(context);

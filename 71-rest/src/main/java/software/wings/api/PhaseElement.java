@@ -7,8 +7,10 @@ package software.wings.api;
 import com.google.inject.Inject;
 
 import io.harness.context.ContextElementType;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.artifact.Artifact;
@@ -37,11 +39,13 @@ public class PhaseElement implements ContextElement {
   private String phaseName;
   private ServiceElement serviceElement;
   private String appId;
-  private String infraMappingId;
+  @Getter(AccessLevel.NONE) private String infraMappingId;
   private String deploymentType;
   private String phaseNameForRollback;
   @Builder.Default private List<NameValuePair> variableOverrides = new ArrayList<>();
   private String rollbackArtifactId;
+  private String infraDefinitionId;
+  private String workflowExecutionId;
 
   @Override
   public ContextElementType getElementType() {
@@ -68,5 +72,9 @@ public class PhaseElement implements ContextElement {
       map.put(ARTIFACT, artifact);
     }
     return map;
+  }
+
+  public String getPhaseExecutionIdForSweepingOutput() {
+    return workflowExecutionId + uuid + phaseName;
   }
 }

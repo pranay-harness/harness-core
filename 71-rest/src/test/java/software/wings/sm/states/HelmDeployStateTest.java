@@ -40,15 +40,18 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import com.google.common.collect.Lists;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.SweepingOutput;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.VariableResolverTracker;
+import io.harness.serializer.KryoUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -77,6 +80,7 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.ImageDetails;
+import software.wings.common.InfrastructureConstants;
 import software.wings.common.VariableProcessor;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.expression.ManagerExpressionEvaluator;
@@ -101,6 +105,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
@@ -119,6 +124,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   private static final String CHART_URL = "http://google.com";
   private static final String GIT_CONNECTOR_ID = "connectorId";
   private static final String COMMAND_FLAGS = "--tls";
+  private static final String PHASE_NAME = "phaseName";
 
   @Mock private AppService appService;
   @Mock private ArtifactService artifactService;
@@ -142,6 +148,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Mock private ApplicationManifestUtils applicationManifestUtils;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private ServiceTemplateHelper serviceTemplateHelper;
+  @Mock private SweepingOutputService sweepingOutputService;
 
   @InjectMocks HelmDeployState helmDeployState = new HelmDeployState("helmDeployState");
   @InjectMocks HelmRollbackState helmRollbackState = new HelmRollbackState("helmRollbackState");
@@ -159,6 +166,8 @@ public class HelmDeployStateTest extends WingsBaseTest {
                                           .uuid(generateUuid())
                                           .serviceElement(serviceElement)
                                           .infraMappingId(INFRA_MAPPING_ID)
+                                          .workflowExecutionId(WORKFLOW_EXECUTION_ID)
+                                          .phaseName(PHASE_NAME)
                                           .deploymentType(DeploymentType.HELM.name())
                                           .build();
 
@@ -187,6 +196,17 @@ public class HelmDeployStateTest extends WingsBaseTest {
                                                             .withDeploymentType(DeploymentType.KUBERNETES.name())
                                                             .build();
 
+  private String outputName = InfrastructureConstants.PHASE_INFRA_MAPPING_KEY + phaseElement.getUuid();
+  private SweepingOutput sweepingOutput = SweepingOutput.builder()
+                                              .appId(APP_ID)
+                                              .name(outputName)
+                                              .uuid(generateUuid())
+                                              .workflowExecutionId(WORKFLOW_EXECUTION_ID)
+                                              .stateExecutionId(null)
+                                              .pipelineExecutionId(null)
+                                              .output(KryoUtils.asDeflatedBytes(INFRA_MAPPING_ID))
+                                              .build();
+
   private Application app = anApplication().uuid(APP_ID).name(APP_NAME).build();
   private Environment env = anEnvironment().appId(APP_ID).uuid(ENV_ID).name(ENV_NAME).build();
   private Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build();
@@ -199,6 +219,9 @@ public class HelmDeployStateTest extends WingsBaseTest {
 
     EmbeddedUser currentUser = EmbeddedUser.builder().name("test").email("test@harness.io").build();
     workflowStandardParams.setCurrentUser(currentUser);
+    when(sweepingOutputService.find(APP_ID, outputName, null, phaseElement.getWorkflowExecutionId(),
+             phaseElement.getPhaseExecutionIdForSweepingOutput(), null))
+        .thenReturn(sweepingOutput);
 
     when(appService.get(APP_ID)).thenReturn(app);
     when(appService.getApplicationWithDefaults(APP_ID)).thenReturn(app);
@@ -242,7 +265,8 @@ public class HelmDeployStateTest extends WingsBaseTest {
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
     on(context).set("featureFlagService", featureFlagService);
-
+    on(context).set("stateExecutionInstance", stateExecutionInstance);
+    on(context).set("sweepingOutputService", sweepingOutputService);
     when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
   }
 

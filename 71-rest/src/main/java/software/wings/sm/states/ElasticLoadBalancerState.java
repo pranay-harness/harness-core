@@ -12,14 +12,12 @@ import io.harness.exception.InvalidRequestException;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ElbStateExecutionData;
 import software.wings.api.InstanceElement;
-import software.wings.api.PhaseElement;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMappingBase;
 import software.wings.beans.SettingAttribute;
-import software.wings.common.Constants;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
@@ -57,10 +55,8 @@ public class ElasticLoadBalancerState extends State {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-
     InfrastructureMapping infrastructureMapping =
-        infrastructureMappingService.get(context.getAppId(), phaseElement.getInfraMappingId());
+        infrastructureMappingService.get(context.getAppId(), context.fetchInfraMappingId());
 
     String loadBalancerName;
     String region;

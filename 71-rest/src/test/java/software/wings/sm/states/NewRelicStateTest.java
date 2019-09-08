@@ -111,7 +111,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
     when(executionContext.getAccountId()).thenReturn(accountId);
     when(executionContext.getContextElement(ContextElementType.PARAM, AbstractAnalysisStateTest.PHASE_PARAM))
         .thenReturn(phaseElement);
-    when(phaseElement.getInfraMappingId()).thenReturn(infraMappingId);
+    when(executionContext.fetchInfraMappingId()).thenReturn(infraMappingId);
     when(executionContext.getAppId()).thenReturn(appId);
     when(infraMappingService.get(anyString(), anyString()))
         .thenReturn(anAwsInfrastructureMapping().withDeploymentType(DeploymentType.KUBERNETES.name()).build());

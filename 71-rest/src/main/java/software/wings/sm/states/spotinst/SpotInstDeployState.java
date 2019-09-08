@@ -109,13 +109,13 @@ public class SpotInstDeployState extends State {
     Environment env = workflowStandardParams.getEnv();
 
     AwsAmiInfrastructureMapping awsAmiInfrastructureMapping =
-        (AwsAmiInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
+        (AwsAmiInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
 
     // fetch setupContextElement
     SpotInstSetupContextElement spotInstSetupContextElement =
         context.<SpotInstSetupContextElement>getContextElementList(ContextElementType.SPOTINST_SERVICE_SETUP)
             .stream()
-            .filter(cse -> phaseElement.getInfraMappingId().equals(cse.getInfraMappingId()))
+            .filter(cse -> context.fetchInfraMappingId().equals(cse.getInfraMappingId()))
             .findFirst()
             .orElse(SpotInstSetupContextElement.builder().build());
 

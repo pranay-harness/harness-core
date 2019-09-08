@@ -80,11 +80,10 @@ public class ApplicationManifestUtils {
       appManifestMap.put(K8sValuesLocation.ServiceOverride, applicationManifest);
     }
 
-    InfrastructureMapping infraMapping =
-        infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
+    InfrastructureMapping infraMapping = infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
     if (infraMapping == null) {
       throw new InvalidRequestException(format(
-          "Infra mapping not found for appId %s infraMappingId %s", app.getUuid(), phaseElement.getInfraMappingId()));
+          "Infra mapping not found for appId %s infraMappingId %s", app.getUuid(), context.fetchInfraMappingId()));
     }
 
     applicationManifest =

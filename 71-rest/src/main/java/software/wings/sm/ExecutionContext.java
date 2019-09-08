@@ -86,5 +86,7 @@ public interface ExecutionContext {
 
   InfraMappingElement fetchInfraMappingElement();
 
+  String fetchInfraMappingId();
+
   ServiceElement fetchServiceElement();
 }

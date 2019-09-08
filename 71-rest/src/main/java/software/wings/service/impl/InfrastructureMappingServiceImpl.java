@@ -55,6 +55,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.beans.SweepingOutput;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.delegate.task.aws.AwsElbListener;
@@ -68,6 +69,7 @@ import io.harness.exception.WingsException;
 import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.queue.Queue;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.serializer.KryoUtils;
 import io.harness.validation.Create;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -78,6 +80,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.annotation.BlueprintProcessor;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentType;
+import software.wings.api.PhaseElement;
 import software.wings.beans.AccountEvent;
 import software.wings.beans.AccountEventType;
 import software.wings.beans.AmiDeploymentType;
@@ -117,6 +120,7 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.infrastructure.Host;
+import software.wings.common.InfrastructureConstants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
@@ -139,6 +143,7 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
@@ -219,6 +224,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private ContainerMasterUrlHelper containerMasterUrlHelper;
   @Inject private ServiceTemplateHelper serviceTemplateHelper;
   @Inject private EventPublishHelper eventPublishHelper;
+  @Inject private SweepingOutputService sweepingOutputService;
 
   @Inject private Queue<PruneEvent> pruneQueue;
 
@@ -2246,5 +2252,17 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                   .addFilter(InfrastructureMappingKeys.envId, Operator.EQ, envId)
                                   .build();
     return list(pageRequest);
+  }
+
+  @Override
+  public void saveInfrastructureMappingToSweepingOutput(
+      String appId, String workflowExecutionId, PhaseElement phaseElement, String infrastructureMappingId) {
+    String phaseExecutionId = phaseElement.getPhaseExecutionIdForSweepingOutput();
+    sweepingOutputService.save(SweepingOutputServiceImpl
+                                   .prepareSweepingOutputBuilder(appId, null, workflowExecutionId, phaseExecutionId,
+                                       null, SweepingOutput.Scope.PHASE)
+                                   .name(InfrastructureConstants.PHASE_INFRA_MAPPING_KEY + phaseElement.getUuid())
+                                   .output(KryoUtils.asDeflatedBytes(infrastructureMappingId))
+                                   .build());
   }
 }

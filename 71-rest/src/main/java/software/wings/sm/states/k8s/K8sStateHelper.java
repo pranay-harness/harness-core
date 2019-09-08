@@ -442,9 +442,8 @@ public class K8sStateHelper {
   }
 
   public ContainerInfrastructureMapping getContainerInfrastructureMapping(ExecutionContext context) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     return (ContainerInfrastructureMapping) infrastructureMappingService.get(
-        context.getAppId(), phaseElement.getInfraMappingId());
+        context.getAppId(), context.fetchInfraMappingId());
   }
 
   public Environment getEnvironment(ExecutionContext context) {

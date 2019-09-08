@@ -330,7 +330,7 @@ public abstract class ContainerServiceDeploy extends State {
                     .getCommandByName(appId, serviceId, env.getUuid(), containerServiceDeploy.getCommandName())
                     .getCommand();
       InfrastructureMapping infrastructureMapping = containerServiceDeploy.infrastructureMappingService.get(
-          workflowStandardParams.getAppId(), phaseElement.getInfraMappingId());
+          workflowStandardParams.getAppId(), context.fetchInfraMappingId());
       infrastructureMappingId = infrastructureMapping.getUuid();
       settingAttribute =
           containerServiceDeploy.settingsService.get(infrastructureMapping.getComputeProviderSettingId());
@@ -342,7 +342,7 @@ public abstract class ContainerServiceDeploy extends State {
       containerElement = context.<ContainerServiceElement>getContextElementList(ContextElementType.CONTAINER_SERVICE)
                              .stream()
                              .filter(cse -> phaseElement.getDeploymentType().equals(cse.getDeploymentType().name()))
-                             .filter(cse -> phaseElement.getInfraMappingId().equals(cse.getInfraMappingId()))
+                             .filter(cse -> context.fetchInfraMappingId().equals(cse.getInfraMappingId()))
                              .findFirst()
                              .orElse(ContainerServiceElement.builder().build());
       rollbackElement = context.getContextElement(

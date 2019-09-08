@@ -694,8 +694,7 @@ public abstract class AbstractAnalysisState extends State {
   }
 
   protected String getPhaseInfraMappingId(ExecutionContext context) {
-    PhaseElement phaseElement = getPhaseElement(context);
-    return phaseElement.getInfraMappingId();
+    return context.fetchInfraMappingId();
   }
 
   protected DeploymentType getDeploymentType(ExecutionContext context) {
@@ -803,9 +802,10 @@ public abstract class AbstractAnalysisState extends State {
   }
 
   protected InfrastructureMapping getInfrastructureMapping(ExecutionContext context) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PHASE_PARAM);
-    String infraMappingId = phaseElement.getInfraMappingId();
-
+    String infraMappingId = context.fetchInfraMappingId();
+    if (context.fetchInfraMappingId() == null) {
+      return null;
+    }
     return infraMappingService.get(context.getAppId(), infraMappingId);
   }
 

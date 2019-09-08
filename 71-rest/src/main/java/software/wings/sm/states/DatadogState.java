@@ -29,12 +29,10 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import software.wings.api.DeploymentType;
-import software.wings.api.PhaseElement;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
-import software.wings.common.Constants;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -207,8 +205,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
             .build();
 
     String waitId = generateUuid();
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
+    String infrastructureMappingId = context.fetchInfraMappingId();
     DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(accountId)

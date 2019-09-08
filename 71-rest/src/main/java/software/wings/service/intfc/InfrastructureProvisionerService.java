@@ -15,6 +15,7 @@ import software.wings.beans.InfrastructureProvisionerDetails;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.aws.model.AwsCFTemplateParamsData;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.sm.ExecutionContext;
@@ -82,4 +83,7 @@ public interface InfrastructureProvisionerService extends OwnedByApplication {
   String getEntityId(String provisionerId, String envId);
 
   ManagerExecutionLogCallback getManagerExecutionCallback(String appId, String activityId, String commandUnitName);
+
+  Map<String, Object> resolveExpressions(InfrastructureDefinition infrastructureDefinition,
+      Map<String, Object> contextMap, InfrastructureProvisioner infrastructureProvisioner);
 }

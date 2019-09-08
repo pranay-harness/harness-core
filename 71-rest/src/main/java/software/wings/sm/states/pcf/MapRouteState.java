@@ -15,7 +15,6 @@ import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
-import software.wings.api.PhaseElement;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
 import software.wings.api.pcf.PcfSetupContextElement;
 import software.wings.api.pcf.PcfSwapRouteRollbackContextElement;
@@ -107,18 +106,17 @@ public class MapRouteState extends State {
   }
 
   protected ExecutionResponse executeInternal(ExecutionContext context) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Application application = appService.get(context.getAppId());
     Environment environment = workflowStandardParams.getEnv();
 
     PcfInfrastructureMapping infrastructureMapping = (PcfInfrastructureMapping) infrastructureMappingService.get(
-        application.getUuid(), phaseElement.getInfraMappingId());
+        application.getUuid(), context.fetchInfraMappingId());
 
     PcfSetupContextElement pcfSetupContextElement =
         context.<PcfSetupContextElement>getContextElementList(ContextElementType.PCF_SERVICE_SETUP)
             .stream()
-            .filter(cse -> phaseElement.getInfraMappingId().equals(cse.getInfraMappingId()))
+            .filter(cse -> context.fetchInfraMappingId().equals(cse.getInfraMappingId()))
             .findFirst()
             .orElse(PcfSetupContextElement.builder().build());
 

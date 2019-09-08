@@ -47,6 +47,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -54,9 +55,11 @@ import com.google.common.collect.Lists;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutput;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.expression.VariableResolverTracker;
+import io.harness.serializer.KryoUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -97,6 +100,7 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerDefinition;
 import software.wings.beans.container.ImageDetails;
 import software.wings.beans.container.KubernetesContainerTask;
+import software.wings.common.InfrastructureConstants;
 import software.wings.common.VariableProcessor;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.expression.ManagerExpressionEvaluator;
@@ -115,6 +119,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -130,6 +135,7 @@ import java.util.Map;
 public class KubernetesSetupTest extends WingsBaseTest {
   private static final String KUBERNETES_CONTROLLER_NAME = "kubernetes-rc-name.1";
   private static final String BASE_URL = "https://env.harness.io/";
+  private static final String PHASE_NAME = "phaseName";
 
   @Mock private SettingsService settingsService;
   @Mock private DelegateService delegateService;
@@ -152,6 +158,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private AwsCommandHelper mockAwsCommandHelper;
   @Mock private ArtifactCollectionUtils artifactCollectionUtils;
+  @Mock private SweepingOutputService sweepingOutputService;
 
   @InjectMocks private KubernetesSetup kubernetesSetup = new KubernetesSetup("name");
 
@@ -173,6 +180,8 @@ public class KubernetesSetupTest extends WingsBaseTest {
                                           .infraMappingId(INFRA_MAPPING_ID)
                                           .appId(APP_ID)
                                           .deploymentType(DeploymentType.KUBERNETES.name())
+                                          .workflowExecutionId(WORKFLOW_EXECUTION_ID)
+                                          .phaseName(PHASE_NAME)
                                           .build();
   private StateExecutionInstance stateExecutionInstance =
       aStateExecutionInstance()
@@ -224,6 +233,17 @@ public class KubernetesSetupTest extends WingsBaseTest {
       asList(ServiceVariable.builder().type(Type.TEXT).name("VAR_1").value("value1".toCharArray()).build(),
           ServiceVariable.builder().type(Type.ENCRYPTED_TEXT).name("VAR_2").value("*******".toCharArray()).build());
 
+  private String outputName = InfrastructureConstants.PHASE_INFRA_MAPPING_KEY + phaseElement.getUuid();
+  private SweepingOutput sweepingOutput = SweepingOutput.builder()
+                                              .appId(APP_ID)
+                                              .name(outputName)
+                                              .uuid(generateUuid())
+                                              .workflowExecutionId(WORKFLOW_EXECUTION_ID)
+                                              .stateExecutionId(null)
+                                              .pipelineExecutionId(null)
+                                              .output(KryoUtils.asDeflatedBytes(INFRA_MAPPING_ID))
+                                              .build();
+
   @Before
   public void setup() throws IllegalAccessException {
     when(appService.get(APP_ID)).thenReturn(app);
@@ -235,6 +255,9 @@ public class KubernetesSetupTest extends WingsBaseTest {
     when(artifactStreamServiceBindingService.listArtifactStreamIds(SERVICE_ID))
         .thenReturn(singletonList(ARTIFACT_STREAM_ID));
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(env);
+    when(sweepingOutputService.find(APP_ID, outputName, null, phaseElement.getWorkflowExecutionId(),
+             phaseElement.getPhaseExecutionIdForSweepingOutput(), null))
+        .thenReturn(sweepingOutput);
 
     ServiceCommand serviceCommand =
         aServiceCommand()
@@ -289,6 +312,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
     on(context).set("infrastructureMappingService", infrastructureMappingService);
     on(context).set("serviceResourceService", serviceResourceService);
     on(context).set("variableProcessor", variableProcessor);
+    on(context).set("sweepingOutputService", sweepingOutputService);
     on(context).set("evaluator", evaluator);
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
     when(evaluator.substitute(anyString(), anyMap(), any(VariableResolverTracker.class), anyString()))
@@ -460,6 +484,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
     ExecutionContext context = new ExecutionContextImpl(stateExecutionInstance);
     on(context).set("infrastructureMappingService", infrastructureMappingService);
     on(context).set("serviceResourceService", serviceResourceService);
+    on(context).set("sweepingOutputService", sweepingOutputService);
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
     CommandExecutionResult result =

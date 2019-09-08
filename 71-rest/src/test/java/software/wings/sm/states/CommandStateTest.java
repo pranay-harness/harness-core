@@ -280,6 +280,7 @@ public class CommandStateTest extends WingsBaseTest {
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
     when(context.getContextElementList(ContextElementType.PARAM)).thenReturn(singletonList(SIMPLE_WORKFLOW_PARAM));
     when(context.getContextElement(ContextElementType.PARAM, PHASE_PARAM)).thenReturn(PHASE_ELEMENT);
+    when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
         .thenReturn(aPhysicalInfrastructureMapping()
                         .withAppId(APP_ID)
@@ -497,7 +498,7 @@ public class CommandStateTest extends WingsBaseTest {
 
     verify(context, times(4)).getContextElement(ContextElementType.STANDARD);
     verify(context, times(1)).getContextElement(ContextElementType.INSTANCE);
-    verify(context, times(1)).getContextElement(ContextElementType.PARAM, PHASE_PARAM);
+    verify(context, times(1)).fetchInfraMappingId();
     verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
     verify(context, times(5)).renderExpression(anyString());
     verify(context, times(1)).getServiceVariables();

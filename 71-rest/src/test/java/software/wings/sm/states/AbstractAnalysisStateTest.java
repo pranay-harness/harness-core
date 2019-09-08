@@ -147,6 +147,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     Reflect.on(wsp).set("env", Environment.Builder.anEnvironment().uuid(envId).build());
     doReturn(wsp).when(context).getContextElement(ContextElementType.STANDARD);
     doReturn(appId).when(context).getAppId();
+    doReturn(infraMappingId).when(context).fetchInfraMappingId();
     doReturn(UUID.randomUUID().toString()).when(context).getWorkflowExecutionId();
 
     SplunkV2State splunkV2State = spy(new SplunkV2State("SplunkState"));
@@ -239,6 +240,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
         .when(context)
         .getContextElement(ContextElementType.PARAM, PHASE_PARAM);
     doReturn(appId).when(context).getAppId();
+    doReturn(infraMappingId).when(context).fetchInfraMappingId();
     doReturn(UUID.randomUUID().toString()).when(context).getWorkflowExecutionId();
 
     WorkflowStandardParams wsp = WorkflowStandardParams.Builder.aWorkflowStandardParams().build();
@@ -288,6 +290,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     when(context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM))
         .thenReturn(PhaseElement.builder().infraMappingId(UUID.randomUUID().toString()).build());
     when(context.getAppId()).thenReturn(appId);
+    when(context.fetchInfraMappingId()).thenReturn(infraMappingId);
 
     doReturn(params).when(context).getContextElement(ContextElementType.STANDARD);
     SplunkV2State splunkV2State = spy(new SplunkV2State("SplunkState"));
@@ -332,6 +335,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     when(context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM))
         .thenReturn(PhaseElement.builder().infraMappingId(UUID.randomUUID().toString()).build());
     when(context.getAppId()).thenReturn(appId);
+    when(context.fetchInfraMappingId()).thenReturn(infraMappingId);
 
     doReturn(params).when(context).getContextElement(ContextElementType.STANDARD);
     SplunkV2State splunkV2State = spy(new SplunkV2State("SplunkState"));

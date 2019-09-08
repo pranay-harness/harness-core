@@ -78,13 +78,11 @@ import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInstanceFilter.AwsInstanceFilterKeys;
-import software.wings.beans.BlueprintProperty;
 import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMapping.InfrastructureMappingKeys;
 import software.wings.beans.InfrastructureProvisioner;
-import software.wings.beans.NameValuePair;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -92,7 +90,6 @@ import software.wings.beans.SpotInstConfig;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.infrastructure.Host;
-import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.azure.AzureHelperService;
@@ -555,15 +552,22 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
           "No infra definition exists with given appId: [%s] infra definition id : [%s]", appId, infraDefinitionId));
     }
     if (context != null) {
-      renderExpression(infrastructureDefinition, context);
+      if (!renderExpression(infrastructureDefinition, context)) {
+        return null;
+      }
     }
+    return getInfrastructureMapping(serviceId, infrastructureDefinition);
+  }
 
+  @Override
+  public InfrastructureMapping getInfrastructureMapping(
+      String serviceId, InfrastructureDefinition infrastructureDefinition) {
     InfrastructureMapping newInfraMapping = infrastructureDefinition.getInfraMapping();
     InfrastructureMapping infraMapping =
         infrastructureDefinitionHelper.existingInfraMapping(infrastructureDefinition, serviceId);
     newInfraMapping.setServiceId(serviceId);
-    newInfraMapping.setAccountId(appService.getAccountIdByAppId(appId));
-    newInfraMapping.setInfrastructureDefinitionId(infraDefinitionId);
+    newInfraMapping.setAccountId(appService.getAccountIdByAppId(infrastructureDefinition.getAppId()));
+    newInfraMapping.setInfrastructureDefinitionId(infrastructureDefinition.getUuid());
     newInfraMapping.setAutoPopulate(false);
     newInfraMapping.setName(
         infrastructureDefinitionHelper.getNameFromInfraDefinition(infrastructureDefinition, serviceId));
@@ -585,7 +589,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     }
   }
 
-  private void renderExpression(InfrastructureDefinition infrastructureDefinition, ExecutionContext context) {
+  private boolean renderExpression(InfrastructureDefinition infrastructureDefinition, ExecutionContext context) {
     Map<String, Object> fieldMapForClass = getAllFields(infrastructureDefinition.getInfrastructure());
     Map<String, String> renderedFieldMap = new HashMap<>();
 
@@ -600,14 +604,20 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       ProvisionerAware provisionerAwareInfrastructure = (ProvisionerAware) infrastructureDefinition.getInfrastructure();
       InfrastructureProvisioner infrastructureProvisioner = infrastructureProvisionerService.get(
           infrastructureDefinition.getAppId(), infrastructureDefinition.getProvisionerId());
-
-      List<BlueprintProperty> properties = getBlueprintProperties(infrastructureDefinition);
-      addProvisionerKeys(properties, infrastructureProvisioner);
-      Map<String, Object> resolvedExpressions = infrastructureProvisionerService.resolveProperties(
-          context.asMap(), properties, Optional.empty(), Optional.empty(), true);
+      try {
+        Object evaluated = context.evaluateExpression(String.format("${%s}", infrastructureProvisioner.variableKey()));
+        if (evaluated == null) {
+          return false;
+        }
+      } catch (Exception exception) {
+        return false;
+      }
+      Map<String, Object> resolvedExpressions = infrastructureProvisionerService.resolveExpressions(
+          infrastructureDefinition, context.asMap(), infrastructureProvisioner);
       provisionerAwareInfrastructure.applyExpressions(resolvedExpressions, infrastructureDefinition.getAppId(),
           infrastructureDefinition.getEnvId(), infrastructureDefinition.getUuid());
     }
+    return true;
   }
 
   @VisibleForTesting
@@ -623,43 +633,6 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       }
     }
     return fieldValueMap;
-  }
-
-  private List<BlueprintProperty> getBlueprintProperties(InfrastructureDefinition infrastructureDefinition) {
-    List<BlueprintProperty> properties = new ArrayList<>();
-    Map<String, String> expressions =
-        ((ProvisionerAware) infrastructureDefinition.getInfrastructure()).getExpressions();
-    if (infrastructureDefinition.getInfrastructure() instanceof PhysicalInfra) {
-      BlueprintProperty hostArrayPathProperty = BlueprintProperty.builder()
-                                                    .name(PhysicalInfra.hostArrayPath)
-                                                    .value(expressions.get(PhysicalInfra.hostArrayPath))
-                                                    .build();
-      List<NameValuePair> fields =
-          expressions.entrySet()
-              .stream()
-              .filter(expression -> !expression.getKey().equals(PhysicalInfra.hostArrayPath))
-              .map(expression -> NameValuePair.builder().name(expression.getKey()).value(expression.getValue()).build())
-              .collect(Collectors.toList());
-      hostArrayPathProperty.setFields(fields);
-      properties.add(hostArrayPathProperty);
-
-    } else {
-      expressions.entrySet()
-          .stream()
-          .map(expression -> BlueprintProperty.builder().name(expression.getKey()).value(expression.getValue()).build())
-          .forEach(properties::add);
-    }
-    return properties;
-  }
-
-  private void addProvisionerKeys(
-      List<BlueprintProperty> properties, InfrastructureProvisioner infrastructureProvisioner) {
-    if (infrastructureProvisioner instanceof ShellScriptInfrastructureProvisioner) {
-      properties.forEach(property -> {
-        property.setValue(format("${%s.%s}", infrastructureProvisioner.variableKey(), property.getValue()));
-        property.getFields().forEach(field -> field.setValue(format("${%s}", field.getValue())));
-      });
-    }
   }
 
   private boolean isTemplated(String expression) {

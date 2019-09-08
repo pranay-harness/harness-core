@@ -41,14 +41,12 @@ import org.apache.commons.jexl3.JexlException.Parsing;
 import org.apache.commons.jexl3.JexlException.Property;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.api.HttpStateExecutionData.HttpStateExecutionDataBuilder;
-import software.wings.api.PhaseElement;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.TaskType;
 import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
 import software.wings.beans.template.TemplateUtils;
-import software.wings.common.Constants;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.intfc.SweepingOutputService;
@@ -325,9 +323,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     }
     String finalHeader = getFinalHeader(context);
     String finalMethod = getFinalMethod(context);
-
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
+    String infrastructureMappingId = context.fetchInfraMappingId();
 
     Integer stateTimeout = getTimeoutMillis();
     int taskSocketTimeout = socketTimeoutMillis;
