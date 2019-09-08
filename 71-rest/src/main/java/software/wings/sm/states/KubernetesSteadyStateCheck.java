@@ -25,7 +25,6 @@ import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
-import software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder;
 import software.wings.api.KubernetesSteadyStateCheckExecutionData;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
@@ -186,7 +185,7 @@ public class KubernetesSteadyStateCheck extends State {
       List<InstanceElement> instanceElements =
           instanceStatusSummaries.stream().map(InstanceStatusSummary::getInstanceElement).collect(toList());
       InstanceElementListParam instanceElementListParam =
-          InstanceElementListParamBuilder.anInstanceElementListParam().withInstanceElements(instanceElements).build();
+          InstanceElementListParam.builder().instanceElements(instanceElements).build();
 
       return ExecutionResponse.builder()
           .executionStatus(executionResponse.getExecutionStatus())

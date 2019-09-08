@@ -5,7 +5,6 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
-import static software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder.anInstanceElementListParam;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 
@@ -261,7 +260,7 @@ public abstract class ContainerServiceDeploy extends State {
                                                  .stream()
                                                  .map(InstanceStatusSummary::getInstanceElement)
                                                  .collect(toList());
-    InstanceElementListParam listParam = anInstanceElementListParam().withInstanceElements(instanceElements).build();
+    InstanceElementListParam listParam = InstanceElementListParam.builder().instanceElements(instanceElements).build();
 
     if (executionResult != null) {
       ResizeCommandUnitExecutionData resizeExecutionData =

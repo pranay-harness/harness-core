@@ -42,7 +42,6 @@ import software.wings.api.HelmDeployStateExecutionData;
 import software.wings.api.InfraMappingElement;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
-import software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Activity;
@@ -836,7 +835,7 @@ public class HelmDeployState extends State {
         List<InstanceElement> instanceElements =
             instanceStatusSummaries.stream().map(InstanceStatusSummary::getInstanceElement).collect(toList());
         InstanceElementListParam instanceElementListParam =
-            InstanceElementListParamBuilder.anInstanceElementListParam().withInstanceElements(instanceElements).build();
+            InstanceElementListParam.builder().instanceElements(instanceElements).build();
 
         executionResponseBuilder.contextElement(instanceElementListParam);
         executionResponseBuilder.notifyElement(instanceElementListParam);

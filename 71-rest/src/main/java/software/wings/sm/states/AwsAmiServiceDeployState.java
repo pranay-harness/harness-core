@@ -426,9 +426,8 @@ public class AwsAmiServiceDeployState extends State {
     ManagerExecutionLogCallback executionLogCallback =
         new ManagerExecutionLogCallback(logService, logBuilder, activity.getUuid());
 
-    InstanceElementListParam instanceElementListParam = InstanceElementListParamBuilder.anInstanceElementListParam()
-                                                            .withInstanceElements(Collections.emptyList())
-                                                            .build();
+    InstanceElementListParamBuilder instanceElementListParamBuilder =
+        InstanceElementListParam.builder().instanceElements(Collections.emptyList());
     ExecutionStatus executionStatus = amiServiceDeployResponse.getExecutionStatus();
     String errorMessage = null;
     try {
@@ -445,7 +444,7 @@ public class AwsAmiServiceDeployState extends State {
               .collect(toList());
 
       awsAmiDeployStateExecutionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
-      instanceElementListParam.setInstanceElements(instanceElements);
+      instanceElementListParamBuilder.instanceElements(instanceElements);
     } catch (Exception ex) {
       logger.error("Ami deploy step failed with error ", ex);
       executionStatus = ExecutionStatus.FAILED;
@@ -460,6 +459,8 @@ public class AwsAmiServiceDeployState extends State {
         ExecutionStatus.SUCCESS.equals(executionStatus) ? LogLevel.INFO : LogLevel.ERROR,
         ExecutionStatus.SUCCESS.equals(executionStatus) ? CommandExecutionStatus.SUCCESS
                                                         : CommandExecutionStatus.FAILURE);
+
+    final InstanceElementListParam instanceElementListParam = instanceElementListParamBuilder.build();
 
     return ExecutionResponse.builder()
         .stateExecutionData(awsAmiDeployStateExecutionData)
