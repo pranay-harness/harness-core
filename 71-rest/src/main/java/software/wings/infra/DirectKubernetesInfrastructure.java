@@ -1,7 +1,9 @@
 package software.wings.infra;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.DirectKubernetesInfrastructureMapping.Builder.aDirectKubernetesInfrastructureMapping;
 import static software.wings.beans.InfrastructureType.DIRECT_KUBERNETES;
+import static software.wings.common.InfrastructureConstants.INFRA_KUBERNETES_INFRAID_EXPRESSION;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.data.validator.Trimmed;
@@ -33,6 +35,10 @@ public class DirectKubernetesInfrastructure
         .withComputeProviderSettingId(cloudProviderId)
         .withInfraMappingType(InfrastructureMappingType.DIRECT_KUBERNETES.name())
         .build();
+  }
+
+  public String getReleaseName() {
+    return isEmpty(releaseName) ? INFRA_KUBERNETES_INFRAID_EXPRESSION : releaseName;
   }
 
   @Override
