@@ -898,8 +898,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return null;
   }
 
-  private Double getNormalizedMetricValue(String metricName, NewRelicMetricDataRecord dataRecord) {
-    switch (dataRecord.getStateType()) {
+  private Double getNormalizedMetricValue(String metricName, NewRelicMetricDataRecord dataRecord, StateType stateType) {
+    switch (stateType) {
       case APP_DYNAMICS:
         return AppDynamicsState.getNormalizedValue(metricName, dataRecord);
       case NEW_RELIC:
@@ -1200,7 +1200,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     int endMinute = (int) TimeUnit.MILLISECONDS.toMinutes(endTime);
     int startMinute = (int) TimeUnit.MILLISECONDS.toMinutes(startTime);
 
-    final Set<NewRelicMetricDataRecord> metricRecords = new HashSet<>();
+    final Set<NewRelicMetricDataRecord> metricRecords = ConcurrentHashMap.newKeySet();
     Map<Integer, Integer> startEndMap = new HashMap<>();
     int movingStart = startMinute, movingEnd = startMinute + 60;
     while (movingEnd <= endMinute) {
@@ -1314,8 +1314,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
         // fill in the metrics for this record at the correct spots
         metricMap.get(metricName)
-            .addToTimeSeriesMap(
-                metricRecord.getDataCollectionMinute(), getNormalizedMetricValue(metricName, metricRecord));
+            .addToTimeSeriesMap(metricRecord.getDataCollectionMinute(),
+                getNormalizedMetricValue(metricName, metricRecord, cvConfiguration.getStateType()));
         metricMap.get(metricName).setMetricType(getMetricType(cvConfiguration, metricName));
         if (isNotEmpty(metricRecord.getDeeplinkMetadata())) {
           if (metricRecord.getDeeplinkUrl().containsKey(metricName)) {
