@@ -34,6 +34,12 @@ public class NexusArtifactStreamYamlHandler
     } else {
       yaml.setMetadataOnly(true);
     }
+    if (isNotEmpty(bean.getExtension())) {
+      yaml.setExtension(bean.getExtension());
+    }
+    if (isNotEmpty(bean.getClassifier())) {
+      yaml.setClassifier(bean.getClassifier());
+    }
     return yaml;
   }
 
@@ -55,6 +61,8 @@ public class NexusArtifactStreamYamlHandler
     } else {
       bean.setMetadataOnly(true);
     }
+    bean.setExtension(yaml.getExtension());
+    bean.setClassifier(yaml.getClassifier());
   }
 
   @Override

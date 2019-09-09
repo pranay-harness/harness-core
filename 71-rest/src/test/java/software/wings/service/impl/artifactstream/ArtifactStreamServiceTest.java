@@ -1,5 +1,6 @@
 package software.wings.service.impl.artifactstream;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyBoolean;
@@ -424,6 +425,20 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  public void shouldAddNexusArtifactStreamWithExtensionAndClassifier() {
+    ArtifactStream savedArtifactSteam = createNexusArtifactStreamWithExtensionAndClassifier();
+    validateNexusArtifactStream(savedArtifactSteam, APP_ID);
+    NexusArtifactStream savedNexusArtifactStream = (NexusArtifactStream) savedArtifactSteam;
+    assertThat(savedNexusArtifactStream.getJobname()).isEqualTo("releases");
+    assertThat(savedNexusArtifactStream.getGroupId()).isEqualTo("io.harness.test");
+    assertThat(savedNexusArtifactStream.getArtifactPaths()).contains("todolist");
+    assertThat(savedNexusArtifactStream.getRepositoryFormat()).isEqualTo(RepositoryFormat.maven.name());
+    assertThat(savedNexusArtifactStream.getExtension()).contains("jar");
+    assertThat(savedNexusArtifactStream.getClassifier()).contains("sources");
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void shouldAddNexusArtifactStreamAtConnectorLevel() {
     ArtifactStream savedArtifactSteam = createNexusArtifactStreamAtConnectorLevel();
     validateNexusArtifactStream(savedArtifactSteam, GLOBAL_APP_ID);
@@ -466,6 +481,24 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     return savedArtifactSteam;
   }
 
+  private ArtifactStream createNexusArtifactStreamWithExtensionAndClassifier() {
+    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .appId(APP_ID)
+                                                  .settingId(SETTING_ID)
+                                                  .jobname("releases")
+                                                  .groupId("io.harness.test")
+                                                  .artifactPaths(asList("todolist"))
+                                                  .autoPopulate(true)
+                                                  .serviceId(SERVICE_ID)
+                                                  .extension("jar")
+                                                  .classifier("sources")
+                                                  .build();
+    ArtifactStream savedArtifactSteam = createArtifactStream(nexusArtifactStream);
+    assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
+    return savedArtifactSteam;
+  }
+
   private void validateNexusArtifactStream(ArtifactStream savedArtifactSteam, String appId) {
     assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
@@ -487,14 +520,21 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldUpdateNexusArtifactStream() {
     ArtifactStream savedArtifactSteam = createNexusArtifactStream();
-    updateNexusArtifactStreamAndValidate((NexusArtifactStream) savedArtifactSteam, APP_ID);
+    updateNexusArtifactStreamAndValidate((NexusArtifactStream) savedArtifactSteam, APP_ID, null, null);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
+  public void shouldUpdateNexusArtifactStreamWithExtensionAndClassifier() {
+    ArtifactStream savedArtifactSteam = createNexusArtifactStreamWithExtensionAndClassifier();
+    updateNexusArtifactStreamAndValidate((NexusArtifactStream) savedArtifactSteam, APP_ID, "war", null);
   }
 
   @Test
   @Category(UnitTests.class)
   public void shouldUpdateNexusArtifactStreamAtConnectorLevel() {
     ArtifactStream savedArtifactSteam = createNexusArtifactStreamAtConnectorLevel();
-    updateNexusArtifactStreamAndValidate((NexusArtifactStream) savedArtifactSteam, GLOBAL_APP_ID);
+    updateNexusArtifactStreamAndValidate((NexusArtifactStream) savedArtifactSteam, GLOBAL_APP_ID, null, null);
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -509,7 +549,34 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     artifactStreamService.update(savedNexusArtifactStream);
   }
 
-  private void updateNexusArtifactStreamAndValidate(NexusArtifactStream savedArtifactSteam, String appId) {
+  @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
+  public void shouldNotUpdateNexusArtifactStreamWithDifferentExtension() {
+    NexusArtifactStream savedNexusArtifactStream =
+        (NexusArtifactStream) createNexusArtifactStreamWithExtensionAndClassifier();
+    assertThat(savedNexusArtifactStream.getJobname()).isEqualTo("releases");
+    assertThat(savedNexusArtifactStream.getArtifactPaths()).contains("todolist");
+    assertThat(savedNexusArtifactStream.getRepositoryFormat()).isEqualTo(RepositoryFormat.maven.name());
+
+    savedNexusArtifactStream.setExtension("war");
+    artifactStreamService.update(savedNexusArtifactStream);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
+  public void shouldNotUpdateNexusArtifactStreamWithDifferentClassifier() {
+    NexusArtifactStream savedNexusArtifactStream =
+        (NexusArtifactStream) createNexusArtifactStreamWithExtensionAndClassifier();
+    assertThat(savedNexusArtifactStream.getJobname()).isEqualTo("releases");
+    assertThat(savedNexusArtifactStream.getArtifactPaths()).contains("todolist");
+    assertThat(savedNexusArtifactStream.getRepositoryFormat()).isEqualTo(RepositoryFormat.maven.name());
+
+    savedNexusArtifactStream.setClassifier(null);
+    artifactStreamService.update(savedNexusArtifactStream);
+  }
+
+  private void updateNexusArtifactStreamAndValidate(
+      NexusArtifactStream savedArtifactSteam, String appId, String extension, String classifier) {
     NexusArtifactStream savedNexusArtifactStream = savedArtifactSteam;
     assertThat(savedNexusArtifactStream.getJobname()).isEqualTo("releases");
     assertThat(savedNexusArtifactStream.getArtifactPaths()).contains("todolist");
@@ -519,6 +586,12 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     savedNexusArtifactStream.setJobname("snapshots");
     savedNexusArtifactStream.setGroupId("io.harness.test.changed");
     savedNexusArtifactStream.setArtifactPaths(asList("todolist-changed"));
+    if (isNotEmpty(extension)) {
+      savedNexusArtifactStream.setExtension(extension);
+    }
+    if (isNotEmpty(classifier)) {
+      savedNexusArtifactStream.setClassifier(classifier);
+    }
 
     ArtifactStream updatedArtifactStream = artifactStreamService.update(savedNexusArtifactStream);
     assertThat(updatedArtifactStream.getUuid()).isNotEmpty();
@@ -543,6 +616,13 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
       verify(yamlPushService, times(2))
           .pushYamlChangeSet(any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(),
               anyBoolean(), anyBoolean());
+    }
+    if (isNotEmpty(extension)) {
+      assertThat(updatedNexusArtifactStream.getExtension()).isEqualTo(extension);
+    }
+
+    if (isNotEmpty(classifier)) {
+      assertThat(updatedNexusArtifactStream.getClassifier()).isEqualTo(classifier);
     }
   }
 

@@ -400,19 +400,36 @@ public class NexusThreeServiceImpl {
         final String groupId = artifactStreamAttributes.getGroupId();
         final String artifactName = artifactStreamAttributes.getArtifactName();
         final String repoName = artifactStreamAttributes.getJobName();
+        final String extension = artifactStreamAttributes.getExtension();
+        final String classifier = artifactStreamAttributes.getClassifier();
 
         logger.info("Downloading version {} of groupId: {} artifactId: {} from repository {}", version, groupId,
             artifactName, repoName);
         NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
         Response<Nexus3AssetResponse> response;
         if (nexusConfig.hasCredentials()) {
-          response =
-              nexusThreeRestClient
-                  .getMavenAsset(Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())),
-                      repoName, groupId, artifactName, version)
-                  .execute();
+          if (isNotEmpty(extension) || isNotEmpty(classifier)) {
+            response = nexusThreeRestClient
+                           .getMavenAssetWithExtensionAndClassifier(
+                               Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())),
+                               repoName, groupId, artifactName, version, extension, classifier)
+                           .execute();
+          } else {
+            response =
+                nexusThreeRestClient
+                    .getMavenAsset(Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())),
+                        repoName, groupId, artifactName, version)
+                    .execute();
+          }
         } else {
-          response = nexusThreeRestClient.getMavenAsset(repoName, groupId, artifactName, version).execute();
+          if (isNotEmpty(extension) || isNotEmpty(classifier)) {
+            response = nexusThreeRestClient
+                           .getMavenAssetWithExtensionAndClassifier(
+                               repoName, groupId, artifactName, version, extension, classifier)
+                           .execute();
+          } else {
+            response = nexusThreeRestClient.getMavenAsset(repoName, groupId, artifactName, version).execute();
+          }
         }
 
         if (isSuccessful(response)) {
@@ -541,7 +558,6 @@ public class NexusThreeServiceImpl {
                            Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), repoId,
                            groupId, artifactName, continuationToken)
                        .execute();
-
       } else {
         response = nexusThreeRestClient.getArtifactVersions(repoId, groupId, artifactName, continuationToken).execute();
       }

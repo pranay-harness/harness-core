@@ -275,11 +275,12 @@ public class NexusServiceImpl implements NexusService {
 
   @Override
   public List<BuildDetails> getVersions(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repoId, String groupId, String artifactName) {
+      String repoId, String groupId, String artifactName, String extension, String classifier) {
     try {
       boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
       if (isNexusTwo) {
-        return nexusTwoService.getVersions(nexusConfig, encryptionDetails, repoId, groupId, artifactName);
+        return nexusTwoService.getVersions(
+            nexusConfig, encryptionDetails, repoId, groupId, artifactName, extension, classifier);
       } else {
         return nexusThreeService.getVersions(nexusConfig, encryptionDetails, repoId, groupId, artifactName);
       }

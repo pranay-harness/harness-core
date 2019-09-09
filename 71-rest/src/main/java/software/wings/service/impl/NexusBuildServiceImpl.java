@@ -81,7 +81,8 @@ public class NexusBuildServiceImpl implements NexusBuildService {
             artifactStreamAttributes.getJobName(), artifactStreamAttributes.getNexusPackageName());
       } else {
         return nexusService.getVersions(config, encryptionDetails, artifactStreamAttributes.getJobName(),
-            artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName());
+            artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName(),
+            artifactStreamAttributes.getExtension(), artifactStreamAttributes.getClassifier());
       }
     } else {
       if (artifactStreamAttributes.getRepositoryFormat().equals(RepositoryFormat.docker.name())) {
@@ -92,7 +93,8 @@ public class NexusBuildServiceImpl implements NexusBuildService {
             artifactStreamAttributes.getJobName(), artifactStreamAttributes.getNexusPackageName());
       } else {
         return nexusService.getVersions(config, encryptionDetails, artifactStreamAttributes.getJobName(),
-            artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName());
+            artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName(),
+            artifactStreamAttributes.getExtension(), artifactStreamAttributes.getClassifier());
       }
     }
   }

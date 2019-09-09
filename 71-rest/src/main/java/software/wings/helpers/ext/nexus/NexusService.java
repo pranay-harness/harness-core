@@ -86,10 +86,12 @@ public interface NexusService {
    * @param repoId       Repository Type
    * @param groupId      Group Id
    * @param artifactName artifact name
+   * @param extension    extension
+   * @param classifier   classifier
    * @return list of versions
    */
   List<BuildDetails> getVersions(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,
-      String groupId, String artifactName);
+      String groupId, String artifactName, String extension, String classifier);
 
   List<BuildDetails> getVersions(String repositoryFormat, NexusConfig nexusConfig,
       List<EncryptedDataDetail> encryptionDetails, String repoId, String packageName);

@@ -229,7 +229,7 @@ public class NexusTwoServiceImpl {
   }
 
   public List<BuildDetails> getVersions(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repoId, String groupId, String artifactName) throws IOException {
+      String repoId, String groupId, String artifactName, String extension, String classifier) throws IOException {
     logger.info("Retrieving versions for repoId {} groupId {} and artifactName {}", repoId, groupId, artifactName);
     String url = getIndexContentPathUrl(nexusConfig, repoId, getGroupId(groupId)) + artifactName + "/";
     final Response<IndexBrowserTreeViewResponse> response =
@@ -245,7 +245,7 @@ public class NexusTwoServiceImpl {
             for (IndexBrowserTreeNode child : children) {
               if (child.getType().equals("V")) {
                 versions.add(child.getNodeName());
-                addArtifactUrl(nexusConfig, versionToArtifactUrls, child);
+                addArtifactUrl(nexusConfig, versionToArtifactUrls, child, extension, classifier);
               }
             }
           }
@@ -380,14 +380,15 @@ public class NexusTwoServiceImpl {
         .collect(toList());
   }
 
-  private void addArtifactUrl(
-      NexusConfig nexusConfig, Map<String, String> versionToArtifactUrls, IndexBrowserTreeNode child) {
+  private void addArtifactUrl(NexusConfig nexusConfig, Map<String, String> versionToArtifactUrls,
+      IndexBrowserTreeNode child, String extension, String classifier) {
     if (child.getChildren() != null) {
       List<IndexBrowserTreeNode> artifacts = child.getChildren();
       if (artifacts != null) {
         for (IndexBrowserTreeNode artifact : artifacts) {
           if (!artifact.getNodeName().endsWith("pom")) {
-            versionToArtifactUrls.put(child.getNodeName(), constructArtifactDownloadUrl(nexusConfig, artifact));
+            versionToArtifactUrls.put(
+                child.getNodeName(), constructArtifactDownloadUrl(nexusConfig, artifact, extension, classifier));
             break;
           }
         }
@@ -421,8 +422,10 @@ public class NexusTwoServiceImpl {
       final Response<IndexBrowserTreeViewResponse> response =
           getIndexBrowserTreeViewResponseResponse(getRestClient(nexusConfig, encryptionDetails), nexusConfig, url);
       if (isSuccessful(response)) {
+        final String extension = artifactStreamAttributes.getExtension();
+        final String classifier = artifactStreamAttributes.getClassifier();
         return getUrlInputStream(nexusConfig, encryptionDetails, response.body().getData().getChildren(), delegateId,
-            taskId, accountId, notifyResponseData);
+            taskId, accountId, notifyResponseData, extension, classifier);
       }
     } else if (repositoryFormat.equals(RepositoryFormat.nuget.name())) {
       logger.info("Retrieving artifacts of NuGet Repository {}, Package {} of Version {}", repositoryName,
@@ -491,18 +494,26 @@ public class NexusTwoServiceImpl {
 
   private Pair<String, InputStream> getUrlInputStream(NexusConfig nexusConfig,
       List<EncryptedDataDetail> encryptionDetails, List<IndexBrowserTreeNode> treeNodes, String delegateId,
-      String taskId, String accountId, ListNotifyResponseData res) {
+      String taskId, String accountId, ListNotifyResponseData res, String extension, String classifier) {
     for (IndexBrowserTreeNode treeNode : treeNodes) {
       for (IndexBrowserTreeNode child : treeNode.getChildren()) {
         if (child.getType().equals("V")) {
           List<IndexBrowserTreeNode> artifacts = child.getChildren();
           if (artifacts != null) {
             for (IndexBrowserTreeNode artifact : artifacts) {
-              if (!artifact.getNodeName().endsWith("pom")) {
-                String artifactUrl = constructArtifactDownloadUrl(nexusConfig, artifact);
+              String artifactName = artifact.getNodeName();
+              if (!artifactName.endsWith("pom")) {
+                String artifactUrl = constructArtifactDownloadUrl(nexusConfig, artifact, extension, classifier);
                 logger.info("Artifact Url:" + artifactUrl);
-                downloadArtifactByUrl(nexusConfig, encryptionDetails, delegateId, taskId, accountId, res,
-                    artifact.getNodeName(), artifactUrl);
+                if (isNotEmpty(extension)) {
+                  int index = artifactName.lastIndexOf('.');
+                  // to avoid running into ArrayIndexOutOfBoundsException
+                  if (index >= 0 && index < artifactName.length() - 1) {
+                    artifactName = artifactName.replace(artifactName.substring(index + 1), extension);
+                  }
+                }
+                downloadArtifactByUrl(
+                    nexusConfig, encryptionDetails, delegateId, taskId, accountId, res, artifactName, artifactUrl);
               }
             }
           }
@@ -513,7 +524,8 @@ public class NexusTwoServiceImpl {
   }
 
   @NotNull
-  private String constructArtifactDownloadUrl(NexusConfig nexusConfig, IndexBrowserTreeNode artifact) {
+  private String constructArtifactDownloadUrl(
+      NexusConfig nexusConfig, IndexBrowserTreeNode artifact, String extension, String classifier) {
     StringBuilder artifactUrl = new StringBuilder(getBaseUrl(nexusConfig));
     artifactUrl.append("service/local/artifact/maven/content?r=")
         .append(artifact.getRepositoryId())
@@ -523,14 +535,26 @@ public class NexusTwoServiceImpl {
         .append(artifact.getArtifactId())
         .append("&v=")
         .append(artifact.getVersion());
-    if (isNotEmpty(artifact.getPackaging())) {
-      artifactUrl.append("&p=").append(artifact.getPackaging());
-    }
-    if (isNotEmpty(artifact.getExtension())) {
-      artifactUrl.append("&e=").append(artifact.getExtension());
-    }
-    if (isNotEmpty(artifact.getClassifier())) {
-      artifactUrl.append("&c=").append(artifact.getClassifier());
+    if (isNotEmpty(extension) || isNotEmpty(classifier)) {
+      if (isNotEmpty(artifact.getPackaging())) { // currently we are honoring the packaging specified in pom.xml
+        artifactUrl.append("&p=").append(artifact.getPackaging());
+      }
+      if (isNotEmpty(extension)) {
+        artifactUrl.append("&e=").append(extension);
+      }
+      if (isNotEmpty(classifier)) {
+        artifactUrl.append("&c=").append(classifier);
+      }
+    } else {
+      if (isNotEmpty(artifact.getPackaging())) {
+        artifactUrl.append("&p=").append(artifact.getPackaging());
+      }
+      if (isNotEmpty(artifact.getExtension())) {
+        artifactUrl.append("&e=").append(artifact.getExtension());
+      }
+      if (isNotEmpty(artifact.getClassifier())) {
+        artifactUrl.append("&c=").append(artifact.getClassifier());
+      }
     }
     return artifactUrl.toString();
   }
