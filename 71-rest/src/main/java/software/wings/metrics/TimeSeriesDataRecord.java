@@ -88,7 +88,7 @@ import java.util.Set;
 public class TimeSeriesDataRecord implements GoogleDataStoreAware, UuidAware, CreatedAtAware {
   @Id private String uuid;
 
-  @NotEmpty private StateType stateType;
+  private StateType stateType; // could be null for older values
 
   private String workflowId;
 
