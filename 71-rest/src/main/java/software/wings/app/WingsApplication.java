@@ -575,14 +575,13 @@ public class WingsApplication extends Application<MainConfiguration> {
     final ArtifactCollectionHandler artifactCollectionHandler = new ArtifactCollectionHandler();
     injector.injectMembers(artifactCollectionHandler);
 
-    final Semaphore artifactCollectionSemaphore = new Semaphore(25);
     PersistenceIterator artifactCollectionIterator = MongoPersistenceIterator.<ArtifactStream>builder()
                                                          .clazz(ArtifactStream.class)
                                                          .fieldName(ArtifactStreamKeys.nextIteration)
                                                          .targetInterval(ofMinutes(1))
                                                          .acceptableDelay(ofSeconds(30))
                                                          .executorService(artifactCollectionExecutor)
-                                                         .semaphore(artifactCollectionSemaphore)
+                                                         .semaphore(new Semaphore(25))
                                                          .handler(artifactCollectionHandler)
                                                          .regular(true)
                                                          .redistribute(true)
@@ -600,9 +599,9 @@ public class WingsApplication extends Application<MainConfiguration> {
             .clazz(ArtifactStream.class)
             .fieldName(ArtifactStreamKeys.nextCleanupIteration)
             .targetInterval(ofHours(2))
-            .acceptableDelay(ofSeconds(30))
+            .acceptableDelay(ofMinutes(15))
             .executorService(artifactCollectionExecutor)
-            .semaphore(artifactCollectionSemaphore)
+            .semaphore(new Semaphore(5))
             .handler(artifactCleanupHandler)
             .filterExpander(
                 query -> query.filter(ArtifactStreamKeys.artifactStreamType, ArtifactStreamType.DOCKER.name()))
@@ -612,7 +611,7 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     injector.injectMembers(artifactCleanupIterator);
     artifactCollectionExecutor.scheduleAtFixedRate(
-        () -> artifactCleanupIterator.process(ProcessMode.PUMP), 0, 10, TimeUnit.SECONDS);
+        () -> artifactCleanupIterator.process(ProcessMode.PUMP), 0, 5, TimeUnit.MINUTES);
 
     InstanceSyncHandler.InstanceSyncExecutor.registerIterators(injector);
     ApprovalPollingHandler.ApprovalPollingExecutor.registerIterators(injector);

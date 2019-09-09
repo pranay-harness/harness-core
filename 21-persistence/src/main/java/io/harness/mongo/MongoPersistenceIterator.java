@@ -98,9 +98,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
 
         if (entity != null) {
           // Make sure that if the object is updated we reset the scheduler for it
-          if (regular) {
-            ((PersistentRegularIterable) entity).updateNextIteration(fieldName, null);
-          } else {
+          if (!regular) {
             final Long nextIteration = entity.obtainNextIteration(fieldName);
 
             final List<Long> nextIterations =
@@ -183,11 +181,16 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
         entity.notify();
       }
     } catch (InterruptedException e) {
+      logger.info("Working on entity {}.{} was interrupted", clazz.getCanonicalName(), entity.getUuid());
       Thread.currentThread().interrupt();
       return;
     }
 
     final Long nextIteration = entity.obtainNextIteration(fieldName);
+    if (regular) {
+      ((PersistentRegularIterable) entity).updateNextIteration(fieldName, null);
+    }
+
     long delay = nextIteration == null ? 0 : currentTimeMillis() - nextIteration;
     if (delay < acceptableDelay.toMillis()) {
       logger.info("Working on entity {}.{} with delay {}", clazz.getCanonicalName(), entity.getUuid(), delay);
