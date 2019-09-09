@@ -120,4 +120,18 @@ public interface NexusThreeRestClient {
   Call<Nexus3AssetResponse> getMavenAsset(@Query("repository") String repository,
       @Query("maven.groupId") String groupId, @Query("maven.artifactId") String artifactId,
       @Query("version") String version);
+
+  @Headers("Accept: application/json")
+  @GET("/service/rest/v1/search/assets")
+  Call<Nexus3AssetResponse> getMavenAssetWithExtensionAndClassifier(@Header("Authorization") String authorization,
+      @Query("repository") String repository, @Query("maven.groupId") String groupId,
+      @Query("maven.artifactId") String artifactId, @Query("version") String version,
+      @Query("maven.extension") String extension, @Query("maven.classifier") String classifier);
+
+  @Headers("Accept: application/json")
+  @GET("/service/rest/v1/search/assets")
+  Call<Nexus3AssetResponse> getMavenAssetWithExtensionAndClassifier(@Query("repository") String repository,
+      @Query("maven.groupId") String groupId, @Query("maven.artifactId") String artifactId,
+      @Query("version") String version, @Query("maven.extension") String extension,
+      @Query("maven.classifier") String classifier);
 }

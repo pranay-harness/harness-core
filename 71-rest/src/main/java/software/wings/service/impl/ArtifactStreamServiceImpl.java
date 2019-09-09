@@ -422,6 +422,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     validateRepositoryType(artifactStream, existingArtifactStream);
     // for nexus
     validateRepositoryFormat(artifactStream, existingArtifactStream);
+    validateExtensionAndClassifier(artifactStream, existingArtifactStream);
     setMetadataOnly(artifactStream);
 
     boolean versionChanged = false;
@@ -522,6 +523,26 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                  .getRepositoryFormat()
                  .equals(((NexusArtifactStream) existingArtifactStream).getRepositoryFormat())) {
           throw new InvalidRequestException("Repository Format cannot be updated", USER);
+        }
+      }
+    }
+  }
+
+  private void validateExtensionAndClassifier(ArtifactStream artifactStream, ArtifactStream existingArtifactStream) {
+    if (artifactStream != null && existingArtifactStream != null) {
+      if (artifactStream instanceof NexusArtifactStream) {
+        String extension = ((NexusArtifactStream) artifactStream).getExtension();
+        String existingExtension = ((NexusArtifactStream) existingArtifactStream).getExtension();
+        if ((extension == null && existingExtension != null) || (extension != null && existingExtension == null)
+            || (extension != null && !extension.equals(existingExtension))) {
+          throw new InvalidRequestException("Extension cannot be updated", USER);
+        }
+
+        String classifier = ((NexusArtifactStream) artifactStream).getClassifier();
+        String existingClassifier = ((NexusArtifactStream) existingArtifactStream).getClassifier();
+        if ((classifier == null && existingClassifier != null) || (classifier != null && existingClassifier == null)
+            || (classifier != null && !classifier.equals(existingClassifier))) {
+          throw new InvalidRequestException("Classifier cannot be updated", USER);
         }
       }
     }

@@ -57,6 +57,8 @@ public class ArtifactStreamAttributes implements ExecutionCapabilityDemander {
   private String buildNoPath;
   private Map<String, String> artifactAttributes;
   private boolean customAttributeMappingNeeded;
+  private String extension;
+  private String classifier;
 
   // These fields are used only during artifact collection and cleanup.
   private boolean isCollection;

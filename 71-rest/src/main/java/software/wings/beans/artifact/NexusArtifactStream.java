@@ -39,6 +39,8 @@ public class NexusArtifactStream extends ArtifactStream {
   private String dockerRegistryUrl;
   private String packageName; // field for nuget and npm
   private String repositoryFormat;
+  private String extension;
+  private String classifier;
 
   public NexusArtifactStream() {
     super(NEXUS.name());
@@ -49,7 +51,8 @@ public class NexusArtifactStream extends ArtifactStream {
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
       String name, boolean autoPopulate, String serviceId, boolean metadataOnly, String jobname, String groupId,
       String imageName, List<String> artifactPaths, String dockerPort, String dockerRegistryUrl, String repositoryType,
-      String accountId, Set<String> keywords, String packageName, String repositoryFormat, boolean sample) {
+      String accountId, Set<String> keywords, String packageName, String repositoryFormat, String extension,
+      String classifier, boolean sample) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, NEXUS.name(), sourceName,
         settingId, name, autoPopulate, serviceId, metadataOnly, accountId, keywords, sample);
     this.jobname = jobname;
@@ -61,6 +64,8 @@ public class NexusArtifactStream extends ArtifactStream {
     this.repositoryType = repositoryType;
     this.packageName = packageName;
     this.repositoryFormat = repositoryFormat;
+    this.extension = extension;
+    this.classifier = classifier;
   }
 
   // Do not remove this unless UI changes to start using groupId
@@ -168,6 +173,8 @@ public class NexusArtifactStream extends ArtifactStream {
         .repositoryType(getRepositoryType())
         .nexusPackageName(packageName)
         .repositoryFormat(getRepositoryFormat())
+        .extension(extension)
+        .classifier(classifier)
         .build();
   }
 
@@ -193,6 +200,8 @@ public class NexusArtifactStream extends ArtifactStream {
     private boolean metadataOnly;
     private String packageName;
     private String repositoryFormat;
+    private String extension;
+    private String classifier;
 
     public void setRepositoryFormat(String repositoryFormat) {
       if (repositoryFormat != null) {
@@ -211,7 +220,7 @@ public class NexusArtifactStream extends ArtifactStream {
     @lombok.Builder
     public Yaml(String harnessApiVersion, String serverName, boolean metadataOnly, String repositoryName,
         String groupId, List<String> artifactPaths, String imageName, String dockerRegistryUrl, String repositoryType,
-        String packageName, String repositoryFormat) {
+        String packageName, String repositoryFormat, String extension, String classifier) {
       super(NEXUS.name(), harnessApiVersion, serverName);
       this.repositoryName = repositoryName;
       this.groupId = groupId;
@@ -222,6 +231,8 @@ public class NexusArtifactStream extends ArtifactStream {
       this.metadataOnly = metadataOnly;
       this.packageName = packageName;
       this.repositoryFormat = repositoryFormat;
+      this.extension = extension;
+      this.classifier = classifier;
     }
   }
 }
