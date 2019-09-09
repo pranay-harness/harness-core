@@ -126,7 +126,7 @@ public class TriggerDeploymentExecution {
 
         return triggerPipelineDeployment(deploymentTrigger, triggerExecution, executionArgs);
 
-      case ORCHESTRATION:
+      case WORKFLOW:
         WorkflowAction workflowAction = (WorkflowAction) deploymentTrigger.getAction();
         executionArgs.setOrchestrationId(workflowAction.getWorkflowId());
         executionArgs.setWorkflowType(ORCHESTRATION);
@@ -424,7 +424,7 @@ public class TriggerDeploymentExecution {
                           .collect(Collectors.toMap(Variable::getName, Variable::getValue));
         }
         break;
-      case ORCHESTRATION:
+      case WORKFLOW:
         WorkflowAction workflowAction = (WorkflowAction) deploymentTrigger.getAction();
         if (workflowAction.getTriggerArgs().getVariables() != null) {
           variables = workflowAction.getTriggerArgs()

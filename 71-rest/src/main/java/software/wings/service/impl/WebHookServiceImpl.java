@@ -308,7 +308,7 @@ public class WebHookServiceImpl implements WebHookService {
   }
 
   private WorkflowType getWorkflowType(ActionType actionType) {
-    if (actionType.equals(ActionType.ORCHESTRATION)) {
+    if (actionType.equals(ActionType.WORKFLOW)) {
       return ORCHESTRATION;
     } else if (actionType.equals(ActionType.PIPELINE)) {
       return PIPELINE;
@@ -318,7 +318,7 @@ public class WebHookServiceImpl implements WebHookService {
   }
 
   private String getWorkflowId(Action action) {
-    if (action.getActionType().equals(ActionType.ORCHESTRATION)) {
+    if (action.getActionType().equals(ActionType.WORKFLOW)) {
       return ((WorkflowAction) action).getWorkflowId();
     } else if (action.getActionType().equals(ActionType.PIPELINE)) {
       return ((PipelineAction) action).getPipelineId();

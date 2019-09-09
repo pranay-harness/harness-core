@@ -11,7 +11,7 @@ import org.mongodb.morphia.annotations.Transient;
 @JsonTypeName("WorkflowAction")
 public class WorkflowAction implements Action {
   @NotEmpty private String workflowId;
-  @NotEmpty private ActionType actionType = ActionType.ORCHESTRATION;
+  @NotEmpty private ActionType actionType = ActionType.WORKFLOW;
   private TriggerArgs triggerArgs;
   @Transient private String workflowName;
 }

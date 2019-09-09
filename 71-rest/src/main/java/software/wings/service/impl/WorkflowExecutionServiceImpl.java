@@ -1273,7 +1273,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     logger.info("Created workflow execution {}", workflowExecution.getUuid());
 
     //    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, app.getAccountId())) {
-    //      if (workflowExecution.getWorkflowType().equals(ORCHESTRATION)) {
+    //      if (workflowExecution.getWorkflowType().equals(WORKFLOW)) {
     //        multiArtifactWorkflowExecutionServiceHelper.saveArtifactsToSweepingOutput(
     //            executionArgs, workflowExecution, workflowExecution.getWorkflowId(), app.getAccountId());
     //      }

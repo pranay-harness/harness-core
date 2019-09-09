@@ -33,6 +33,8 @@ public interface DeploymentTriggerService
 
   DeploymentTrigger get(@NotEmpty String appId, @NotEmpty String triggerId);
 
+  DeploymentTrigger getWithoutRead(@NotEmpty String appId, @NotEmpty String triggerId);
+
   Map<String, WebhookSource.WebhookEventInfo> fetchWebhookChildEvents(String webhookSource);
 
   Map<String, String> fetchCustomExpressionList(String webhookSource);

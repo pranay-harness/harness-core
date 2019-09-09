@@ -167,7 +167,7 @@ public class DeploymentTriggerResource {
   @Timed
   @ExceptionMetered
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("triggerId") String triggerId) {
-    DeploymentTrigger trigger = deploymentTriggerService.get(appId, triggerId);
+    DeploymentTrigger trigger = deploymentTriggerService.getWithoutRead(appId, triggerId);
     if (trigger != null) {
       triggerAuthHandler.authorize(trigger, true);
       deploymentTriggerService.delete(appId, triggerId);

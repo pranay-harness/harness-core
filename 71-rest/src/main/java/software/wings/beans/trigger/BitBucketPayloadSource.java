@@ -13,6 +13,6 @@ import javax.validation.constraints.NotNull;
 @Builder
 public class BitBucketPayloadSource implements PayloadSource {
   @NotNull private Type type = Type.BITBUCKET;
-  private List<BitBucketEventType> bitBucketEvents;
+  public List<BitBucketEventType> bitBucketEvents;
   private List<CustomPayloadExpression> customPayloadExpressions;
 }

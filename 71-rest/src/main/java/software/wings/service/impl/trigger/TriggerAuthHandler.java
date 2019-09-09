@@ -65,7 +65,7 @@ public class TriggerAuthHandler {
           triggerVariables = pipelineAction.getTriggerArgs().getVariables();
         }
         break;
-      case ORCHESTRATION:
+      case WORKFLOW:
         WorkflowAction workflowAction = (WorkflowAction) trigger.getAction();
         String workflowId = workflowAction.getWorkflowId();
         try {

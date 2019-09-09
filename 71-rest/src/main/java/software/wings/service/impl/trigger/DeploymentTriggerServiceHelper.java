@@ -74,7 +74,7 @@ public class DeploymentTriggerServiceHelper {
       }
 
       validateTriggerArgs(trigger.getAppId(), pipelineAction.getTriggerArgs());
-    } else if (action.getActionType() == ActionType.ORCHESTRATION) {
+    } else if (action.getActionType() == ActionType.WORKFLOW) {
       WorkflowAction workflowAction = (WorkflowAction) action;
       try {
         workflowService.fetchWorkflowName(trigger.getAppId(), workflowAction.getWorkflowId());
@@ -107,7 +107,7 @@ public class DeploymentTriggerServiceHelper {
                                  .build())
                 .build());
         break;
-      case ORCHESTRATION:
+      case WORKFLOW:
         WorkflowAction workflowAction = (WorkflowAction) deploymentTrigger.getAction();
         TriggerArgs wfTriggerArgs = workflowAction.getTriggerArgs();
         List<TriggerArtifactVariable> wfTriggerArtifactVariables =
@@ -136,7 +136,7 @@ public class DeploymentTriggerServiceHelper {
       Cron cron = parser.parse(PREFIX + cronExpression);
       return CronDescriptor.instance(I18nMessages.DEFAULT_LOCALE).describe(cron);
     } catch (Exception e) {
-      throw new TriggerException(e.getMessage(), null);
+      throw new TriggerException(e.getMessage(), USER);
     }
   }
 

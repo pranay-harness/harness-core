@@ -13,9 +13,9 @@ public enum WebhookSource {
   GITLAB,
   BITBUCKET;
 
-  public enum EventType {}
+  public interface WebhookEvent {}
 
-  public enum GitHubEventType {
+  public enum GitHubEventType implements WebhookEvent {
     PULL_REQUEST("Pull Request", "pull_request", WebhookEventType.PULL_REQUEST),
     PUSH("Push", "push", WebhookEventType.PUSH),
     PING("Ping", "ping", WebhookEventType.PING),
@@ -53,7 +53,7 @@ public enum WebhookSource {
     }
   }
 
-  public enum BitBucketEventType {
+  public enum BitBucketEventType implements WebhookEvent {
     PING("Ping", "ping", WebhookEventType.PING),
     DIAGNOSTICS_PING("Diagnostics Ping", "diagnostics:ping", WebhookEventType.PING),
     ALL("All", "all", WebhookEventType.ANY),
@@ -112,7 +112,7 @@ public enum WebhookSource {
     }
   }
 
-  public enum GitLabEventType {
+  public enum GitLabEventType implements WebhookEvent {
     PULL_REQUEST("Pull Request", "Merge Request Hook", WebhookEventType.PULL_REQUEST),
     PUSH("Push", "Push Hook", WebhookEventType.PUSH),
     PING("Ping", "ping", WebhookEventType.PING),

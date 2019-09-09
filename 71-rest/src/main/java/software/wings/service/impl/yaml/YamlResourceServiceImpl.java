@@ -27,6 +27,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
 import software.wings.beans.HarnessTag;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
@@ -48,6 +49,7 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.entityinterface.ApplicationAccess;
+import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
@@ -61,6 +63,7 @@ import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -71,6 +74,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.yaml.YamlArtifactStreamService;
 import software.wings.service.intfc.yaml.YamlGitService;
@@ -84,6 +88,7 @@ import software.wings.yaml.BaseYaml;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
 import software.wings.yaml.command.CommandYaml;
+import software.wings.yaml.trigger.DeploymentTriggerYaml;
 import software.wings.yaml.workflow.WorkflowYaml;
 
 import java.util.List;
@@ -112,6 +117,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private HarnessTagService harnessTagService;
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
+  @Inject private FeatureFlagService featureFlagService;
+  @Inject private DeploymentTriggerService deploymentTriggerService;
 
   /**
    * Find by app, service and service command ids.
@@ -251,15 +258,27 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   public RestResponse<YamlPayload> getTrigger(String appId, String triggerId) {
     String accountId = appService.getAccountIdByAppId(appId);
     Validator.notNullCheck("No account found for appId:" + appId, accountId);
-    Trigger trigger = triggerService.get(appId, triggerId);
 
-    Trigger.Yaml triggerYaml = (Trigger.Yaml) yamlHandlerFactory
-                                   .getYamlHandler(YamlType.TRIGGER)
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+      DeploymentTrigger deploymentTrigger = deploymentTriggerService.get(appId, triggerId);
 
-                                   .toYaml(trigger, appId);
+      DeploymentTriggerYaml yaml =
+          (DeploymentTriggerYaml) yamlHandlerFactory.getYamlHandler(YamlType.DEPLOYMENT_TRIGGER)
+              .toYaml(deploymentTrigger, appId);
 
-    return YamlHelper.getYamlRestResponse(
-        yamlGitSyncService, trigger.getUuid(), accountId, triggerYaml, trigger.getName() + YAML_EXTENSION);
+      return YamlHelper.getYamlRestResponse(yamlGitSyncService, deploymentTrigger.getUuid(), accountId, yaml,
+          deploymentTrigger.getName() + YAML_EXTENSION);
+    } else {
+      Trigger trigger = triggerService.get(appId, triggerId);
+
+      Trigger.Yaml triggerYaml = (Trigger.Yaml) yamlHandlerFactory
+                                     .getYamlHandler(YamlType.TRIGGER)
+
+                                     .toYaml(trigger, appId);
+
+      return YamlHelper.getYamlRestResponse(
+          yamlGitSyncService, trigger.getUuid(), accountId, triggerYaml, trigger.getName() + YAML_EXTENSION);
+    }
   }
 
   /**

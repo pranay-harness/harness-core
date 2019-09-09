@@ -7,10 +7,10 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "actionType", include = EXISTING_PROPERTY)
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = WorkflowAction.class, name = "ORCHESTRATION")
+  @JsonSubTypes.Type(value = WorkflowAction.class, name = "WORKFLOW")
   , @JsonSubTypes.Type(value = PipelineAction.class, name = "PIPELINE")
 })
 public interface Action {
-  enum ActionType { PIPELINE, ORCHESTRATION }
+  enum ActionType { PIPELINE, WORKFLOW }
   ActionType getActionType();
 }

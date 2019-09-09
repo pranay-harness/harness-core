@@ -85,6 +85,7 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.defaults.Defaults;
+import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
@@ -116,6 +117,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
 import software.wings.service.intfc.yaml.YamlArtifactStreamService;
@@ -184,6 +186,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private ExecutorService executorService;
   @Inject private ApplicationManifestService applicationManifestService;
   @Inject private TriggerService triggerService;
+  @Inject private DeploymentTriggerService deploymentTriggerService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
   @Override
@@ -307,6 +310,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             yaml = yamlResourceService.getWorkflow(appId, entityId).getResource().getYaml();
             break;
           case "Trigger":
+            appId = ((AppLevelYamlNode) dn).getAppId();
+            yaml = yamlResourceService.getTrigger(appId, entityId).getResource().getYaml();
+            break;
+          case "DeploymentTrigger":
             appId = ((AppLevelYamlNode) dn).getAppId();
             yaml = yamlResourceService.getTrigger(appId, entityId).getResource().getYaml();
             break;
@@ -715,6 +722,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       futureResponseList.add(executorService.submit(() -> doTriggers(app, appPath.clone())));
     }
 
+    if (isTriggerRefactored(accountId)) {
+      futureResponseList.add(executorService.submit(() -> doDeploymentTriggers(app, appPath.clone())));
+    }
+
     //      completionService.submit(() -> doTriggers(app, appPath.clone()));
 
     // collect results to this map so we can rebuild the correct order
@@ -745,6 +756,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     if (isTriggerYamlEnabled(accountId)) {
       appFolder.addChild(map.get(TRIGGER_FOLDER));
     }
+    if (isTriggerRefactored(accountId)) {
+      appFolder.addChild(map.get(TRIGGER_FOLDER));
+    }
     //--------------------------------------
 
     return applicationsFolder;
@@ -752,6 +766,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   private boolean isTriggerYamlEnabled(String accountId) {
     return featureFlagService.isEnabled(FeatureName.TRIGGER_YAML, accountId);
+  }
+
+  private boolean isTriggerRefactored(String accountId) {
+    return featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId);
   }
 
   private FolderNode doApplicationsYamlTree(String accountId, DirectoryPath directoryPath, boolean applyPermissions,
@@ -1451,9 +1469,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   private FolderNode doTriggers(Application app, DirectoryPath directoryPath) {
     String accountId = app.getAccountId();
+
     FolderNode triggersFolder = new FolderNode(
         accountId, TRIGGER_FOLDER, Trigger.class, directoryPath.add(TRIGGER_FOLDER), app.getUuid(), yamlGitSyncService);
-
     PageRequest<Trigger> pageRequest = aPageRequest().addFilter("appId", Operator.EQ, app.getAppId()).build();
     List<Trigger> triggers = triggerService.list(pageRequest, false, null).getResponse();
 
@@ -1464,6 +1482,27 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         triggersFolder.addChild(
             new AppLevelYamlNode(accountId, trigger.getUuid(), trigger.getAppId(), triggerYamlFileName, Trigger.class,
                 triggerPath.add(triggerYamlFileName), yamlGitSyncService, Type.TRIGGER));
+      }
+    }
+
+    return triggersFolder;
+  }
+
+  private FolderNode doDeploymentTriggers(Application app, DirectoryPath directoryPath) {
+    String accountId = app.getAccountId();
+
+    FolderNode triggersFolder = new FolderNode(accountId, TRIGGER_FOLDER, DeploymentTrigger.class,
+        directoryPath.add(TRIGGER_FOLDER), app.getUuid(), yamlGitSyncService);
+    PageRequest<DeploymentTrigger> pageRequest = aPageRequest().addFilter("appId", Operator.EQ, app.getAppId()).build();
+    List<DeploymentTrigger> triggers = deploymentTriggerService.list(pageRequest).getResponse();
+
+    if (triggers != null) {
+      for (DeploymentTrigger trigger : triggers) {
+        DirectoryPath triggerPath = directoryPath.clone();
+        String triggerYamlFileName = trigger.getName() + YAML_EXTENSION;
+        triggersFolder.addChild(new AppLevelYamlNode(accountId, trigger.getUuid(), trigger.getAppId(),
+            triggerYamlFileName, DeploymentTrigger.class, triggerPath.add(triggerYamlFileName), yamlGitSyncService,
+            Type.DEPLOYMENT_TRIGGER));
       }
     }
 
@@ -1966,6 +2005,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   @Override
+  public String getRootPathByDeploymentTrigger(DeploymentTrigger trigger) {
+    Application app = appService.get(trigger.getAppId());
+    return getRootPathByApp(app) + PATH_DELIMITER + TRIGGER_FOLDER;
+  }
+
+  @Override
   public String getRootPathByPipeline(Pipeline pipeline) {
     Application app = appService.get(pipeline.getAppId());
     return getRootPathByApp(app) + PATH_DELIMITER + PIPELINES_FOLDER;
@@ -2160,6 +2205,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       return getRootPathByCVConfiguration((CVConfiguration) entity);
     } else if (entity instanceof Trigger) {
       return getRootPathByTrigger((Trigger) entity);
+    } else if (entity instanceof DeploymentTrigger) {
+      return getRootPathByDeploymentTrigger((DeploymentTrigger) entity);
     } else if (entity instanceof HarnessTag) {
       return getRootPathForTags();
     }

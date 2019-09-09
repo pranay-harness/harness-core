@@ -202,6 +202,8 @@ public enum EntityType {
 
   TRIGGER,
 
+  DEPLOYMENT_TRIGGER,
+
   ROLE,
 
   TEMPLATE,

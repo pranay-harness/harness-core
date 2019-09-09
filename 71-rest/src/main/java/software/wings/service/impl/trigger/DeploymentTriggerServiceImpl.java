@@ -78,8 +78,8 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
     validateTrigger(trigger, null);
     setConditionTypeInTrigger(trigger);
     String uuid = Validator.duplicateCheck(() -> wingsPersistence.save(trigger), "name", trigger.getName());
+    actionsAfterTriggerSave(trigger);
     return get(trigger.getAppId(), uuid);
-    // Todo Uncomment once YAML support is added  actionsAfterTriggerSave(deploymentTrigger);
   }
 
   @Override
@@ -101,15 +101,15 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
     validateTrigger(trigger, existingTrigger);
     setConditionTypeInTrigger(trigger);
     String uuid = Validator.duplicateCheck(() -> wingsPersistence.save(trigger), "name", trigger.getName());
+    actionsAfterTriggerUpdate(existingTrigger, trigger);
     return get(trigger.getAppId(), uuid);
-    // Todo Uncomment once YAML support is added actionsAfterTriggerUpdate(existingTrigger, deploymentTrigger);
   }
 
   @Override
   public void delete(String appId, String triggerId) {
     DeploymentTrigger deploymentTrigger = get(appId, triggerId);
     notNullCheck("Trigger not exist ", triggerId, USER);
-    // Todo Uncomment once YAML support is added  actionsAfterTriggerDelete(deploymentTrigger);
+    actionsAfterTriggerDelete(deploymentTrigger);
     boolean answer = wingsPersistence.delete(DeploymentTrigger.class, triggerId);
 
     if (answer) {
@@ -124,6 +124,13 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
     TriggerProcessor triggerProcessor = obtainTriggerProcessor(deploymentTrigger);
     triggerProcessor.transformTriggerConditionRead(deploymentTrigger);
     triggerProcessor.transformTriggerActionRead(deploymentTrigger);
+    return deploymentTrigger;
+  }
+
+  @Override
+  public DeploymentTrigger getWithoutRead(String appId, String triggerId) {
+    DeploymentTrigger deploymentTrigger = wingsPersistence.getWithAppId(DeploymentTrigger.class, appId, triggerId);
+    notNullCheck("Trigger not exist ", triggerId, USER);
     return deploymentTrigger;
   }
 
@@ -332,16 +339,16 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
     throw new InvalidRequestException("Invalid Trigger Condition for trigger " + condition.getType().name(), USER);
   }
 
-  void actionsAfterTriggerRead(DeploymentTrigger existingTrigger, DeploymentTrigger updatedTrigger) {
-    String accountId = appService.getAccountIdByAppId(updatedTrigger.getAppId());
+  // void actionsAfterTriggerRead(DeploymentTrigger existingTrigger, DeploymentTrigger updatedTrigger) {
+  //  String accountId = appService.getAccountIdByAppId(updatedTrigger.getAppId());
+  //
+  //  boolean isRename = !existingTrigger.getName().equals(updatedTrigger.getName());
+  //  yamlPushService.pushYamlChangeSet(accountId, existingTrigger, updatedTrigger, Event.Type.UPDATE, false, isRename);
+  //}
 
-    boolean isRename = !existingTrigger.getName().equals(updatedTrigger.getName());
-    yamlPushService.pushYamlChangeSet(accountId, existingTrigger, updatedTrigger, Event.Type.UPDATE, false, isRename);
-  }
-
-  void actionsAfterTriggerDelete(DeploymentTrigger savedTrigger) {
+  private void actionsAfterTriggerDelete(DeploymentTrigger savedTrigger) {
     String accountId = appService.getAccountIdByAppId(savedTrigger.getAppId());
-    yamlPushService.pushYamlChangeSet(accountId, null, savedTrigger, Event.Type.DELETE, false, false);
+    yamlPushService.pushYamlChangeSet(accountId, savedTrigger, null, Event.Type.DELETE, false, false);
   }
 
   void actionsAfterTriggerSave(DeploymentTrigger savedTrigger) {

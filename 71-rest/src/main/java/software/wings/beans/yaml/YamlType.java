@@ -73,13 +73,21 @@ import software.wings.beans.container.PortMapping;
 import software.wings.beans.container.StorageConfiguration;
 import software.wings.beans.defaults.Defaults;
 import software.wings.beans.trigger.ArtifactSelection;
+import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.Trigger;
 import software.wings.infra.CloudProviderInfrastructure;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.verification.CVConfiguration;
+import software.wings.yaml.trigger.ActionYaml;
+import software.wings.yaml.trigger.ConditionYaml;
+import software.wings.yaml.trigger.PayloadSourceYaml;
+import software.wings.yaml.trigger.TriggerArtifactSelectionValueYaml;
+import software.wings.yaml.trigger.TriggerArtifactVariableYaml;
 import software.wings.yaml.trigger.TriggerConditionYaml;
+import software.wings.yaml.trigger.TriggerVariableYaml;
+import software.wings.yaml.trigger.WebhookEventYaml;
 
 /**
  * @author rktummala on 10/17/17
@@ -236,6 +244,11 @@ public enum YamlType {
   TRIGGER(EntityType.TRIGGER.name(),
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, TRIGGER_FOLDER, YAML_EXPRESSION),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, TRIGGER_FOLDER, ANY), Trigger.class),
+  DEPLOYMENT_TRIGGER(EntityType.DEPLOYMENT_TRIGGER.name(),
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, TRIGGER_FOLDER, YAML_EXPRESSION),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, TRIGGER_FOLDER, ANY),
+      DeploymentTrigger.class),
+
   PIPELINE(EntityType.PIPELINE.name(),
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, PIPELINES_FOLDER, YAML_EXPRESSION),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, PIPELINES_FOLDER, ANY),
@@ -276,6 +289,13 @@ public enum YamlType {
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, ANY), Defaults.class),
   USAGE_RESTRICTIONS(ObjectType.USAGE_RESTRICTIONS, "", "", UsageRestrictions.class),
   TRIGGER_CONDITION(ObjectType.TRIGGER_CONDITION, "", "", TriggerConditionYaml.class),
+  CONDITION(ObjectType.CONDITION, "", "", ConditionYaml.class),
+  PAYLOAD_SOURCE(ObjectType.PAYLOAD_SOURCE, "", "", PayloadSourceYaml.class),
+  ACTION(ObjectType.ACTION, "", "", ActionYaml.class),
+  TRIGGER_ARTIFACT_VARIABLE(ObjectType.TRIGGER_ARTIFACT_VARIABLE, "", "", TriggerArtifactVariableYaml.class),
+  WEBHOOK_EVENT(ObjectType.WEBHOOK_EVENT, "", "", WebhookEventYaml.class),
+  TRIGGER_VARIABLE(ObjectType.TRIGGER_VARIABLE, "", "", TriggerVariableYaml.class),
+  TRIGGER_ARTIFACT_VALUE(ObjectType.TRIGGER_ARTIFACT_VALUE, "", "", TriggerArtifactSelectionValueYaml.class),
   ARTIFACT_SELECTION(ObjectType.ARTIFACT_SELECTION, "", "", ArtifactSelection.Yaml.class),
   TAG(EntityType.TAG.name(), generatePath(PATH_DELIMITER, false, SETUP_FOLDER, TAGS_YAML),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, ANY), HarnessTag.class),
