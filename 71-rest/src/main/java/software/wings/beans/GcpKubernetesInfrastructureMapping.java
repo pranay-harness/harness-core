@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.lang.String.format;
+import static software.wings.common.InfrastructureConstants.INFRA_KUBERNETES_INFRAID_EXPRESSION;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
@@ -29,7 +30,6 @@ import java.util.Optional;
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "GcpKubernetesInfrastructureMappingKeys")
 public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureMapping {
-  private static final String INFRA_KUBERNETES_INFRAID_EXPRESSION = "${infra.kubernetes.infraId}";
   @Attributes(title = "Namespace") @Blueprint private String namespace;
   @Trimmed private String releaseName = INFRA_KUBERNETES_INFRAID_EXPRESSION;
   private String masterUrl;

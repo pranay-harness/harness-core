@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.InfraDefinition;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -27,14 +28,20 @@ public class GoogleKubernetesEngineYamlHandler
   @Override
   public Yaml toYaml(GoogleKubernetesEngine bean, String appId) {
     SettingAttribute cloudProvider = settingsService.get(bean.getCloudProviderId());
-    return Yaml.builder()
-        .clusterName(bean.getClusterName())
-        .namespace(bean.getNamespace())
-        .releaseName(bean.getReleaseName())
-        .cloudProviderName(cloudProvider.getName())
-        .type(InfrastructureType.GCP_KUBERNETES_ENGINE)
-        .expressions(bean.getExpressions())
-        .build();
+    Yaml yaml = Yaml.builder()
+                    .clusterName(bean.getClusterName())
+                    .namespace(bean.getNamespace())
+                    .releaseName(bean.getReleaseName())
+                    .cloudProviderName(cloudProvider.getName())
+                    .type(InfrastructureType.GCP_KUBERNETES_ENGINE)
+                    .expressions(bean.getExpressions())
+                    .build();
+
+    // To prevent default release name from showing in yaml when provisioner
+    if (isNotEmpty(bean.getExpressions())) {
+      yaml.setReleaseName(null);
+    }
+    return yaml;
   }
 
   @Override

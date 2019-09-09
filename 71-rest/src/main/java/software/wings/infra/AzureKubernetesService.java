@@ -1,7 +1,9 @@
 package software.wings.infra;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.AzureKubernetesInfrastructureMapping.Builder.anAzureKubernetesInfrastructureMapping;
 import static software.wings.beans.InfrastructureType.AZURE_KUBERNETES;
+import static software.wings.common.InfrastructureConstants.INFRA_KUBERNETES_INFRAID_EXPRESSION;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
@@ -37,6 +39,10 @@ public class AzureKubernetesService
         .withResourceGroup(resourceGroup)
         .withInfraMappingType(InfrastructureMappingType.AZURE_KUBERNETES.name())
         .build();
+  }
+
+  public String getReleaseName() {
+    return isEmpty(releaseName) ? INFRA_KUBERNETES_INFRAID_EXPRESSION : releaseName;
   }
 
   @Override

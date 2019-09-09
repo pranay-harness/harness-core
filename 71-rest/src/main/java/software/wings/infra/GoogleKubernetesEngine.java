@@ -1,8 +1,10 @@
 package software.wings.infra;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.lang.String.format;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.beans.InfrastructureType.GCP_KUBERNETES_ENGINE;
+import static software.wings.common.InfrastructureConstants.INFRA_KUBERNETES_INFRAID_EXPRESSION;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -44,6 +46,10 @@ public class GoogleKubernetesEngine
         .withReleaseName(releaseName)
         .withInfraMappingType(InfrastructureMappingType.GCP_KUBERNETES.name())
         .build();
+  }
+
+  public String getReleaseName() {
+    return isEmpty(releaseName) ? INFRA_KUBERNETES_INFRAID_EXPRESSION : releaseName;
   }
 
   @Override
