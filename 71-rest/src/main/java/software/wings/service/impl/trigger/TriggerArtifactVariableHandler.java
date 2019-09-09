@@ -99,7 +99,7 @@ public class TriggerArtifactVariableHandler {
             });
           }
           break;
-        case ORCHESTRATION:
+        case WORKFLOW:
           WorkflowAction workflowAction = (WorkflowAction) trigger.getAction();
           Workflow workflow = workflowService.readWorkflow(appId, workflowAction.getWorkflowId());
           Map<String, String> variables = null;

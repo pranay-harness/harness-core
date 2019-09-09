@@ -30,6 +30,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.HarnessTagLink;
+import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.beans.trigger.Condition.Type;
 
@@ -61,7 +62,7 @@ import javax.validation.constraints.NotNull;
 @HarnessExportableEntity
 @FieldNameConstants(innerTypeName = "DeploymentTriggerKeys")
 public class DeploymentTrigger implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
-                                          UpdatedByAware, PersistentCronIterable, TagAware {
+                                          UpdatedByAware, PersistentCronIterable, TagAware, ApplicationAccess {
   @Id @NotNull(groups = {DeploymentTrigger.class}) @SchemaIgnore private String uuid;
   @NotNull protected String appId;
   @Indexed protected String accountId;

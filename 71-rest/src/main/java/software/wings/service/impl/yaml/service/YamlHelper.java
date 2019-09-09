@@ -32,6 +32,7 @@ import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
@@ -51,6 +52,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.verification.CVConfiguration;
@@ -81,6 +83,7 @@ public class YamlHelper {
   @Inject ConfigService configService;
   @Inject FeatureFlagService featureFlagService;
   @Inject TriggerService triggerService;
+  @Inject DeploymentTriggerService deploymentTriggerService;
 
   public SettingAttribute getCloudProvider(String accountId, String yamlFilePath) {
     return getSettingAttribute(accountId, YamlType.CLOUD_PROVIDER, yamlFilePath);
@@ -160,6 +163,22 @@ public class YamlHelper {
         aPageRequest().addFilter("appId", Operator.EQ, appId).addFilter("name", Operator.EQ, triggerName).build();
 
     Optional<Trigger> trigger = triggerService.list(pageRequest, false, null).getResponse().stream().findFirst();
+    if (!trigger.isPresent()) {
+      return null;
+    }
+
+    return trigger.get();
+  }
+
+  public DeploymentTrigger getDeploymentTrigger(String appId, String yamlFilePath) {
+    String triggerName =
+        extractEntityNameFromYamlPath(YamlType.DEPLOYMENT_TRIGGER.getPathExpression(), yamlFilePath, PATH_DELIMITER);
+    notNullCheck("Trigger name null in the given yaml file: " + yamlFilePath, triggerName);
+
+    PageRequest<DeploymentTrigger> pageRequest =
+        aPageRequest().addFilter("appId", Operator.EQ, appId).addFilter("name", Operator.EQ, triggerName).build();
+
+    Optional<DeploymentTrigger> trigger = deploymentTriggerService.list(pageRequest).getResponse().stream().findFirst();
     if (!trigger.isPresent()) {
       return null;
     }

@@ -148,7 +148,7 @@ public class WebhookTriggerDeploymentExecution {
             return triggerArtifactVariables;
           }
           break;
-        case ORCHESTRATION:
+        case WORKFLOW:
           WorkflowAction workflowAction = (WorkflowAction) deploymentTrigger.getAction();
           if (workflowAction.getTriggerArgs() != null
               && workflowAction.getTriggerArgs().getTriggerArtifactVariables() != null) {
@@ -192,7 +192,7 @@ public class WebhookTriggerDeploymentExecution {
           variables = updateWFVariables(pipelineAction.getTriggerArgs().getVariables(), payLoadMap);
         }
         break;
-      case ORCHESTRATION:
+      case WORKFLOW:
         WorkflowAction workflowAction = (WorkflowAction) deploymentTrigger.getAction();
         if (workflowAction.getTriggerArgs().getVariables() != null) {
           variables = updateWFVariables(workflowAction.getTriggerArgs().getVariables(), payLoadMap);

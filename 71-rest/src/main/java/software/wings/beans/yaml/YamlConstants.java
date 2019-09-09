@@ -29,6 +29,8 @@ public interface YamlConstants {
   String CV_CONFIG_FOLDER = "Service Verification";
   String WORKFLOWS_FOLDER = "Workflows";
   String TRIGGER_FOLDER = "Triggers";
+  String NEW_TRIGGER_FOLDER = "NewTriggers";
+
   String PIPELINES_FOLDER = "Pipelines";
 
   String CLOUD_PROVIDERS_FOLDER = "Cloud Providers";

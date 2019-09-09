@@ -233,13 +233,13 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
   }
 
   private Map<String, String> convertToTriggerBeanVariables(
-      String accountId, String appId, Workflow workflow, List<TriggerVariable> TriggerVariable) {
+      String accountId, String appId, Workflow workflow, List<TriggerVariable> triggerVariable) {
     Map<String, String> workflowVariables = Maps.newLinkedHashMap();
 
-    String envId = resolveEnvironmentId(TriggerVariable, appId, workflowVariables, workflow);
+    String envId = resolveEnvironmentId(triggerVariable, appId, workflowVariables, workflow);
 
-    if (isNotEmpty(TriggerVariable)) {
-      TriggerVariable.forEach((TriggerVariable variable) -> {
+    if (isNotEmpty(triggerVariable)) {
+      triggerVariable.forEach((TriggerVariable variable) -> {
         String entityType = variable.getEntityType();
         String variableName = variable.getName();
         String variableValue = variable.getValue();

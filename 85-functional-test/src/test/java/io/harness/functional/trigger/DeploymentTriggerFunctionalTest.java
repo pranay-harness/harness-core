@@ -1,7 +1,7 @@
 package io.harness.functional.trigger;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.beans.trigger.Action.ActionType.ORCHESTRATION;
+import static software.wings.beans.trigger.Action.ActionType.WORKFLOW;
 
 import com.google.inject.Inject;
 
@@ -100,7 +100,7 @@ public class DeploymentTriggerFunctionalTest extends AbstractFunctionalTest {
     assertThat(savedTrigger).isNotNull();
     assertThat(savedTrigger.getUuid()).isNotEmpty();
     assertThat(workflowAction.getWorkflowId()).isEqualTo(buildWorkflow.getUuid());
-    assertThat(workflowAction.getActionType()).isEqualTo(ORCHESTRATION);
+    assertThat(workflowAction.getActionType()).isEqualTo(WORKFLOW);
 
     // Get the saved trigger
     savedTriggerResponse = Setup.portal()
@@ -115,7 +115,7 @@ public class DeploymentTriggerFunctionalTest extends AbstractFunctionalTest {
     assertThat(savedTrigger).isNotNull();
     assertThat(savedTrigger.getUuid()).isNotEmpty();
     assertThat(workflowAction.getWorkflowId()).isEqualTo(buildWorkflow.getUuid());
-    assertThat(workflowAction.getActionType()).isEqualTo(ORCHESTRATION);
+    assertThat(workflowAction.getActionType()).isEqualTo(WORKFLOW);
 
     // Delete the trigger
     Setup.portal()

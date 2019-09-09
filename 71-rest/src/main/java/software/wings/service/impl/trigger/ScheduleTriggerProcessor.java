@@ -62,7 +62,7 @@ public class ScheduleTriggerProcessor implements TriggerProcessor {
       ScheduledTriggerExecutionParams scheduledTriggerExecutionParams =
           (ScheduledTriggerExecutionParams) triggerExecutionParams;
 
-      DeploymentTrigger trigger = scheduledTriggerExecutionParams.trigger;
+      DeploymentTrigger trigger = scheduledTriggerExecutionParams.getTrigger();
       if (trigger.isTriggerDisabled()) {
         logger.warn("Trigger is disabled for appId {}, Trigger Id {} and name {} with the scheduled fire time ",
             trigger.getAppId(), trigger.getUuid(), trigger.getName());
@@ -73,7 +73,7 @@ public class ScheduleTriggerProcessor implements TriggerProcessor {
 
       ScheduledCondition scheduledCondition = (ScheduledCondition) (trigger.getCondition());
       if (scheduledCondition.isOnNewArtifactOnly()) {
-        if (trigger.getAction() != null && trigger.getAction().getActionType().equals(ActionType.ORCHESTRATION)) {
+        if (trigger.getAction() != null && trigger.getAction().getActionType().equals(ActionType.WORKFLOW)) {
           List<ArtifactVariable> artifactVariables =
               triggerArtifactVariableHandler.fetchArtifactVariablesForExecution(trigger.getAppId(), trigger, null);
 

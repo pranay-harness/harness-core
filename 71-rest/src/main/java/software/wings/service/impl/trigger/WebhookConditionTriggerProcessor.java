@@ -138,7 +138,7 @@ public class WebhookConditionTriggerProcessor implements TriggerProcessor {
           }
 
           break;
-        case ORCHESTRATION:
+        case WORKFLOW:
           WorkflowAction workflowAction = (WorkflowAction) deploymentTrigger.getAction();
           if (workflowAction.getTriggerArgs().getVariables() != null) {
             updateWFVariables(workflowAction.getTriggerArgs().getVariables(), parameters);
