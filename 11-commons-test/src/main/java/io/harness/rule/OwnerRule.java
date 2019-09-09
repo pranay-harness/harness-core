@@ -34,6 +34,7 @@ public class OwnerRule extends RepeatRule {
   public static final String HARSH = "harsh.jain@harness.io";
   public static final String HITESH = "hitesh.aringa@harness.io";
   public static final String JATIN = "jatin@harness.io";
+  public static final String JUHI = "juhi.agrawal@harness.io";
   public static final String MARK = "mark.lu@harness.io";
   public static final String MEENAKSHI = "meenakshi.raikwar@harness.io";
   public static final String NATARAJA = "nataraja@harness.io";
@@ -74,6 +75,7 @@ public class OwnerRule extends RepeatRule {
                                            .add(HARSH)
                                            .add(HITESH)
                                            .add(JATIN)
+                                           .add(JUHI)
                                            .add(MARK)
                                            .add(MEENAKSHI)
                                            .add(NATARAJA)
