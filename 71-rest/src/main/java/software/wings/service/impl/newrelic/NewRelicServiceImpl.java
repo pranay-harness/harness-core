@@ -16,6 +16,7 @@ import com.google.inject.Singleton;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.VerificationOperationException;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -88,6 +89,19 @@ public class NewRelicServiceImpl implements NewRelicService {
   @Override
   public void validateAPMConfig(SettingAttribute settingAttribute, APMValidateCollectorConfig config) {
     try {
+      if (isNotEmpty(config.getUrl()) && isNotEmpty(config.getBaseUrl())) {
+        if (!config.getBaseUrl().endsWith("/")) {
+          throw new VerificationOperationException(
+              ErrorCode.APM_CONFIGURATION_ERROR, "The Base URL must end with a / (forward slash)");
+        }
+        if (config.getUrl().charAt(0) == '/') {
+          throw new VerificationOperationException(
+              ErrorCode.APM_CONFIGURATION_ERROR, "The validation path must not begin with a / (forward slash)");
+        }
+      } else {
+        throw new VerificationOperationException(
+            ErrorCode.APM_CONFIGURATION_ERROR, "The Base URL and validation path must not be empty");
+      }
       SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                             .accountId(settingAttribute.getAccountId())
                                             .appId(GLOBAL_APP_ID)
