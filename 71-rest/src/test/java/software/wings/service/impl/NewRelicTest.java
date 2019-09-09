@@ -9,6 +9,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.exception.WingsException;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.scm.ScmSecret;
@@ -19,6 +20,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
+import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.FeatureName;
 import software.wings.beans.NewRelicConfig;
 import software.wings.service.impl.newrelic.NewRelicApplication;
@@ -26,6 +28,7 @@ import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
 import software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicMetric;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
+import software.wings.service.intfc.newrelic.NewRelicService;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -43,6 +46,7 @@ import java.util.UUID;
 public class NewRelicTest extends WingsBaseTest {
   @Inject private NewRelicDelegateService newRelicDelegateService;
   @Inject private ScmSecret scmSecret;
+  @Inject private NewRelicService newRelicService;
   private NewRelicConfig newRelicConfig;
   private String accountId;
   static final String NEW_RELIC_DATE_FORMAT = "YYYY-MM-dd'T'HH:mm:ssZ";
@@ -146,5 +150,23 @@ public class NewRelicTest extends WingsBaseTest {
     assertThat(specialCharBatches).hasSize(1);
     assertThat(specialCharBatches.get(0).contains("WebTransaction/special char %?name=s1&value=v1")).isTrue();
     assertThat(specialCharBatches.get(0).contains("WebTransaction/special char %?name=s2&value=v2")).isTrue();
+  }
+
+  @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
+  public void testUrlNotEndingWithSlash() {
+    APMValidateCollectorConfig config =
+        APMValidateCollectorConfig.builder().url("thisisagoodtestURL").baseUrl("Thisbase/url/doesnot/endwith").build();
+    newRelicService.validateAPMConfig(null, config);
+  }
+
+  @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
+  public void testUrlBeginingWithSlash() {
+    APMValidateCollectorConfig config = APMValidateCollectorConfig.builder()
+                                            .url("/thisisagoodtestURL")
+                                            .baseUrl("Thisbase/url/doesnot/endwith/")
+                                            .build();
+    newRelicService.validateAPMConfig(null, config);
   }
 }
