@@ -13,6 +13,7 @@ import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServi
 import static software.wings.common.Constants.PHASE_NAME_PREFIX;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_PREFIX;
 import static software.wings.sm.ExecutionEventAdvice.ExecutionEventAdviceBuilder.anExecutionEventAdvice;
+import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 import static software.wings.sm.ExecutionInterruptType.ABORT_ALL;
 import static software.wings.sm.ExecutionInterruptType.ROLLBACK;
 import static software.wings.sm.StateType.FORK;
@@ -323,6 +324,17 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         return anExecutionEventAdvice().withExecutionInterruptType(ExecutionInterruptType.IGNORE).build();
       }
       case END_EXECUTION: {
+        return anExecutionEventAdvice().withExecutionInterruptType(ExecutionInterruptType.END_EXECUTION).build();
+      }
+
+      case ABORT_WORKFLOW_EXECUTION: {
+        ExecutionInterrupt executionInterrupt =
+            anExecutionInterrupt()
+                .withExecutionInterruptType(ExecutionInterruptType.ABORT_ALL)
+                .withExecutionUuid(executionEvent.getContext().getWorkflowExecutionId())
+                .withAppId(executionEvent.getContext().getAppId())
+                .build();
+        workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
         return anExecutionEventAdvice().withExecutionInterruptType(ExecutionInterruptType.END_EXECUTION).build();
       }
 
