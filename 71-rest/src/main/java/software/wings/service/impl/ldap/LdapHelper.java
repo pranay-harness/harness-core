@@ -345,8 +345,8 @@ public class LdapHelper {
           logger.info("LDAP auth failed with response: identifier:[{}],authenticationResultCode:[{}],resultCode:[{}]",
               identifier, response.getAuthenticationResultCode(), response.getResultCode().name());
         } else if (response.getResultCode() != null) {
-          logger.info("LDAP auth failed with response: identifier:[{}],authenticationResultCode:[{}],resultCode:[{}]",
-              identifier, response.getAuthenticationResultCode(), response.getResultCode().name());
+          logger.info("LDAP auth failed with response: identifier:[{}],resultCode:[{}]", identifier,
+              response.getResultCode().name());
         } else if (response.getAuthenticationResultCode() != null) {
           logger.info("LDAP auth failed with response: identifier:[{}],authenticationResultCode:[{}]", identifier,
               response.getAuthenticationResultCode());
