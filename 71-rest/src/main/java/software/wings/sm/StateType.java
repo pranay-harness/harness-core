@@ -276,7 +276,7 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * dyna trace state type.
    */
-  DYNA_TRACE(DynatraceState.class, VERIFICATIONS, 5, asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  DYNA_TRACE(DynatraceState.class, VERIFICATIONS, 5, "Dynatrace", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * Prometheus state type.
