@@ -1,7 +1,9 @@
 package migrations.all;
 
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 
 import com.google.inject.Inject;
 
@@ -11,6 +13,8 @@ import com.mongodb.DBCollection;
 import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
@@ -23,7 +27,6 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactKeys;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
-import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.EnvFilter;
 import software.wings.security.GenericEntityFilter;
@@ -42,22 +45,29 @@ public class MigrateServiceLevelArtifactStreamsToConnectorLevel implements Migra
   private static final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w"; // TODO: change this to reflect correct account
   private static final String SEPARATOR = "_";
   private static final String CUSTOM_ARTIFACT_SERVER = "Custom Artifact Server";
-  private static int COUNTER = 1;
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private SettingsService settingsService;
 
   @Override
   public void migrate() {
-    logger.info("Migration Started - move service level artifact streams to connector level for account " + ACCOUNT_ID);
+    logger.info("Migration Started - move service level artifact streams to connector level");
     Account account = wingsPersistence.get(Account.class, ACCOUNT_ID);
     if (account == null) {
       logger.info("Specified account not found. Not migrating artifact streams from services to connectors.");
       return;
     }
+
+    migrateAccount(account.getUuid());
+    logger.info("Migration Completed - move service level artifact streams to connector level");
+  }
+
+  private void migrateAccount(String accountId) {
+    logger.info("Processing account: " + accountId);
+
     // Prefetch applications for this account
     List<Application> applications = wingsPersistence.createQuery(Application.class)
-                                         .filter(ApplicationKeys.accountId, ACCOUNT_ID)
+                                         .filter(ApplicationKeys.accountId, accountId)
                                          .project(ApplicationKeys.name, true)
                                          .asList();
     Map<String, String> appIdToNameMap = new HashMap<>();
@@ -81,11 +91,10 @@ public class MigrateServiceLevelArtifactStreamsToConnectorLevel implements Migra
     boolean found = false;
     try (HIterator<SettingAttribute> settingAttributeHIterator =
              new HIterator<>(wingsPersistence.createQuery(SettingAttribute.class)
-                                 .filter(SettingAttributeKeys.accountId, ACCOUNT_ID)
+                                 .filter(SettingAttributeKeys.accountId, accountId)
                                  .fetch())) {
-      while (settingAttributeHIterator.hasNext()) {
-        SettingAttribute settingAttribute = settingAttributeHIterator.next();
-
+      for (SettingAttribute settingAttribute : settingAttributeHIterator) {
+        Set<String> addedNames = new HashSet<>();
         // For each SettingId find all the artifact Steams
         logger.info("Finding all artifact streams associated with settingId {}", settingAttribute.getUuid());
         try (HIterator<ArtifactStream> artifactStreamsIterator =
@@ -94,17 +103,14 @@ public class MigrateServiceLevelArtifactStreamsToConnectorLevel implements Migra
                                      .field(ArtifactStreamKeys.appId)
                                      .notEqual(GLOBAL_APP_ID)
                                      .fetch())) {
-          while (artifactStreamsIterator.hasNext()) {
+          for (ArtifactStream artifactStream : artifactStreamsIterator) {
+            if (isBlank(artifactStream.getServiceId())
+                || !serviceIdToNameMap.containsKey(artifactStream.getServiceId())) {
+              // Skip if serviceId is not valid
+              continue;
+            }
             found = true;
-            ArtifactStream artifactStream = artifactStreamsIterator.next();
-            // Resolve the duplicate names
-            // Name : settingname_appname_service_name_artifactStreamName_type
-            // Make APP_ID as GLOBAL_APP_ID
-            // serviceId can be settingId
-            // bulk update
-            String name = settingAttribute.getName() + SEPARATOR + appIdToNameMap.get(artifactStream.getAppId())
-                + SEPARATOR + serviceIdToNameMap.get(artifactStream.getServiceId()) + SEPARATOR + "AS" + COUNTER++
-                + SEPARATOR + artifactStream.getArtifactStreamType();
+            String name = getArtifactStreamName(appIdToNameMap, serviceIdToNameMap, artifactStream, addedNames);
             bulkWriteOperation
                 .find(wingsPersistence.createQuery(ArtifactStream.class)
                           .filter(ArtifactStreamKeys.uuid, artifactStream.getUuid())
@@ -120,61 +126,66 @@ public class MigrateServiceLevelArtifactStreamsToConnectorLevel implements Migra
           bulkWriteOperation.execute();
           logger.info("Updated: " + updated + " artifact streams for setting id: " + settingAttribute.getUuid());
           updated = 0;
-          COUNTER = 1;
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
           found = false;
         }
       }
     }
+
     // Create Custom Artifact Source folder and migrate all CUSTOM ARTIFACT STREAMS
-    migrateCustomArtifactStreamsToAccountLevel(appIdToNameMap, serviceIdToNameMap, bulkWriteOperation);
-    logger.info(
-        "Migration Completed - move service level artifact streams to connector level for account " + ACCOUNT_ID);
+    migrateCustomArtifactStreamsToAccountLevel(accountId, appIdToNameMap, serviceIdToNameMap, bulkWriteOperation);
+    logger.info("Done processing account: " + accountId);
   }
 
-  private void migrateCustomArtifactStreamsToAccountLevel(Map<String, String> appIdToNameMap,
+  private void migrateCustomArtifactStreamsToAccountLevel(String accountId, Map<String, String> appIdToNameMap,
       Map<String, String> serviceIdToNameMap, BulkWriteOperation bulkWriteOperation) {
-    logger.info("Inside migrateCustomArtifactStreamsToAccountLevel for account: " + ACCOUNT_ID);
-    GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType("ALL").build();
-    Set<String> prodFilterTypes = new HashSet<>();
-    prodFilterTypes.add("PROD");
-    EnvFilter prodEnvFilter = EnvFilter.builder().filterTypes(prodFilterTypes).build();
-    Set<String> nonProdFilterTypes = new HashSet<>();
-    nonProdFilterTypes.add("NON_PROD");
-    EnvFilter nonProdEnvFilter = EnvFilter.builder().filterTypes(nonProdFilterTypes).build();
-    Set<UsageRestrictions.AppEnvRestriction> appEnvRestrictions = new HashSet<>();
-    appEnvRestrictions.add(
-        UsageRestrictions.AppEnvRestriction.builder().appFilter(appFilter).envFilter(prodEnvFilter).build());
-    appEnvRestrictions.add(
-        UsageRestrictions.AppEnvRestriction.builder().appFilter(appFilter).envFilter(nonProdEnvFilter).build());
-    SettingAttribute settingAttribute =
-        SettingAttribute.Builder.aSettingAttribute()
-            .withName(CUSTOM_ARTIFACT_SERVER)
-            .withValue(CustomArtifactServerConfig.builder().accountId(ACCOUNT_ID).build())
-            .withAccountId(ACCOUNT_ID)
-            .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
-            .withUsageRestrictions(UsageRestrictions.builder().appEnvRestrictions(appEnvRestrictions).build())
-            .build();
+    logger.info("Inside migrateCustomArtifactStreamsToAccountLevel for account: " + accountId);
+    Pair<SettingAttribute, String> settingAttributeStringPair = getCustomArtifactServerName(accountId);
+    SettingAttribute savedSettingAttribute = settingAttributeStringPair.getLeft();
+    if (savedSettingAttribute == null) {
+      GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType("ALL").build();
+      Set<String> prodFilterTypes = new HashSet<>();
+      prodFilterTypes.add("PROD");
+      EnvFilter prodEnvFilter = EnvFilter.builder().filterTypes(prodFilterTypes).build();
+      Set<String> nonProdFilterTypes = new HashSet<>();
+      nonProdFilterTypes.add("NON_PROD");
+      EnvFilter nonProdEnvFilter = EnvFilter.builder().filterTypes(nonProdFilterTypes).build();
+      Set<UsageRestrictions.AppEnvRestriction> appEnvRestrictions = new HashSet<>();
+      appEnvRestrictions.add(
+          UsageRestrictions.AppEnvRestriction.builder().appFilter(appFilter).envFilter(prodEnvFilter).build());
+      appEnvRestrictions.add(
+          UsageRestrictions.AppEnvRestriction.builder().appFilter(appFilter).envFilter(nonProdEnvFilter).build());
+      SettingAttribute settingAttribute =
+          SettingAttribute.Builder.aSettingAttribute()
+              .withName(settingAttributeStringPair.getRight())
+              .withValue(CustomArtifactServerConfig.builder().accountId(accountId).build())
+              .withAccountId(accountId)
+              .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
+              .withUsageRestrictions(UsageRestrictions.builder().appEnvRestrictions(appEnvRestrictions).build())
+              .build();
 
-    logger.info("Creating Custom Artifact Server folder for account: " + ACCOUNT_ID);
-    SettingAttribute savedSettingAttribute = settingsService.save(settingAttribute);
+      logger.info("Creating Custom Artifact Server folder for account: " + accountId);
+      savedSettingAttribute = settingsService.save(settingAttribute);
+    }
 
     logger.info("Finding all artifact streams of type CUSTOM");
     int updated = 0;
     boolean found = false;
+    Set<String> addedNames = new HashSet<>();
     try (HIterator<ArtifactStream> customArtifactStreamsIterator =
              new HIterator<>(wingsPersistence.createQuery(ArtifactStream.class)
-                                 .filter(ArtifactStreamKeys.artifactStreamType, ArtifactStreamType.CUSTOM.name())
+                                 .filter(ArtifactStreamKeys.artifactStreamType, CUSTOM.name())
                                  .field(ArtifactStreamKeys.appId)
                                  .notEqual(GLOBAL_APP_ID)
-                                 .filter(ArtifactStreamKeys.accountId, ACCOUNT_ID)
+                                 .filter(ArtifactStreamKeys.accountId, accountId)
                                  .fetch())) {
-      while (customArtifactStreamsIterator.hasNext()) {
+      for (ArtifactStream artifactStream : customArtifactStreamsIterator) {
+        if (isBlank(artifactStream.getServiceId()) || !serviceIdToNameMap.containsKey(artifactStream.getServiceId())) {
+          // Skip if serviceId is not valid
+          continue;
+        }
         found = true;
-        ArtifactStream artifactStream = customArtifactStreamsIterator.next();
-        String name = settingAttribute.getName() + SEPARATOR + appIdToNameMap.get(artifactStream.getAppId()) + SEPARATOR
-            + serviceIdToNameMap.get(artifactStream.getServiceId()) + SEPARATOR + "AS" + COUNTER++ + SEPARATOR
-            + artifactStream.getArtifactStreamType();
+        String name = getArtifactStreamName(appIdToNameMap, serviceIdToNameMap, artifactStream, addedNames);
         bulkWriteOperation
             .find(wingsPersistence.createQuery(ArtifactStream.class)
                       .filter(ArtifactStreamKeys.uuid, artifactStream.getUuid())
@@ -186,22 +197,21 @@ public class MigrateServiceLevelArtifactStreamsToConnectorLevel implements Migra
                     .append(ArtifactStreamKeys.serviceId, savedSettingAttribute.getUuid())));
         updated++;
 
-        // update all artifacts belonging to this artifact stream - set settingId to the new connector created above
+        // Update all artifacts belonging to this artifact stream - set settingId to the new connector created above
         int updatedArtifacts = 0;
         boolean foundArtifacts = false;
         final DBCollection artifactCollection = wingsPersistence.getCollection(DEFAULT_STORE, "artifacts");
         BulkWriteOperation artifactsBulkWriteOperation = artifactCollection.initializeUnorderedBulkOperation();
         try (HIterator<Artifact> artifactIterator =
                  new HIterator<>(wingsPersistence.createQuery(Artifact.class)
-                                     .filter(ArtifactKeys.artifactStreamType, ArtifactStreamType.CUSTOM.name())
+                                     .filter(ArtifactKeys.artifactStreamType, CUSTOM.name())
                                      .field(ArtifactKeys.appId)
                                      .notEqual(GLOBAL_APP_ID)
-                                     .filter(ArtifactKeys.accountId, ACCOUNT_ID)
+                                     .filter(ArtifactKeys.accountId, accountId)
                                      .filter(ArtifactKeys.artifactStreamId, artifactStream.getUuid())
                                      .fetch())) {
-          while (artifactIterator.hasNext()) {
+          for (Artifact artifact : artifactIterator) {
             foundArtifacts = true;
-            Artifact artifact = artifactIterator.next();
             artifactsBulkWriteOperation
                 .find(wingsPersistence.createQuery(Artifact.class)
                           .filter(ArtifactKeys.uuid, artifact.getUuid())
@@ -228,7 +238,46 @@ public class MigrateServiceLevelArtifactStreamsToConnectorLevel implements Migra
       bulkWriteOperation.execute();
       logger.info(
           "Migrated: " + updated + " custom artifact streams to setting id: " + savedSettingAttribute.getUuid());
-      COUNTER = 1;
+    }
+  }
+
+  private String getArtifactStreamName(Map<String, String> appIdToNameMap, Map<String, String> serviceIdToNameMap,
+      ArtifactStream artifactStream, Set<String> addedNames) {
+    // Resolve the duplicate names
+    // Name : appName_serviceName_artifactStreamName
+    // Make APP_ID as GLOBAL_APP_ID
+    // serviceId can be settingId
+    // bulk update
+    String originalName = appIdToNameMap.get(artifactStream.fetchAppId()) + SEPARATOR
+        + serviceIdToNameMap.get(artifactStream.getServiceId()) + SEPARATOR + artifactStream.getName();
+    String name = originalName;
+    for (int i = 1; addedNames.contains(name); i++) {
+      name = originalName + SEPARATOR + i;
+    }
+    addedNames.add(name);
+    return name;
+  }
+
+  private Pair<SettingAttribute, String> getCustomArtifactServerName(String accountId) {
+    int i = 0;
+    while (true) {
+      String name;
+      if (i == 0) {
+        name = CUSTOM_ARTIFACT_SERVER;
+      } else {
+        name = CUSTOM_ARTIFACT_SERVER + " " + i;
+      }
+
+      SettingAttribute settingAttribute = settingsService.getByName(accountId, GLOBAL_APP_ID, name);
+      if (settingAttribute == null) {
+        // Create a new setting attribute.
+        return ImmutablePair.of(null, name);
+      }
+      if (CUSTOM.name().equals(settingAttribute.getValue().getType())) {
+        // Setting attribute already exists.
+        return Pair.of(settingAttribute, name);
+      }
+      i++;
     }
   }
 }
