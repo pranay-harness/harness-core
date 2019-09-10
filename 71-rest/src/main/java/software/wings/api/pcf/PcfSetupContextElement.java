@@ -1,5 +1,10 @@
 package software.wings.api.pcf;
 
+import static com.google.common.collect.Maps.newHashMap;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import com.google.common.collect.ImmutableMap;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.context.ContextElementType;
 import lombok.AllArgsConstructor;
@@ -52,6 +57,25 @@ public class PcfSetupContextElement implements ContextElement {
 
   @Override
   public Map<String, Object> paramMap(ExecutionContext context) {
+    Map<String, Object> map = newHashMap();
+    if (newPcfApplicationDetails != null) {
+      map.put("newAppName", newPcfApplicationDetails.getApplicationName());
+      map.put("newAppGuid", newPcfApplicationDetails.getApplicationGuid());
+    }
+
+    PcfAppSetupTimeDetails oldAppDetails = getOldAppDetail(appDetailsToBeDownsized);
+    if (oldAppDetails != null) {
+      map.put("oldAppName", oldAppDetails.getApplicationName());
+      map.put("oldAppGuid", oldAppDetails.getApplicationGuid());
+    }
+    return ImmutableMap.of("pcf", map);
+  }
+
+  private PcfAppSetupTimeDetails getOldAppDetail(List<PcfAppSetupTimeDetails> appDetailsToBeDownsized) {
+    if (isNotEmpty(appDetailsToBeDownsized)) {
+      return appDetailsToBeDownsized.get(0);
+    }
+
     return null;
   }
 

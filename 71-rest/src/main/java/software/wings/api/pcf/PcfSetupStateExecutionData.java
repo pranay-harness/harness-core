@@ -1,7 +1,5 @@
 package software.wings.api.pcf;
 
-import com.google.common.collect.Maps;
-
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -49,7 +47,7 @@ public class PcfSetupStateExecutionData extends StateExecutionData implements De
   }
 
   private Map<String, ExecutionDataValue> getInternalExecutionDetails() {
-    Map<String, ExecutionDataValue> executionDetails = Maps.newLinkedHashMap();
+    Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
     putNotNull(executionDetails, "organization",
         ExecutionDataValue.builder().value(pcfCommandRequest.getOrganization()).displayName("Organization").build());
     putNotNull(executionDetails, "space",
