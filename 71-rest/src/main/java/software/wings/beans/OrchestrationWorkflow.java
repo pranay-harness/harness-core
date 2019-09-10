@@ -78,7 +78,7 @@ public abstract class OrchestrationWorkflow {
 
   public abstract void onSave();
 
-  public abstract void onLoad(boolean infraRefactor);
+  public abstract void onLoad(boolean infraRefactor, Workflow workflow);
 
   public abstract Set<EntityType> getRequiredEntityTypes();
 
@@ -172,6 +172,7 @@ public abstract class OrchestrationWorkflow {
   /***
    * Add template expressions to workflow variables
    */
+  //
   public void addToUserVariables(
       List<TemplateExpression> templateExpressions, String stateType, String name, State state) {
     if (isEmpty(templateExpressions)) {

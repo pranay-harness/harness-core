@@ -182,8 +182,8 @@ fi
 
 if [[ "" != "$ENABLE_CRONS" ]]; then
   yq write -i /opt/harness/config.yml enableIterators "$ENABLE_CRONS"
-  yq write -i /opt/harness/config.yml backgroundScheduler.enable "$ENABLE_CRONS"
-  yq write -i /opt/harness/config.yml serviceScheduler.enable "$ENABLE_CRONS"
+  yq write -i /opt/harness/config.yml backgroundScheduler.enabled "$ENABLE_CRONS"
+  yq write -i /opt/harness/config.yml serviceScheduler.enabled "$ENABLE_CRONS"
 fi
 
 if [[ "" != "$ALLOW_TRIAL_REGISTRATION" ]]; then

@@ -17,6 +17,10 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.EntityType.ARTIFACT;
+import static software.wings.beans.EntityType.ENVIRONMENT;
+import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
+import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
+import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.PipelineExecution.PIPELINE_ID_KEY;
 import static software.wings.common.Constants.PIPELINE_ENV_STATE_VALIDATION_MESSAGE;
 import static software.wings.expression.ManagerExpressionEvaluator.getName;
@@ -555,6 +559,7 @@ public class PipelineServiceImpl implements PipelineService {
       boolean hasSshInfraMapping = false;
       boolean templatized = false;
       boolean pipelineParameterized = false;
+      boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, pipeline.getAccountId());
       List<String> invalidWorkflows = new ArrayList<>();
       List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
       List<Variable> pipelineVariables = new ArrayList<>();
@@ -580,8 +585,7 @@ public class PipelineServiceImpl implements PipelineService {
                 templatized = true;
               }
               validateWorkflowVariables(workflow, pse, invalidWorkflows, pse.getWorkflowVariables());
-              setPipelineVariables(workflow.getOrchestrationWorkflow().getUserVariables(), pse.getWorkflowVariables(),
-                  pipelineVariables, withFinalValuesOnly);
+              setPipelineVariables(workflow, pse, pipelineVariables, withFinalValuesOnly, infraRefactor);
               if (!pipelineParameterized) {
                 pipelineParameterized = checkPipelineEntityParameterized(pse.getWorkflowVariables(), workflow);
               }
@@ -651,6 +655,7 @@ public class PipelineServiceImpl implements PipelineService {
     boolean templatized = false;
     boolean envParameterized = false;
     boolean hasBuildWorkflow = false;
+    boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, pipeline.getAccountId());
     List<DeploymentType> deploymentTypes = new ArrayList<>();
     List<String> invalidWorkflows = new ArrayList<>();
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
@@ -673,8 +678,7 @@ public class PipelineServiceImpl implements PipelineService {
 
           validateWorkflowVariables(workflow, pse, invalidWorkflows, pse.getWorkflowVariables());
 
-          setPipelineVariables(workflow.getOrchestrationWorkflow().getUserVariables(), pse.getWorkflowVariables(),
-              pipelineVariables, false);
+          setPipelineVariables(workflow, pse, pipelineVariables, false, infraRefactor);
           if (!templatized && isNotEmpty(pse.getWorkflowVariables())) {
             templatized = true;
           }
@@ -704,8 +708,11 @@ public class PipelineServiceImpl implements PipelineService {
     pipeline.setHasBuildWorkflow(hasBuildWorkflow);
   }
 
-  private void setPipelineVariables(List<Variable> workflowVariables, Map<String, String> pseWorkflowVariables,
-      List<Variable> pipelineVariables, boolean withFinalValuesOnly) {
+  private void setPipelineVariables(Workflow workflow, PipelineStageElement pse, List<Variable> pipelineVariables,
+      boolean withFinalValuesOnly, boolean infraRefator) {
+    List<Variable> workflowVariables = workflow.getOrchestrationWorkflow().getUserVariables();
+    Map<String, String> pseWorkflowVariables = pse.getWorkflowVariables();
+
     if (isEmpty(workflowVariables)) {
       return;
     }
@@ -743,6 +750,24 @@ public class PipelineServiceImpl implements PipelineService {
               // Variable is an expression so prompt for the value at runtime.
               Variable pipelineVariable = variable.cloneInternal();
               pipelineVariable.setName(variableName);
+              if (pipelineVariable.obtainEntityType().equals(ENVIRONMENT)) {
+                if (infraRefator) {
+                  pipelineVariable.getMetadata().put("relatedField",
+                      Joiner.on(",").join(getInfraDefVariables(workflowVariables, pseWorkflowVariables)));
+
+                } else {
+                  pipelineVariable.getMetadata().put(
+                      "relatedField", Joiner.on(",").join(getInfraVariables(workflowVariables, pseWorkflowVariables)));
+                }
+              }
+
+              if (pipelineVariable.obtainEntityType().equals(SERVICE)) {
+                String relatedFieldOldValue = String.valueOf(pipelineVariable.getMetadata().get("relatedField"));
+                if (isNotEmpty(relatedFieldOldValue) && !relatedFieldOldValue.equals("null")) {
+                  String relatedFieldNewValue = getName(pseWorkflowVariables.get(relatedFieldOldValue));
+                  pipelineVariable.getMetadata().put("relatedField", relatedFieldNewValue);
+                }
+              }
               if (withFinalValuesOnly) {
                 // If only final concrete values are needed, set value as null as the used has not entered them yet.
                 pipelineVariable.setValue(null);
@@ -756,6 +781,31 @@ public class PipelineServiceImpl implements PipelineService {
         }
       }
     }
+  }
+
+  private List<String> getInfraVariables(List<Variable> workflowVariables, Map<String, String> pseWorkflowVariables) {
+    List<Variable> infraMappingVariable =
+        workflowVariables.stream()
+            .filter(t -> t.obtainEntityType() != null && t.obtainEntityType().equals(INFRASTRUCTURE_MAPPING))
+            .collect(toList());
+    List<String> infraVarNames = new ArrayList<>();
+    for (Variable variable : infraMappingVariable) {
+      infraVarNames.add(getName(pseWorkflowVariables.get(variable.getName())));
+    }
+    return infraVarNames;
+  }
+
+  private List<String> getInfraDefVariables(
+      List<Variable> workflowVariables, Map<String, String> pseWorkflowVariables) {
+    List<Variable> infraDefVariable =
+        workflowVariables.stream()
+            .filter(t -> t.obtainEntityType() != null && t.obtainEntityType().equals(INFRASTRUCTURE_DEFINITION))
+            .collect(toList());
+    List<String> infraVarNames = new ArrayList<>();
+    for (Variable variable : infraDefVariable) {
+      infraVarNames.add(pseWorkflowVariables.get(variable.getName()));
+    }
+    return infraVarNames;
   }
 
   private void resolveEnvIds(List<String> envIds, Map<String, String> pseWorkflowVariables, Workflow workflow) {

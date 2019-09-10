@@ -25,6 +25,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
+import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -279,6 +280,18 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
     }
     return templateExpressions.stream().anyMatch(
         templateExpression -> templateExpression.getFieldName().equals("envId"));
+  }
+
+  public String fetchEnvTemplatizedName() {
+    TemplateExpression envTemplateExpression = fetchEnvTemplateExpression();
+    return WorkflowServiceTemplateHelper.getName(envTemplateExpression.getExpression(), EntityType.ENVIRONMENT);
+  }
+
+  private TemplateExpression fetchEnvTemplateExpression() {
+    return templateExpressions.stream()
+        .filter(templateExpression -> templateExpression.getFieldName().equals("envId"))
+        .findFirst()
+        .orElse(null);
   }
 
   public boolean envValid() {

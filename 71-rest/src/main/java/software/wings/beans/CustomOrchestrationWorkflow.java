@@ -49,7 +49,7 @@ public class CustomOrchestrationWorkflow extends OrchestrationWorkflow {
   public void onSave() {}
 
   @Override
-  public void onLoad(boolean infraRefactor) {}
+  public void onLoad(boolean infraRefactor, Workflow workflow) {}
 
   @Override
   public Set<EntityType> getRequiredEntityTypes() {
