@@ -41,6 +41,7 @@ public interface PipelineService extends OwnedByApplication {
    */
   Pipeline readPipeline(String appId, String pipelineId, boolean withServices);
 
+  boolean pipelineExists(@NotEmpty String appId, @NotEmpty String pipelineId);
   /**
    * Read pipeline with variables.
    *

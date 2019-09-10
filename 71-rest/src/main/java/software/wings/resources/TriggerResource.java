@@ -165,7 +165,9 @@ public class TriggerResource {
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("triggerId") String triggerId) {
     Trigger trigger = triggerService.get(appId, triggerId);
     if (trigger != null) {
-      triggerService.authorize(trigger, true);
+      if (triggerService.triggerActionExists(trigger)) {
+        triggerService.authorize(trigger, true);
+      }
       triggerService.delete(appId, triggerId);
     }
     return new RestResponse<>();

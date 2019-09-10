@@ -76,6 +76,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.deployment.DeploymentMetadata.Include;
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.Trigger.TriggerKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
@@ -454,6 +455,15 @@ public class PipelineServiceImpl implements PipelineService {
       setServicesAndPipelineVariables(pipeline);
     }
     return pipeline;
+  }
+
+  @Override
+  public boolean pipelineExists(String appId, String pipelineId) {
+    return wingsPersistence.createQuery(Trigger.class)
+               .filter(TriggerKeys.appId, appId)
+               .filter(TriggerKeys.pipelineId, pipelineId)
+               .getKey()
+        != null;
   }
 
   /**
