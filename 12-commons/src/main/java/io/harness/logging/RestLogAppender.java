@@ -121,9 +121,9 @@ public class RestLogAppender<E> extends AppenderBase<E> {
       if (logLines.isEmpty()) {
         return;
       }
-
-      Flow.retry(10, ofSeconds(3),
-          () -> retrofit.create(LogdnaRestClient.class).postLogs(getAuthHeader(), localhostName, logLines).execute());
+      // Do not retry here to post logs as if the request fails logs keep piling up.
+      // We have the logs any way in StackDriver
+      retrofit.create(LogdnaRestClient.class).postLogs(getAuthHeader(), localhostName, logLines).execute();
     } catch (Exception ex) {
       logger.error("Failed to submit logs after 10 tries to {}", retrofit.baseUrl(), ex);
     }
@@ -145,6 +145,8 @@ public class RestLogAppender<E> extends AppenderBase<E> {
         }
         LogLine logLine = new LogLine(message, logLevel, programName);
         logQueue.add(logLine);
+      } catch (IllegalStateException ex) {
+        // Ignore as Queue is full
       } catch (Exception ex) {
         logger.error("", ex);
       }
@@ -164,7 +166,7 @@ public class RestLogAppender<E> extends AppenderBase<E> {
 
     synchronized (this) {
       localhostName = getLocalHostName();
-      logQueue = Queues.newConcurrentLinkedQueue();
+      logQueue = Queues.newArrayBlockingQueue(500000);
       Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
           this ::submitLogs, 1000, 1000, TimeUnit.MILLISECONDS);
     }
@@ -219,7 +221,7 @@ public class RestLogAppender<E> extends AppenderBase<E> {
 
   @Value
   @AllArgsConstructor
-  public static class LogLine {
+  private static class LogLine {
     private String line;
     private String level;
     private String app;
