@@ -41,7 +41,6 @@ public class MigrateArtifactStreamBindingsToServiceVariable implements Migration
   @SuppressWarnings("deprecation")
   public void migrate() {
     logger.info("Migration Started - move artifact stream bindings to service variable");
-
     Account account = wingsPersistence.get(Account.class, ACCOUNT_ID);
     if (account == null) {
       logger.info("Specified account not found. Not migrating artifact stream bindings to service variable.");
@@ -49,7 +48,6 @@ public class MigrateArtifactStreamBindingsToServiceVariable implements Migration
     }
 
     migrateAccount(account.getUuid());
-
     logger.info("Migration Completed - move artifact stream bindings to service variable");
   }
 
