@@ -230,7 +230,6 @@ import software.wings.beans.SlackConfig;
 import software.wings.beans.SmbConfig;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SpotInstConfig;
-import software.wings.beans.SpotInstInfrastructureMapping;
 import software.wings.beans.StringValue;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.SystemCatalog;
@@ -851,7 +850,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(ShellScriptInfrastructureProvisioner.class);
     set.add(SmbArtifactStream.class);
     set.add(SplunkCVConfiguration.class);
-    set.add(SpotInstInfrastructureMapping.class);
     set.add(SSOSettings.class);
     set.add(StackdriverCVConfiguration.class);
     set.add(StateExecutionInstance.class);
