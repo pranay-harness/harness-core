@@ -6,6 +6,8 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
@@ -194,7 +196,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     logsCVConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
     logsCVConfiguration.setStateType(StateType.SUMO);
     logsCVConfiguration.setBaselineStartMinute(
-        TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis()) - TimeUnit.DAYS.toMinutes(1));
+        TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis()) - TimeUnit.HOURS.toMinutes(1));
     logsCVConfiguration.setBaselineEndMinute(TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis()));
 
     cvConfigId = wingsPersistence.save(logsCVConfiguration);
@@ -210,7 +212,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     datadogCVConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
     datadogCVConfiguration.setStateType(StateType.DATA_DOG_LOG);
     datadogCVConfiguration.setBaselineStartMinute(
-        TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis()) - TimeUnit.DAYS.toMinutes(1));
+        TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis()) - TimeUnit.HOURS.toMinutes(1));
     datadogCVConfiguration.setBaselineEndMinute(TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis()));
 
     datadogCvConfigId = wingsPersistence.save(datadogCVConfiguration);
@@ -483,7 +485,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
             logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1));
 
     // save some log and trigger again
-    long numOfMinutesSaved = 100;
+    long numOfMinutesSaved = 45;
     for (long i = logsCVConfiguration.getBaselineStartMinute();
          i <= logsCVConfiguration.getBaselineStartMinute() + numOfMinutesSaved; i++) {
       LogDataRecord logDataRecord = new LogDataRecord();
@@ -548,7 +550,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
             logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1));
 
     // save some log and trigger again
-    long numOfMinutesSaved = 100;
+    long numOfMinutesSaved = 45;
     for (long i = logsCVConfiguration.getBaselineStartMinute();
          i <= logsCVConfiguration.getBaselineStartMinute() + numOfMinutesSaved; i++) {
       LogDataRecord logDataRecord = new LogDataRecord();
@@ -742,7 +744,48 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  public void testLogsL1ClusteringNothingNewPast2hours() {
+    long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+    continuousVerificationService.triggerLogsL1Clustering(accountId);
+    List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("appId", appId).asList();
+    assertEquals(0, learningEngineAnalysisTasks.size());
+
+    int numOfMinutes = 10;
+    int numOfHosts = 3;
+
+    LogDataRecord logDataRecord = new LogDataRecord();
+    logDataRecord.setAppId(appId);
+    logDataRecord.setCvConfigId(cvConfigId);
+    logDataRecord.setStateType(StateType.SUMO);
+    logDataRecord.setClusterLevel(ClusterLevel.H0);
+
+    for (int i = 0; i < numOfMinutes; i++) {
+      for (int j = 0; j < numOfHosts; j++) {
+        logDataRecord.setUuid(null);
+        logDataRecord.setHost("host-" + j);
+        logDataRecord.setClusterLevel(ClusterLevel.H0);
+        logDataRecord.setLogCollectionMinute(currentMinute - 200 + i);
+        wingsPersistence.save(logDataRecord);
+
+        if (i % 2 == 0) {
+          logDataRecord.setUuid(null);
+          logDataRecord.setClusterLevel(ClusterLevel.L0);
+          wingsPersistence.save(logDataRecord);
+        }
+      }
+    }
+
+    continuousVerificationService.triggerLogsL1Clustering(accountId);
+    learningEngineAnalysisTasks =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("appId", appId).asList();
+    assertEquals(0, learningEngineAnalysisTasks.size());
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void testLogsL1Clustering() {
+    long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
     continuousVerificationService.triggerLogsL1Clustering(accountId);
     List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("appId", appId).asList();
@@ -762,7 +805,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         logDataRecord.setUuid(null);
         logDataRecord.setHost("host-" + j);
         logDataRecord.setClusterLevel(ClusterLevel.H0);
-        logDataRecord.setLogCollectionMinute(100 + i);
+        logDataRecord.setLogCollectionMinute(currentMinute - 100 + i);
         wingsPersistence.save(logDataRecord);
 
         if (i % 2 == 0) {
@@ -781,31 +824,33 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     for (int i = 0; i < numOfHosts; i++) {
       hosts.add("host-" + i);
     }
-    assertThat(learningEngineAnalysisTasks).hasSize(numOfMinutes / 2);
+    assertEquals(numOfMinutes / 2, learningEngineAnalysisTasks.size());
     for (int i = 0; i < numOfMinutes / 2; i++) {
       LearningEngineAnalysisTask learningEngineAnalysisTask = learningEngineAnalysisTasks.get(i);
-      assertThat(learningEngineAnalysisTask.getWorkflow_id()).isNull();
-      assertThat(learningEngineAnalysisTask.getWorkflow_execution_id()).isNull();
-      assertThat(learningEngineAnalysisTask.getState_execution_id())
-          .isEqualTo("LOGS_CLUSTER_L1_" + cvConfigId + "_" + (100 + i * 2));
-      assertThat(learningEngineAnalysisTask.getService_id()).isEqualTo(serviceId);
-      assertThat(learningEngineAnalysisTask.getAnalysis_minute()).isEqualTo(100 + i * 2);
-      assertThat(learningEngineAnalysisTask.getControl_input_url())
-          .isEqualTo(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_GET_24X7_LOG_URL + "?cvConfigId="
-              + cvConfigId + "&appId=" + appId + "&clusterLevel=L0&logCollectionMinute=" + (100 + i * 2));
-      assertThat(learningEngineAnalysisTask.getTest_input_url()).isNull();
-      assertThat(learningEngineAnalysisTask.getAnalysis_save_url())
-          .isEqualTo(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_STATE_SAVE_24X7_CLUSTERED_LOG_URL
+      assertNull(learningEngineAnalysisTask.getWorkflow_id());
+      assertNull(learningEngineAnalysisTask.getWorkflow_execution_id());
+      assertEquals("LOGS_CLUSTER_L1_" + cvConfigId + "_" + (currentMinute - 100 + i * 2),
+          learningEngineAnalysisTask.getState_execution_id());
+      assertEquals(serviceId, learningEngineAnalysisTask.getService_id());
+      assertEquals(currentMinute - 100 + i * 2, learningEngineAnalysisTask.getAnalysis_minute());
+      assertEquals(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_GET_24X7_LOG_URL
               + "?cvConfigId=" + cvConfigId + "&appId=" + appId
-              + "&clusterLevel=L1&logCollectionMinute=" + (100 + i * 2));
-      assertThat(learningEngineAnalysisTask.getControl_nodes()).isEqualTo(hosts);
-      assertThat(learningEngineAnalysisTask.getTest_nodes()).isNull();
+              + "&clusterLevel=L0&logCollectionMinute=" + (currentMinute - 100 + i * 2),
+          learningEngineAnalysisTask.getControl_input_url());
+      assertNull(learningEngineAnalysisTask.getTest_input_url());
+      assertEquals(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_STATE_SAVE_24X7_CLUSTERED_LOG_URL
+              + "?cvConfigId=" + cvConfigId + "&appId=" + appId
+              + "&clusterLevel=L1&logCollectionMinute=" + (currentMinute - 100 + i * 2),
+          learningEngineAnalysisTask.getAnalysis_save_url());
+      assertEquals(hosts, learningEngineAnalysisTask.getControl_nodes());
+      assertNull(learningEngineAnalysisTask.getTest_nodes());
     }
   }
 
   @Test
   @Category(UnitTests.class)
   public void testLogsL2Clustering() {
+    long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
     continuousVerificationService.triggerLogsL2Clustering(accountId);
     List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("appId", appId).asList();
@@ -825,7 +870,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         logDataRecord.setUuid(null);
         logDataRecord.setClusterLevel(ClusterLevel.H1);
         logDataRecord.setHost("host-" + j);
-        logDataRecord.setLogCollectionMinute(100 + i);
+        logDataRecord.setLogCollectionMinute(currentMinute - 100 + i);
         wingsPersistence.save(logDataRecord);
 
         logDataRecord.setUuid(null);
@@ -844,7 +889,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         logDataRecord.setUuid(null);
         logDataRecord.setClusterLevel(ClusterLevel.H1);
         logDataRecord.setHost("host-" + j);
-        logDataRecord.setLogCollectionMinute(100 + i);
+        logDataRecord.setLogCollectionMinute(currentMinute - 100 + i);
         wingsPersistence.save(logDataRecord);
 
         logDataRecord.setUuid(null);
@@ -865,14 +910,15 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     learningEngineAnalysisTasks =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("appId", appId).asList();
     assertThat(learningEngineAnalysisTasks).hasSize(1);
-    final int clusterMinute = 100 + CRON_POLL_INTERVAL_IN_MINUTES - 1;
+    final int clusterMinute = (int) currentMinute - 100 + CRON_POLL_INTERVAL_IN_MINUTES - 1;
     LearningEngineAnalysisTask learningEngineAnalysisTask = learningEngineAnalysisTasks.get(0);
-    validateL2Clustering(learningEngineAnalysisTask, clusterMinute);
+    validateL2Clustering(learningEngineAnalysisTask, clusterMinute, currentMinute);
   }
 
   @Test
   @Category(UnitTests.class)
   public void testLogsL2ClusteringRetryBackoff() throws Exception {
+    long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
     continuousVerificationService.triggerLogsL2Clustering(accountId);
     List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("appId", appId).asList();
@@ -892,7 +938,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         logDataRecordInRetry.setUuid(null);
         logDataRecordInRetry.setClusterLevel(ClusterLevel.H1);
         logDataRecordInRetry.setHost("host-" + j);
-        logDataRecordInRetry.setLogCollectionMinute(100 + i);
+        logDataRecordInRetry.setLogCollectionMinute(currentMinute - 100 + i);
         wingsPersistence.save(logDataRecordInRetry);
 
         logDataRecordInRetry.setUuid(null);
@@ -900,7 +946,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         wingsPersistence.save(logDataRecordInRetry);
       }
     }
-    final int clusterMinute = 100 + CRON_POLL_INTERVAL_IN_MINUTES - 1;
+    final int clusterMinute = (int) currentMinute - 100 + CRON_POLL_INTERVAL_IN_MINUTES - 1;
     createFailedLETask("LOGS_CLUSTER_L2_" + cvConfigId + "_" + clusterMinute, null, null, clusterMinute, false);
     continuousVerificationService.triggerLogsL2Clustering(accountId);
     learningEngineAnalysisTasks =
@@ -912,7 +958,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         logDataRecordInRetry.setUuid(null);
         logDataRecordInRetry.setClusterLevel(ClusterLevel.H1);
         logDataRecordInRetry.setHost("host-" + j);
-        logDataRecordInRetry.setLogCollectionMinute(100 + i);
+        logDataRecordInRetry.setLogCollectionMinute(currentMinute - 100 + i);
         wingsPersistence.save(logDataRecordInRetry);
 
         logDataRecordInRetry.setUuid(null);
@@ -937,10 +983,12 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(learningEngineAnalysisTasks).hasSize(3);
 
     LearningEngineAnalysisTask learningEngineAnalysisTask = learningEngineAnalysisTasks.get(2);
-    validateL2Clustering(learningEngineAnalysisTask, clusterMinute);
+    validateL2Clustering(learningEngineAnalysisTask, clusterMinute, currentMinute);
   }
 
-  private void validateL2Clustering(LearningEngineAnalysisTask learningEngineAnalysisTask, int clusterMinute) {
+  private void validateL2Clustering(
+      LearningEngineAnalysisTask learningEngineAnalysisTask, int clusterMinute, long currentMin) {
+    long startMin = currentMin - 100;
     assertThat(learningEngineAnalysisTask.getWorkflow_id()).isNull();
     assertThat(learningEngineAnalysisTask.getWorkflow_execution_id()).isNull();
     assertThat(learningEngineAnalysisTask.getState_execution_id())
@@ -948,8 +996,9 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(learningEngineAnalysisTask.getService_id()).isEqualTo(serviceId);
     assertThat(learningEngineAnalysisTask.getAnalysis_minute()).isEqualTo(clusterMinute);
     assertThat(learningEngineAnalysisTask.getControl_input_url())
-        .isEqualTo(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_GET_24X7_ALL_LOGS_URL + "?cvConfigId="
-            + cvConfigId + "&appId=" + appId + "&clusterLevel=L1&startMinute=100&endMinute=" + clusterMinute);
+        .isEqualTo(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_GET_24X7_ALL_LOGS_URL
+            + "?cvConfigId=" + cvConfigId + "&appId=" + appId + "&clusterLevel=L1&startMinute=" + startMin
+            + "&endMinute=" + clusterMinute);
     assertThat(learningEngineAnalysisTask.getTest_input_url()).isNull();
     assertThat(learningEngineAnalysisTask.getAnalysis_save_url())
         .isEqualTo(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_STATE_SAVE_24X7_CLUSTERED_LOG_URL
@@ -1568,5 +1617,190 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     verify(delegateService).queueTask(taskCaptor.capture());
     APMDataCollectionInfo info = (APMDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
     assertThat(info.getStartTime()).isEqualTo(expectedStart);
+  }
+
+  private long getFlooredTime(long currentTime, long delta) {
+    long expectedStart = currentTime - delta;
+    if (Math.floorMod(expectedStart - 1, CRON_POLL_INTERVAL_IN_MINUTES) != 0) {
+      expectedStart -= Math.floorMod(expectedStart - 1, CRON_POLL_INTERVAL_IN_MINUTES);
+    }
+    return expectedStart;
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testLogsDataCollectionAfter2Hours() throws Exception {
+    long currentTime = Timestamp.currentMinuteBoundary();
+
+    LogsCVConfiguration sumoConfig = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(sumoConfig));
+
+    LogDataRecord dataRecord = LogDataRecord.builder()
+                                   .cvConfigId(cvConfigId)
+                                   .logCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(currentTime) - 400)
+                                   .clusterLevel(ClusterLevel.HF)
+                                   .build();
+
+    wingsPersistence.save(dataRecord);
+
+    long expectedStart = TimeUnit.MILLISECONDS.toMinutes(currentTime) - PREDECTIVE_HISTORY_MINUTES;
+
+    // here it brings it closer to the actual 15min boundary
+    sumoConfig.setBaselineStartMinute(expectedStart);
+    long expectedEnd = sumoConfig.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1;
+    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
+        .thenReturn(managerFeatureFlagCall);
+    ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+
+    continuousVerificationService.triggerLogDataCollection(accountId);
+
+    verify(delegateService).queueTask(taskCaptor.capture());
+    SumoDataCollectionInfo info = (SumoDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
+    assertEquals(TimeUnit.MINUTES.toMillis(sumoConfig.getBaselineStartMinute()), info.getStartTime());
+    assertEquals(TimeUnit.MINUTES.toMillis(expectedEnd), info.getEndTime());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testLogsL1ClusteringHalfBefore2hoursAndHalfAfter() {
+    long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+    continuousVerificationService.triggerLogsL1Clustering(accountId);
+    List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("appId", appId).asList();
+    assertEquals(0, learningEngineAnalysisTasks.size());
+
+    int numOfMinutes = 10;
+    int numOfHosts = 3;
+
+    LogDataRecord logDataRecord = new LogDataRecord();
+    logDataRecord.setAppId(appId);
+    logDataRecord.setCvConfigId(cvConfigId);
+    logDataRecord.setStateType(StateType.SUMO);
+    logDataRecord.setClusterLevel(ClusterLevel.H0);
+
+    for (int i = 0; i < numOfMinutes; i++) {
+      for (int j = 0; j < numOfHosts; j++) {
+        logDataRecord.setUuid(null);
+        logDataRecord.setHost("host-" + j);
+        logDataRecord.setClusterLevel(ClusterLevel.H0);
+        logDataRecord.setLogCollectionMinute(currentMinute - 125 + i);
+        wingsPersistence.save(logDataRecord);
+
+        if (i % 2 == 0) {
+          logDataRecord.setUuid(null);
+          logDataRecord.setClusterLevel(ClusterLevel.L0);
+          wingsPersistence.save(logDataRecord);
+        }
+      }
+    }
+
+    continuousVerificationService.triggerLogsL1Clustering(accountId);
+    learningEngineAnalysisTasks =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("appId", appId).asList();
+
+    Set<String> hosts = new HashSet<>();
+    for (int i = 0; i < numOfHosts; i++) {
+      hosts.add("host-" + i);
+    }
+    assertThat(learningEngineAnalysisTasks).hasSize(2);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testLogsDataCollectionHappyCase() throws Exception {
+    long currentTime = Timestamp.currentMinuteBoundary();
+
+    LogsCVConfiguration sumoConfig = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(sumoConfig));
+
+    // save 2 hour old data
+    LogDataRecord dataRecord = LogDataRecord.builder()
+                                   .cvConfigId(cvConfigId)
+                                   .logCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(currentTime) - 60)
+                                   .clusterLevel(ClusterLevel.HF)
+                                   .build();
+
+    wingsPersistence.save(dataRecord);
+    long expectedStart = currentTime - TimeUnit.MINUTES.toMillis(60) + TimeUnit.MINUTES.toMillis(1);
+
+    long expectedEnd = expectedStart + TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES - 1);
+
+    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
+        .thenReturn(managerFeatureFlagCall);
+    ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+
+    continuousVerificationService.triggerLogDataCollection(accountId);
+
+    verify(delegateService).queueTask(taskCaptor.capture());
+    SumoDataCollectionInfo info = (SumoDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
+    assertEquals(expectedStart, info.getStartTime());
+    assertEquals(expectedEnd, info.getEndTime());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testLogsDataCollectionNoDataSoFar() throws Exception {
+    long currentTime = Timestamp.currentMinuteBoundary();
+
+    LogsCVConfiguration sumoConfig = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
+    sumoConfig.setBaselineStartMinute(TimeUnit.MILLISECONDS.toMinutes(currentTime) - 30);
+
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(sumoConfig));
+
+    // save 2 hour old data
+    LogDataRecord dataRecord = LogDataRecord.builder()
+                                   .cvConfigId(cvConfigId)
+                                   .logCollectionMinute(sumoConfig.getBaselineEndMinute())
+                                   .clusterLevel(ClusterLevel.HF)
+                                   .build();
+
+    long expectedStart = currentTime - TimeUnit.MINUTES.toMillis(60) + TimeUnit.MINUTES.toMillis(1);
+
+    long expectedEnd = expectedStart + TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES - 1);
+    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
+        .thenReturn(managerFeatureFlagCall);
+    ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+
+    continuousVerificationService.triggerLogDataCollection(accountId);
+
+    verify(delegateService).queueTask(taskCaptor.capture());
+    SumoDataCollectionInfo info = (SumoDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
+    assertEquals(TimeUnit.MINUTES.toMillis(sumoConfig.getBaselineStartMinute()), info.getStartTime());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testLogsDataCollectionBaselineEndMoreThan2Hours() throws Exception {
+    long currentTime = Timestamp.currentMinuteBoundary();
+
+    LogsCVConfiguration sumoConfig = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
+    sumoConfig.setBaselineStartMinute(TimeUnit.MILLISECONDS.toMinutes(currentTime) - 180);
+    sumoConfig.setBaselineEndMinute(sumoConfig.getBaselineStartMinute() + 30);
+
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(sumoConfig));
+
+    long expectedStart = TimeUnit.MILLISECONDS.toMinutes(currentTime) - PREDECTIVE_HISTORY_MINUTES;
+
+    // here it brings it closer to the actual 15min boundary
+    sumoConfig.setBaselineStartMinute(expectedStart);
+    long expectedEnd = sumoConfig.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1;
+    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
+        .thenReturn(managerFeatureFlagCall);
+    ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+
+    continuousVerificationService.triggerLogDataCollection(accountId);
+
+    verify(delegateService).queueTask(taskCaptor.capture());
+    SumoDataCollectionInfo info = (SumoDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
+    assertEquals(TimeUnit.MINUTES.toMillis(sumoConfig.getBaselineStartMinute()), info.getStartTime());
+    assertEquals(TimeUnit.MINUTES.toMillis(expectedEnd), info.getEndTime());
   }
 }
