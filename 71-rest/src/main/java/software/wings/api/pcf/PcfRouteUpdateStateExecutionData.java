@@ -2,8 +2,6 @@ package software.wings.api.pcf;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.google.common.collect.Maps;
-
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -42,7 +40,7 @@ public class PcfRouteUpdateStateExecutionData extends StateExecutionData impleme
   }
 
   private Map<String, ExecutionDataValue> getInternalExecutionDetails() {
-    Map<String, ExecutionDataValue> execDetails = Maps.newLinkedHashMap();
+    Map<String, ExecutionDataValue> execDetails = super.getExecutionDetails();
     putNotNull(execDetails, "organization",
         ExecutionDataValue.builder().value(pcfCommandRequest.getOrganization()).displayName("Organization").build());
     putNotNull(execDetails, "space",
