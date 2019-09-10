@@ -5,11 +5,13 @@ import static java.time.Duration.ofMillis;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.exception.WingsException;
 import io.harness.network.SafeHttpCall;
 import lombok.extern.slf4j.Slf4j;
 import retrofit2.Call;
 import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.verification.VerificationDataAnalysisResponse;
 
 import java.util.HashMap;
@@ -20,6 +22,7 @@ import java.util.Map;
 public class VerificationManagerClientHelper {
   private static final int MAX_RETRY = 3;
   @Inject private VerificationManagerClient managerClient;
+  @Inject CVActivityLogService cvActivityLogService;
 
   public Map<String, Object> getManagerHeader(String accountId, String analysisVersion) {
     try {
@@ -40,6 +43,12 @@ public class VerificationManagerClientHelper {
 
   public void notifyManagerForVerificationAnalysis(AnalysisContext context, VerificationDataAnalysisResponse response) {
     Map<String, Object> headers = getManagerHeader(context.getAccountId(), context.getManagerVersion());
+    if (response.getExecutionStatus() == ExecutionStatus.SUCCESS) {
+      cvActivityLogService.getLoggerByStateExecutionId(context.getStateExecutionId()).info("Analysis successful");
+    } else {
+      cvActivityLogService.getLoggerByStateExecutionId(context.getStateExecutionId())
+          .error("Analysis failed with error: " + response.getStateExecutionData().getErrorMsg());
+    }
     callManagerWithRetry(managerClient.sendNotifyForVerificationState(headers, context.getCorrelationId(), response));
   }
 

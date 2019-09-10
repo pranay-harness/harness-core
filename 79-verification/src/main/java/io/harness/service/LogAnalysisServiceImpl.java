@@ -99,7 +99,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Praveen
@@ -267,8 +266,6 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       String query = logData.get(0).getQuery();
       switch (clusterLevel) {
         case L0:
-          cvActivityLogService.getLogger(cvConfigId, logCollectionMinute, stateExecutionId)
-              .info("Log data has been collected for minute %t", TimeUnit.MINUTES.toMillis(logCollectionMinute));
           break;
         case L1:
           String node = logData.get(0).getHost();
@@ -288,7 +285,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
               workflowExecutionId, stateExecutionId, logCollectionMinute, MLAnalysisType.LOG_CLUSTER, L2);
           break;
         default:
-          throw new WingsException("Bad cluster level {} " + clusterLevel.name());
+          throw WingsException.builder().message("Bad cluster level {} " + clusterLevel.name()).build();
       }
       return true;
     } catch (Exception ex) {

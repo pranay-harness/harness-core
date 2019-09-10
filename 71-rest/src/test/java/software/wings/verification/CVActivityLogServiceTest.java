@@ -2,6 +2,7 @@ package software.wings.verification;
 
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
@@ -20,6 +21,7 @@ import software.wings.verification.CVActivityLog.CVActivityLogKeys;
 import software.wings.verification.CVActivityLog.LogLevel;
 
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
@@ -160,7 +162,17 @@ public class CVActivityLogServiceTest extends BaseIntegrationTest {
     assertThat(activityLogs.get(1).getLog()).isEqualTo(logLine2);
   }
 
-  private void createLog(String cvConfigId, long dataCollectionMinute, String logLine) {
+  @Test
+  @Category(IntegrationTests.class)
+  public void testIfCVTaskValidUntilIsBeingSetTo2Weeks() {
+    CVActivityLog cvActivityLog = createLog(generateUUID(), System.currentTimeMillis(), "Test log");
+    assertTrue(cvActivityLog.getValidUntil().getTime() > Instant.now().toEpochMilli());
+    assertThat(Math.abs(cvActivityLog.getValidUntil().getTime()
+                   - OffsetDateTime.now().plus(2, ChronoUnit.WEEKS).toInstant().toEpochMilli())
+        < TimeUnit.DAYS.toMillis(1));
+  }
+
+  private CVActivityLog createLog(String cvConfigId, long dataCollectionMinute, String logLine) {
     CVActivityLog cvActivityLog = CVActivityLog.builder()
                                       .cvConfigId(cvConfigId)
                                       .dataCollectionMinute(dataCollectionMinute)
@@ -168,5 +180,6 @@ public class CVActivityLogServiceTest extends BaseIntegrationTest {
                                       .logLevel(LogLevel.INFO)
                                       .build();
     wingsPersistence.save(cvActivityLog);
+    return cvActivityLog;
   }
 }

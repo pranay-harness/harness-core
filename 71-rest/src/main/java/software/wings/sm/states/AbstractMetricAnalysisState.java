@@ -219,11 +219,10 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
         getLogger().info("Per Minute data collection will be done for triggering delegate task");
       } else {
         delegateTaskId = triggerAnalysisDataCollection(context, analysisContext, executionData, hostsToCollect);
-        logDataCollectionTriggeredMessage(activityLogger);
         getLogger().info("triggered data collection for {} state, id: {}, delgateTaskId: {}", getStateType(),
             context.getStateExecutionInstanceId(), delegateTaskId);
       }
-
+      logDataCollectionTriggeredMessage(activityLogger);
       executionData.setDelegateTaskId(delegateTaskId);
       final VerificationDataAnalysisResponse response =
           VerificationDataAnalysisResponse.builder().stateExecutionData(executionData).build();

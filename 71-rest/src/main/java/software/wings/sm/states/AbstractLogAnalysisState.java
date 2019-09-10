@@ -221,10 +221,10 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         getLogger().info("Per Minute data collection will be done for triggering delegate task");
       } else {
         delegateTaskId = triggerAnalysisDataCollection(executionContext, executionData, hostsToBeCollected);
-        logDataCollectionTriggeredMessage(activityLogger);
         getLogger().info("triggered data collection for {} state, id: {}, delgateTaskId: {}", getStateType(),
             executionContext.getStateExecutionInstanceId(), delegateTaskId);
       }
+      logDataCollectionTriggeredMessage(activityLogger);
       // Set the rendered query into the analysis context which will be used during task analysis.
       analysisContext.setQuery(getRenderedQuery());
 

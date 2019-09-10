@@ -65,14 +65,23 @@ public class DataCollectionCallback implements NotifyCallback {
   public void notify(Map<String, ResponseData> response) {
     final DataCollectionTaskResult result = (DataCollectionTaskResult) response.values().iterator().next();
     logger.info("data collection result for app " + appId + " is: " + result);
-    Logger activityLogger = cvActivityLogService.getLogger(
-        cvConfigId, TimeUnit.MILLISECONDS.toMinutes(dataCollectionEndTime), stateExecutionId);
-    activityLogger.info("Data collection done with status: " + result.getStatus());
+    activityLog(result);
     if (result.getStatus() == DataCollectionTaskStatus.FAILURE) {
-      activityLogger.error("Data collection failed with error " + result.getErrorMessage());
       sendErrorNotification(result.getErrorMessage());
     }
     alertIfNecessary(result.getStatus(), result.getErrorMessage());
+  }
+
+  private void activityLog(DataCollectionTaskResult result) {
+    Logger activityLogger = cvActivityLogService.getLogger(
+        cvConfigId, TimeUnit.MILLISECONDS.toMinutes(dataCollectionEndTime), stateExecutionId);
+    if (result.getStatus() == DataCollectionTaskStatus.SUCCESS) {
+      activityLogger.info(
+          "Data collection successful for time range %t to %t", dataCollectionStartTime, dataCollectionEndTime);
+    } else {
+      activityLogger.error(
+          "Data collection failed for time range %t to %t", dataCollectionStartTime, dataCollectionEndTime);
+    }
   }
 
   // TODO what is this used for

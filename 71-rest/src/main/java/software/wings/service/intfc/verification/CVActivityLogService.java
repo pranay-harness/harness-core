@@ -27,7 +27,7 @@ public interface CVActivityLogService {
      * use %t in the log message with timestamp params to localize timestamp in the UI.
      * @param logLevel
      * @param log
-     * @param timestampParams
+     * @param timestampParams epoch timestamp in millis
      */
     void log(LogLevel logLevel, String log, long... timestampParams);
   }
