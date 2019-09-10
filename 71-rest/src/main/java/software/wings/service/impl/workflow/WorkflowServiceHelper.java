@@ -16,6 +16,12 @@ import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.api.DeploymentType.AMI;
+import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
+import static software.wings.api.DeploymentType.ECS;
+import static software.wings.api.DeploymentType.HELM;
+import static software.wings.api.DeploymentType.KUBERNETES;
+import static software.wings.api.DeploymentType.PCF;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
@@ -28,6 +34,7 @@ import static software.wings.beans.PhaseStepType.AMI_AUTOSCALING_GROUP_SETUP;
 import static software.wings.beans.PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP;
 import static software.wings.beans.PhaseStepType.AMI_SWITCH_AUTOSCALING_GROUP_ROUTES;
 import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
+import static software.wings.beans.PhaseStepType.COLLECT_ARTIFACT;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
 import static software.wings.beans.PhaseStepType.DEPLOY_AWSCODEDEPLOY;
@@ -40,6 +47,7 @@ import static software.wings.beans.PhaseStepType.PCF_SWICH_ROUTES;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.sm.StateType.ARTIFACT_CHECK;
+import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
 import static software.wings.sm.StateType.AWS_AMI_ROLLBACK_SWITCH_ROUTES;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_ROLLBACK;
@@ -84,6 +92,7 @@ import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.DeploymentType;
+import software.wings.beans.AmiDeploymentType;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -102,6 +111,7 @@ import software.wings.beans.Service;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowCreationFlags;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder;
@@ -111,10 +121,12 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.EcsServiceSpecification;
+import software.wings.common.Constants;
 import software.wings.infra.AwsAmiInfrastructure;
 import software.wings.infra.AwsInstanceInfrastructure;
 import software.wings.infra.CloudProviderInfrastructure;
 import software.wings.infra.GoogleKubernetesEngine;
+import software.wings.infra.InfraMappingInfrastructureProvider;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.PhysicalInfra;
 import software.wings.service.intfc.AppService;
@@ -2216,5 +2228,160 @@ public class WorkflowServiceHelper {
       }
     }
     return resolvedWorkflowVariables;
+  }
+
+  public void generateNewWorkflowPhaseSteps(String appId, String envId, WorkflowPhase workflowPhase,
+      boolean serviceRepeat, OrchestrationWorkflowType orchestrationWorkflowType, WorkflowCreationFlags creationFlags) {
+    DeploymentType deploymentType = workflowPhase.getDeploymentType();
+    String accountId = appService.getAccountIdByAppId(appId);
+    boolean infraMappingRefactorEnabled = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId);
+    boolean isDynamicInfrastructure;
+    if (infraMappingRefactorEnabled) {
+      isDynamicInfrastructure =
+          infrastructureDefinitionService.isDynamicInfrastructure(appId, workflowPhase.getInfraDefinitionId());
+    } else {
+      isDynamicInfrastructure = isDynamicInfrastructure(appId, workflowPhase.getInfraMappingId());
+    }
+
+    if (deploymentType == ECS) {
+      if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {
+        if (creationFlags != null && creationFlags.isEcsBgDnsType()) {
+          generateNewWorkflowPhaseStepsForECSBlueGreenRoute53(appId, workflowPhase, !serviceRepeat);
+        } else {
+          generateNewWorkflowPhaseStepsForECSBlueGreen(appId, workflowPhase, !serviceRepeat);
+        }
+      } else {
+        generateNewWorkflowPhaseStepsForECS(appId, workflowPhase, !serviceRepeat, orchestrationWorkflowType);
+      }
+    } else if (deploymentType == KUBERNETES) {
+      if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {
+        generateNewWorkflowPhaseStepsForKubernetesBlueGreen(appId, workflowPhase, !serviceRepeat);
+      } else {
+        generateNewWorkflowPhaseStepsForKubernetes(appId, workflowPhase, !serviceRepeat, orchestrationWorkflowType);
+      }
+    } else if (deploymentType == HELM) {
+      generateNewWorkflowPhaseStepsForHelm(appId, workflowPhase, !serviceRepeat);
+    } else if (deploymentType == AWS_CODEDEPLOY) {
+      generateNewWorkflowPhaseStepsForAWSCodeDeploy(appId, workflowPhase);
+    } else if (deploymentType == DeploymentType.AWS_LAMBDA) {
+      generateNewWorkflowPhaseStepsForAWSLambda(appId, envId, workflowPhase);
+    } else if (deploymentType == AMI) {
+      if (featureFlagService.isEnabled(FeatureName.SPOTINST, accountId)
+          && isSpotInstTypeInfra(infraMappingRefactorEnabled, workflowPhase.getInfraDefinitionId(),
+                 workflowPhase.getInfraMappingId(), appId)) {
+        if (BLUE_GREEN.equals(orchestrationWorkflowType)) {
+          generateNewWorkflowPhaseStepsForSpotInstBlueGreen(appId, workflowPhase, !serviceRepeat);
+        } else {
+          throw new InvalidRequestException("Spotinst ONLY supported for Blue/Green deployments right now", USER);
+        }
+      } else {
+        if (BLUE_GREEN.equals(orchestrationWorkflowType)) {
+          generateNewWorkflowPhaseStepsForAWSAmiBlueGreen(
+              appId, workflowPhase, !serviceRepeat, isDynamicInfrastructure);
+        } else {
+          generateNewWorkflowPhaseStepsForAWSAmi(
+              appId, workflowPhase, !serviceRepeat, isDynamicInfrastructure, orchestrationWorkflowType);
+        }
+      }
+    } else if (deploymentType == PCF) {
+      if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {
+        generateNewWorkflowPhaseStepsForPCFBlueGreen(appId, workflowPhase, !serviceRepeat);
+      } else {
+        generateNewWorkflowPhaseStepsForPCF(appId, envId, workflowPhase, !serviceRepeat, orchestrationWorkflowType);
+      }
+    } else {
+      generateNewWorkflowPhaseStepsForSSH(appId, workflowPhase, orchestrationWorkflowType);
+    }
+  }
+
+  public WorkflowPhase generateRollbackWorkflowPhase(String appId, WorkflowPhase workflowPhase,
+      boolean serviceSetupRequired, OrchestrationWorkflowType orchestrationWorkflowType,
+      WorkflowCreationFlags creationFlags) {
+    DeploymentType deploymentType = workflowPhase.getDeploymentType();
+    if (deploymentType == ECS) {
+      if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {
+        if (creationFlags != null && creationFlags.isEcsBgDnsType()) {
+          return generateRollbackWorkflowPhaseForEcsBlueGreenRoute53(appId, workflowPhase, orchestrationWorkflowType);
+        } else {
+          return generateRollbackWorkflowPhaseForEcsBlueGreen(appId, workflowPhase, orchestrationWorkflowType);
+        }
+      } else {
+        return generateRollbackWorkflowPhaseForEcs(appId, workflowPhase, orchestrationWorkflowType);
+      }
+    } else if (deploymentType == KUBERNETES) {
+      if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {
+        return generateRollbackWorkflowPhaseForKubernetesBlueGreen(workflowPhase, serviceSetupRequired);
+      } else {
+        return generateRollbackWorkflowPhaseForKubernetes(workflowPhase, serviceSetupRequired);
+      }
+    } else if (deploymentType == AWS_CODEDEPLOY) {
+      return generateRollbackWorkflowPhaseForAwsCodeDeploy(workflowPhase);
+    } else if (deploymentType == DeploymentType.AWS_LAMBDA) {
+      return generateRollbackWorkflowPhaseForAwsLambda(workflowPhase);
+    } else if (deploymentType == AMI) {
+      String accountId = appService.getAccountIdByAppId(appId);
+      if (featureFlagService.isEnabled(FeatureName.SPOTINST, accountId)
+          && isSpotInstTypeInfra(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId),
+                 workflowPhase.getInfraDefinitionId(), workflowPhase.getInfraMappingId(), appId)) {
+        if (BLUE_GREEN.equals(orchestrationWorkflowType)) {
+          return generateRollbackWorkflowPhaseForSpotInstBlueGreen(workflowPhase);
+        } else {
+          throw new InvalidRequestException("Spotinst ONLY supported for Blue/Green deployments right now", USER);
+        }
+      } else {
+        if (BLUE_GREEN.equals(orchestrationWorkflowType)) {
+          return generateRollbackWorkflowPhaseForAwsAmiBlueGreen(workflowPhase);
+        } else {
+          return generateRollbackWorkflowPhaseForAwsAmi(workflowPhase);
+        }
+      }
+    } else if (deploymentType == HELM) {
+      return generateRollbackWorkflowPhaseForHelm(workflowPhase);
+    } else if (deploymentType == PCF) {
+      if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {
+        return generateRollbackWorkflowPhaseForPCFBlueGreen(workflowPhase, serviceSetupRequired);
+      } else {
+        return generateRollbackWorkflowPhaseForPCF(workflowPhase);
+      }
+    } else {
+      return generateRollbackWorkflowPhaseForSSH(appId, workflowPhase);
+    }
+  }
+
+  public void generateNewWorkflowPhaseStepsForArtifactCollection(WorkflowPhase workflowPhase) {
+    List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
+
+    phaseSteps.add(aPhaseStep(PhaseStepType.PREPARE_STEPS, WorkflowServiceHelper.PREPARE_STEPS).build());
+
+    phaseSteps.add(aPhaseStep(COLLECT_ARTIFACT, Constants.COLLECT_ARTIFACT)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(ARTIFACT_COLLECTION.name())
+                                    .name(Constants.ARTIFACT_COLLECTION)
+                                    .build())
+                       .build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WorkflowServiceHelper.WRAP_UP).build());
+  }
+
+  private boolean isDynamicInfrastructure(String appId, String infrastructureMappingId) {
+    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infrastructureMappingId);
+    if (infrastructureMapping == null) {
+      return false;
+    }
+    return isNotEmpty(infrastructureMapping.getProvisionerId());
+  }
+
+  private boolean isSpotInstTypeInfra(
+      boolean infraMappingRefactorEnabled, String infraDefinitionId, String infraMappingId, String appId) {
+    if (infraMappingRefactorEnabled) {
+      InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefinitionId);
+      InfraMappingInfrastructureProvider infrastructure = infrastructureDefinition.getInfrastructure();
+      return infrastructure instanceof AwsAmiInfrastructure
+          && AmiDeploymentType.SPOTINST.equals(((AwsAmiInfrastructure) infrastructure).getAmiDeploymentType());
+    } else {
+      InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, infraMappingId);
+      return infraMapping instanceof AwsAmiInfrastructureMapping
+          && AmiDeploymentType.SPOTINST.equals(((AwsAmiInfrastructureMapping) infraMapping).getAmiDeploymentType());
+    }
   }
 }
