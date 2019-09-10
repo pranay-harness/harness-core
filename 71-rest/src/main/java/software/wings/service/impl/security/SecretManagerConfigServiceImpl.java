@@ -53,16 +53,18 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
 
   @Override
   public String save(SecretManagerConfig secretManagerConfig) {
+    String accountId = secretManagerConfig.getAccountId();
     logger.info("Saving secret manager {} of type {} from account {}", secretManagerConfig.getUuid(),
-        secretManagerConfig.getEncryptionType(), secretManagerConfig.getAccountId());
+        secretManagerConfig.getEncryptionType(), accountId);
 
     // Need to unset other secret managers if the current one to be saved is default.
     if (secretManagerConfig.isDefault()) {
-      Query<SecretManagerConfig> updateQuery = wingsPersistence.createQuery(SecretManagerConfig.class);
+      Query<SecretManagerConfig> updateQuery =
+          wingsPersistence.createQuery(SecretManagerConfig.class).filter(ACCOUNT_ID_KEY, accountId);
       UpdateOperations<SecretManagerConfig> updateOperations =
           wingsPersistence.createUpdateOperations(SecretManagerConfig.class).set(IS_DEFAULT_KEY, false);
       wingsPersistence.update(updateQuery, updateOperations);
-      logger.info("Set all other secret managers as non-default");
+      logger.info("Set all other secret managers as non-default in account {}", accountId);
     }
 
     secretManagerConfig.setEncryptionType(secretManagerConfig.getEncryptionType());

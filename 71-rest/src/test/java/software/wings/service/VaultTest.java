@@ -427,7 +427,7 @@ public class VaultTest extends WingsBaseTest {
     assertThat(savedVaultConfig.getAccountId()).isEqualTo(accountId);
 
     savedKmsConfig = (KmsConfig) encryptionConfigs.get(1);
-    assertThat(savedKmsConfig.isDefault()).isFalse();
+    assertThat(savedKmsConfig.isDefault()).isTrue();
     assertThat(savedKmsConfig.getAccountId()).isEqualTo(GLOBAL_ACCOUNT_ID);
   }
 

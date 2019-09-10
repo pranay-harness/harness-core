@@ -1671,6 +1671,55 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Category(UnitTests.class)
+  public void resetDefaultShouldNotAcrossAccount() {
+    int numOfKmsConfigs = 3;
+    Set<String> kmsIds = new HashSet<>();
+    for (int i = 0; i < numOfKmsConfigs; i++) {
+      kmsIds.add(saveKmsConfigWithAccount(getAccount(AccountType.PAID)));
+    }
+
+    for (String kmsId : kmsIds) {
+      KmsConfig kmsConfig = wingsPersistence.get(KmsConfig.class, kmsId);
+      // Each KMS config should be default of its own account and not affecting each other.
+      assertThat(kmsConfig.isDefault()).isTrue();
+    }
+  }
+
+  private String saveKmsConfigWithAccount(Account account) {
+    String accountId = wingsPersistence.save(account);
+    when(accountService.get(accountId)).thenReturn(account);
+    when(secretsManagementFeature.isAvailableForAccount(accountId)).thenReturn(true);
+
+    User user = User.Builder.anUser()
+                    .withAccounts(Collections.singletonList(account))
+                    .withEmail(UUID.randomUUID().toString())
+                    .withName(UUID.randomUUID().toString())
+                    .build();
+    wingsPersistence.save(user);
+
+    UserThreadLocal.set(user);
+    KmsConfig kmsConfig = getKmsConfig();
+    return kmsService.saveKmsConfig(accountId, kmsConfig);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void deleteGlobalKmsNotAllowed() {
+    KmsConfig globalKmsConfig = getKmsConfig();
+    globalKmsConfig.setName("Global config");
+    globalKmsConfig.setDefault(true);
+    String kmsId = kmsService.saveGlobalKmsConfig(accountId, globalKmsConfig);
+
+    try {
+      kmsService.deleteKmsConfig(accountId, kmsId);
+      fail("Exception expected when deleting global KMS secret manager");
+    } catch (KmsOperationException e) {
+      // Global kMS operation exception expected.
+    }
+  }
+
+  @Test
   @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
   public void listKmsGlobalDefault() {

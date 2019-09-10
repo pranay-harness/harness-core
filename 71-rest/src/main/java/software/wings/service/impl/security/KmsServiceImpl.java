@@ -219,6 +219,13 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
   @Override
   public boolean deleteKmsConfig(String accountId, String kmsConfigId) {
+    KmsConfig kmsConfig = wingsPersistence.get(KmsConfig.class, kmsConfigId);
+    Preconditions.checkNotNull(kmsConfig, "no Kms config found with id " + kmsConfigId);
+
+    if (GLOBAL_ACCOUNT_ID.equals(kmsConfig.getAccountId())) {
+      throw new KmsOperationException("Can not delete global kms configuration");
+    }
+
     final long count = wingsPersistence.createQuery(EncryptedData.class)
                            .filter(EncryptedDataKeys.accountId, accountId)
                            .filter(EncryptedDataKeys.kmsId, kmsConfigId)
@@ -230,9 +237,6 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
           + "Please transition your secrets to another secret manager and try again.";
       throw new KmsOperationException(message, USER_SRE);
     }
-
-    KmsConfig kmsConfig = wingsPersistence.get(KmsConfig.class, kmsConfigId);
-    Preconditions.checkNotNull(kmsConfig, "no vault config found with id " + kmsConfigId);
 
     Query<EncryptedData> deleteQuery =
         wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(kmsConfigId);
