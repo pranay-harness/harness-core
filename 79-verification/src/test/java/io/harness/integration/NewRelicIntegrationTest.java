@@ -75,6 +75,7 @@ import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
 import software.wings.service.impl.newrelic.NewRelicMetric;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
+import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricData;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicSetupTestNodeData;
@@ -503,15 +504,30 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     record.addNewRelicMetricAnalysis(analysis2);
 
     final NewRelicMetricAnalysis analysis3 =
-        NewRelicMetricAnalysis.builder().riskLevel(RiskLevel.LOW).metricName("metric1").build();
+        NewRelicMetricAnalysis.builder()
+            .riskLevel(RiskLevel.LOW)
+            .metricName("metric1")
+            .metricValues(
+                Lists.newArrayList(NewRelicMetricAnalysisValue.builder().name(REQUSET_PER_MINUTE).testValue(5).build()))
+            .build();
     record.addNewRelicMetricAnalysis(analysis3);
 
     final NewRelicMetricAnalysis analysis4 =
-        NewRelicMetricAnalysis.builder().riskLevel(RiskLevel.LOW).metricName("metric0").build();
+        NewRelicMetricAnalysis.builder()
+            .riskLevel(RiskLevel.LOW)
+            .metricValues(Lists.newArrayList(
+                NewRelicMetricAnalysisValue.builder().name(REQUSET_PER_MINUTE).testValue(10).build()))
+            .metricName("metric0")
+            .build();
     record.addNewRelicMetricAnalysis(analysis4);
 
     final NewRelicMetricAnalysis analysis5 =
-        NewRelicMetricAnalysis.builder().riskLevel(RiskLevel.LOW).metricName("abc").build();
+        NewRelicMetricAnalysis.builder()
+            .riskLevel(RiskLevel.LOW)
+            .metricName("abc")
+            .metricValues(Lists.newArrayList(
+                NewRelicMetricAnalysisValue.builder().name(REQUSET_PER_MINUTE).testValue(15).build()))
+            .build();
     record.addNewRelicMetricAnalysis(analysis5);
 
     wingsPersistence.save(record);

@@ -51,7 +51,7 @@ public class CVActivityLog implements PersistentEntity, UuidAware, CreatedAtAwar
   }
   public enum LogLevel {
     INFO(),
-    WARN(Ansi.BackgroundYellow),
+    WARN(Ansi.Yellow),
     ERROR(Ansi.Red);
 
     private Ansi ansi;

@@ -1470,6 +1470,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 .hosts(analysisClusterMap.keySet())
                 .analysisStartTime(TimeUnit.MINUTES.toMillis(analysisMinute - CRON_POLL_INTERVAL_IN_MINUTES) + 1)
                 .analysisEndTime(TimeUnit.MINUTES.toMillis(analysisMinute))
+                .riskScore(1.0)
                 .build()));
       }
     });
