@@ -1,9 +1,13 @@
 package io.harness.apm;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rest.RestResponse.Builder.aRestResponse;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -135,6 +139,29 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     assertThat(resultList).isNotNull();
     assertThat(resultList).hasSize(numOfGroups);
     resultList.forEach(record -> assertThat(record.getAnalysisMinute()).isEqualTo(numOfMinutes));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testSorting() throws IOException {
+    final Gson gson = new Gson();
+    File file = new File(getClass().getClassLoader().getResource("./ts_sorting_record.json").getFile());
+    TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord;
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<TimeSeriesMLAnalysisRecord>() {}.getType();
+      timeSeriesMLAnalysisRecord = gson.fromJson(br, type);
+
+      timeSeriesMLAnalysisRecord.compressTransactions();
+      wingsPersistence.save(timeSeriesMLAnalysisRecord);
+    }
+
+    final Set<NewRelicMetricAnalysisRecord> metricsAnalysis =
+        managerAnalysisService.getMetricsAnalysis(timeSeriesMLAnalysisRecord.getAppId(),
+            timeSeriesMLAnalysisRecord.getStateExecutionId(), timeSeriesMLAnalysisRecord.getStateExecutionId());
+
+    assertNotNull(metricsAnalysis);
+    assertEquals(1, metricsAnalysis.size());
+    assertTrue(isNotEmpty(metricsAnalysis.iterator().next().getMetricAnalyses()));
   }
 
   private LearningEngineAnalysisTask getLearningEngineAnalysisTask() {

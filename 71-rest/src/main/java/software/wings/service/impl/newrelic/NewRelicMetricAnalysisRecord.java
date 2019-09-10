@@ -160,11 +160,11 @@ public class NewRelicMetricAnalysisRecord extends Base implements Comparable<New
                     switch (sortOrder.getOrderType()) {
                       case ASC:
                         sortCriteriaDiff =
-                            (int) (metricAnalysisValue.getTestValue() - otherMetricAnalysisValue.getTestValue());
+                            Double.compare(metricAnalysisValue.getTestValue(), otherMetricAnalysisValue.getTestValue());
                         break;
                       case DESC:
                         sortCriteriaDiff =
-                            (int) (otherMetricAnalysisValue.getTestValue() - metricAnalysisValue.getTestValue());
+                            Double.compare(otherMetricAnalysisValue.getTestValue(), metricAnalysisValue.getTestValue());
                         break;
                       default:
                         throw new WingsException("Invalid sort order " + sortOrder.getOrderType());
@@ -181,7 +181,7 @@ public class NewRelicMetricAnalysisRecord extends Base implements Comparable<New
         }
       }
 
-      return this.metricName.compareTo(other.metricName);
+      return 0;
     }
   }
 
