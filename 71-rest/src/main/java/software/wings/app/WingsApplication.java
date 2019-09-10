@@ -359,7 +359,9 @@ public class WingsApplication extends Application<MainConfiguration> {
     registerAuthFilters(configuration, environment, injector);
 
     // Register collection iterators
-    registerIterators(injector);
+    if (configuration.isEnableIterators()) {
+      registerIterators(injector);
+    }
 
     environment.lifecycle().addServerLifecycleListener(server -> {
       for (Connector connector : server.getConnectors()) {
@@ -569,8 +571,8 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   public static void registerIterators(Injector injector) {
-    final ScheduledThreadPoolExecutor artifactCollectionExecutor =
-        new ScheduledThreadPoolExecutor(25, new ThreadFactoryBuilder().setNameFormat("ArtifactCollection").build());
+    final ScheduledThreadPoolExecutor artifactCollectionExecutor = new ScheduledThreadPoolExecutor(
+        25, new ThreadFactoryBuilder().setNameFormat("Iterator-ArtifactCollection").build());
 
     final ArtifactCollectionHandler artifactCollectionHandler = new ArtifactCollectionHandler();
     injector.injectMembers(artifactCollectionHandler);

@@ -30,8 +30,8 @@ public class InstanceSyncHandler implements Handler<InfrastructureMapping> {
   public static class InstanceSyncExecutor {
     static int POOL_SIZE = 10;
     public static void registerIterators(Injector injector) {
-      final ScheduledThreadPoolExecutor executor =
-          new ScheduledThreadPoolExecutor(POOL_SIZE, new ThreadFactoryBuilder().setNameFormat("InstanceSync").build());
+      final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
+          POOL_SIZE, new ThreadFactoryBuilder().setNameFormat("Iterator-InstanceSync").build());
 
       final InstanceSyncHandler handler = new InstanceSyncHandler();
       injector.injectMembers(handler);

@@ -28,6 +28,7 @@ xxxxxxxx
       programName: manager-saas-accesslogs
 
 backgroundScheduler:
+  enabled: true
   schedulerName: automation_background_scheduler
   instanceId: automation_background
   tablePrefix: quartz
@@ -44,6 +45,7 @@ serviceScheduler:
   threadCount: 25
   #mongoUri: mongodb://localhost:27017/service_scheduler
 
+enableIterators: true
 trialRegistrationAllowed: true
 blacklistedEmailDomainsAllowed: true
 executionLogStorageMode: MONGO

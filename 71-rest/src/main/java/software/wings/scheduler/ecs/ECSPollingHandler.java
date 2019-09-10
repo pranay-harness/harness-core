@@ -32,7 +32,7 @@ public class ECSPollingHandler implements Handler<ECSPollingJobEntity> {
     static int POOL_SIZE = 5;
     public static void registerIterators(Injector injector) {
       final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
-          POOL_SIZE, new ThreadFactoryBuilder().setNameFormat("ECSPollingHandler").build());
+          POOL_SIZE, new ThreadFactoryBuilder().setNameFormat("Iterator-ECSPollingHandler").build());
 
       final ECSPollingHandler handler = new ECSPollingHandler();
       injector.injectMembers(handler);

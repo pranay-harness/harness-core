@@ -180,6 +180,12 @@ if [[ "" != "$BACKGROUND_SCHEDULER_CLUSTERED" ]]; then
   yq write -i /opt/harness/config.yml backgroundScheduler.clustered "$BACKGROUND_SCHEDULER_CLUSTERED"
 fi
 
+if [[ "" != "$ENABLE_CRONS" ]]; then
+  yq write -i /opt/harness/config.yml enableIterators "$ENABLE_CRONS"
+  yq write -i /opt/harness/config.yml backgroundScheduler.enable "$ENABLE_CRONS"
+  yq write -i /opt/harness/config.yml serviceScheduler.enable "$ENABLE_CRONS"
+fi
+
 if [[ "" != "$ALLOW_TRIAL_REGISTRATION" ]]; then
   yq write -i /opt/harness/config.yml trialRegistrationAllowed "$ALLOW_TRIAL_REGISTRATION"
 fi
