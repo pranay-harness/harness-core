@@ -1,7 +1,6 @@
 package software.wings.service.impl.instance.stats.collector;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -125,7 +124,7 @@ public class StatsCollectorImplIntegrationTest extends BaseIntegrationTest {
     RestResponse<InstanceTimeline> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<InstanceTimeline>>() {});
     InstanceTimeline timeline = restResponse.getResource();
-    assertEquals(2, timeline.getPoints().size());
+    assertThat(timeline.getPoints().size()).isEqualTo(2);
 
     DataPoint firstPoint = timeline.getPoints().get(0);
 
@@ -133,8 +132,8 @@ public class StatsCollectorImplIntegrationTest extends BaseIntegrationTest {
     //    assertThat( firstPoint.getTotal()).isEqualTo(instances.size());
 
     //    DataPoint secondPoint = timeline.getPoints().get(1);
-    //    assertEquals("all the instances were deleted before second createStats call, so total should be zero", 0,
-    //        secondPoint.getTotal());
+    //    assertThat(    //        secondPoint.getTotal()).isEqualTo("all the instances were deleted before second
+    //    createStats call, so total should be zero", 0);
   }
 
   private Instance sampleInstance(String accountId) {

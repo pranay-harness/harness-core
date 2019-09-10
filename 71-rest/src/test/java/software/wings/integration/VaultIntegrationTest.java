@@ -5,8 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.fail;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -627,7 +626,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
       for (Field field : encryptedFields) {
         field.setAccessible(true);
         char[] secrets = (char[]) field.get(settingValue);
-        assertArrayEquals(SecretManager.ENCRYPTED_FIELD_MASK.toCharArray(), secrets);
+        assertThat(SecretManager.ENCRYPTED_FIELD_MASK.toCharArray()).isEqualTo(secrets);
       }
     }
   }

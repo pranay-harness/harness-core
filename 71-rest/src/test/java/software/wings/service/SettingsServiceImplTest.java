@@ -7,7 +7,6 @@ import static io.harness.rule.OwnerRule.RAMA;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.assertArrayEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
@@ -439,7 +438,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
 
     HostConnectionAttributes updatedHostConnectionAttributes =
         (HostConnectionAttributes) updatedSettingAttribute.getValue();
-    assertArrayEquals(updatedHostConnectionAttributes.getKey(), SecretManager.ENCRYPTED_FIELD_MASK.toCharArray());
+    assertThat(updatedHostConnectionAttributes.getKey()).isEqualTo(SecretManager.ENCRYPTED_FIELD_MASK.toCharArray());
     assertThat(updatedHostConnectionAttributes.getSshPort()).isEqualTo(22);
   }
 

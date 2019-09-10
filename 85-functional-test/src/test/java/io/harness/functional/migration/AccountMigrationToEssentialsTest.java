@@ -2,7 +2,6 @@ package io.harness.functional.migration;
 
 import static io.harness.rule.OwnerRule.ANKIT;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotEquals;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.generator.SettingGenerator.Settings;
@@ -34,7 +33,7 @@ public class AccountMigrationToEssentialsTest extends AbstractAccountMigrationTe
 
     updateAccountLicense(AccountType.ESSENTIALS);
 
-    assertNotEquals(AccountType.ESSENTIALS, getAccountType());
+    assertThat(AccountType.ESSENTIALS).isNotEqualTo(getAccountType());
 
     Map<String, Object> gitOpsComplyInfo = new HashMap<>();
     gitOpsComplyInfo.put("sourceReposToRetain", Arrays.asList(Settings.TERRAFORM_MAIN_GIT_REPO.name()));

@@ -7,8 +7,7 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.fail;
 import static software.wings.beans.User.Builder.anUser;
 
 import com.google.common.collect.Sets;
@@ -201,7 +200,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     user = restResponse.getResource();
     assertThat(user).isNotNull();
     String newJwtToken = user.getToken();
-    assertNotEquals(jwtToken, newJwtToken);
+    assertThat(jwtToken).isNotEqualTo(newJwtToken);
   }
 
   @Test

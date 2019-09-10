@@ -2,7 +2,6 @@ package software.wings.integration;
 
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
@@ -304,10 +303,8 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
     assertThat(workflowExecutionList.size() > 0).isTrue();
     assertThat(workflowExecutionList.get(0).getUuid()).isEqualTo(workflowExecutionId);
     assertThat(workflowExecutionList.get(0).getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
-    assertEquals(
-        "pipeline id matches", "pipelineId", workflowExecutionList.get(0).getPipelineSummary().getPipelineId());
-    assertEquals(
-        "pipeline name matches", "pipelineName", workflowExecutionList.get(0).getPipelineSummary().getPipelineName());
+    assertThat("pipelineId").isEqualTo(workflowExecutionList.get(0).getPipelineSummary().getPipelineId());
+    assertThat("pipelineName").isEqualTo(workflowExecutionList.get(0).getPipelineSummary().getPipelineName());
     assertThat(workflowExecutionList.get(0).getEnvId()).isEqualTo(envId);
   }
 

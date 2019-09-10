@@ -1,7 +1,6 @@
 package software.wings.integration.SSO.LDAP;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotEquals;
 import static software.wings.integration.SSO.LDAP.LdapIntegrationTestConstants.ACCOUNT_ID;
 import static software.wings.integration.SSO.LDAP.LdapIntegrationTestConstants.ADMIN_HARNESS_ID;
 import static software.wings.integration.SSO.LDAP.LdapIntegrationTestConstants.INVALID_TOKEN;
@@ -84,7 +83,7 @@ public class LdapIntegrationTest extends BaseIntegrationTest implements WingsInt
   @Category(IntegrationTests.class)
   public void testLdapConnectionSettings() {
     loginAdminUser();
-    assertNotEquals(userToken, INVALID_TOKEN);
+    assertThat(userToken).isNotEqualTo(INVALID_TOKEN);
     createAndTestLdapSettings();
 
     // tests happy cases for ldap test api's
@@ -99,14 +98,14 @@ public class LdapIntegrationTest extends BaseIntegrationTest implements WingsInt
   @Ignore("TODO: Aman to investigate and fix")
   public void testLdapLogin() {
     loginAdminUser();
-    assertNotEquals(userToken, INVALID_TOKEN);
+    assertThat(userToken).isNotEqualTo(INVALID_TOKEN);
     createAndTestLdapSettings();
 
     // Authentication testing for Ldap
     enableLdapAsDefaultLoginMechanism();
     userToken = INVALID_TOKEN;
     loginUsingLdap();
-    assertNotEquals(userToken, INVALID_TOKEN);
+    assertThat(userToken).isNotEqualTo(INVALID_TOKEN);
     revertDefaultLoginToUserPassword();
   }
 
@@ -116,7 +115,7 @@ public class LdapIntegrationTest extends BaseIntegrationTest implements WingsInt
   @Ignore("TODO: Aman to investigate and fix")
   public void testLdapUserGroupLinking() {
     loginAdminUser();
-    assertNotEquals(userToken, INVALID_TOKEN);
+    assertThat(userToken).isNotEqualTo(INVALID_TOKEN);
     createAndTestLdapSettings();
 
     // GroupLinking testing
@@ -230,7 +229,7 @@ public class LdapIntegrationTest extends BaseIntegrationTest implements WingsInt
 
   public void loginUsingLdap() {
     String loginUserToken = loginUser(ADMIN_HARNESS_ID, adminAccountLdapPass);
-    assertNotEquals(loginUserToken, INVALID_TOKEN);
+    assertThat(loginUserToken).isNotEqualTo(INVALID_TOKEN);
   }
 
   private void deleteExistingLdapSettings() {

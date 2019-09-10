@@ -1,7 +1,6 @@
 package software.wings.resources;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -107,7 +106,7 @@ public class AccountExportImportResourceTest extends CategoryTest {
     logger.info(usersJson);
     logger.info(newUsersJson);
 
-    assertNotEquals(newUsersJson, usersJson);
+    assertThat(newUsersJson).isNotEqualTo(usersJson);
     assertThat(newUsersJson.indexOf(userId) < 0).isTrue();
   }
 }

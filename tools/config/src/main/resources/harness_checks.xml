@@ -76,8 +76,8 @@
             <property name="illegalPkgs" value="java.util.logging.Logger"/>
 
             <!-- use org.org.assertj.core.api.Assertions.assertThat instead -->
-            <!-- TODO: add org.junit.Assert,-->
-            <property name="illegalPkgs" value="junit.framework.Assert"/>
+            <property name="illegalPkgs" value="org.junit.Assert,
+                                                junit.framework.Assert"/>
 
             <!-- use org.apache.commons.text.StrSubstitutor instead -->
             <property name="illegalClasses" value="org.apache.commons.lang3.text.StrSubstitutor"/>

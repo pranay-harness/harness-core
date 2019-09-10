@@ -1,7 +1,7 @@
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.fail;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.utils.WingsTestConstants.USER_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;

@@ -2,7 +2,7 @@ package software.wings.integration.network;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.fail;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.IntegrationTests;

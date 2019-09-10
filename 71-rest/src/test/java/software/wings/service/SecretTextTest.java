@@ -6,8 +6,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
@@ -1097,8 +1096,8 @@ public class SecretTextTest extends WingsBaseTest {
     String encryptedUuid = encryptedData.getUuid();
 
     File download = configService.download(appId, configFileId);
-    assertEquals(FileUtils.readFileToString(fileToSave, Charset.defaultCharset()),
-        FileUtils.readFileToString(download, Charset.defaultCharset()));
+    assertThat(FileUtils.readFileToString(download, Charset.defaultCharset()))
+        .isEqualTo(FileUtils.readFileToString(fileToSave, Charset.defaultCharset()));
 
     List<SecretChangeLog> changeLogs =
         secretManagementResource.getChangeLogs(accountId, secretFileId, CONFIG_FILE).getResource();
@@ -1125,8 +1124,8 @@ public class SecretTextTest extends WingsBaseTest {
     assertThat(encryptedData.getParentIds().contains(configFileId)).isTrue();
 
     download = configService.download(appId, configFileId);
-    assertEquals(FileUtils.readFileToString(fileToUpdate, Charset.defaultCharset()),
-        FileUtils.readFileToString(download, Charset.defaultCharset()));
+    assertThat(FileUtils.readFileToString(download, Charset.defaultCharset()))
+        .isEqualTo(FileUtils.readFileToString(fileToUpdate, Charset.defaultCharset()));
 
     changeLogs = secretManagementResource.getChangeLogs(accountId, secretFileId, SECRET_TEXT).getResource();
     assertThat(changeLogs).hasSize(2);
@@ -1153,8 +1152,8 @@ public class SecretTextTest extends WingsBaseTest {
     configService.update(configFile, null);
 
     download = configService.download(appId, configFileId);
-    assertEquals(FileUtils.readFileToString(newFileToSave, Charset.defaultCharset()),
-        FileUtils.readFileToString(download, Charset.defaultCharset()));
+    assertThat(FileUtils.readFileToString(download, Charset.defaultCharset()))
+        .isEqualTo(FileUtils.readFileToString(newFileToSave, Charset.defaultCharset()));
   }
 
   @Test

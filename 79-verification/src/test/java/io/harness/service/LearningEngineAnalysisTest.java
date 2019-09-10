@@ -7,7 +7,6 @@ import static io.harness.rest.RestResponse.Builder.aRestResponse;
 import static io.harness.rule.OwnerRule.PARNIAN;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
@@ -149,8 +148,9 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
           .isEqualTo(i);
     }
 
-    assertNull(learningEngineService.getNextLearningEngineAnalysisTask(
-        ServiceApiVersion.V1, Optional.of(false), Optional.empty()));
+    assertThat(learningEngineService.getNextLearningEngineAnalysisTask(
+                   ServiceApiVersion.V1, Optional.of(false), Optional.empty()))
+        .isNull();
   }
 
   @Test
@@ -184,8 +184,9 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
           .isEqualTo(numOfTasks - i);
     }
 
-    assertNull(learningEngineService.getNextLearningEngineAnalysisTask(
-        ServiceApiVersion.V1, Optional.of(true), Optional.empty()));
+    assertThat(learningEngineService.getNextLearningEngineAnalysisTask(
+                   ServiceApiVersion.V1, Optional.of(true), Optional.empty()))
+        .isNull();
   }
 
   @Test
@@ -269,8 +270,9 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
           .isEqualTo(numOfTasks);
     }
 
-    assertNull(learningEngineService.getNextLearningEngineAnalysisTask(
-        ServiceApiVersion.V1, Optional.of(true), Optional.empty()));
+    assertThat(learningEngineService.getNextLearningEngineAnalysisTask(
+                   ServiceApiVersion.V1, Optional.of(true), Optional.empty()))
+        .isNull();
   }
 
   @Test
@@ -329,8 +331,9 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
                                                                 .build();
     wingsPersistence.updateField(LearningEngineAnalysisTask.class, learningEngineAnalysisTask.getUuid(), "retry",
         LearningEngineAnalysisTask.RETRIES);
-    assertNull(learningEngineService.getNextLearningEngineAnalysisTask(
-        ServiceApiVersion.V1, Optional.empty(), Optional.empty()));
+    assertThat(learningEngineService.getNextLearningEngineAnalysisTask(
+                   ServiceApiVersion.V1, Optional.empty(), Optional.empty()))
+        .isNull();
   }
 
   @Test
@@ -374,8 +377,9 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
           .isEqualTo(i);
     }
 
-    assertNull(learningEngineService.getNextLearningEngineAnalysisTask(
-        ServiceApiVersion.V1, Optional.empty(), Optional.empty()));
+    assertThat(learningEngineService.getNextLearningEngineAnalysisTask(
+                   ServiceApiVersion.V1, Optional.empty(), Optional.empty()))
+        .isNull();
   }
 
   @Test
@@ -642,7 +646,8 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
                    .count())
         .isEqualTo(1);
 
-    assertNull(learningEngineService.getNextLearningEngineAnalysisTask(
-        ServiceApiVersion.V1, Optional.of(false), Optional.empty()));
+    assertThat(learningEngineService.getNextLearningEngineAnalysisTask(
+                   ServiceApiVersion.V1, Optional.of(false), Optional.empty()))
+        .isNull();
   }
 }

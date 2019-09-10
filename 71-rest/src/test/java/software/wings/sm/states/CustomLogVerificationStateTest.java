@@ -1,7 +1,6 @@
 package software.wings.sm.states;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -77,11 +76,8 @@ public class CustomLogVerificationStateTest extends WingsBaseTest {
     assertThat(logDefinitions).isNotNull();
     assertThat(logDefinitions.containsKey("customLogVerificationQuery")).isTrue();
     Map<String, ResponseMapper> mapping = logDefinitions.get("customLogVerificationQuery");
-    assertEquals("Host json path is correct", "hits.hits[*]._source.kubernetes.pod.name",
-        mapping.get("host").getJsonPath().get(0));
-    assertEquals("timestamp json path is correct", "hits.hits[*]._source.@timestamp",
-        mapping.get("timestamp").getJsonPath().get(0));
-    assertEquals(
-        "logMessage json path is correct", "hits.hits[*]._source.log", mapping.get("logMessage").getJsonPath().get(0));
+    assertThat("hits.hits[*]._source.kubernetes.pod.name").isEqualTo(mapping.get("host").getJsonPath().get(0));
+    assertThat("hits.hits[*]._source.@timestamp").isEqualTo(mapping.get("timestamp").getJsonPath().get(0));
+    assertThat("hits.hits[*]._source.log").isEqualTo(mapping.get("logMessage").getJsonPath().get(0));
   }
 }

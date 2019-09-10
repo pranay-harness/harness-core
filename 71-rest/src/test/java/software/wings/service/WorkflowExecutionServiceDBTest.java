@@ -7,7 +7,6 @@ import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.CountsByStatuses.Builder.aCountsByStatuses;
@@ -158,8 +157,8 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
       assertThat(hostElements.containsKey(deployedNode.getHost().getUuid())).isTrue();
       HostElement hostElement = hostElements.get(deployedNode.getHost().getUuid());
       assertThat(deployedNode.getHost().getHostName()).isEqualTo(hostElement.getHostName());
-      assertEquals(hostService.get(appId, envId, hostElement.getUuid()).getEc2Instance(),
-          deployedNode.getHost().getEc2Instance());
+      assertThat(deployedNode.getHost().getEc2Instance())
+          .isEqualTo(hostService.get(appId, envId, hostElement.getUuid()).getEc2Instance());
     });
   }
 }

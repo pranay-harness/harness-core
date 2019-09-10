@@ -1,7 +1,6 @@
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotEquals;
 
 import com.google.inject.Inject;
 
@@ -33,7 +32,7 @@ public class HarnessClientApiKeyServiceTest extends WingsBaseTest {
     assertThat(generatedApiKey).isEqualTo(keyFromGet);
 
     String salesForceKey = harnessApiKeyService.generate(ClientType.SALESFORCE.name());
-    assertNotEquals(generatedApiKey, salesForceKey);
+    assertThat(generatedApiKey).isNotEqualTo(salesForceKey);
 
     thrown.expect(Exception.class);
     harnessApiKeyService.generate(ClientType.PROMETHEUS.name());

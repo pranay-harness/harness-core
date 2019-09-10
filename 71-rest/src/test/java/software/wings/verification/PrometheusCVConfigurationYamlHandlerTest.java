@@ -3,7 +3,6 @@ package software.wings.verification;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -167,8 +166,8 @@ public class PrometheusCVConfigurationYamlHandlerTest extends WingsBaseTest {
       yamlHandler.upsertFromYaml(changeContext, null);
       fail("parsed invalid metric list");
     } catch (WingsException e) {
-      assertEquals("Test1 has error metrics [Metric1] and/or response time metrics [] but no throughput metrics.\n",
-          e.getMessage());
+      assertThat(e.getMessage())
+          .isEqualTo("Test1 has error metrics [Metric1] and/or response time metrics [] but no throughput metrics.\n");
     }
 
     timeSeriesList.add(TimeSeries.builder()

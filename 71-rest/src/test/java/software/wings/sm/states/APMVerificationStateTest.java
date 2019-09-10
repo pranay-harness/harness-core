@@ -2,7 +2,6 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -168,10 +167,10 @@ public class APMVerificationStateTest extends WingsBaseTest {
     info.setResponseMapping(mapping);
     apmVerificationState.setMetricCollectionInfos(Arrays.asList(info));
     Map<String, String> invalidFields = apmVerificationState.validateFields();
-    assertEquals(1, invalidFields.size());
-    assertEquals("for " + metricName + " the collection url has " + VERIFICATION_HOST_PLACEHOLDER
-            + " and baseline collection url as well",
-        invalidFields.get("collectionUrl"));
+    assertThat(invalidFields).hasSize(1);
+    assertThat("for " + metricName + " the collection url has " + VERIFICATION_HOST_PLACEHOLDER
+        + " and baseline collection url as well")
+        .isEqualTo(invalidFields.get("collectionUrl"));
   }
 
   @Test
@@ -192,10 +191,10 @@ public class APMVerificationStateTest extends WingsBaseTest {
     info.setResponseMapping(mapping);
     apmVerificationState.setMetricCollectionInfos(Arrays.asList(info));
     Map<String, String> invalidFields = apmVerificationState.validateFields();
-    assertEquals(1, invalidFields.size());
-    assertEquals("Baseline url can only be set for canary verification strategy. For " + metricName
-            + " there is baseline url set " + VERIFICATION_HOST_PLACEHOLDER,
-        invalidFields.get("collectionUrl"));
+    assertThat(invalidFields).hasSize(1);
+    assertThat("Baseline url can only be set for canary verification strategy. For " + metricName
+        + " there is baseline url set " + VERIFICATION_HOST_PLACEHOLDER)
+        .isEqualTo(invalidFields.get("collectionUrl"));
   }
 
   @Test
@@ -222,9 +221,9 @@ public class APMVerificationStateTest extends WingsBaseTest {
     info2.setResponseMapping(mapping);
     apmVerificationState.setMetricCollectionInfos(Arrays.asList(info1, info2));
     Map<String, String> invalidFields = apmVerificationState.validateFields();
-    assertEquals(1, invalidFields.size());
-    assertEquals("for " + metricName2 + " the url has " + VERIFICATION_HOST_PLACEHOLDER
-            + ". When configuring multi url verification all metrics should follow the same pattern.",
-        invalidFields.get("collectionUrl"));
+    assertThat(1).isEqualTo(invalidFields.size());
+    assertThat("for " + metricName2 + " the url has " + VERIFICATION_HOST_PLACEHOLDER
+        + ". When configuring multi url verification all metrics should follow the same pattern.")
+        .isEqualTo(invalidFields.get("collectionUrl"));
   }
 }

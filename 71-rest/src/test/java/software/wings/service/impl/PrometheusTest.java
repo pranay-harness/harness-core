@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Lists;
 
@@ -134,8 +133,8 @@ public class PrometheusTest extends WingsBaseTest {
     Map<String, String> invalidFields =
         PrometheusResource.validateTransactions(Lists.newArrayList(timeSeries1, timeSeries2), false);
     assertThat(invalidFields).hasSize(1);
-    assertEquals("t1 has error metrics [m1, m2] and/or response time metrics [] but no throughput metrics.",
-        invalidFields.get("Invalid metrics for group: t1"));
+    assertThat(invalidFields.get("Invalid metrics for group: t1"))
+        .isEqualTo("t1 has error metrics [m1, m2] and/or response time metrics [] but no throughput metrics.");
   }
 
   @Test
@@ -156,8 +155,8 @@ public class PrometheusTest extends WingsBaseTest {
     Map<String, String> invalidFields =
         PrometheusResource.validateTransactions(Lists.newArrayList(timeSeries1, timeSeries2), false);
     assertThat(invalidFields).hasSize(1);
-    assertEquals("t1 has error metrics [] and/or response time metrics [m1, m2] but no throughput metrics.",
-        invalidFields.get("Invalid metrics for group: t1"));
+    assertThat(invalidFields.get("Invalid metrics for group: t1"))
+        .isEqualTo("t1 has error metrics [] and/or response time metrics [m1, m2] but no throughput metrics.");
   }
 
   @Test
@@ -184,8 +183,8 @@ public class PrometheusTest extends WingsBaseTest {
     Map<String, String> invalidFields =
         PrometheusResource.validateTransactions(Lists.newArrayList(timeSeries1, timeSeries2, timeSeries3), false);
     assertThat(invalidFields).hasSize(1);
-    assertEquals("t1 has more than one throughput metrics [m2, m3] defined.",
-        invalidFields.get("Invalid metrics for group: t1"));
+    assertThat(invalidFields.get("Invalid metrics for group: t1"))
+        .isEqualTo("t1 has more than one throughput metrics [m2, m3] defined.");
   }
 
   @Test

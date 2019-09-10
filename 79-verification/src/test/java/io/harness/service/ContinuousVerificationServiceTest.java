@@ -6,8 +6,6 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
@@ -749,7 +747,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     continuousVerificationService.triggerLogsL1Clustering(accountId);
     List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("appId", appId).asList();
-    assertEquals(0, learningEngineAnalysisTasks.size());
+    assertThat(0).isEqualTo(learningEngineAnalysisTasks.size());
 
     int numOfMinutes = 10;
     int numOfHosts = 3;
@@ -779,7 +777,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     continuousVerificationService.triggerLogsL1Clustering(accountId);
     learningEngineAnalysisTasks =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("appId", appId).asList();
-    assertEquals(0, learningEngineAnalysisTasks.size());
+    assertThat(0).isEqualTo(learningEngineAnalysisTasks.size());
   }
 
   @Test
@@ -824,26 +822,25 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     for (int i = 0; i < numOfHosts; i++) {
       hosts.add("host-" + i);
     }
-    assertEquals(numOfMinutes / 2, learningEngineAnalysisTasks.size());
+    assertThat(numOfMinutes / 2).isEqualTo(learningEngineAnalysisTasks.size());
     for (int i = 0; i < numOfMinutes / 2; i++) {
       LearningEngineAnalysisTask learningEngineAnalysisTask = learningEngineAnalysisTasks.get(i);
-      assertNull(learningEngineAnalysisTask.getWorkflow_id());
-      assertNull(learningEngineAnalysisTask.getWorkflow_execution_id());
-      assertEquals("LOGS_CLUSTER_L1_" + cvConfigId + "_" + (currentMinute - 100 + i * 2),
-          learningEngineAnalysisTask.getState_execution_id());
-      assertEquals(serviceId, learningEngineAnalysisTask.getService_id());
-      assertEquals(currentMinute - 100 + i * 2, learningEngineAnalysisTask.getAnalysis_minute());
-      assertEquals(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_GET_24X7_LOG_URL
-              + "?cvConfigId=" + cvConfigId + "&appId=" + appId
-              + "&clusterLevel=L0&logCollectionMinute=" + (currentMinute - 100 + i * 2),
-          learningEngineAnalysisTask.getControl_input_url());
-      assertNull(learningEngineAnalysisTask.getTest_input_url());
-      assertEquals(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_STATE_SAVE_24X7_CLUSTERED_LOG_URL
-              + "?cvConfigId=" + cvConfigId + "&appId=" + appId
-              + "&clusterLevel=L1&logCollectionMinute=" + (currentMinute - 100 + i * 2),
-          learningEngineAnalysisTask.getAnalysis_save_url());
-      assertEquals(hosts, learningEngineAnalysisTask.getControl_nodes());
-      assertNull(learningEngineAnalysisTask.getTest_nodes());
+      assertThat(learningEngineAnalysisTask.getWorkflow_id()).isNull();
+      assertThat(learningEngineAnalysisTask.getWorkflow_execution_id()).isNull();
+      assertThat("LOGS_CLUSTER_L1_" + cvConfigId + "_" + (currentMinute - 100 + i * 2))
+          .isEqualTo(learningEngineAnalysisTask.getState_execution_id());
+      assertThat(serviceId).isEqualTo(learningEngineAnalysisTask.getService_id());
+      assertThat(currentMinute - 100 + i * 2).isEqualTo(learningEngineAnalysisTask.getAnalysis_minute());
+      assertThat(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_GET_24X7_LOG_URL + "?cvConfigId="
+          + cvConfigId + "&appId=" + appId + "&clusterLevel=L0&logCollectionMinute=" + (currentMinute - 100 + i * 2))
+          .isEqualTo(learningEngineAnalysisTask.getControl_input_url());
+      assertThat(learningEngineAnalysisTask.getTest_input_url()).isNull();
+      assertThat(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_STATE_SAVE_24X7_CLUSTERED_LOG_URL
+          + "?cvConfigId=" + cvConfigId + "&appId=" + appId
+          + "&clusterLevel=L1&logCollectionMinute=" + (currentMinute - 100 + i * 2))
+          .isEqualTo(learningEngineAnalysisTask.getAnalysis_save_url());
+      assertThat(hosts).isEqualTo(learningEngineAnalysisTask.getControl_nodes());
+      assertThat(learningEngineAnalysisTask.getTest_nodes()).isNull();
     }
   }
 
@@ -1658,8 +1655,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     verify(delegateService).queueTask(taskCaptor.capture());
     SumoDataCollectionInfo info = (SumoDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
-    assertEquals(TimeUnit.MINUTES.toMillis(sumoConfig.getBaselineStartMinute()), info.getStartTime());
-    assertEquals(TimeUnit.MINUTES.toMillis(expectedEnd), info.getEndTime());
+    assertThat(TimeUnit.MINUTES.toMillis(sumoConfig.getBaselineStartMinute())).isEqualTo(info.getStartTime());
+    assertThat(TimeUnit.MINUTES.toMillis(expectedEnd)).isEqualTo(info.getEndTime());
   }
 
   @Test
@@ -1669,7 +1666,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     continuousVerificationService.triggerLogsL1Clustering(accountId);
     List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("appId", appId).asList();
-    assertEquals(0, learningEngineAnalysisTasks.size());
+    assertThat(0).isEqualTo(learningEngineAnalysisTasks.size());
 
     int numOfMinutes = 10;
     int numOfHosts = 3;
@@ -1737,8 +1734,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     verify(delegateService).queueTask(taskCaptor.capture());
     SumoDataCollectionInfo info = (SumoDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
-    assertEquals(expectedStart, info.getStartTime());
-    assertEquals(expectedEnd, info.getEndTime());
+    assertThat(expectedStart).isEqualTo(info.getStartTime());
+    assertThat(expectedEnd).isEqualTo(info.getEndTime());
   }
 
   @Test
@@ -1771,7 +1768,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     verify(delegateService).queueTask(taskCaptor.capture());
     SumoDataCollectionInfo info = (SumoDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
-    assertEquals(TimeUnit.MINUTES.toMillis(sumoConfig.getBaselineStartMinute()), info.getStartTime());
+    assertThat(TimeUnit.MINUTES.toMillis(sumoConfig.getBaselineStartMinute())).isEqualTo(info.getStartTime());
   }
 
   @Test
@@ -1800,7 +1797,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     verify(delegateService).queueTask(taskCaptor.capture());
     SumoDataCollectionInfo info = (SumoDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
-    assertEquals(TimeUnit.MINUTES.toMillis(sumoConfig.getBaselineStartMinute()), info.getStartTime());
-    assertEquals(TimeUnit.MINUTES.toMillis(expectedEnd), info.getEndTime());
+    assertThat(TimeUnit.MINUTES.toMillis(sumoConfig.getBaselineStartMinute())).isEqualTo(info.getStartTime());
+    assertThat(TimeUnit.MINUTES.toMillis(expectedEnd)).isEqualTo(info.getEndTime());
   }
 }

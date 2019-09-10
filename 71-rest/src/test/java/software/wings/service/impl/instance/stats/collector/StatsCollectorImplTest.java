@@ -1,7 +1,6 @@
 package software.wings.service.impl.instance.stats.collector;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -20,6 +19,6 @@ public class StatsCollectorImplTest extends CategoryTest {
 
     Instant instant2 = Instant.parse("2018-12-03T10:12:30.00Z");
     aligned = StatsCollectorImpl.alignedWithMinute(instant2, 10);
-    assertEquals(aligned, Instant.parse("2018-12-03T10:10:00.00Z"));
+    assertThat(Instant.parse("2018-12-03T10:10:00.00Z")).isEqualTo(aligned);
   }
 }

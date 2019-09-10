@@ -1,7 +1,6 @@
 package software.wings.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotEquals;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -25,7 +24,7 @@ public class CryptoUtilsTest extends CategoryTest {
     // test strings are of expected length and random
     assertThat(randomString1.length()).isEqualTo(LEN);
     assertThat(randomString2.length()).isEqualTo(LEN);
-    assertNotEquals(randomString1, randomString2);
+    assertThat(randomString1).isNotEqualTo(randomString2);
 
     randomString1 = CryptoUtils.secureRandAlphaNumString(LEN * LEN);
     randomString2 = CryptoUtils.secureRandAlphaNumString(LEN * LEN);
@@ -36,6 +35,6 @@ public class CryptoUtilsTest extends CategoryTest {
     // test strings are of expected length and random
     assertThat(randomString1.length()).isEqualTo(LEN * LEN);
     assertThat(randomString2.length()).isEqualTo(LEN * LEN);
-    assertNotEquals(randomString1, randomString2);
+    assertThat(randomString1).isNotEqualTo(randomString2);
   }
 }

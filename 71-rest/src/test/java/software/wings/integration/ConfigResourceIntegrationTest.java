@@ -3,7 +3,6 @@ package software.wings.integration;
 import static io.harness.rule.OwnerRule.MARK;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotEquals;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.data.structure.EmptyPredicate;
@@ -87,7 +86,7 @@ public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
     // 5. Download the config file again to verify content changed
     savedConfigFile = getConfig(appId, configId);
     int newConfigFileVersion = savedConfigFile.getDefaultVersion();
-    assertNotEquals(oldConfigFileVersion, newConfigFileVersion);
+    assertThat(oldConfigFileVersion).isNotEqualTo(newConfigFileVersion);
     downloadedFileContent = downloadConfig(configId, appId, newConfigFileVersion);
     assertThat(downloadedFileContent).isEqualTo(CONFIG_FILE2_CONTENT);
 

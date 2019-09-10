@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.cv;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
@@ -75,7 +75,7 @@ public class LogDataCollectionTaskTest extends DataCollectionTestBase {
     logDataCollectionTask.collectAndSaveData(logDataCollectionInfo);
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
     verify(dataCollectionService).executeParrallel(captor.capture());
-    assertEquals(3, captor.getValue().size());
+    assertThat(captor.getValue().size()).isEqualTo(3);
   }
 
   public LogDataCollectionInfoV2 createLogDataCollectionInfo() {

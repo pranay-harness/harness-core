@@ -7,7 +7,6 @@ import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.VAIBHAV_TULSYAN;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -786,8 +785,8 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     }
     assertThat(timeSeriesRisk.getRisk()).isEqualTo(2);
     assertThat(timeSeriesRisk.getEndTime()).isEqualTo(TimeUnit.MINUTES.toMillis(25685341));
-    assertEquals("Start time should be correct",
-        TimeUnit.MINUTES.toMillis(25685341 - CRON_POLL_INTERVAL_IN_MINUTES) + 1, timeSeriesRisk.getStartTime());
+    assertThat(TimeUnit.MINUTES.toMillis(25685341 - CRON_POLL_INTERVAL_IN_MINUTES) + 1)
+        .isEqualTo(timeSeriesRisk.getStartTime());
   }
 
   @Test
