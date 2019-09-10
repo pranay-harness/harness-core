@@ -32,7 +32,7 @@ public class ApprovalPollingHandler implements Handler<ApprovalPollingJobEntity>
     static int POOL_SIZE = 5;
     public static void registerIterators(Injector injector) {
       final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
-          POOL_SIZE, new ThreadFactoryBuilder().setNameFormat("ApprovalPolling").build());
+          POOL_SIZE, new ThreadFactoryBuilder().setNameFormat("Iterator-ApprovalPolling").build());
 
       final ApprovalPollingHandler handler = new ApprovalPollingHandler();
       injector.injectMembers(handler);

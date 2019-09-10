@@ -31,7 +31,7 @@ public class EntityAuditRecordHandler implements Handler<AuditRecord> {
     static int POOL_SIZE = 2;
     public static void registerIterators(Injector injector) {
       final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
-          POOL_SIZE, new ThreadFactoryBuilder().setNameFormat("EntityAuditRecordProcessor").build());
+          POOL_SIZE, new ThreadFactoryBuilder().setNameFormat("Iterator-EntityAuditRecordProcessor").build());
 
       final EntityAuditRecordHandler handler = new EntityAuditRecordHandler();
       injector.injectMembers(handler);

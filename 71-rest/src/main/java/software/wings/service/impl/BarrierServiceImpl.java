@@ -72,7 +72,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
   public static void registerIterators(Injector injector) {
     final int threads = 2;
     final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
-        threads, new ThreadFactoryBuilder().setNameFormat("BarrierInstanceMonitor").build());
+        threads, new ThreadFactoryBuilder().setNameFormat("Iterator-BarrierInstanceMonitor").build());
 
     final BarrierService barrierService = injector.getInstance(BarrierService.class);
 

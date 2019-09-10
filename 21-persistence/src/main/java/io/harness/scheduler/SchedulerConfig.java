@@ -6,6 +6,7 @@ public class SchedulerConfig {
   @JsonProperty(defaultValue = "com.novemberain.quartz.mongodb.DynamicMongoDBJobStore")
   private String jobStoreClass = com.novemberain.quartz.mongodb.DynamicMongoDBJobStore.class.getCanonicalName();
 
+  @JsonProperty(defaultValue = "true") private boolean isEnabled = true;
   @JsonProperty(defaultValue = "1") private String threadCount = "1";
   @JsonProperty(defaultValue = "10000") private String idleWaitTime = "10000";
   @JsonProperty(defaultValue = "true") private String autoStart = "true";
@@ -16,6 +17,14 @@ public class SchedulerConfig {
 
   private String mongoUri;
   @JsonProperty(defaultValue = "30000") private String mongoOptionWriteConcernTimeoutMillis = "30000";
+
+  public boolean isEnabled() {
+    return isEnabled;
+  }
+
+  public void setEnabled(boolean enabled) {
+    isEnabled = enabled;
+  }
 
   public String getJobStoreClass() {
     return jobStoreClass;

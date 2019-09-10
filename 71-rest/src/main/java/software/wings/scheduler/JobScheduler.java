@@ -25,6 +25,10 @@ public class JobScheduler extends HQuartzScheduler implements ConfigChangeListen
   @Inject
   public JobScheduler(Injector injector, SchedulerConfig schedulerConfig, String defaultMongoUri) {
     super(injector, schedulerConfig, defaultMongoUri);
+    if (!schedulerConfig.isEnabled()) {
+      return;
+    }
+
     try {
       if (schedulerConfig.getAutoStart().equals("true")) {
         injector.getInstance(MaintenanceController.class).register(this);

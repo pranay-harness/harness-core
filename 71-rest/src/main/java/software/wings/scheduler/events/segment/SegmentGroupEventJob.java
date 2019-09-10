@@ -41,7 +41,7 @@ public class SegmentGroupEventJob implements Handler<SegmentGroupEventJobContext
     public static void registerIterators(Injector injector) {
       try {
         final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
-            POOL_SIZE, new ThreadFactoryBuilder().setNameFormat("SegmentGroupEventJob-Pool").build());
+            POOL_SIZE, new ThreadFactoryBuilder().setNameFormat("Iterator-SegmentGroupEventJob-Pool").build());
 
         final SegmentGroupEventJob handler = new SegmentGroupEventJob();
         injector.injectMembers(handler);

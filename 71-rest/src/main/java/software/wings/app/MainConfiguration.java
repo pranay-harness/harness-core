@@ -66,6 +66,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConnectionFactory = MongoConfig.builder().build();
   @JsonProperty private PortalConfig portal = new PortalConfig();
+  @JsonProperty(defaultValue = "true") private boolean enableIterators = true;
   @JsonProperty(defaultValue = "true") private boolean enableAuth = true;
   @JsonProperty(defaultValue = "50") private int jenkinsBuildQuerySize = 50;
   @JsonProperty private FileUploadLimit fileUploadLimits = new FileUploadLimit();

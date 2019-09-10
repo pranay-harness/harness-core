@@ -26,8 +26,8 @@ public class GCPBillingHandler implements Handler<GCPBillingJobEntity> {
   public static class GCPBillingExecutor {
     static int POOL_SIZE = 5;
     public static void registerIterators(Injector injector) {
-      final ScheduledThreadPoolExecutor executor =
-          new ScheduledThreadPoolExecutor(POOL_SIZE, new ThreadFactoryBuilder().setNameFormat("GCPBilling").build());
+      final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
+          POOL_SIZE, new ThreadFactoryBuilder().setNameFormat("Iterator-GCPBilling").build());
 
       final GCPBillingHandler handler = new GCPBillingHandler();
       injector.injectMembers(handler);

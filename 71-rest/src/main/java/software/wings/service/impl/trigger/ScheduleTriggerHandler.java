@@ -31,7 +31,7 @@ public class ScheduleTriggerHandler implements Handler<DeploymentTrigger> {
   private static final ScheduleTriggerHandler handler = new ScheduleTriggerHandler();
   private static ExecutorService executor = Executors.newSingleThreadExecutor();
   private static final ScheduledThreadPoolExecutor executorService = new ScheduledThreadPoolExecutor(
-      POOL_SIZE, new ThreadFactoryBuilder().setNameFormat("ScheduleTriggerThread").build());
+      POOL_SIZE, new ThreadFactoryBuilder().setNameFormat("Iterator-ScheduleTriggerThread").build());
 
   private static PersistenceIterator<DeploymentTrigger> iterator =
       MongoPersistenceIterator.<DeploymentTrigger>builder()
