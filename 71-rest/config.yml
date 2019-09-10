@@ -43,6 +43,7 @@ serviceScheduler:
   instanceId: automation_background
   tablePrefix: quartz
   threadCount: 25
+  enabled: true
   #mongoUri: mongodb://localhost:27017/service_scheduler
 
 enableIterators: true

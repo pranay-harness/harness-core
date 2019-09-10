@@ -32,6 +32,8 @@ import static software.wings.common.Constants.WORKFLOW_VALIDATION_MESSAGE;
 import static software.wings.common.Constants.phaseNamePattern;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_PREFIX;
 
+import com.google.common.base.Joiner;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.OrchestrationWorkflowType;
@@ -316,10 +318,23 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
    * Invoked after loading document from mongo by morphia.
    */
   @Override
-  public void onLoad(boolean infraRefactor) {
+  public void onLoad(boolean infraRefactor, Workflow workflow) {
     populatePhaseSteps(preDeploymentSteps, getGraph());
     if (rollbackProvisioners != null) {
       populatePhaseSteps(rollbackProvisioners, getGraph());
+    }
+
+    // update related field for envId var.
+    if (workflow.checkEnvironmentTemplatized()) {
+      String envVarName = workflow.fetchEnvTemplatizedName();
+      Variable variable = contains(userVariables, envVarName);
+      if (variable != null) {
+        if (infraRefactor) {
+          variable.getMetadata().put("relatedField", Joiner.on(",").join(fetchInfraDefVariableNames()));
+        } else {
+          variable.getMetadata().put("relatedField", Joiner.on(",").join(fetchInfraMappingVariableNames()));
+        }
+      }
     }
 
     workflowPhases = new ArrayList<>();
@@ -331,9 +346,12 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       if (infraRefactor) {
         if (workflowPhase.checkInfraDefinitionTemplatized()) {
           String infraVarName = workflowPhase.fetchInfraDefinitionTemplatizedName();
-          if (!workflowPhase.checkServiceTemplatized()) {
-            Variable variable = contains(userVariables, infraVarName);
-            if (variable != null) {
+          Variable variable = contains(userVariables, infraVarName);
+          if (variable != null) {
+            if (!workflow.checkEnvironmentTemplatized()) {
+              variable.getMetadata().put("envId", workflow.getEnvId());
+            }
+            if (!workflowPhase.checkServiceTemplatized()) {
               variable.getMetadata().put("serviceId", workflowPhase.getServiceId());
             }
           }
@@ -341,10 +359,18 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       } else {
         if (workflowPhase.checkInfraTemplatized()) {
           String infraVarName = workflowPhase.fetchInfraMappingTemplatizedName();
-          if (!workflowPhase.checkServiceTemplatized()) {
-            Variable variable = contains(userVariables, infraVarName);
-            if (variable != null) {
+          // if env is not templatised add envId in metadata
+          Variable variable = contains(userVariables, infraVarName);
+          if (variable != null) {
+            if (!workflow.checkEnvironmentTemplatized()) {
+              variable.getMetadata().put("envId", workflow.getEnvId());
+            } else {
+              variable.getMetadata().put("envId", "");
+            }
+            if (!workflowPhase.checkServiceTemplatized()) {
               variable.getMetadata().put("serviceId", workflowPhase.getServiceId());
+            } else {
+              variable.getMetadata().put("serviceId", "");
             }
           }
         }
@@ -357,6 +383,20 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     }
     populatePhaseSteps(postDeploymentSteps, getGraph());
     reorderUserVariables();
+  }
+
+  private List<String> fetchInfraMappingVariableNames() {
+    return userVariables.stream()
+        .filter(t -> t.obtainEntityType() != null && t.obtainEntityType().equals(INFRASTRUCTURE_MAPPING))
+        .map(Variable::getName)
+        .collect(toList());
+  }
+
+  private List<String> fetchInfraDefVariableNames() {
+    return userVariables.stream()
+        .filter(t -> t.obtainEntityType() != null && t.obtainEntityType().equals(INFRASTRUCTURE_DEFINITION))
+        .map(Variable::getName)
+        .collect(toList());
   }
 
   /**
