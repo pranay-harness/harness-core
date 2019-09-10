@@ -162,14 +162,6 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
           learningEngineAnalysisTask.getExecutionStatus(), analysisTask.getAnalysis_minute(),
           learningEngineAnalysisTask);
     }
-    if (isTaskCreated) {
-      cvActivityLogService
-          .getLogger(
-              analysisTask.getCvConfigId(), analysisTask.getAnalysis_minute(), analysisTask.getState_execution_id())
-          .info("Task is successfully enqueued for analysis for "
-                  + ClusterLevel.valueOf(analysisTask.getCluster_level()).getClusteringPhase() + ". Analysis minute %t",
-              TimeUnit.MINUTES.toMillis(analysisTask.getAnalysis_minute()));
-    }
     return isTaskCreated;
   }
 
@@ -232,13 +224,17 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
       }
       return null;
     }
-    if (task != null) {
-      cvActivityLogService.getLogger(task.getCvConfigId(), task.getAnalysis_minute(), task.getState_execution_id())
-          .info("Task picked up by learning engine for "
-                  + ClusterLevel.valueOf(task.getCluster_level()).getClusteringPhase() + ". Analysis minute %t",
-              TimeUnit.MINUTES.toMillis(task.getAnalysis_minute()));
-    }
+    logActivityOnLETaskPickup(task);
     return task;
+  }
+
+  private void logActivityOnLETaskPickup(LearningEngineAnalysisTask task) {
+    if (task != null && task.getMl_analysis_type() == MLAnalysisType.TIME_SERIES) {
+      cvActivityLogService.getLogger(task.getCvConfigId(), task.getAnalysis_minute(), task.getState_execution_id())
+          .info("Time series analysis started for time range %t to %t",
+              TimeUnit.MINUTES.toMillis(task.getAnalysis_minute()),
+              TimeUnit.MINUTES.toMillis(task.getAnalysis_minute() + 1));
+    }
   }
 
   @Override
@@ -295,8 +291,8 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
         wingsPersistence.createUpdateOperations(LearningEngineAnalysisTask.class)
             .set(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.SUCCESS);
     wingsPersistence.update(query, updateOperations);
-    logAnalysisCompleteActivity(
-        cvActivityLogService.getLoggerByStateExecutionId(stateExecutionId), level, analysisMinute);
+    logActivityOnAnalysisComplete(
+        cvActivityLogService.getLoggerByStateExecutionId(stateExecutionId), type, analysisMinute);
   }
 
   @Override
@@ -308,15 +304,17 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     wingsPersistence.updateField(LearningEngineAnalysisTask.class, taskId,
         LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.SUCCESS);
     LearningEngineAnalysisTask task = wingsPersistence.get(LearningEngineAnalysisTask.class, taskId);
-    logAnalysisCompleteActivity(
+    logActivityOnAnalysisComplete(
         cvActivityLogService.getLogger(task.getCvConfigId(), task.getAnalysis_minute(), task.getState_execution_id()),
-        ClusterLevel.valueOf(task.getCluster_level()), task.getAnalysis_minute());
+        task.getMl_analysis_type(), task.getAnalysis_minute());
     logger.info("Job has been marked as SUCCESS for taskId : {}", taskId);
   }
 
-  private void logAnalysisCompleteActivity(Logger activityLogger, ClusterLevel level, long analysisMinute) {
-    activityLogger.info("Analysis completed for " + level.getClusteringPhase() + ". Analysis minute %t",
-        TimeUnit.MINUTES.toMillis(analysisMinute));
+  private void logActivityOnAnalysisComplete(
+      Logger activityLogger, MLAnalysisType mlAnalysisType, long analysisMinute) {
+    String prefix = mlAnalysisType == MLAnalysisType.TIME_SERIES ? "Time series " : "Log ";
+    activityLogger.info(prefix + "analysis completed for time range %t to %t.",
+        TimeUnit.MINUTES.toMillis(analysisMinute), TimeUnit.MINUTES.toMillis(analysisMinute + 1));
   }
   @Override
   public void markExpTaskCompleted(String taskId) {

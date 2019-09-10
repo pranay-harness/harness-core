@@ -150,6 +150,9 @@ public class PrometheusState extends AbstractMetricAnalysisState {
                                     .appId(context.getAppId())
                                     .stateExecutionId(context.getStateExecutionInstanceId())
                                     .executionData(executionData)
+                                    .dataCollectionStartTime(dataCollectionStartTimeStamp)
+                                    .dataCollectionEndTime(dataCollectionStartTimeStamp
+                                        + TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration())))
                                     .build(),
         waitId);
     return delegateService.queueTask(delegateTask);

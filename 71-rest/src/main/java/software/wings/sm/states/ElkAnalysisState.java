@@ -293,6 +293,9 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     waitNotifyEngine.waitForAll(DataCollectionCallback.builder()
                                     .appId(context.getAppId())
                                     .stateExecutionId(context.getStateExecutionInstanceId())
+                                    .dataCollectionStartTime(logCollectionStartTimeStamp)
+                                    .dataCollectionEndTime(logCollectionStartTimeStamp
+                                        + TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration())))
                                     .executionData(executionData)
                                     .build(),
         waitIds);

@@ -281,6 +281,9 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
     waitNotifyEngine.waitForAll(DataCollectionCallback.builder()
                                     .appId(context.getAppId())
                                     .stateExecutionId(context.getStateExecutionInstanceId())
+                                    .dataCollectionStartTime(dataCollectionStartTimeStamp)
+                                    .dataCollectionEndTime(dataCollectionStartTimeStamp
+                                        + TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration())))
                                     .executionData(executionData)
                                     .build(),
         waitIds);

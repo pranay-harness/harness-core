@@ -34,6 +34,7 @@ import software.wings.service.intfc.verification.CVTaskService;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -155,8 +156,9 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
   public void testIfCVTaskValidUntilIsBeingSetToOneMonth() {
     CVTask cvTask = createAndSaveCVTask();
     assertTrue(cvTask.getValidUntil().getTime() > Instant.now().toEpochMilli());
-    assertTrue(cvTask.getValidUntil().getTime() > Instant.now().plus(29, ChronoUnit.DAYS).toEpochMilli()
-        && cvTask.getValidUntil().getTime() < Instant.now().plus(31, ChronoUnit.DAYS).toEpochMilli());
+    assertThat(Math.abs(cvTask.getValidUntil().getTime()
+                   - OffsetDateTime.now().plus(1, ChronoUnit.MONTHS).toInstant().toEpochMilli())
+        < TimeUnit.DAYS.toMillis(3));
   }
 
   @Test

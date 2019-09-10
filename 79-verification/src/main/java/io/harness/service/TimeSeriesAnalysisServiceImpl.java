@@ -141,16 +141,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     } catch (Throwable t) {
       logger.info("Error converting to TimeSeriesDataRecord", t);
     }
-    if (stateExecutionId != null) {
-      // TODO: get cvConfigId and dataCollectionMin and log when 24 * 7 config save happens
-      cvActivityLogService.getLoggerByStateExecutionId(stateExecutionId)
-          .info("Metrics data has been collected for minute " + getDataCollectionMinute(metricData));
-    }
     return true;
-  }
-
-  private int getDataCollectionMinute(List<NewRelicMetricDataRecord> newRelicMetricDataRecords) {
-    return newRelicMetricDataRecords.get(0).getDataCollectionMinute();
   }
 
   @Override

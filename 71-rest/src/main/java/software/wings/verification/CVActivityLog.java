@@ -1,21 +1,28 @@
 package software.wings.verification;
 
+import static software.wings.common.VerificationConstants.ACTIVITY_LOG_TTL_WEEKS;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 
+import java.time.OffsetDateTime;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 @Entity(value = "cvActivityLogs", noClassnameStored = true)
@@ -33,6 +40,13 @@ public class CVActivityLog implements PersistentEntity, UuidAware, CreatedAtAwar
   @NonNull private String log;
   @NonNull private LogLevel logLevel;
   private List<Long> timestampParams;
+
+  @Default
+  @JsonIgnore
+  @SchemaIgnore
+  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  private Date validUntil = Date.from(OffsetDateTime.now().plusWeeks(ACTIVITY_LOG_TTL_WEEKS).toInstant());
+  ;
 
   @JsonIgnore
   public long getLastUpdatedAt() {

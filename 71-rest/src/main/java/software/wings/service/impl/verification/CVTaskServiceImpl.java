@@ -98,12 +98,8 @@ public class CVTaskServiceImpl implements CVTaskService {
   @Override
   public void updateTaskStatus(String cvTaskId, DataCollectionTaskResult result) {
     CVTask cvTask = getCVTask(cvTaskId);
-    Logger activityLogger = getActivityLogger(cvTask);
-    activityLogger.info("Data collection task completed with status: " + result.getStatus() + ". minute: %t",
-        cvTask.getDataCollectionInfo().getStartTime().toEpochMilli());
+    logActivity(result, cvTask);
     if (result.getStatus() == DataCollectionTaskStatus.FAILURE) {
-      activityLogger.error("Data collection task failed with exception " + result.getErrorMessage() + ". minute: %t",
-          cvTask.getDataCollectionInfo().getStartTime().toEpochMilli());
       Map<String, Object> updateMap =
           ImmutableMap.of(CVTaskKeys.status, ExecutionStatus.FAILED, CVTaskKeys.exception, result.getErrorMessage());
       wingsPersistence.updateFields(CVTask.class, cvTaskId, updateMap);
@@ -117,6 +113,20 @@ public class CVTaskServiceImpl implements CVTaskService {
       enqueueNextTask(cvTask);
     } else {
       throw new RuntimeException("Not implemented: " + result.getStatus());
+    }
+  }
+
+  private void logActivity(DataCollectionTaskResult result, CVTask cvTask) {
+    Logger activityLogger = getActivityLogger(cvTask);
+    // plus one in the endtime to represent the minute boundary properly in the UI
+    if (result.getStatus() == DataCollectionTaskStatus.SUCCESS) {
+      activityLogger.info("Data collection successful for time range %t to %t",
+          cvTask.getDataCollectionInfo().getStartTime().toEpochMilli(),
+          cvTask.getDataCollectionInfo().getEndTime().toEpochMilli() + 1);
+    } else {
+      activityLogger.error("Data collection failed for time range %t to %t",
+          cvTask.getDataCollectionInfo().getStartTime().toEpochMilli(),
+          cvTask.getDataCollectionInfo().getEndTime().toEpochMilli() + 1);
     }
   }
 

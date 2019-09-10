@@ -1508,7 +1508,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     String message = user == null
         ? "The state was marked " + status.name().toLowerCase()
         : "The state was marked " + status.name().toLowerCase() + " by " + user.getName() + "(" + user.getEmail() + ")";
-
+    if (status == ExecutionStatus.SUCCESS) {
+      cvActivityLogService.getLoggerByStateExecutionId(stateExecutionId).info(message);
+    } else {
+      cvActivityLogService.getLoggerByStateExecutionId(stateExecutionId).error(message);
+    }
     if (getLogAnalysisStates().contains(analysisContext.getStateType())) {
       final LogMLAnalysisRecord analysisRecord = LogMLAnalysisRecord.builder()
                                                      .logCollectionMinute(-1)
