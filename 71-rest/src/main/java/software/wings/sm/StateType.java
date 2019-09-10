@@ -86,6 +86,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhaseStepType;
 import software.wings.common.Constants;
+import software.wings.common.WorkflowConstants;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.sm.states.APMVerificationState;
@@ -594,33 +595,33 @@ public enum StateType implements StateTypeDescriptor {
   TERRAFORM_ROLLBACK(TerraformRollbackState.class, PROVISIONERS, ROLLBACK_TERRAFORM_NAME,
       singletonList(InfrastructureMappingType.AWS_SSH), singletonList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
 
-  K8S_DEPLOYMENT_ROLLING(K8sRollingDeploy.class, KUBERNETES, 3, Constants.K8S_DEPLOYMENT_ROLLING,
+  K8S_DEPLOYMENT_ROLLING(K8sRollingDeploy.class, KUBERNETES, 3, WorkflowConstants.K8S_DEPLOYMENT_ROLLING,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
-  K8S_SCALE(K8sScale.class, KUBERNETES, 6, Constants.K8S_SCALE,
+  K8S_SCALE(K8sScale.class, KUBERNETES, 6, WorkflowConstants.K8S_SCALE,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   K8S_DEPLOYMENT_ROLLING_ROLLBACK(K8sRollingDeployRollback.class, KUBERNETES, 4,
-      Constants.K8S_DEPLOYMENT_ROLLING_ROLLBACK,
+      WorkflowConstants.K8S_DEPLOYMENT_ROLLING_ROLLBACK,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
-  K8S_BLUE_GREEN_DEPLOY(K8sBlueGreenDeploy.class, KUBERNETES, 1, Constants.K8S_BLUE_GREEN_DEPLOY,
+  K8S_BLUE_GREEN_DEPLOY(K8sBlueGreenDeploy.class, KUBERNETES, 1, WorkflowConstants.K8S_BLUE_GREEN_DEPLOY,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
-  K8S_CANARY_DEPLOY(K8sCanaryDeploy.class, KUBERNETES, 0, Constants.K8S_CANARY_DEPLOY,
+  K8S_CANARY_DEPLOY(K8sCanaryDeploy.class, KUBERNETES, 0, WorkflowConstants.K8S_CANARY_DEPLOY,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
-  K8S_DELETE(K8sDelete.class, KUBERNETES, 7, Constants.K8S_DELETE,
+  K8S_DELETE(K8sDelete.class, KUBERNETES, 7, WorkflowConstants.K8S_DELETE,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),

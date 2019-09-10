@@ -5,7 +5,6 @@ import static io.harness.beans.OrchestrationWorkflowType.BASIC;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.beans.OrchestrationWorkflowType.CANARY;
-import static io.harness.beans.OrchestrationWorkflowType.MULTI_SERVICE;
 import static io.harness.beans.OrchestrationWorkflowType.ROLLING;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
@@ -36,13 +35,8 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.api.DeploymentType.AMI;
-import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
-import static software.wings.api.DeploymentType.AWS_LAMBDA;
-import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
-import static software.wings.api.DeploymentType.PCF;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Base.APP_ID_KEY;
@@ -52,16 +46,10 @@ import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
-import static software.wings.beans.PhaseStepType.COLLECT_ARTIFACT;
 import static software.wings.beans.PhaseStepType.K8S_PHASE_STEP;
-import static software.wings.beans.PhaseStepType.PREPARE_STEPS;
-import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
-import static software.wings.common.Constants.K8S_CANARY_PHASE_NAME;
-import static software.wings.common.Constants.K8S_PRIMARY_PHASE_NAME;
 import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
-import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_SETUP;
 import static software.wings.sm.StateType.AWS_CODEDEPLOY_STATE;
@@ -98,7 +86,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -134,11 +121,8 @@ import software.wings.api.DeploymentType;
 import software.wings.api.InstanceElement;
 import software.wings.app.StaticConfiguration;
 import software.wings.beans.Account;
-import software.wings.beans.AmiDeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.ArtifactVariable;
-import software.wings.beans.AwsAmiInfrastructureMapping;
-import software.wings.beans.BuildWorkflow;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CustomOrchestrationWorkflow;
 import software.wings.beans.ElementExecutionSummary;
@@ -173,7 +157,6 @@ import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowKeys;
 import software.wings.beans.WorkflowCategorySteps;
 import software.wings.beans.WorkflowCategoryStepsMeta;
-import software.wings.beans.WorkflowCreationFlags;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.WorkflowPhase;
@@ -193,16 +176,16 @@ import software.wings.beans.peronalization.Personalization;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.beans.trigger.Trigger;
-import software.wings.common.Constants;
+import software.wings.common.WorkflowConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
-import software.wings.infra.AwsAmiInfrastructure;
-import software.wings.infra.InfraMappingInfrastructureProvider;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.ServiceClassLocator;
+import software.wings.service.impl.workflow.creation.WorkflowCreator;
+import software.wings.service.impl.workflow.creation.WorkflowCreatorFactory;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -348,6 +331,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
+
+  @Inject private WorkflowCreatorFactory workflowCreatorFactory;
 
   /**
    * {@inheritDoc}
@@ -794,7 +779,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .type(K8S_DEPLOYMENT_ROLLING.name())
-                                    .name(Constants.K8S_DEPLOYMENT_ROLLING)
+                                    .name(WorkflowConstants.K8S_DEPLOYMENT_ROLLING)
                                     .properties(defaultSetupProperties)
                                     .build())
                        .build());
@@ -811,7 +796,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                .addStep(GraphNode.builder()
                                             .id(generateUuid())
                                             .type(K8S_DEPLOYMENT_ROLLING_ROLLBACK.name())
-                                            .name(Constants.K8S_DEPLOYMENT_ROLLING_ROLLBACK)
+                                            .name(WorkflowConstants.K8S_DEPLOYMENT_ROLLING_ROLLBACK)
                                             .rollback(true)
                                             .build())
                                .withPhaseStepNameForRollback(WorkflowServiceHelper.DEPLOY)
@@ -854,7 +839,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .type(K8S_BLUE_GREEN_DEPLOY.name())
-                                    .name(Constants.K8S_STAGE_DEPLOY)
+                                    .name(WorkflowConstants.K8S_STAGE_DEPLOY)
                                     .properties(defaultSetupProperties)
                                     .build())
                        .build());
@@ -979,7 +964,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .type(K8S_CANARY_DEPLOY.name())
-                                    .name(Constants.K8S_CANARY_DEPLOY)
+                                    .name(WorkflowConstants.K8S_CANARY_DEPLOY)
                                     .properties(defaultCanaryDeployProperties)
                                     .build())
                        .build());
@@ -1035,56 +1020,20 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
     final boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, workflow.getAccountId());
     validateOrchestrationWorkflow(workflow);
-    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+    final OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     workflow.setDefaultVersion(1);
     List<String> linkedTemplateUuids = new ArrayList<>();
     List<String> linkedArtifactStreamIds = new ArrayList<>();
+
     if (orchestrationWorkflow != null) {
-      if (StringUtils.isNotEmpty(workflow.getServiceId())
-          && workflowServiceHelper.isK8sV2Service(workflow.getAppId(), workflow.getServiceId())) {
-        CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-        if (isEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
-          createK8sWorkflow(workflow);
-        }
-      } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)
-          || orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
-        CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-        addLinkedPreOrPostDeploymentSteps(canaryOrchestrationWorkflow);
-        if (isNotEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
-          List<WorkflowPhase> workflowPhases = canaryOrchestrationWorkflow.getWorkflowPhases();
-          canaryOrchestrationWorkflow.setWorkflowPhases(new ArrayList<>());
-          workflowPhases.forEach(workflowPhase -> attachWorkflowPhase(workflow, workflowPhase));
-        }
-      } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)
-          || orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING)
-          || orchestrationWorkflow.getOrchestrationWorkflowType().equals(BLUE_GREEN)) {
-        CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-        addLinkedPreOrPostDeploymentSteps(canaryOrchestrationWorkflow);
-        WorkflowPhase workflowPhase;
-        if (isEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
-          workflowPhase = aWorkflowPhase()
-                              .infraMappingId(workflow.getInfraMappingId())
-                              .serviceId(workflow.getServiceId())
-                              .daemonSet(isDaemonSet(workflow.getAppId(), workflow.getServiceId()))
-                              .statefulSet(isStatefulSet(workflow.getAppId(), workflow.getServiceId()))
-                              .build();
-          if (infraRefactor) {
-            workflowPhase.setInfraDefinitionId(workflow.getInfraDefinitionId());
-          }
-          attachWorkflowPhase(workflow, workflowPhase);
-        }
-      } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BUILD)) {
-        BuildWorkflow buildWorkflow = (BuildWorkflow) orchestrationWorkflow;
-        addLinkedPreOrPostDeploymentSteps(buildWorkflow);
-        if (isEmpty(buildWorkflow.getWorkflowPhases())) {
-          WorkflowPhase workflowPhase = aWorkflowPhase().build();
-          attachWorkflowPhase(workflow, workflowPhase);
-        }
-      }
+      boolean isV2ServicePresent = StringUtils.isNotEmpty(workflow.getServiceId())
+          && workflowServiceHelper.isK8sV2Service(workflow.getAppId(), workflow.getServiceId());
+      WorkflowCreator workflowCreator = workflowCreatorFactory.getWorkflowCreatorFactory(
+          orchestrationWorkflow.getOrchestrationWorkflowType(), isV2ServicePresent);
+      workflow = workflowCreator.createWorkflow(workflow);
       if (isEmpty(orchestrationWorkflow.getNotificationRules())) {
         createDefaultNotificationRule(workflow);
       }
-
       if (!orchestrationWorkflow.getOrchestrationWorkflowType().equals(BUILD)
           && orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
         CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
@@ -1395,21 +1344,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     workflow.setTemplatizedServiceIds(orchestrationWorkflow.getTemplatizedServiceIds());
   }
 
-  private void generateNewWorkflowPhaseStepsForArtifactCollection(WorkflowPhase workflowPhase) {
-    List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
-
-    phaseSteps.add(aPhaseStep(PREPARE_STEPS, WorkflowServiceHelper.PREPARE_STEPS).build());
-
-    phaseSteps.add(aPhaseStep(COLLECT_ARTIFACT, Constants.COLLECT_ARTIFACT)
-                       .addStep(GraphNode.builder()
-                                    .id(generateUuid())
-                                    .type(ARTIFACT_COLLECTION.name())
-                                    .name(Constants.ARTIFACT_COLLECTION)
-                                    .build())
-                       .build());
-    phaseSteps.add(aPhaseStep(WRAP_UP, WorkflowServiceHelper.WRAP_UP).build());
-  }
-
   /**
    * Sets service Id to Phase
    *
@@ -1708,7 +1642,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     workflowPhase.setDaemonSet(isDaemonSet(appId, workflowPhase.getServiceId()));
     workflowPhase.setStatefulSet(isStatefulSet(appId, workflowPhase.getServiceId()));
 
-    attachWorkflowPhase(workflow, workflowPhase);
+    boolean isV2ServicePresent = StringUtils.isNotEmpty(workflowPhase.getServiceId())
+        && workflowServiceHelper.isK8sV2Service(workflow.getAppId(), workflowPhase.getServiceId());
+
+    WorkflowCreator workflowCreator = workflowCreatorFactory.getWorkflowCreatorFactory(
+        orchestrationWorkflow.getOrchestrationWorkflowType(), isV2ServicePresent);
+
+    workflowCreator.attachWorkflowPhase(workflow, workflowPhase);
 
     if (artifactCheckRequiredForDeployment(workflowPhase, orchestrationWorkflow)) {
       workflowServiceHelper.ensureArtifactCheckInPreDeployment(
@@ -1809,98 +1749,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return workflowServiceHelper.workflowHasSshDeploymentPhase(canaryOrchestrationWorkflow);
     }
     return false;
-  }
-
-  private void attachWorkflowPhase(Workflow workflow, WorkflowPhase workflowPhase) {
-    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-    boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, workflow.getAccountId());
-    if (orchestrationWorkflow.needCloudProvider()) {
-      if (infraRefactor) {
-        workflowServiceHelper.setCloudProviderInfraRefactor(workflow.getAppId(), workflowPhase);
-      } else {
-        workflowServiceHelper.setCloudProvider(workflow.getAppId(), workflowPhase);
-      }
-    }
-
-    // No need to generate phase steps if it's already created
-    if (isNotEmpty(workflowPhase.getPhaseSteps()) && orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
-      ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases().add(workflowPhase);
-      return;
-    }
-
-    if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)
-        || orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
-      CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-      boolean serviceRepeat = canaryOrchestrationWorkflow.serviceRepeat(workflowPhase, infraRefactor);
-      boolean createCanaryPhase = !serviceRepeat;
-      boolean createPrimaryPhase =
-          serviceRepeat && !canaryOrchestrationWorkflow.containsPhaseWithName(K8S_PRIMARY_PHASE_NAME);
-
-      if (workflowServiceHelper.isK8sV2Service(workflow.getAppId(), workflowPhase.getServiceId())) {
-        if (createPrimaryPhase) {
-          if (isBlank(workflowPhase.getName())) {
-            workflowPhase.setName(K8S_PRIMARY_PHASE_NAME);
-          }
-          addK8sRollingWorkflowPhaseSteps(workflowPhase);
-        } else if (createCanaryPhase) {
-          if (isBlank(workflowPhase.getName())) {
-            workflowPhase.setName(K8S_CANARY_PHASE_NAME);
-          }
-          addK8sCanaryWorkflowPhaseSteps(workflowPhase);
-        } else {
-          addK8sEmptyPhaseStep(workflowPhase);
-        }
-
-        workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(workflowPhase);
-        canaryOrchestrationWorkflow.getWorkflowPhases().add(workflowPhase);
-        WorkflowPhase rollbackWorkflowPhase;
-        if (infraRefactor) {
-          rollbackWorkflowPhase = createRollbackPhaseInfraRefactor(workflowPhase);
-        } else {
-          rollbackWorkflowPhase = createRollbackPhase(workflowPhase);
-        }
-
-        if (createPrimaryPhase) {
-          addK8sRollingRollbackWorkflowPhaseSteps(rollbackWorkflowPhase);
-        } else if (createCanaryPhase) {
-          addK8sCanaryRollbackWorkflowPhaseSteps(rollbackWorkflowPhase);
-        } else {
-          addK8sEmptyRollbackPhaseStep(rollbackWorkflowPhase);
-        }
-
-        workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(rollbackWorkflowPhase);
-        canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
-      } else {
-        generateNewWorkflowPhaseSteps(workflow.getAppId(), workflow.getEnvId(), workflowPhase, serviceRepeat,
-            orchestrationWorkflow.getOrchestrationWorkflowType(), workflow.getCreationFlags());
-        workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(workflowPhase);
-        canaryOrchestrationWorkflow.getWorkflowPhases().add(workflowPhase);
-
-        WorkflowPhase rollbackWorkflowPhase = generateRollbackWorkflowPhase(workflow.getAppId(), workflowPhase,
-            !serviceRepeat, orchestrationWorkflow.getOrchestrationWorkflowType(), workflow.getCreationFlags());
-        workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(rollbackWorkflowPhase);
-        canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
-      }
-    } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)
-        || orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING)
-        || orchestrationWorkflow.getOrchestrationWorkflowType().equals(BLUE_GREEN)) {
-      CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-      generateNewWorkflowPhaseSteps(workflow.getAppId(), workflow.getEnvId(), workflowPhase, false,
-          orchestrationWorkflow.getOrchestrationWorkflowType(), workflow.getCreationFlags());
-
-      workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(workflowPhase);
-      canaryOrchestrationWorkflow.getWorkflowPhases().add(workflowPhase);
-
-      WorkflowPhase rollbackWorkflowPhase = generateRollbackWorkflowPhase(workflow.getAppId(), workflowPhase, true,
-          orchestrationWorkflow.getOrchestrationWorkflowType(), workflow.getCreationFlags());
-      workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(rollbackWorkflowPhase);
-      canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
-    } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BUILD)) {
-      BuildWorkflow buildWorkflow = (BuildWorkflow) orchestrationWorkflow;
-      workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(workflowPhase);
-      generateNewWorkflowPhaseStepsForArtifactCollection(workflowPhase);
-      buildWorkflow.getWorkflowPhases().add(workflowPhase);
-    }
   }
 
   private void preAppendRollbackProvisionInfrastructure(
@@ -3220,154 +3068,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private void updateDefaultArtifactVariablesNeeded(Set<String> serviceArtifactVariableNames) {
     serviceArtifactVariableNames.add(ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME);
-  }
-
-  private boolean isDynamicInfrastructure(String appId, String infrastructureMappingId) {
-    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infrastructureMappingId);
-    if (infrastructureMapping == null) {
-      return false;
-    }
-    return isNotEmpty(infrastructureMapping.getProvisionerId());
-  }
-
-  private void generateNewWorkflowPhaseSteps(String appId, String envId, WorkflowPhase workflowPhase,
-      boolean serviceRepeat, OrchestrationWorkflowType orchestrationWorkflowType, WorkflowCreationFlags creationFlags) {
-    DeploymentType deploymentType = workflowPhase.getDeploymentType();
-    String accountId = appService.getAccountIdByAppId(appId);
-    boolean infraMappingRefactorEnabled = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId);
-    boolean isDynamicInfrastructure;
-    if (infraMappingRefactorEnabled) {
-      isDynamicInfrastructure =
-          infrastructureDefinitionService.isDynamicInfrastructure(appId, workflowPhase.getInfraDefinitionId());
-    } else {
-      isDynamicInfrastructure = isDynamicInfrastructure(appId, workflowPhase.getInfraMappingId());
-    }
-
-    if (deploymentType == ECS) {
-      if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {
-        if (creationFlags != null && creationFlags.isEcsBgDnsType()) {
-          workflowServiceHelper.generateNewWorkflowPhaseStepsForECSBlueGreenRoute53(
-              appId, workflowPhase, !serviceRepeat);
-        } else {
-          workflowServiceHelper.generateNewWorkflowPhaseStepsForECSBlueGreen(appId, workflowPhase, !serviceRepeat);
-        }
-      } else {
-        workflowServiceHelper.generateNewWorkflowPhaseStepsForECS(
-            appId, workflowPhase, !serviceRepeat, orchestrationWorkflowType);
-      }
-    } else if (deploymentType == KUBERNETES) {
-      if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {
-        workflowServiceHelper.generateNewWorkflowPhaseStepsForKubernetesBlueGreen(appId, workflowPhase, !serviceRepeat);
-      } else {
-        workflowServiceHelper.generateNewWorkflowPhaseStepsForKubernetes(
-            appId, workflowPhase, !serviceRepeat, orchestrationWorkflowType);
-      }
-    } else if (deploymentType == HELM) {
-      workflowServiceHelper.generateNewWorkflowPhaseStepsForHelm(appId, workflowPhase, !serviceRepeat);
-    } else if (deploymentType == AWS_CODEDEPLOY) {
-      workflowServiceHelper.generateNewWorkflowPhaseStepsForAWSCodeDeploy(appId, workflowPhase);
-    } else if (deploymentType == AWS_LAMBDA) {
-      workflowServiceHelper.generateNewWorkflowPhaseStepsForAWSLambda(appId, envId, workflowPhase);
-    } else if (deploymentType == AMI) {
-      if (featureFlagService.isEnabled(FeatureName.SPOTINST, accountId)
-          && isSpotInstTypeInfra(infraMappingRefactorEnabled, workflowPhase.getInfraDefinitionId(),
-                 workflowPhase.getInfraMappingId(), appId)) {
-        if (BLUE_GREEN.equals(orchestrationWorkflowType)) {
-          workflowServiceHelper.generateNewWorkflowPhaseStepsForSpotInstBlueGreen(appId, workflowPhase, !serviceRepeat);
-        } else {
-          throw new InvalidRequestException("Spotinst ONLY supported for Blue/Green deployments right now", USER);
-        }
-      } else {
-        if (BLUE_GREEN.equals(orchestrationWorkflowType)) {
-          workflowServiceHelper.generateNewWorkflowPhaseStepsForAWSAmiBlueGreen(
-              appId, workflowPhase, !serviceRepeat, isDynamicInfrastructure);
-        } else {
-          workflowServiceHelper.generateNewWorkflowPhaseStepsForAWSAmi(
-              appId, workflowPhase, !serviceRepeat, isDynamicInfrastructure, orchestrationWorkflowType);
-        }
-      }
-    } else if (deploymentType == PCF) {
-      if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {
-        workflowServiceHelper.generateNewWorkflowPhaseStepsForPCFBlueGreen(appId, workflowPhase, !serviceRepeat);
-      } else {
-        workflowServiceHelper.generateNewWorkflowPhaseStepsForPCF(
-            appId, envId, workflowPhase, !serviceRepeat, orchestrationWorkflowType);
-      }
-    } else {
-      workflowServiceHelper.generateNewWorkflowPhaseStepsForSSH(appId, workflowPhase, orchestrationWorkflowType);
-    }
-  }
-
-  private WorkflowPhase generateRollbackWorkflowPhase(String appId, WorkflowPhase workflowPhase,
-      boolean serviceSetupRequired, OrchestrationWorkflowType orchestrationWorkflowType,
-      WorkflowCreationFlags creationFlags) {
-    DeploymentType deploymentType = workflowPhase.getDeploymentType();
-    if (deploymentType == ECS) {
-      if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {
-        if (creationFlags != null && creationFlags.isEcsBgDnsType()) {
-          return workflowServiceHelper.generateRollbackWorkflowPhaseForEcsBlueGreenRoute53(
-              appId, workflowPhase, orchestrationWorkflowType);
-        } else {
-          return workflowServiceHelper.generateRollbackWorkflowPhaseForEcsBlueGreen(
-              appId, workflowPhase, orchestrationWorkflowType);
-        }
-      } else {
-        return workflowServiceHelper.generateRollbackWorkflowPhaseForEcs(
-            appId, workflowPhase, orchestrationWorkflowType);
-      }
-    } else if (deploymentType == KUBERNETES) {
-      if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {
-        return workflowServiceHelper.generateRollbackWorkflowPhaseForKubernetesBlueGreen(
-            workflowPhase, serviceSetupRequired);
-      } else {
-        return workflowServiceHelper.generateRollbackWorkflowPhaseForKubernetes(workflowPhase, serviceSetupRequired);
-      }
-    } else if (deploymentType == AWS_CODEDEPLOY) {
-      return workflowServiceHelper.generateRollbackWorkflowPhaseForAwsCodeDeploy(workflowPhase);
-    } else if (deploymentType == AWS_LAMBDA) {
-      return workflowServiceHelper.generateRollbackWorkflowPhaseForAwsLambda(workflowPhase);
-    } else if (deploymentType == AMI) {
-      String accountId = appService.getAccountIdByAppId(appId);
-      if (featureFlagService.isEnabled(FeatureName.SPOTINST, accountId)
-          && isSpotInstTypeInfra(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId),
-                 workflowPhase.getInfraDefinitionId(), workflowPhase.getInfraMappingId(), appId)) {
-        if (BLUE_GREEN.equals(orchestrationWorkflowType)) {
-          return workflowServiceHelper.generateRollbackWorkflowPhaseForSpotInstBlueGreen(workflowPhase);
-        } else {
-          throw new InvalidRequestException("Spotinst ONLY supported for Blue/Green deployments right now", USER);
-        }
-      } else {
-        if (BLUE_GREEN.equals(orchestrationWorkflowType)) {
-          return workflowServiceHelper.generateRollbackWorkflowPhaseForAwsAmiBlueGreen(workflowPhase);
-        } else {
-          return workflowServiceHelper.generateRollbackWorkflowPhaseForAwsAmi(workflowPhase);
-        }
-      }
-    } else if (deploymentType == HELM) {
-      return workflowServiceHelper.generateRollbackWorkflowPhaseForHelm(workflowPhase);
-    } else if (deploymentType == PCF) {
-      if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {
-        return workflowServiceHelper.generateRollbackWorkflowPhaseForPCFBlueGreen(workflowPhase, serviceSetupRequired);
-      } else {
-        return workflowServiceHelper.generateRollbackWorkflowPhaseForPCF(workflowPhase);
-      }
-    } else {
-      return workflowServiceHelper.generateRollbackWorkflowPhaseForSSH(appId, workflowPhase);
-    }
-  }
-
-  private boolean isSpotInstTypeInfra(
-      boolean infraMappingRefactorEnabled, String infraDefinitionId, String infraMappingId, String appId) {
-    if (infraMappingRefactorEnabled) {
-      InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefinitionId);
-      InfraMappingInfrastructureProvider infrastructure = infrastructureDefinition.getInfrastructure();
-      return infrastructure instanceof AwsAmiInfrastructure
-          && AmiDeploymentType.SPOTINST.equals(((AwsAmiInfrastructure) infrastructure).getAmiDeploymentType());
-    } else {
-      InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, infraMappingId);
-      return infraMapping instanceof AwsAmiInfrastructureMapping
-          && AmiDeploymentType.SPOTINST.equals(((AwsAmiInfrastructureMapping) infraMapping).getAmiDeploymentType());
-    }
   }
 
   private void createDefaultNotificationRule(Workflow workflow) {
