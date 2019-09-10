@@ -176,6 +176,7 @@ import software.wings.beans.peronalization.Personalization;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.Trigger.TriggerKeys;
 import software.wings.common.WorkflowConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
@@ -624,6 +625,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public Workflow readWorkflow(String appId, String workflowId) {
     return readWorkflow(appId, workflowId, null);
+  }
+
+  @Override
+  public boolean workflowExists(String appId, String workflowId) {
+    return wingsPersistence.createQuery(Trigger.class)
+               .filter(TriggerKeys.appId, appId)
+               .filter(TriggerKeys.workflowId, workflowId)
+               .getKey()
+        != null;
   }
 
   @Override
