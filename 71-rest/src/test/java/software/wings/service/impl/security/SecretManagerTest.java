@@ -1,7 +1,6 @@
 package software.wings.service.impl.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertArrayEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyMap;
@@ -90,7 +89,7 @@ public class SecretManagerTest extends CategoryTest {
   public void testMaskEncryptedFields() {
     AwsConfig awsConfig = AwsConfig.builder().accountId(ACCOUNT_ID).accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build();
     secretManager.maskEncryptedFields(awsConfig);
-    assertArrayEquals(awsConfig.getSecretKey(), ENCRYPTED_FIELD_MASK.toCharArray());
+    assertThat(awsConfig.getSecretKey()).isEqualTo(ENCRYPTED_FIELD_MASK.toCharArray());
   }
 
   @Test
@@ -103,7 +102,7 @@ public class SecretManagerTest extends CategoryTest {
                                     .secretKey(ENCRYPTED_FIELD_MASK.toCharArray())
                                     .build();
     secretManager.resetUnchangedEncryptedFields(awsConfig, maskedAwsConfig);
-    assertArrayEquals(maskedAwsConfig.getSecretKey(), SECRET_KEY);
+    assertThat(maskedAwsConfig.getSecretKey()).isEqualTo(SECRET_KEY);
   }
 
   @Test

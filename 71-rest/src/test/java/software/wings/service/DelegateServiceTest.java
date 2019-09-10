@@ -12,7 +12,7 @@ import static io.harness.delegate.message.MessageConstants.SELF_DESTRUCT;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -268,7 +268,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     IntStream.range(0, maxDelegatesAllowed).forEach(i -> delegateService.add(BUILDER.build()));
     try {
       delegateService.add(BUILDER.build());
-      fail();
+      fail("");
     } catch (WingsException ignored) {
     }
   }

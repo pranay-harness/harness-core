@@ -1,7 +1,6 @@
 package migrations.all;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotEquals;
 
 import com.google.inject.Inject;
 
@@ -40,6 +39,6 @@ public class InitServiceCountersIntegrationTest extends BaseIntegrationTest {
     long finalCount =
         wingsPersistence.createQuery(Counter.class).field("key").endsWith(ActionType.CREATE_SERVICE.toString()).count();
 
-    assertNotEquals("new entry(ies) should be created in `limitCounters` collection after migration", 0, finalCount);
+    assertThat(0).isNotEqualTo(finalCount);
   }
 }

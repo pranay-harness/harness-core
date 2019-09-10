@@ -6,7 +6,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -1282,7 +1281,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
           new LogRequest(query, appId, "se2", workflowId, serviceId, hosts, collectionMinute, false);
       RestResponse<Set<LogDataRecord>> restResponse = getRequestBuilderWithLearningAuthHeader(target).post(
           entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<Set<LogDataRecord>>>() {});
-      assertEquals(addedMessages.get(2, collectionMinute), restResponse.getResource());
+      assertThat(restResponse.getResource()).isEqualTo(addedMessages.get(2, collectionMinute));
     }
   }
 

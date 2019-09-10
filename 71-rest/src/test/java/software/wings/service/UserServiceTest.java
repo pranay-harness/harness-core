@@ -8,7 +8,7 @@ import static io.harness.rule.OwnerRule.RAGHU;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -255,7 +255,7 @@ public class UserServiceTest extends WingsBaseTest {
 
     try {
       userService.completeMarketPlaceSignup(savedUser, testInvite, MarketPlaceType.AWS);
-      fail();
+      fail("");
     } catch (WingsException e) {
       log().info("Expected error " + e.getCode());
       assertThat(e.getCode()).isEqualTo(ErrorCode.USER_INVITATION_DOES_NOT_EXIST);
@@ -265,7 +265,7 @@ public class UserServiceTest extends WingsBaseTest {
     when(userService.getUserByEmail(USER_EMAIL)).thenReturn(savedUser);
     try {
       userService.completeMarketPlaceSignup(savedUser, testInvite, MarketPlaceType.AWS);
-      fail();
+      fail("");
     } catch (WingsException e) {
       log().info("Expected error " + e.getCode());
       assertThat(e.getCode()).isEqualTo(ErrorCode.USER_ALREADY_REGISTERED);
@@ -274,7 +274,7 @@ public class UserServiceTest extends WingsBaseTest {
     when(userService.getUserByEmail(USER_EMAIL)).thenReturn(null);
     try {
       userService.completeMarketPlaceSignup(savedUser, testInvite, MarketPlaceType.AWS);
-      fail();
+      fail("");
     } catch (WingsException e) {
       log().info("Expected error " + e.getCode());
       assertThat(e.getCode()).isEqualTo(ErrorCode.MARKETPLACE_TOKEN_NOT_FOUND);
@@ -284,7 +284,7 @@ public class UserServiceTest extends WingsBaseTest {
 
     try {
       userService.completeMarketPlaceSignup(savedUser, testInvite, MarketPlaceType.AWS);
-      fail();
+      fail("");
     } catch (WingsException e) {
       log().info("Expected error " + e.getCode());
       assertThat(e.getCode()).isEqualTo(ErrorCode.INVALID_MARKETPLACE_TOKEN);

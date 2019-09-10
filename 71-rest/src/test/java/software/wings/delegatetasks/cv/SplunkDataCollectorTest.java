@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.cv;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -71,13 +71,13 @@ public class SplunkDataCollectorTest {
     ThirdPartyApiCallLog thirdPartyApiCallLog = mock(ThirdPartyApiCallLog.class);
     when(dataCollectionCallback.createApiCallLog()).thenReturn(thirdPartyApiCallLog);
     List<LogElement> logElements = splunkDataCollector.fetchLogs(Optional.empty());
-    assertEquals(2, logElements.size());
-    assertEquals("todo-app-with-verification-todo-app-qa-3-5b7d99ccf9-2mr9x", logElements.get(0).getHost());
-    assertEquals("todo-app-with-verification-todo-app-qa-3-5b7d99ccf9-2mr9x", logElements.get(1).getHost());
-    assertEquals("1", logElements.get(0).getClusterLabel());
-    assertEquals("2", logElements.get(1).getClusterLabel());
-    assertEquals("test log message with exception cluster 1", logElements.get(0).getLogMessage());
-    assertEquals("test log message with exception cluster 2", logElements.get(1).getLogMessage());
+    assertThat(logElements.size()).isEqualTo(2);
+    assertThat(logElements.get(0).getHost()).isEqualTo("todo-app-with-verification-todo-app-qa-3-5b7d99ccf9-2mr9x");
+    assertThat(logElements.get(1).getHost()).isEqualTo("todo-app-with-verification-todo-app-qa-3-5b7d99ccf9-2mr9x");
+    assertThat(logElements.get(0).getClusterLabel()).isEqualTo("1");
+    assertThat(logElements.get(1).getClusterLabel()).isEqualTo("2");
+    assertThat(logElements.get(0).getLogMessage()).isEqualTo("test log message with exception cluster 1");
+    assertThat(logElements.get(1).getLogMessage()).isEqualTo("test log message with exception cluster 2");
   }
 
   private InputStream getSplunkJsonResponseInputStream() {

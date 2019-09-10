@@ -2,7 +2,6 @@ package software.wings.verification;
 
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -131,11 +130,9 @@ public class DatadogCVConfigurationYamlHandlerTest extends CategoryTest {
     assertThat(yaml.getAccountId()).isEqualTo(cvServiceConfiguration.getAccountId());
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
     assertThat(yaml.getEnvName()).isEqualTo(envName);
-    assertEquals("ApplicationFilter should be same",
-        cvServiceConfiguration.getDockerMetrics().keySet().iterator().next(),
-        yaml.getDockerMetrics().keySet().iterator().next());
-    assertEquals("Metrics value shouldbe same", cvServiceConfiguration.getDockerMetrics().values(),
-        yaml.getDockerMetrics().values());
+    assertThat(yaml.getDockerMetrics().keySet().iterator().next())
+        .isEqualTo(cvServiceConfiguration.getDockerMetrics().keySet().iterator().next());
+    assertThat(yaml.getDockerMetrics().values()).isEqualTo(cvServiceConfiguration.getDockerMetrics().values());
   }
 
   @Test

@@ -8,8 +8,7 @@ import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -591,7 +590,7 @@ public class KmsTest extends WingsBaseTest {
 
     try {
       kmsService.saveKmsConfig(accountId, kmsConfig);
-      fail();
+      fail("");
     } catch (WingsException e) {
       assertThat(e.getCode()).isEqualTo(ErrorCode.INVALID_REQUEST);
     }
@@ -2219,10 +2218,10 @@ public class KmsTest extends WingsBaseTest {
 
     String configFileId = configService.save(configFile, new BoundedInputStream(new FileInputStream(fileToSave)));
     File download = configService.download(renameAppId, configFileId);
-    assertEquals(FileUtils.readFileToString(fileToSave, Charset.defaultCharset()),
-        FileUtils.readFileToString(download, Charset.defaultCharset()));
-    assertEquals(
-        0, wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, accountId).count());
+    assertThat(FileUtils.readFileToString(download, Charset.defaultCharset()))
+        .isEqualTo(FileUtils.readFileToString(fileToSave, Charset.defaultCharset()));
+    assertThat(wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, accountId).count())
+        .isEqualTo(0);
     ConfigFile savedConfigFile = configService.get(renameAppId, configFileId);
     assertThat(savedConfigFile.isEncrypted()).isFalse();
     assertThat(isEmpty(savedConfigFile.getEncryptedFileId())).isTrue();
@@ -2238,8 +2237,8 @@ public class KmsTest extends WingsBaseTest {
     configFile.setEncryptedFileId(secretFileId);
     configService.update(configFile, null);
     download = configService.download(renameAppId, configFileId);
-    assertEquals(FileUtils.readFileToString(fileToUpdate, Charset.defaultCharset()),
-        FileUtils.readFileToString(download, Charset.defaultCharset()));
+    assertThat(FileUtils.readFileToString(download, Charset.defaultCharset()))
+        .isEqualTo(FileUtils.readFileToString(fileToUpdate, Charset.defaultCharset()));
     savedConfigFile = configService.get(renameAppId, configFileId);
     assertThat(savedConfigFile.isEncrypted()).isTrue();
     assertThat(isEmpty(savedConfigFile.getEncryptedFileId())).isFalse();
@@ -2263,14 +2262,15 @@ public class KmsTest extends WingsBaseTest {
     configFile.setEncrypted(false);
     configService.update(configFile, new BoundedInputStream(new FileInputStream(fileToUpdate)));
     download = configService.download(renameAppId, configFileId);
-    assertEquals(FileUtils.readFileToString(fileToUpdate, Charset.defaultCharset()),
-        FileUtils.readFileToString(download, Charset.defaultCharset()));
+    assertThat(FileUtils.readFileToString(download, Charset.defaultCharset()))
+        .isEqualTo(FileUtils.readFileToString(fileToUpdate, Charset.defaultCharset()));
     savedConfigFile = configService.get(renameAppId, configFileId);
     assertThat(savedConfigFile.isEncrypted()).isFalse();
     assertThat(isEmpty(savedConfigFile.getEncryptedFileId())).isTrue();
 
-    assertEquals(1,
-        wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, renameAccountId).count());
+    assertThat(
+        wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, renameAccountId).count())
+        .isEqualTo(1);
     List<SecretChangeLog> changeLogs =
         secretManager.getChangeLogs(renameAccountId, secretFileId, SettingVariableTypes.CONFIG_FILE);
     assertThat(changeLogs).hasSize(1);
@@ -2331,8 +2331,8 @@ public class KmsTest extends WingsBaseTest {
 
     configService.save(configFile, new BoundedInputStream(new FileInputStream(fileToSave)));
     File download = configService.download(renameAppId, configFile.getUuid());
-    assertEquals(FileUtils.readFileToString(fileToSave, Charset.defaultCharset()),
-        FileUtils.readFileToString(download, Charset.defaultCharset()));
+    assertThat(FileUtils.readFileToString(download, Charset.defaultCharset()))
+        .isEqualTo(FileUtils.readFileToString(fileToSave, Charset.defaultCharset()));
     assertThat(wingsPersistence.createQuery(EncryptedData.class).count()).isEqualTo(numOfEncryptedValsForKms);
   }
 
@@ -2397,10 +2397,11 @@ public class KmsTest extends WingsBaseTest {
 
     String configFileId = configService.save(configFile, null);
     File download = configService.download(randomAppId, configFileId);
-    assertEquals(FileUtils.readFileToString(fileToSave, Charset.defaultCharset()),
-        FileUtils.readFileToString(download, Charset.defaultCharset()));
-    assertEquals(numOfEncryptedValsForKms + 1,
-        wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, randomAccountId).count());
+    assertThat(FileUtils.readFileToString(download, Charset.defaultCharset()))
+        .isEqualTo(FileUtils.readFileToString(fileToSave, Charset.defaultCharset()));
+    assertThat(
+        wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, randomAccountId).count())
+        .isEqualTo(numOfEncryptedValsForKms + 1);
 
     List<EncryptedData> encryptedFileData = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
                                                 .filter("type", SettingVariableTypes.CONFIG_FILE)
@@ -2417,10 +2418,11 @@ public class KmsTest extends WingsBaseTest {
         randomAccountId, newSecretName, encryptedUuid, null, new BoundedInputStream(new FileInputStream(fileToUpdate)));
 
     download = configService.download(randomAppId, configFileId);
-    assertEquals(FileUtils.readFileToString(fileToUpdate, Charset.defaultCharset()),
-        FileUtils.readFileToString(download, Charset.defaultCharset()));
-    assertEquals(numOfEncryptedValsForKms + 1,
-        wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, randomAccountId).count());
+    assertThat(FileUtils.readFileToString(download, Charset.defaultCharset()))
+        .isEqualTo(FileUtils.readFileToString(fileToUpdate, Charset.defaultCharset()));
+    assertThat(
+        wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, randomAccountId).count())
+        .isEqualTo(numOfEncryptedValsForKms + 1);
 
     encryptedFileData = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
                             .filter("type", SettingVariableTypes.CONFIG_FILE)
@@ -2533,10 +2535,11 @@ public class KmsTest extends WingsBaseTest {
 
     String configFileId = configService.save(configFile, null);
     File download = configService.download(renameAppId, configFileId);
-    assertEquals(FileUtils.readFileToString(fileToSave, Charset.defaultCharset()),
-        FileUtils.readFileToString(download, Charset.defaultCharset()));
-    assertEquals(numOfEncryptedValsForKms + 1,
-        wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, renameAccountId).count());
+    assertThat(FileUtils.readFileToString(download, Charset.defaultCharset()))
+        .isEqualTo(FileUtils.readFileToString(fileToSave, Charset.defaultCharset()));
+    assertThat(
+        wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, renameAccountId).count())
+        .isEqualTo(numOfEncryptedValsForKms + 1);
 
     List<EncryptedData> encryptedFileData = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
                                                 .filter("type", SettingVariableTypes.CONFIG_FILE)
@@ -2551,10 +2554,11 @@ public class KmsTest extends WingsBaseTest {
         renameAccountId, newSecretName, encryptedUuid, null, new BoundedInputStream(new FileInputStream(fileToUpdate)));
 
     download = configService.download(renameAppId, configFileId);
-    assertEquals(FileUtils.readFileToString(fileToUpdate, Charset.defaultCharset()),
-        FileUtils.readFileToString(download, Charset.defaultCharset()));
-    assertEquals(numOfEncryptedValsForKms + 1,
-        wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, renameAccountId).count());
+    assertThat(FileUtils.readFileToString(download, Charset.defaultCharset()))
+        .isEqualTo(FileUtils.readFileToString(fileToUpdate, Charset.defaultCharset()));
+    assertThat(
+        wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, renameAccountId).count())
+        .isEqualTo(numOfEncryptedValsForKms + 1);
 
     encryptedFileData = wingsPersistence.createQuery(EncryptedData.class)
                             .filter(EncryptedDataKeys.accountId, renameAccountId)

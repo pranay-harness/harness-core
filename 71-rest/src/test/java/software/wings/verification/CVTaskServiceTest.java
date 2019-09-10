@@ -2,10 +2,6 @@ package software.wings.verification;
 
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -71,9 +67,9 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
   public void testSaveCVTask() {
     CVTask cvTask = createCVTask();
     cvTaskService.saveCVTask(cvTask);
-    assertEquals(ExecutionStatus.QUEUED, cvTask.getStatus());
+    assertThat(cvTask.getStatus()).isEqualTo(ExecutionStatus.QUEUED);
     CVTask updatedCVTask = getCVTask(cvTask.getUuid());
-    assertEquals(ExecutionStatus.QUEUED, updatedCVTask.getStatus());
+    assertThat(updatedCVTask.getStatus()).isEqualTo(ExecutionStatus.QUEUED);
   }
 
   @Test
@@ -82,8 +78,8 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
     CVTask cvTask = createCVTask();
     cvTaskService.saveCVTask(cvTask);
     Optional<CVTask> nextTask = cvTaskService.getNextTask(cvTask.getAccountId());
-    assertTrue(nextTask.isPresent());
-    assertEquals(cvTask.getUuid(), nextTask.get().getUuid());
+    assertThat(nextTask.isPresent()).isTrue();
+    assertThat(nextTask.get().getUuid()).isEqualTo(cvTask.getUuid());
   }
 
   @Test
@@ -93,7 +89,7 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
     cvTask.setValidAfter(Instant.now().plus(10, ChronoUnit.MINUTES).toEpochMilli());
     cvTaskService.saveCVTask(cvTask);
     Optional<CVTask> nextTask = cvTaskService.getNextTask(cvTask.getAccountId());
-    assertFalse(nextTask.isPresent());
+    assertThat(nextTask.isPresent()).isFalse();
   }
 
   @Test
@@ -103,8 +99,8 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
     cvTask.setValidAfter(Instant.now().minus(10, ChronoUnit.MINUTES).toEpochMilli());
     cvTaskService.saveCVTask(cvTask);
     Optional<CVTask> nextTask = cvTaskService.getNextTask(cvTask.getAccountId());
-    assertTrue(nextTask.isPresent());
-    assertEquals(cvTask.getUuid(), nextTask.get().getUuid());
+    assertThat(nextTask.isPresent()).isTrue();
+    assertThat(nextTask.get().getUuid()).isEqualTo(cvTask.getUuid());
   }
 
   @Test
@@ -114,12 +110,12 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
     cvTask.setStatus(ExecutionStatus.RUNNING);
     wingsPersistence.save(cvTask);
     Optional<CVTask> nextTask = cvTaskService.getNextTask(cvTask.getAccountId());
-    assertFalse(nextTask.isPresent());
+    assertThat(nextTask.isPresent()).isFalse();
     cvTask.setStatus(ExecutionStatus.QUEUED);
     wingsPersistence.save(cvTask);
     nextTask = cvTaskService.getNextTask(cvTask.getAccountId());
-    assertTrue(nextTask.isPresent());
-    assertEquals(cvTask.getUuid(), nextTask.get().getUuid());
+    assertThat(nextTask.isPresent()).isTrue();
+    assertThat(nextTask.get().getUuid()).isEqualTo(cvTask.getUuid());
   }
 
   @Test
@@ -127,9 +123,9 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
   public void testExecutionStatusUpdateOnGettingNextTask() {
     CVTask cvTask = createAndSaveCVTask();
     Optional<CVTask> nextTask = cvTaskService.getNextTask(cvTask.getAccountId());
-    assertEquals(ExecutionStatus.RUNNING, nextTask.get().getStatus());
+    assertThat(nextTask.get().getStatus()).isEqualTo(ExecutionStatus.RUNNING);
     CVTask reloadedCVTask = getCVTask(cvTask.getUuid());
-    assertEquals(ExecutionStatus.RUNNING, reloadedCVTask.getStatus());
+    assertThat(reloadedCVTask.getStatus()).isEqualTo(ExecutionStatus.RUNNING);
   }
 
   @Test
@@ -143,19 +139,19 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
     wingsPersistence.save(cvTasks.get(0));
     for (int i = 1; i < 10; i++) {
       Optional<CVTask> nextTask = cvTaskService.getNextTask(accountId);
-      assertTrue(nextTask.isPresent());
-      assertEquals(cvTasks.get(i).getUuid(), nextTask.get().getUuid());
+      assertThat(nextTask.isPresent()).isTrue();
+      assertThat(nextTask.get().getUuid()).isEqualTo(cvTasks.get(i).getUuid());
     }
     Optional<CVTask> nextTask = cvTaskService.getNextTask(accountId);
-    assertTrue(nextTask.isPresent());
-    assertEquals(cvTasks.get(0).getUuid(), nextTask.get().getUuid());
-    assertFalse(cvTaskService.getNextTask(accountId).isPresent());
+    assertThat(nextTask.isPresent()).isTrue();
+    assertThat(nextTask.get().getUuid()).isEqualTo(cvTasks.get(0).getUuid());
+    assertThat(cvTaskService.getNextTask(accountId).isPresent()).isFalse();
   }
   @Test
   @Category(IntegrationTests.class)
   public void testIfCVTaskValidUntilIsBeingSetToOneMonth() {
     CVTask cvTask = createAndSaveCVTask();
-    assertTrue(cvTask.getValidUntil().getTime() > Instant.now().toEpochMilli());
+    assertThat(cvTask.getValidUntil().getTime() > Instant.now().toEpochMilli()).isTrue();
     assertThat(Math.abs(cvTask.getValidUntil().getTime()
                    - OffsetDateTime.now().plus(1, ChronoUnit.MONTHS).toInstant().toEpochMilli())
         < TimeUnit.DAYS.toMillis(3));
@@ -165,7 +161,7 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
   @Category(IntegrationTests.class)
   public void testGetCVTaskById() {
     CVTask cvTask = createAndSaveCVTask();
-    assertEquals(cvTask.getUuid(), cvTaskService.getCVTask(cvTask.getUuid()).getUuid());
+    assertThat(cvTaskService.getCVTask(cvTask.getUuid()).getUuid()).isEqualTo(cvTask.getUuid());
   }
 
   @Test
@@ -188,13 +184,13 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
     for (int i = 0; i < cvTasks.size(); i++) {
       cvTasks.set(i, cvTaskService.getCVTask(cvTasks.get(i).getUuid()));
     }
-    assertEquals(ExecutionStatus.QUEUED, cvTasks.get(0).getStatus());
+    assertThat(cvTasks.get(0).getStatus()).isEqualTo(ExecutionStatus.QUEUED);
     for (int i = 0; i < 9; i++) {
-      assertEquals(cvTasks.get(i).getNextTaskId(), cvTasks.get(i + 1).getUuid());
+      assertThat(cvTasks.get(i + 1).getUuid()).isEqualTo(cvTasks.get(i).getNextTaskId());
     }
-    assertNull(cvTasks.get(cvTasks.size() - 1).getNextTaskId());
+    assertThat(cvTasks.get(cvTasks.size() - 1).getNextTaskId()).isNull();
     for (int i = 1; i < 10; i++) {
-      assertEquals(ExecutionStatus.WAITING, cvTasks.get(i).getStatus());
+      assertThat(cvTasks.get(i).getStatus()).isEqualTo(ExecutionStatus.WAITING);
     }
   }
 
@@ -208,8 +204,8 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
     DataCollectionTaskResult dataCollectionTaskResult =
         DataCollectionTaskResult.builder().status(DataCollectionTaskStatus.SUCCESS).build();
     cvTaskService.updateTaskStatus(cvTask.getUuid(), dataCollectionTaskResult);
-    assertEquals(ExecutionStatus.SUCCESS, cvTaskService.getCVTask(cvTask.getUuid()).getStatus());
-    assertEquals(ExecutionStatus.QUEUED, cvTaskService.getCVTask(nextTask.getUuid()).getStatus());
+    assertThat(cvTaskService.getCVTask(cvTask.getUuid()).getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(cvTaskService.getCVTask(nextTask.getUuid()).getStatus()).isEqualTo(ExecutionStatus.QUEUED);
   }
 
   @Test
@@ -225,11 +221,11 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
                                                             .build();
     cvTaskService.updateTaskStatus(cvTask.getUuid(), dataCollectionTaskResult);
     CVTask updatedTask1 = cvTaskService.getCVTask(cvTask.getUuid());
-    assertEquals(ExecutionStatus.FAILED, updatedTask1.getStatus());
-    assertEquals("Error from unit test", updatedTask1.getException());
+    assertThat(updatedTask1.getStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(updatedTask1.getException()).isEqualTo("Error from unit test");
     CVTask updatedTask2 = cvTaskService.getCVTask(nextTask.getUuid());
-    assertEquals(ExecutionStatus.FAILED, updatedTask2.getStatus());
-    assertEquals("Previous task failed", updatedTask2.getException());
+    assertThat(updatedTask2.getStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(updatedTask2.getException()).isEqualTo("Previous task failed");
   }
 
   @Test
@@ -249,9 +245,9 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
     verify(waitNotifyEngine).notify(eq(correlationId), responseArgumentCaptor.capture());
     VerificationStateAnalysisExecutionData stateExecutionData =
         responseArgumentCaptor.getValue().getStateExecutionData();
-    assertEquals("Error from unit test", stateExecutionData.getErrorMsg());
-    assertEquals(ExecutionStatus.ERROR, stateExecutionData.getStatus());
-    assertEquals(correlationId, stateExecutionData.getCorrelationId());
+    assertThat(stateExecutionData.getErrorMsg()).isEqualTo("Error from unit test");
+    assertThat(stateExecutionData.getStatus()).isEqualTo(ExecutionStatus.ERROR);
+    assertThat(stateExecutionData.getCorrelationId()).isEqualTo(correlationId);
   }
 
   @Test
@@ -259,7 +255,7 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
   public void testExpireLongRunningTasksIfTaskIsNotExpired() {
     CVTask cvTask = createAndSaveCVTask(ExecutionStatus.RUNNING);
     cvTaskService.expireLongRunningTasks(cvTask.getAccountId());
-    assertEquals(ExecutionStatus.RUNNING, cvTaskService.getCVTask(cvTask.getUuid()).getStatus());
+    assertThat(cvTaskService.getCVTask(cvTask.getUuid()).getStatus()).isEqualTo(ExecutionStatus.RUNNING);
   }
 
   @Test
@@ -271,8 +267,8 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
     FieldUtils.writeField(cvTaskService, "clock", clock, true);
     cvTaskService.expireLongRunningTasks(cvTask.getAccountId());
     CVTask updatedTask = cvTaskService.getCVTask(cvTask.getUuid());
-    assertEquals(ExecutionStatus.FAILED, updatedTask.getStatus());
-    assertEquals("Task timed out", updatedTask.getException());
+    assertThat(updatedTask.getStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(updatedTask.getException()).isEqualTo("Task timed out");
   }
 
   @Test
@@ -287,8 +283,8 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
     FieldUtils.writeField(cvTaskService, "clock", clock, true);
     cvTaskService.expireLongRunningTasks(cvTask.getAccountId());
     CVTask updatedNextTask = cvTaskService.getCVTask(nextTask.getUuid());
-    assertEquals(ExecutionStatus.FAILED, updatedNextTask.getStatus());
-    assertEquals("Previous task timed out", updatedNextTask.getException());
+    assertThat(updatedNextTask.getStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(updatedNextTask.getException()).isEqualTo("Previous task timed out");
   }
 
   private CVTask getCVTask(String cvTaskId) {

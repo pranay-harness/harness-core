@@ -3,7 +3,6 @@ package software.wings.sm.states;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -115,8 +114,8 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
           .isEqualTo(DEFAULT_GROUP_NAME);
     }
 
-    assertEquals(Collections.singletonMap(DynatraceState.TEST_HOST_NAME, DEFAULT_GROUP_NAME),
-        dynatraceState.getCanaryNewHostNames(executionContext));
+    assertThat(dynatraceState.getCanaryNewHostNames(executionContext))
+        .isEqualTo(Collections.singletonMap(DynatraceState.TEST_HOST_NAME, DEFAULT_GROUP_NAME));
   }
 
   @Test

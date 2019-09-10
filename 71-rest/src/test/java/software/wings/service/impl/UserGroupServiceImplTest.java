@@ -4,8 +4,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -421,7 +419,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
       userGroupService.updateMembers(userGroup1, true);
       verify(emailNotificationService, atLeastOnce()).send(emailDataArgumentCaptor.capture());
       List<EmailData> emailsData = emailDataArgumentCaptor.getAllValues();
-      assertNotEquals(2,
+      assertThat(2).isNotEqualTo(
           emailsData.stream()
               .filter(emailData -> emailData.getTemplateName().equals(ADD_GROUP_EMAIL_TEMPLATE_NAME))
               .collect(toList())
@@ -509,8 +507,8 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     wingsPersistence.save(defaultUserGroup);
     wingsPersistence.save(nonDefaultUserGroup);
 
-    assertEquals(Arrays.asList(defaultUserGroup.getUuid(), nonDefaultUserGroup.getUuid()),
-        getIds(userGroupService.getUserGroupsByAccountId(ACCOUNT_ID, user)));
+    assertThat(getIds(userGroupService.getUserGroupsByAccountId(ACCOUNT_ID, user)))
+        .isEqualTo(Arrays.asList(defaultUserGroup.getUuid(), nonDefaultUserGroup.getUuid()));
   }
 
   private List<String> getIds(List<UserGroup> userGroups) {

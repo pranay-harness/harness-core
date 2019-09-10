@@ -2,7 +2,6 @@ package migrations.all;
 
 import static io.harness.rule.OwnerRule.JATIN;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotEquals;
 
 import com.google.inject.Inject;
 
@@ -59,9 +58,7 @@ public class InitWorkflowCountersIntegrationTest extends BaseIntegrationTest {
 
     Counter counter = counterService.get(action);
 
-    assertNotEquals(
-        "[initWorkflowCounters] new entry(ies) should be created in `limitCounters` collection after migration", 0,
-        (long) counter.getValue());
+    assertThat(0).isNotEqualTo((long) counter.getValue());
     assertThat((long) counter.getValue()).isEqualTo(workflowCount);
   }
 }

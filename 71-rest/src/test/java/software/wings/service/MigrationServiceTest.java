@@ -1,7 +1,6 @@
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotEquals;
 
 import io.harness.category.element.UnitTests;
 import migrations.MigrationList;
@@ -35,6 +34,6 @@ public class MigrationServiceTest extends WingsBaseTest {
       assertThat(pair.getKey() - 1).isEqualTo(last.get());
       last.set(pair.getKey());
     });
-    assertNotEquals("No items in migration list", last.get(), -1);
+    assertThat(last.get()).isNotEqualTo(-1);
   }
 }

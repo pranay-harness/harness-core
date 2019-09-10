@@ -3,7 +3,7 @@ package software.wings.service;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.when;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Environment.Builder.anEnvironment;

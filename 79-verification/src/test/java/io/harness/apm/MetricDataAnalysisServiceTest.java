@@ -5,9 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rest.RestResponse.Builder.aRestResponse;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -159,9 +156,9 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
         managerAnalysisService.getMetricsAnalysis(timeSeriesMLAnalysisRecord.getAppId(),
             timeSeriesMLAnalysisRecord.getStateExecutionId(), timeSeriesMLAnalysisRecord.getStateExecutionId());
 
-    assertNotNull(metricsAnalysis);
-    assertEquals(1, metricsAnalysis.size());
-    assertTrue(isNotEmpty(metricsAnalysis.iterator().next().getMetricAnalyses()));
+    assertThat(metricsAnalysis).isNotNull();
+    assertThat(metricsAnalysis).hasSize(1);
+    assertThat(isNotEmpty(metricsAnalysis.iterator().next().getMetricAnalyses())).isTrue();
   }
 
   private LearningEngineAnalysisTask getLearningEngineAnalysisTask() {

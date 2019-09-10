@@ -2,7 +2,6 @@ package io.harness.e2e.dailysanity.cdworkflow;
 
 import static io.harness.rule.OwnerRule.JUHI;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertTrue;
 import static software.wings.beans.Application.Builder.anApplication;
 
 import com.google.inject.Inject;
@@ -71,8 +70,8 @@ public class TagsManagementTest extends AbstractE2ETest {
     JsonPath createRestrictedTagResponse = TagsManagementUtils.createTag(bearerToken, getAccount().getUuid(), tag);
     RESTRICTED_TAG_UUID = createRestrictedTagResponse.get("resource.uuid");
     JsonPath getTag = TagsManagementUtils.getTag(bearerToken, getAccount().getUuid(), RESTRICTED_TAG_KEY);
-    assertTrue(getTag.getList("resource.response").size() == 1);
-    assertTrue(getTag.getList("resource.response[0].allowedValues").size() == 2);
+    assertThat(getTag.getList("resource.response").size() == 1).isTrue();
+    assertThat(getTag.getList("resource.response[0].allowedValues").size() == 2).isTrue();
   }
 
   @Test
@@ -83,7 +82,7 @@ public class TagsManagementTest extends AbstractE2ETest {
     JsonPath createNormalTagResponse = TagsManagementUtils.createTag(bearerToken, getAccount().getUuid(), tag);
     NORMAL_TAG_UUID = createNormalTagResponse.get("resource.uuid");
     JsonPath getTag = TagsManagementUtils.getTag(bearerToken, getAccount().getUuid(), NORMAL_TAG_KEY);
-    assertTrue(getTag.getList("resource.response").size() == 1);
+    assertThat(getTag.getList("resource.response").size() == 1).isTrue();
   }
 
   @Test
@@ -105,8 +104,8 @@ public class TagsManagementTest extends AbstractE2ETest {
         TagsManagementUtils.editTag(bearerToken, getAccount().getUuid(), RESTRICTED_TAG_KEY, tag);
     logger.info(createNormalTagResponse.get("resource.key"));
     JsonPath getTag = TagsManagementUtils.getTag(bearerToken, getAccount().getUuid(), RESTRICTED_TAG_KEY);
-    assertTrue(getTag.getList("resource.response").size() == 1);
-    assertTrue(getTag.getList("resource.response[0].allowedValues").size() == 3);
+    assertThat(getTag.getList("resource.response").size() == 1).isTrue();
+    assertThat(getTag.getList("resource.response[0].allowedValues").size() == 3).isTrue();
   }
 
   @Test
@@ -137,7 +136,7 @@ public class TagsManagementTest extends AbstractE2ETest {
     JsonPath tagsUsageDetails =
         TagsManagementUtils.getTagUsageDetails(bearerToken, getAccount().getUuid(), RESTRICTED_TAG_KEY);
     assertThat(tagsUsageDetails).isNotNull();
-    assertTrue(tagsUsageDetails.getList("resource.response").size() == 1);
+    assertThat(tagsUsageDetails.getList("resource.response").size() == 1).isTrue();
   }
 
   @Test
@@ -148,10 +147,10 @@ public class TagsManagementTest extends AbstractE2ETest {
     JsonPath createNormalTagResponse = TagsManagementUtils.createTag(bearerToken, getAccount().getUuid(), tag);
     NORMAL_TAG_UUID = createNormalTagResponse.get("resource.uuid");
     JsonPath getTagBeforeDelete = TagsManagementUtils.getTag(bearerToken, getAccount().getUuid(), DELETE_TAG_KEY);
-    assertTrue(getTagBeforeDelete.getList("resource.response").size() == 1);
+    assertThat(getTagBeforeDelete.getList("resource.response").size() == 1).isTrue();
 
     JsonPath deleteTag = TagsManagementUtils.deleteTag(bearerToken, getAccount().getUuid(), DELETE_TAG_KEY);
     JsonPath getTagAfterDelete = TagsManagementUtils.getTag(bearerToken, getAccount().getUuid(), DELETE_TAG_KEY);
-    assertTrue(getTagAfterDelete.getList("resource.response").size() == 0);
+    assertThat(getTagAfterDelete.getList("resource.response").size() == 0).isTrue();
   }
 }

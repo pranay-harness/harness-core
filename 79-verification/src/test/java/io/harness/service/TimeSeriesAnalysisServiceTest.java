@@ -4,7 +4,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rest.RestResponse.Builder.aRestResponse;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
@@ -107,7 +106,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
     final Set<NewRelicMetricDataRecord> metricRecords =
         timeSeriesAnalysisService.getMetricRecords(cvConfigId, analysisStartMinute, analysisEndMinute, null, accountId);
     int numOfMinutesAsked = analysisEndMinute - analysisStartMinute + 1;
-    assertEquals(numOfMinutesAsked * numOfTxns * numOfHosts, metricRecords.size());
+    assertThat(metricRecords.size()).isEqualTo(numOfMinutesAsked * numOfTxns * numOfHosts);
 
     metricRecords.forEach(metricRecord -> metricRecord.setUuid(null));
     Set<NewRelicMetricDataRecord> expectedRecords = new HashSet<>();
@@ -193,9 +192,9 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
 
     NewRelicMetricDataRecord heartBeat = timeSeriesAnalysisService.getHeartBeat(StateType.NEW_RELIC, appId,
         stateExecutionId, workflowExecutionId, serviceId, NewRelicMetricDataRecord.DEFAULT_GROUP_NAME, OrderType.ASC);
-    assertEquals(0, heartBeat.getDataCollectionMinute());
+    assertThat(heartBeat.getDataCollectionMinute()).isEqualTo(0);
     heartBeat = timeSeriesAnalysisService.getHeartBeat(StateType.NEW_RELIC, appId, stateExecutionId,
         workflowExecutionId, serviceId, NewRelicMetricDataRecord.DEFAULT_GROUP_NAME, OrderType.DESC);
-    assertEquals(9, heartBeat.getDataCollectionMinute());
+    assertThat(heartBeat.getDataCollectionMinute()).isEqualTo(9);
   }
 }

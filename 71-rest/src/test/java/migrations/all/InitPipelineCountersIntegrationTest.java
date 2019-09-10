@@ -1,7 +1,6 @@
 package migrations.all;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotEquals;
 
 import com.google.inject.Inject;
 
@@ -44,6 +43,6 @@ public class InitPipelineCountersIntegrationTest extends BaseIntegrationTest {
                           .endsWith(ActionType.CREATE_PIPELINE.toString())
                           .count();
 
-    assertNotEquals("new entry(ies) should be created in `limitCounters` collection after migration", 0, finalCount);
+    assertThat(0).isNotEqualTo(finalCount);
   }
 }

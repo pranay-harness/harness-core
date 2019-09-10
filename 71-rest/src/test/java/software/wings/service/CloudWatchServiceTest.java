@@ -3,7 +3,6 @@ package software.wings.service;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -119,9 +118,9 @@ public class CloudWatchServiceTest extends WingsBaseTest {
     assertThat(cloudwatchMetrics.containsKey(AwsNameSpace.LAMBDA)).isFalse();
     assertThat(cloudwatchMetrics.containsKey(AwsNameSpace.EC2)).isFalse();
     assertThat(cloudwatchMetrics.get(AwsNameSpace.ECS)).hasSize(1);
-    assertEquals("CPUUtilization", cloudwatchMetrics.get(AwsNameSpace.ECS).get(0).getMetricName());
+    assertThat("CPUUtilization").isEqualTo(cloudwatchMetrics.get(AwsNameSpace.ECS).get(0).getMetricName());
     assertThat(cloudwatchMetrics.get(AwsNameSpace.ELB)).hasSize(1);
-    assertEquals("HTTPCode_Backend_2XX", cloudwatchMetrics.get(AwsNameSpace.ELB).get(0).getMetricName());
+    assertThat("HTTPCode_Backend_2XX").isEqualTo(cloudwatchMetrics.get(AwsNameSpace.ELB).get(0).getMetricName());
   }
 
   @Test

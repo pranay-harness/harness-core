@@ -4,7 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
@@ -107,7 +107,7 @@ public class KmsKeysRotationTest extends WingsBaseTest {
       kmsService.saveKmsConfig(GLOBAL_ACCOUNT_ID, kmsConfig);
     } catch (WingsException e) {
       logger.error("Key rotation failed, {}", e.getParams());
-      fail();
+      fail("");
     }
     logger.info("Key rotation done");
   }

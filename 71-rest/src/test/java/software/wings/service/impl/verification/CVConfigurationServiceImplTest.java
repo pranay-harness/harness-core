@@ -1,7 +1,6 @@
 package software.wings.service.impl.verification;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertArrayEquals;
 
 import com.google.inject.Inject;
 
@@ -121,7 +120,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     List<String> actualKeySet = new ArrayList<>(actualDefinitions.keySet());
     Collections.sort(actualKeySet);
 
-    assertArrayEquals(expectedKeySet.toArray(), actualKeySet.toArray());
+    assertThat(expectedKeySet).isEqualTo(actualKeySet);
 
     expectedKeySet.forEach(key -> {
       TimeSeriesMetricDefinition definition = actualDefinitions.get(key);

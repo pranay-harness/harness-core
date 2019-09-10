@@ -7,9 +7,7 @@ import static java.time.Duration.ofMillis;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.sm.StateType.APP_DYNAMICS;
@@ -1425,7 +1423,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     target = client.target(url);
     final RestResponse<String> updateResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(updateBaseline, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
-    assertNotEquals(savedObjectUuid, updateResponse.getResource());
+    assertThat(savedObjectUuid).isNotEqualTo(updateResponse.getResource());
     savedObjectUuid = updateResponse.getResource();
 
     sleep(ofMillis(5000));
@@ -1626,14 +1624,10 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     for (int i = 0; i < 2; i++) {
       for (int j = 0; j < numOfEnvs; j++) {
         final int index = i * numOfEnvs * 2 + j * 2;
-        assertEquals("failed for " + i + ":" + j + " index:" + index, "app" + i + testUuid,
-            cvConfigurations.get(index).getAppId());
-        assertEquals("failed for " + i + ":" + j + " index:" + index, "env" + j + testUuid,
-            cvConfigurations.get(index).getEnvId());
-        assertEquals("failed for " + i + ":" + j + " index:" + index, "app" + i + testUuid,
-            cvConfigurations.get(index + 1).getAppId());
-        assertEquals("failed for " + i + ":" + j + " index:" + index, "env" + j + testUuid,
-            cvConfigurations.get(index + 1).getEnvId());
+        assertThat(cvConfigurations.get(index).getAppId()).isEqualTo("app" + i + testUuid);
+        assertThat(cvConfigurations.get(index).getEnvId()).isEqualTo("env" + j + testUuid);
+        assertThat(cvConfigurations.get(index + 1).getAppId()).isEqualTo("app" + i + testUuid);
+        assertThat(cvConfigurations.get(index + 1).getEnvId()).isEqualTo("env" + j + testUuid);
       }
     }
 
@@ -1649,14 +1643,10 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     for (int i = 0; i < 2; i++) {
       for (int j = 0; j < 2; j++) {
         final int index = i * 2 * 2 + j * 2;
-        assertEquals("failed for " + i + ":" + j + " index:" + index, "app" + i + testUuid,
-            cvConfigurations.get(index).getAppId());
-        assertEquals("failed for " + i + ":" + j + " index:" + index, "env" + j + testUuid,
-            cvConfigurations.get(index).getEnvId());
-        assertEquals("failed for " + i + ":" + j + " index:" + index, "app" + i + testUuid,
-            cvConfigurations.get(index + 1).getAppId());
-        assertEquals("failed for " + i + ":" + j + " index:" + index, "env" + j + testUuid,
-            cvConfigurations.get(index + 1).getEnvId());
+        assertThat(cvConfigurations.get(index).getAppId()).isEqualTo("app" + i + testUuid);
+        assertThat(cvConfigurations.get(index).getEnvId()).isEqualTo("env" + j + testUuid);
+        assertThat(cvConfigurations.get(index + 1).getAppId()).isEqualTo("app" + i + testUuid);
+        assertThat(cvConfigurations.get(index + 1).getEnvId()).isEqualTo("env" + j + testUuid);
       }
     }
   }

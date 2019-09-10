@@ -1,7 +1,6 @@
 package io.harness.governance.pipeline.service.evaluators;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
@@ -48,11 +47,11 @@ public class WorkflowStatusEvaluatorTest extends WingsBaseTest {
     List<Tag> tags = Arrays.asList(new Tag("tag1", null), new Tag("tag2", "tag2val"));
     PipelineGovernanceRule rule = new PipelineGovernanceRule(tags, MatchType.ALL, 10, "note", false);
     GovernanceRuleStatus status = workflowStatusEvaluator.status(SOME_ACCOUNT_ID, workflow, rule);
-    assertFalse("for matchType ALL, all tags must be present in resource", status.isTagsIncluded());
+    assertThat(status.isTagsIncluded()).isFalse();
 
     tags = Arrays.asList(new Tag("tag1", null), new Tag("tag2", "tag2val"));
     rule = new PipelineGovernanceRule(tags, MatchType.ANY, 10, "note", true);
     status = workflowStatusEvaluator.status(SOME_ACCOUNT_ID, workflow, rule);
-    assertTrue("for matchType ANY, any tag must be present in resource", status.isTagsIncluded());
+    assertThat(status.isTagsIncluded()).isTrue();
   }
 }

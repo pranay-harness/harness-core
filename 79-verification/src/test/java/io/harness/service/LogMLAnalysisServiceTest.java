@@ -7,7 +7,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.service.LearningEngineAnalysisServiceImpl.BACKOFF_LIMIT;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
@@ -1584,7 +1583,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertThat(feedbackRecord).isNotNull();
     assertThat(records).isNotNull();
     assertThat(records).hasSize(2);
-    assertNotEquals("uuid1", feedbackRecord.getUuid());
+    assertThat("uuid1").isNotEqualTo(feedbackRecord.getUuid());
   }
 
   @Test

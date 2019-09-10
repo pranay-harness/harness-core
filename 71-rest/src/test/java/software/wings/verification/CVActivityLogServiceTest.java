@@ -2,7 +2,6 @@ package software.wings.verification;
 
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
@@ -166,7 +165,7 @@ public class CVActivityLogServiceTest extends BaseIntegrationTest {
   @Category(IntegrationTests.class)
   public void testIfCVTaskValidUntilIsBeingSetTo2Weeks() {
     CVActivityLog cvActivityLog = createLog(generateUUID(), System.currentTimeMillis(), "Test log");
-    assertTrue(cvActivityLog.getValidUntil().getTime() > Instant.now().toEpochMilli());
+    assertThat(cvActivityLog.getValidUntil().getTime() > Instant.now().toEpochMilli()).isTrue();
     assertThat(Math.abs(cvActivityLog.getValidUntil().getTime()
                    - OffsetDateTime.now().plus(2, ChronoUnit.WEEKS).toInstant().toEpochMilli())
         < TimeUnit.DAYS.toMillis(1));

@@ -1,7 +1,6 @@
 package software.wings.service.impl.instance.stats.collector;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import com.google.common.base.Suppliers;
 
@@ -61,8 +60,9 @@ public class InstanceMapperTest extends WingsBaseTest {
                          .collect(Collectors.toList());
 
     assertThat(apps.containsAll(sampleApps.get())).isTrue();
-    assertEquals("no aggregation by service should be present", 0,
-        statsSnapshot.getAggregateCounts().stream().filter(it -> it.getEntityType() == EntityType.SERVICE).count());
+    assertThat(
+        statsSnapshot.getAggregateCounts().stream().filter(it -> it.getEntityType() == EntityType.SERVICE).count())
+        .isEqualTo(0);
   }
 
   @Test
@@ -90,8 +90,9 @@ public class InstanceMapperTest extends WingsBaseTest {
                          .collect(Collectors.toList());
 
     assertThat(apps.isEmpty()).isTrue();
-    assertEquals(
-        0, statsSnapshot.getAggregateCounts().stream().filter(it -> it.getEntityType() == EntityType.SERVICE).count());
+    assertThat(
+        statsSnapshot.getAggregateCounts().stream().filter(it -> it.getEntityType() == EntityType.SERVICE).count())
+        .isEqualTo(0);
   }
 
   private List<Instance> getSampleInstance(String accountId) {

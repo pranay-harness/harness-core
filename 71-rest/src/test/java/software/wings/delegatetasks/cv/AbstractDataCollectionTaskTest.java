@@ -1,7 +1,6 @@
 package software.wings.delegatetasks.cv;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -67,9 +66,9 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
     ResponseData responseData = abstractDataCollectionTask.run(dataCollectionInfo);
 
     DataCollectionTaskResult taskResult = (DataCollectionTaskResult) responseData;
-    assertEquals(DataCollectionTaskStatus.SUCCESS, taskResult.getStatus());
-    assertEquals(StateType.SPLUNKV2, taskResult.getStateType());
-    assertNull(taskResult.getErrorMessage());
+    assertThat(DataCollectionTaskStatus.SUCCESS).isEqualTo(taskResult.getStatus());
+    assertThat(StateType.SPLUNKV2).isEqualTo(taskResult.getStateType());
+    assertThat(taskResult.getErrorMessage()).isNull();
   }
 
   @Test
@@ -86,9 +85,9 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
     DataCollectionTaskResult taskResult = (DataCollectionTaskResult) responseData;
     verify(dataCollector, times(2)).init(any(), eq(dataCollectionInfo));
     verify(abstractDataCollectionTask, times(1)).collectAndSaveData(dataCollectionInfo);
-    assertEquals(DataCollectionTaskStatus.SUCCESS, taskResult.getStatus());
-    assertEquals(StateType.SPLUNKV2, taskResult.getStateType());
-    assertEquals("error message from test", taskResult.getErrorMessage());
+    assertThat(DataCollectionTaskStatus.SUCCESS).isEqualTo(taskResult.getStatus());
+    assertThat(StateType.SPLUNKV2).isEqualTo(taskResult.getStateType());
+    assertThat("error message from test").isEqualTo(taskResult.getErrorMessage());
   }
 
   @Test
@@ -105,9 +104,9 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
     verify(dataCollector, times(4)).init(any(), eq(dataCollectionInfo));
     verify(abstractDataCollectionTask, times(0)).collectAndSaveData(dataCollectionInfo);
     DataCollectionTaskResult taskResult = (DataCollectionTaskResult) responseData;
-    assertEquals(DataCollectionTaskStatus.FAILURE, taskResult.getStatus());
-    assertEquals(StateType.SPLUNKV2, taskResult.getStateType());
-    assertEquals("error message from test", taskResult.getErrorMessage());
+    assertThat(DataCollectionTaskStatus.FAILURE).isEqualTo(taskResult.getStatus());
+    assertThat(StateType.SPLUNKV2).isEqualTo(taskResult.getStateType());
+    assertThat("error message from test").isEqualTo(taskResult.getErrorMessage());
   }
 
   @Test
@@ -124,9 +123,9 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
     verify(dataCollector, times(4)).init(any(), eq(dataCollectionInfo));
     verify(abstractDataCollectionTask, times(4)).collectAndSaveData(dataCollectionInfo);
     DataCollectionTaskResult taskResult = (DataCollectionTaskResult) responseData;
-    assertEquals(DataCollectionTaskStatus.FAILURE, taskResult.getStatus());
-    assertEquals(StateType.SPLUNKV2, taskResult.getStateType());
-    assertEquals("error message from test", taskResult.getErrorMessage());
+    assertThat(DataCollectionTaskStatus.FAILURE).isEqualTo(taskResult.getStatus());
+    assertThat(StateType.SPLUNKV2).isEqualTo(taskResult.getStateType());
+    assertThat("error message from test").isEqualTo(taskResult.getErrorMessage());
   }
 
   public DataCollectionInfoV2 createDataCollectionInfo() {

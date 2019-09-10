@@ -1,8 +1,7 @@
 package io.harness.governance.pipeline.service;
 
 import static graphql.Assert.assertNotEmpty;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
@@ -50,7 +49,7 @@ public class PipelineGovernanceServiceImplIntegrationTest extends BaseIntegratio
     pipelineGovernanceService.add(config);
 
     List<PipelineGovernanceConfig> list = pipelineGovernanceService.list(SOME_ACCOUNT_ID);
-    assertEquals(intialList.size() + 1, list.size());
+    assertThat(list.size()).isEqualTo(intialList.size() + 1);
   }
 
   @Test
@@ -65,10 +64,10 @@ public class PipelineGovernanceServiceImplIntegrationTest extends BaseIntegratio
             Collections.singletonList(new PipelineGovernanceRule(Collections.emptyList(), MatchType.ALL, 10, "", true)),
             Collections.emptyList()));
 
-    assertEquals(newlyAdded.getName(), "name-new");
-    assertEquals(newlyAdded.getDescription(), "description-new");
+    assertThat("name-new").isEqualTo(newlyAdded.getName());
+    assertThat("description-new").isEqualTo(newlyAdded.getDescription());
     assertNotEmpty(newlyAdded.getRules());
-    assertEquals(newlyAdded.getRules().get(0).getWeight(), 10);
+    assertThat(10).isEqualTo(newlyAdded.getRules().get(0).getWeight());
   }
 
   @Test
@@ -78,6 +77,6 @@ public class PipelineGovernanceServiceImplIntegrationTest extends BaseIntegratio
         null, SOME_ACCOUNT_ID, "name", "description", Collections.emptyList(), Collections.emptyList());
 
     PipelineGovernanceConfig addedConfig = pipelineGovernanceService.add(config);
-    assertNotNull(addedConfig.getUuid());
+    assertThat(addedConfig.getUuid()).isNotNull();
   }
 }
