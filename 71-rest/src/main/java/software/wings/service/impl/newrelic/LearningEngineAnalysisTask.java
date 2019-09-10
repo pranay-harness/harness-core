@@ -46,7 +46,10 @@ import java.util.concurrent.TimeUnit;
   ,
       @Index(fields = {
         @Field("cvConfigId"), @Field(value = "analysis_minute", type = IndexType.DESC), @Field("executionStatus")
-      }, options = @IndexOptions(name = "cvConfigStatusIdx"))
+      }, options = @IndexOptions(name = "cvConfigStatusIdx")), @Index(fields = {
+        @Field("executionStatus")
+        , @Field("ml_analysis_type"), @Field(value = "is24x7Task"), @Field(value = "createdAt", type = IndexType.DESC)
+      }, options = @IndexOptions(name = "usageMetricsIndex"))
 })
 @Data
 @Builder

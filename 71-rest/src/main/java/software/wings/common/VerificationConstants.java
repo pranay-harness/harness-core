@@ -133,9 +133,20 @@ public class VerificationConstants {
   public static final String LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_TIME_IN_SECONDS =
       "learning_engine_analysis_task_queued_time_in_seconds";
   public static final String LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_COUNT = "learning_engine_analysis_task_queued_count";
+  public static final String LEARNING_ENGINE_SERVICE_GUARD_ANALYSIS_TASK_QUEUED_COUNT =
+      "learning_engine_service_guard_analysis_task_queued_count";
+  public static final String LEARNING_ENGINE_SERVICE_GUARD_CLUSTERING_TASK_QUEUED_COUNT =
+      "learning_engine_service_guard_clustering_task_queued_count";
+  public static final String LEARNING_ENGINE_SERVICE_GUARD_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS =
+      "learning_engine_service_guard_clustering_task_queued_time_in_seconds";
+  public static final String LEARNING_ENGINE_SERVICE_GUARD_ANALYSIS_TASK_QUEUED_TIME_IN_SECONDS =
+      "learning_engine_service_guard_analysis_task_queued_time_in_seconds";
   public static final String LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_TIME_IN_SECONDS =
       "learning_engine_feedback_task_queued_time_in_seconds";
   public static final String LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_COUNT = "learning_engine_feedback_task_queued_count";
+  public static final String LEARNING_ENGINE_WORKFLOW_TASK_QUEUED_TIME_IN_SECONDS =
+      "learning_engine_workflow_task_queued_time_in_seconds";
+  public static final String LEARNING_ENGINE_WORKFLOW_TASK_COUNT = "learning_engine_workflow_task_queued_count";
   public static final String LEARNING_ENGINE_EXP_TASK_QUEUED_TIME_IN_SECONDS =
       "learning_engine_exp_task_queued_time_in_seconds";
   public static final String CV_META_DATA = "cv_meta_data";
@@ -144,7 +155,11 @@ public class VerificationConstants {
       LEARNING_ENGINE_TASK_QUEUED_TIME_IN_SECONDS, LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS,
       LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_TIME_IN_SECONDS, LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_TIME_IN_SECONDS,
       LEARNING_ENGINE_EXP_TASK_QUEUED_TIME_IN_SECONDS, LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_COUNT,
-      LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_COUNT, LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_COUNT);
+      LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_COUNT, LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_COUNT,
+      LEARNING_ENGINE_SERVICE_GUARD_ANALYSIS_TASK_QUEUED_COUNT,
+      LEARNING_ENGINE_SERVICE_GUARD_ANALYSIS_TASK_QUEUED_TIME_IN_SECONDS,
+      LEARNING_ENGINE_SERVICE_GUARD_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS, LEARNING_ENGINE_WORKFLOW_TASK_COUNT,
+      LEARNING_ENGINE_SERVICE_GUARD_CLUSTERING_TASK_QUEUED_COUNT, LEARNING_ENGINE_WORKFLOW_TASK_QUEUED_TIME_IN_SECONDS);
 
   public static final String IGNORED_ERRORS_METRIC_NAME = "ignored_errors";
 
