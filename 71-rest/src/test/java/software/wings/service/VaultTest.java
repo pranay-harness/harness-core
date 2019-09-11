@@ -415,8 +415,16 @@ public class VaultTest extends WingsBaseTest {
     assertThat(savedKmsConfig.isDefault()).isTrue();
     assertThat(savedKmsConfig.getAccountId()).isEqualTo(GLOBAL_ACCOUNT_ID);
 
+    SecretManagerConfig defaultConfig = secretManagerConfigService.getDefaultSecretManager(accountId);
+    assertThat(defaultConfig instanceof KmsConfig).isTrue();
+    assertThat(defaultConfig.getAccountId()).isEqualTo(GLOBAL_ACCOUNT_ID);
+
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
+
+    defaultConfig = secretManagerConfigService.getDefaultSecretManager(accountId);
+    assertThat(defaultConfig instanceof VaultConfig).isTrue();
+    assertThat(defaultConfig.getAccountId()).isEqualTo(accountId);
 
     encryptionConfigs = secretManager.listSecretManagers(accountId);
     assertThat(encryptionConfigs).hasSize(2);
@@ -426,7 +434,8 @@ public class VaultTest extends WingsBaseTest {
     assertThat(savedVaultConfig.getAccountId()).isEqualTo(accountId);
 
     savedKmsConfig = (KmsConfig) encryptionConfigs.get(1);
-    assertThat(savedKmsConfig.isDefault()).isTrue();
+    // PL-3472: There should be only one default secret manager from the list secret manager call.
+    assertThat(savedKmsConfig.isDefault()).isFalse();
     assertThat(savedKmsConfig.getAccountId()).isEqualTo(GLOBAL_ACCOUNT_ID);
   }
 
