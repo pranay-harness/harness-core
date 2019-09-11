@@ -61,6 +61,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
 import software.wings.beans.TaskType;
 import software.wings.beans.Variable;
+import software.wings.beans.VariableType;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
@@ -395,23 +396,6 @@ public class CommandState extends State {
                   featureFlagService.isEnabled(FeatureName.SSH_SHORT_VALIDATION_TIMEOUT, accountId));
 
       getHostConnectionDetails(context, host, commandExecutionContextBuilder);
-      if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-        if (artifact != null) {
-          getArtifactDetails(
-              context, executionDataBuilder, service, accountId, artifact, commandExecutionContextBuilder);
-        } else if (command.isArtifactNeeded()) {
-          throw new WingsException(
-              format("Unable to find artifact for service %s", service.getName()), WingsException.USER);
-        }
-      } else {
-        if (isNotEmpty(multiArtifacts)) {
-          getMultiArtifactDetails(
-              context, executionDataBuilder, service, accountId, multiArtifacts, commandExecutionContextBuilder);
-        } else if (command.isArtifactNeeded()) {
-          throw new WingsException(
-              format("Unable to find artifact for service %s", service.getName()), WingsException.USER);
-        }
-      }
 
       boolean isInExpectedFormat = false;
       if (serviceCommand.getTemplateUuid() != null) {
@@ -453,6 +437,28 @@ public class CommandState extends State {
         }
       }
 
+      Map<String, String> flattenedTemplateVariables = new HashMap<>();
+      flattenTemplateVariables(command, flattenedTemplateVariables);
+      addArtifactTemplateVariablesToContext(flattenedTemplateVariables, multiArtifacts, context);
+
+      if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+        if (artifact != null) {
+          getArtifactDetails(
+              context, executionDataBuilder, service, accountId, artifact, commandExecutionContextBuilder);
+        } else if (command.isArtifactNeeded()) {
+          throw new WingsException(
+              format("Unable to find artifact for service %s", service.getName()), WingsException.USER);
+        }
+      } else {
+        if (isNotEmpty(multiArtifacts)) {
+          getMultiArtifactDetails(
+              context, executionDataBuilder, service, accountId, multiArtifacts, commandExecutionContextBuilder);
+        } else if (command.isArtifactNeeded()) {
+          throw new WingsException(
+              format("Unable to find artifact for service %s", service.getName()), WingsException.USER);
+        }
+      }
+
       List<CommandUnit> flattenCommandUnits;
       if (serviceCommand.getTemplateUuid() != null) {
         if (isInExpectedFormat) {
@@ -478,11 +484,7 @@ public class CommandState extends State {
       activityId = activity.getUuid();
       executionDataBuilder.withActivityId(activityId);
 
-      if (featureFlagService.isEnabled(FeatureName.INLINE_SSH_COMMAND, accountId)) {
-        commandExecutionContextBuilder.withInlineSshCommand(true);
-      }
-      commandExecutionContextBuilder.withMultiArtifact(
-          featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId));
+      setPropertiesFromFeatureFlags(accountId, commandExecutionContextBuilder);
       CommandExecutionContext commandExecutionContext =
           commandExecutionContextBuilder.withActivityId(activityId).withDeploymentType(deploymentType.name()).build();
 
@@ -493,12 +495,46 @@ public class CommandState extends State {
       return handleException(context, executionDataBuilder, activityId, appId, e);
     }
 
+    return getExecutionResponse(executionDataBuilder, activityId, delegateTaskId);
+  }
+
+  private ExecutionResponse getExecutionResponse(
+      CommandStateExecutionData.Builder executionDataBuilder, String activityId, String delegateTaskId) {
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Collections.singletonList(activityId))
         .stateExecutionData(executionDataBuilder.withDelegateTaskId(delegateTaskId).build())
         .delegateTaskId(delegateTaskId)
         .build();
+  }
+
+  private void addArtifactTemplateVariablesToContext(
+      Map<String, String> artifactTemplateVariableMap, Map<String, Artifact> multiArtifacts, ExecutionContext context) {
+    if (artifactTemplateVariableMap.size() > 0) {
+      for (Entry<String, String> entry : artifactTemplateVariableMap.entrySet()) {
+        String param = entry.getKey();
+        String paramValue = entry.getValue();
+        String expression = templateUtils.getExpression(paramValue);
+        Artifact evaluatedValue = (Artifact) context.evaluateExpression(expression);
+        if (evaluatedValue != null) {
+          multiArtifacts.put(param, evaluatedValue);
+        }
+      }
+    }
+  }
+
+  private void flattenTemplateVariables(Command command, Map<String, String> artifactTemplateVariables) {
+    for (Variable var : command.getTemplateVariables()) {
+      if (var.getType().equals(VariableType.ARTIFACT)) {
+        artifactTemplateVariables.put(var.getName(), var.getValue());
+      }
+    }
+
+    for (CommandUnit cu : command.getCommandUnits()) {
+      if (cu instanceof Command) {
+        flattenTemplateVariables((Command) cu, artifactTemplateVariables);
+      }
+    }
   }
 
   private String queueDelegateTask(String activityId, String appId, String envId, String infrastructureMappingId,
@@ -837,6 +873,26 @@ public class CommandState extends State {
         getHostConnectionDetails(context, host, commandExecutionContextBuilder);
       }
 
+      String templateId = this.getTemplateUuid();
+      String templateVersion = this.getTemplateVersion();
+      expandCommand(command, templateId, templateVersion, command.getName());
+      Template template = templateService.get(templateId, templateVersion);
+      if (template != null) {
+        SshCommandTemplate sshCommandTemplate = (SshCommandTemplate) template.getTemplateObject();
+        resolveTemplateVariablesInLinkedCommands(
+            command, sshCommandTemplate.getReferencedTemplateList(), this.getTemplateVariables());
+      }
+
+      if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+        renderCommandString(command, context, executionDataBuilder.build(), artifact, true);
+      } else {
+        renderCommandString(command, context, executionDataBuilder.build(), true);
+      }
+
+      Map<String, String> flattenedTemplateVariables = new HashMap<>();
+      flattenTemplateVariables(command, flattenedTemplateVariables);
+      addArtifactTemplateVariablesToContext(flattenedTemplateVariables, multiArtifacts, context);
+
       if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
         if (artifact != null) {
           getArtifactDetails(
@@ -861,22 +917,6 @@ public class CommandState extends State {
         }
       }
 
-      String templateId = this.getTemplateUuid();
-      String templateVersion = this.getTemplateVersion();
-      expandCommand(command, templateId, templateVersion, command.getName());
-      Template template = templateService.get(templateId, templateVersion);
-      if (template != null) {
-        SshCommandTemplate sshCommandTemplate = (SshCommandTemplate) template.getTemplateObject();
-        resolveTemplateVariablesInLinkedCommands(
-            command, sshCommandTemplate.getReferencedTemplateList(), this.getTemplateVariables());
-      }
-
-      if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-        renderCommandString(command, context, executionDataBuilder.build(), artifact, true);
-      } else {
-        renderCommandString(command, context, executionDataBuilder.build(), true);
-      }
-
       List<CommandUnit> flattenCommandUnits =
           getFlattenCommandUnits(appId, envId, service, deploymentType.name(), accountId, command, true);
       Activity activity = activityHelperService.createAndSaveActivity(
@@ -886,9 +926,7 @@ public class CommandState extends State {
       executionDataBuilder.withActivityId(activityId);
       executionDataBuilder.withTemplateVariable(
           templateUtils.processTemplateVariables(context, command.getTemplateVariables()));
-      if (featureFlagService.isEnabled(FeatureName.INLINE_SSH_COMMAND, accountId)) {
-        commandExecutionContextBuilder.withInlineSshCommand(true);
-      }
+      setPropertiesFromFeatureFlags(accountId, commandExecutionContextBuilder);
       CommandExecutionContext commandExecutionContext =
           commandExecutionContextBuilder.withActivityId(activityId).withDeploymentType(deploymentType.name()).build();
 
@@ -899,12 +937,16 @@ public class CommandState extends State {
       return handleException(context, executionDataBuilder, activityId, appId, e);
     }
 
-    return ExecutionResponse.builder()
-        .async(true)
-        .correlationIds(Collections.singletonList(activityId))
-        .stateExecutionData(executionDataBuilder.withDelegateTaskId(delegateTaskId).build())
-        .delegateTaskId(delegateTaskId)
-        .build();
+    return getExecutionResponse(executionDataBuilder, activityId, delegateTaskId);
+  }
+
+  private void setPropertiesFromFeatureFlags(
+      String accountId, CommandExecutionContext.Builder commandExecutionContextBuilder) {
+    if (featureFlagService.isEnabled(FeatureName.INLINE_SSH_COMMAND, accountId)) {
+      commandExecutionContextBuilder.withInlineSshCommand(true);
+    }
+    commandExecutionContextBuilder.withMultiArtifact(
+        featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId));
   }
 
   private ExecutionResponse handleException(ExecutionContext context,
@@ -937,6 +979,18 @@ public class CommandState extends State {
       commandEntity.setName(template.getName());
       commandEntity.setCommandType(sshCommandTemplate.getCommandType());
       commandEntity.setCommandUnits(sshCommandTemplate.getCommandUnits());
+      for (CommandUnit commandUnit : commandEntity.getCommandUnits()) {
+        if (commandUnit instanceof Command) {
+          if (((Command) commandUnit).getTemplateReference() != null) {
+            template = templateService.get(((Command) commandUnit).getTemplateReference().getTemplateUuid(),
+                String.valueOf(((Command) commandUnit).getTemplateReference().getTemplateVersion()));
+            if (template != null) {
+              ((Command) commandUnit)
+                  .setCommandUnits(((SshCommandTemplate) template.getTemplateObject()).getCommandUnits());
+            }
+          }
+        }
+      }
     }
     return commandEntity;
   }
@@ -1388,7 +1442,6 @@ public class CommandState extends State {
     }
     return null;
   }
-
   @Override
   @SchemaIgnore
   public List<EntityType> getRequiredExecutionArgumentTypes() {

@@ -682,12 +682,12 @@ public class CommandStateTest extends WingsBaseTest {
     on(commandState).set("templateUtils", templateUtils);
     CommandStateExecutionData commandStateExecutionData =
         CommandStateExecutionData.Builder.aCommandStateExecutionData().build();
-    final Command command =
-        aCommand()
-            .addCommandUnits(anExecCommandUnit().withCommandString("${var1}").build())
-            .addCommandUnits(
-                aCommand().addCommandUnits(anExecCommandUnit().withCommandString("${var2}").build()).build())
-            .build();
+    final Command command = createCommand();
+    testRenderCommandString(commandState, commandStateExecutionData, command);
+  }
+
+  private void testRenderCommandString(
+      CommandState commandState, CommandStateExecutionData commandStateExecutionData, Command command) {
     Artifact artifact = null;
     commandState.renderCommandString(command, context, commandStateExecutionData, artifact);
     verify(context, times(1))
@@ -734,20 +734,16 @@ public class CommandStateTest extends WingsBaseTest {
     }
     CommandStateExecutionData commandStateExecutionData =
         CommandStateExecutionData.Builder.aCommandStateExecutionData().withTemplateVariable(stateVariables).build();
-    final Command command =
-        aCommand()
-            .addCommandUnits(anExecCommandUnit().withCommandString("${var1}").build())
-            .addCommandUnits(
-                aCommand().addCommandUnits(anExecCommandUnit().withCommandString("${var2}").build()).build())
-            .build();
-    Artifact artifact = null;
-    commandState.renderCommandString(command, context, commandStateExecutionData, artifact);
-    verify(context, times(1))
-        .renderExpression(
-            "${var1}", StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());
-    verify(context, times(1))
-        .renderExpression(
-            "${var2}", StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());
+    final Command command = createCommand();
+    testRenderCommandString(commandState, commandStateExecutionData, command);
+  }
+
+  @NotNull
+  private Command createCommand() {
+    return aCommand()
+        .addCommandUnits(anExecCommandUnit().withCommandString("${var1}").build())
+        .addCommandUnits(aCommand().addCommandUnits(anExecCommandUnit().withCommandString("${var2}").build()).build())
+        .build();
   }
 
   @Test
@@ -770,13 +766,6 @@ public class CommandStateTest extends WingsBaseTest {
                                  .addCommandUnits(anExecCommandUnit().withCommandString("${var2}").build())
                                  .build())
             .build();
-    Artifact artifact = null;
-    commandState.renderCommandString(command, context, commandStateExecutionData, artifact);
-    verify(context, times(1))
-        .renderExpression(
-            "${var1}", StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());
-    verify(context, times(1))
-        .renderExpression(
-            "${var2}", StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());
+    testRenderCommandString(commandState, commandStateExecutionData, command);
   }
 }

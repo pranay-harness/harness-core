@@ -93,10 +93,14 @@ public class AzureHelperService {
     return (AzureConfig) computeProviderSetting.getValue();
   }
 
-  public void validateAzureAccountCredential(String clientId, String tenantId, String key) {
+  public void validateAzureAccountCredential(AzureConfig azureConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     try {
-      ApplicationTokenCredentials credentials =
-          new ApplicationTokenCredentials(clientId, tenantId, key, AzureEnvironment.AZURE);
+      if (isNotEmpty(encryptedDataDetails)) {
+        encryptionService.decrypt(azureConfig, encryptedDataDetails);
+      }
+
+      ApplicationTokenCredentials credentials = new ApplicationTokenCredentials(azureConfig.getClientId(),
+          azureConfig.getTenantId(), new String(azureConfig.getKey()), AzureEnvironment.AZURE);
 
       Azure.configure().withLogLevel(LogLevel.NONE).authenticate(credentials).withDefaultSubscription();
 
