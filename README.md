@@ -17,17 +17,11 @@ Download JDK 1.8-191 from [Java archive downloads](http://www.oracle.com/technet
 
    `brew install maven`
 
-4. Install and start MongoDB Docker Image (v3.6):
 
-```
-$ docker run -p 27017:27017 -v ~/_mongodb_data:/data/db --name mongoContainer -d --rm mongo:3.6
-```
-Install & use RoboMongo client to test MongoDB connection.
-
-5. Install npm (used for front-end):
+4. Install npm (used for front-end):
    `brew install npm`
 
-6. **Set up JAVA_HOME: create or add this to your bash profile `~/.bash_profile` file and add following line:**
+5. **Set up JAVA_HOME: create or add this to your bash profile `~/.bash_profile` file and add following line:**
 
 ```
    ulimit -u 8192
@@ -35,7 +29,7 @@ Install & use RoboMongo client to test MongoDB connection.
   
 ```
 
-7. Go to http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html. Accept the license agreement and download the files. Unzip the files. Copy the two jars to `$JAVA_HOME/jre/lib/security` (you'll probably need to use sudo).
+6. Go to http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html. Accept the license agreement and download the files. Unzip the files. Copy the two jars to `$JAVA_HOME/jre/lib/security` (you'll probably need to use sudo).
 
 Run this script to test if JCE is installed properly:
 
@@ -49,7 +43,7 @@ sudo apt update
 sudo apt install oracle-java8-unlimited-jce-policy
 ```
 
-8. Update /etc/hosts to reflect your hostname
+7. Update /etc/hosts to reflect your hostname
 ```
 255.255.255.255	broadcasthost
 127.0.0.1  <your hostname>
@@ -98,6 +92,51 @@ NOTE: the data from it is used for every git operation github does on you behave
 
    `mvn clean install`
 
+3. If Global Search is not required:
+
+    Install and start MongoDB Docker Image (v3.6):
+
+    ```
+    $ docker run -p 27017:27017 -v ~/_mongodb_data:/data/db --name mongoContainer -d --rm mongo:3.6
+    ```
+    
+    In config.yml set `searchEnabled` to `false`.
+    
+    Install & use RoboMongo client to test MongoDB connection.
+
+4. If Global search has to be enabled (OPTIONAL):
+
+    Install and start Elasticsearch Docker Image for Search(v7.3):
+    ```
+    $ docker run -p 9200:9200 -p 9300:9300 -v ~/_elasticsearch_data:/usr/share/elasticsearch/data -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.3.0
+    ```
+
+    Run mongo in replica set:
+
+    ```
+    $ docker-compose -f <Directory to portal>/portal/docker-files/mongo-replicaset/docker-compose.yml up -d
+    ```
+
+    Add this to /etc/hosts:
+    ```
+    127.0.0.1       mongo1
+    127.0.0.1       mongo2
+    127.0.0.1       mongo3
+    ```
+
+    Run `brew install mongodb`
+
+    Run `mongo --port 30001`
+
+    Run these in the mongo console:
+    ```
+    rs.initiate()
+    rs.add('mongo2:30002')
+    rs.add('mongo3:30003')
+    ```
+    
+    In config.yml set `mongo.uri` to `mongodb://mongo1:30001,mongo2:30002,mongo3:30003/harness`.
+    Do the same in `config-datagen.yml` and `verification-config.yml`.
 
 ### Run Harness without IDE (especially for the UI development)
 

@@ -35,6 +35,7 @@ import software.wings.beans.DefaultSalesContacts;
 import software.wings.beans.UrlInfo;
 import software.wings.beans.security.access.GlobalWhitelistConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
+import software.wings.search.framework.ElasticsearchConfig;
 import software.wings.security.authentication.MarketPlaceConfig;
 import software.wings.security.authentication.oauth.AzureConfig;
 import software.wings.security.authentication.oauth.BitbucketConfig;
@@ -65,6 +66,9 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConnectionFactory = MongoConfig.builder().build();
+  @JsonProperty("elasticsearch")
+  private ElasticsearchConfig elasticsearchConfig = ElasticsearchConfig.builder().build();
+  @JsonProperty(value = "searchEnabled", defaultValue = "true") private boolean isSearchEnabled = true;
   @JsonProperty private PortalConfig portal = new PortalConfig();
   @JsonProperty(defaultValue = "true") private boolean enableIterators = true;
   @JsonProperty(defaultValue = "true") private boolean enableAuth = true;

@@ -1,0 +1,38 @@
+package software.wings.search.framework;
+
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
+import software.wings.dl.WingsPersistence;
+import software.wings.search.framework.PerpetualSearchLocker.LockTimeoutCallback;
+import software.wings.search.framework.SearchDistributedLock.SearchDistributedLockKeys;
+
+import java.sql.Date;
+import java.time.Instant;
+
+@Slf4j
+@AllArgsConstructor
+public class SearchHeartbeatMonitor implements Runnable {
+  private WingsPersistence wingsPersistence;
+  private LockTimeoutCallback lockTimeoutCallback;
+  private String lockName;
+  private String uuid;
+
+  public void run() {
+    Query<SearchDistributedLock> query = wingsPersistence.createQuery(SearchDistributedLock.class)
+                                             .field(SearchDistributedLockKeys.name)
+                                             .equal(lockName)
+                                             .field(SearchDistributedLockKeys.uuid)
+                                             .equal(uuid);
+
+    SearchDistributedLock searchDistributedLock = query.get();
+    Instant instant = Instant.now();
+    if (searchDistributedLock != null) {
+      wingsPersistence.updateField(
+          SearchDistributedLock.class, lockName, SearchDistributedLockKeys.heartbeat, Date.from(instant));
+    } else {
+      logger.info("Search lock is deleted");
+      lockTimeoutCallback.stop();
+    }
+  }
+}

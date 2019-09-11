@@ -1,0 +1,51 @@
+{
+  "settings" : {
+    "analysis" : {
+      "analyzer" : {"custom_analyzer" : {"tokenizer" : "custom_tokenizer"}},
+      "tokenizer" : {
+        "custom_tokenizer" :
+        {"type" : "edge_ngram", "min_gram" : "1", "max_gram" : "25"}
+      }
+    }
+  },
+  "mappings" : {
+    "properties" : {
+      "accountId" : {"type" : "keyword"},
+      "createdBy" : {
+        "properties" : {
+          "email" : {"type" : "keyword", "index" : false},
+          "name" : {"type" : "keyword", "index" : false},
+          "uuid" : {"type" : "keyword", "index" : false}
+        }
+      },
+      "lastUpdatedBy" : {
+        "properties" : {
+          "email": {
+            "type": "keyword",
+            "index": false
+          },
+          "name": {
+            "type": "keyword",
+            "index": false
+          },
+          "uuid": {
+            "type": "keyword",
+            "index": false
+          }
+        }
+      },
+
+      "createdAt" : {"type" : "long","index" : false},
+      "description"
+      : {"type" : "text", "analyzer" : "standard"},
+      "id" : {"type" : "keyword","index" : false},
+      "lastUpdatedAt" : {"type" : "long","index" : false},
+      "name"
+      : {"type" : "text", "analyzer": "standard" },
+      "type" : {
+        "type" : "keyword",
+        "index" : false
+      }
+    }
+  }
+}

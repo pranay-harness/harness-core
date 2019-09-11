@@ -62,6 +62,7 @@ public enum FeatureName {
   TF_ALL, // TODO: Yogesh, Remove this once UI is done
   SPLUNK_CV_TASK,
   SLACK_APPROVALS,
+  SEARCH(Scope.GLOBAL),
   GRAPHQL_STRESS_TESTING;
 
   FeatureName() {

@@ -1,0 +1,49 @@
+version: "3"
+services:
+  mongo1:
+    hostname: mongo1
+    container_name: mongo1
+    image: mongo:3.6
+    volumes:
+      - ~/_mongodb1/db:/data/db
+      - ~/_mongodb1/configdb:/data/configdb
+    networks:
+      - mongo-dev-net
+    expose:
+      - 30001
+    ports:
+      - 30001:30001
+    restart: always
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "devrs", "--port", "30001" ]
+  mongo2:
+    hostname: mongo2
+    container_name: mongo2
+    image: mongo:3.6
+    volumes:
+      - ~/_mongodb2/db:/data/db
+      - ~/_mongodb2/configdb:/data/configdb
+    networks:
+      - mongo-dev-net
+    expose:
+      - 30002
+    ports:
+      - 30002:30002
+    restart: always
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "devrs", "--port", "30002" ]
+  mongo3:
+    hostname: mongo3
+    container_name: mongo3
+    image: mongo:3.6
+    volumes:
+      - ~/_mongodb3/db:/data/db
+      - ~/_mongodb3/configdb:/data/configdb
+    networks:
+      - mongo-dev-net
+    expose:
+      - 30003
+    ports:
+      - 30003:30003
+    restart: always
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "devrs", "--port", "30003" ]
+networks:
+  mongo-dev-net:

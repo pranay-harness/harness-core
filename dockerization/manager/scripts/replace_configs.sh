@@ -25,6 +25,10 @@ if [[ "" != "$MONGO_URI" ]]; then
   yq write -i /opt/harness/config.yml mongo.uri "${MONGO_URI//\\&/&}"
 fi
 
+if [[ "" != "$ELASTICSEARCH_URI" ]]; then
+  yq write -i /opt/harness/config.yml elasticsearch.uri "$ELASTICSEARCH_URI"
+fi
+
 if [[ "" != "$MONGO_LOCK_URI" ]]; then
   yq write -i /opt/harness/config.yml mongo.locksUri "${MONGO_LOCK_URI//\\&/&}"
 fi
