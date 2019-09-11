@@ -1,0 +1,7 @@
+{
+  "mappings" : {
+    "properties" : {"appId" : {"type" : "keyword", "index" : false},
+      "appName" : {"type" :  "text", "index" : false}
+    }
+  }
+}

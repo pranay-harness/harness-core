@@ -430,6 +430,8 @@ import software.wings.metrics.TimeSeriesDataRecord;
 import software.wings.prune.PruneEvent;
 import software.wings.resources.DelegateFileResource.FileIdempotentResult;
 import software.wings.scheduler.events.segment.SegmentGroupEventJobContext;
+import software.wings.search.framework.SearchDistributedLock;
+import software.wings.search.framework.SearchEntitySyncState;
 import software.wings.security.EnvFilter;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.WorkflowFilter;
@@ -835,6 +837,8 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(Role.class);
     set.add(SamlSettings.class);
     set.add(Schema.class);
+    set.add(SearchDistributedLock.class);
+    set.add(SearchEntitySyncState.class);
     set.add(SecretChangeLog.class);
     set.add(SecretManagerConfig.class);
     set.add(SecretUsageLog.class);

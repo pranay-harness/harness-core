@@ -130,6 +130,7 @@ import software.wings.scheduler.ecs.ECSPollingHandler;
 import software.wings.scheduler.events.segment.SegmentGroupEventJob.SegmentGroupEventJobExecutor;
 import software.wings.scheduler.instance.InstanceSyncHandler;
 import software.wings.scheduler.marketplace.gcp.GCPBillingHandler;
+import software.wings.search.framework.ElasticsearchSyncService;
 import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.AuthenticationFilter;
@@ -298,6 +299,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new SSOModule());
     modules.add(new AuthModule());
     modules.add(new GcpMarketplaceIntegrationModule());
+    modules.add(new SearchModule());
     modules.add(new ProviderModule() {
       @Provides
       public GrpcServerConfig getGrpcServerConfig() {
@@ -337,7 +339,7 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     registerResources(environment, injector);
 
-    registerManagedBeans(environment, injector);
+    registerManagedBeans(configuration, environment, injector);
 
     registerQueueListeners(injector);
 
@@ -492,7 +494,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     }
   }
 
-  private void registerManagedBeans(Environment environment, Injector injector) {
+  private void registerManagedBeans(MainConfiguration configuration, Environment environment, Injector injector) {
     environment.lifecycle().manage((Managed) injector.getInstance(WingsPersistence.class));
     environment.lifecycle().manage(new ManageDistributedLockSvc(injector.getInstance(DistributedLockSvc.class)));
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
@@ -502,6 +504,9 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.lifecycle().manage(injector.getInstance(NotifierScheduledExecutorService.class));
     environment.lifecycle().manage(injector.getInstance(GcpMarketplaceSubscriberService.class));
     environment.lifecycle().manage((Managed) injector.getInstance(ExecutorService.class));
+    if (configuration.isSearchEnabled()) {
+      environment.lifecycle().manage(injector.getInstance(ElasticsearchSyncService.class));
+    }
   }
 
   private void registerQueueListeners(Injector injector) {
