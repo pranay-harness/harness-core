@@ -69,7 +69,7 @@ public interface Jenkins {
    * @return the queue reference
    * @throws IOException the io exception
    */
-  QueueReference trigger(String jobname, Map<String, String> parameters) throws IOException;
+  QueueReference trigger(String jobname, Map<String, String> parameters) throws RuntimeException, IOException;
 
   /**
    * Check status.
