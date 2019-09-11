@@ -179,9 +179,12 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
         if (encryptionType == null || secretManagerConfig.getEncryptionType() == encryptionType) {
           rv.add(secretManagerConfig);
 
-          defaultSet = secretManagerConfig.isDefault() || defaultSet;
-          globalSecretManager =
-              secretManagerConfig.getAccountId().equals(GLOBAL_ACCOUNT_ID) ? secretManagerConfig : globalSecretManager;
+          if (secretManagerConfig.getAccountId().equals(GLOBAL_ACCOUNT_ID)) {
+            globalSecretManager = secretManagerConfig;
+          } else {
+            defaultSet = secretManagerConfig.isDefault() || defaultSet;
+          }
+
           Query<EncryptedData> encryptedDataQuery = wingsPersistence.createQuery(EncryptedData.class)
                                                         .filter(EncryptedDataKeys.accountId, accountId)
                                                         .filter(EncryptedDataKeys.kmsId, secretManagerConfig.getUuid());
@@ -211,8 +214,9 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
         }
       }
 
-      if (!defaultSet && globalSecretManager != null) {
-        globalSecretManager.setDefault(true);
+      if (globalSecretManager != null) {
+        // PL-3472: There should be only one secret manager to be default in the list API call.
+        globalSecretManager.setDefault(!defaultSet);
       }
     }
 
