@@ -419,6 +419,7 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     injector.getInstance(EventsModuleHelper.class).initialize();
     if (injector.getInstance(FeatureFlagService.class).isGlobalEnabled(PERPETUAL_TASK_SERVICE)) {
+      logger.info("Initializing gRPC server...");
       ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
       serviceManager.awaitHealthy();
       Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
