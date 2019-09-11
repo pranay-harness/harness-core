@@ -62,7 +62,8 @@ public class GitConfigHelperService {
           throw new InvalidRequestException("Could not find SettingAttribute for Id: " + gitConfig.getSshSettingId());
         }
         gitConfig.setSshSettingAttribute(sshSettingAttribute);
-      } else if (gitConfig.getUsername() == null || gitConfig.getPassword() == null) {
+      } else if (gitConfig.getUsername() == null
+          || (gitConfig.getPassword() == null && gitConfig.getEncryptedPassword() == null)) {
         throw new InvalidRequestException("Username and password can not be empty", USER);
       }
     }
