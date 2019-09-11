@@ -1573,6 +1573,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         accountId, cloudProvidersFolder, SettingVariableTypes.KUBERNETES_CLUSTER, directoryPath.clone());
     doCloudProviderType(accountId, cloudProvidersFolder, PHYSICAL_DATA_CENTER, directoryPath.clone());
     doCloudProviderType(accountId, cloudProvidersFolder, SettingVariableTypes.PCF, directoryPath.clone());
+    doCloudProviderType(accountId, cloudProvidersFolder, SettingVariableTypes.SPOT_INST, directoryPath.clone());
 
     return cloudProvidersFolder;
   }
