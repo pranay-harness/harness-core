@@ -142,7 +142,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
 
   @Override
   public EncryptedRecord encrypt(String accountId, char[] value, KmsConfig kmsConfig) {
-    Preconditions.checkNotNull(kmsConfig, "null for " + accountId);
+    Preconditions.checkNotNull(kmsConfig, "null secret manager for account " + accountId);
     int failedAttempts = 0;
     while (true) {
       try {
@@ -170,7 +170,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       return null;
     }
 
-    Preconditions.checkNotNull(kmsConfig, "null for " + data);
+    Preconditions.checkNotNull(kmsConfig, "null secret manager for encrypted record " + data.getUuid());
 
     int failedAttempts = 0;
     while (true) {
