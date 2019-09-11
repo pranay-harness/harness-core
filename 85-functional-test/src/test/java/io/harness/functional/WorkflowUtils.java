@@ -1,7 +1,7 @@
 package io.harness.functional;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
+import static software.wings.beans.BlueGreenOrchestrationWorkflow.BlueGreenOrchestrationWorkflowBuilder.aBlueGreenOrchestrationWorkflow;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
@@ -39,6 +39,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.sm.StateType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -115,7 +116,7 @@ public class WorkflowUtils {
         .build();
   }
 
-  public Workflow getBasicEcsEc2TypeWorkflow(
+  public Workflow getEcsEc2TypeCanaryWorkflow(
       String name, Service service, InfrastructureDefinition infrastructureDefinition) {
     List<PhaseStep> phaseSteps = new ArrayList<>();
 
@@ -131,7 +132,7 @@ public class WorkflowUtils {
         .infraDefinitionId(infrastructureDefinition.getUuid())
         .serviceId(service.getUuid())
         .orchestrationWorkflow(
-            aBuildOrchestrationWorkflow()
+            aCanaryOrchestrationWorkflow()
                 .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, PRE_DEPLOYMENT_CONSTANT).build())
                 .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, POST_DEPLOYMENT_CONSTANT).build())
                 .addWorkflowPhase(aWorkflowPhase()
@@ -244,6 +245,73 @@ public class WorkflowUtils {
             .templateExpressions(Arrays.asList(templateExpressionForEnv, templateExpressionForInfraDefinition))
             .build();
     return workflow;
+  }
+
+  public Workflow createAwsAmiBGWorkflow(
+      String name, Service service, InfrastructureDefinition infrastructureDefinition) {
+    List<PhaseStep> phaseSteps = new ArrayList<>();
+    phaseSteps.add(aPhaseStep(PhaseStepType.AMI_AUTOSCALING_GROUP_SETUP,
+        " Setup AutoScaling "
+            + "Group")
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(StateType.AWS_AMI_SERVICE_SETUP.toString())
+                                    .name("Ami Setup")
+                                    .properties(ImmutableMap.<String, Object>builder()
+                                                    .put("autoScalingGroupName",
+                                                        "${app.name}_${service"
+                                                            + ".name}_${env.name}")
+                                                    .put("maxInstances", 1)
+                                                    .put("desiredInstances", 1)
+                                                    .put("resizeStrategy", "RESIZE_NEW_FIRST")
+                                                    .put("minInstances", 1)
+                                                    .put("autoScalingSteadyStateTimeout", 10)
+                                                    .put("useCurrentRunningCount", false)
+                                                    .build())
+
+                                    .build())
+                       .build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.DEPLOY_SERVICE, "Deploy")
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .name("deploy")
+                                    .type(StateType.AWS_AMI_SERVICE_DEPLOY.toString())
+                                    .properties(ImmutableMap.<String, Object>builder()
+                                                    .put("instanceCount", 1)
+                                                    .put("instanceUnitType", "COUNT")
+                                                    .build())
+                                    .build())
+                       .build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, "Verify Service").build());
+    phaseSteps.add(
+        aPhaseStep(PhaseStepType.AMI_SWITCH_AUTOSCALING_GROUP_ROUTES, "Swap Routes")
+            .addStep(GraphNode.builder()
+                         .id(generateUuid())
+                         .name("swap asg")
+                         .type(StateType.AWS_AMI_SWITCH_ROUTES.toString())
+                         .properties(ImmutableMap.<String, Object>builder().put("downsizeOldAsg", true).build())
+                         .build())
+            .build());
+    phaseSteps.add(aPhaseStep(WRAP_UP, WRAP_UP_CONSTANT).build());
+
+    return aWorkflow()
+        .name(name + System.currentTimeMillis())
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .appId(service.getAppId())
+        .envId(infrastructureDefinition.getEnvId())
+        .infraDefinitionId(infrastructureDefinition.getUuid())
+        .serviceId(service.getUuid())
+        .orchestrationWorkflow(aBlueGreenOrchestrationWorkflow()
+                                   .addWorkflowPhase(aWorkflowPhase()
+                                                         .serviceId(service.getUuid())
+                                                         .deploymentType(DeploymentType.AMI)
+                                                         .daemonSet(false)
+                                                         .infraDefinitionId(infrastructureDefinition.getUuid())
+                                                         .infraDefinitionName(infrastructureDefinition.getName())
+                                                         .phaseSteps(phaseSteps)
+                                                         .build())
+                                   .build())
+        .build();
   }
 
   private TemplateExpression getTemplateExpressionsForEnv() {

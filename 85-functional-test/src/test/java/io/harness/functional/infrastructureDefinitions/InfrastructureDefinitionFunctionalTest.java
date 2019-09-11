@@ -109,7 +109,7 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
     checkScopedService(infrastructureDefinition.getDeploymentType(), service);
     checkListInfraDefinitionByService(service, infrastructureDefinition);
 
-    Workflow workflow = workflowUtils.getBasicEcsEc2TypeWorkflow("ecs-ec2-", service, infrastructureDefinition);
+    Workflow workflow = workflowUtils.getEcsEc2TypeCanaryWorkflow("ecs-ec2-", service, infrastructureDefinition);
     workflow = workflowGenerator.ensureWorkflow(seed, owners, workflow);
 
     Artifact artifact = getArtifact(service, service.getAppId());

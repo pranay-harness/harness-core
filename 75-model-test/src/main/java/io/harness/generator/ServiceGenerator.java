@@ -83,7 +83,7 @@ public class ServiceGenerator {
     owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
     owners.add(ensureService(
         seed, owners, builder().name(name).artifactType(ArtifactType.WAR).deploymentType(DeploymentType.SSH).build()));
-    artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECHO_WAR);
+    artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.AWS_AMI);
     return owners.obtainService();
   }
 
@@ -91,6 +91,13 @@ public class ServiceGenerator {
     owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.FUNCTIONAL_TEST));
     owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.WAR).build()));
     artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.ARTIFACTORY_ECHO_WAR);
+    return owners.obtainService();
+  }
+
+  public Service ensureAmiGenericTest(Randomizer.Seed seed, Owners owners, String name) {
+    owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
+    owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.AMI).build()));
+    artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.AWS_AMI);
     return owners.obtainService();
   }
 

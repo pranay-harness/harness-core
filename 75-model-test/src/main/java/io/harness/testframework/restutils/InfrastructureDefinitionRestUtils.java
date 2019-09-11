@@ -1,20 +1,20 @@
 package io.harness.testframework.restutils;
 
-import com.google.inject.Singleton;
-
 import io.harness.beans.PageResponse;
 import io.harness.exception.EmptyRestResponseException;
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
+import lombok.experimental.UtilityClass;
 import software.wings.infra.InfrastructureDefinition;
+import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.ws.rs.core.GenericType;
 
-@Singleton
+@UtilityClass
 public class InfrastructureDefinitionRestUtils {
   public static InfrastructureDefinition save(String bearerToken, InfrastructureDefinition infrastructureDefinition) {
     GenericType<RestResponse<InfrastructureDefinition>> infraDefinitionType =
@@ -131,5 +131,49 @@ public class InfrastructureDefinitionRestUtils {
         .stream()
         .map(InfrastructureDefinition::getUuid)
         .collect(Collectors.toList());
+  }
+
+  public static List<String> listAutoScalingGroups(
+      String bearerToken, String accountId, String appId, String cloudProviderId, String region) {
+    GenericType<RestResponse<List<String>>> restResponseGenericType = new GenericType<RestResponse<List<String>>>() {};
+    RestResponse<List<String>> restResponse =
+        Setup.portal()
+            .auth()
+            .oauth2(bearerToken)
+            .contentType(ContentType.JSON)
+            .queryParam("routingId", accountId)
+            .queryParam("appId", appId)
+            .queryParams("region", region)
+            .get("infrastructure-mappings/compute-providers/" + cloudProviderId + "/auto-scaling"
+                + "-groups/")
+            .as(restResponseGenericType.getType());
+    if (restResponse.getResource() == null) {
+      throw new EmptyRestResponseException("infrastructure-mappings/compute-providers/" + cloudProviderId
+              + "/auto-scaling"
+              + "-groups/",
+          String.valueOf(restResponse.getResponseMessages()));
+    }
+    return restResponse.getResource();
+  }
+
+  public static AwsAsgGetRunningCountData amiRunningInstances(
+      String bearerToken, String accountId, String appId, String serviceId, String infraDefinitionId) {
+    GenericType<RestResponse<AwsAsgGetRunningCountData>> restResponseGenericType =
+        new GenericType<RestResponse<AwsAsgGetRunningCountData>>() {};
+    RestResponse<AwsAsgGetRunningCountData> restResponse =
+        Setup.portal()
+            .auth()
+            .oauth2(bearerToken)
+            .contentType(ContentType.JSON)
+            .queryParam("routingId", accountId)
+            .queryParam("appId", appId)
+            .queryParam("serviceId", serviceId)
+            .get("/infrastructure-definitions/" + infraDefinitionId + "/ami/runningcount")
+            .as(restResponseGenericType.getType());
+    if (restResponse.getResource() == null) {
+      throw new EmptyRestResponseException("/infrastructure-definitions/" + infraDefinitionId + "/ami/runningcount",
+          String.valueOf(restResponse.getResponseMessages()));
+    }
+    return restResponse.getResource();
   }
 }

@@ -39,6 +39,7 @@ import software.wings.beans.yaml.YamlType;
 import software.wings.infra.InfraDefinitionTestConstants;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.InfrastructureDefinition.Yaml;
+import software.wings.service.impl.yaml.handler.InfraDefinition.AwsAmiInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.AwsEcsInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.AwsInstanceInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.AwsLambdaInfrastructureYamlHandler;
@@ -77,13 +78,14 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
 
   @InjectMocks @Inject private InfrastructureDefinitionYamlHandler handler;
   @InjectMocks @Inject private AwsLambdaInfrastructureYamlHandler awsLambdaInfrastructureYamlHandler;
-  @InjectMocks @Inject private GoogleKubernetesEngineYamlHandler googleKubernetesEngineYamlHandler;
+  @InjectMocks @Inject private AwsAmiInfrastructureYamlHandler awsAmiInfrastructureYamlHandler;
+  @InjectMocks @Inject private AwsInstanceInfrastructureYamlHandler awsInstanceInfrastructureYamlHandler;
+  @InjectMocks @Inject private AwsEcsInfrastructureYamlHandler awsEcsInfrastructureYamlHandler;
   @InjectMocks @Inject private AzureKubernetesServiceYamlHandler azureKubernetesServiceYamlHandler;
   @InjectMocks @Inject private AzureInstanceInfrastructureYamlHandler azureInstanceInfrastructureYamlHandler;
+  @InjectMocks @Inject private GoogleKubernetesEngineYamlHandler googleKubernetesEngineYamlHandler;
   @InjectMocks @Inject private DirectKubernetesInfrastructureYamlHandler directKubernetesInfrastructureYamlHandler;
-  @InjectMocks @Inject private AwsInstanceInfrastructureYamlHandler awsInstanceInfrastructureYamlHandler;
   @InjectMocks @Inject private CodeDeployInfrastructureYamlHandler codeDeployInfrastructureYamlHandler;
-  @InjectMocks @Inject private AwsEcsInfrastructureYamlHandler awsEcsInfrastructureYamlHandler;
   @InjectMocks @Inject private PcfInfraStructureYamlHandler pcfInfraStructureYamlHandler;
   @InjectMocks @Inject private PhysicalInfraYamlHandler physicalInfraYamlHandler;
   @InjectMocks @Inject private PhysicalInfraWinrmYamlHandler physicalInfraWinrmYamlHandler;
@@ -96,6 +98,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
   private static class validYamlInfraStructureFiles {
     // Make sure that CloudProviderName is TEST_CLOUD_PROVIDER
     private static final String AWS_ECS = "aws_ecs.yaml";
+    private static final String AWS_AMI = "aws_ami.yaml";
     private static final String AWS_ECS_PROVISIONER = "aws_ecs_provisioner.yaml";
     private static final String AWS_LAMBDA = "aws_lambda.yaml";
     private static final String AWS_LAMBDA_PROVISIONER = "aws_lambda_provisioner.yaml";
@@ -237,6 +240,14 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
     doReturn(physicalInfraWinrmYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), any());
     testCRUD(validYamlInfraStructureFiles.PHYSICAL_INFRA_WINRM, InfrastructureType.PHYSICAL_INFRA_WINRM,
         DeploymentType.WINRM, CloudProviderType.PHYSICAL_DATA_CENTER);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void TestCRUDAndGetAwsAMi() throws IOException {
+    doReturn(awsAmiInfrastructureYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), any());
+    testCRUD(
+        validYamlInfraStructureFiles.AWS_AMI, InfrastructureType.AWS_AMI, DeploymentType.AMI, CloudProviderType.AWS);
   }
 
   private void testCRUD(String yamlFileName, String cloudProviderInfrastructureType, DeploymentType deploymentType,

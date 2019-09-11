@@ -13,6 +13,7 @@ public class ArtifactStreamGeneratorFactory {
   @Inject private JenkinsArtifactStreamStreamsGenerator jenkinsArtifactStreamStreamsGenerator;
   @Inject private AmazonS3ArtifactStreamStreamsGenerator amazonS3ArtifactStreamStreamsGenerator;
   @Inject private ArtifactoryArtifactStreamStreamsGenerator artifactoryArtifactStreamStreamsGenerator;
+  @Inject private AmazonAmiArtifactStreamsGenerator amazonAmiArtifactStreamsGenerator;
 
   public ArtifactStreamsGenerator getArtifactStreamGenerator(ArtifactStreams artifactStreams) {
     if (ArtifactStreams.HARNESS_SAMPLE_ECR.equals(artifactStreams)) {
@@ -29,6 +30,9 @@ public class ArtifactStreamGeneratorFactory {
     }
     if (ArtifactStreams.HARNESS_SAMPLE_ECHO_WAR.equals(artifactStreams)) {
       return jenkinsArtifactStreamStreamsGenerator;
+    }
+    if (ArtifactStreams.AWS_AMI.equals(artifactStreams)) {
+      return amazonAmiArtifactStreamsGenerator;
     }
     return null;
   }

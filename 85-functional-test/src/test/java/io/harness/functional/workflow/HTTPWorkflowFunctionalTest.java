@@ -28,8 +28,11 @@ import software.wings.beans.Environment;
 import software.wings.beans.GraphNode;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.artifact.Artifact;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.states.HttpState.HttpStateKeys;
+
+import java.util.Collections;
 
 public class HTTPWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
@@ -63,8 +66,8 @@ public class HTTPWorkflowFunctionalTest extends AbstractFunctionalTest {
         WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), application.getUuid(), workflow);
     assertThat(savedWorkflow).isNotNull();
 
-    WorkflowExecution workflowExecution =
-        runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), savedWorkflow.getUuid());
+    WorkflowExecution workflowExecution = runWorkflow(bearerToken, application.getUuid(), environment.getUuid(),
+        savedWorkflow.getUuid(), Collections.<Artifact>emptyList());
     assertThat(workflowExecution).isNotNull();
   }
 
