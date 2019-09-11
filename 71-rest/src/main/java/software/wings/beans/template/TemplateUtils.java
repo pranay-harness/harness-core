@@ -46,7 +46,7 @@ public class TemplateUtils {
     }
   }
 
-  private String getExpression(String value) {
+  public String getExpression(String value) {
     Matcher m = p.matcher(value);
     if (m.find()) {
       return m.group(1);

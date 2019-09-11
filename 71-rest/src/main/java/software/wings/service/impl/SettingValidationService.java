@@ -212,8 +212,7 @@ public class SettingValidationService {
     if (settingValue instanceof GcpConfig) {
       gcpHelperService.validateCredential((GcpConfig) settingValue, encryptedDataDetails);
     } else if (settingValue instanceof AzureConfig) {
-      azureHelperService.validateAzureAccountCredential(((AzureConfig) settingValue).getClientId(),
-          ((AzureConfig) settingValue).getTenantId(), new String(((AzureConfig) settingValue).getKey()));
+      azureHelperService.validateAzureAccountCredential((AzureConfig) settingValue, encryptedDataDetails);
     } else if (settingValue instanceof PcfConfig) {
       validatePcfConfig(settingAttribute, (PcfConfig) settingValue);
     } else if (settingValue instanceof AwsConfig) {

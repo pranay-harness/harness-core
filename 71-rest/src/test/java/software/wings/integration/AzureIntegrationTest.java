@@ -54,7 +54,8 @@ public class AzureIntegrationTest extends WingsBaseTest {
   @Test
   @Category(IntegrationTests.class)
   public void azureAuthenticationTest() {
-    azureHelperService.validateAzureAccountCredential(clientId, tenantId, key);
+    AzureConfig config = getAzureConfig();
+    azureHelperService.validateAzureAccountCredential(config, Collections.emptyList());
   }
 
   @Test
