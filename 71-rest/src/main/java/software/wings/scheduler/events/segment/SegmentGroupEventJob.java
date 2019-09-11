@@ -34,7 +34,7 @@ public class SegmentGroupEventJob implements Handler<SegmentGroupEventJobContext
   @Inject private AccountService accountService;
 
   public static class SegmentGroupEventJobExecutor {
-    static int POOL_SIZE = 1;
+    static int POOL_SIZE = 2;
     static Duration INTERVAL = Duration.ofHours(24);
     static Duration ACCEPTABLE_DELAY = Duration.ofMinutes(35);
     static Duration CHECK_INTERVAL = Duration.ofMinutes(30);
