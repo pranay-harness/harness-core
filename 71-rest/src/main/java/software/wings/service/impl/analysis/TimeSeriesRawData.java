@@ -29,6 +29,7 @@ import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.metrics.MetricType;
+import software.wings.metrics.RiskLevel;
 import software.wings.service.intfc.DataStoreService;
 
 import java.time.OffsetDateTime;
@@ -150,14 +151,16 @@ public class TimeSeriesRawData implements GoogleDataStoreAware, UuidAware {
         List<Double> optimalData = new ArrayList<>();
 
         hostSummaryMap.values().forEach(hostSummary -> {
-          if (isNotEmpty(hostSummary.getControl_data())) {
-            controlData.addAll(hostSummary.getControl_data());
-          }
-          if (isNotEmpty(hostSummary.getTest_data())) {
-            testData.addAll(hostSummary.getTest_data());
-          }
-          if (isNotEmpty(hostSummary.getOptimal_data())) {
-            optimalData.addAll(hostSummary.getOptimal_data());
+          if (RiskLevel.LOW.equals(RiskLevel.getRiskLevel(hostSummary.getRisk()))) {
+            if (isNotEmpty(hostSummary.getControl_data())) {
+              controlData.addAll(hostSummary.getControl_data());
+            }
+            if (isNotEmpty(hostSummary.getTest_data())) {
+              testData.addAll(hostSummary.getTest_data());
+            }
+            if (isNotEmpty(hostSummary.getOptimal_data())) {
+              optimalData.addAll(hostSummary.getOptimal_data());
+            }
           }
         });
 

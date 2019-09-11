@@ -108,6 +108,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(55, BaseMigration.class))
         .add(Pair.of(56, BaseMigration.class))
         .add(Pair.of(57, BaseMigration.class))
+        .add(Pair.of(58, MigrateTimeSeriesRawDataToGoogle.class))
         .build();
   }
 }
