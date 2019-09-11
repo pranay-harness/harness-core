@@ -22,6 +22,7 @@ import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.analysis.TSRequest;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLScores;
+import software.wings.service.impl.analysis.Version;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.MetricDataAnalysisService;
@@ -159,7 +160,7 @@ public class TimeSeriesResource {
             .getResource()
         && dataStoreService instanceof GoogleDataStoreServiceImpl && isWorkflowTask) {
       return new RestResponse<>(timeSeriesAnalysisService.getMetricTemplateWithCategorizedThresholds(
-          appId, stateType, stateExecutionId, serviceId, cvConfigId, groupName));
+          appId, stateType, stateExecutionId, serviceId, cvConfigId, groupName, Version.PROD));
     } else {
       return new RestResponse<>(timeSeriesAnalysisService.getMetricTemplate(
           appId, stateType, stateExecutionId, serviceId, cvConfigId, groupName));

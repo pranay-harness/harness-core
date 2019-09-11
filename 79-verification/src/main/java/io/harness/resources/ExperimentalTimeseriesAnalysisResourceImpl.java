@@ -14,6 +14,7 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.ExperimentalMetricAnalysisRecord;
+import software.wings.service.impl.analysis.Version;
 import software.wings.sm.StateType;
 
 import java.util.Map;
@@ -98,6 +99,6 @@ public class ExperimentalTimeseriesAnalysisResourceImpl implements ExperimentalM
       @QueryParam("serviceId") String serviceId, @QueryParam("cvConfigId") String cvConfigId,
       @QueryParam("groupName") String groupName) {
     return new RestResponse<>(timeSeriesAnalysisService.getMetricTemplateWithCategorizedThresholds(
-        appId, stateType, stateExecutionId, serviceId, cvConfigId, groupName));
+        appId, stateType, stateExecutionId, serviceId, cvConfigId, groupName, Version.EXPERIMENT));
   }
 }
