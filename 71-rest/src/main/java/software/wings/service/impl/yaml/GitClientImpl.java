@@ -321,7 +321,6 @@ public class GitClientImpl implements GitClient {
     // TODO:: pull latest remote branch??
     try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitOperationContext)))) {
       String timestamp = new SimpleDateFormat(COMMIT_TIMESTAMP_FORMAT).format(new java.util.Date());
-      StringBuilder commitMessage = new StringBuilder("Harness IO Git Sync. \n");
 
       String repoDirectory = gitClientHelper.getRepoDirectory(gitOperationContext);
       gitCommitRequest.getGitFileChanges().forEach(gitFileChange -> {
@@ -401,18 +400,26 @@ public class GitClientImpl implements GitClient {
         }
       });
       Status status = git.status().call();
+
+      StringBuilder commitMessage = new StringBuilder(48);
+
       if (status.getAdded().isEmpty() && status.getChanged().isEmpty() && status.getRemoved().isEmpty()) {
         logger.warn(
             getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "No git change to commit. GitCommitRequest: [{}]",
             gitCommitRequest);
         return GitCommitResult.builder().build(); // do nothing
       } else {
-        status.getAdded().forEach(
-            filePath -> commitMessage.append(format("%s: %s\n", DiffEntry.ChangeType.ADD, filePath)));
-        status.getChanged().forEach(
-            filePath -> commitMessage.append(format("%s: %s\n", DiffEntry.ChangeType.MODIFY, filePath)));
-        status.getRemoved().forEach(
-            filePath -> commitMessage.append(format("%s: %s\n", DiffEntry.ChangeType.DELETE, filePath)));
+        if (isNotBlank(gitConfig.getCommitMessage())) {
+          commitMessage.append(gitConfig.getCommitMessage());
+        } else {
+          commitMessage.append("Harness IO Git Sync. \n");
+          status.getAdded().forEach(
+              filePath -> commitMessage.append(format("%s: %s\n", DiffEntry.ChangeType.ADD, filePath)));
+          status.getChanged().forEach(
+              filePath -> commitMessage.append(format("%s: %s\n", DiffEntry.ChangeType.MODIFY, filePath)));
+          status.getRemoved().forEach(
+              filePath -> commitMessage.append(format("%s: %s\n", DiffEntry.ChangeType.DELETE, filePath)));
+        }
       }
 
       String authorName = isNotBlank(gitConfig.getAuthorName()) ? gitConfig.getAuthorName() : HARNESS_IO_KEY_;
@@ -1029,7 +1036,7 @@ public class GitClientImpl implements GitClient {
   private void configureHttpCredentialProvider(TransportCommand gitCommand, GitConfig gitConfig) {
     String username = gitConfig.getUsername();
     char[] password = gitConfig.getPassword();
-    if (gitConfig.getAuthenticationScheme().equals(KERBEROS)) {
+    if (KERBEROS.equals(gitConfig.getAuthenticationScheme())) {
       addApacheConnectionFactoryAndGenerateTGT(gitConfig);
       username = ((HostConnectionAttributes) gitConfig.getSshSettingAttribute().getValue())
                      .getKerberosConfig()

@@ -64,6 +64,7 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
 
   @Trimmed private String authorName;
   @Trimmed @Email private String authorEmailId;
+  @Trimmed private String commitMessage;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
@@ -97,7 +98,7 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
   public GitConfig(String username, char[] password, String repoUrl, String branch, String accountId,
       String encryptedPassword, String sshSettingId, SettingAttribute sshSettingAttribute, boolean keyAuth,
       AuthenticationScheme authenticationScheme, String description, String webhookToken, GitRepositoryType gitRepoType,
-      boolean generateWebhookUrl, String authorName, String authorEmailId) {
+      boolean generateWebhookUrl, String authorName, String authorEmailId, String commitMessage) {
     super(SettingVariableTypes.GIT.name());
     this.username = username;
     this.password = password == null ? null : password.clone();
@@ -115,6 +116,7 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
     this.generateWebhookUrl = generateWebhookUrl;
     this.authorName = authorName;
     this.authorEmailId = authorEmailId;
+    this.commitMessage = commitMessage;
   }
 
   @Data
@@ -123,24 +125,26 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
   public static final class Yaml extends ArtifactServerYaml {
     private String branch;
     private String reference;
-    private String repoUrl;
-    private String username;
-    private String password;
     private boolean keyAuth;
     private String sshSettingId;
     private String description;
-    private String webhookToken;
+    private String authorName;
+    private String authorEmailId;
+    private String commitMessage;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String url, String username, String password, String branch,
         String reference, UsageRestrictions.Yaml usageRestrictions, boolean keyAuth, String sshSettingId,
-        String description) {
+        String description, String authorName, String authorEmailId, String commitMessage) {
       super(type, harnessApiVersion, url, username, password, usageRestrictions);
       this.branch = branch;
       this.reference = reference;
       this.keyAuth = keyAuth;
       this.sshSettingId = sshSettingId;
       this.description = description;
+      this.authorName = authorName;
+      this.authorEmailId = authorEmailId;
+      this.commitMessage = commitMessage;
     }
   }
 }
