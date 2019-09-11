@@ -11,6 +11,7 @@ import software.wings.service.impl.analysis.MetricAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLScores;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
+import software.wings.service.impl.analysis.Version;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.sm.StateType;
@@ -71,7 +72,8 @@ public interface TimeSeriesAnalysisService {
       String stateExecutionId, String serviceId, String cvConfigId, String groupName);
 
   Map<String, Map<String, TimeSeriesMetricDefinition>> getMetricTemplateWithCategorizedThresholds(String appId,
-      StateType stateType, String stateExecutionId, String serviceId, String cvConfigId, String groupName);
+      StateType stateType, String stateExecutionId, String serviceId, String cvConfigId, String groupName,
+      Version version);
 
   NewRelicMetricDataRecord getAnalysisMinute(StateType stateType, String appId, String stateExecutionId,
       String workflowExecutionId, String serviceId, String groupName);

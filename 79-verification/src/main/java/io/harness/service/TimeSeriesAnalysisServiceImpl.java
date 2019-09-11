@@ -54,6 +54,7 @@ import software.wings.service.impl.analysis.ExperimentalMetricAnalysisRecord;
 import software.wings.service.impl.analysis.MetricAnalysisRecord;
 import software.wings.service.impl.analysis.MetricAnalysisRecord.MetricAnalysisRecordKeys;
 import software.wings.service.impl.analysis.SupervisedTSThreshold;
+import software.wings.service.impl.analysis.SupervisedTSThreshold.SupervisedTSThresholdKeys;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLHostSummary;
 import software.wings.service.impl.analysis.TimeSeriesMLMetricScores;
@@ -70,6 +71,7 @@ import software.wings.service.impl.analysis.TimeSeriesMetricTemplates.TimeSeries
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.analysis.TimeSeriesRiskData;
 import software.wings.service.impl.analysis.TimeSeriesRiskSummary;
+import software.wings.service.impl.analysis.Version;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
@@ -592,11 +594,12 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
   @Override
   public Map<String, Map<String, TimeSeriesMetricDefinition>> getMetricTemplateWithCategorizedThresholds(String appId,
-      StateType stateType, String stateExecutionId, String serviceId, String cvConfigId, String groupName) {
+      StateType stateType, String stateExecutionId, String serviceId, String cvConfigId, String groupName,
+      Version version) {
     Map<String, Map<String, TimeSeriesMetricDefinition>> result = new HashMap<>();
 
     // Add supervised metric thresholds
-    addSupervisedMetricThresholds(serviceId, result);
+    addSupervisedMetricThresholds(serviceId, result, version);
 
     // Add user defined metric thresholds
     addUserDefinedMetricThresholds(appId, stateType, serviceId, cvConfigId, groupName, result);
@@ -778,11 +781,15 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   private void addSupervisedMetricThresholds(
-      String serviceId, Map<String, Map<String, TimeSeriesMetricDefinition>> metricDefinitionMap) {
+      String serviceId, Map<String, Map<String, TimeSeriesMetricDefinition>> metricDefinitionMap, Version version) {
     try {
       List<SupervisedTSThreshold> thresholds =
           dataStoreService
-              .list(SupervisedTSThreshold.class, aPageRequest().addFilter("serviceId", Operator.EQ, serviceId).build())
+              .list(SupervisedTSThreshold.class,
+                  aPageRequest()
+                      .addFilter(SupervisedTSThresholdKeys.serviceId, Operator.EQ, serviceId)
+                      .addFilter(SupervisedTSThresholdKeys.version, Operator.EQ, version)
+                      .build())
               .getResponse();
       if (isNotEmpty(thresholds)) {
         for (SupervisedTSThreshold threshold : thresholds) {

@@ -47,18 +47,21 @@ public class SupervisedTSThreshold implements GoogleDataStoreAware, CreatedAtAwa
   private Double standardDeviation;
   private Double minThreshold;
   private Double maxThreshold;
+  private Version version;
   private long createdAt;
 
-  public static String getKey(String accountId, String serviceId, String transactionName, String metricName) {
-    return String.join(connector, accountId, serviceId, transactionName, metricName);
+  public static String getKey(
+      String accountId, String serviceId, String transactionName, String metricName, Version version) {
+    return String.join(connector, accountId, serviceId, transactionName, metricName, version.name());
   }
 
   @Override
   public Entity convertToCloudStorageEntity(Datastore datastore) {
-    Key taskKey = datastore.newKeyFactory()
-                      .setKind(this.getClass().getAnnotation(org.mongodb.morphia.annotations.Entity.class).value())
-                      .newKey(this.getUuid() != null ? this.getUuid()
-                                                     : getKey(accountId, serviceId, transactionName, metricName));
+    Key taskKey =
+        datastore.newKeyFactory()
+            .setKind(this.getClass().getAnnotation(org.mongodb.morphia.annotations.Entity.class).value())
+            .newKey(this.getUuid() != null ? this.getUuid()
+                                           : getKey(accountId, serviceId, transactionName, metricName, version));
 
     com.google.cloud.datastore.Entity.Builder dataStoreRecordBuilder =
         com.google.cloud.datastore.Entity.newBuilder(taskKey);
@@ -70,6 +73,7 @@ public class SupervisedTSThreshold implements GoogleDataStoreAware, CreatedAtAwa
     addFieldIfNotEmpty(dataStoreRecordBuilder, SupervisedTSThresholdKeys.standardDeviation, standardDeviation, true);
     addFieldIfNotEmpty(dataStoreRecordBuilder, SupervisedTSThresholdKeys.minThreshold, minThreshold, true);
     addFieldIfNotEmpty(dataStoreRecordBuilder, SupervisedTSThresholdKeys.maxThreshold, maxThreshold, true);
+    addFieldIfNotEmpty(dataStoreRecordBuilder, SupervisedTSThresholdKeys.version, version.name(), false);
     return dataStoreRecordBuilder.build();
   }
 
@@ -85,9 +89,11 @@ public class SupervisedTSThreshold implements GoogleDataStoreAware, CreatedAtAwa
             .standardDeviation(readDouble(entity, SupervisedTSThresholdKeys.mean))
             .minThreshold(readDouble(entity, SupervisedTSThresholdKeys.minThreshold))
             .maxThreshold(readDouble(entity, SupervisedTSThresholdKeys.maxThreshold))
+            .version(Version.valueOf(readString(entity, SupervisedTSThresholdKeys.version)))
             .build();
 
     tsThreshold.setUuid(entity.getKey().getName());
+
     return tsThreshold;
   }
 
