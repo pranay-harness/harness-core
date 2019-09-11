@@ -25,7 +25,10 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.artifact.Artifact;
 import software.wings.service.intfc.WorkflowExecutionService;
+
+import java.util.Collections;
 
 public class WorkflowExecutionTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
@@ -49,8 +52,8 @@ public class WorkflowExecutionTest extends AbstractFunctionalTest {
 
   @NotNull
   public WorkflowExecution executeWorkflow(Workflow workflow, Application application, Environment environment) {
-    WorkflowExecution workflowExecution =
-        runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), workflow.getUuid());
+    WorkflowExecution workflowExecution = runWorkflow(bearerToken, application.getUuid(), environment.getUuid(),
+        workflow.getUuid(), Collections.<Artifact>emptyList());
     assertThat(workflowExecution).isNotNull();
     return workflowExecution;
   }

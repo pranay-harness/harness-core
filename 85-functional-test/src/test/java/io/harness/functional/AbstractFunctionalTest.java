@@ -34,6 +34,7 @@ import software.wings.beans.ExecutionCredential.ExecutionType;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.security.UserGroup;
 import software.wings.graphql.datafetcher.DataLoaderRegistryHelper;
 import software.wings.security.UserPermissionInfo;
@@ -43,6 +44,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.ws.rs.core.GenericType;
 
@@ -133,12 +135,14 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
     return restResponse.getResource();
   }
 
-  public WorkflowExecution runWorkflow(String bearerToken, String appId, String envId, String orchestrationId) {
+  public WorkflowExecution runWorkflow(
+      String bearerToken, String appId, String envId, String orchestrationId, List<Artifact> artifactList) {
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
     executionArgs.setExecutionCredential(
         SSHExecutionCredential.Builder.aSSHExecutionCredential().withExecutionType(ExecutionType.SSH).build());
     executionArgs.setOrchestrationId(orchestrationId);
+    executionArgs.setArtifacts(artifactList);
 
     return getWorkflowExecution(bearerToken, appId, envId, executionArgs);
   }

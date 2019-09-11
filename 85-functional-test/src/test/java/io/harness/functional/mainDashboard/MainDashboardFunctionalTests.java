@@ -27,10 +27,13 @@ import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.stats.DeploymentStatistics;
 import software.wings.beans.stats.DeploymentStatistics.AggregatedDayStats;
 import software.wings.beans.stats.ServiceInstanceStatistics;
 import software.wings.service.intfc.WorkflowExecutionService;
+
+import java.util.Collections;
 
 public class MainDashboardFunctionalTests extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
@@ -85,8 +88,8 @@ public class MainDashboardFunctionalTests extends AbstractFunctionalTest {
     assertThat(savedWorkflow).isNotNull();
 
     // Test running the workflow
-    WorkflowExecution workflowExecution =
-        runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), savedWorkflow.getUuid());
+    WorkflowExecution workflowExecution = runWorkflow(bearerToken, application.getUuid(), environment.getUuid(),
+        savedWorkflow.getUuid(), Collections.<Artifact>emptyList());
     assertThat(workflowExecution).isNotNull();
 
     // Checking dashboard after executing workflow

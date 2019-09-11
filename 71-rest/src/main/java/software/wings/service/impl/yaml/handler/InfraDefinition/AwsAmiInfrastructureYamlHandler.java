@@ -69,6 +69,7 @@ public class AwsAmiInfrastructureYamlHandler
       spotinstCloudProviderId = spotinstCloudProvider.getUuid();
     }
     bean.setCloudProviderId(cloudProvider.getUuid());
+    bean.setRegion(yaml.getRegion());
     bean.setAutoScalingGroupName(yaml.getAutoScalingGroupName());
     bean.setClassicLoadBalancers(yaml.getClassicLoadBalancers());
     bean.setHostNameConvention(yaml.getHostNameConvention());

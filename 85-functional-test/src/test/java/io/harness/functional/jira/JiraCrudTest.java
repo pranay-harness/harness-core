@@ -30,7 +30,10 @@ import software.wings.beans.GraphNode;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.artifact.Artifact;
 import software.wings.service.intfc.WorkflowExecutionService;
+
+import java.util.Collections;
 
 public class JiraCrudTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
@@ -67,8 +70,8 @@ public class JiraCrudTest extends AbstractFunctionalTest {
     assertThat(savedWorkflow).isNotNull();
 
     // Test running the workflow
-    WorkflowExecution workflowExecution =
-        runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), savedWorkflow.getUuid());
+    WorkflowExecution workflowExecution = runWorkflow(bearerToken, application.getUuid(), environment.getUuid(),
+        savedWorkflow.getUuid(), Collections.<Artifact>emptyList());
     assertThat(workflowExecution).isNotNull();
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }

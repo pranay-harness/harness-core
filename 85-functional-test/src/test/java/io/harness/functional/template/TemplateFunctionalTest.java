@@ -29,11 +29,13 @@ import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.ShellScriptTemplate;
 
+import java.util.Collections;
 import javax.ws.rs.core.GenericType;
 
 public class TemplateFunctionalTest extends AbstractFunctionalTest {
@@ -77,8 +79,8 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
 
     assertThat(buildWorkflow).isNotNull();
 
-    WorkflowExecution workflowExecution = runWorkflow(bearerToken, application.getUuid(), null,
-        buildWorkflow.getUuid()); // workflowExecutionRestResponse.getResource();
+    WorkflowExecution workflowExecution = runWorkflow(bearerToken, application.getUuid(), null, buildWorkflow.getUuid(),
+        Collections.<Artifact>emptyList()); // workflowExecutionRestResponse.getResource();
     assertThat(workflowExecution).isNotNull();
   }
 

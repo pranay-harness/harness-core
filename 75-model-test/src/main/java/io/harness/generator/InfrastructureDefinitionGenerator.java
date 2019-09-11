@@ -14,6 +14,7 @@ import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.SettingGenerator.Settings;
 import io.harness.testframework.restutils.InfrastructureDefinitionRestUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.assertj.core.api.Assertions;
 import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
@@ -28,6 +29,8 @@ import software.wings.infra.AwsInstanceInfrastructure;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.InfrastructureDefinition.InfrastructureDefinitionKeys;
+
+import java.util.List;
 
 @Singleton
 public class InfrastructureDefinitionGenerator {
@@ -157,17 +160,23 @@ public class InfrastructureDefinitionGenerator {
 
   private InfrastructureDefinition ensureAwsAmi(Randomizer.Seed seed, Owners owners, String bearerToken) {
     Environment environment = ensureEnv(seed, owners);
+    final String region = "us-east-1";
+    final String accountId = environment.getAccountId();
+    final String appId = environment.getAppId();
 
     final SettingAttribute awsCloudProvider =
         settingGenerator.ensurePredefined(seed, owners, Settings.AWS_TEST_CLOUD_PROVIDER);
 
-    AwsAmiInfrastructure awsAmiInfrastructure =
-        AwsAmiInfrastructure.builder()
-            .cloudProviderId(awsCloudProvider.getUuid())
-            .region("us"
-                + "-east-1")
-            .autoScalingGroupName("prashant__test__app_AMI__Service_Aws__Env__1")
-            .build();
+    List<String> autoScalingGroups = InfrastructureDefinitionRestUtils.listAutoScalingGroups(
+        bearerToken, accountId, appId, awsCloudProvider.getUuid(), region);
+
+    Assertions.assertThat(autoScalingGroups).isNotEmpty();
+
+    AwsAmiInfrastructure awsAmiInfrastructure = AwsAmiInfrastructure.builder()
+                                                    .cloudProviderId(awsCloudProvider.getUuid())
+                                                    .region(region)
+                                                    .autoScalingGroupName(autoScalingGroups.get(0))
+                                                    .build();
 
     String name = Joiner.on(StringUtils.EMPTY).join("aws-ami", System.currentTimeMillis());
     InfrastructureDefinition infrastructureDefinition = InfrastructureDefinition.builder()
