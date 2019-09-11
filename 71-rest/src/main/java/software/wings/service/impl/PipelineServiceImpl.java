@@ -20,7 +20,6 @@ import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
-import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.PipelineExecution.PIPELINE_ID_KEY;
 import static software.wings.common.Constants.PIPELINE_ENV_STATE_VALIDATION_MESSAGE;
 import static software.wings.expression.ManagerExpressionEvaluator.getName;
@@ -760,24 +759,14 @@ public class PipelineServiceImpl implements PipelineService {
               // Variable is an expression so prompt for the value at runtime.
               Variable pipelineVariable = variable.cloneInternal();
               pipelineVariable.setName(variableName);
-              if (pipelineVariable.obtainEntityType().equals(ENVIRONMENT)) {
-                if (infraRefator) {
-                  pipelineVariable.getMetadata().put("relatedField",
-                      Joiner.on(",").join(getInfraDefVariables(workflowVariables, pseWorkflowVariables)));
+              EntityType entityType = pipelineVariable.obtainEntityType();
 
-                } else {
-                  pipelineVariable.getMetadata().put(
-                      "relatedField", Joiner.on(",").join(getInfraVariables(workflowVariables, pseWorkflowVariables)));
-                }
+              if (entityType.equals(ENVIRONMENT)) {
+                setRelatedFieldEnvironment(infraRefator, workflowVariables, pseWorkflowVariables, pipelineVariable);
+              } else {
+                cloneRelatedFieldName(pseWorkflowVariables, pipelineVariable);
               }
 
-              if (pipelineVariable.obtainEntityType().equals(SERVICE)) {
-                String relatedFieldOldValue = String.valueOf(pipelineVariable.getMetadata().get("relatedField"));
-                if (isNotEmpty(relatedFieldOldValue) && !relatedFieldOldValue.equals("null")) {
-                  String relatedFieldNewValue = getName(pseWorkflowVariables.get(relatedFieldOldValue));
-                  pipelineVariable.getMetadata().put("relatedField", relatedFieldNewValue);
-                }
-              }
               if (withFinalValuesOnly) {
                 // If only final concrete values are needed, set value as null as the used has not entered them yet.
                 pipelineVariable.setValue(null);
@@ -790,6 +779,28 @@ public class PipelineServiceImpl implements PipelineService {
           }
         }
       }
+    }
+  }
+
+  private void cloneRelatedFieldName(Map<String, String> pseWorkflowVariables, Variable pipelineVariable) {
+    if (pipelineVariable.getMetadata().get("relatedField") != null) {
+      String relatedFieldOldValue = String.valueOf(pipelineVariable.getMetadata().get("relatedField"));
+      if (isNotEmpty(relatedFieldOldValue) && !relatedFieldOldValue.equals("null")) {
+        String relatedFieldNewValue = getName(pseWorkflowVariables.get(relatedFieldOldValue));
+        pipelineVariable.getMetadata().put("relatedField", relatedFieldNewValue);
+      }
+    }
+  }
+
+  private void setRelatedFieldEnvironment(boolean infraRefator, List<Variable> workflowVariables,
+      Map<String, String> pseWorkflowVariables, Variable pipelineVariable) {
+    if (infraRefator) {
+      pipelineVariable.getMetadata().put(
+          "relatedField", Joiner.on(",").join(getInfraDefVariables(workflowVariables, pseWorkflowVariables)));
+
+    } else {
+      pipelineVariable.getMetadata().put(
+          "relatedField", Joiner.on(",").join(getInfraVariables(workflowVariables, pseWorkflowVariables)));
     }
   }
 
@@ -813,7 +824,7 @@ public class PipelineServiceImpl implements PipelineService {
             .collect(toList());
     List<String> infraVarNames = new ArrayList<>();
     for (Variable variable : infraDefVariable) {
-      infraVarNames.add(pseWorkflowVariables.get(variable.getName()));
+      infraVarNames.add(getName(pseWorkflowVariables.get(variable.getName())));
     }
     return infraVarNames;
   }
