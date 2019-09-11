@@ -20,6 +20,7 @@ import software.wings.service.intfc.AccountService;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -35,7 +36,7 @@ public class SegmentGroupEventJob implements Handler<SegmentGroupEventJobContext
   public static class SegmentGroupEventJobExecutor {
     static int POOL_SIZE = 1;
     static Duration INTERVAL = Duration.ofHours(24);
-    static Duration ACCEPTABLE_DELAY = Duration.ofMinutes(10);
+    static Duration ACCEPTABLE_DELAY = Duration.ofMinutes(35);
     static Duration CHECK_INTERVAL = Duration.ofMinutes(30);
 
     public static void registerIterators(Injector injector) {
@@ -61,10 +62,13 @@ public class SegmentGroupEventJob implements Handler<SegmentGroupEventJobContext
 
         injector.injectMembers(iterator);
 
+        final Random rand = new Random();
+
         // this'll check every 30 minutes if there are any new jobs to process.
         // this value must be lower than `targetInterval`
-        executor.scheduleAtFixedRate(
-            () -> iterator.process(ProcessMode.PUMP), 0, CHECK_INTERVAL.getSeconds(), TimeUnit.SECONDS);
+        executor.scheduleAtFixedRate(()
+                                         -> iterator.process(ProcessMode.PUMP),
+            rand.nextInt((int) CHECK_INTERVAL.getSeconds()), CHECK_INTERVAL.getSeconds(), TimeUnit.SECONDS);
       } catch (Exception e) {
         logger.error("Error registering iterators in SegmentGroupEventJob", e);
       }
