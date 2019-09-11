@@ -385,7 +385,7 @@ public class JenkinsImpl implements Jenkins {
    * @see software.wings.helpers.ext.jenkins.Jenkins#trigger(java.lang.String)
    */
   @Override
-  public QueueReference trigger(String jobname, Map<String, String> parameters) throws IOException {
+  public QueueReference trigger(String jobname, Map<String, String> parameters) throws RuntimeException, IOException {
     JobWithDetails jobWithDetails = getJob(jobname);
     if (jobWithDetails == null) {
       throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "No job [" + jobname + "] found");
@@ -403,6 +403,11 @@ public class JenkinsImpl implements Jenkins {
       logger.info("Triggering job {} success ", jobWithDetails.getUrl());
       return queueReference;
     } catch (HttpResponseException e) {
+      if (e.getStatusCode() == 400 && isEmpty(parameters)) {
+        throw new RuntimeException(format(
+            "Failed to trigger job %s with url %s.\nThis might be because the Jenkins job requires parameters but none were provided in the Jenkins step.",
+            jobname, jobWithDetails.getUrl()));
+      }
       throw e;
     } catch (IOException e) {
       throw new IOException(format("Failed to trigger job %s with url %s", jobname, jobWithDetails.getUrl()), e);
@@ -517,7 +522,7 @@ public class JenkinsImpl implements Jenkins {
               sleep(ofSeconds(1L));
               continue;
             } else {
-              throw new Exception("Failed to collect environment variables from Jenkins: " + path
+              throw new RuntimeException("Failed to collect environment variables from Jenkins: " + path
                   + ".\nThis might be because 'Capture environment variables' is enabled in Jenkins step but EnvInject plugin is not installed in the Jenkins instance.");
             }
           }
