@@ -302,10 +302,12 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     bucketRegions.put("us-west-1", "-us-west-1");
     bucketRegions.put("us-west-2", "-us-west-2");
     bucketRegions.put("ca-central-1", "-ca-central-1");
+    bucketRegions.put("ap-east-1", "-ap-east-1");
     bucketRegions.put("ap-south-1", "-ap-south-1");
     bucketRegions.put("ap-northeast-2", "-ap-northeast-2");
     bucketRegions.put("ap-northeast-3", "-ap-northeast-3");
     bucketRegions.put("ap-southeast-1", "-ap-southeast-1");
+    bucketRegions.put("ap-southeast-2", "-ap-southeast-2");
     bucketRegions.put("ap-northeast-1", "-ap-northeast-1");
     bucketRegions.put("cn-north-1", ".cn-north-1");
     bucketRegions.put("cn-northwest-1", ".cn-northwest-1");
@@ -313,7 +315,9 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     bucketRegions.put("eu-west-1", "-eu-west-1");
     bucketRegions.put("eu-west-2", "-eu-west-2");
     bucketRegions.put("eu-west-3", "-eu-west-3");
+    bucketRegions.put("eu-north-1", "-eu-north-1");
     bucketRegions.put("sa-east-1", "-sa-east-1");
+    bucketRegions.put("me-south-1", "-me-south-1");
   }
 
   private String constructCommandStringForSMB(ArtifactStreamAttributes artifactStreamAttributes,
