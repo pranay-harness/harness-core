@@ -296,7 +296,8 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       return true;
     } else {
       saveTimeSeriesMLScores(timeSeriesMLScores);
-      bumpCollectionMinuteToProcess(appId, stateExecutionId, workflowExecutionId, groupName, analysisMinute, accountId);
+      bumpCollectionMinuteToProcess(
+          appId, stateExecutionId, workflowExecutionId, groupName, analysisMinute, accountId, cvConfigId != null);
       learningEngineService.markCompleted(taskId);
     }
 
@@ -676,9 +677,10 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     return rv.get(0);
   }
 
+  // TODO: Remove is24x7 parameter when changes for workflow go in
   @Override
   public void bumpCollectionMinuteToProcess(String appId, String stateExecutionId, String workflowExecutionId,
-      String groupName, int analysisMinute, String accountId) {
+      String groupName, int analysisMinute, String accountId, boolean is24x7) {
     logger.info(
         "bumpCollectionMinuteToProcess. Going to update the record for stateExecutionId {} and dataCollectionMinute {}",
         stateExecutionId, analysisMinute);
@@ -689,7 +691,8 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     if (managerClientHelper
             .callManagerWithRetry(
                 managerClient.isFeatureEnabled(FeatureName.GDS_TIME_SERIES_SAVE_PER_MINUTE, accountId))
-            .getResource()) {
+            .getResource()
+        && is24x7) {
       PageRequest<TimeSeriesDataRecord> pageRequest =
           aPageRequest()
               .withLimit(UNLIMITED)
