@@ -5,9 +5,9 @@ import io.harness.perpetualtask.example.SamplePerpetualTaskServiceClient;
 import io.harness.perpetualtask.k8s.watch.K8sWatchPerpetualTaskServiceClient;
 
 public enum PerpetualTaskType {
+  K8S_WATCH(K8sWatchPerpetualTaskServiceClient.class),
   ECS_CLUSTER(EcsPerpetualTaskServiceClient.class),
-  SAMPLE(SamplePerpetualTaskServiceClient.class),
-  K8S_WATCH(K8sWatchPerpetualTaskServiceClient.class);
+  SAMPLE(SamplePerpetualTaskServiceClient.class);
 
   private final Class<? extends PerpetualTaskServiceClient> perpetualTaskServiceClientClass;
 

@@ -13,6 +13,7 @@ import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.ServiceEvent;
 import com.amazonaws.services.secretsmanager.model.AWSSecretsManagerException;
 import com.esotericsoftware.kryo.Kryo;
+import io.harness.perpetualtask.internal.AssignmentTaskResponse;
 import io.harness.serializer.KryoRegistrar;
 import software.wings.api.AmiServiceDeployElement;
 import software.wings.api.AmiServiceSetupElement;
@@ -1344,5 +1345,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(Instant.class, 7235);
     kryo.register(SplunkDataCollectionInfoV2.class, 7236);
     kryo.register(PcfSetupStateExecutionData.class, 7237);
+    kryo.register(AssignmentTaskResponse.class, 7238);
   }
 }

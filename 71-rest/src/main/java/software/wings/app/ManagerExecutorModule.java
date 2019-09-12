@@ -25,5 +25,8 @@ public class ManagerExecutorModule extends AbstractModule {
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("taskPollExecutor"))
         .toInstance(new ManagedScheduledExecutorService("TaskPoll-Thread"));
+    bind(ScheduledExecutorService.class)
+        .annotatedWith(Names.named("perpetualTaskAssignor"))
+        .toInstance(new ManagedScheduledExecutorService("perpetualTaskAssignor"));
   }
 }

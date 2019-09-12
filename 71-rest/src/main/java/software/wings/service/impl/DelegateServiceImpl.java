@@ -1488,7 +1488,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     addMergedParamsForCapabilityCheck(task);
 
-    DelegatePackage delegatePackage = getDelegataePackageWithEncryptionConfig(task, task.getDelegateId());
+    DelegatePackage delegatePackage = getDelegatePackageWithEncryptionConfig(task, task.getDelegateId());
     CapabilityHelper.embedCapabilitiesInDelegateTask(task,
         delegatePackage == null || isEmpty(delegatePackage.getEncryptionConfigs())
             ? Collections.emptyList()
@@ -1499,7 +1499,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     }
   }
 
-  // For some of the tasks, the necesssary factors to do capability check is split across multiple
+  // For some of the tasks, the necessary factors to do capability check is split across multiple
   // params. So none of the params can provide the execution capability by itself. To work around this,
   // we're adding extra params that combines these split params.
   private void addMergedParamsForCapabilityCheck(DelegateTask task) {
@@ -1850,7 +1850,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     }
   }
 
-  private DelegatePackage getDelegataePackageWithEncryptionConfig(DelegateTask delegateTask, String delegateId) {
+  private DelegatePackage getDelegatePackageWithEncryptionConfig(DelegateTask delegateTask, String delegateId) {
     try {
       if (CapabilityHelper.isTaskParameterType(delegateTask.getData())) {
         return resolvePreAssignmentExpressions(delegateTask, delegateId);

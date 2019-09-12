@@ -7,7 +7,9 @@ import com.google.inject.Inject;
 import com.google.protobuf.util.Durations;
 
 import io.harness.category.element.IntegrationTests;
-import io.harness.perpetualtask.PerpetualTaskRecord.PerpetualTaskRecordKeys;
+import io.harness.perpetualtask.internal.PerpetualTaskRecord;
+import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
+import io.harness.perpetualtask.internal.PerpetualTaskRecordDao;
 import io.harness.rule.OwnerRule.Owner;
 import lombok.val;
 import org.junit.After;
@@ -22,11 +24,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class PerpetualTaskServiceIntegrationTest extends BaseIntegrationTest {
+  private final long HEARTBEAT_MILLIS = Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli();
+
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private PerpetualTaskRecordDao perpetualTaskRecordDao;
 
   private final String TEST_ACCOUNT_ID = "TEST_ACCOUNT_ID_" + this.getClass().getSimpleName();
-  private final long HEARTBEAT_MILLIS = Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli();
+
   private final PerpetualTaskType DEFAULT_TASK_TYPE = PerpetualTaskType.ECS_CLUSTER;
   private final PerpetualTaskSchedule TASK_SCHEDULE = PerpetualTaskSchedule.newBuilder()
                                                           .setInterval(Durations.fromSeconds(1))
@@ -82,7 +87,7 @@ public class PerpetualTaskServiceIntegrationTest extends BaseIntegrationTest {
     boolean heartbeatUpdated = perpetualTaskService.updateHeartbeat(taskId, HEARTBEAT_MILLIS);
     assertThat(heartbeatUpdated).isTrue();
 
-    PerpetualTaskRecord task = perpetualTaskService.getTask(taskId);
+    PerpetualTaskRecord task = perpetualTaskRecordDao.getTask(taskId);
     assertThat(task).isNotNull();
     assertThat(task.getLastHeartbeat()).isEqualTo(HEARTBEAT_MILLIS);
   }

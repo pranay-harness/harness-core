@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.util.Durations;
 
+import io.harness.beans.DelegateTask;
 import io.harness.exception.InvalidRequestException;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
@@ -78,5 +79,11 @@ public class EcsPerpetualTaskServiceClient implements PerpetualTaskServiceClient
                                                         .build();
     logger.debug("Get Task params {} ", ecsPerpetualTaskParams.toString());
     return ecsPerpetualTaskParams;
+  }
+
+  @Override
+  public DelegateTask getValidationTask(PerpetualTaskClientContext context, String accountId) {
+    // TODO: implement this
+    return null;
   }
 }

@@ -48,12 +48,12 @@ public class CapabilityHelperTest extends WingsBaseTest {
     assertThat(task.getExecutionCapabilities()).isNotNull();
     assertThat(task.getExecutionCapabilities()).hasSize(2);
 
-    Set<String> criterias = new HashSet<>();
-    criterias.add(HTTP_VAUTL_URL + ":" + HTTP_PORT);
-    criterias.add(GOOGLE_COM + ":" + HTTP_PORT);
+    Set<String> criteriaSet = new HashSet<>();
+    criteriaSet.add(HTTP_VAUTL_URL + ":" + HTTP_PORT);
+    criteriaSet.add(GOOGLE_COM + ":" + HTTP_PORT);
 
     task.getExecutionCapabilities().forEach(
-        executionCapability -> assertThat(criterias.contains(executionCapability.fetchCapabilityBasis())).isTrue());
+        executionCapability -> assertThat(criteriaSet.contains(executionCapability.fetchCapabilityBasis())).isTrue());
   }
 
   @Test

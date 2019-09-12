@@ -1,5 +1,7 @@
 package io.harness.perpetualtask;
 
+import static io.harness.delegate.service.DelegateServiceImpl.getDelegateId;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
@@ -21,8 +23,6 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 @Slf4j
 public class PerpetualTaskWorker {
-  // TODO(Tang): add task assignment logic
-  private final String delegateId = "";
   private final TimeLimiter timeLimiter;
   private Set<PerpetualTaskId> assignedTasks;
   private Map<String, PerpetualTaskExecutor> factoryMap;
@@ -52,8 +52,9 @@ public class PerpetualTaskWorker {
   }
 
   void updateAssignedTaskIds() {
-    logger.debug("Updating the list of assigned tasks.. {} ", delegateId);
+    String delegateId = getDelegateId();
     assignedTasks = new HashSet<>(perpetualTaskServiceGrpcClient.listTaskIds(delegateId));
+    logger.debug("Refreshed list of assigned perpetual tasks {}", assignedTasks);
   }
 
   @VisibleForTesting
@@ -63,10 +64,10 @@ public class PerpetualTaskWorker {
 
   void startTask(PerpetualTaskId taskId) {
     try {
+      logger.info("Starting perpetual task {}.", taskId);
       PerpetualTaskContext context = perpetualTaskServiceGrpcClient.getTaskContext(taskId);
       PerpetualTaskSchedule schedule = context.getTaskSchedule();
       long intervalSeconds = Durations.toSeconds(schedule.getInterval());
-
       PerpetualTaskLifecycleManager perpetualTaskLifecycleManager =
           new PerpetualTaskLifecycleManager(taskId, context, factoryMap, perpetualTaskServiceGrpcClient, timeLimiter);
       ScheduledFuture<?> taskHandle = scheduledService.scheduleWithFixedDelay(
