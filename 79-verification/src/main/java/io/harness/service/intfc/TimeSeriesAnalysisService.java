@@ -57,7 +57,7 @@ public interface TimeSeriesAnalysisService {
       String workflowExecutionId, String serviceId, String metricGroup, OrderType orderType);
 
   void bumpCollectionMinuteToProcess(String appId, String stateExecutionId, String workflowExecutionId,
-      String groupName, int analysisMinute, String accountId);
+      String groupName, int analysisMinute, String accountId, boolean is24x7);
 
   int getMaxControlMinuteWithData(StateType stateType, String appId, String serviceId, String workflowId,
       String workflowExecutionId, String groupName);
