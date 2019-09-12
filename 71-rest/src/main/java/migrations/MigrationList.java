@@ -27,6 +27,7 @@ import migrations.all.CVCollectionCronFrequencyMigration;
 import migrations.all.CleanUpDatadogCallLogMigration;
 import migrations.all.CleanupOrphanInstances;
 import migrations.all.CloudWatchCVMigration;
+import migrations.all.ConvertRestrictedTagsToNonRestrictedTagsForUnsupportedAccountTypes;
 import migrations.all.CreateDefaultAlertNotificationRule;
 import migrations.all.DanglingAppEnvReferenceRemovalMigration;
 import migrations.all.DanglingUserInviteCleanupMigration;
@@ -281,6 +282,7 @@ public class MigrationList {
         .add(Pair.of(277, SweepingStateMigration.class))
         .add(Pair.of(278, DatadogCustomMetricMigration.class))
         .add(Pair.of(279, SettingAttributesCategoryMigration.class))
+        .add(Pair.of(280, ConvertRestrictedTagsToNonRestrictedTagsForUnsupportedAccountTypes.class))
         .build();
   }
 }

@@ -23,6 +23,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import com.mongodb.BasicDBObject;
 import io.harness.beans.PageRequest;
@@ -34,6 +35,7 @@ import io.harness.validation.Update;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotBlank;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
@@ -44,6 +46,11 @@ import software.wings.beans.HarnessTagLink.HarnessTagLinkKeys;
 import software.wings.beans.User;
 import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
+import software.wings.features.TagsFeature;
+import software.wings.features.api.GetAccountId;
+import software.wings.features.api.PremiumFeature;
+import software.wings.features.api.RestrictedApi;
+import software.wings.features.extractors.HarnessTagAccountIdExtractor;
 import software.wings.graphql.schema.type.aggregation.QLEntityType;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
@@ -63,6 +70,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -90,6 +98,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   @Inject private AuthService authService;
   @Inject private AppService appService;
   @Inject private EntityNameCache entityNameCache;
+  @Inject @Named(TagsFeature.FEATURE_NAME) private PremiumFeature tagsFeature;
 
   public static final Set<EntityType> supportedTagEntityTypes =
       ImmutableSet.of(SERVICE, ENVIRONMENT, WORKFLOW, PROVISIONER, PIPELINE, TRIGGER, APPLICATION);
@@ -109,6 +118,17 @@ public class HarnessTagServiceImpl implements HarnessTagService {
     sanitizeAndValidateHarnessTag(tag);
     validateSystemTagNameCreation(tag, allowSystemTagsCreate);
 
+    checkIfTagCanBeCreated(tag);
+
+    wingsPersistence.save(tag);
+    HarnessTag savedTag = get(tag.getAccountId(), tag.getKey());
+
+    yamlPushService.pushYamlChangeSet(savedTag.getAccountId(), savedTag, savedTag, Type.UPDATE, syncFromGit, false);
+
+    return savedTag;
+  }
+
+  private void checkIfTagCanBeCreated(HarnessTag tag) {
     HarnessTag existingTag = get(tag.getAccountId(), tag.getKey());
 
     if (existingTag != null) {
@@ -119,12 +139,11 @@ public class HarnessTagServiceImpl implements HarnessTagService {
       throw new InvalidRequestException("Cannot add more tags. Maximum tags supported are " + MAX_TAGS_PER_ACCOUNT);
     }
 
-    wingsPersistence.save(tag);
-    HarnessTag savedTag = get(tag.getAccountId(), tag.getKey());
-
-    yamlPushService.pushYamlChangeSet(savedTag.getAccountId(), savedTag, savedTag, Type.UPDATE, syncFromGit, false);
-
-    return savedTag;
+    String accountId = tag.getAccountId();
+    boolean isRestrictedTag = isNotEmpty(tag.getAllowedValues());
+    if (!tagsFeature.isAvailableForAccount(accountId) && isRestrictedTag) {
+      throw new InvalidRequestException(String.format("Operation not permitted for account [%s].", accountId), USER);
+    }
   }
 
   @Override
@@ -133,7 +152,8 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   }
 
   @Override
-  public HarnessTag updateTag(HarnessTag tag, boolean syncFromGit) {
+  @RestrictedApi(TagsFeature.class)
+  public HarnessTag updateTag(@GetAccountId(HarnessTagAccountIdExtractor.class) HarnessTag tag, boolean syncFromGit) {
     sanitizeAndValidateHarnessTag(tag);
 
     HarnessTag existingTag = get(tag.getAccountId(), tag.getKey());
@@ -161,7 +181,8 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   }
 
   @Override
-  public HarnessTag update(HarnessTag tag) {
+  @RestrictedApi(TagsFeature.class)
+  public HarnessTag update(@GetAccountId(HarnessTagAccountIdExtractor.class) HarnessTag tag) {
     return updateTag(tag, false);
   }
 
@@ -536,6 +557,16 @@ public class HarnessTagServiceImpl implements HarnessTagService {
     PermissionAttribute permissionAttribute = new PermissionAttribute(permissionType, action);
 
     authHandler.authorize(asList(permissionAttribute), asList(appId), entityId);
+  }
+
+  @Override
+  public void convertRestrictedTagsToNonRestrictedTags(Collection<String> accounts) {
+    UpdateOperations<HarnessTag> updateOp =
+        wingsPersistence.createUpdateOperations(HarnessTag.class).unset(HarnessTagKeys.allowedValues);
+    Query<HarnessTag> query =
+        wingsPersistence.createQuery(HarnessTag.class).field(HarnessTagKeys.accountId).in(accounts);
+
+    wingsPersistence.update(query, updateOp);
   }
 
   private void authorizeTriggers(String appId, String entityId) {

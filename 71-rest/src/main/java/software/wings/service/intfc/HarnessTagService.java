@@ -11,6 +11,7 @@ import software.wings.beans.HarnessTagLink;
 import software.wings.graphql.schema.type.aggregation.QLEntityType;
 import software.wings.security.PermissionAttribute.Action;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import javax.validation.Valid;
@@ -41,6 +42,7 @@ public interface HarnessTagService {
   void deleteTag(@NotBlank String accountId, @NotBlank String key, boolean syncFromGit);
 
   void validateTagResourceAccess(String appId, String accountId, String entityId, EntityType entityType, Action action);
+  void convertRestrictedTagsToNonRestrictedTags(Collection<String> accounts);
 
   Set<HarnessTagLink> getTagLinks(String accountId, EntityType entityType, List<String> entityIds, String key);
 

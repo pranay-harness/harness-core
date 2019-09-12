@@ -74,6 +74,12 @@
     ESSENTIALS:
       available: false
 
+  TAGS:
+    COMMUNITY:
+      available: false
+    ESSENTIALS:
+      available: false
+
   TWO_FACTOR_AUTHENTICATION:
     COMMUNITY:
       available: false
