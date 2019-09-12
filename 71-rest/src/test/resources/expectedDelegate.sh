@@ -61,6 +61,9 @@ fi
 
 if [[ "$OSTYPE" == darwin* ]]; then
   MEM=$(top -l 1 -n 0 | grep PhysMem | cut -d ' ' -f 2 | cut -d 'G' -f 1)
+  if [[ $MEM =~ "M" ]]; then
+    MEM=$(($(echo $MEM | cut -d 'M' -f 1)/1024))
+  fi
   echo "Memory is $MEM"
   if [[ $MEM -lt 6 ]]; then
     echo
