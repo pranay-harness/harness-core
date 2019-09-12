@@ -1,34 +1,29 @@
 package software.wings.delegatetasks;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
-import com.bertramlabs.plugins.hcl4j.HCLParser;
-import com.bertramlabs.plugins.hcl4j.HCLParserException;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.TerraformExecutionData;
+import software.wings.beans.GitConfig;
+import software.wings.beans.GitFileConfig;
+import software.wings.beans.GitOperationContext;
 import software.wings.beans.delegation.TerraformProvisionParameters;
-import software.wings.beans.yaml.GitFetchFilesResult;
-import software.wings.beans.yaml.GitFile;
+import software.wings.helpers.ext.terraform.TerraformConfigInspectClient.BLOCK_TYPE;
 import software.wings.service.intfc.GitService;
+import software.wings.service.intfc.TerraformConfigInspectService;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.utils.GitUtilsDelegate;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -36,6 +31,8 @@ import java.util.function.Supplier;
 public class TerraformFetchTargetsTask extends AbstractDelegateRunnableTask {
   @Inject private GitService gitService;
   @Inject private EncryptionService encryptionService;
+  @Inject private GitUtilsDelegate gitUtilsDelegate;
+  @Inject private TerraformConfigInspectService terraformConfigInspectService;
   private static final String TERRAFORM_FILE_EXTENSION = ".tf";
   public TerraformFetchTargetsTask(String delegateId, DelegateTask delegateTask,
       Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
@@ -49,35 +46,15 @@ public class TerraformFetchTargetsTask extends AbstractDelegateRunnableTask {
 
   private TerraformExecutionData run(TerraformProvisionParameters parameters) {
     try {
-      encryptionService.decrypt(parameters.getSourceRepo(), parameters.getSourceRepoEncryptionDetails());
-      GitFetchFilesResult gitFetchFilesResult =
-          gitService.fetchFilesByPath(parameters.getSourceRepo(), UUID.randomUUID().toString(), null,
-              parameters.getSourceRepoBranch(), Collections.singletonList(parameters.getScriptPath()), true,
-              Collections.singletonList(TERRAFORM_FILE_EXTENSION), false);
+      GitConfig gitConfig = parameters.getSourceRepo();
+      GitOperationContext gitOperationContext = gitUtilsDelegate.cloneRepo(gitConfig,
+          GitFileConfig.builder().connectorId(parameters.getSourceRepoSettingId()).build(),
+          parameters.getSourceRepoEncryptionDetails());
 
-      if (gitFetchFilesResult == null) {
-        throw new WingsException(ErrorCode.UNKNOWN_ERROR, "Failed to fetch files from git");
-      }
-
-      List<GitFile> files = gitFetchFilesResult.getFiles();
-      if (isEmpty(files)) {
-        throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", "No Terraform files found");
-      }
-
-      HCLParser hclParser = new HCLParser();
-      List<String> targets = new ArrayList<>();
-      for (GitFile file : files) {
-        try {
-          Map<String, Object> parsedContent = hclParser.parse(file.getFileContent());
-          if (isNotEmpty(parsedContent)) {
-            targets.addAll(getTargetModules(parsedContent));
-            targets.addAll(getTargetResources(parsedContent));
-          }
-        } catch (HCLParserException | IOException e) {
-          throw new WingsException(ErrorCode.GENERAL_ERROR, e)
-              .addParam("message", "Failure in parsing file:" + file.getFilePath() + " for targets. " + e.getMessage());
-        }
-      }
+      String absoluteModulePath =
+          gitUtilsDelegate.resolveAbsoluteFilePath(gitOperationContext, parameters.getScriptPath());
+      List<String> targets = terraformConfigInspectService.parseFieldsUnderCategory(
+          absoluteModulePath, BLOCK_TYPE.MANAGED_RESOURCES.name().toLowerCase());
       return TerraformExecutionData.builder().targets(targets).build();
     } catch (Exception e) {
       if (e instanceof WingsException) {

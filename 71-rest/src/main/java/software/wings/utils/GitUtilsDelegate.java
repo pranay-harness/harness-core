@@ -1,5 +1,4 @@
 package software.wings.utils;
-
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
@@ -7,6 +6,7 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.FileReadException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.GitOperationContext;
@@ -47,10 +47,14 @@ public class GitUtilsDelegate {
     return gitOperationContext;
   }
 
-  public String resolveScriptDirectory(GitOperationContext gitOperationContext, String scriptPath) {
+  public String resolveAbsoluteFilePath(GitOperationContext gitOperationContext, String scriptPath) {
     return Paths
         .get(Paths.get(System.getProperty(USER_DIR_KEY)).toString(),
             gitClientHelper.getRepoDirectory(gitOperationContext), scriptPath)
         .toString();
+  }
+
+  public String resolveAbsoluteRepoPath(GitOperationContext gitOperationContext) {
+    return resolveAbsoluteFilePath(gitOperationContext, StringUtils.EMPTY);
   }
 }

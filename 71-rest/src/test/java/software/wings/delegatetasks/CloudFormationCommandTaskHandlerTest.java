@@ -170,7 +170,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
     doReturn(gitOperationContext)
         .when(gitUtilsDelegate)
         .cloneRepo(any(GitConfig.class), any(GitFileConfig.class), anyListOf(EncryptedDataDetail.class));
-    doReturn(data).when(gitUtilsDelegate).resolveScriptDirectory(any(GitOperationContext.class), anyString());
+    doReturn(data).when(gitUtilsDelegate).resolveAbsoluteFilePath(any(GitOperationContext.class), anyString());
     doReturn(data).when(gitUtilsDelegate).getRequestDataFromFile(anyString());
     String stackId = "Stack Id 00";
     CreateStackResult createStackResult = new CreateStackResult().withStackId(stackId);

@@ -135,6 +135,20 @@ function setupDelegateJars(){
 
       done
 
+      for version in v1.0; do
+
+        echo "Copying terraform-config-inspect v${version} binaries for ${platform}"
+
+        sudo mkdir -p ${STORAGE_DIR}/harness-download/harness-terraform-config-inspect/${version}/${platform}/amd64/
+
+        curl  -s -L -o terraform-config-inspect https://app.harness.io/storage/harness-download/harness-terraform-config-inspect/${version}/${platform}/amd64/terraform-config-inspect
+
+        echo $(ls -sh terraform-config-inspect  | cut -d ' ' -f1)
+
+        sudo cp terraform-config-inspect ${STORAGE_DIR}/harness-download/harness-terraform-config-inspect/${version}/${platform}/amd64/
+
+      done
+
     done
 }
 
