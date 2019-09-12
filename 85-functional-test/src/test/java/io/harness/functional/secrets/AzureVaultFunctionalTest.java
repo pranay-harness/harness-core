@@ -30,7 +30,7 @@ import javax.ws.rs.core.GenericType;
  * @author marklu on 9/11/19
  */
 @Slf4j
-public class AzureKeyVaultFunctionalTest extends AbstractFunctionalTest {
+public class AzureVaultFunctionalTest extends AbstractFunctionalTest {
   private static final String SM_NAME = "Azure Key Vault";
   private static final String CLIENT_ID = "19875049-d2a5-47c3-b1fe-f8babd7caf30";
   private static final String TENANT_ID = "b229b2bb-5f33-4d22-bce0-730f6474e906";
