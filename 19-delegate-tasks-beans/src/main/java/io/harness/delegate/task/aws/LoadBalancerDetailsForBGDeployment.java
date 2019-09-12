@@ -1,0 +1,100 @@
+package io.harness.delegate.task.aws;
+
+import lombok.Data;
+
+@Data
+public class LoadBalancerDetailsForBGDeployment {
+  public LoadBalancerDetailsForBGDeployment() {}
+  private String loadBalancerName;
+  private String loadBalancerArn;
+  private String prodListenerPort;
+  private String stageListenerPort;
+  private String prodListenerArn;
+  private String stageListenerArn;
+  private String prodTargetGroupName;
+  private String prodTargetGroupArn;
+  private String stageTargetGroupName;
+  private String stageTargetGroupArn;
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder {
+    private String loadBalancerName;
+    private String loadBalancerArn;
+    private String prodListenerPort;
+    private String stageListenerPort;
+    private String prodListenerArn;
+    private String stageListenerArn;
+    private String prodTargetGroupName;
+    private String prodTargetGroupArn;
+    private String stageTargetGroupName;
+    private String stageTargetGroupArn;
+
+    public Builder loadBalancerName(String loadBalancerName) {
+      this.loadBalancerName = loadBalancerName;
+      return this;
+    }
+
+    public Builder loadBalancerArn(String loadBalancerArn) {
+      this.loadBalancerArn = loadBalancerArn;
+      return this;
+    }
+
+    public Builder prodListenerPort(String prodListenerPort) {
+      this.prodListenerPort = prodListenerPort;
+      return this;
+    }
+
+    public Builder prodListenerArn(String prodListenerArn) {
+      this.prodListenerArn = prodListenerArn;
+      return this;
+    }
+
+    public Builder stageListenerPort(String stageListenerPort) {
+      this.stageListenerPort = stageListenerPort;
+      return this;
+    }
+
+    public Builder stageListenerArn(String stageListenerArn) {
+      this.stageListenerArn = stageListenerArn;
+      return this;
+    }
+
+    public Builder prodTargetGroupName(String prodTargetGroupName) {
+      this.prodTargetGroupName = prodTargetGroupName;
+      return this;
+    }
+
+    public Builder stageTargetGroupName(String stageTargetGroupName) {
+      this.stageTargetGroupName = stageTargetGroupName;
+      return this;
+    }
+
+    public Builder prodTargetGroupArn(String prodTargetGroupArn) {
+      this.prodTargetGroupArn = prodTargetGroupArn;
+      return this;
+    }
+
+    public Builder stageTargetGroupArn(String stageTargetGroupArn) {
+      this.stageTargetGroupArn = stageTargetGroupArn;
+      return this;
+    }
+
+    public LoadBalancerDetailsForBGDeployment build() {
+      LoadBalancerDetailsForBGDeployment lbDetail = new LoadBalancerDetailsForBGDeployment();
+      lbDetail.setLoadBalancerName(loadBalancerName);
+      lbDetail.setLoadBalancerArn(loadBalancerArn);
+      lbDetail.setProdListenerPort(prodListenerPort);
+      lbDetail.setStageListenerPort(stageListenerPort);
+      lbDetail.setProdListenerArn(prodListenerArn);
+      lbDetail.setStageListenerArn(stageListenerArn);
+      lbDetail.setProdTargetGroupName(prodTargetGroupName);
+      lbDetail.setProdTargetGroupArn(prodTargetGroupArn);
+      lbDetail.setStageTargetGroupName(stageTargetGroupName);
+      lbDetail.setStageTargetGroupArn(stageTargetGroupArn);
+      return lbDetail;
+    }
+  }
+}

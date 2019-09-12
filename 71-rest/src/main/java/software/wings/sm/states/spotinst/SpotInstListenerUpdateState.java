@@ -176,10 +176,7 @@ public class SpotInstListenerUpdateState extends State {
         .newElastiGroup(setupContextElement.getNewElastiGroupOriginalConfig())
         .oldElastiGroup(setupContextElement.getOldElastiGroupOriginalConfig())
         .elastiGroupNamePrefix(setupContextElement.getElstiGroupNamePrefix())
-        .targetGroupArnForNewElastiGroup(setupContextElement.getStageTargetGroupArn())
-        .targetGroupArnForOldElastiGroup(setupContextElement.getProdTargetGroupArn())
-        .prodListenerArn(setupContextElement.getProdListenerArn())
-        .stageListenerArn(setupContextElement.getStageListenerArn())
+        .lBdetailsForBGDeploymentList(setupContextElement.getLbDetailsForBGDeployment())
         .timeoutIntervalInMin(commandRequest.getSpotInstTaskParameters().getTimeoutIntervalInMin())
         .rollback(isRollback())
         .build();
@@ -195,8 +192,8 @@ public class SpotInstListenerUpdateState extends State {
         .infraId(setupContextElement.getInfraMappingId())
         .serviceId(setupContextElement.getServiceId())
         .downsizeOldElastiGroup(downsizeOldElastiGroup)
-        .prodTargetGroupArn(setupContextElement.getProdTargetGroupArn())
-        .stageTargetGroupArn(setupContextElement.getStageTargetGroupArn())
+        .lbDetails(setupContextElement.getLbDetailsForBGDeployment())
+        .isRollback(isRollback())
         .build();
   }
 

@@ -13,6 +13,7 @@ import static java.util.stream.Collectors.toList;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
+import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ReportTarget;
@@ -35,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@Singleton
 @Slf4j
 public class SpotInstHelperServiceDelegateImpl implements SpotInstHelperServiceDelegate {
   private SpotInstRestClient getSpotInstRestClient() {

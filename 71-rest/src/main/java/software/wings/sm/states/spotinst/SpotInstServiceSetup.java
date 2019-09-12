@@ -11,6 +11,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstSetupTaskResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
@@ -30,6 +31,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -52,12 +54,7 @@ public class SpotInstServiceSetup extends State {
 
   // LoadBalancer details
   @Getter @Setter private boolean useLoadBalancer;
-  @Getter @Setter private String loadBalancerName;
-  @Getter @Setter private boolean classicLoadBalancer;
-  @Getter @Setter private String targetListenerPort;
-  @Getter @Setter private String targetListenerProtocol;
-  @Getter @Setter private String prodListenerPort;
-
+  private List<LoadBalancerDetailsForBGDeployment> awsLoadBalancerConfigs;
   @Inject private transient ActivityService activityService;
   @Inject private transient DelegateService delegateService;
   @Inject private transient SpotInstStateHelper spotinstStateHelper;
@@ -166,6 +163,7 @@ public class SpotInstServiceSetup extends State {
             .envId(stateExecutionData.getEnvId())
             .newElastiGroupOriginalConfig(stateExecutionData.getElastiGroupOriginalConfig())
             .elstiGroupNamePrefix(context.renderExpression(elastiGroupNamePrefix))
+            .lbDetailsForBGDeployment(spotInstSetupTaskResponse.getLbDetailsForBGDeployments())
             .build();
 
     // Add these details only if spotInstSetupTaskResponse is not NULL
@@ -188,10 +186,7 @@ public class SpotInstServiceSetup extends State {
 
     ElastiGroup oldElastiGroup = fetchOldElasticGroup(spotInstSetupTaskResponse);
     spotInstSetupContextElement.setOldElastiGroupOriginalConfig(oldElastiGroup);
-    spotInstSetupContextElement.setProdListenerArn(spotInstSetupTaskResponse.getProdListenerArn());
-    spotInstSetupContextElement.setStageListenerArn(spotInstSetupTaskResponse.getStageListenerArn());
-    spotInstSetupContextElement.setStageTargetGroupArn(spotInstSetupTaskResponse.getStageTargetGroupArn());
-    spotInstSetupContextElement.setProdTargetGroupArn(spotInstSetupTaskResponse.getProdTargetGroupArn());
+    spotInstSetupContextElement.setLbDetailsForBGDeployment(spotInstSetupTaskResponse.getLbDetailsForBGDeployments());
 
     if (oldElastiGroup != null && oldElastiGroup.getCapacity() != null) {
       spotInstSetupContextElement.setCurrentRunningInstanceCount(oldElastiGroup.getCapacity().getTarget());
@@ -206,5 +201,13 @@ public class SpotInstServiceSetup extends State {
     }
 
     return spotInstSetupTaskResponse.getGroupToBeDownsized().get(0);
+  }
+
+  public List<LoadBalancerDetailsForBGDeployment> getAwsLoadBalancerConfigs() {
+    return awsLoadBalancerConfigs;
+  }
+
+  public void setAwsLoadBalancerConfigs(List<LoadBalancerDetailsForBGDeployment> awsLoadBalancerConfigs) {
+    this.awsLoadBalancerConfigs = awsLoadBalancerConfigs;
   }
 }

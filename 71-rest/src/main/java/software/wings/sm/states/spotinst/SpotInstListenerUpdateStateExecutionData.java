@@ -1,15 +1,21 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static java.util.stream.Collectors.toList;
+
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
+import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.api.ExecutionDataValue;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.sm.StateExecutionData;
 
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -25,9 +31,11 @@ public class SpotInstListenerUpdateStateExecutionData
   private String serviceId;
   private String activityId;
   private boolean downsizeOldElastiGroup;
-  private String prodTargetGroupArn;
-  private String stageTargetGroupArn;
+  private List<LoadBalancerDetailsForBGDeployment> lbDetails;
+  private String prodTargetGroups;
+  private String stageTargetGroups;
   private String commandName;
+  private boolean isRollback;
 
   private SpotInstCommandRequest spotinstCommandRequest;
 
@@ -45,11 +53,64 @@ public class SpotInstListenerUpdateStateExecutionData
             .value(spotinstCommandRequest.getSpotInstTaskParameters().getActivityId())
             .displayName("Activity Id")
             .build());
-    putNotNull(executionDetails, "stageTargetGroupArn",
-        ExecutionDataValue.builder().value(stageTargetGroupArn).displayName("Prod Target Group (After Swap)").build());
+    putNotNull(executionDetails, "prodTargetGroups",
+        ExecutionDataValue.builder()
+            .value(getActiveTargetGroups())
+            .displayName("Active Target Groups (After Swap)")
+            .build());
+    putNotNull(executionDetails, "stageTargetGroups",
+        ExecutionDataValue.builder()
+            .value(getInactiveTargetGroups())
+            .displayName("Stage Target Groups (After Swap)")
+            .build());
+
     putNotNull(executionDetails, "downsizeOldElastiGroup",
         ExecutionDataValue.builder().value(downsizeOldElastiGroup).displayName("Downsize Old ElastiGroup").build());
     return executionDetails;
+  }
+
+  private String getActiveTargetGroups() {
+    final StringBuilder stringBuilder = new StringBuilder(128);
+    List<String> tgNames;
+    if (isRollback) {
+      // If rollback, we are restoring original prodTargetGroups.
+      tgNames = lbDetails.stream().map(lbDetail -> lbDetail.getProdTargetGroupName()).collect(toList());
+    } else {
+      tgNames = lbDetails.stream().map(lbDetail -> lbDetail.getStageListenerArn()).collect(toList());
+    }
+
+    return returnTargetGroupDisplayString(tgNames);
+  }
+
+  private String getInactiveTargetGroups() {
+    List<String> tgNames;
+    if (isRollback) {
+      // If rollback, we are restoring original prodTargetGroups.
+      tgNames = lbDetails.stream().map(lbDetail -> lbDetail.getStageListenerArn()).collect(toList());
+    } else {
+      tgNames = lbDetails.stream().map(lbDetail -> lbDetail.getProdTargetGroupName()).collect(toList());
+    }
+
+    return returnTargetGroupDisplayString(tgNames);
+  }
+
+  private String returnTargetGroupDisplayString(List<String> tgNames) {
+    if (isEmpty(tgNames)) {
+      return StringUtils.EMPTY;
+    }
+
+    boolean isFirstElement = true;
+    final StringBuilder stringBuilder = new StringBuilder(128);
+    for (String name : tgNames) {
+      if (isFirstElement) {
+        stringBuilder.append(name);
+        isFirstElement = false;
+      } else {
+        stringBuilder.append(" ,").append(name);
+      }
+    }
+
+    return stringBuilder.toString();
   }
 
   @Override

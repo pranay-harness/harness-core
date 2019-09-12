@@ -25,6 +25,8 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
+import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
+import io.harness.delegate.task.aws.LoadBalancerType;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
@@ -91,5 +93,7 @@ public class DelegateTasksKryoRegister implements KryoRegistrar {
     kryo.register(SpotInstGetElastigroupJsonResponse.class, 19028);
     kryo.register(SpotInstListElastigroupInstancesResponse.class, 19029);
     kryo.register(SpotInstListElastigroupNamesResponse.class, 19030);
+    kryo.register(LoadBalancerDetailsForBGDeployment.class, 19031);
+    kryo.register(LoadBalancerType.class, 19032);
   }
 }

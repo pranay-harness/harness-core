@@ -21,6 +21,7 @@ import com.google.inject.Singleton;
 
 import com.amazonaws.services.elasticloadbalancingv2.model.Action;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeListenersResult;
+import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.delegate.task.spotinst.request.SpotInstSwapRoutesTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
@@ -85,10 +86,11 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
       spotInstHelperServiceDelegate.updateElastiGroup(spotInstToken, spotInstAccountId, oldElastiGroupId,
           ElastiGroupRenameRequest.builder().name(stageElastiGroupName).build());
     }
-    awsElbHelperServiceDelegate.updateListenersForEcsBG(awsConfig, emptyList(),
-        swapRoutesParameters.getProdListenerArn(), swapRoutesParameters.getStageListenerArn(),
-        swapRoutesParameters.getAwsRegion());
-    logCallback.saveExecutionLog("Completed swap routes", INFO, SUCCESS);
+
+    logCallback.saveExecutionLog("Updating Listener Rules for Load Balancer");
+    awsElbHelperServiceDelegate.updateListenersForBGDeployment(awsConfig, emptyList(),
+        swapRoutesParameters.getLBdetailsForBGDeploymentList(), swapRoutesParameters.getAwsRegion());
+    logCallback.saveExecutionLog("Route Updated Successfully", INFO, SUCCESS);
 
     // Downsize if configured on state
     if (swapRoutesParameters.isDownsizeOldElastiGroup() && isNotEmpty(oldElastiGroupId)) {
@@ -147,26 +149,7 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
           swapRoutesParameters, RENAME_OLD_COMMAND_UNIT, "No old elastigroup found for renaming");
     }
 
-    DescribeListenersResult result = awsElbHelperServiceDelegate.describeListenerResult(
-        awsConfig, emptyList(), swapRoutesParameters.getProdListenerArn(), swapRoutesParameters.getAwsRegion());
-    Optional<Action> optionalAction =
-        result.getListeners()
-            .get(0)
-            .getDefaultActions()
-            .stream()
-            .filter(action -> "forward".equalsIgnoreCase(action.getType()) && isNotEmpty(action.getTargetGroupArn()))
-            .findFirst();
-
-    logCallback = getLogCallBack(swapRoutesParameters, SWAP_ROUTES_COMMAND_UNIT);
-    if (optionalAction.isPresent()
-        && optionalAction.get().getTargetGroupArn().equals(swapRoutesParameters.getTargetGroupArnForNewElastiGroup())) {
-      logCallback.saveExecutionLog(format("Listener: [%s] is forwarding traffic to: [%s]. Swap routes in rollback",
-          swapRoutesParameters.getProdListenerArn(), swapRoutesParameters.getTargetGroupArnForNewElastiGroup()));
-      awsElbHelperServiceDelegate.updateListenersForEcsBG(awsConfig, emptyList(),
-          swapRoutesParameters.getProdListenerArn(), swapRoutesParameters.getStageListenerArn(),
-          swapRoutesParameters.getAwsRegion());
-    }
-    logCallback.saveExecutionLog("Prod Elastigroup is UP with correct traffic", INFO, SUCCESS);
+    restoreRoutesToOriginalStateIfChanged(awsConfig, swapRoutesParameters);
 
     // Downsize new elastiGrup
     ElastiGroup temp = ElastiGroup.builder()
@@ -186,6 +169,31 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
     logCallback.saveExecutionLog("Completed Rename", INFO, SUCCESS);
 
     return SpotInstTaskExecutionResponse.builder().commandExecutionStatus(SUCCESS).build();
+  }
+
+  private void restoreRoutesToOriginalStateIfChanged(
+      AwsConfig awsConfig, SpotInstSwapRoutesTaskParameters swapRoutesParameters) {
+    ExecutionLogCallback logCallback = getLogCallBack(swapRoutesParameters, SWAP_ROUTES_COMMAND_UNIT);
+    for (LoadBalancerDetailsForBGDeployment lbDetail : swapRoutesParameters.getLBdetailsForBGDeploymentList()) {
+      DescribeListenersResult result = awsElbHelperServiceDelegate.describeListenerResult(
+          awsConfig, emptyList(), lbDetail.getProdListenerArn(), swapRoutesParameters.getAwsRegion());
+      Optional<Action> optionalAction =
+          result.getListeners()
+              .get(0)
+              .getDefaultActions()
+              .stream()
+              .filter(action -> "forward".equalsIgnoreCase(action.getType()) && isNotEmpty(action.getTargetGroupArn()))
+              .findFirst();
+
+      if (optionalAction.isPresent()
+          && optionalAction.get().getTargetGroupArn().equals(lbDetail.getStageTargetGroupArn())) {
+        logCallback.saveExecutionLog(format("Listener: [%s] is forwarding traffic to: [%s]. Swap routes in rollback",
+            lbDetail.getProdListenerArn(), lbDetail.getStageTargetGroupArn()));
+        awsElbHelperServiceDelegate.updateListenersForEcsBG(awsConfig, emptyList(), lbDetail.getProdListenerArn(),
+            lbDetail.getStageListenerArn(), swapRoutesParameters.getAwsRegion());
+      }
+    }
+    logCallback.saveExecutionLog("Prod Elastigroup is UP with correct traffic", INFO, SUCCESS);
   }
 
   private void createAndFinishEmptyExecutionLog(

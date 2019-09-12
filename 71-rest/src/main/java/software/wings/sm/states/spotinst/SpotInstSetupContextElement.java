@@ -2,6 +2,7 @@ package software.wings.sm.states.spotinst;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.delegate.task.spotinst.response.SpotInstSetupTaskResponse;
 import io.harness.spotinst.model.ElastiGroup;
 import lombok.AllArgsConstructor;
@@ -13,6 +14,7 @@ import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
+import java.util.List;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -37,10 +39,7 @@ public class SpotInstSetupContextElement implements ContextElement {
   private SpotInstSetupTaskResponse spotInstSetupTaskResponse;
   private ElastiGroup newElastiGroupOriginalConfig;
   private ElastiGroup oldElastiGroupOriginalConfig;
-  private String prodListenerArn;
-  private String stageListenerArn;
-  private String prodTargetGroupArn;
-  private String stageTargetGroupArn;
+  private List<LoadBalancerDetailsForBGDeployment> lbDetailsForBGDeployment;
   private String elstiGroupNamePrefix;
 
   @Override

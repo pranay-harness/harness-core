@@ -10,4 +10,5 @@ import java.util.List;
 @Builder
 public class SpotInstDeployTaskResponse implements SpotInstTaskResponse {
   private List<Instance> ec2InstancesAdded;
+  private List<Instance> ec2InstancesExisting;
 }

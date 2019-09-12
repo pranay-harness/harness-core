@@ -1,6 +1,7 @@
 package software.wings.sm.states.spotinst;
 
 import static com.google.common.collect.Maps.newHashMap;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.spotinst.model.SpotInstConstants.DEPLOYMENT_ERROR;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
@@ -29,6 +30,7 @@ import io.harness.spotinst.model.ElastiGroupCapacity;
 import io.harness.spotinst.model.SpotInstConstants;
 import lombok.Getter;
 import lombok.Setter;
+import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
@@ -88,6 +90,7 @@ public class SpotInstDeployState extends State {
     super(name, stateType);
   }
 
+  @Override
   public boolean isRollback() {
     return false;
   }
@@ -202,11 +205,23 @@ public class SpotInstDeployState extends State {
         (AwsAmiInfrastructureMapping) infrastructureMappingService.get(
             stateExecutionData.getAppId(), stateExecutionData.getInfraId());
 
+    List<InstanceElement> instanceElements = awsStateHelper.generateInstanceElements(
+        spotInstDeployTaskResponse.getEc2InstancesAdded(), awsAmiInfrastructureMapping, context);
+    if (isNotEmpty(instanceElements)) {
+      // These are newly launched instances, set NewInstance = true for verification service
+      instanceElements.forEach(instanceElement -> instanceElement.setNewInstance(true));
+    }
+
+    List<InstanceElement> existingInstanceElements = awsStateHelper.generateInstanceElements(
+        spotInstDeployTaskResponse.getEc2InstancesExisting(), awsAmiInfrastructureMapping, context);
+    if (isNotEmpty(existingInstanceElements)) {
+      // These are Existing instances for older elastiGroup, set NewInstance = false for verification service
+      existingInstanceElements.forEach(instanceElement -> instanceElement.setNewInstance(false));
+      instanceElements.addAll(existingInstanceElements);
+    }
+
     InstanceElementListParam instanceElementListParam =
-        InstanceElementListParam.builder()
-            .instanceElements(awsStateHelper.generateInstanceElements(
-                spotInstDeployTaskResponse.getEc2InstancesAdded(), awsAmiInfrastructureMapping, context))
-            .build();
+        InstanceElementListParam.builder().instanceElements(instanceElements).build();
 
     return ExecutionResponse.builder()
         .executionStatus(executionStatus)
@@ -266,7 +281,7 @@ public class SpotInstDeployState extends State {
         .resizeNewFirst(ResizeStrategy.RESIZE_NEW_FIRST.equals(spotInstSetupContextElement.getResizeStrategy()))
         .blueGreen(isBlueGreen)
         .timeoutIntervalInMin(commandRequest.getSpotInstTaskParameters().getTimeoutIntervalInMin())
-        .oldElastiGroupWithUpdatedCapacity((!isRollback() && isBlueGreen) ? null : oldElastiGroup)
+        .oldElastiGroupWithUpdatedCapacity(oldElastiGroup)
         .newElastiGroupWithUpdatedCapacity(newElastiGroup)
         .build();
   }
