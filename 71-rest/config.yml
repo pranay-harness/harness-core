@@ -170,10 +170,11 @@ mongo:
   #uri: mongodb://mongo1:30001,mongo2:30002,mongo3:30003/harness
   #locksUri: mongodb://localhost:27017/impermanent
 
-searchEnabled: true
+searchEnabled: false
 
 elasticsearch:
   uri: http://localhost:9200
+  indexSuffix: _default
 
 watcherMetadataUrl: https://ci.harness.io/storage/wingswatchers/watcherci.txt
 delegateMetadataUrl: https://ci.harness.io/storage/wingsdelegates/delegateci.txt

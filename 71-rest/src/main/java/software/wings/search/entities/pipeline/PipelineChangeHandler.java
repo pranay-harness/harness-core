@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 
 import com.mongodb.DBObject;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.mapping.cache.DefaultEntityCache;
@@ -15,7 +14,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.search.entities.application.ApplicationSearchEntity;
 import software.wings.search.entities.pipeline.PipelineView.PipelineViewKeys;
 import software.wings.search.framework.ChangeHandler;
-import software.wings.search.framework.ElasticsearchUtils;
+import software.wings.search.framework.ElasticsearchDao;
 import software.wings.search.framework.SearchEntityUtils;
 import software.wings.search.framework.changestreams.ChangeEvent;
 import software.wings.search.framework.changestreams.ChangeType;
@@ -31,7 +30,7 @@ import java.util.Optional;
 
 @Slf4j
 public class PipelineChangeHandler implements ChangeHandler {
-  @Inject private RestHighLevelClient elasticsearchClient;
+  @Inject private ElasticsearchDao elasticsearchDao;
   @Inject private WingsPersistence wingsPersistence;
   private static final Mapper mapper = new Mapper();
   private static final EntityCache entityCache = new DefaultEntityCache();
@@ -49,8 +48,8 @@ public class PipelineChangeHandler implements ChangeHandler {
         String newValue = application.getName();
         String filterKey = PipelineViewKeys.appId;
         String filterValue = application.getUuid();
-        return ElasticsearchUtils.updateKeyInMultipleDocuments(
-            elasticsearchClient, PipelineSearchEntity.TYPE, keyToUpdate, newValue, filterKey, filterValue);
+        return elasticsearchDao.updateKeyInMultipleDocuments(
+            PipelineSearchEntity.TYPE, keyToUpdate, newValue, filterKey, filterValue);
       }
     }
     return true;
@@ -74,13 +73,12 @@ public class PipelineChangeHandler implements ChangeHandler {
 
         Optional<String> jsonString = SearchEntityUtils.convertToJson(pipelineView);
         if (jsonString.isPresent()) {
-          return ElasticsearchUtils.upsertDocument(
-              elasticsearchClient, PipelineSearchEntity.TYPE, pipelineView.getId(), jsonString.get());
+          return elasticsearchDao.upsertDocument(PipelineSearchEntity.TYPE, pipelineView.getId(), jsonString.get());
         }
         return false;
       }
       case DELETE: {
-        return ElasticsearchUtils.deleteDocument(elasticsearchClient, PipelineSearchEntity.TYPE, changeEvent.getUuid());
+        return elasticsearchDao.deleteDocument(PipelineSearchEntity.TYPE, changeEvent.getUuid());
       }
       default:
     }

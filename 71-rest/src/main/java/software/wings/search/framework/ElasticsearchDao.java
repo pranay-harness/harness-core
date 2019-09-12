@@ -1,6 +1,7 @@
 package software.wings.search.framework;
 
-import lombok.experimental.UtilityClass;
+import com.google.inject.Inject;
+
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.DocWriteResponse.Result;
@@ -11,41 +12,22 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
-import org.hibernate.validator.constraints.NotBlank;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
-@UtilityClass
-public final class ElasticsearchUtils {
-  public static String getIndexName(String type) {
-    String INDEX_SUFFIX = "_idx";
-    return type.concat(INDEX_SUFFIX);
-  }
+public final class ElasticsearchDao {
+  @Inject RestHighLevelClient client;
+  @Inject ElasticsearchIndexManager elasticsearchIndexManager;
 
-  public static BoolQueryBuilder createQuery(@NotBlank String searchString, @NotBlank String accountId) {
-    BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
-
-    QueryBuilder queryBuilder = QueryBuilders.disMaxQuery()
-                                    .add(QueryBuilders.matchPhrasePrefixQuery("name", searchString).boost(5))
-                                    .add(QueryBuilders.matchPhraseQuery("description", searchString))
-                                    .tieBreaker(0.7f);
-
-    boolQueryBuilder.must(queryBuilder).filter(QueryBuilders.termQuery("accountId", accountId));
-    return boolQueryBuilder;
-  }
-
-  public static boolean upsertDocument(RestHighLevelClient client, String type, String id, String jsonString) {
-    String indexName = getIndexName(type);
+  public boolean upsertDocument(String type, String id, String jsonString) {
+    String indexName = elasticsearchIndexManager.getIndexName(type);
     UpdateRequest updateRequest = new UpdateRequest(indexName, id);
     updateRequest.doc(jsonString, XContentType.JSON);
     updateRequest.retryOnConflict(3);
@@ -65,9 +47,9 @@ public final class ElasticsearchUtils {
     return false;
   }
 
-  public static boolean updateKeyInMultipleDocuments(RestHighLevelClient client, String type, String keyToUpdate,
-      String newValue, String filterKey, String filterValue) {
-    String indexName = getIndexName(type);
+  public boolean updateKeyInMultipleDocuments(
+      String type, String keyToUpdate, String newValue, String filterKey, String filterValue) {
+    String indexName = elasticsearchIndexManager.getIndexName(type);
     UpdateByQueryRequest request = new UpdateByQueryRequest(indexName);
     request.setConflicts("proceed");
     //    request.setQuery(new TermQueryBuilder(filterKey, filterValue));
@@ -95,8 +77,8 @@ public final class ElasticsearchUtils {
     return false;
   }
 
-  public static boolean deleteDocument(RestHighLevelClient client, String type, String id) {
-    String indexName = getIndexName(type);
+  public boolean deleteDocument(String type, String id) {
+    String indexName = elasticsearchIndexManager.getIndexName(type);
     DeleteRequest deleteRequest = new DeleteRequest(indexName, id);
     try {
       DeleteResponse deleteResponse = client.delete(deleteRequest, RequestOptions.DEFAULT);

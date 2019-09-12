@@ -12,4 +12,6 @@ public class ElasticsearchConfig {
   @Builder.Default
   @NotEmpty
   private String uri = "http://localhost:9200";
+
+  @JsonProperty(defaultValue = "_default") @Builder.Default @NotEmpty private String indexSuffix = "_default";
 }
