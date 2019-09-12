@@ -1,9 +1,9 @@
 package software.wings.helpers.ext.pcf;
 
+import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.helpers.ext.pcf.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -53,9 +53,9 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
   }
 
   public ApplicationDetail createApplication(PcfRequestConfig pcfRequestConfig, String manifestFilePath,
-      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+      String configPathVar, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     try {
-      pcfClient.pushApplicationUsingManifest(pcfRequestConfig, manifestFilePath, executionLogCallback);
+      pcfClient.pushApplicationUsingManifest(pcfRequestConfig, manifestFilePath, configPathVar, executionLogCallback);
       return getApplicationByName(pcfRequestConfig);
     } catch (Exception e) {
       throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);

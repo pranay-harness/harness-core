@@ -12,7 +12,7 @@ public interface PcfDeploymentManager {
 
   List<String> getSpacesForOrganization(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException;
 
-  ApplicationDetail createApplication(PcfRequestConfig pcfRequestConfig, String manifestFilePath,
+  ApplicationDetail createApplication(PcfRequestConfig pcfRequestConfig, String manifestFilePath, String configPathVar,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException;
 
   ApplicationDetail resizeApplication(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException;

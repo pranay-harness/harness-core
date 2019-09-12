@@ -25,7 +25,7 @@ public class PcfDeploymentManagerUnsupported implements PcfDeploymentManager {
 
   @Override
   public ApplicationDetail createApplication(PcfRequestConfig pcfRequestConfig, String manifestFilePath,
-      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+      String configPathVar, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     throw new PivotalClientApiException("PCF operations not supported by this API.");
   }
 

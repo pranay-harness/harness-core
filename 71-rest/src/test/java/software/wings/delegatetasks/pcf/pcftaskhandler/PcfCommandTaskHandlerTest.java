@@ -155,8 +155,8 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     doReturn(null).when(pcfDeploymentManager).resizeApplication(any());
     File f1 = new File("./test1");
     File f2 = new File("./test2");
-    doReturn(f1).when(pcfCommandTaskHelper).downloadArtifact(any(), any());
-    doReturn(f2).when(pcfCommandTaskHelper).createManifestYamlFileLocally(any(), any(), any());
+    doReturn(f1).when(pcfCommandTaskHelper).downloadArtifact(any(), any(), any());
+    doReturn(f2).when(pcfCommandTaskHelper).createManifestYamlFileLocally(any(), any(), any(), any());
     doNothing().when(pcfCommandTaskHelper).deleteCreatedFile(anyList());
 
     doReturn(ApplicationDetail.builder()
@@ -170,11 +170,11 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
                  .runningInstances(0)
                  .build())
         .when(pcfDeploymentManager)
-        .createApplication(any(), any(), any());
+        .createApplication(any(), any(), anyString(), any());
 
     PcfCommandExecutionResponse pcfCommandExecutionResponse =
         pcfSetupCommandTaskHandler.executeTask(pcfCommandRequest, null);
-    verify(pcfDeploymentManager, times(1)).createApplication(any(), any(), any());
+    verify(pcfDeploymentManager, times(1)).createApplication(any(), any(), anyString(), any());
     verify(pcfDeploymentManager, times(3)).deleteApplication(any());
     verify(pcfDeploymentManager, times(1)).resizeApplication(any());
 

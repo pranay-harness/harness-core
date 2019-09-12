@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
+import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
 import static java.util.stream.Collectors.toList;
-import static software.wings.helpers.ext.pcf.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
 
 import com.google.inject.Singleton;
 

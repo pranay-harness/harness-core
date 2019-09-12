@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.pcf;
 
 import static com.google.common.base.Charsets.UTF_8;
+import static io.harness.pcf.model.PcfConstants.PCF_ARTIFACT_DOWNLOAD_DIR_PATH;
 import static java.util.stream.Collectors.toList;
 
 import com.google.common.collect.Lists;
@@ -10,7 +11,6 @@ import com.google.inject.Singleton;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import io.harness.filesystem.FileIo;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -44,8 +44,6 @@ import java.util.concurrent.ExecutionException;
  */
 @Singleton
 public class PcfCommandTaskHelper {
-  public static final String PCF_ARTIFACT_DOWNLOAD_DIR_PATH = "./repository/pcfartifacts";
-  private static final String REPOSITORY_DIR_PATH = "./repository";
   private static final String IMAGE_FILE_LOCATION_PLACEHOLDER = "\\$\\{FILE_LOCATION}";
   private static final String APPLICATION_NAME_PLACEHOLDER = "\\$\\{APPLICATION_NAME}";
   private static final String INSTANCE_COUNT_PLACEHOLDER = "\\$\\{INSTANCE_COUNT}";
@@ -293,21 +291,16 @@ public class PcfCommandTaskHelper {
     executionLogCallback.saveExecutionLog(builder.toString());
   }
 
-  public File downloadArtifact(List<ArtifactFile> artifactFiles, String accountId)
+  public File downloadArtifact(List<ArtifactFile> artifactFiles, String accountId, File workingDirecotry)
       throws IOException, ExecutionException {
     List<Pair<String, String>> fileIds = Lists.newArrayList();
     artifactFiles.forEach(artifactFile -> fileIds.add(Pair.of(artifactFile.getFileUuid(), null)));
-
-    // check if repository exists, if not create it
-    FileIo.createDirectoryIfDoesNotExist(REPOSITORY_DIR_PATH);
-    FileIo.createDirectoryIfDoesNotExist(PCF_ARTIFACT_DOWNLOAD_DIR_PATH);
-    File dir = new File(PCF_ARTIFACT_DOWNLOAD_DIR_PATH);
 
     InputStream inputStream =
         delegateFileManager.downloadArtifactByFileId(FileBucket.ARTIFACTS, fileIds.get(0).getKey(), accountId);
 
     String fileName = System.currentTimeMillis() + artifactFiles.get(0).getName();
-    File artifactFile = new File(dir.getAbsolutePath() + "/" + fileName);
+    File artifactFile = new File(workingDirecotry.getAbsolutePath() + "/" + fileName);
 
     if (!artifactFile.createNewFile()) {
       throw new WingsException(ErrorCode.GENERAL_ERROR)
@@ -358,21 +351,15 @@ public class PcfCommandTaskHelper {
     return -1;
   }
 
-  public File createManifestYamlFileLocally(
-      PcfCommandSetupRequest pcfCommandSetupRequest, String tempPath, String releaseName) throws IOException {
+  public File createManifestYamlFileLocally(PcfCommandSetupRequest pcfCommandSetupRequest, String tempPath,
+      String releaseName, File workingDirectory) throws IOException {
     String manifestYaml = pcfCommandSetupRequest.getManifestYaml();
 
     manifestYaml = manifestYaml.replaceAll(APPLICATION_NAME_PLACEHOLDER, releaseName)
                        .replaceAll(IMAGE_FILE_LOCATION_PLACEHOLDER, tempPath)
                        .replaceAll(INSTANCE_COUNT_PLACEHOLDER, "0");
 
-    String directoryPath = getPcfArtifactDownloadDirPath();
-    // check if repository exists, if not create it
-    FileIo.createDirectoryIfDoesNotExist(REPOSITORY_DIR_PATH);
-    FileIo.createDirectoryIfDoesNotExist(directoryPath);
-    File dir = new File(directoryPath);
-
-    File manifestFile = getManifestFile(releaseName, dir);
+    File manifestFile = getManifestFile(releaseName, workingDirectory);
     if (!manifestFile.createNewFile()) {
       throw new WingsException(ErrorCode.GENERAL_ERROR)
           .addParam("message", "Failed to create file " + manifestFile.getCanonicalPath());
