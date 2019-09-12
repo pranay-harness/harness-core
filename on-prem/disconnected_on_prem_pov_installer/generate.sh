@@ -157,6 +157,27 @@ for chartmuseumversion in v0.8.2; do
     curl -L -o "${CHARTMUSEUM_MAC_DIR}chartmuseum" "${CHARTMUSEUM_MAC_URL}"
 done
 
+for tfConfigInspectVersion in v1.0; do
+  echo "Adding terraform-config-inspect" $tfConfigInspectVersion
+
+  TF_CONFIG_INSPECT_LINUX_DIR="${IMAGES_DIR}/tf-config-inspect/linux/$tfConfigInspectVersion/"
+  TF_CONFIG_INSPECT_MAC_DIR="${IMAGES_DIR}/tf-config-inspect/darwin/$tfConfigInspectVersion/"
+
+  TF_CONFIG_INSPECT_LINUX_URL=https://app.harness.io/storage/harness-download/harness-terraform-config-inspect/"$tfConfigInspectVersion"/linux/amd64/terraform-config-inspect
+  TF_CONFIG_INSPECT_MAC_URL=https://app.harness.io/storage/harness-download/harness-terraform-config-inspect/"$tfConfigInspectVersion"/darwin/amd64/terraform-config-inspect
+
+  echo "$TF_CONFIG_INSPECT_LINUX_DIR"
+  echo "$TF_CONFIG_INSPECT_MAC_DIR"
+
+  mkdir -p "$TF_CONFIG_INSPECT_LINUX_DIR"
+  mkdir -p "$TF_CONFIG_INSPECT_MAC_DIR"
+
+  curl -L -o "${TF_CONFIG_INSPECT_LINUX_DIR}terraform-config-inspect" "$TF_CONFIG_INSPECT_LINUX_URL"
+  curl -L -o "${TF_CONFIG_INSPECT_MAC_DIR}terraform-config-inspect" "$TF_CONFIG_INSPECT_MAC_URL"
+
+
+done
+
 cp delegate.jar "${IMAGES_DIR}/"
 cp watcher.jar "${IMAGES_DIR}/"
 mv "${JRE_SOLARIS_1}" "${IMAGES_DIR}/"

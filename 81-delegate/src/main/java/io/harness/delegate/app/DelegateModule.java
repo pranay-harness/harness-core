@@ -130,6 +130,8 @@ import software.wings.helpers.ext.sftp.SftpService;
 import software.wings.helpers.ext.sftp.SftpServiceImpl;
 import software.wings.helpers.ext.smb.SmbService;
 import software.wings.helpers.ext.smb.SmbServiceImpl;
+import software.wings.helpers.ext.terraform.TerraformConfigInspectClient;
+import software.wings.helpers.ext.terraform.TerraformConfigInspectClientImpl;
 import software.wings.service.EcrClassicBuildServiceImpl;
 import software.wings.service.impl.AcrBuildServiceImpl;
 import software.wings.service.impl.AmazonS3BuildServiceImpl;
@@ -152,6 +154,7 @@ import software.wings.service.impl.SftpBuildServiceImpl;
 import software.wings.service.impl.SlackNotificationServiceImpl;
 import software.wings.service.impl.SmbBuildServiceImpl;
 import software.wings.service.impl.SshCommandUnitExecutorServiceImpl;
+import software.wings.service.impl.TerraformConfigInspectServiceImpl;
 import software.wings.service.impl.WinRMCommandUnitExecutorServiceImpl;
 import software.wings.service.impl.analysis.APMDelegateService;
 import software.wings.service.impl.analysis.APMDelegateServiceImpl;
@@ -207,6 +210,7 @@ import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.SftpBuildService;
 import software.wings.service.intfc.SlackNotificationService;
 import software.wings.service.intfc.SmbBuildService;
+import software.wings.service.intfc.TerraformConfigInspectService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.aws.delegate.AwsAmiHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
@@ -497,6 +501,8 @@ public class DelegateModule extends DependencyModule {
     k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.TRAFFIC_SPLIT.name())
         .to(K8sTrafficSplitTaskHandler.class);
     k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.APPLY.name()).to(K8sApplyTaskHandler.class);
+    bind(TerraformConfigInspectClient.class).toInstance(new TerraformConfigInspectClientImpl());
+    bind(TerraformConfigInspectService.class).toInstance(new TerraformConfigInspectServiceImpl());
   }
 
   @Override

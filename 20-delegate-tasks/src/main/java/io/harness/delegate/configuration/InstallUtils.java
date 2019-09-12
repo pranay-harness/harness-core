@@ -5,6 +5,8 @@ import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.network.Http.getBaseUrl;
 import static java.lang.String.format;
 
+import com.google.common.base.Joiner;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -33,6 +35,19 @@ public class InstallUtils {
   private static String goTemplateToolPath = "go-template";
   private static String helmPath = "helm";
   private static String chartMuseumPath = "chartmuseum";
+
+  private static final Joiner pathJoiner = Joiner.on("/");
+
+  private static final String terraformConfigInspectBaseDir = "./client-tools/tf-config"
+      + "-inspect";
+  private static final String terraformConfigInspectBinary = "terraform-config-inspect";
+  private static final String terraformConfigInspectVersion = "v1.0"; // This is not the
+  // version provided by Hashicorp because currently they do not maintain releases as such
+
+  public static String getTerraformConfigInspectPath() {
+    return pathJoiner.join(terraformConfigInspectBaseDir, terraformConfigInspectVersion, getOsPath(), "amd64",
+        terraformConfigInspectBinary);
+  }
 
   public static String getKubectlPath() {
     return kubectlPath;
@@ -468,5 +483,59 @@ public class InstallUtils {
       logger.error("Error installing chart museum", e);
       return false;
     }
+  }
+
+  public static boolean installTerraformConfigInspect(DelegateConfiguration configuration) {
+    try {
+      final String terraformConfigInspectVersionedDirectory =
+          Paths.get(getTerraformConfigInspectPath()).getParent().toString();
+      if (validateTerraformConfigInspectExists(terraformConfigInspectVersionedDirectory)) {
+        logger.info("terraform-config-inspect already installed at {}", terraformConfigInspectVersionedDirectory);
+        return true;
+      }
+
+      logger.info("Installing terraform-config-inspect");
+      createDirectoryIfDoesNotExist(terraformConfigInspectVersionedDirectory);
+
+      String downloadUrl = getTerraformConfigInspectDownloadUrl(getManagerBaseUrl(configuration.getManagerUrl()));
+      logger.info("Download Url is {}", downloadUrl);
+
+      String script = "curl $MANAGER_PROXY_CURL -LO " + downloadUrl + "\n"
+          + "chmod +x ./terraform-config-inspect";
+
+      ProcessExecutor processExecutor = new ProcessExecutor()
+                                            .timeout(10, TimeUnit.MINUTES)
+                                            .directory(new File(terraformConfigInspectVersionedDirectory))
+                                            .command("/bin/bash", "-c", script)
+                                            .readOutput(true);
+      ProcessResult result = processExecutor.execute();
+      if (result.getExitValue() == 0) {
+        String tfConfigInspectPath = Paths.get(getTerraformConfigInspectPath()).toAbsolutePath().toString();
+        logger.info("terraform config inspect installed at {}", tfConfigInspectPath);
+        return true;
+      } else {
+        logger.error("Error installing terraform config inspect");
+        return false;
+      }
+
+    } catch (Exception ex) {
+      logger.error("Error installing terraform config inspect", ex);
+      return false;
+    }
+  }
+
+  private static String getTerraformConfigInspectDownloadUrl(String managerBaseUrl) {
+    return pathJoiner.join(managerBaseUrl,
+        "storage/harness-download/harness-terraform-config"
+            + "-inspect",
+        terraformConfigInspectVersion, getOsPath(), "amd64", terraformConfigInspectBinary);
+  }
+
+  private static boolean validateTerraformConfigInspectExists(String terraformConfigInspectVersionedDirectory) {
+    if (Files.exists(
+            Paths.get(pathJoiner.join(terraformConfigInspectVersionedDirectory, terraformConfigInspectBinary)))) {
+      return true;
+    }
+    return false;
   }
 }

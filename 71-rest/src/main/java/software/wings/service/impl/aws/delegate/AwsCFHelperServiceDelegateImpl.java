@@ -58,7 +58,7 @@ public class AwsCFHelperServiceDelegateImpl extends AwsHelperServiceDelegateBase
         GitOperationContext gitOperationContext =
             gitUtilsDelegate.cloneRepo(gitConfig, gitFileConfig, sourceRepoEncryptedDetail);
         String absoluteTemplatePath =
-            gitUtilsDelegate.resolveScriptDirectory(gitOperationContext, gitFileConfig.getFilePath());
+            gitUtilsDelegate.resolveAbsoluteFilePath(gitOperationContext, gitFileConfig.getFilePath());
         request.withTemplateBody(gitUtilsDelegate.getRequestDataFromFile(absoluteTemplatePath));
       } else {
         request.withTemplateBody(data);

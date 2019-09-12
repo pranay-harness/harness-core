@@ -8,6 +8,7 @@ import static io.harness.delegate.configuration.InstallUtils.installChartMuseum;
 import static io.harness.delegate.configuration.InstallUtils.installGoTemplateTool;
 import static io.harness.delegate.configuration.InstallUtils.installHelm;
 import static io.harness.delegate.configuration.InstallUtils.installKubectl;
+import static io.harness.delegate.configuration.InstallUtils.installTerraformConfigInspect;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_DASH;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_GO_AHEAD;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_HEARTBEAT;
@@ -308,6 +309,7 @@ public class DelegateServiceImpl implements DelegateService {
       boolean goTemplateInstalled = installGoTemplateTool(delegateConfiguration);
       boolean helmInstalled = installHelm(delegateConfiguration);
       boolean chartMuseumInstalled = installChartMuseum(delegateConfiguration);
+      boolean tfConfigInspectInstalled = installTerraformConfigInspect(delegateConfiguration);
 
       long start = clock.millis();
       String description = "description here".equals(delegateConfiguration.getDescription())
@@ -441,15 +443,17 @@ public class DelegateServiceImpl implements DelegateService {
 
       startProfileCheck();
 
-      if (!kubectlInstalled || !goTemplateInstalled || !helmInstalled || !chartMuseumInstalled) {
+      if (!kubectlInstalled || !goTemplateInstalled || !helmInstalled || !chartMuseumInstalled
+          || !tfConfigInspectInstalled) {
         systemExecutorService.submit(() -> {
           boolean kubectl = kubectlInstalled;
           boolean goTemplate = goTemplateInstalled;
           boolean helm = helmInstalled;
           boolean chartMuseum = chartMuseumInstalled;
+          boolean tfConfigInspect = tfConfigInspectInstalled;
 
           int retries = CLIENT_TOOL_RETRIES;
-          while ((!kubectl || !goTemplate || !helm || !chartMuseum) && retries > 0) {
+          while ((!kubectl || !goTemplate || !helm || !chartMuseum || !tfConfigInspect) && retries > 0) {
             sleep(ofSeconds(15L));
             if (!kubectl) {
               kubectl = installKubectl(delegateConfiguration);
@@ -462,6 +466,9 @@ public class DelegateServiceImpl implements DelegateService {
             }
             if (!chartMuseum) {
               chartMuseum = installChartMuseum(delegateConfiguration);
+            }
+            if (!tfConfigInspect) {
+              tfConfigInspect = installTerraformConfigInspect(delegateConfiguration);
             }
 
             retries--;
@@ -478,6 +485,9 @@ public class DelegateServiceImpl implements DelegateService {
           }
           if (!chartMuseum) {
             logger.error("Failed to install chartMuseum after {} retries", CLIENT_TOOL_RETRIES);
+          }
+          if (!tfConfigInspect) {
+            logger.error("Failed to install tf-config-inspect after {} retries", CLIENT_TOOL_RETRIES);
           }
         });
       }

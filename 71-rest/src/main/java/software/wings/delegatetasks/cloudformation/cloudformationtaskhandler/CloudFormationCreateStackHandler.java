@@ -128,7 +128,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
     GitOperationContext gitOperationContext = gitUtilsDelegate.cloneRepo(
         request.getGitConfig(), request.getGitFileConfig(), request.getSourceRepoEncryptionDetails());
     String templatePathRepo =
-        gitUtilsDelegate.resolveScriptDirectory(gitOperationContext, request.getGitFileConfig().getFilePath());
+        gitUtilsDelegate.resolveAbsoluteFilePath(gitOperationContext, request.getGitFileConfig().getFilePath());
     request.setData(gitUtilsDelegate.getRequestDataFromFile(templatePathRepo));
     request.setCreateType(CLOUD_FORMATION_STACK_CREATE_BODY);
   }

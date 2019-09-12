@@ -1,40 +1,39 @@
 package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 
 import com.google.inject.Inject;
 
-import com.bertramlabs.plugins.hcl4j.HCLParser;
-import com.bertramlabs.plugins.hcl4j.HCLParserException;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.ExplanationException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.apache.commons.lang3.NotImplementedException;
 import software.wings.api.TerraformExecutionData;
 import software.wings.beans.GitConfig;
+import software.wings.beans.GitFileConfig;
+import software.wings.beans.GitOperationContext;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.TerraformInputVariablesTaskResponse;
 import software.wings.beans.delegation.TerraformProvisionParameters;
-import software.wings.beans.yaml.GitFetchFilesResult;
-import software.wings.beans.yaml.GitFile;
+import software.wings.helpers.ext.terraform.TerraformConfigInspectClient.BLOCK_TYPE;
 import software.wings.service.intfc.GitService;
+import software.wings.service.intfc.TerraformConfigInspectService;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.utils.GitUtilsDelegate;
 
-import java.io.IOException;
+import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -43,6 +42,8 @@ public class TerraformInputVariablesObtainTask extends AbstractDelegateRunnableT
   private static final String TERRAFORM_FILE_EXTENSION = ".tf";
   @Inject private GitService gitService;
   @Inject private EncryptionService encryptionService;
+  @Inject private GitUtilsDelegate gitUtilsDelegate;
+  @Inject private TerraformConfigInspectService terraformConfigInspectService;
 
   public TerraformInputVariablesObtainTask(String delegateId, DelegateTask delegateTask,
       Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
@@ -62,52 +63,41 @@ public class TerraformInputVariablesObtainTask extends AbstractDelegateRunnableT
   private TerraformInputVariablesTaskResponse run(TerraformProvisionParameters parameters) {
     try {
       GitConfig gitConfig = parameters.getSourceRepo();
-      encryptionService.decrypt(gitConfig, parameters.getSourceRepoEncryptionDetails());
-
-      // TODO VS: do not fetch all files, only the ones mentioned in the main tf file
-      String branch =
-          isNotEmpty(parameters.getSourceRepoBranch()) ? parameters.getSourceRepoBranch() : gitConfig.getBranch();
-      GitFetchFilesResult gitFetchFilesResult = gitService.fetchFilesByPath(gitConfig, UUID.randomUUID().toString(), "",
-          branch, Collections.singletonList(parameters.getScriptPath()), true,
-          Collections.singletonList(TERRAFORM_FILE_EXTENSION), false);
-
-      HCLParser hclParser = new HCLParser();
-      Set<NameValuePair> variablesList = new HashSet<>();
-
-      boolean foundTerraformFiles = false;
-      List<GitFile> files = gitFetchFilesResult.getFiles();
-      if (isNotEmpty(files)) {
-        for (GitFile file : files) {
-          if (file.getFilePath().endsWith(TERRAFORM_FILE_EXTENSION)) {
-            foundTerraformFiles = true;
-            Map<String, Object> parsedContents;
-            try {
-              parsedContents = hclParser.parse(file.getFileContent());
-            } catch (HCLParserException e) {
-              logger.error("HCL Parser Exception for file [" + file.getFilePath() + "], " + gitConfig, e);
-              throw new WingsException(ErrorCode.GENERAL_ERROR)
-                  .addParam("message", "Invalid Terraform File [" + file.getFilePath() + "] : " + e.getMessage());
-            }
-            LinkedHashMap<String, Object> variables = (LinkedHashMap) parsedContents.get("variable");
-            if (variables != null) {
-              variables.keySet()
-                  .stream()
-                  .map(variable -> NameValuePair.builder().name(variable).valueType(Type.TEXT.name()).build())
-                  .forEach(variablesList::add);
-            }
-          }
-        }
+      if (isNotEmpty(parameters.getSourceRepoBranch())) {
+        gitConfig.setBranch(parameters.getSourceRepoBranch());
       }
-      if (!foundTerraformFiles) {
-        throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", "No Terraform Files Found");
-      } else if (variablesList.isEmpty()) {
-        throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", "No Variables Found");
+
+      GitOperationContext gitOperationContext = gitUtilsDelegate.cloneRepo(gitConfig,
+          GitFileConfig.builder().connectorId(parameters.getSourceRepoSettingId()).build(),
+          parameters.getSourceRepoEncryptionDetails());
+
+      String absoluteModulePath =
+          gitUtilsDelegate.resolveAbsoluteFilePath(gitOperationContext, parameters.getScriptPath());
+      List<NameValuePair> variablesList = new ArrayList<>();
+
+      if (noTfFiles(absoluteModulePath)) {
+        throw new InvalidRequestException("No Terraform Files Found", WingsException.USER);
       }
+
+      List<String> variables = terraformConfigInspectService.parseFieldsUnderCategory(
+          absoluteModulePath, BLOCK_TYPE.VARIABLES.name().toLowerCase());
+
+      if (variables != null) {
+        variables.stream()
+            .distinct()
+            .map(variable -> NameValuePair.builder().name(variable).valueType(Type.TEXT.name()).build())
+            .forEach(variablesList::add);
+      }
+
+      if (variablesList.isEmpty()) {
+        throw new ExplanationException("No Terraform input variables found", null);
+      }
+
       return TerraformInputVariablesTaskResponse.builder()
-          .variablesList(new ArrayList<>(variablesList))
+          .variablesList(variablesList)
           .terraformExecutionData(TerraformExecutionData.builder().executionStatus(ExecutionStatus.SUCCESS).build())
           .build();
-    } catch (RuntimeException | IOException e) {
+    } catch (RuntimeException e) {
       logger.error("Terraform Input Variables Task Exception " + parameters, e);
       return TerraformInputVariablesTaskResponse.builder()
           .terraformExecutionData(TerraformExecutionData.builder()
@@ -115,6 +105,17 @@ public class TerraformInputVariablesObtainTask extends AbstractDelegateRunnableT
                                       .errorMessage(ExceptionUtils.getMessage(e))
                                       .build())
           .build();
+    }
+  }
+
+  private boolean noTfFiles(String directory) {
+    File dir = new File(directory);
+    try {
+      return FileUtils.listFiles(dir, new WildcardFileFilter("*.tf"), null).isEmpty();
+    } catch (IllegalArgumentException e) {
+      throw new InvalidRequestException(format("Could not read the specified "
+              + "directory  \"%s\" for terraform files",
+          dir.getName()));
     }
   }
 }
