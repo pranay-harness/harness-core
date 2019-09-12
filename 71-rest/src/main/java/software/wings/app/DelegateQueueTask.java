@@ -25,6 +25,7 @@ import io.harness.version.VersionInfoManager;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 import org.atmosphere.cpr.BroadcasterFactory;
+import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.FindOptions;
@@ -48,7 +49,10 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 public class DelegateQueueTask implements Runnable {
-  private static final long REBROADCAST_FACTOR = TimeUnit.SECONDS.toMillis(2);
+  private static final long ASYNC_TASK_REBROADCAST_FACTOR = TimeUnit.SECONDS.toMillis(16);
+
+  private static final long SYNC_TASK_REBROADCAST_FACTOR = TimeUnit.SECONDS.toMillis(5);
+  private static final int MAX_SYNC_REBROADCAST_TRIES = 3;
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private BroadcasterFactory broadcasterFactory;
@@ -74,7 +78,10 @@ public class DelegateQueueTask implements Runnable {
           markTimedOutTasksAsFailed();
           markLongQueuedTasksAsFailed();
         }
-        rebroadcastUnassignedTasks();
+
+        rebroadcastUnassignedSyncTasks();
+        rebroadcastUnassignedAsyncTasks();
+
         return true;
       }, 1L, TimeUnit.MINUTES, true);
     } catch (UncheckedTimeoutException exception) {
@@ -191,34 +198,86 @@ public class DelegateQueueTask implements Runnable {
     }
   }
 
-  private void rebroadcastUnassignedTasks() {
+  /*
+    Rebroadcast async tasks at below intervals in seconds
+    0 32 64 128 256 512 1024 2048
+   */
+  private void rebroadcastUnassignedAsyncTasks() {
+    long now = clock.millis();
+    String criteria = new StringBuilder(128)
+                          .append("this.")
+                          .append(DelegateTaskKeys.lastBroadcastAt)
+                          .append(" < ")
+                          .append(now)
+                          .append(" - Math.pow(2, this.")
+                          .append(DelegateTaskKeys.broadcastCount)
+                          .append(") * ")
+                          .append(ASYNC_TASK_REBROADCAST_FACTOR)
+                          .toString();
+
+    rebroadcastUnassignedTasks(true, criteria, now);
+  }
+
+  // Rebroadcast sync tasks only once after 5 seconds
+  private void rebroadcastUnassignedSyncTasks() {
+    long now = clock.millis();
+    String criteria = new StringBuilder(128)
+                          .append("this.")
+                          .append(DelegateTaskKeys.lastBroadcastAt)
+                          .append(" < ")
+                          .append(now)
+                          .append(" - (this.")
+                          .append(DelegateTaskKeys.broadcastCount)
+                          .append(" * ")
+                          .append(SYNC_TASK_REBROADCAST_FACTOR)
+                          .append(')')
+                          .toString();
+
+    rebroadcastUnassignedTasks(false, criteria, now);
+  }
+
+  private void rebroadcastUnassignedTasks(boolean async, String broadCastTimeoutCriteria, long currentTime) {
     // Re-broadcast queued tasks not picked up by any Delegate and not in process of validation
     Query<DelegateTask> unassignedTasksQuery =
         wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
             .filter(DelegateTaskKeys.status, QUEUED)
             .filter(DelegateTaskKeys.version, versionInfoManager.getVersionInfo().getVersion())
+            .filter(DelegateTaskKeys.async, async)
             .field(DelegateTaskKeys.delegateId)
             .doesNotExist();
 
-    long now = clock.millis();
+    if (!async) {
+      // Don't rebroadcast sync task after MAX_SYNC_REBROADCAST_TRIES attempts
+      unassignedTasksQuery.field(DelegateTaskKeys.broadcastCount).lessThan(MAX_SYNC_REBROADCAST_TRIES);
+    }
 
     unassignedTasksQuery.and(
         unassignedTasksQuery.or(unassignedTasksQuery.criteria(DelegateTaskKeys.validationStartedAt).doesNotExist(),
-            unassignedTasksQuery.criteria(DelegateTaskKeys.validationStartedAt).lessThan(now - VALIDATION_TIMEOUT)),
+            unassignedTasksQuery.criteria(DelegateTaskKeys.validationStartedAt)
+                .lessThan(currentTime - VALIDATION_TIMEOUT)),
         unassignedTasksQuery.or(unassignedTasksQuery.criteria(DelegateTaskKeys.lastBroadcastAt).doesNotExist(),
-            new WhereCriteria("this." + DelegateTaskKeys.lastBroadcastAt + " < " + now + " - Math.pow(2, this."
-                + DelegateTaskKeys.broadcastCount + ") * " + REBROADCAST_FACTOR)));
+            new WhereCriteria(broadCastTimeoutCriteria)));
 
     try (HIterator<DelegateTask> iterator = new HIterator(unassignedTasksQuery.fetch())) {
-      UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
-                                                            .set(DelegateTaskKeys.lastBroadcastAt, now)
-                                                            .inc(DelegateTaskKeys.broadcastCount)
-                                                            .unset(DelegateTaskKeys.preAssignedDelegateId);
-
       int count = 0;
       while (iterator.hasNext()) {
         DelegateTask delegateTask = iterator.next();
-        wingsPersistence.update(delegateTask, updateOperations);
+
+        Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
+                                        .filter(DelegateTaskKeys.uuid, delegateTask.getUuid())
+                                        .filter(DelegateTaskKeys.broadcastCount, delegateTask.getBroadcastCount());
+        UpdateOperations<DelegateTask> updateOperations =
+            wingsPersistence.createUpdateOperations(DelegateTask.class)
+                .set(DelegateTaskKeys.lastBroadcastAt, currentTime)
+                .set(DelegateTaskKeys.broadcastCount, delegateTask.getBroadcastCount() + 1)
+                .unset(DelegateTaskKeys.preAssignedDelegateId);
+
+        delegateTask =
+            wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions().returnNew(true));
+        if (delegateTask == null) {
+          continue;
+        }
+
         logger.info("Rebroadcast queued task [{}], broadcast count: {}", delegateTask.getUuid(),
             delegateTask.getBroadcastCount());
         delegateTask.setPreAssignedDelegateId(null);
