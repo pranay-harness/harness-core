@@ -24,6 +24,7 @@ import io.swagger.annotations.Api;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.audit.AuditSkip;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.FeatureName;
 import software.wings.beans.User;
@@ -60,6 +61,7 @@ import javax.ws.rs.core.MediaType;
 @Path("/graphql")
 @Produces("application/json")
 @Singleton
+@AuditSkip
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class GraphQLResource {
