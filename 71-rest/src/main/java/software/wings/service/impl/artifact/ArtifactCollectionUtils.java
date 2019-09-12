@@ -238,7 +238,7 @@ public class ArtifactCollectionUtils {
     return getDockerConfig(artifactStreamService.get(artifactStreamId));
   }
 
-  public String getDockerConfig(ArtifactStream artifactStream) {
+  private String getDockerConfig(ArtifactStream artifactStream) {
     if (artifactStream == null) {
       return "";
     }
@@ -487,7 +487,7 @@ public class ArtifactCollectionUtils {
         : dockerConfig.getDockerRegistryUrl() + "/" + imageName + "/tags/";
 
     String domainName = Http.getDomainWithPort(dockerConfig.getDockerRegistryUrl());
-    Map<String, String> metadata = new HashMap();
+    Map<String, String> metadata = new HashMap<>();
     metadata.put(ArtifactMetadataKeys.image, domainName + "/" + imageName + ":" + tag);
     metadata.put(ArtifactMetadataKeys.tag, tag);
     return aBuildDetails().withNumber(tag).withMetadata(metadata).withBuildUrl(tagUrl + tag).build();
@@ -509,7 +509,7 @@ public class ArtifactCollectionUtils {
     return artifactStreamAttributes;
   }
 
-  private static boolean isArtifactoryDockerOrGenric(ArtifactStream artifactStream, ArtifactType artifactType) {
+  private static boolean isArtifactoryDockerOrGeneric(ArtifactStream artifactStream, ArtifactType artifactType) {
     if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
       return ArtifactType.DOCKER.equals(artifactType)
           || !"maven".equals(artifactStream.fetchArtifactStreamAttributes().getRepositoryType());
@@ -527,7 +527,7 @@ public class ArtifactCollectionUtils {
     String artifactStreamType = artifactStream.getArtifactStreamType();
 
     if (ArtifactCollectionServiceAsyncImpl.metadataOnlyStreams.contains(artifactStreamType)
-        || isArtifactoryDockerOrGenric(artifactStream, artifactType)) {
+        || isArtifactoryDockerOrGeneric(artifactStream, artifactType)) {
       return BuildSourceRequestType.GET_BUILDS;
     } else {
       return BuildSourceRequestType.GET_LAST_SUCCESSFUL_BUILD;

@@ -389,9 +389,9 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     // throw exception if variable does not exist in service
     List<ArtifactVariable> artifactVariables = workflowStandardParams.getWorkflowElement().getArtifactVariables();
     Map<String, Artifact> artifactsMap = new HashMap<>();
-    Artifact artifact = null;
     if (isNotEmpty(artifactVariables)) {
       for (ArtifactVariable artifactVariable : artifactVariables) {
+        Artifact artifact = null;
         switch (artifactVariable.getEntityType()) {
           case WORKFLOW:
             if (isEmpty(artifactVariable.getOverriddenArtifactVariables())) {
