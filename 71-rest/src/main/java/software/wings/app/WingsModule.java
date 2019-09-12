@@ -90,6 +90,7 @@ import software.wings.dl.exportimport.WingsMongoExportImport;
 import software.wings.features.ApiKeysFeature;
 import software.wings.features.ApprovalFlowFeature;
 import software.wings.features.AuditTrailFeature;
+import software.wings.features.CustomDashboardFeature;
 import software.wings.features.DelegatesFeature;
 import software.wings.features.DeploymentHistoryFeature;
 import software.wings.features.FlowControlFeature;
@@ -927,6 +928,7 @@ public class WingsModule extends DependencyModule {
     mapBinder.addBinding(AuditTrailFeature.FEATURE_NAME).to(AuditTrailFeature.class).in(Singleton.class);
     mapBinder.addBinding(RestApiFeature.FEATURE_NAME).to(RestApiFeature.class).in(Singleton.class);
     mapBinder.addBinding(DeploymentHistoryFeature.FEATURE_NAME).to(DeploymentHistoryFeature.class).in(Singleton.class);
+    mapBinder.addBinding(CustomDashboardFeature.FEATURE_NAME).to(CustomDashboardFeature.class).in(Singleton.class);
 
     binder()
         .bind(PremiumFeature.class)
@@ -999,6 +1001,10 @@ public class WingsModule extends DependencyModule {
         .bind(RestrictedFeature.class)
         .annotatedWith(Names.named(DeploymentHistoryFeature.FEATURE_NAME))
         .to(DeploymentHistoryFeature.class);
+    binder()
+        .bind(PremiumFeature.class)
+        .annotatedWith(Names.named(CustomDashboardFeature.FEATURE_NAME))
+        .to(CustomDashboardFeature.class);
   }
 
   @Override

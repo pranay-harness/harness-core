@@ -125,3 +125,9 @@
   DELEGATES:
     COMMUNITY:
       maxDelegatesAllowed: 1
+
+  CUSTOM_DASHBOARD:
+    COMMUNITY:
+      available: false
+    ESSENTIALS:
+      available: false
