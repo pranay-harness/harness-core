@@ -15,6 +15,7 @@ import org.apache.commons.io.IOUtils;
 import software.wings.app.MainConfiguration;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
+import software.wings.audit.AuditSkip;
 import software.wings.beans.HttpMethod;
 import software.wings.common.AuditHelper;
 import software.wings.security.annotations.DelegateAuth;
@@ -109,7 +110,9 @@ public class AuditRequestFilter implements ContainerRequestFilter {
 
   private boolean isAuditExemptedResource() {
     return resourceInfo.getResourceMethod().getAnnotation(DelegateAuth.class) != null
-        || resourceInfo.getResourceMethod().getAnnotation(LearningEngineAuth.class) != null;
+        || resourceInfo.getResourceMethod().getAnnotation(LearningEngineAuth.class) != null
+        || resourceInfo.getResourceMethod().getAnnotation(AuditSkip.class) != null
+        || resourceInfo.getResourceClass().getAnnotation(AuditSkip.class) != null;
   }
 
   private boolean isAuditExemptedHttpMethod(ContainerRequestContext requestContext) {
