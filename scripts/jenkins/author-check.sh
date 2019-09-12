@@ -82,7 +82,7 @@ EXCEPTIONS="^`cat .mailmap |\
 
 mv .mailmap .mailmap.tmp
 
-EXECPTION_COMMITS=`git log --oneline --format='%aN <%aE>' | grep -i "$EXCEPTIONS" | wc -l`
+EXECPTION_COMMITS=`git log --oneline --format='%aN <%aE>' | grep  "$EXCEPTIONS" | wc -l`
 
 mv .mailmap.tmp .mailmap
 
