@@ -313,3 +313,7 @@ fi
 if [[ "" != "$STACK_DRIVER_LOGGING_ENABLED" ]]; then
   yq write -i /opt/harness/config.yml logging.appenders[2].stackdriverLogEnabled "$STACK_DRIVER_LOGGING_ENABLED"
 fi
+
+if [[ "$SEARCH_ENABLED" == "true" ]]; then
+  yq write -i /opt/harness/config.yml searchEnabled true
+fi

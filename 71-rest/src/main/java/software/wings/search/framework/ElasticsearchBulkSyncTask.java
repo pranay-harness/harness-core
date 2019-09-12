@@ -36,6 +36,8 @@ import java.util.Set;
 @Slf4j
 public class ElasticsearchBulkSyncTask extends ElasticsearchSyncTask {
   @Inject RestHighLevelClient client;
+  @Inject ElasticsearchDao elasticsearchDao;
+  @Inject ElasticsearchIndexManager elasticsearchIndexManager;
   private Queue<ChangeEvent> changeEventsDuringBulkSync = new LinkedList<>();
   private Map<Class, Boolean> isFirstChangeReceived = new HashMap<>();
   private Set<SearchEntity<?>> entitiesToBulkSync = new HashSet<>();
@@ -58,7 +60,7 @@ public class ElasticsearchBulkSyncTask extends ElasticsearchSyncTask {
 
   private boolean deleteIndex(SearchEntity<?> searchEntity) {
     try {
-      String indexName = ElasticsearchUtils.getIndexName(searchEntity.getType());
+      String indexName = elasticsearchIndexManager.getIndexName(searchEntity.getType());
       GetIndexRequest getIndexRequest = new GetIndexRequest(indexName);
       boolean exists = client.indices().exists(getIndexRequest, RequestOptions.DEFAULT);
       if (exists) {
@@ -91,7 +93,7 @@ public class ElasticsearchBulkSyncTask extends ElasticsearchSyncTask {
 
   private boolean createIndex(SearchEntity<?> searchEntity) {
     try {
-      String indexName = ElasticsearchUtils.getIndexName(searchEntity.getType());
+      String indexName = elasticsearchIndexManager.getIndexName(searchEntity.getType());
       CreateIndexRequest createIndexRequest = new CreateIndexRequest(indexName);
 
       String entityConfiguration = getSearchConfiguration(searchEntity);
@@ -135,7 +137,7 @@ public class ElasticsearchBulkSyncTask extends ElasticsearchSyncTask {
           return false;
         }
         boolean isUpserted =
-            ElasticsearchUtils.upsertDocument(client, searchEntity.getType(), entityBaseView.getId(), jsonString.get());
+            elasticsearchDao.upsertDocument(searchEntity.getType(), entityBaseView.getId(), jsonString.get());
         if (!isUpserted) {
           return false;
         }

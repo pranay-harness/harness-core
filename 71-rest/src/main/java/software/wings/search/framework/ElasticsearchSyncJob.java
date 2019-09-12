@@ -36,8 +36,10 @@ public class ElasticsearchSyncJob implements Runnable {
       }
     } catch (RuntimeException | InterruptedException e) {
       logger.error("Search Sync Job unexpectedly stopped", e);
+    } finally {
+      logger.info("Search sync job has stopped");
+      stop();
     }
-    logger.info("Search sync job has stopped");
   }
 
   public void stop() {

@@ -100,8 +100,6 @@ NOTE: the data from it is used for every git operation github does on you behave
     $ docker run -p 27017:27017 -v ~/_mongodb_data:/data/db --name mongoContainer -d --rm mongo:3.6
     ```
     
-    In config.yml set `searchEnabled` to `false`.
-    
     Install & use RoboMongo client to test MongoDB connection.
 
 4. If Global search has to be enabled (OPTIONAL):
@@ -110,7 +108,9 @@ NOTE: the data from it is used for every git operation github does on you behave
     ```
     $ docker run -p 9200:9200 -p 9300:9300 -v ~/_elasticsearch_data:/usr/share/elasticsearch/data -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.3.0
     ```
-
+    
+    In config.yml set `searchEnabled` to `true`.
+    
     Run mongo in replica set:
 
     ```

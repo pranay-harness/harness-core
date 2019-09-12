@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.mapping.cache.DefaultEntityCache;
@@ -12,7 +11,7 @@ import org.mongodb.morphia.mapping.cache.EntityCache;
 import software.wings.beans.Application;
 import software.wings.dl.WingsPersistence;
 import software.wings.search.framework.ChangeHandler;
-import software.wings.search.framework.ElasticsearchUtils;
+import software.wings.search.framework.ElasticsearchDao;
 import software.wings.search.framework.SearchEntityUtils;
 import software.wings.search.framework.changestreams.ChangeEvent;
 
@@ -28,7 +27,7 @@ import java.util.Optional;
 @Slf4j
 @Singleton
 public class ApplicationChangeHandler implements ChangeHandler {
-  @Inject private RestHighLevelClient elasticsearchClient;
+  @Inject private ElasticsearchDao elasticsearchDao;
   @Inject private WingsPersistence wingsPersistence;
   private static final Mapper mapper = new Mapper();
   private static final EntityCache entityCache = new DefaultEntityCache();
@@ -46,14 +45,13 @@ public class ApplicationChangeHandler implements ChangeHandler {
         ApplicationView applicationView = ApplicationView.fromApplication(application);
         Optional<String> applicationViewJson = SearchEntityUtils.convertToJson(applicationView);
         if (applicationViewJson.isPresent()) {
-          return ElasticsearchUtils.upsertDocument(
-              elasticsearchClient, ApplicationSearchEntity.TYPE, applicationView.getId(), applicationViewJson.get());
+          return elasticsearchDao.upsertDocument(
+              ApplicationSearchEntity.TYPE, applicationView.getId(), applicationViewJson.get());
         }
         return false;
       }
       case DELETE: {
-        return ElasticsearchUtils.deleteDocument(
-            elasticsearchClient, ApplicationSearchEntity.TYPE, changeEvent.getUuid());
+        return elasticsearchDao.deleteDocument(ApplicationSearchEntity.TYPE, changeEvent.getUuid());
       }
       default:
     }

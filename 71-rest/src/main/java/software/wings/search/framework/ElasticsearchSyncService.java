@@ -7,8 +7,10 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.FeatureName;
 import software.wings.service.intfc.FeatureFlagService;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The service which fires up the job responsible
@@ -21,19 +23,20 @@ import java.util.concurrent.ExecutorService;
 public class ElasticsearchSyncService implements Managed {
   @Inject private ElasticsearchSyncJob elasticSearchSyncJob;
   @Inject private FeatureFlagService featureFlagService;
-  @Inject private ExecutorService executorService;
-  private CompletableFuture<Void> elasticsearchSyncJobFuture;
+  private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+  private ScheduledFuture elasticsearchSyncJobFuture;
 
   public void start() {
     if (featureFlagService.isGlobalEnabled(FeatureName.SEARCH)) {
       elasticsearchSyncJobFuture =
-          CompletableFuture.runAsync(elasticSearchSyncJob, executorService).thenRun(() -> { this.start(); });
+          scheduledExecutorService.scheduleWithFixedDelay(elasticSearchSyncJob, 0, 1, TimeUnit.SECONDS);
     }
   }
 
   public void stop() {
     if (featureFlagService.isGlobalEnabled(FeatureName.SEARCH)) {
       elasticsearchSyncJobFuture.cancel(true);
+      scheduledExecutorService.shutdown();
     }
   }
 }
