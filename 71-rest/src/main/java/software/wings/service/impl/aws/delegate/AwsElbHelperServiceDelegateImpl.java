@@ -56,6 +56,7 @@ import com.amazonaws.services.elasticloadbalancingv2.model.TargetHealthDescripti
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
+import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -658,6 +659,29 @@ public class AwsElbHelperServiceDelegateImpl
     client.modifyListener(new ModifyListenerRequest()
                               .withListenerArn(stageListener.getListenerArn())
                               .withDefaultActions(prodListener.getDefaultActions()));
+  }
+
+  @Override
+  public void updateListenersForBGDeployment(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      List<LoadBalancerDetailsForBGDeployment> lbDetailsForBGDeployments, String region) {
+    encryptionService.decrypt(awsConfig, encryptionDetails);
+
+    AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
+
+    lbDetailsForBGDeployments.forEach(lbDetailsForBGDeployment -> {
+      DescribeListenersResult prodListenerResult = client.describeListeners(
+          new DescribeListenersRequest().withListenerArns(lbDetailsForBGDeployment.getProdListenerArn()));
+      DescribeListenersResult stageListenerResult = client.describeListeners(
+          new DescribeListenersRequest().withListenerArns(lbDetailsForBGDeployment.getStageListenerArn()));
+      Listener prodListener = prodListenerResult.getListeners().get(0);
+      Listener stageListener = stageListenerResult.getListeners().get(0);
+      client.modifyListener(new ModifyListenerRequest()
+                                .withListenerArn(prodListener.getListenerArn())
+                                .withDefaultActions(stageListener.getDefaultActions()));
+      client.modifyListener(new ModifyListenerRequest()
+                                .withListenerArn(stageListener.getListenerArn())
+                                .withDefaultActions(prodListener.getDefaultActions()));
+    });
   }
 
   @Override

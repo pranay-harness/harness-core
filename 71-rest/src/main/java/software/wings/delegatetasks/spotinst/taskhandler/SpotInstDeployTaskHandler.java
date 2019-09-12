@@ -28,6 +28,7 @@ import java.util.List;
 @Singleton
 @NoArgsConstructor
 public class SpotInstDeployTaskHandler extends SpotInstTaskHandler {
+  @Override
   protected SpotInstTaskExecutionResponse executeTaskInternal(SpotInstTaskParameters spotInstTaskParameters,
       SpotInstConfig spotInstConfig, AwsConfig awsConfig) throws Exception {
     if (!(spotInstTaskParameters instanceof SpotInstDeployTaskParameters)) {
@@ -46,13 +47,15 @@ public class SpotInstDeployTaskHandler extends SpotInstTaskHandler {
     boolean resizeNewFirst = deployTaskParameters.isResizeNewFirst();
     int steadyStateTimeOut = getTimeOut(deployTaskParameters.getSteadyStateTimeOut());
 
+    // For Rollback, we always upsize oldElastiGroup
     if (resizeNewFirst && !deployTaskParameters.isRollback()) {
       if (newElastiGroup != null) {
         updateElastiGroupAndWait(spotInstToken, spotInstAccountId, newElastiGroup,
             deployTaskParameters.getWorkflowExecutionId(), steadyStateTimeOut, deployTaskParameters,
             UP_SCALE_COMMAND_UNIT, UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
       }
-      if (oldElastiGroup != null) {
+      // If BG, do not update oldElastiGroup
+      if (oldElastiGroup != null && !deployTaskParameters.isBlueGreen()) {
         updateElastiGroupAndWait(spotInstToken, spotInstAccountId, oldElastiGroup,
             deployTaskParameters.getWorkflowExecutionId(), steadyStateTimeOut, deployTaskParameters,
             DOWN_SCALE_COMMAND_UNIT, DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
@@ -75,9 +78,17 @@ public class SpotInstDeployTaskHandler extends SpotInstTaskHandler {
               awsConfig, deployTaskParameters.getAwsRegion(), spotInstToken, spotInstAccountId, newElastiGroup.getId())
         : emptyList();
 
+    List<Instance> ec2InstancesForOlderElastiGroup = oldElastiGroup != null
+        ? getAllEc2InstancesOfElastiGroup(
+              awsConfig, deployTaskParameters.getAwsRegion(), spotInstToken, spotInstAccountId, oldElastiGroup.getId())
+        : emptyList();
+
     return SpotInstTaskExecutionResponse.builder()
         .commandExecutionStatus(SUCCESS)
-        .spotInstTaskResponse(SpotInstDeployTaskResponse.builder().ec2InstancesAdded(newElastiGroupInstances).build())
+        .spotInstTaskResponse(SpotInstDeployTaskResponse.builder()
+                                  .ec2InstancesAdded(newElastiGroupInstances)
+                                  .ec2InstancesExisting(ec2InstancesForOlderElastiGroup)
+                                  .build())
         .build();
   }
 }

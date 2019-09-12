@@ -6,6 +6,7 @@ import com.amazonaws.services.elasticloadbalancingv2.model.LoadBalancer;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
+import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -55,4 +56,6 @@ public interface AwsElbHelperServiceDelegate {
   DescribeListenersResult describeListenerResult(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String prodListenerArn, String region);
   String getTargetGroupForDefaultAction(Listener listener, ExecutionLogCallback executionLogCallback);
+  void updateListenersForBGDeployment(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      List<LoadBalancerDetailsForBGDeployment> lbDetailsForBGDeployments, String region);
 }

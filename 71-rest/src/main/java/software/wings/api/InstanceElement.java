@@ -33,6 +33,7 @@ public class InstanceElement implements ContextElement {
   private String podName;
   private String workloadName;
   private EcsContainerDetails ecsContainerDetails;
+  private boolean newInstance;
 
   @Override
   public String getName() {
@@ -128,6 +129,14 @@ public class InstanceElement implements ContextElement {
     this.workloadName = workloadName;
   }
 
+  public boolean isNewInstance() {
+    return newInstance;
+  }
+
+  public void setNewInstance(boolean newInstance) {
+    this.newInstance = newInstance;
+  }
+
   /**
    * Gets host element.
    *
@@ -216,6 +225,7 @@ public class InstanceElement implements ContextElement {
     private String podName;
     private String workloadName;
     private EcsContainerDetails ecsContainerDetails;
+    private boolean newInstance;
 
     private Builder() {}
 
@@ -268,6 +278,11 @@ public class InstanceElement implements ContextElement {
       return this;
     }
 
+    public Builder newInstance(boolean newInstance) {
+      this.newInstance = newInstance;
+      return this;
+    }
+
     public Builder but() {
       return anInstanceElement()
           .uuid(uuid)
@@ -278,7 +293,8 @@ public class InstanceElement implements ContextElement {
           .serviceTemplateElement(serviceTemplateElement)
           .podName(podName)
           .workloadName(workloadName)
-          .ecsContainerDetails(ecsContainerDetails);
+          .ecsContainerDetails(ecsContainerDetails)
+          .newInstance(newInstance);
     }
 
     public InstanceElement build() {
@@ -292,6 +308,7 @@ public class InstanceElement implements ContextElement {
       instanceElement.setPodName(podName);
       instanceElement.setWorkloadName(workloadName);
       instanceElement.setEcsContainerDetails(ecsContainerDetails);
+      instanceElement.setNewInstance(newInstance);
       return instanceElement;
     }
   }

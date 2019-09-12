@@ -102,7 +102,7 @@ public abstract class SpotInstTaskHandler {
     logCallback.saveExecutionLog("Request Sent to update Elastigroup", INFO, SUCCESS);
 
     ExecutionLogCallback waitLogCallback = getLogCallBack(parameters, waitCommandUnitName);
-    waitLogCallback.saveExecutionLog(format("Waiting for elasti group: [%s] to reach steady state", elastiGroupId));
+    waitLogCallback.saveExecutionLog(format("Waiting for Elastigroup: [%s] to reach steady state", elastiGroupId));
     try {
       timeLimiter.callWithTimeout(() -> {
         while (true) {
@@ -116,11 +116,11 @@ public abstract class SpotInstTaskHandler {
           if (targetInstances == 0) {
             if (currentTotalCount == 0) {
               waitLogCallback.saveExecutionLog(
-                  format("Elasti group: [%s] does not have any instances.", elastiGroupId), INFO, SUCCESS);
+                  format("Elastigroup: [%s] does not have any instances.", elastiGroupId), INFO, SUCCESS);
               return true;
             } else {
               waitLogCallback.saveExecutionLog(
-                  format("Elasti group: [%s] still has [%d] total and [%d] healthy instances", elastiGroupId,
+                  format("Elastigroup: [%s] still has [%d] total and [%d] healthy instances", elastiGroupId,
                       currentTotalCount, currentHealthyCount));
             }
           } else {
@@ -129,7 +129,7 @@ public abstract class SpotInstTaskHandler {
                     targetInstances, currentTotalCount, currentHealthyCount, elastiGroupId));
             if (targetInstances == currentHealthyCount && targetInstances == currentTotalCount) {
               waitLogCallback.saveExecutionLog(
-                  format("Elasti group: [%s] reached steady state", elastiGroupId), INFO, SUCCESS);
+                  format("Elastigroup: [%s] reached steady state", elastiGroupId), INFO, SUCCESS);
               return true;
             }
           }

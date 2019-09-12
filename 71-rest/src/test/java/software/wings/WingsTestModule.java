@@ -8,6 +8,8 @@ import com.google.inject.name.Names;
 
 import io.harness.shell.ShellExecutionService;
 import io.harness.shell.ShellExecutionServiceImpl;
+import io.harness.spotinst.SpotInstHelperServiceDelegate;
+import io.harness.spotinst.SpotInstHelperServiceDelegateImpl;
 import io.harness.threading.ThreadPool;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
@@ -93,6 +95,7 @@ public class WingsTestModule extends AbstractModule {
     bind(ContainerService.class).to(ContainerServiceImpl.class);
     bind(AwsAppAutoScalingHelperServiceDelegate.class).to(AwsAppAutoScalingHelperServiceDelegateImpl.class);
     bind(AwsElbHelperServiceDelegate.class).to(AwsElbHelperServiceDelegateImpl.class);
+    bind(SpotInstHelperServiceDelegate.class).to(SpotInstHelperServiceDelegateImpl.class);
     bind(AwsAsgHelperServiceDelegate.class).to(AwsAsgHelperServiceDelegateImpl.class);
     bind(AwsEc2HelperServiceDelegate.class).to(AwsEc2HelperServiceDelegateImpl.class);
     bind(AwsEcsHelperServiceDelegate.class).to(AwsEcsHelperServiceDelegateImpl.class);
