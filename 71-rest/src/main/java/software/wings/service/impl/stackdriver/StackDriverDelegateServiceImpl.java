@@ -3,12 +3,16 @@ package software.wings.service.impl.stackdriver;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
+import static io.harness.threading.Morpheus.sleep;
+import static java.time.Duration.ofSeconds;
+import static software.wings.common.VerificationConstants.RATE_LIMIT_STATUS;
 import static software.wings.common.VerificationConstants.STACKDRIVER_DEFAULT_HOST_NAME_FIELD;
 import static software.wings.common.VerificationConstants.STACKDRIVER_DEFAULT_LOG_MESSAGE_FIELD;
 import static software.wings.common.VerificationConstants.STACK_DRIVER_QUERY_SEPARATER;
 import static software.wings.service.impl.stackdriver.StackDriverNameSpace.LOADBALANCER;
 import static software.wings.service.impl.stackdriver.StackDriverNameSpace.POD_NAME;
 
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.compute.model.ForwardingRule;
 import com.google.api.services.compute.model.Region;
 import com.google.api.services.logging.v2.Logging;
@@ -23,6 +27,7 @@ import com.google.inject.Singleton;
 
 import com.jayway.jsonpath.JsonPath;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.VerificationOperationException;
 import io.harness.exception.WingsException;
 import io.harness.expression.SecretString;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -54,6 +59,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -316,8 +322,9 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
     String queryField = getQueryField(hostnameField, new ArrayList<>(hosts), query, startTime, endTime, is24X7Task);
 
     List<LogEntry> logEntries = new ArrayList<>();
-    ListLogEntriesResponse response;
+    ListLogEntriesResponse response = null;
     String nextPageToken = null;
+    boolean hasReachedRateLimit = false;
     do {
       ListLogEntriesRequest request = new ListLogEntriesRequest();
       ThirdPartyApiCallLog apiCallLog = callLog.copy();
@@ -352,6 +359,23 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
       }
       try {
         response = logging.entries().list(request).execute();
+        hasReachedRateLimit = false;
+      } catch (GoogleJsonResponseException ge) {
+        if (ge.getStatusCode() == RATE_LIMIT_STATUS) {
+          hasReachedRateLimit = true;
+          int randomNum = ThreadLocalRandom.current().nextInt(1, 11);
+          logger.info("Encountered Rate limiting from stackdriver. Sleeping {} seconds for state {} ", randomNum,
+              apiCallLog.getStateExecutionId());
+          apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+          apiCallLog.addFieldToResponse(
+              HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(ge), ThirdPartyApiCallLog.FieldType.TEXT);
+          delegateLogService.save(gcpConfig.getAccountId(), apiCallLog);
+          sleep(ofSeconds(randomNum));
+          continue;
+        } else {
+          throw new VerificationOperationException(
+              ErrorCode.STACKDRIVER_ERROR, "error fetching logs from stackdriver", ge);
+        }
       } catch (Exception e) {
         logger.error("Error fetching logs, request {}", request, e);
         apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
@@ -367,7 +391,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
       if (isNotEmpty(response.getEntries())) {
         logEntries.addAll(response.getEntries());
       }
-    } while (fetchNextPage && isNotEmpty(response) && isNotEmpty(response.getNextPageToken()));
+    } while (hasReachedRateLimit || (fetchNextPage && isNotEmpty(response) && isNotEmpty(response.getNextPageToken())));
 
     return logEntries;
   }
