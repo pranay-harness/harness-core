@@ -521,6 +521,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @OwnerRule.Owner(emails = PRAVEEN, intermittent = true)
   @Category(UnitTests.class)
   public void testDatadogLogsCollection() throws IOException {
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);

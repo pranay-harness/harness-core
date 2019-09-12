@@ -524,15 +524,18 @@ public class CommandState extends State {
   }
 
   private void flattenTemplateVariables(Command command, Map<String, String> artifactTemplateVariables) {
-    for (Variable var : command.getTemplateVariables()) {
-      if (var.getType().equals(VariableType.ARTIFACT)) {
-        artifactTemplateVariables.put(var.getName(), var.getValue());
+    if (isNotEmpty(command.getTemplateVariables())) {
+      for (Variable var : command.getTemplateVariables()) {
+        if (var.getType().equals(VariableType.ARTIFACT)) {
+          artifactTemplateVariables.put(var.getName(), var.getValue());
+        }
       }
-    }
-
-    for (CommandUnit cu : command.getCommandUnits()) {
-      if (cu instanceof Command) {
-        flattenTemplateVariables((Command) cu, artifactTemplateVariables);
+      if (isNotEmpty(command.getCommandUnits())) {
+        for (CommandUnit cu : command.getCommandUnits()) {
+          if (cu instanceof Command) {
+            flattenTemplateVariables((Command) cu, artifactTemplateVariables);
+          }
+        }
       }
     }
   }
