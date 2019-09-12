@@ -130,6 +130,7 @@ import software.wings.scheduler.ecs.ECSPollingHandler;
 import software.wings.scheduler.events.segment.SegmentGroupEventJob.SegmentGroupEventJobExecutor;
 import software.wings.scheduler.instance.InstanceSyncHandler;
 import software.wings.scheduler.marketplace.gcp.GCPBillingHandler;
+import software.wings.scheduler.persistance.PersistentLockCleanup;
 import software.wings.search.framework.ElasticsearchSyncService;
 import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
@@ -534,16 +535,17 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     logger.info("Initializing scheduled jobs...");
     injector.getInstance(NotifierScheduledExecutorService.class)
-        .scheduleWithFixedDelay(injector.getInstance(Notifier.class), 0L, 30L, TimeUnit.SECONDS);
+        .scheduleWithFixedDelay(injector.getInstance(Notifier.class), rand.nextInt(10), 30L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("delegateTaskNotifier")))
-        .scheduleWithFixedDelay(injector.getInstance(DelegateQueueTask.class), 0L, 12L, TimeUnit.SECONDS);
+        .scheduleWithFixedDelay(injector.getInstance(DelegateQueueTask.class), rand.nextInt(12), 12L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("gitChangeSet")))
-        .scheduleWithFixedDelay(injector.getInstance(GitChangeSetRunnable.class), 0L, 2L, TimeUnit.SECONDS);
+        .scheduleWithFixedDelay(
+            injector.getInstance(GitChangeSetRunnable.class), rand.nextInt(4), 4L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
         .scheduleWithFixedDelay(injector.getInstance(DelegateServiceImpl.class), 0L, 2L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
         .scheduleWithFixedDelay(
-            injector.getInstance(DelegateServiceImpl.class), rand.nextInt(60), 60L, TimeUnit.MINUTES);
+            injector.getInstance(PersistentLockCleanup.class), rand.nextInt(60), 60L, TimeUnit.MINUTES);
   }
 
   public static void registerObservers(Injector injector) {
