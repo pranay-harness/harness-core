@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.SUMO_CONFIGURATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
+import static software.wings.common.VerificationConstants.RATE_LIMIT_STATUS;
 import static software.wings.common.VerificationConstants.URL_STRING;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 import static software.wings.delegatetasks.SumoDataCollectionTask.DEFAULT_TIME_ZONE;
@@ -57,7 +58,6 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class SumoDelegateServiceImpl implements SumoDelegateService {
   private static final long DEFAULT_SLEEP_TIME_IN_MILLIS = 5000;
-  private static final int SUMO_RATE_LIMIT_STATUS = 429;
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService delegateLogService;
 
@@ -186,7 +186,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
       saveThirdPartyCallLogs(apiCallLog, dataCollectionInfo.getSumoConfig(), searchQuery, String.valueOf(startTime),
           String.valueOf(endTime), sumoServerException.getErrorMessage(), requestTimeStamp,
           OffsetDateTime.now().toInstant().toEpochMilli(), sumoServerException.getHTTPStatus(), FieldType.TEXT);
-      if (sumoServerException.getHTTPStatus() == SUMO_RATE_LIMIT_STATUS) {
+      if (sumoServerException.getHTTPStatus() == RATE_LIMIT_STATUS) {
         int randomNum = ThreadLocalRandom.current().nextInt(1, 11);
         logger.info("Encountered Rate limiting from sumo. Sleeping {}seconds for logCollectionMin {}", 30 + randomNum,
             logCollectionMinute);
