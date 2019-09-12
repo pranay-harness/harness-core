@@ -105,6 +105,7 @@ import software.wings.features.RestApiFeature;
 import software.wings.features.SamlFeature;
 import software.wings.features.SecretsManagementFeature;
 import software.wings.features.ServiceNowNotificationFeature;
+import software.wings.features.TagsFeature;
 import software.wings.features.TemplateLibraryFeature;
 import software.wings.features.TwoFactorAuthenticationFeature;
 import software.wings.features.UsersFeature;
@@ -928,6 +929,7 @@ public class WingsModule extends DependencyModule {
     mapBinder.addBinding(AuditTrailFeature.FEATURE_NAME).to(AuditTrailFeature.class).in(Singleton.class);
     mapBinder.addBinding(RestApiFeature.FEATURE_NAME).to(RestApiFeature.class).in(Singleton.class);
     mapBinder.addBinding(DeploymentHistoryFeature.FEATURE_NAME).to(DeploymentHistoryFeature.class).in(Singleton.class);
+    mapBinder.addBinding(TagsFeature.FEATURE_NAME).to(TagsFeature.class).in(Singleton.class);
     mapBinder.addBinding(CustomDashboardFeature.FEATURE_NAME).to(CustomDashboardFeature.class).in(Singleton.class);
 
     binder()
@@ -1001,6 +1003,7 @@ public class WingsModule extends DependencyModule {
         .bind(RestrictedFeature.class)
         .annotatedWith(Names.named(DeploymentHistoryFeature.FEATURE_NAME))
         .to(DeploymentHistoryFeature.class);
+    binder().bind(PremiumFeature.class).annotatedWith(Names.named(TagsFeature.FEATURE_NAME)).to(TagsFeature.class);
     binder()
         .bind(PremiumFeature.class)
         .annotatedWith(Names.named(CustomDashboardFeature.FEATURE_NAME))

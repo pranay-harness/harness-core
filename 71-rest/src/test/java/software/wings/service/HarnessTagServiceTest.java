@@ -4,6 +4,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static junit.framework.TestCase.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
@@ -24,6 +25,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
+import software.wings.beans.Account;
 import software.wings.beans.EntityType;
 import software.wings.beans.HarnessTag;
 import software.wings.beans.HarnessTagLink;
@@ -31,7 +33,9 @@ import software.wings.beans.ResourceLookup;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.EntityNameCache;
 import software.wings.service.impl.HarnessTagServiceImpl;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ResourceLookupService;
+import software.wings.utils.WingsTestConstants;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -46,6 +50,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   @Inject @InjectMocks @Spy private HarnessTagServiceImpl harnessTagService;
 
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private AccountService accountService;
 
   private String colorTagKey = "color";
   private HarnessTag colorTag = HarnessTag.builder().accountId(TEST_ACCOUNT_ID).key(colorTagKey).build();
@@ -53,6 +58,14 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   @Before
   public void setUp() throws Exception {
     when(resourceLookupService.getWithResourceId(TEST_ACCOUNT_ID, "id")).thenReturn(getResourceLookupWithId("id"));
+
+    Account account = anAccount()
+                          .withUuid(TEST_ACCOUNT_ID)
+                          .withAccountName(WingsTestConstants.ACCOUNT_NAME)
+                          .withCompanyName(WingsTestConstants.COMPANY_NAME)
+                          .withLicenseInfo(getLicenseInfo())
+                          .build();
+    accountService.save(account);
   }
 
   @Test
