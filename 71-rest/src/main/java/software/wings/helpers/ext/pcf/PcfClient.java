@@ -25,7 +25,7 @@ public interface PcfClient {
   ApplicationDetail getApplicationByName(PcfRequestConfig pcfRequestConfige)
       throws PivotalClientApiException, InterruptedException;
 
-  void pushApplicationUsingManifest(PcfRequestConfig pcfRequestConfigs, String filePath,
+  void pushApplicationUsingManifest(PcfRequestConfig pcfRequestConfigs, String filePath, String configPathVar,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException, InterruptedException;
 
   void stopApplication(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException, InterruptedException;

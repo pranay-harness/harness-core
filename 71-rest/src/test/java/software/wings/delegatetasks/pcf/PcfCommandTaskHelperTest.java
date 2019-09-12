@@ -79,7 +79,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
                                                                   .manifestYaml(MANIFEST_YAML)
                                                                   .routeMaps(Arrays.asList("route1", "route2"))
                                                                   .build(),
-        ".", RELEASE_NAME);
+        ".", RELEASE_NAME, file);
 
     assertThat(file.exists()).isTrue();
 

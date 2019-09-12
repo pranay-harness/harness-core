@@ -1,7 +1,8 @@
 package software.wings.helpers.ext.pcf;
 
+import static io.harness.pcf.model.PcfConstants.CF_HOME;
+import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
 import static java.util.stream.Collectors.toList;
-import static software.wings.helpers.ext.pcf.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
 
 import com.google.common.base.Charsets;
 import com.google.inject.Singleton;
@@ -54,6 +55,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -260,7 +262,7 @@ public class PcfClientImpl implements PcfClient {
     }
   }
 
-  public void pushApplicationUsingManifest(PcfRequestConfig pcfRequestConfig, String filePath,
+  public void pushApplicationUsingManifest(PcfRequestConfig pcfRequestConfig, String filePath, String configVarPath,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException, InterruptedException {
     logger.info(new StringBuilder()
                     .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
@@ -276,7 +278,7 @@ public class PcfClientImpl implements PcfClient {
 
     if (pcfRequestConfig.isUseCLIForAppCreate()) {
       logger.info("Using CLI to create application");
-      performCfPushUsingCli(pcfRequestConfig, filePath, applicationManifest, executionLogCallback);
+      performCfPushUsingCli(pcfRequestConfig, filePath, applicationManifest, configVarPath, executionLogCallback);
       return;
     }
     AtomicBoolean exceptionOccured = new AtomicBoolean(false);
@@ -305,18 +307,19 @@ public class PcfClientImpl implements PcfClient {
   }
 
   private void performCfPushUsingCli(PcfRequestConfig pcfRequestConfig, String filePath,
-      ApplicationManifest applicationManifest, ExecutionLogCallback executionLogCallback)
+      ApplicationManifest applicationManifest, String configPathVar, ExecutionLogCallback executionLogCallback)
       throws PivotalClientApiException {
     // Create a new filePath.
     String finalFilePath = filePath.replace(".yml", "_1.yml");
     ApplicationManifestUtils.write(Paths.get(finalFilePath), applicationManifest);
     logManifestFile(finalFilePath, executionLogCallback);
 
+    executionLogCallback.saveExecutionLog("# CF_HOME value: " + configPathVar);
     int exitCode = 1;
     try {
-      boolean loginSuccessful = doLogin(pcfRequestConfig, executionLogCallback);
+      boolean loginSuccessful = doLogin(pcfRequestConfig, executionLogCallback, configPathVar);
       if (loginSuccessful) {
-        exitCode = doCfPush(pcfRequestConfig, executionLogCallback, finalFilePath);
+        exitCode = doCfPush(pcfRequestConfig, executionLogCallback, finalFilePath, configPathVar);
       }
     } catch (Exception e) {
       throw new PivotalClientApiException(new StringBuilder()
@@ -338,12 +341,13 @@ public class PcfClientImpl implements PcfClient {
   }
 
   private int doCfPush(PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback,
-      String finalFilePath) throws InterruptedException, TimeoutException, IOException {
+      String finalFilePath, String configPathVar) throws InterruptedException, TimeoutException, IOException {
     executionLogCallback.saveExecutionLog("# Performing \"cf push\"");
     ProcessExecutor processExecutor = new ProcessExecutor()
                                           .timeout(pcfRequestConfig.getTimeOutIntervalInMins(), TimeUnit.MINUTES)
                                           .command("/bin/sh", "-c", "cf push -f " + finalFilePath)
                                           .readOutput(true)
+                                          .environment(getEnvironmentMapForPcfExecutor(configPathVar))
                                           .redirectOutput(new LogOutputStream() {
                                             @Override
                                             protected void processLine(String line) {
@@ -354,7 +358,13 @@ public class PcfClientImpl implements PcfClient {
     return processResult.getExitValue();
   }
 
-  boolean doLogin(PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback)
+  private Map<String, String> getEnvironmentMapForPcfExecutor(String configPathVar) {
+    Map<String, String> map = new HashMap();
+    map.put(CF_HOME, configPathVar);
+    return map;
+  }
+
+  boolean doLogin(PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback, String configPathVar)
       throws IOException, InterruptedException, TimeoutException {
     executionLogCallback.saveExecutionLog("# Performing \"login\"");
     String password = handlePwdForSpecialCharsForShell(pcfRequestConfig.getPassword());
@@ -374,6 +384,7 @@ public class PcfClientImpl implements PcfClient {
                                                   .append(password)
                                                   .toString())
                                           .readOutput(true)
+                                          .environment(getEnvironmentMapForPcfExecutor(configPathVar))
                                           .redirectOutput(new LogOutputStream() {
                                             @Override
                                             protected void processLine(String line) {
