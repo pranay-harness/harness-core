@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.trigger;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.trigger.ArtifactSelection.Type.ARTIFACT_SOURCE;
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_COLLECTED;
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_DEPLOYED;
@@ -38,6 +39,7 @@ public class ArtifactSelectionYamlHandler extends BaseYamlHandler<Yaml, Artifact
                                       .type(bean.getType().name())
                                       .serviceName(bean.getServiceName())
                                       .workflowName(bean.getWorkflowName())
+                                      .pipelineName(bean.getPipelineName())
                                       .build();
 
     if (EmptyPredicate.isNotEmpty(bean.getArtifactStreamId())) {
@@ -75,7 +77,11 @@ public class ArtifactSelectionYamlHandler extends BaseYamlHandler<Yaml, Artifact
                                               .serviceName(serviceName)
                                               .build();
 
-    if (EmptyPredicate.isNotEmpty(yaml.getWorkflowName())) {
+    if (isNotBlank(yaml.getPipelineName())) {
+      String pipelineId = yamlHelper.getPipelineId(appId, yaml.getPipelineName());
+      artifactSelection.setPipelineId(pipelineId);
+      artifactSelection.setPipelineName(yaml.getPipelineName());
+    } else if (isNotBlank(yaml.getWorkflowName())) {
       Workflow workflow = yamlHelper.getWorkflowFromName(appId, yaml.getWorkflowName());
       artifactSelection.setWorkflowName(workflow.getName());
       artifactSelection.setWorkflowId(workflow.getUuid());

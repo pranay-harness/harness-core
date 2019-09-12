@@ -76,13 +76,15 @@ public class ArtifactSelection {
     private boolean regex;
     private String artifactFilter;
     String workflowName;
+    String pipelineName;
     String serviceName;
 
     @lombok.Builder
     public Yaml(String type, String artifactStreamName, String workflowName, String artifactFilter, String serviceName,
-        boolean regex) {
+        boolean regex, String pipelineName) {
       this.artifactStreamName = artifactStreamName;
       this.workflowName = workflowName;
+      this.pipelineName = pipelineName;
       this.artifactFilter = artifactFilter;
       this.type = type;
       this.regex = regex;
