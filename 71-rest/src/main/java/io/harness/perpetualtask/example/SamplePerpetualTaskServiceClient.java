@@ -2,6 +2,7 @@ package io.harness.perpetualtask.example;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.DelegateTask;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
@@ -29,5 +30,11 @@ public class SamplePerpetualTaskServiceClient implements PerpetualTaskServiceCli
   public SamplePerpetualTaskParams getTaskParams(PerpetualTaskClientContext clientContext) {
     Map<String, String> clientParams = clientContext.getClientParams();
     return SamplePerpetualTaskParams.newBuilder().setCountry(clientParams.get(COUNTRY_NAME)).build();
+  }
+
+  @Override
+  public DelegateTask getValidationTask(PerpetualTaskClientContext context, String accountId) {
+    // TODO: implement this
+    return null;
   }
 }

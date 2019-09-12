@@ -70,6 +70,7 @@ import io.harness.metrics.MetricRegistryModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistenceIterator;
+import io.harness.perpetualtask.internal.PerpetualTaskRecordHandler;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
@@ -631,6 +632,10 @@ public class WingsApplication extends Application<MainConfiguration> {
     SegmentGroupEventJobExecutor.registerIterators(injector);
     BarrierServiceImpl.registerIterators(injector);
     EntityAuditRecordHandler.EntityAuditRecordExecutor.registerIterators(injector);
+    if (injector.getInstance(FeatureFlagService.class).isGlobalEnabled(PERPETUAL_TASK_SERVICE)) {
+      logger.info("Initializing Perpetual Task Assignor..");
+      PerpetualTaskRecordHandler.PerpetualTaskRecordExecutor.registerIterators(injector);
+    }
   }
 
   private void registerCronJobs(Injector injector) {

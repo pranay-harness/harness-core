@@ -7,6 +7,7 @@ import com.google.inject.Injector;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.DelegateRunnableTask;
+import io.harness.perpetualtask.internal.AssignmentTask;
 import software.wings.delegatetasks.APMDataCollectionTask;
 import software.wings.delegatetasks.AppdynamicsDataCollectionTask;
 import software.wings.delegatetasks.BambooTask;
@@ -344,6 +345,7 @@ public enum TaskType {
   AWS_AMI_ASYNC_TASK(TaskGroup.AWS, AwsAmiAsyncTask.class, AwsConnectionValidation.class),
   AWS_CF_TASK(TaskGroup.AWS, AwsCFTask.class, AwsConnectionValidation.class),
   K8S_COMMAND_TASK(TaskGroup.K8S, K8sTask.class, K8sCommandValidation.class),
+  K8S_WATCH_TASK(TaskGroup.K8S, AssignmentTask.class, K8sCommandValidation.class),
   TRIGGER_TASK(TaskGroup.TRIGGER, TriggerTask.class, TriggerValidation.class),
   JIRA(TaskGroup.JIRA, JiraTask.class, JiraValidation.class),
   CONNECTIVITY_VALIDATION(

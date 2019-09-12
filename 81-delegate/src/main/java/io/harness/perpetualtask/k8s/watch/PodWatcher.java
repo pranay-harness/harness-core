@@ -16,6 +16,7 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.harness.event.client.EventPublisher;
+
 import io.harness.event.payloads.Container;
 import io.harness.event.payloads.Container.Resource;
 import io.harness.event.payloads.Container.Resource.Quantity;
@@ -104,8 +105,6 @@ public class PodWatcher implements Watcher<Pod> {
       }
       eventPublisher.publishMessage(podEvent);
     }
-
-    logger.info("\n");
   }
 
   @Override

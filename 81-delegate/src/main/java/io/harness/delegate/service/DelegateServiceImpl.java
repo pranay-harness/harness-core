@@ -270,7 +270,7 @@ public class DelegateServiceImpl implements DelegateService {
     return hostName;
   }
 
-  static String getDelegateId() {
+  public static String getDelegateId() {
     return delegateId;
   }
 

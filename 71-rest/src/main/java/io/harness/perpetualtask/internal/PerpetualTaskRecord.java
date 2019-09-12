@@ -1,5 +1,8 @@
-package io.harness.perpetualtask;
+package io.harness.perpetualtask.internal;
 
+import io.harness.iterator.PersistentRegularIterable;
+import io.harness.perpetualtask.PerpetualTaskClientContext;
+import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -13,6 +16,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.Indexed;
 
 @Data
 @Builder
@@ -21,7 +25,8 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "PerpetualTaskRecordKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(value = "perpetualTask", noClassnameStored = true)
-public class PerpetualTaskRecord implements PersistentEntity, CreatedAtAware, UpdatedAtAware, UuidAware {
+public class PerpetualTaskRecord
+    implements PersistentEntity, UuidAware, PersistentRegularIterable, CreatedAtAware, UpdatedAtAware {
   @Id String uuid;
   String accountId;
   PerpetualTaskType perpetualTaskType;
@@ -30,6 +35,17 @@ public class PerpetualTaskRecord implements PersistentEntity, CreatedAtAware, Up
   long timeoutMillis;
   String delegateId;
   long lastHeartbeat;
+  @Indexed Long nextIteration;
   long createdAt;
   long lastUpdatedAt;
+
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    return nextIteration;
+  }
+
+  @Override
+  public void updateNextIteration(String fieldName, Long nextIteration) {
+    this.nextIteration = nextIteration;
+  }
 }

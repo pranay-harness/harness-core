@@ -1,33 +1,31 @@
 package io.harness.perpetualtask;
 
-import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.protobuf.Any;
+import com.google.protobuf.Message;
 import com.google.protobuf.util.Durations;
 
-import io.grpc.Context;
-import io.harness.grpc.auth.DelegateAuthServerInterceptor;
-import io.harness.perpetualtask.PerpetualTaskRecord.PerpetualTaskRecordKeys;
+import io.harness.grpc.utils.HTimestamps;
+import io.harness.perpetualtask.internal.PerpetualTaskRecord;
+import io.harness.perpetualtask.internal.PerpetualTaskRecordDao;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
-import software.wings.dl.WingsPersistence;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
 public class PerpetualTaskServiceImpl implements PerpetualTaskService {
-  private final WingsPersistence persistence;
+  private final PerpetualTaskRecordDao perpetualTaskRecordDao;
+  private final PerpetualTaskServiceClientRegistry clientRegistry;
 
   @Inject
-  public PerpetualTaskServiceImpl(WingsPersistence persistence) {
-    this.persistence = persistence;
+  public PerpetualTaskServiceImpl(
+      PerpetualTaskRecordDao perpetualTaskRecordDao, PerpetualTaskServiceClientRegistry clientRegistry) {
+    this.perpetualTaskRecordDao = perpetualTaskRecordDao;
+    this.clientRegistry = clientRegistry;
   }
 
   @Override
@@ -35,7 +33,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
       PerpetualTaskClientContext clientContext, PerpetualTaskSchedule schedule, boolean allowDuplicate) {
     if (!allowDuplicate) {
       Optional<PerpetualTaskRecord> perpetualTaskMaybe =
-          getExistingPerpetualTask(accountId, perpetualTaskType, clientContext);
+          perpetualTaskRecordDao.getExistingPerpetualTask(accountId, perpetualTaskType, clientContext);
       if (perpetualTaskMaybe.isPresent()) {
         PerpetualTaskRecord perpetualTaskRecord = perpetualTaskMaybe.get();
         logger.info("Perpetual task exist {} ", perpetualTaskRecord.getUuid());
@@ -53,60 +51,48 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
                                      .delegateId("")
                                      .build();
 
-    return persistence.save(record);
-  }
-
-  private Optional<PerpetualTaskRecord> getExistingPerpetualTask(
-      String accountId, PerpetualTaskType perpetualTaskType, PerpetualTaskClientContext clientContext) {
-    PerpetualTaskRecord perpetualTaskRecord = persistence.createQuery(PerpetualTaskRecord.class)
-                                                  .field(PerpetualTaskRecordKeys.accountId)
-                                                  .equal(accountId)
-                                                  .field(PerpetualTaskRecordKeys.perpetualTaskType)
-                                                  .equal(perpetualTaskType)
-                                                  .field(PerpetualTaskRecordKeys.clientContext)
-                                                  .equal(clientContext)
-                                                  .get();
-    return Optional.ofNullable(perpetualTaskRecord);
+    return perpetualTaskRecordDao.save(record);
   }
 
   @Override
   public boolean deleteTask(String accountId, String taskId) {
-    Query<PerpetualTaskRecord> query = persistence.createQuery(PerpetualTaskRecord.class)
-                                           .field(PerpetualTaskRecordKeys.accountId)
-                                           .equal(accountId)
-                                           .field(PerpetualTaskRecordKeys.uuid)
-                                           .equal(taskId);
-    return persistence.delete(query);
+    return perpetualTaskRecordDao.remove(accountId, taskId);
   }
 
   @Override
-  public List<String> listTaskIds(String delegateId) {
-    logger.info("Account id is: {}", DelegateAuthServerInterceptor.ACCOUNT_ID_CTX_KEY.get(Context.current()));
-    List<PerpetualTaskRecord> records = persistence.createQuery(PerpetualTaskRecord.class)
-                                            .field(PerpetualTaskRecordKeys.accountId)
-                                            .equal(GLOBAL_ACCOUNT_ID)
-                                            .field(PerpetualTaskRecordKeys.delegateId)
-                                            .equal(delegateId)
-                                            .asList();
-
-    return records.stream().map(PerpetualTaskRecord::getUuid).collect(Collectors.toList());
+  public List<String> listAssignedTaskIds(String delegateId) {
+    return perpetualTaskRecordDao.listAssignedTaskIds(delegateId);
   }
 
   @Override
-  public PerpetualTaskRecord getTask(String taskId) {
-    return persistence.createQuery(PerpetualTaskRecord.class).field(PerpetualTaskRecordKeys.uuid).equal(taskId).get();
+  public PerpetualTaskContext getTaskContext(String taskId) {
+    PerpetualTaskRecord perpetualTaskRecord = perpetualTaskRecordDao.getTask(taskId);
+
+    PerpetualTaskParams params = getTaskParams(perpetualTaskRecord);
+
+    PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
+                                         .setInterval(Durations.fromSeconds(perpetualTaskRecord.getIntervalSeconds()))
+                                         .setTimeout(Durations.fromMillis(perpetualTaskRecord.getTimeoutMillis()))
+                                         .build();
+
+    return PerpetualTaskContext.newBuilder()
+        .setTaskParams(params)
+        .setTaskSchedule(schedule)
+        .setHeartbeatTimestamp(HTimestamps.fromMillis(perpetualTaskRecord.getLastHeartbeat()))
+        .build();
   }
 
-  @Override
+  private PerpetualTaskParams getTaskParams(PerpetualTaskRecord perpetualTaskRecord) {
+    PerpetualTaskServiceClient client = clientRegistry.getClient(perpetualTaskRecord.getPerpetualTaskType());
+    Message perpetualTaskParams = client.getTaskParams(perpetualTaskRecord.getClientContext());
+    return PerpetualTaskParams.newBuilder().setCustomizedParams(Any.pack(perpetualTaskParams)).build();
+  }
+
   public boolean updateHeartbeat(String taskId, long heartbeatMillis) {
-    PerpetualTaskRecord task = getTask(taskId);
-    if (null == task || task.getLastHeartbeat() > heartbeatMillis) {
+    PerpetualTaskRecord taskRecord = perpetualTaskRecordDao.getTask(taskId);
+    if (null == taskRecord || taskRecord.getLastHeartbeat() > heartbeatMillis) {
       return false;
     }
-    UpdateOperations<PerpetualTaskRecord> taskUpdateOperations =
-        persistence.createUpdateOperations(PerpetualTaskRecord.class)
-            .set(PerpetualTaskRecordKeys.lastHeartbeat, heartbeatMillis);
-    UpdateResults update = persistence.update(task, taskUpdateOperations);
-    return update.getUpdatedCount() > 0;
+    return perpetualTaskRecordDao.saveHeartbeat(taskRecord, heartbeatMillis);
   }
 }

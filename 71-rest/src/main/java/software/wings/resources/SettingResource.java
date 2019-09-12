@@ -9,7 +9,6 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
-import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.FeatureName.PERPETUAL_TASK_SERVICE;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -207,12 +206,11 @@ public class SettingResource {
     SettingAttribute savedSettingAttribute = settingsService.save(variable);
 
     if (featureFlagService.isGlobalEnabled(PERPETUAL_TASK_SERVICE)) {
-      // TODO(Tang): test this check on cloud provider type..and only k8s cluster
       if (CLOUD_PROVIDER == savedSettingAttribute.getCategory()
           && "KUBERNETES_CLUSTER".equals(savedSettingAttribute.getValue().getType())) {
         K8WatchPerpetualTaskClientParams params =
             new K8WatchPerpetualTaskClientParams(savedSettingAttribute.getUuid(), "Pod");
-        k8SWatchPerpetualTaskServiceClient.create(GLOBAL_ACCOUNT_ID, params);
+        k8SWatchPerpetualTaskServiceClient.create(savedSettingAttribute.getAccountId(), params);
       }
     }
     return new RestResponse<>(savedSettingAttribute);

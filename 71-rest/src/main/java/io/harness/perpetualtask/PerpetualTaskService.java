@@ -8,9 +8,9 @@ public interface PerpetualTaskService {
 
   boolean deleteTask(String accountId, String taskId);
 
-  List<String> listTaskIds(String delegateId);
+  List<String> listAssignedTaskIds(String delegateId);
 
-  PerpetualTaskRecord getTask(String taskId);
+  PerpetualTaskContext getTaskContext(String taskId);
 
   boolean updateHeartbeat(String taskId, long heartbeatMillis);
 }

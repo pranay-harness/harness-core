@@ -14,12 +14,12 @@ service PerpetualTaskService {
   rpc PublishHeartbeat(HeartbeatRequest) returns (HeartbeatResponse);
 }
 
-// params are tracked in client/ownerService
+// params are tracked by clients
 message PerpetualTaskParams {
   google.protobuf.Any customized_params = 1;
 }
 
-// schedule is persisted in mongodb
+// schedule persists in mongodb
 message PerpetualTaskSchedule {
   google.protobuf.Duration interval = 1;
   google.protobuf.Duration timeout = 2;

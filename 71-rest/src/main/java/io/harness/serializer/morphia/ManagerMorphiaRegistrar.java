@@ -8,7 +8,7 @@ import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.HObjectFactory.NotFoundClass;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.notifications.NotificationReceiverInfo;
-import io.harness.perpetualtask.PerpetualTaskRecord;
+import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.AmiServiceDeployElement;
 import software.wings.api.AmiServiceSetupElement;
