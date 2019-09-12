@@ -3,6 +3,7 @@ package software.wings.beans;
 import static io.harness.expression.SecretString.SECRET_MASK;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.security.encryption.EncryptionType;
@@ -22,6 +23,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @ToString(exclude = {"secretKey"})
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "AzureSecretsManagerConfigKeys")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AzureVaultConfig extends SecretManagerConfig {
   @Attributes(title = "Name", required = true) private String name;
 

@@ -32,7 +32,6 @@ import software.wings.service.intfc.security.AzureSecretsManagerService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -46,38 +45,26 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
   public String saveAzureSecretsManagerConfig(String accountId, AzureVaultConfig azureVautConfig) {
     checkIfSecretsManagerConfigCanBeCreatedOrUpdated(accountId);
     azureVautConfig.setAccountId(accountId);
-
     AzureVaultConfig oldConfigForAudit = null;
     AzureVaultConfig savedAzureVaultConfig = null;
-    boolean credentialChanged = false;
+
+    boolean updateCallWithMaskedSecretKey = false;
 
     if (isNotEmpty(azureVautConfig.getUuid())) {
-      savedAzureVaultConfig = getAzureVaultConfig(azureVautConfig.getUuid());
-      if (SECRET_MASK.equals(azureVautConfig.getSecretKey())) {
-        savedAzureVaultConfig.setSecretKey(savedAzureVaultConfig.getSecretKey());
-      }
-      credentialChanged = !Objects.equals(azureVautConfig.getSecretKey(), savedAzureVaultConfig.getSecretKey())
-          || !Objects.equals(azureVautConfig.getClientId(), savedAzureVaultConfig.getClientId())
-          || !Objects.equals(azureVautConfig.getTenantId(), savedAzureVaultConfig.getTenantId())
-          || !Objects.equals(azureVautConfig.getSubscription(), savedAzureVaultConfig.getSubscription());
-
-      // Secret fields un-decrypted azure config
       savedAzureVaultConfig = wingsPersistence.get(AzureVaultConfig.class, azureVautConfig.getUuid());
       oldConfigForAudit = KryoUtils.clone(savedAzureVaultConfig);
+
+      updateCallWithMaskedSecretKey = SECRET_MASK.equals(azureVautConfig.getSecretKey());
     }
 
-    // Validate every time when secret manager config change submitted
-    validateAzureVaultConfig(azureVautConfig);
-
-    if (!credentialChanged) {
-      savedAzureVaultConfig.setName(azureVautConfig.getName());
-      savedAzureVaultConfig.setDefault(azureVautConfig.isDefault());
-      savedAzureVaultConfig.setVaultName(azureVautConfig.getVaultName());
+    if (updateCallWithMaskedSecretKey) {
+      azureVautConfig.setSecretKey(savedAzureVaultConfig.getSecretKey());
+      azureVautConfig.setUuid(savedAzureVaultConfig.getUuid());
 
       // PL-3237: Audit secret manager config changes.
-      generateAuditForSecretManager(accountId, oldConfigForAudit, savedAzureVaultConfig);
+      generateAuditForSecretManager(accountId, oldConfigForAudit, azureVautConfig);
 
-      return secretManagerConfigService.save(savedAzureVaultConfig);
+      return secretManagerConfigService.save(azureVautConfig);
     }
 
     EncryptedData secretKeyEncryptedData = getEncryptedDataForSecretField(
