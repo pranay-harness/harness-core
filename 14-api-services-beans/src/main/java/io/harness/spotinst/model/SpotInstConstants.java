@@ -25,6 +25,7 @@ public interface SpotInstConstants {
   String PROD_ELASTI_GROUP_NAME_SUFFIX = "PRODUCTION";
   String STAGE_ELASTI_GROUP_NAME_SUFFIX = "STAGE";
   String ELASTI_GROUP_IMAGE_CONFIG = "imageId";
+  String ELASTI_GROUP_USER_DATA_CONFIG = "userData";
   String GROUP_CONFIG_ELEMENT = "group";
 
   // Command unit Names
@@ -37,5 +38,5 @@ public interface SpotInstConstants {
   String RENAME_COMMAND_UNIT = "Rename Elastigroup";
   String RENAME_OLD_COMMAND_UNIT = "Rename old Elastigroup";
   String RENAME_NEW_COMMAND_UNIT = "Rename new Elastigroup";
-  String DEPLOYMENT_ERROR = "Deployment error";
+  String DEPLOYMENT_ERROR = "Final Deployment status";
 }

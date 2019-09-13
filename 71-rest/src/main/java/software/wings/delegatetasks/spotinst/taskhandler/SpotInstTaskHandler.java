@@ -49,7 +49,12 @@ public abstract class SpotInstTaskHandler {
   public SpotInstTaskExecutionResponse executeTask(
       SpotInstTaskParameters spotInstTaskParameters, SpotInstConfig spotInstConfig, AwsConfig awsConfig) {
     try {
-      return executeTaskInternal(spotInstTaskParameters, spotInstConfig, awsConfig);
+      SpotInstTaskExecutionResponse response = executeTaskInternal(spotInstTaskParameters, spotInstConfig, awsConfig);
+      if (!spotInstTaskParameters.isSyncTask()) {
+        ExecutionLogCallback logCallback = getLogCallBack(spotInstTaskParameters, DEPLOYMENT_ERROR);
+        logCallback.saveExecutionLog("No deployment error. Execution success", INFO, SUCCESS);
+      }
+      return response;
     } catch (Exception ex) {
       if (spotInstTaskParameters.isSyncTask()) {
         logger.error(format("Exception: [%s] while processing Spotinst sync task", ex.getMessage()), ex);

@@ -12,6 +12,7 @@ import static io.harness.spotinst.model.SpotInstConstants.CAPACITY_TARGET_CONFIG
 import static io.harness.spotinst.model.SpotInstConstants.CAPACITY_UNIT_CONFIG_ELEMENT;
 import static io.harness.spotinst.model.SpotInstConstants.COMPUTE;
 import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_IMAGE_CONFIG;
+import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_USER_DATA_CONFIG;
 import static io.harness.spotinst.model.SpotInstConstants.GROUP_CONFIG_ELEMENT;
 import static io.harness.spotinst.model.SpotInstConstants.LAUNCH_SPECIFICATION;
 import static io.harness.spotinst.model.SpotInstConstants.LB_TYPE_TG;
@@ -209,8 +210,8 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
 
     updateName(elastiGroupConfigMap, newElastiGroupName);
     updateInitialCapacity(elastiGroupConfigMap);
-    updateWithLoadBalancerAndImageConfig(
-        setupTaskParameters.getAwsLoadBalancerConfigs(), elastiGroupConfigMap, setupTaskParameters.getImage());
+    updateWithLoadBalancerAndImageConfig(setupTaskParameters.getAwsLoadBalancerConfigs(), elastiGroupConfigMap,
+        setupTaskParameters.getImage(), setupTaskParameters.getUserData());
     return gson.toJson(jsonConfigMap);
   }
 
@@ -230,8 +231,8 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
     }
   }
 
-  private void updateWithLoadBalancerAndImageConfig(
-      List<LoadBalancerDetailsForBGDeployment> lbDetailList, Map<String, Object> elastiGroupConfigMap, String image) {
+  private void updateWithLoadBalancerAndImageConfig(List<LoadBalancerDetailsForBGDeployment> lbDetailList,
+      Map<String, Object> elastiGroupConfigMap, String image, String userData) {
     Map<String, Object> computeConfigMap = (Map<String, Object>) elastiGroupConfigMap.get(COMPUTE);
     Map<String, Object> launchSpecificationMap = (Map<String, Object>) computeConfigMap.get(LAUNCH_SPECIFICATION);
 
@@ -239,6 +240,9 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
         ElastiGroupLoadBalancerConfig.builder().loadBalancers(generateLBConfigs(lbDetailList)).build());
 
     launchSpecificationMap.put(ELASTI_GROUP_IMAGE_CONFIG, image);
+    if (isNotEmpty(userData)) {
+      launchSpecificationMap.put(ELASTI_GROUP_USER_DATA_CONFIG, userData);
+    }
   }
 
   private List<ElastiGroupLoadBalancer> generateLBConfigs(List<LoadBalancerDetailsForBGDeployment> lbDetailList) {

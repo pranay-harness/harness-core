@@ -1,5 +1,6 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.spotinst.model.SpotInstConstants.DEPLOYMENT_ERROR;
 import static io.harness.spotinst.model.SpotInstConstants.GROUP_CONFIG_ELEMENT;
@@ -10,7 +11,9 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.sm.states.spotinst.SpotInstServiceSetup.SPOTINST_SERVICE_SETUP_COMMAND;
 import static software.wings.utils.Validator.notNullCheck;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.BaseEncoding;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
@@ -47,11 +50,13 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.command.SpotinstDummyCommandUnit;
+import software.wings.beans.container.UserDataSpecification;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest.SpotInstCommandRequestBuilder;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
@@ -72,6 +77,7 @@ public class SpotInstStateHelper {
   @Inject private SettingsService settingsService;
   @Inject private SecretManager secretManager;
   @Inject private ActivityService activityService;
+  @Inject private ServiceResourceService serviceResourceService;
 
   public SpotInstSetupStateExecutionData prepareStateExecutionData(
       ExecutionContext context, SpotInstServiceSetup serviceSetup) {
@@ -126,9 +132,7 @@ public class SpotInstStateHelper {
 
     String elastiGroupOriginalJson = context.renderExpression(awsAmiInfrastructureMapping.getSpotinstElastiGroupJson());
     ElastiGroup elastiGroupOriginalConfig = generateOriginalConfigFromJson(elastiGroupOriginalJson, serviceSetup);
-
     boolean blueGreen = serviceSetup.isBlueGreen();
-
     SpotInstTaskParameters spotInstTaskParameters =
         SpotInstSetupTaskParameters.builder()
             .accountId(app.getAccountId())
@@ -143,6 +147,7 @@ public class SpotInstStateHelper {
             .awsLoadBalancerConfigs(
                 addLoadBalancerConfigAfterExpressionEvaluation(serviceSetup.getAwsLoadBalancerConfigs(), context))
             .image(artifact.getRevision())
+            .userData(getBase64EncodedUserData(app.getUuid(), serviceElement.getUuid(), context))
             .awsRegion(awsAmiInfrastructureMapping.getRegion())
             .build();
 
@@ -192,6 +197,16 @@ public class SpotInstStateHelper {
       throw new WingsException(
           ErrorCode.INVALID_ARGUMENT, "PORT Number is invalid, Cant be cast to Integer: " + port, USER);
     }
+  }
+
+  private String getBase64EncodedUserData(String appId, String serviceId, ExecutionContext context) {
+    UserDataSpecification userDataSpecification = serviceResourceService.getUserDataSpecification(appId, serviceId);
+    if (userDataSpecification != null && isNotEmpty(userDataSpecification.getData())) {
+      String userData = userDataSpecification.getData();
+      String userDataAfterEvaluation = context.renderExpression(userData);
+      return BaseEncoding.base64().encode(userDataAfterEvaluation.getBytes(Charsets.UTF_8));
+    }
+    return null;
   }
 
   private ElastiGroup generateOriginalConfigFromJson(
