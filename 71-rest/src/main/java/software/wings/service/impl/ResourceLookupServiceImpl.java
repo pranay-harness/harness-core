@@ -15,6 +15,7 @@ import static software.wings.audit.ResourceType.ARTIFACT_SERVER;
 import static software.wings.audit.ResourceType.CLOUD_PROVIDER;
 import static software.wings.audit.ResourceType.COLLABORATION_PROVIDER;
 import static software.wings.audit.ResourceType.CONNECTION_ATTRIBUTES;
+import static software.wings.audit.ResourceType.DEPLOYMENT_TRIGGER;
 import static software.wings.audit.ResourceType.ENCRYPTED_RECORDS;
 import static software.wings.audit.ResourceType.ENVIRONMENT;
 import static software.wings.audit.ResourceType.LOAD_BALANCER;
@@ -58,6 +59,7 @@ import software.wings.beans.ResourceLookup.ResourceLookupKeys;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.entityinterface.TagAware;
+import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.PermissionAttribute.Action;
@@ -99,7 +101,7 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
 
   private static List<String> applicationLevelResource =
       Arrays.asList(APPLICATION.name(), SERVICE.name(), ENVIRONMENT.name(), WORKFLOW.name(), PIPELINE.name(),
-          PROVISIONER.name(), TRIGGER.name(), TEMPLATE.name(), TEMPLATE_FOLDER.name());
+          PROVISIONER.name(), TRIGGER.name(), TEMPLATE.name(), TEMPLATE_FOLDER.name(), DEPLOYMENT_TRIGGER.name());
 
   private static List<String> accountLevelResource = Arrays.asList(CLOUD_PROVIDER.name(), ARTIFACT_SERVER.name(),
       SOURCE_REPO_PROVIDER.name(), COLLABORATION_PROVIDER.name(), LOAD_BALANCER.name(), VERIFICATION_PROVIDER.name(),
@@ -398,6 +400,11 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
         pageResponse = (PageResponse<T>) wingsPersistence.query(Trigger.class, (PageRequest<Trigger>) request);
         break;
 
+      case DEPLOYMENT_TRIGGER:
+        pageResponse =
+            (PageResponse<T>) wingsPersistence.query(DeploymentTrigger.class, (PageRequest<DeploymentTrigger>) request);
+        break;
+
       case PROVISIONER:
         pageResponse = (PageResponse<T>) wingsPersistence.query(
             InfrastructureProvisioner.class, (PageRequest<InfrastructureProvisioner>) request);
@@ -459,6 +466,7 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
       case WORKFLOW:
       case PIPELINE:
       case TRIGGER:
+      case DEPLOYMENT_TRIGGER:
       case PROVISIONER:
       case APPLICATION:
         for (T t : response.getResponse()) {

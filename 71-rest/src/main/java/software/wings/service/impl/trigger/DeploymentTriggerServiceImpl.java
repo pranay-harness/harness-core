@@ -14,6 +14,7 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -68,7 +69,7 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
   @Override
   public PageResponse<DeploymentTrigger> list(
       PageRequest<DeploymentTrigger> pageRequest, boolean withTags, String tagFilter) {
-    return resourceLookupService.listWithTagFilters(pageRequest, tagFilter, EntityType.TRIGGER, withTags);
+    return resourceLookupService.listWithTagFilters(pageRequest, tagFilter, EntityType.DEPLOYMENT_TRIGGER, withTags);
   }
 
   @Override
@@ -79,7 +80,7 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
     setConditionTypeInTrigger(trigger);
     String uuid = Validator.duplicateCheck(() -> wingsPersistence.save(trigger), "name", trigger.getName());
     actionsAfterTriggerSave(trigger);
-    return get(trigger.getAppId(), uuid);
+    return getWithoutRead(trigger.getAppId(), uuid);
   }
 
   @Override
@@ -120,7 +121,7 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
   @Override
   public DeploymentTrigger get(String appId, String triggerId) {
     DeploymentTrigger deploymentTrigger = wingsPersistence.getWithAppId(DeploymentTrigger.class, appId, triggerId);
-    notNullCheck("Trigger not exist ", triggerId, USER);
+    notNullCheck("Trigger not exist ", deploymentTrigger, USER);
     TriggerProcessor triggerProcessor = obtainTriggerProcessor(deploymentTrigger);
     triggerProcessor.transformTriggerConditionRead(deploymentTrigger);
     triggerProcessor.transformTriggerActionRead(deploymentTrigger);
@@ -149,9 +150,15 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
     PageResponse<DeploymentTrigger> response = wingsPersistence.query(DeploymentTrigger.class, pageRequest);
 
     response.getResponse().forEach(deploymentTrigger -> {
-      TriggerProcessor triggerProcessor = obtainTriggerProcessor(deploymentTrigger);
-      triggerProcessor.transformTriggerConditionRead(deploymentTrigger);
-      triggerProcessor.transformTriggerActionRead(deploymentTrigger);
+      try {
+        TriggerProcessor triggerProcessor = obtainTriggerProcessor(deploymentTrigger);
+        triggerProcessor.transformTriggerConditionRead(deploymentTrigger);
+        triggerProcessor.transformTriggerActionRead(deploymentTrigger);
+      } catch (Exception e) {
+        deploymentTrigger.setTriggerInvalid(true);
+        deploymentTrigger.setErrorMsg(ExceptionUtils.getMessage(e));
+        logger.error("Error Reading trigger: " + deploymentTrigger.getName(), e, USER);
+      }
     });
     return response;
   }

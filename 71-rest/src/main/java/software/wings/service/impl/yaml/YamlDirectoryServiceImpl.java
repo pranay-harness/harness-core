@@ -718,14 +718,11 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     futureResponseList.add(
         executorService.submit(() -> doProvisioners(app, appPath.clone(), applyPermissions, allowedProvisioners)));
 
-    if (isTriggerYamlEnabled(accountId)) {
-      futureResponseList.add(executorService.submit(() -> doTriggers(app, appPath.clone())));
-    }
-
     if (isTriggerRefactored(accountId)) {
       futureResponseList.add(executorService.submit(() -> doDeploymentTriggers(app, appPath.clone())));
+    } else if (isTriggerYamlEnabled(accountId)) {
+      futureResponseList.add(executorService.submit(() -> doTriggers(app, appPath.clone())));
     }
-
     //      completionService.submit(() -> doTriggers(app, appPath.clone()));
 
     // collect results to this map so we can rebuild the correct order
@@ -753,12 +750,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     appFolder.addChild(map.get(WORKFLOWS_FOLDER));
     appFolder.addChild(map.get(PIPELINES_FOLDER));
     appFolder.addChild(map.get(PROVISIONERS_FOLDER));
-    if (isTriggerYamlEnabled(accountId)) {
-      appFolder.addChild(map.get(TRIGGER_FOLDER));
-    }
     if (isTriggerRefactored(accountId)) {
       appFolder.addChild(map.get(TRIGGER_FOLDER));
+    } else if (isTriggerYamlEnabled(accountId)) {
+      appFolder.addChild(map.get(TRIGGER_FOLDER));
     }
+
     //--------------------------------------
 
     return applicationsFolder;

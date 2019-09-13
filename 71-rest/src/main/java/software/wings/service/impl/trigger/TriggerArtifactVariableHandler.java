@@ -11,6 +11,7 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.TriggerException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.ArtifactVariable;
@@ -45,6 +46,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -69,12 +71,22 @@ public class TriggerArtifactVariableHandler {
     if (triggerArtifactVariables != null) {
       triggerArtifactVariables.forEach(triggerArtifactVariable -> {
         String entityId = triggerArtifactVariable.getEntityId();
-        EntityType entityType = triggerArtifactVariable.getEntityType();
-        validateVariableName(appId, entityId, entityType, triggerArtifactVariable.getVariableName());
-        if (triggerArtifactVariable.getVariableValue() != null) {
-          validateTriggerArtifactSelection(
-              appId, triggerArtifactVariable.getVariableValue(), triggerArtifactVariable.getVariableName());
+        if (entityId == null) {
+          throw new TriggerException(
+              "entityId is null for artifact variable " + triggerArtifactVariable.getVariableName(), null);
         }
+        EntityType entityType = triggerArtifactVariable.getEntityType();
+
+        if (entityType == null) {
+          throw new TriggerException(
+              "entityType is null for artifact variable " + triggerArtifactVariable.getVariableName(), null);
+        }
+
+        validateVariableName(appId, entityId, entityType, triggerArtifactVariable.getVariableName());
+        notNullCheck("Artifact value cannot be null for variable: " + triggerArtifactVariable.getVariableName(),
+            triggerArtifactVariable.getVariableValue());
+        validateTriggerArtifactSelection(
+            appId, triggerArtifactVariable.getVariableValue(), triggerArtifactVariable.getVariableName());
       });
     }
   }
@@ -86,7 +98,14 @@ public class TriggerArtifactVariableHandler {
       switch (trigger.getAction().getActionType()) {
         case PIPELINE:
           PipelineAction pipelineAction = (PipelineAction) trigger.getAction();
-          Pipeline pipeline = pipelineService.readPipeline(appId, pipelineAction.getPipelineId(), false);
+          Map<String, String> pipelineVariables = new HashMap<>();
+          if (pipelineAction.getTriggerArgs() != null && pipelineAction.getTriggerArgs().getVariables() != null) {
+            pipelineVariables = pipelineAction.getTriggerArgs().getVariables().stream().collect(
+                Collectors.toMap(Variable::getName, Variable::getValue));
+          }
+
+          Pipeline pipeline = pipelineService.readPipelineWithResolvedVariables(
+              appId, pipelineAction.getPipelineId(), pipelineVariables);
           artifactVariables =
               pipelineService.fetchDeploymentMetadata(appId, pipeline, null, null, Include.ARTIFACT_SERVICE)
                   .getArtifactVariables();
@@ -102,7 +121,7 @@ public class TriggerArtifactVariableHandler {
         case WORKFLOW:
           WorkflowAction workflowAction = (WorkflowAction) trigger.getAction();
           Workflow workflow = workflowService.readWorkflow(appId, workflowAction.getWorkflowId());
-          Map<String, String> variables = null;
+          Map<String, String> variables = new HashMap<>();
           if (workflowAction.getTriggerArgs() != null && workflowAction.getTriggerArgs().getVariables() != null) {
             variables = workflowAction.getTriggerArgs().getVariables().stream().collect(
                 Collectors.toMap(Variable::getName, Variable::getValue));
@@ -131,20 +150,18 @@ public class TriggerArtifactVariableHandler {
       String appId, List<TriggerArtifactVariable> inputTriggerArtifactVariables) {
     if (inputTriggerArtifactVariables != null) {
       return inputTriggerArtifactVariables.stream()
-          .map(triggerArtifactVariable -> {
-            return TriggerArtifactVariable.builder()
-                .variableName(triggerArtifactVariable.getVariableName())
-                .variableValue(addTriggerVariableValue(appId, triggerArtifactVariable.getVariableValue()))
-                .entityId(triggerArtifactVariable.getEntityId())
-                .entityType(triggerArtifactVariable.getEntityType())
-                .entityName(fetchEntityName(
-                    appId, triggerArtifactVariable.getEntityId(), triggerArtifactVariable.getEntityType()))
-                .build();
-          })
+          .map(triggerArtifactVariable
+              -> TriggerArtifactVariable.builder()
+                     .variableName(triggerArtifactVariable.getVariableName())
+                     .variableValue(addTriggerVariableValue(appId, triggerArtifactVariable.getVariableValue()))
+                     .entityId(triggerArtifactVariable.getEntityId())
+                     .entityType(triggerArtifactVariable.getEntityType())
+                     .entityName(fetchEntityName(
+                         appId, triggerArtifactVariable.getEntityId(), triggerArtifactVariable.getEntityType()))
+                     .build())
           .collect(toList());
-    } else {
-      return null;
     }
+    return null;
   }
 
   private TriggerArtifactSelectionValue addTriggerVariableValue(
@@ -243,6 +260,9 @@ public class TriggerArtifactVariableHandler {
   }
 
   private String fetchEntityName(String appId, String entityId, EntityType entityType) {
+    if (isExpression(entityId)) {
+      return null;
+    }
     switch (entityType) {
       case SERVICE:
         return serviceResourceService.get(entityId).getName();
@@ -267,6 +287,9 @@ public class TriggerArtifactVariableHandler {
       case LAST_DEPLOYED:
         TriggerArtifactSelectionLastDeployed workflowVar = (TriggerArtifactSelectionLastDeployed) variableValue;
 
+        if (workflowVar.getWorkflowId() == null) {
+          throw new TriggerException("workflow Id is null for artifact variable " + variableName, null);
+        }
         if (isExpression(workflowVar.getWorkflowId())) {
           return;
         }
@@ -282,6 +305,15 @@ public class TriggerArtifactVariableHandler {
         break;
       case WEBHOOK_VARIABLE:
         TriggerArtifactSelectionWebhook artifactSelectionWebhook = (TriggerArtifactSelectionWebhook) variableValue;
+
+        if (artifactSelectionWebhook.getArtifactServerId() == null) {
+          throw new TriggerException("artifact server Id is null for artifact variable " + variableName, null);
+        }
+
+        if (artifactSelectionWebhook.getArtifactStreamId() == null) {
+          throw new TriggerException("artifact stream Id is null for artifact variable " + variableName, null);
+        }
+
         if (isExpression(artifactSelectionWebhook.getArtifactServerId())
             && !isExpression(artifactSelectionWebhook.getArtifactStreamId())) {
           throw new WingsException("artifact stream should also be expression if artifact server is expression");
@@ -296,6 +328,15 @@ public class TriggerArtifactVariableHandler {
         break;
       case LAST_COLLECTED:
         TriggerArtifactSelectionLastCollected artifactVar = (TriggerArtifactSelectionLastCollected) variableValue;
+
+        if (artifactVar.getArtifactServerId() == null) {
+          throw new TriggerException("artifact server Id is null for artifact variable " + variableName, null);
+        }
+
+        if (artifactVar.getArtifactStreamId() == null) {
+          throw new TriggerException("artifact stream Id is null for artifact variable " + variableName, null);
+        }
+
         if (isExpression(artifactVar.getArtifactServerId()) && !isExpression(artifactVar.getArtifactStreamId())) {
           throw new WingsException(
               "artifact stream should also be expression also be expression if artifact server is expression");
@@ -315,6 +356,11 @@ public class TriggerArtifactVariableHandler {
     if (isExpression(variableName) || isExpression(entityId)) {
       return;
     }
+
+    if (variableName == null) {
+      throw new TriggerException("trigger artifact variable name is null", null);
+    }
+
     switch (entityType) {
       case SERVICE:
       case SERVICE_TEMPLATE:
@@ -372,20 +418,20 @@ public class TriggerArtifactVariableHandler {
         return fetchArtifactUuid(triggerArtifactVariableValueArtifact.getArtifactStreamId(),
             triggerArtifactVariableValueArtifact.getArtifactFilter(), true, artifactVariable);
       case ARTIFACT_SOURCE:
-        return artifacts.stream().findFirst().get().getUuid();
+        return artifacts.get(artifacts.size() - 1).getUuid();
       case PIPELINE_SOURCE:
         return fetchLastDeployedArtifacts(
-            appId, ((PipelineAction) trigger.getAction()).getPipelineId(), triggerArtifactVariable.getVariableName());
+            appId, ((PipelineAction) trigger.getAction()).getPipelineId(), triggerArtifactVariable);
       case LAST_DEPLOYED:
         TriggerArtifactSelectionLastDeployed triggerArtifactSelectionLastDeployed =
             (TriggerArtifactSelectionLastDeployed) triggerArtifactVariable.getVariableValue();
         return fetchLastDeployedArtifacts(
-            appId, triggerArtifactSelectionLastDeployed.getWorkflowId(), triggerArtifactVariable.getVariableName());
+            appId, triggerArtifactSelectionLastDeployed.getWorkflowId(), triggerArtifactVariable);
       case WEBHOOK_VARIABLE:
         TriggerArtifactSelectionWebhook artifactSelectionWebhook =
             (TriggerArtifactSelectionWebhook) triggerArtifactVariable.getVariableValue();
         return fetchArtifactUuid(artifactSelectionWebhook.getArtifactStreamId(),
-            artifactSelectionWebhook.getBuildNumber(), false, artifactVariable);
+            artifactSelectionWebhook.getArtifactFilter(), false, artifactVariable);
       default:
         unhandled(triggerArtifactVariable.getVariableValue().getArtifactSelectionType());
     }
@@ -418,7 +464,8 @@ public class TriggerArtifactVariableHandler {
     }
   }
 
-  private String fetchLastDeployedArtifacts(String appId, String workflowId, String variableName) {
+  private String fetchLastDeployedArtifacts(
+      String appId, String workflowId, TriggerArtifactVariable triggerArtifactVariable) {
     List<ArtifactVariable> lastDeployedArtifacts =
         workflowExecutionService.obtainLastGoodDeployedArtifactsVariables(appId, workflowId);
 
@@ -428,14 +475,17 @@ public class TriggerArtifactVariableHandler {
     }
     Optional<ArtifactVariable> artifactVariable =
         lastDeployedArtifacts.stream()
-            .filter(lastDeployedArtifact -> { return variableName.equals(lastDeployedArtifact.getName()); })
+            .filter(lastDeployedArtifact -> {
+              return triggerArtifactVariable.getEntityId().equals(lastDeployedArtifact.getEntityId())
+                  && triggerArtifactVariable.getVariableName().equals(lastDeployedArtifact.getName());
+            })
             .findFirst();
 
     if (artifactVariable.isPresent()) {
       return artifactVariable.get().getValue();
     } else {
       throw new WingsException("selected workflow/Pipeline " + workflowId + " does not have variable name "
-          + variableName + " for trigger ");
+          + triggerArtifactVariable.getVariableName() + " for trigger ");
     }
   }
 }

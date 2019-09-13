@@ -15,5 +15,5 @@ public class TriggerArtifactSelectionWebhook implements TriggerArtifactSelection
   private transient String artifactStreamName;
   private transient String artifactServerName;
   private transient String artifactStreamType;
-  private String buildNumber;
+  private String artifactFilter;
 }

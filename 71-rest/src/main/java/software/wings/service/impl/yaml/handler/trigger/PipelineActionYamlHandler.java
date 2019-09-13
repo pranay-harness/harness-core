@@ -70,7 +70,8 @@ public class PipelineActionYamlHandler extends ActionYamlHandler<PipelineActionY
     getTriggerVariablesBean(accountId, appId, pipeline.getEnvIds().get(0), yaml.getVariables(), triggerVariables);
 
     List<TriggerArtifactVariable> triggerArtifactVariables = new ArrayList<>();
-    getArtifactVariableBean(changeContext, changeSetContext, yaml.getArtifactSelections(), triggerArtifactVariables);
+    getArtifactVariableBean(
+        accountId, appId, changeContext, changeSetContext, yaml.getArtifactSelections(), triggerArtifactVariables);
 
     TriggerArgs triggerArgs = TriggerArgs.builder()
                                   .excludeHostsWithSameArtifact(yaml.isExcludeHostsWithSameArtifact())

@@ -15,6 +15,7 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.TriggerException;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import lombok.Builder;
@@ -67,6 +68,14 @@ public class ArtifactTriggerProcessor implements TriggerProcessor {
 
     ArtifactStream artifactStream = artifactStreamService.get(artifactCondition.getArtifactStreamId());
     notNullCheck("Artifact Source is mandatory for New Artifact Condition Trigger", artifactStream, USER);
+
+    if (artifactCondition.getArtifactServerId() == null) {
+      throw new TriggerException("artifact server Id is null for trigger " + trigger.getName(), null);
+    }
+
+    if (artifactCondition.getArtifactStreamId() == null) {
+      throw new TriggerException("artifact stream Id is null for trigger " + trigger.getName(), null);
+    }
 
     validateArtifactFilter(artifactCondition.getArtifactFilter());
     trigger.setCondition(ArtifactCondition.builder()

@@ -1432,7 +1432,7 @@ public class TriggerServiceImpl implements TriggerService {
   public void authorize(Trigger trigger, boolean existing) {
     WorkflowType workflowType = trigger.getWorkflowType();
     try {
-      triggerAuthHandler.authorizeWorkflowOrPipeline(trigger.getAppId(), trigger.getWorkflowId());
+      triggerAuthHandler.authorizeWorkflowOrPipeline(trigger.getAppId(), trigger.getWorkflowId(), existing);
     } catch (WingsException ex) {
       throw new WingsException("User does not have deployment execution permission on "
               + (workflowType == PIPELINE ? "Pipeline" : "Workflow"),

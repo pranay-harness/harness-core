@@ -63,8 +63,8 @@ public abstract class ActionYamlHandler<Y extends ActionYaml> extends BaseYamlHa
     }
   }
 
-  protected void getArtifactVariableBean(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext,
-      List<TriggerArtifactVariableYaml> triggerArtifactVariableYamls,
+  protected void getArtifactVariableBean(String accountId, String appId, ChangeContext<Y> changeContext,
+      List<ChangeContext> changeSetContext, List<TriggerArtifactVariableYaml> triggerArtifactVariableYamls,
       List<TriggerArtifactVariable> triggerArtifactVariables) {
     for (TriggerArtifactVariableYaml triggerArtifactVariableYaml : triggerArtifactVariableYamls) {
       TriggerArtifactValueYamlHandler triggerArtifactValueYamlHandler = yamlHandlerFactory.getYamlHandler(
@@ -75,10 +75,13 @@ public abstract class ActionYamlHandler<Y extends ActionYaml> extends BaseYamlHa
       TriggerArtifactSelectionValue value =
           triggerArtifactValueYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext);
 
+      String entityId = workflowYAMLHelper.getWorkflowVariableValueBean(accountId, null, appId,
+          triggerArtifactVariableYaml.getEntityType(), triggerArtifactVariableYaml.getEntityName());
+
       TriggerArtifactVariable triggerArtifactVariable =
           TriggerArtifactVariable.builder()
               .variableName(triggerArtifactVariableYaml.getVariableName())
-              .entityName(triggerArtifactVariableYaml.getEntityName())
+              .entityId(entityId)
               .entityType(EntityType.valueOf(triggerArtifactVariableYaml.getEntityType()))
               .variableValue(value)
               .build();

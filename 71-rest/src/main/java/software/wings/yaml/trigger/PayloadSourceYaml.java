@@ -18,6 +18,7 @@ import software.wings.yaml.BaseYamlWithType;
   @Type(value = BitBucketPayloadSourceYaml.class, name = "BITBUCKET")
   , @Type(value = GitlabPayloadSourceYaml.class, name = "GITLAB"),
       @Type(value = GithubPayloadSourceYaml.class, name = "GITHUB"),
+      @Type(value = CustomPayloadSourceYaml.class, name = "CUSTOM")
 })
 public class PayloadSourceYaml extends BaseYamlWithType {
   public PayloadSourceYaml(String type) {

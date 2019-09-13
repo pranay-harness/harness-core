@@ -7,6 +7,7 @@ import static java.util.Arrays.asList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.TriggerException;
 import io.harness.exception.WingsException;
 import software.wings.beans.Environment;
 import software.wings.beans.Pipeline;
@@ -32,19 +33,19 @@ import java.util.List;
 
 @Singleton
 public class TriggerAuthHandler {
-  @Inject AuthHandler authHandler;
-  @Inject EnvironmentService environmentService;
-  @Inject AuthService authService;
-  @Inject PipelineService pipelineService;
-  @Inject WorkflowService workflowService;
+  @Inject private AuthHandler authHandler;
+  @Inject private EnvironmentService environmentService;
+  @Inject private AuthService authService;
+  @Inject private PipelineService pipelineService;
+  @Inject private WorkflowService workflowService;
 
   public void authorize(DeploymentTrigger trigger, boolean existing) {
     if (trigger.getAction() == null) {
       return;
     }
 
-    boolean envParamaterized;
-    List<Variable> variables;
+    boolean envParamaterized = false;
+    List<Variable> variables = null;
     List<Variable> triggerVariables = null;
     ActionType actionType = trigger.getAction().getActionType();
     switch (actionType) {
@@ -52,10 +53,14 @@ public class TriggerAuthHandler {
         PipelineAction pipelineAction = (PipelineAction) trigger.getAction();
         String pipeLineId = pipelineAction.getPipelineId();
         try {
-          authorizeWorkflowOrPipeline(trigger.getAppId(), pipeLineId);
+          authorizeWorkflowOrPipeline(trigger.getAppId(), pipeLineId, existing);
         } catch (WingsException ex) {
-          throw new WingsException(
-              "User does not have deployment execution permission on Pipeline: " + pipeLineId, USER);
+          throw new TriggerException(
+              "User does not have deployment execution permission on Pipeline: " + pipelineAction.getPipelineName(),
+              USER);
+        }
+        if (isEmpty(pipeLineId) && existing) {
+          break;
         }
         Pipeline pipeline = pipelineService.readPipeline(trigger.getAppId(), pipeLineId, true);
         Validator.notNullCheck("Pipeline does not exist", pipeline, USER);
@@ -69,10 +74,14 @@ public class TriggerAuthHandler {
         WorkflowAction workflowAction = (WorkflowAction) trigger.getAction();
         String workflowId = workflowAction.getWorkflowId();
         try {
-          authorizeWorkflowOrPipeline(trigger.getAppId(), workflowId);
+          authorizeWorkflowOrPipeline(trigger.getAppId(), workflowId, existing);
         } catch (WingsException ex) {
-          throw new WingsException(
-              "User does not have deployment execution permission on Workflow: " + workflowId, USER);
+          throw new TriggerException(
+              "User does not have deployment execution permission on Workflow: " + workflowAction.getWorkflowName(),
+              USER);
+        }
+        if (isEmpty(workflowId) && existing) {
+          break;
         }
         Workflow workflow = workflowService.readWorkflow(trigger.getAppId(), workflowId);
         Validator.notNullCheck("Workflow does not exist", workflow, USER);
@@ -84,7 +93,7 @@ public class TriggerAuthHandler {
         }
         break;
       default:
-        throw new WingsException("Action Type not supported: " + actionType, USER);
+        throw new TriggerException("Action Type not supported: " + actionType, USER);
     }
 
     if (envParamaterized) {
@@ -92,7 +101,7 @@ public class TriggerAuthHandler {
         if (existing) {
           return;
         }
-        throw new WingsException("Please select a value for entity type variables.", USER);
+        throw new TriggerException("Please select a value for entity type variables.", USER);
       }
 
       String templatizedEnvVariableName = WorkflowServiceTemplateHelper.getTemplatizedEnvVariableName(variables);
@@ -110,18 +119,18 @@ public class TriggerAuthHandler {
       if (existing) {
         return;
       }
-      throw new WingsException("Environment is parameterized. Please select a value in the format ${varName}.", USER);
+      throw new TriggerException("Environment is parameterized. Please select a value in the format ${varName}.", USER);
     }
     authorizeEnvironment(trigger.getAppId(), environmentVaribale.getValue());
   }
 
-  public void authorizeEnvironment(String appId, String environmentValue) {
+  void authorizeEnvironment(String appId, String environmentValue) {
     if (ManagerExpressionEvaluator.matchesVariablePattern(environmentValue)) {
       try {
         authHandler.authorizeAccountPermission(
             asList(new PermissionAttribute(PermissionType.ACCOUNT_MANAGEMENT, Action.READ)));
       } catch (WingsException ex) {
-        throw new WingsException(
+        throw new TriggerException(
             "User not authorized: Only members of the Account Administrator user group can create or update Triggers with parameterized variables.",
             USER);
       }
@@ -132,7 +141,7 @@ public class TriggerAuthHandler {
         try {
           authService.checkIfUserAllowedToDeployToEnv(appId, environmentValue);
         } catch (WingsException ex) {
-          throw new WingsException(
+          throw new TriggerException(
               "User does not have deployment execution permission on environment. [" + environment.getName() + "]",
               USER);
         }
@@ -143,7 +152,7 @@ public class TriggerAuthHandler {
           authHandler.authorizeAccountPermission(
               asList(new PermissionAttribute(PermissionType.ACCOUNT_MANAGEMENT, Action.READ)));
         } catch (WingsException ex) {
-          throw new WingsException(
+          throw new TriggerException(
               "User not authorized: Only members of the Account Administrator user group can create or update Triggers with parameterized variables",
               USER);
         }
@@ -151,7 +160,12 @@ public class TriggerAuthHandler {
     }
   }
 
-  public void authorizeWorkflowOrPipeline(String appId, String workflowOrPipelineId) {
+  void authorizeWorkflowOrPipeline(String appId, String workflowOrPipelineId, boolean existing) {
+    if (isEmpty(workflowOrPipelineId)) {
+      if (existing) {
+        return;
+      }
+    }
     PermissionAttribute permissionAttribute = new PermissionAttribute(PermissionType.DEPLOYMENT, Action.EXECUTE);
     List<PermissionAttribute> permissionAttributeList = asList(permissionAttribute);
     authHandler.authorize(permissionAttributeList, asList(appId), workflowOrPipelineId);

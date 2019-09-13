@@ -109,59 +109,62 @@ public class WebhookConditionTriggerProcessor implements TriggerProcessor {
     if (existingToken == null || existingToken.getWebHookToken() == null) {
       webHookToken =
           WebHookToken.builder().httpMethod("POST").webHookToken(CryptoUtils.secureRandAlphaNumString(40)).build();
-
-      addExpressionsAsParameters(deploymentTrigger, webHookToken);
     } else {
       webHookToken = existingToken;
-      addExpressionsAsParameters(deploymentTrigger, webHookToken);
     }
 
+    Map<String, Object> payload = new HashMap<>();
+    payload.put("application", deploymentTrigger.getAppId());
+    addParametersToPayload(deploymentTrigger, payload);
+    webHookToken.setPayload(new Gson().toJson(payload));
     return webHookToken;
   }
 
-  private void addExpressionsAsParameters(DeploymentTrigger deploymentTrigger, WebHookToken webHookToken) {
-    Map<String, Object> parameters = new HashMap<>();
-
+  private void addParametersToPayload(DeploymentTrigger deploymentTrigger, Map<String, Object> payload) {
+    Map<String, String> parameters = new HashMap<>();
     if (deploymentTrigger.getAction() != null) {
       switch (deploymentTrigger.getAction().getActionType()) {
         case PIPELINE:
           PipelineAction pipelineAction = (PipelineAction) deploymentTrigger.getAction();
-          if (pipelineAction.getTriggerArgs().getVariables() != null) {
-            updateWFVariables(pipelineAction.getTriggerArgs().getVariables(), parameters);
-          }
+          if (pipelineAction.getTriggerArgs() != null) {
+            if (pipelineAction.getTriggerArgs().getVariables() != null) {
+              updateWFVariables(pipelineAction.getTriggerArgs().getVariables(), parameters);
+            }
 
-          if (pipelineAction.getTriggerArgs() != null
-              && pipelineAction.getTriggerArgs().getTriggerArtifactVariables() != null) {
-            pipelineAction.getTriggerArgs().getTriggerArtifactVariables().forEach(artifactVariable -> {
-              addArtifactVariablesexpression(artifactVariable.getVariableValue(), parameters);
-            });
+            if (pipelineAction.getTriggerArgs().getTriggerArtifactVariables() != null) {
+              pipelineAction.getTriggerArgs().getTriggerArtifactVariables().forEach(artifactVariable -> {
+                addArtifactVariablesexpression(artifactVariable.getVariableValue(), parameters);
+              });
+            }
           }
-
           break;
         case WORKFLOW:
           WorkflowAction workflowAction = (WorkflowAction) deploymentTrigger.getAction();
-          if (workflowAction.getTriggerArgs().getVariables() != null) {
-            updateWFVariables(workflowAction.getTriggerArgs().getVariables(), parameters);
+          if (workflowAction.getTriggerArgs() != null) {
+            if (workflowAction.getTriggerArgs().getVariables() != null) {
+              updateWFVariables(workflowAction.getTriggerArgs().getVariables(), parameters);
+            }
+
+            if (workflowAction.getTriggerArgs().getTriggerArtifactVariables() != null) {
+              workflowAction.getTriggerArgs().getTriggerArtifactVariables().forEach(artifactVariable -> {
+                addArtifactVariablesexpression(artifactVariable.getVariableValue(), parameters);
+              });
+            }
           }
 
-          if (workflowAction.getTriggerArgs() != null
-              && workflowAction.getTriggerArgs().getTriggerArtifactVariables() != null) {
-            workflowAction.getTriggerArgs().getTriggerArtifactVariables().forEach(artifactVariable -> {
-              addArtifactVariablesexpression(artifactVariable.getVariableValue(), parameters);
-            });
-          }
           break;
         default:
           unhandled(deploymentTrigger.getAction().getActionType());
       }
     }
-
-    webHookToken.setPayload(new Gson().toJson(parameters));
+    if (isNotEmpty(parameters)) {
+      payload.put("parameters", parameters);
+    }
   }
 
-  private void updateWFVariables(List<Variable> variables, Map<String, Object> parameters) {
+  private void updateWFVariables(List<Variable> variables, Map<String, String> parameters) {
     if (isNotEmpty(variables)) {
-      variables.stream().filter(variableEntry -> isNotEmpty(variableEntry.getValue())).forEach(variable -> {
+      variables.stream().filter(v -> isNotEmpty(v.getValue())).forEach(variable -> {
         String wfVariableValue = variable.getValue();
         if (matchesVariablePattern(wfVariableValue)) {
           parameters.put(getNameFromExpression(variable.getValue()), variable.getValue());
@@ -175,7 +178,7 @@ public class WebhookConditionTriggerProcessor implements TriggerProcessor {
   }
 
   private void addArtifactVariablesexpression(
-      TriggerArtifactSelectionValue triggerArtifactVariableValue, Map<String, Object> parameters) {
+      TriggerArtifactSelectionValue triggerArtifactVariableValue, Map<String, String> parameters) {
     switch (triggerArtifactVariableValue.getArtifactSelectionType()) {
       case LAST_COLLECTED:
         TriggerArtifactSelectionLastCollected lastCollected =
@@ -192,7 +195,7 @@ public class WebhookConditionTriggerProcessor implements TriggerProcessor {
 
         if (matchesVariablePattern(lastCollected.getArtifactServerId())) {
           parameters.put(
-              getNameFromExpression(lastCollected.getArtifactStreamId()), lastCollected.getArtifactServerId());
+              getNameFromExpression(lastCollected.getArtifactServerId()), lastCollected.getArtifactServerId());
         }
         break;
       case LAST_DEPLOYED:
@@ -210,8 +213,8 @@ public class WebhookConditionTriggerProcessor implements TriggerProcessor {
           parameters.put(getNameFromExpression(webhook.getArtifactStreamId()), webhook.getArtifactStreamId());
         }
 
-        if (matchesVariablePattern(webhook.getBuildNumber())) {
-          parameters.put(getNameFromExpression(webhook.getBuildNumber()), webhook.getBuildNumber());
+        if (matchesVariablePattern(webhook.getArtifactFilter())) {
+          parameters.put(getNameFromExpression(webhook.getArtifactFilter()), webhook.getArtifactFilter());
         }
 
         if (matchesVariablePattern(webhook.getArtifactServerId())) {
