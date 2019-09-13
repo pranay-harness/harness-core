@@ -54,7 +54,6 @@ import software.wings.features.api.GetAccountId;
 import software.wings.features.api.PremiumFeature;
 import software.wings.features.api.RestrictedApi;
 import software.wings.features.extractors.HarnessTagAccountIdExtractor;
-import software.wings.graphql.schema.type.aggregation.QLEntityType;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -689,7 +688,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   }
 
   @Override
-  public Set<HarnessTagLink> getTagLinks(String accountId, EntityType entityType, List<String> entityIds, String key) {
+  public Set<HarnessTagLink> getTagLinks(String accountId, EntityType entityType, Set<String> entityIds, String key) {
     List<HarnessTagLink> harnessTagLinks = wingsPersistence.createQuery(HarnessTagLink.class)
                                                .filter(HarnessTagLinkKeys.accountId, accountId)
                                                .field(HarnessTagLinkKeys.entityId)
@@ -701,13 +700,13 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   }
 
   @Override
-  public Set<String> getEntityIdsWithTag(String accountId, String key, QLEntityType entityType, List<String> values) {
+  public Set<String> getEntityIdsWithTag(String accountId, String key, EntityType entityType, String value) {
     Query<HarnessTagLink> query = wingsPersistence.createQuery(HarnessTagLink.class)
                                       .filter(HarnessTagLinkKeys.accountId, accountId)
                                       .filter(HarnessTagLinkKeys.entityType, entityType.name())
                                       .filter(HarnessTagLinkKeys.key, key);
-    if (isNotEmpty(values)) {
-      query.field(HarnessTagLinkKeys.value).in(values);
+    if (isNotEmpty(value)) {
+      query.field(HarnessTagLinkKeys.value).equal(value);
     }
 
     List<HarnessTagLink> harnessTagLinks = query.project("entityId", true).asList();

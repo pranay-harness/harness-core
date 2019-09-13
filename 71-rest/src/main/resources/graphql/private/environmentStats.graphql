@@ -5,7 +5,12 @@ enum EnvironmentEntityAggregation {
 
 input EnvironmentAggregation {
   entityAggregation: EnvironmentEntityAggregation
-  tagAggregation: TagAggregation
+  tagAggregation: EnvironmentTagAggregation
+}
+
+input EnvironmentTagAggregation {
+  entityType: EnvironmentTagType
+  tagName: String
 }
 
 extend type Query {

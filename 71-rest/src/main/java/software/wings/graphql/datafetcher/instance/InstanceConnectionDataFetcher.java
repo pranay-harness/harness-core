@@ -36,7 +36,7 @@ public class InstanceConnectionDataFetcher
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   protected QLInstanceConnection fetchConnection(List<QLInstanceFilter> filters,
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
-    Query<Instance> query = populateFilters(wingsPersistence, filters, Instance.class)
+    Query<Instance> query = populateFilters(wingsPersistence, filters, Instance.class, true)
                                 .filter(InstanceKeys.isDeleted, false)
                                 .order(Sort.descending(InstanceKeys.lastDeployedAt));
 

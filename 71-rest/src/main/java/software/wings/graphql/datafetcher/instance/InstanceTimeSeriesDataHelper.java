@@ -52,7 +52,7 @@ public class InstanceTimeSeriesDataHelper {
 
   public QLStackedTimeSeriesData getTimeSeriesAggregatedData(String accountId,
       QLNoOpAggregateFunction aggregateFunction, List<QLInstanceFilter> filters, QLTimeSeriesAggregation groupByTime,
-      QLInstanceEntityAggregation groupBy) {
+      QLInstanceEntityAggregation groupByEntity) {
     //    SELECT PERCENTILE_DISC(0.50) WITHIN GROUP (ORDER BY SUM_VALUE) AS CNT,
     //    time_bucket_gapfill('1 days',REPORTEDAT, '2019-08-03T10:35:10.248Z', '2019-08-10T10:35:10.248Z') AS
     //    GRP_BY_TIME, ENTITY_ID FROM (SELECT APPID AS ENTITY_ID, REPORTEDAT, SUM(INSTANCECOUNT) AS SUM_VALUE FROM
@@ -71,7 +71,7 @@ public class InstanceTimeSeriesDataHelper {
       String timeQuerySegment =
           instanceStatsDataFetcher.getGroupByTimeQueryWithGapFill(groupByTime, "REPORTEDAT", from, to);
 
-      String groupByFieldName = getSqlFieldName(groupBy);
+      String groupByFieldName = getSqlFieldName(groupByEntity);
       queryBuilder.append(timeQuerySegment)
           .append(" AS GRP_BY_TIME, ENTITY_ID FROM (SELECT ")
           .append(groupByFieldName)
@@ -96,7 +96,7 @@ public class InstanceTimeSeriesDataHelper {
               "' GROUP BY ENTITY_ID, REPORTEDAT) INSTANCE_STATS GROUP BY ENTITY_ID, GRP_BY_TIME ORDER BY GRP_BY_TIME");
 
       List<QLStackedTimeSeriesDataPoint> dataPoints = new ArrayList<>();
-      executeStackedTimeSeriesQuery(accountId, queryBuilder.toString(), dataPoints, groupBy);
+      executeStackedTimeSeriesQuery(accountId, queryBuilder.toString(), dataPoints, groupByEntity);
       return QLStackedTimeSeriesData.builder().data(dataPoints).build();
     } catch (Exception ex) {
       throw new WingsException("Error while getting time series data", ex);

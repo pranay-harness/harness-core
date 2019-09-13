@@ -11,11 +11,21 @@ input EnvironmentFilter {
   application: IdFilter
   environment: IdFilter
   environmentType: EnvironmentTypeFilter
+  tag: EnvironmentTagFilter
 }
 
 input EnvironmentTypeFilter {
   operator: EnumOperator
   values: [EnvironmentType]
+}
+
+enum EnvironmentTagType {
+  APPLICATION
+}
+
+input EnvironmentTagFilter {
+  entityType: EnvironmentTagType
+  tags: [TagInput]
 }
 
 type Environment {

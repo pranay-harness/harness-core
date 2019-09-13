@@ -4,7 +4,12 @@ enum PipelineEntityAggregation {
 
 input PipelineAggregation {
   entityAggregation: PipelineEntityAggregation
-  tagAggregation: TagAggregation
+  tagAggregation: PipelineTagAggregation
+}
+
+input PipelineTagAggregation {
+  entityType: PipelineTagType
+  tagName: String
 }
 
 extend type Query {

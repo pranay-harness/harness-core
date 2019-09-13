@@ -14,9 +14,9 @@ import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.query.Query;
+import software.wings.beans.EntityType;
 import software.wings.beans.infrastructure.instance.Instance;
-import software.wings.dl.WingsPersistence;
-import software.wings.graphql.datafetcher.RealTimeStatsDataFetcher;
+import software.wings.graphql.datafetcher.RealTimeStatsDataFetcherWithTags;
 import software.wings.graphql.schema.type.aggregation.QLAggregatedData;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLDataPoint;
@@ -27,6 +27,8 @@ import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceAggregation;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceEntityAggregation;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceFilter;
+import software.wings.graphql.schema.type.aggregation.instance.QLInstanceTagAggregation;
+import software.wings.graphql.schema.type.aggregation.instance.QLInstanceTagType;
 import software.wings.graphql.utils.nameservice.NameService;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.FlatEntitySummaryStats;
 
@@ -36,50 +38,37 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class InstanceStatsDataFetcher extends RealTimeStatsDataFetcher<QLNoOpAggregateFunction, QLInstanceFilter,
-    QLInstanceAggregation, QLNoOpSortCriteria> {
-  @Inject private WingsPersistence wingsPersistence;
-  @Inject InstanceTimeSeriesDataHelper timeSeriesDataHelper;
-  @Inject InstanceQueryHelper instanceMongoHelper;
+public class InstanceStatsDataFetcher
+    extends RealTimeStatsDataFetcherWithTags<QLNoOpAggregateFunction, QLInstanceFilter, QLInstanceAggregation,
+        QLNoOpSortCriteria, QLInstanceTagType, QLInstanceTagAggregation, QLInstanceEntityAggregation> {
+  @Inject private InstanceTimeSeriesDataHelper timeSeriesDataHelper;
+  @Inject private InstanceQueryHelper instanceMongoHelper;
+
+  @Override
+  protected QLInstanceTagAggregation getTagAggregation(QLInstanceAggregation groupBy) {
+    return groupBy.getTagAggregation();
+  }
+
+  @Override
+  protected EntityType getEntityType(QLInstanceTagType entityType) {
+    return instanceMongoHelper.getEntityType(entityType);
+  }
 
   @Override
   protected QLData fetch(String accountId, QLNoOpAggregateFunction aggregateFunction, List<QLInstanceFilter> filters,
-      List<QLInstanceAggregation> groupBy, List<QLNoOpSortCriteria> sortCriteria) {
-    validateAggregations(groupBy);
+      List<QLInstanceAggregation> groupByList, List<QLNoOpSortCriteria> sortCriteria) {
+    validateAggregations(groupByList);
 
-    /**
-     * Cases to be handled
-     * 1) No agg
-     * 2) 1 entity
-     * 3) 1 entity, 1 time
-     * 4) 1 entity, 1 tag
-     * 5) 1 time agg, 1 tag agg
-     * 6) 2 entity agg
-     * 7) 2 tag agg
-     * 8) 1 tag agg, 1 entity agg
-     * 9) 1 tag agg, 1 time agg
-     * 10) 1 tag agg
-     * 11) 1 time agg
-     * 12)
-     * 13)
-     * 14)
-     * 15)
-     * 16)
-     * 17)
-     * 18)
-     */
+    QLTimeSeriesAggregation groupByTime = getGroupByTime(groupByList);
+    List<QLInstanceEntityAggregation> groupByEntityList = getGroupByEntity(groupByList);
+    List<QLInstanceTagAggregation> groupByTagList = getGroupByTag(groupByList);
 
-    QLTimeSeriesAggregation groupByTime = getGroupByTime(groupBy);
-    List<QLInstanceEntityAggregation> groupByEntity = getGroupByEntity(groupBy);
+    groupByEntityList = getGroupByEntityListFromTags(groupByList, groupByEntityList, groupByTagList, groupByTime);
 
     if (groupByTime != null) {
-      if (isNotEmpty(groupByEntity)) {
-        if (groupByEntity.size() == 1) {
-          return timeSeriesDataHelper.getTimeSeriesAggregatedData(
-              accountId, aggregateFunction, filters, groupByTime, groupByEntity.get(0));
-        } else {
-          throw new InvalidRequestException("Invalid query. Only one groupBy column allowed");
-        }
+      if (isNotEmpty(groupByEntityList)) {
+        return timeSeriesDataHelper.getTimeSeriesAggregatedData(
+            accountId, aggregateFunction, filters, groupByTime, groupByEntityList.get(0));
       } else {
         return timeSeriesDataHelper.getTimeSeriesData(accountId, aggregateFunction, filters, groupByTime);
       }
@@ -99,9 +88,9 @@ public class InstanceStatsDataFetcher extends RealTimeStatsDataFetcher<QLNoOpAgg
 
       instanceMongoHelper.setQuery(accountId, filters, query);
 
-      if (isNotEmpty(groupBy)) {
-        if (groupBy.size() == 1) {
-          QLInstanceEntityAggregation firstLevelAggregation = groupByEntity.get(0);
+      if (isNotEmpty(groupByList)) {
+        if (groupByList.size() == 1) {
+          QLInstanceEntityAggregation firstLevelAggregation = groupByEntityList.get(0);
           String entityIdColumn = getMongoFieldName(firstLevelAggregation);
           String entityNameColumn = getNameField(firstLevelAggregation);
           List<QLDataPoint> dataPoints = new ArrayList<>();
@@ -119,9 +108,9 @@ public class InstanceStatsDataFetcher extends RealTimeStatsDataFetcher<QLNoOpAgg
                 dataPoints.add(dataPoint);
               });
           return QLAggregatedData.builder().dataPoints(dataPoints).build();
-        } else if (groupBy.size() == 2) {
-          QLInstanceEntityAggregation firstLevelAggregation = groupByEntity.get(0);
-          QLInstanceEntityAggregation secondLevelAggregation = groupByEntity.get(1);
+        } else if (groupByList.size() == 2) {
+          QLInstanceEntityAggregation firstLevelAggregation = groupByEntityList.get(0);
+          QLInstanceEntityAggregation secondLevelAggregation = groupByEntityList.get(1);
           String entityIdColumn = getMongoFieldName(firstLevelAggregation);
           String entityNameColumn = getNameField(firstLevelAggregation);
           String secondLevelEntityIdColumn = getMongoFieldName(secondLevelAggregation);
@@ -143,10 +132,12 @@ public class InstanceStatsDataFetcher extends RealTimeStatsDataFetcher<QLNoOpAgg
               .aggregate(TwoLevelAggregatedData.class)
               .forEachRemaining(twoLevelAggregatedData -> { aggregatedDataList.add(twoLevelAggregatedData); });
 
-          return getStackedData(aggregatedDataList, firstLevelAggregation.name(), secondLevelAggregation.name());
+          return getStackedData(
+              nameService, aggregatedDataList, firstLevelAggregation.name(), secondLevelAggregation.name());
 
         } else {
-          throw new InvalidRequestException("Only one or two level aggregations supported right now");
+          logger.warn("Only one or two level aggregations supported right now");
+          throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
         }
       } else {
         long count = query.count();
@@ -176,12 +167,12 @@ public class InstanceStatsDataFetcher extends RealTimeStatsDataFetcher<QLNoOpAgg
                            : null;
   }
 
-  private void validateAggregations(List<QLInstanceAggregation> groupBy) {
+  private void validateAggregations(List<QLInstanceAggregation> groupByList) {
     // TODO
   }
 
   @Override
-  protected void populateFilters(String accountId, List<QLInstanceFilter> filters, Query query) {
+  public void populateFilters(String accountId, List<QLInstanceFilter> filters, Query query) {
     instanceMongoHelper.setQuery(accountId, filters, query);
   }
 
@@ -198,7 +189,8 @@ public class InstanceStatsDataFetcher extends RealTimeStatsDataFetcher<QLNoOpAgg
       case InstanceType:
         return "instanceType";
       default:
-        throw new InvalidRequestException("Unknown aggregation type" + aggregation);
+        logger.warn("Unknown aggregation type" + aggregation);
+        throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
     }
   }
 
@@ -215,17 +207,38 @@ public class InstanceStatsDataFetcher extends RealTimeStatsDataFetcher<QLNoOpAgg
       case InstanceType:
         return "instanceType";
       default:
-        throw new InvalidRequestException("Unknown aggregation type" + aggregation);
+        logger.warn("Unknown aggregation type" + aggregation);
+        throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
     }
   }
 
   @Override
-  protected String getAggregationFieldName(String aggregation) {
+  public String getAggregationFieldName(String aggregation) {
     return null;
   }
 
   @Override
   public String getEntityType() {
     return NameService.instance;
+  }
+
+  @Override
+  protected QLInstanceEntityAggregation getEntityAggregation(QLInstanceAggregation groupBy) {
+    return groupBy.getEntityAggregation();
+  }
+
+  @Override
+  protected QLInstanceEntityAggregation getGroupByEntityFromTag(QLInstanceTagAggregation groupByTag) {
+    switch (groupByTag.getEntityType()) {
+      case APPLICATION:
+        return QLInstanceEntityAggregation.Application;
+      case SERVICE:
+        return QLInstanceEntityAggregation.Service;
+      case ENVIRONMENT:
+        return QLInstanceEntityAggregation.Environment;
+      default:
+        logger.warn("Unsupported tag entity type {}", groupByTag.getEntityType());
+        throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
+    }
   }
 }

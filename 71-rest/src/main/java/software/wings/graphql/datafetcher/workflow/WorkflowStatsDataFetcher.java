@@ -4,57 +4,96 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.inject.Inject;
 
-import io.harness.exception.WingsException;
+import io.harness.exception.InvalidRequestException;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
+import software.wings.beans.EntityType;
 import software.wings.beans.Workflow;
-import software.wings.graphql.datafetcher.RealTimeStatsDataFetcher;
+import software.wings.graphql.datafetcher.RealTimeStatsDataFetcherWithTags;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLNoOpAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.workflow.QLWorkflowAggregation;
 import software.wings.graphql.schema.type.aggregation.workflow.QLWorkflowEntityAggregation;
 import software.wings.graphql.schema.type.aggregation.workflow.QLWorkflowFilter;
+import software.wings.graphql.schema.type.aggregation.workflow.QLWorkflowTagAggregation;
+import software.wings.graphql.schema.type.aggregation.workflow.QLWorkflowTagType;
 import software.wings.graphql.utils.nameservice.NameService;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-public class WorkflowStatsDataFetcher extends RealTimeStatsDataFetcher<QLNoOpAggregateFunction, QLWorkflowFilter,
-    QLWorkflowAggregation, QLNoOpSortCriteria> {
+@Slf4j
+public class WorkflowStatsDataFetcher
+    extends RealTimeStatsDataFetcherWithTags<QLNoOpAggregateFunction, QLWorkflowFilter, QLWorkflowAggregation,
+        QLNoOpSortCriteria, QLWorkflowTagType, QLWorkflowTagAggregation, QLWorkflowEntityAggregation> {
   @Inject WorkflowQueryHelper workflowQueryHelper;
 
   @Override
   protected QLData fetch(String accountId, QLNoOpAggregateFunction aggregateFunction, List<QLWorkflowFilter> filters,
-      List<QLWorkflowAggregation> groupBy, List<QLNoOpSortCriteria> sortCriteria) {
+      List<QLWorkflowAggregation> groupByList, List<QLNoOpSortCriteria> sortCriteria) {
     final Class entityClass = Workflow.class;
-    List<String> groupByList = new ArrayList<>();
-    if (isNotEmpty(groupBy)) {
-      groupByList = groupBy.stream()
-                        .filter(g -> g != null && g.getEntityAggregation() != null)
-                        .map(g -> g.getEntityAggregation().name())
-                        .collect(Collectors.toList());
+    final List<String> groupByEntityList = new ArrayList<>();
+    if (isNotEmpty(groupByList)) {
+      groupByList.forEach(groupBy -> {
+        if (groupBy.getEntityAggregation() != null) {
+          groupByEntityList.add(groupBy.getEntityAggregation().name());
+        }
+
+        if (groupBy.getTagAggregation() != null) {
+          QLWorkflowEntityAggregation groupByEntityFromTag = getGroupByEntityFromTag(groupBy.getTagAggregation());
+          if (groupByEntityFromTag != null) {
+            groupByEntityList.add(groupByEntityFromTag.name());
+          }
+        }
+      });
     }
-    return getQLData(accountId, filters, entityClass, groupByList);
+    return getQLData(accountId, filters, entityClass, groupByEntityList);
   }
 
-  protected String getAggregationFieldName(String aggregation) {
+  public String getAggregationFieldName(String aggregation) {
     QLWorkflowEntityAggregation workflowAggregation = QLWorkflowEntityAggregation.valueOf(aggregation);
     switch (workflowAggregation) {
       case Application:
         return "appId";
       default:
-        throw new WingsException("Unknown aggregation type" + aggregation);
+        throw new InvalidRequestException("Unknown aggregation type" + aggregation);
     }
   }
 
   @Override
-  protected void populateFilters(String accountId, List<QLWorkflowFilter> filters, Query query) {
-    workflowQueryHelper.setQuery(filters, query);
+  public void populateFilters(String accountId, List<QLWorkflowFilter> filters, Query query) {
+    workflowQueryHelper.setQuery(filters, query, accountId);
   }
 
   @Override
   public String getEntityType() {
     return NameService.workflow;
+  }
+
+  @Override
+  protected QLWorkflowTagAggregation getTagAggregation(QLWorkflowAggregation groupBy) {
+    return groupBy.getTagAggregation();
+  }
+
+  @Override
+  protected EntityType getEntityType(QLWorkflowTagType entityType) {
+    return workflowQueryHelper.getEntityType(entityType);
+  }
+
+  @Override
+  protected QLWorkflowEntityAggregation getEntityAggregation(QLWorkflowAggregation groupBy) {
+    return groupBy.getEntityAggregation();
+  }
+
+  @Override
+  protected QLWorkflowEntityAggregation getGroupByEntityFromTag(QLWorkflowTagAggregation groupByTag) {
+    switch (groupByTag.getEntityType()) {
+      case APPLICATION:
+        return QLWorkflowEntityAggregation.Application;
+      default:
+        logger.warn("Unsupported tag entity type {}", groupByTag.getEntityType());
+        throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
+    }
   }
 }

@@ -37,8 +37,8 @@ public class ServiceConnectionDataFetcher
   @AuthRule(permissionType = PermissionType.SERVICE, action = Action.READ)
   protected QLServiceConnection fetchConnection(List<QLServiceFilter> serviceFilters,
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
-    Query<Service> query =
-        populateFilters(wingsPersistence, serviceFilters, Service.class).order(Sort.descending(ServiceKeys.createdAt));
+    Query<Service> query = populateFilters(wingsPersistence, serviceFilters, Service.class, true)
+                               .order(Sort.descending(ServiceKeys.createdAt));
 
     QLServiceConnectionBuilder qlServiceConnectionBuilder = QLServiceConnection.builder();
     qlServiceConnectionBuilder.pageInfo(utils.populate(pageQueryParameters, query, service -> {
@@ -52,7 +52,7 @@ public class ServiceConnectionDataFetcher
 
   @Override
   protected void populateFilters(List<QLServiceFilter> filters, Query query) {
-    serviceQueryHelper.setQuery(filters, query);
+    serviceQueryHelper.setQuery(filters, query, getAccountId());
   }
 
   @Override

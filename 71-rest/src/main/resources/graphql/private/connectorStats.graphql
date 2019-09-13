@@ -4,7 +4,6 @@ enum ConnectorTypeAggregation {
 
 input ConnectorAggregation {
   typeAggregation: ConnectorTypeAggregation
-  tagAggregation: TagAggregation
 }
 
 extend type Query {

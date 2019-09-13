@@ -24,12 +24,12 @@ public class ApplicationStatsDataFetcher extends RealTimeStatsDataFetcher<QLNoOp
   }
 
   @Override
-  protected void populateFilters(String accountId, List<QLApplicationFilter> filters, Query query) {
+  public void populateFilters(String accountId, List<QLApplicationFilter> filters, Query query) {
     // do nothing
   }
 
   @Override
-  protected String getAggregationFieldName(String aggregation) {
+  public String getAggregationFieldName(String aggregation) {
     return null;
   }
 

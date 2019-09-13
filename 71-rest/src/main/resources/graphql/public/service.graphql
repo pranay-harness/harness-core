@@ -31,4 +31,14 @@ type ServiceConnection {
 input ServiceFilter {
   application: IdFilter
   service: IdFilter
+  tag: ServiceTagFilter
+}
+
+input ServiceTagFilter {
+  entityType: ServiceTagType
+  tags: [TagInput]
+}
+
+enum ServiceTagType {
+  APPLICATION
 }

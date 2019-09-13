@@ -37,7 +37,7 @@ public class TriggerConnectionDataFetcher
   @AuthRule(permissionType = PermissionType.LOGGED_IN, action = Action.READ)
   protected QLTriggerConnection fetchConnection(List<QLTriggerFilter> triggerFilters,
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
-    Query<Trigger> query = populateFilters(wingsPersistence, triggerFilters, Trigger.class);
+    Query<Trigger> query = populateFilters(wingsPersistence, triggerFilters, Trigger.class, false);
     query.order(Sort.descending(TriggerKeys.createdAt));
 
     QLTriggerConnectionBuilder qlTriggerConnectionBuilder = QLTriggerConnection.builder();
@@ -52,16 +52,7 @@ public class TriggerConnectionDataFetcher
 
   @Override
   protected void populateFilters(List<QLTriggerFilter> filters, Query query) {
-    triggerQueryHelper.setQuery(filters, query);
-  }
-
-  /**
-   *
-   * @return
-   */
-  @Override
-  public String getAccountId() {
-    return null;
+    triggerQueryHelper.setQuery(filters, query, getAccountId());
   }
 
   @Override

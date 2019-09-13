@@ -150,17 +150,18 @@ public abstract class AbstractConnectionV2DataFetcher<F, S, O> extends BaseDataF
   protected abstract void populateFilters(List<F> filters, Query query);
 
   @NotNull
-  public Query populateFilters(WingsPersistence wingsPersistence, List<F> filters, Class entityClass) {
-    Query query = populateAccountFilter(wingsPersistence, entityClass);
+  public Query populateFilters(
+      WingsPersistence wingsPersistence, List<F> filters, Class entityClass, boolean accountFilter) {
+    Query query = populateAccountFilter(wingsPersistence, entityClass, accountFilter);
     populateFilters(filters, query);
     return query;
   }
 
   @NotNull
-  public Query populateAccountFilter(WingsPersistence wingsPersistence, Class entityClass) {
+  public Query populateAccountFilter(WingsPersistence wingsPersistence, Class entityClass, boolean accountFilter) {
     Query query = wingsPersistence.createAuthorizedQuery(entityClass);
     final String accountId = getAccountId();
-    if (accountId != null) {
+    if (accountId != null && accountFilter) {
       query.filter(SettingAttributeKeys.accountId, accountId);
       return query;
     }

@@ -36,7 +36,7 @@ public class ExecutionConnectionDataFetcher
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   protected QLExecutionConnection fetchConnection(List<QLExecutionFilter> filters,
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
-    Query<WorkflowExecution> query = populateFilters(wingsPersistence, filters, WorkflowExecution.class)
+    Query<WorkflowExecution> query = populateFilters(wingsPersistence, filters, WorkflowExecution.class, true)
                                          .order(Sort.descending(WorkflowExecutionKeys.createdAt));
 
     QLExecutionConnectionBuilder connectionBuilder = QLExecutionConnection.builder();
@@ -51,7 +51,7 @@ public class ExecutionConnectionDataFetcher
   @Override
   protected void populateFilters(List<QLExecutionFilter> filters, Query query) {
     filters = addAppIdValidation(filters);
-    executionQueryHelper.setQuery(filters, query);
+    executionQueryHelper.setQuery(filters, query, getAccountId());
   }
 
   private List<QLExecutionFilter> addAppIdValidation(List<QLExecutionFilter> filters) {
@@ -77,10 +77,10 @@ public class ExecutionConnectionDataFetcher
     return updatedFilters;
   }
 
-  @Override
-  public String getAccountId() {
-    return null;
-  }
+  //  @Override
+  //  public String getAccountId() {
+  //    return null;
+  //  }
 
   @Override
   protected QLExecutionFilter generateFilter(DataFetchingEnvironment environment, String key, String value) {

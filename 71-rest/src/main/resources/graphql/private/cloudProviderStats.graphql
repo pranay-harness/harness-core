@@ -4,7 +4,6 @@ enum CloudProviderTypeAggregation {
 
 input CloudProviderAggregation {
   typeAggregation: CloudProviderTypeAggregation
-  tagAggregation: TagAggregation
 }
 
 extend type Query {

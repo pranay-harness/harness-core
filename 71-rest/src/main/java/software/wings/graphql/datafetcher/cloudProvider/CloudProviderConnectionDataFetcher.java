@@ -38,7 +38,7 @@ public class CloudProviderConnectionDataFetcher
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   protected QLCloudProviderConnection fetchConnection(List<QLCloudProviderFilter> filters,
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
-    Query<SettingAttribute> query = populateFilters(wingsPersistence, filters, SettingAttribute.class)
+    Query<SettingAttribute> query = populateFilters(wingsPersistence, filters, SettingAttribute.class, true)
                                         .filter(SettingAttributeKeys.category, SettingCategory.CLOUD_PROVIDER);
 
     final List<SettingAttribute> settingAttributes = query.asList();

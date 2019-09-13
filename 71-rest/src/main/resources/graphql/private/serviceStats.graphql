@@ -5,7 +5,12 @@ enum ServiceEntityAggregation {
 
 input ServiceAggregation {
   entityAggregation: ServiceEntityAggregation
-  tagAggregation: TagAggregation
+  tagAggregation: ServiceTagAggregation
+}
+
+input ServiceTagAggregation {
+  entityType: ServiceTagType
+  tagName: String
 }
 
 extend type Query {

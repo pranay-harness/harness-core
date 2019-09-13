@@ -41,7 +41,7 @@ public class ConnectorConnectionDataFetcher
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
     final Iterable<SettingCategory> settingValues =
         Lists.newArrayList(SettingCategory.CONNECTOR, SettingCategory.HELM_REPO);
-    Query<SettingAttribute> query = populateFilters(wingsPersistence, filters, SettingAttribute.class);
+    Query<SettingAttribute> query = populateFilters(wingsPersistence, filters, SettingAttribute.class, true);
     query = query.field(SettingAttributeKeys.category).in(settingValues);
 
     final List<SettingAttribute> settingAttributes = query.asList();

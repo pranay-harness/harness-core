@@ -36,6 +36,7 @@ input DeploymentFilter {
   trigger: IdFilter
   workflow: IdFilter
   pipeline: IdFilter
+  tag: DeploymentTagFilter
 }
 
 input DeploymentAggregationFunction {
@@ -53,7 +54,12 @@ enum DurationAggregateOperation {
 input DeploymentAggregation {
   entityAggregation: DeploymentEntityAggregation
   timeAggregation: TimeSeriesAggregation
-  tagAggregation: TagAggregation
+  tagAggregation: DeploymentTagAggregation
+}
+
+input DeploymentTagAggregation {
+  entityType: DeploymentTagType
+  tagName: String
 }
 
 extend type Query {

@@ -5,12 +5,12 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
-import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.dl.WingsPersistence;
+import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.datafetcher.SettingsAttributeStatsDataFetcher;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLNoOpAggregateFunction;
@@ -23,6 +23,7 @@ import software.wings.graphql.utils.nameservice.NameService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 
 public class CloudProviderStatsDataFetcher extends SettingsAttributeStatsDataFetcher<QLNoOpAggregateFunction,
     QLCloudProviderFilter, QLCloudProviderAggregation, QLNoOpSortCriteria> {
@@ -44,14 +45,14 @@ public class CloudProviderStatsDataFetcher extends SettingsAttributeStatsDataFet
 
   @Override
   @NotNull
-  protected Query populateFilters(
-      WingsPersistence wingsPersistence, String accountId, List<QLCloudProviderFilter> filters, Class entityClass) {
-    Query query = super.populateFilters(wingsPersistence, accountId, filters, entityClass);
+  public Query populateFilters(DataFetcherUtils utils, WingsPersistence wingsPersistence, String accountId,
+      List<QLCloudProviderFilter> filters, Class entityClass) {
+    Query query = super.populateFilters(utils, wingsPersistence, accountId, filters, entityClass);
     query.filter(SettingAttributeKeys.category, SettingCategory.CLOUD_PROVIDER);
     return query;
   }
 
-  protected String getAggregationFieldName(String aggregation) {
+  public String getAggregationFieldName(String aggregation) {
     QLCloudProviderTypeAggregation cloudProviderAggregation = QLCloudProviderTypeAggregation.valueOf(aggregation);
     switch (cloudProviderAggregation) {
       case Type:
@@ -62,7 +63,7 @@ public class CloudProviderStatsDataFetcher extends SettingsAttributeStatsDataFet
   }
 
   @Override
-  protected void populateFilters(String accountId, List<QLCloudProviderFilter> filters, Query query) {
+  public void populateFilters(String accountId, List<QLCloudProviderFilter> filters, Query query) {
     cloudProviderQueryHelper.setQuery(filters, query);
   }
 

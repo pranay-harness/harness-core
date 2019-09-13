@@ -37,7 +37,7 @@ public class WorkflowConnectionDataFetcher
   @AuthRule(permissionType = PermissionType.WORKFLOW, action = Action.READ)
   public QLWorkflowConnection fetchConnection(List<QLWorkflowFilter> serviceFilters,
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
-    Query<Workflow> query = populateFilters(wingsPersistence, serviceFilters, Workflow.class);
+    Query<Workflow> query = populateFilters(wingsPersistence, serviceFilters, Workflow.class, true);
     query.order(Sort.descending(WorkflowKeys.createdAt));
     QLWorkflowConnectionBuilder connectionBuilder = QLWorkflowConnection.builder();
     connectionBuilder.pageInfo(utils.populate(pageQueryParameters, query, workflow -> {
@@ -51,7 +51,7 @@ public class WorkflowConnectionDataFetcher
 
   @Override
   protected void populateFilters(List<QLWorkflowFilter> filters, Query query) {
-    workflowQueryHelper.setQuery(filters, query);
+    workflowQueryHelper.setQuery(filters, query, getAccountId());
   }
 
   @Override

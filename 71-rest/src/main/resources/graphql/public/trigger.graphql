@@ -25,4 +25,14 @@ type TriggerConnection {
 input TriggerFilter {
   trigger: IdFilter
   application: IdFilter
+  tag: TriggerTagFilter
+}
+
+input TriggerTagFilter {
+  entityType: TriggerTagType
+  tags: [TagInput]
+}
+
+enum TriggerTagType {
+  APPLICATION
 }
