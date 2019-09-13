@@ -220,6 +220,8 @@ public class K8sStateHelper {
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(app.getAccountId())
                                     .appId(app.getUuid())
+                                    .envId(getEnvIdFromExecutionContext(context))
+                                    .infrastructureMappingId(getContainerInfrastructureMappingId(context))
                                     .waitId(waitId)
                                     .async(true)
                                     .data(TaskData.builder()
@@ -809,6 +811,8 @@ public class K8sStateHelper {
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(app.getAccountId())
                                     .appId(app.getUuid())
+                                    .envId(getEnvIdFromExecutionContext(context))
+                                    .infrastructureMappingId(getContainerInfrastructureMappingId(context))
                                     .waitId(waitId)
                                     .async(true)
                                     .data(TaskData.builder()
@@ -838,5 +842,23 @@ public class K8sStateHelper {
     }
 
     return k8sPodList.stream().map(K8sPod::getNamespace).collect(Collectors.toSet());
+  }
+
+  public String getContainerInfrastructureMappingId(ExecutionContext context) {
+    ContainerInfrastructureMapping infrastructureMapping = getContainerInfrastructureMapping(context);
+    if (infrastructureMapping == null) {
+      return null;
+    }
+
+    return infrastructureMapping.getUuid();
+  }
+
+  public String getEnvIdFromExecutionContext(ExecutionContext context) {
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    if (workflowStandardParams == null || workflowStandardParams.getEnv() == null) {
+      return null;
+    }
+
+    return workflowStandardParams.getEnv().getUuid();
   }
 }

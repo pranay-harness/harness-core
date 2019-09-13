@@ -112,6 +112,7 @@ import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.k8s.K8sStateHelper;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.ApplicationManifestUtils;
 import software.wings.utils.KubernetesConvention;
@@ -147,6 +148,7 @@ public class HelmDeployState extends State {
   @Inject private transient ApplicationManifestUtils applicationManifestUtils;
   @Inject private transient HelmChartConfigHelperService helmChartConfigHelperService;
   @Inject private transient ServiceTemplateHelper serviceTemplateHelper;
+  @Inject private transient K8sStateHelper k8sStateHelper;
 
   @DefaultValue("10") private int steadyStateTimeout; // Minutes
 
@@ -763,17 +765,20 @@ public class HelmDeployState extends State {
     applicationManifestUtils.setValuesPathInGitFetchFilesTaskParams(fetchFilesTaskParams);
 
     String waitId = generateUuid();
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(app.getAccountId())
-                                    .appId(app.getUuid())
-                                    .async(true)
-                                    .waitId(waitId)
-                                    .data(TaskData.builder()
-                                              .taskType(TaskType.GIT_FETCH_FILES_TASK.name())
-                                              .parameters(new Object[] {fetchFilesTaskParams})
-                                              .timeout(TimeUnit.MINUTES.toMillis(GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT))
-                                              .build())
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .accountId(app.getAccountId())
+            .appId(app.getUuid())
+            .envId(k8sStateHelper.getEnvIdFromExecutionContext(context))
+            .infrastructureMappingId(k8sStateHelper.getContainerInfrastructureMappingId(context))
+            .async(true)
+            .waitId(waitId)
+            .data(TaskData.builder()
+                      .taskType(TaskType.GIT_FETCH_FILES_TASK.name())
+                      .parameters(new Object[] {fetchFilesTaskParams})
+                      .timeout(TimeUnit.MINUTES.toMillis(GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT))
+                      .build())
+            .build();
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
@@ -950,17 +955,20 @@ public class HelmDeployState extends State {
         getHelmValuesFetchTaskParameters(context, app.getUuid(), activityId);
 
     String waitId = generateUuid();
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(app.getAccountId())
-                                    .appId(app.getUuid())
-                                    .waitId(waitId)
-                                    .async(true)
-                                    .data(TaskData.builder()
-                                              .taskType(TaskType.HELM_VALUES_FETCH.name())
-                                              .parameters(new Object[] {helmValuesFetchTaskParameters})
-                                              .timeout(TimeUnit.MINUTES.toMillis(10))
-                                              .build())
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .accountId(app.getAccountId())
+            .appId(app.getUuid())
+            .envId(k8sStateHelper.getEnvIdFromExecutionContext(context))
+            .infrastructureMappingId(k8sStateHelper.getContainerInfrastructureMappingId(context))
+            .waitId(waitId)
+            .async(true)
+            .data(TaskData.builder()
+                      .taskType(TaskType.HELM_VALUES_FETCH.name())
+                      .parameters(new Object[] {helmValuesFetchTaskParameters})
+                      .timeout(TimeUnit.MINUTES.toMillis(10))
+                      .build())
+            .build();
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
