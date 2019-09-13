@@ -307,7 +307,7 @@ public abstract class AbstractAnalysisState extends State {
       if (k8sElement != null) {
         ContainerInfrastructureMapping containerInfrastructureMapping =
             (ContainerInfrastructureMapping) infrastructureMapping;
-        List<K8sPod> currentPods = k8sStateHelper.getPodList(
+        List<K8sPod> currentPods = k8sStateHelper.tryGetPodList(
             containerInfrastructureMapping, containerInfrastructureMapping.getNamespace(), k8sElement.getReleaseName());
         if (currentPods != null) {
           currentPods.forEach(pod -> {

@@ -976,57 +976,48 @@ public class K8sTaskHelper {
   }
 
   public List<K8sPod> getPodDetailsWithTrack(
-      KubernetesConfig kubernetesConfig, String namespace, String releaseName, String track) {
+      KubernetesConfig kubernetesConfig, String namespace, String releaseName, String track) throws Exception {
     Map<String, String> labels = ImmutableMap.of(HarnessLabels.releaseName, releaseName, HarnessLabels.track, track);
     return getPodDetailsWithLabels(kubernetesConfig, namespace, releaseName, labels);
   }
 
   public List<K8sPod> getPodDetailsWithColor(
-      KubernetesConfig kubernetesConfig, String namespace, String releaseName, String color) {
+      KubernetesConfig kubernetesConfig, String namespace, String releaseName, String color) throws Exception {
     Map<String, String> labels = ImmutableMap.of(HarnessLabels.releaseName, releaseName, HarnessLabels.color, color);
     return getPodDetailsWithLabels(kubernetesConfig, namespace, releaseName, labels);
   }
 
-  public List<K8sPod> getPodDetails(KubernetesConfig kubernetesConfig, String namespace, String releaseName) {
+  public List<K8sPod> getPodDetails(KubernetesConfig kubernetesConfig, String namespace, String releaseName)
+      throws Exception {
     Map<String, String> labels = ImmutableMap.of(HarnessLabels.releaseName, releaseName);
     return getPodDetailsWithLabels(kubernetesConfig, namespace, releaseName, labels);
   }
 
-  public List<K8sPod> getPodDetailsWithLabels(
-      KubernetesConfig kubernetesConfig, String namespace, String releaseName, Map<String, String> labels) {
-    try {
-      return timeLimiter.callWithTimeout(() -> {
-        try {
-          return kubernetesContainerService.getRunningPodsWithLabels(kubernetesConfig, emptyList(), namespace, labels)
-              .stream()
-              .map(pod
-                  -> K8sPod.builder()
-                         .uid(pod.getMetadata().getUid())
-                         .name(pod.getMetadata().getName())
-                         .namespace(pod.getMetadata().getNamespace())
-                         .releaseName(releaseName)
-                         .podIP(pod.getStatus().getPodIP())
-                         .containerList(pod.getStatus()
-                                            .getContainerStatuses()
-                                            .stream()
-                                            .map(container
-                                                -> K8sContainer.builder()
-                                                       .containerId(container.getContainerID())
-                                                       .name(container.getName())
-                                                       .image(container.getImage())
-                                                       .build())
-                                            .collect(Collectors.toList()))
-                         .build())
-              .collect(Collectors.toList());
-        } catch (Exception e) {
-          logger.warn("Failed getting Pods ", e);
-          return null;
-        }
-      }, 10, TimeUnit.SECONDS, true);
-    } catch (Exception e) {
-      logger.warn("Failed getting Pods ", e);
-      return null;
-    }
+  public List<K8sPod> getPodDetailsWithLabels(KubernetesConfig kubernetesConfig, String namespace, String releaseName,
+      Map<String, String> labels) throws Exception {
+    return timeLimiter.callWithTimeout(() -> {
+      return kubernetesContainerService.getRunningPodsWithLabels(kubernetesConfig, emptyList(), namespace, labels)
+          .stream()
+          .map(pod
+              -> K8sPod.builder()
+                     .uid(pod.getMetadata().getUid())
+                     .name(pod.getMetadata().getName())
+                     .namespace(pod.getMetadata().getNamespace())
+                     .releaseName(releaseName)
+                     .podIP(pod.getStatus().getPodIP())
+                     .containerList(pod.getStatus()
+                                        .getContainerStatuses()
+                                        .stream()
+                                        .map(container
+                                            -> K8sContainer.builder()
+                                                   .containerId(container.getContainerID())
+                                                   .name(container.getName())
+                                                   .image(container.getImage())
+                                                   .build())
+                                        .collect(Collectors.toList()))
+                     .build())
+          .collect(Collectors.toList());
+    }, 10, TimeUnit.SECONDS, true);
   }
 
   public String getLoadBalancerEndpoint(KubernetesConfig kubernetesConfig, List<KubernetesResource> resources) {
