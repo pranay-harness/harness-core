@@ -10,4 +10,5 @@ import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 public class QLPipelineFilter implements EntityFilter {
   QLIdFilter application;
   QLIdFilter pipeline;
+  QLPipelineTagFilter tag;
 }

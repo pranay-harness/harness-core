@@ -15,6 +15,16 @@ enum PipelineFilterType {
 input PipelineFilter {
   application: IdFilter
   pipeline: IdFilter
+  tag: PipelineTagFilter
+}
+
+input PipelineTagFilter {
+  entityType: PipelineTagType
+  tags: [TagInput]
+}
+
+enum PipelineTagType {
+  APPLICATION
 }
 
 # Type for pipeline

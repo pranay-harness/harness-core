@@ -11,4 +11,5 @@ public class QLEnvironmentFilter implements EntityFilter {
   QLIdFilter environment;
   QLIdFilter application;
   QLEnvironmentTypeFilter environmentType;
+  QLEnvironmentTagFilter tag;
 }

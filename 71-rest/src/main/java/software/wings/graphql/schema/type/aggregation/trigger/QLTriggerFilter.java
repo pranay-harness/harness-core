@@ -10,4 +10,5 @@ import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 public class QLTriggerFilter implements EntityFilter {
   QLIdFilter trigger;
   QLIdFilter application;
+  QLTriggerTagFilter tag;
 }

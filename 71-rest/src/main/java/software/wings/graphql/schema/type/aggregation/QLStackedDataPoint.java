@@ -1,11 +1,11 @@
 package software.wings.graphql.schema.type.aggregation;
 
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 
 import java.util.List;
 
-@Value
+@Data
 @Builder
 public class QLStackedDataPoint {
   QLReference key;

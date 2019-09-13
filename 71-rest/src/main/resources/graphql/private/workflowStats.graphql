@@ -4,7 +4,12 @@ enum WorkflowEntityAggregation {
 
 input WorkflowAggregation {
   entityAggregation: WorkflowEntityAggregation
-  tagAggregation: TagAggregation
+  tagAggregation: WorkflowTagAggregation
+}
+
+input WorkflowTagAggregation {
+  entityType: WorkflowTagType
+  tagName: String
 }
 
 extend type Query {

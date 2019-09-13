@@ -21,6 +21,18 @@ input ExecutionFilter {
   workflow: IdFilter
   pipeline: IdFilter
   creationTime: TimeFilter
+  tag: DeploymentTagFilter
+}
+
+input DeploymentTagFilter {
+  entityType: DeploymentTagType
+  tags: [TagInput]
+}
+
+enum DeploymentTagType {
+  APPLICATION
+  SERVICE
+  ENVIRONMENT
 }
 
 enum ExecutionStatus {

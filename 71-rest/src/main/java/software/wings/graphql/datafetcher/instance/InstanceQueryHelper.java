@@ -11,14 +11,18 @@ import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
+import software.wings.beans.EntityType;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
+import software.wings.graphql.datafetcher.tag.TagHelper;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLStringFilter;
 import software.wings.graphql.schema.type.aggregation.QLStringOperator;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceFilter;
-import software.wings.graphql.schema.type.aggregation.tag.QLTagFilter;
+import software.wings.graphql.schema.type.aggregation.instance.QLInstanceTagFilter;
+import software.wings.graphql.schema.type.aggregation.instance.QLInstanceTagType;
+import software.wings.graphql.schema.type.aggregation.tag.QLTagInput;
 import software.wings.graphql.schema.type.instance.QLInstanceType;
 import software.wings.service.intfc.HarnessTagService;
 
@@ -33,6 +37,7 @@ import java.util.Set;
 public class InstanceQueryHelper {
   @Inject protected DataFetcherUtils utils;
   @Inject protected HarnessTagService tagService;
+  @Inject protected TagHelper tagHelper;
 
   public void setQuery(String accountId, List<QLInstanceFilter> filters, Query query) {
     if (isEmpty(filters)) {
@@ -82,10 +87,11 @@ public class InstanceQueryHelper {
                 .build());
       }
 
-      if (filter.getTagFilter() != null) {
-        QLTagFilter tagFilter = filter.getTagFilter();
-        Set<String> entityIds = tagService.getEntityIdsWithTag(
-            accountId, tagFilter.getName(), tagFilter.getEntityType(), tagFilter.getValues());
+      if (filter.getTag() != null) {
+        QLInstanceTagFilter tagFilter = filter.getTag();
+        List<QLTagInput> tags = tagFilter.getTags();
+        Set<String> entityIds =
+            tagHelper.getEntityIdsFromTags(accountId, tags, getEntityType(tagFilter.getEntityType()));
         if (isNotEmpty(entityIds)) {
           switch (tagFilter.getEntityType()) {
             case APPLICATION:
@@ -97,16 +103,6 @@ public class InstanceQueryHelper {
             case ENVIRONMENT:
               query.field("envId").in(entityIds);
               break;
-            case WORKFLOW:
-              query.field("workflowId").in(entityIds);
-              break;
-            case PIPELINE:
-              query.field("pipelineId").in(entityIds);
-              break;
-            case CLOUD_PROVIDER:
-            case CONNECTOR:
-              query.field("computeProviderId").in(entityIds);
-              break;
             default:
               logger.error("EntityType {} not supported in query", tagFilter.getEntityType());
               throw new InvalidRequestException("Error while compiling query", WingsException.USER);
@@ -114,5 +110,19 @@ public class InstanceQueryHelper {
         }
       }
     });
+  }
+
+  public EntityType getEntityType(QLInstanceTagType entityType) {
+    switch (entityType) {
+      case APPLICATION:
+        return EntityType.APPLICATION;
+      case SERVICE:
+        return EntityType.SERVICE;
+      case ENVIRONMENT:
+        return EntityType.ENVIRONMENT;
+      default:
+        logger.error("Unsupported entity type {} for tag ", entityType);
+        throw new InvalidRequestException("Unsupported entity type " + entityType);
+    }
   }
 }

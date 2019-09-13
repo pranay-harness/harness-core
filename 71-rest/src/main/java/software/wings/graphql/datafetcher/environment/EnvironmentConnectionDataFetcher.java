@@ -37,8 +37,8 @@ public class EnvironmentConnectionDataFetcher
   @AuthRule(permissionType = PermissionType.ENV, action = Action.READ)
   public QLEnvironmentConnection fetchConnection(List<QLEnvironmentFilter> filters,
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
-    Query<Environment> query =
-        populateFilters(wingsPersistence, filters, Environment.class).order(Sort.descending(EnvironmentKeys.createdAt));
+    Query<Environment> query = populateFilters(wingsPersistence, filters, Environment.class, true)
+                                   .order(Sort.descending(EnvironmentKeys.createdAt));
 
     QLEnvironmentConnectionBuilder connectionBuilder = QLEnvironmentConnection.builder();
     connectionBuilder.pageInfo(utils.populate(pageQueryParameters, query, environment -> {
@@ -51,7 +51,7 @@ public class EnvironmentConnectionDataFetcher
 
   @Override
   protected void populateFilters(List<QLEnvironmentFilter> filters, Query query) {
-    environmentQueryHelper.setQuery(filters, query);
+    environmentQueryHelper.setQuery(filters, query, getAccountId());
   }
 
   @Override

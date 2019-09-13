@@ -86,7 +86,7 @@ public class TagsInUseConnectionDataFetcher
   private void populateTags(
       List<QLTagInUseFilter> filters, List<String> tagsKeyList, Map<String, Set<String>> tagsInUseMap) {
     try (HIterator<HarnessTagLink> iterator =
-             new HIterator<HarnessTagLink>(populateFilters(wingsPersistence, filters, HarnessTagLink.class)
+             new HIterator<HarnessTagLink>(populateFilters(wingsPersistence, filters, HarnessTagLink.class, true)
                                                .project(HarnessTagLinkKeys.key, true)
                                                .project(HarnessTagLinkKeys.value, true)
                                                .order(HarnessTagLinkKeys.key)

@@ -1,5 +1,9 @@
 input TagFilter {
   entityType: EntityType
+  tags: [TagInput]
+}
+
+input TagInput {
   name: String
-  values: [String]
+  value: String
 }

@@ -26,8 +26,8 @@ public class ApplicationConnectionDataFetcher
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   public QLApplicationConnection fetchConnection(List<QLApplicationFilter> appFilters,
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
-    Query<Application> query =
-        populateFilters(wingsPersistence, null, Application.class).order(Sort.descending(ApplicationKeys.createdAt));
+    Query<Application> query = populateFilters(wingsPersistence, null, Application.class, true)
+                                   .order(Sort.descending(ApplicationKeys.createdAt));
 
     QLApplicationConnectionBuilder connectionBuilder = QLApplicationConnection.builder();
     connectionBuilder.pageInfo(utils.populate(pageQueryParameters, query, application -> {

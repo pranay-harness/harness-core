@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.execution;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -21,14 +22,17 @@ import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import io.fabric8.utils.Lists;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
-import software.wings.graphql.datafetcher.AbstractStatsDataFetcher;
+import software.wings.beans.EntityType;
+import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithTags;
 import software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.DeploymentMetaDataFields;
 import software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.DeploymentStatsQueryMetaDataBuilder;
 import software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.ResultType;
+import software.wings.graphql.datafetcher.tag.TagHelper;
 import software.wings.graphql.schema.type.aggregation.Filter;
 import software.wings.graphql.schema.type.aggregation.QLAggregatedData;
 import software.wings.graphql.schema.type.aggregation.QLAggregatedData.QLAggregatedDataBuilder;
@@ -73,6 +77,9 @@ import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentFil
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentFilterType;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentSortCriteria;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentSortType;
+import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTagAggregation;
+import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTagFilter;
+import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTagType;
 import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentTypeFilter;
 import software.wings.graphql.utils.nameservice.NameService;
 
@@ -95,10 +102,13 @@ import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
-public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeploymentAggregationFunction,
-    QLDeploymentFilter, QLDeploymentAggregation, QLDeploymentSortCriteria> {
+public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags<QLDeploymentAggregationFunction,
+    QLDeploymentFilter, QLDeploymentAggregation, QLDeploymentSortCriteria, QLDeploymentTagType,
+    QLDeploymentTagAggregation, QLDeploymentEntityAggregation> {
   @Inject TimeScaleDBService timeScaleDBService;
   @Inject QLStatsHelper statsHelper;
+  @Inject ExecutionQueryHelper executionQueryHelper;
+  @Inject TagHelper tagHelper;
   private DeploymentTableSchema schema = new DeploymentTableSchema();
   private static final long weekOffset = 7 * 24 * 60 * 60 * 1000;
 
@@ -140,17 +150,20 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
   }
 
   private QLData getData(@NotNull String accountId, QLDeploymentAggregationFunction aggregateFunction,
-      List<QLDeploymentFilter> filters, List<QLDeploymentAggregation> groupBy,
+      List<QLDeploymentFilter> filters, List<QLDeploymentAggregation> groupByList,
       List<QLDeploymentSortCriteria> sortCriteria) {
-    DeploymentStatsQueryMetaData queryData = null;
+    DeploymentStatsQueryMetaData queryData;
     boolean successful = false;
     int retryCount = 0;
-    List<QLDeploymentEntityAggregation> groupByEntity = getGroupByEntity(groupBy);
-    QLTimeSeriesAggregation groupByTime = getGroupByTime(groupBy);
+    List<QLDeploymentEntityAggregation> groupByEntityList = getGroupByEntity(groupByList);
+    List<QLDeploymentTagAggregation> groupByTagList = getGroupByTag(groupByList);
+    QLTimeSeriesAggregation groupByTime = getGroupByTime(groupByList);
 
-    preValidateInput(groupByEntity, groupByTime);
+    groupByEntityList = getGroupByEntityListFromTags(groupByList, groupByEntityList, groupByTagList, groupByTime);
 
-    queryData = formQuery(accountId, aggregateFunction, filters, groupByEntity, groupByTime, sortCriteria);
+    preValidateInput(groupByEntityList, groupByTime);
+
+    queryData = formQuery(accountId, aggregateFunction, filters, groupByEntityList, groupByTime, sortCriteria);
     logger.info("Query : [{}]", queryData.getQuery());
 
     while (!successful && retryCount < MAX_RETRY) {
@@ -538,6 +551,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
     selectQuery.addCustomFromTable(schema.getDeploymentTable());
 
     if (!Lists.isNullOrEmpty(filters)) {
+      filters = processFilterForTags(accountId, filters);
       decorateQueryWithFilters(selectQuery, filters);
     }
 
@@ -552,7 +566,6 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
     }
 
     addAccountFilter(selectQuery, accountId);
-
     addParentIdFilter(selectQuery);
 
     List<QLDeploymentSortCriteria> finalSortCriteria = null;
@@ -702,6 +715,57 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
         }
       }
     }
+  }
+
+  private List<QLDeploymentFilter> processFilterForTags(String accountId, List<QLDeploymentFilter> filters) {
+    List<QLDeploymentFilter> newList = new ArrayList<>();
+    for (QLDeploymentFilter filter : filters) {
+      Set<QLDeploymentFilterType> filterTypes = QLDeploymentFilter.getFilterTypes(filter);
+      for (QLDeploymentFilterType type : filterTypes) {
+        if (type.equals(QLDeploymentFilterType.Tag)) {
+          QLDeploymentTagFilter tagFilter = filter.getTag();
+
+          if (tagFilter != null) {
+            Set<String> entityIds = tagHelper.getEntityIdsFromTags(
+                accountId, tagFilter.getTags(), getEntityType(tagFilter.getEntityType()));
+            if (isNotEmpty(entityIds)) {
+              switch (tagFilter.getEntityType()) {
+                case APPLICATION:
+                  newList.add(QLDeploymentFilter.builder()
+                                  .application(QLIdFilter.builder()
+                                                   .operator(QLIdOperator.IN)
+                                                   .values(entityIds.toArray(new String[0]))
+                                                   .build())
+                                  .build());
+                  break;
+                case SERVICE:
+                  newList.add(QLDeploymentFilter.builder()
+                                  .service(QLIdFilter.builder()
+                                               .operator(QLIdOperator.IN)
+                                               .values(entityIds.toArray(new String[0]))
+                                               .build())
+                                  .build());
+                  break;
+                case ENVIRONMENT:
+                  newList.add(QLDeploymentFilter.builder()
+                                  .environment(QLIdFilter.builder()
+                                                   .operator(QLIdOperator.IN)
+                                                   .values(entityIds.toArray(new String[0]))
+                                                   .build())
+                                  .build());
+                  break;
+                default:
+                  logger.error("EntityType {} not supported in query", tagFilter.getEntityType());
+                  throw new InvalidRequestException("Error while compiling query", WingsException.USER);
+              }
+            }
+          }
+        } else {
+          newList.add(filter);
+        }
+      }
+    }
+    return newList;
   }
 
   private void addSimpleTimeFilter(SelectQuery selectQuery, Filter filter, QLDeploymentFilterType type) {
@@ -1149,5 +1213,35 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
   @Override
   public String getEntityType() {
     return NameService.deployment;
+  }
+
+  @Override
+  protected QLDeploymentTagAggregation getTagAggregation(QLDeploymentAggregation groupBy) {
+    return groupBy.getTagAggregation();
+  }
+
+  @Override
+  protected EntityType getEntityType(QLDeploymentTagType entityType) {
+    return executionQueryHelper.getEntityType(entityType);
+  }
+
+  @Override
+  protected QLDeploymentEntityAggregation getGroupByEntityFromTag(QLDeploymentTagAggregation groupByTag) {
+    switch (groupByTag.getEntityType()) {
+      case APPLICATION:
+        return QLDeploymentEntityAggregation.Application;
+      case SERVICE:
+        return QLDeploymentEntityAggregation.Service;
+      case ENVIRONMENT:
+        return QLDeploymentEntityAggregation.Environment;
+      default:
+        logger.warn("Unsupported tag entity type {}", groupByTag.getEntityType());
+        throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
+    }
+  }
+
+  @Override
+  protected QLDeploymentEntityAggregation getEntityAggregation(QLDeploymentAggregation groupBy) {
+    return groupBy.getEntityAggregation();
   }
 }

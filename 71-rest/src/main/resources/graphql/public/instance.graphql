@@ -15,6 +15,17 @@ enum InstanceType {
   PCF_INSTANCE
 }
 
+input InstanceTagFilter {
+  entityType: InstanceTagType
+  tags: [TagInput]
+}
+
+enum InstanceTagType {
+  APPLICATION
+  SERVICE
+  ENVIRONMENT
+}
+
 type InstanceConnection {
   pageInfo: PageInfo
   nodes: [Instance]
@@ -27,7 +38,7 @@ input InstanceFilter {
   environment: IdFilter
   cloudProvider: IdFilter
   instanceType: InstanceType
-  tagFilter: TagFilter
+  tag: InstanceTagFilter
 }
 
 interface Instance {

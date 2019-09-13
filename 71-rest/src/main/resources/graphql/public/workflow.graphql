@@ -35,4 +35,14 @@ enum WorkflowFilterType {
 input WorkflowFilter {
   application: IdFilter
   workflow: IdFilter
+  tag: WorkflowTagFilter
+}
+
+input WorkflowTagFilter {
+  entityType: WorkflowTagType
+  tags: [TagInput]
+}
+
+enum WorkflowTagType {
+  APPLLICATION
 }

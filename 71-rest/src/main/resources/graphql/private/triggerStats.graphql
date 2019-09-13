@@ -4,7 +4,12 @@ enum TriggerEntityAggregation {
 
 input TriggerAggregation {
   entityAggregation: TriggerEntityAggregation
-  tagAggregation: TagAggregation
+  tagAggregation: TriggerTagAggregation
+}
+
+input TriggerTagAggregation {
+  entityType: TriggerTagType
+  tagName: String
 }
 
 extend type Query {

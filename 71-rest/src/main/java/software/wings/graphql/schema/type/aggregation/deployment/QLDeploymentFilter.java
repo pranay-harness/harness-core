@@ -2,8 +2,8 @@ package software.wings.graphql.schema.type.aggregation.deployment;
 
 import io.harness.exception.WingsException;
 import lombok.Builder;
+import lombok.Data;
 import lombok.ToString;
-import lombok.Value;
 import software.wings.graphql.schema.type.aggregation.EntityFilter;
 import software.wings.graphql.schema.type.aggregation.Filter;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
@@ -15,7 +15,7 @@ import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentT
 import java.util.HashSet;
 import java.util.Set;
 
-@Value
+@Data
 @Builder
 @ToString
 public class QLDeploymentFilter implements EntityFilter {
@@ -50,6 +50,7 @@ public class QLDeploymentFilter implements EntityFilter {
   private QLIdFilter trigger;
   private QLIdFilter workflow;
   private QLIdFilter pipeline;
+  private QLDeploymentTagFilter tag;
 
   public static Set<QLDeploymentFilterType> getFilterTypes(QLDeploymentFilter filter) {
     Set<QLDeploymentFilterType> filterTypes = new HashSet<>();
@@ -100,6 +101,10 @@ public class QLDeploymentFilter implements EntityFilter {
       filterTypes.add(QLDeploymentFilterType.RollbackDuration);
     }
 
+    if (filter.getTag() != null) {
+      filterTypes.add(QLDeploymentFilterType.Tag);
+    }
+
     return filterTypes;
   }
 
@@ -133,6 +138,8 @@ public class QLDeploymentFilter implements EntityFilter {
         return filter.getEndTime();
       case StartTime:
         return filter.getStartTime();
+      case Tag:
+        return filter.getTag();
       default:
         throw new WingsException("Unsupported type " + type);
     }

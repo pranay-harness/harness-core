@@ -37,7 +37,7 @@ public class PipelineConnectionDataFetcher
   @AuthRule(permissionType = PermissionType.PIPELINE, action = Action.READ)
   public QLPipelineConnection fetchConnection(List<QLPipelineFilter> pipelineFilters,
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
-    Query<Pipeline> query = populateFilters(wingsPersistence, pipelineFilters, Pipeline.class);
+    Query<Pipeline> query = populateFilters(wingsPersistence, pipelineFilters, Pipeline.class, true);
     query.order(Sort.descending(PipelineKeys.createdAt));
 
     QLPipelineConnectionBuilder connectionBuilder = QLPipelineConnection.builder();
@@ -51,7 +51,7 @@ public class PipelineConnectionDataFetcher
 
   @Override
   protected void populateFilters(List<QLPipelineFilter> filters, Query query) {
-    pipelineQueryHelper.setQuery(filters, query);
+    pipelineQueryHelper.setQuery(filters, query, getAccountId());
   }
 
   @Override

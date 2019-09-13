@@ -4,43 +4,66 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.inject.Inject;
 
-import io.harness.exception.WingsException;
-import org.jetbrains.annotations.NotNull;
+import io.harness.exception.InvalidRequestException;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
+import software.wings.beans.EntityType;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.Trigger.TriggerKeys;
 import software.wings.dl.WingsPersistence;
-import software.wings.graphql.datafetcher.RealTimeStatsDataFetcher;
+import software.wings.graphql.datafetcher.DataFetcherUtils;
+import software.wings.graphql.datafetcher.RealTimeStatsDataFetcherWithTags;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLNoOpAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.trigger.QLTriggerAggregation;
 import software.wings.graphql.schema.type.aggregation.trigger.QLTriggerEntityAggregation;
 import software.wings.graphql.schema.type.aggregation.trigger.QLTriggerFilter;
+import software.wings.graphql.schema.type.aggregation.trigger.QLTriggerTagAggregation;
+import software.wings.graphql.schema.type.aggregation.trigger.QLTriggerTagType;
 import software.wings.graphql.utils.nameservice.NameService;
 import software.wings.service.intfc.AppService;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 
-public class TriggerStatsDataFetcher extends RealTimeStatsDataFetcher<QLNoOpAggregateFunction, QLTriggerFilter,
-    QLTriggerAggregation, QLNoOpSortCriteria> {
+@Slf4j
+public class TriggerStatsDataFetcher extends RealTimeStatsDataFetcherWithTags<QLNoOpAggregateFunction, QLTriggerFilter,
+    QLTriggerAggregation, QLNoOpSortCriteria, QLTriggerTagType, QLTriggerTagAggregation, QLTriggerEntityAggregation> {
   @Inject private AppService appService;
   @Inject TriggerQueryHelper triggerQueryHelper;
 
   @Override
+  protected QLTriggerTagAggregation getTagAggregation(QLTriggerAggregation groupBy) {
+    return groupBy.getTagAggregation();
+  }
+
+  @Override
+  protected EntityType getEntityType(QLTriggerTagType entityType) {
+    return triggerQueryHelper.getEntityType(entityType);
+  }
+
+  @Override
   protected QLData fetch(String accountId, QLNoOpAggregateFunction aggregateFunction, List<QLTriggerFilter> filters,
-      List<QLTriggerAggregation> groupBy, List<QLNoOpSortCriteria> sortCriteria) {
+      List<QLTriggerAggregation> groupByList, List<QLNoOpSortCriteria> sortCriteria) {
     final Class entityClass = Trigger.class;
-    List<String> groupByList = new ArrayList<>();
-    if (isNotEmpty(groupBy)) {
-      groupByList = groupBy.stream()
-                        .filter(g -> g != null && g.getEntityAggregation() != null)
-                        .map(g -> g.getEntityAggregation().name())
-                        .collect(Collectors.toList());
+    final List<String> groupByEntityList = new ArrayList<>();
+    if (isNotEmpty(groupByList)) {
+      groupByList.forEach(groupBy -> {
+        if (groupBy.getEntityAggregation() != null) {
+          groupByEntityList.add(groupBy.getEntityAggregation().name());
+        }
+
+        if (groupBy.getTagAggregation() != null) {
+          QLTriggerEntityAggregation groupByEntityFromTag = getGroupByEntityFromTag(groupBy.getTagAggregation());
+          if (groupByEntityFromTag != null) {
+            groupByEntityList.add(groupByEntityFromTag.name());
+          }
+        }
+      });
     }
-    return getQLData(accountId, filters, entityClass, groupByList);
+    return getQLData(accountId, filters, entityClass, groupByEntityList);
   }
 
   private void populateAppIdFilter(String accountId, Query query) {
@@ -50,31 +73,48 @@ public class TriggerStatsDataFetcher extends RealTimeStatsDataFetcher<QLNoOpAggr
 
   @Override
   @NotNull
-  protected Query populateFilters(
-      WingsPersistence wingsPersistence, String accountId, List<QLTriggerFilter> filters, Class entityClass) {
+  public Query populateFilters(DataFetcherUtils utils, WingsPersistence wingsPersistence, String accountId,
+      List<QLTriggerFilter> filters, Class entityClass) {
     Query query = wingsPersistence.createQuery(entityClass);
     populateFilters(accountId, filters, query);
     populateAppIdFilter(accountId, query);
     return query;
   }
 
-  protected String getAggregationFieldName(String aggregation) {
+  public String getAggregationFieldName(String aggregation) {
     QLTriggerEntityAggregation triggerAggregation = QLTriggerEntityAggregation.valueOf(aggregation);
     switch (triggerAggregation) {
       case Application:
         return "appId";
       default:
-        throw new WingsException("Unknown aggregation type" + aggregation);
+        logger.warn("Unknown aggregation type" + aggregation);
+        throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
     }
   }
 
   @Override
-  protected void populateFilters(String accountId, List<QLTriggerFilter> filters, Query query) {
-    triggerQueryHelper.setQuery(filters, query);
+  public void populateFilters(String accountId, List<QLTriggerFilter> filters, Query query) {
+    triggerQueryHelper.setQuery(filters, query, accountId);
   }
 
   @Override
   public String getEntityType() {
     return NameService.trigger;
+  }
+
+  @Override
+  protected QLTriggerEntityAggregation getEntityAggregation(QLTriggerAggregation groupBy) {
+    return groupBy.getEntityAggregation();
+  }
+
+  @Override
+  protected QLTriggerEntityAggregation getGroupByEntityFromTag(QLTriggerTagAggregation groupByTag) {
+    switch (groupByTag.getEntityType()) {
+      case APPLICATION:
+        return QLTriggerEntityAggregation.Application;
+      default:
+        logger.warn("Unsupported tag entity type {}", groupByTag.getEntityType());
+        throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
+    }
   }
 }

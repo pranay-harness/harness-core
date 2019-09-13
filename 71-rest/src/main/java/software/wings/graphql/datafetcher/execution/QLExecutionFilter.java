@@ -8,6 +8,7 @@ import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLNumberFilter;
 import software.wings.graphql.schema.type.aggregation.QLStringFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
+import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTagFilter;
 
 @Value
 @Builder
@@ -27,4 +28,5 @@ public class QLExecutionFilter implements EntityFilter {
   private QLIdFilter pipeline;
   private QLTimeFilter creationTime;
   private QLIdFilter pipelineExecution;
+  private QLDeploymentTagFilter tag;
 }

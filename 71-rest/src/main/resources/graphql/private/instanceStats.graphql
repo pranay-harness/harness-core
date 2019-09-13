@@ -9,7 +9,12 @@ enum InstanceEntityAggregation {
 input InstanceAggregation {
   entityAggregation: InstanceEntityAggregation
   timeAggregation: TimeSeriesAggregation
-  tagAggregation: TagAggregation
+  tagAggregation: InstanceTagAggregation
+}
+
+input InstanceTagAggregation {
+  entityType: InstanceTagType
+  tagName: String
 }
 
 extend type Query {

@@ -12,6 +12,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.dl.WingsPersistence;
+import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.datafetcher.SettingsAttributeStatsDataFetcher;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLNoOpAggregateFunction;
@@ -45,20 +46,20 @@ public class ConnectorStatsDataFetcher extends SettingsAttributeStatsDataFetcher
 
   @NotNull
   @Override
-  protected Query populateFilters(
-      WingsPersistence wingsPersistence, String accountId, List<QLConnectorFilter> filters, Class entityClass) {
-    Query query = super.populateFilters(wingsPersistence, accountId, filters, entityClass);
+  public Query populateFilters(DataFetcherUtils utils, WingsPersistence wingsPersistence, String accountId,
+      List<QLConnectorFilter> filters, Class entityClass) {
+    Query query = super.populateFilters(utils, wingsPersistence, accountId, filters, entityClass);
     query.field(SettingAttributeKeys.category)
         .in(Lists.newArrayList(SettingCategory.CONNECTOR, SettingCategory.HELM_REPO));
     return query;
   }
 
   @Override
-  protected void populateFilters(String accountId, List<QLConnectorFilter> filters, Query query) {
+  public void populateFilters(String accountId, List<QLConnectorFilter> filters, Query query) {
     connectorQueryHelper.setQuery(filters, query);
   }
 
-  protected String getAggregationFieldName(String aggregation) {
+  public String getAggregationFieldName(String aggregation) {
     QLConnectorTypeAggregation connectorAggregation = QLConnectorTypeAggregation.valueOf(aggregation);
     switch (connectorAggregation) {
       case Type:

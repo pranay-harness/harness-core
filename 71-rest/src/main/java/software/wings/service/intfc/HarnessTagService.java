@@ -8,7 +8,6 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.EntityType;
 import software.wings.beans.HarnessTag;
 import software.wings.beans.HarnessTagLink;
-import software.wings.graphql.schema.type.aggregation.QLEntityType;
 import software.wings.security.PermissionAttribute.Action;
 
 import java.util.Collection;
@@ -44,14 +43,14 @@ public interface HarnessTagService {
   void validateTagResourceAccess(String appId, String accountId, String entityId, EntityType entityType, Action action);
   void convertRestrictedTagsToNonRestrictedTags(Collection<String> accounts);
 
-  Set<HarnessTagLink> getTagLinks(String accountId, EntityType entityType, List<String> entityIds, String key);
+  Set<HarnessTagLink> getTagLinks(String accountId, EntityType entityType, Set<String> entityIds, String key);
 
   /**
    * @param accountId
    * @param key
    * @param entityType
-   * @param values if value is not present, returns all the entityIds with the key and any value
+   * @param value if value is not present, returns all the entityIds with the key and any value
    * @return set of entityIds
    */
-  Set<String> getEntityIdsWithTag(String accountId, String key, QLEntityType entityType, List<String> values);
+  Set<String> getEntityIdsWithTag(String accountId, String key, EntityType entityType, String value);
 }

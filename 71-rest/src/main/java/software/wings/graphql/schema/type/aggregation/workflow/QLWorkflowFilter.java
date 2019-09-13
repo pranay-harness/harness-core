@@ -10,4 +10,5 @@ import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 public class QLWorkflowFilter implements EntityFilter {
   QLIdFilter application;
   QLIdFilter workflow;
+  QLWorkflowTagFilter tag;
 }
