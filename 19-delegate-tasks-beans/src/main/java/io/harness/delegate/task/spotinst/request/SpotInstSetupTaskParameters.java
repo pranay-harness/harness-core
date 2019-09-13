@@ -18,12 +18,13 @@ public class SpotInstSetupTaskParameters extends SpotInstTaskParameters {
   private String image;
   private String resizeStrategy;
   private List<LoadBalancerDetailsForBGDeployment> awsLoadBalancerConfigs;
+  private String userData;
 
   @Builder
   public SpotInstSetupTaskParameters(String accountId, String appId, String commandName, String activityId,
       Integer timeoutIntervalInMin, String elastiGroupJson, String workflowExecutionId, String elastiGroupNamePrefix,
       boolean blueGreen, String image, String resizeStrategy, String awsRegion,
-      List<LoadBalancerDetailsForBGDeployment> awsLoadBalancerConfigs) {
+      List<LoadBalancerDetailsForBGDeployment> awsLoadBalancerConfigs, String userData) {
     super(appId, accountId, activityId, commandName, workflowExecutionId, timeoutIntervalInMin, SPOT_INST_SETUP,
         awsRegion);
     this.blueGreen = blueGreen;
@@ -32,5 +33,6 @@ public class SpotInstSetupTaskParameters extends SpotInstTaskParameters {
     this.image = image;
     this.resizeStrategy = resizeStrategy;
     this.awsLoadBalancerConfigs = awsLoadBalancerConfigs;
+    this.userData = userData;
   }
 }
