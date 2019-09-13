@@ -14,6 +14,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
+import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -33,6 +34,8 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.K8sPodSyncException;
+import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.K8sPod;
@@ -66,7 +69,7 @@ import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
-import software.wings.common.Constants;
+import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.helm.request.HelmValuesFetchTaskParameters;
@@ -458,7 +461,7 @@ public class K8sStateHelper {
     ContainerInfrastructureMapping infraMapping = getContainerInfrastructureMapping(context);
     String serviceTemplateId = serviceTemplateHelper.fetchServiceTemplateId(infraMapping);
 
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();
     Artifact artifact = ((DeploymentExecutionContext) context).getArtifactForService(serviceId);
     String artifactStreamId = artifact == null ? null : artifact.getArtifactStreamId();
@@ -610,8 +613,18 @@ public class K8sStateHelper {
         .collect(Collectors.toList());
   }
 
-  public List<K8sPod> getPodList(
+  public List<K8sPod> tryGetPodList(
       ContainerInfrastructureMapping containerInfrastructureMapping, String namespace, String releaseName) {
+    try {
+      return getPodList(containerInfrastructureMapping, namespace, releaseName);
+    } catch (Exception e) {
+      logger.info("Failed to fetch PodList for release {}. Exception: {}.", releaseName, e);
+    }
+    return null;
+  }
+
+  public List<K8sPod> getPodList(ContainerInfrastructureMapping containerInfrastructureMapping, String namespace,
+      String releaseName) throws K8sPodSyncException, InterruptedException {
     K8sInstanceSyncTaskParameters k8sInstanceSyncTaskParameters =
         K8sInstanceSyncTaskParameters.builder()
             .accountId(containerInfrastructureMapping.getAccountId())
@@ -637,25 +650,28 @@ public class K8sStateHelper {
                                     .infrastructureMappingId(containerInfrastructureMapping.getUuid())
                                     .build();
 
-    try {
-      ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
-      if (notifyResponseData instanceof ErrorNotifyResponseData) {
-        logger.info("Failed to fetch PodList for release {}. Msg: {}.", releaseName,
-            ((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
-      } else {
-        K8sTaskExecutionResponse k8sTaskExecutionResponse = delegateService.executeTask(delegateTask);
-        if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
-          K8sInstanceSyncResponse k8sInstanceSyncResponse =
-              (K8sInstanceSyncResponse) k8sTaskExecutionResponse.getK8sTaskResponse();
-          return k8sInstanceSyncResponse.getK8sPodInfoList();
-        }
-        logger.info("Failed to fetch PodList for release {}. Msg: {}. Status: {}", releaseName,
-            k8sTaskExecutionResponse.getErrorMessage(), k8sTaskExecutionResponse.getCommandExecutionStatus());
-      }
-    } catch (Exception e) {
-      logger.info("Failed to fetch PodList for release " + releaseName, e);
+    ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
+    if (notifyResponseData instanceof ErrorNotifyResponseData) {
+      throw new K8sPodSyncException(format("Failed to fetch PodList for release %s. Error: %s", releaseName,
+          ((ErrorNotifyResponseData) notifyResponseData).getErrorMessage()));
+    } else if (notifyResponseData instanceof RemoteMethodReturnValueData
+        && ((RemoteMethodReturnValueData) notifyResponseData).getException() != null) {
+      throw new K8sPodSyncException(
+          format("Failed to fetch PodList for release %s. Exception: %s", releaseName, notifyResponseData));
+    } else if (!(notifyResponseData instanceof K8sTaskExecutionResponse)) {
+      throw new UnexpectedException(format("Failed to fetch PodList for release %s. Unknown return type %s",
+          releaseName + notifyResponseData.getClass().getName()));
     }
-    return null;
+
+    K8sTaskExecutionResponse k8sTaskExecutionResponse = (K8sTaskExecutionResponse) notifyResponseData;
+    if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
+      K8sInstanceSyncResponse k8sInstanceSyncResponse =
+          (K8sInstanceSyncResponse) k8sTaskExecutionResponse.getK8sTaskResponse();
+      return k8sInstanceSyncResponse.getK8sPodInfoList();
+    }
+
+    throw new K8sPodSyncException(format("Failed to fetch PodList for release %s. Msg: %s. Status: %s", releaseName,
+        k8sTaskExecutionResponse.getErrorMessage(), k8sTaskExecutionResponse.getCommandExecutionStatus()));
   }
 
   private List<InstanceElement> getInstanceElementList(List<K8sPod> podList) {

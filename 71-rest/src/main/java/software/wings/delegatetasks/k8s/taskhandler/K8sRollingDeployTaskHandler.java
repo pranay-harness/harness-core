@@ -165,7 +165,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
         .build();
   }
 
-  private List<K8sPod> getPods() {
+  private List<K8sPod> getPods() throws Exception {
     List<K8sPod> k8sPods = new ArrayList<>();
 
     if (isEmpty(managedWorkloads)) {
@@ -184,7 +184,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     return k8sPods;
   }
 
-  private List<K8sPod> getNewPods(List<K8sPod> existingPods) {
+  private List<K8sPod> getNewPods(List<K8sPod> existingPods) throws Exception {
     List<K8sPod> newPods = getPods();
     if (CollectionUtils.isEmpty(existingPods)) {
       return newPods;

@@ -2,6 +2,7 @@ package software.wings.service.impl.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -22,6 +23,7 @@ import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.HarnessException;
+import io.harness.exception.K8sPodSyncException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.K8sPod;
@@ -248,14 +250,16 @@ public class ContainerInstanceHandler extends InstanceHandler {
   }
 
   private void syncK8sInstances(ContainerInfrastructureMapping containerInfraMapping,
-      ContainerMetadata containerMetadata, Collection<Instance> instancesInDB, DeploymentSummary deploymentSummary) {
-    List<K8sPod> currentPods = k8sStateHelper.getPodList(
-        containerInfraMapping, containerMetadata.getNamespace(), containerMetadata.getReleaseName());
-
-    if (currentPods == null) {
-      logger.warn("Skipping Instance Sync. Could not fetch pod Info for release " + containerMetadata.getReleaseName()
-          + " in namespace " + containerMetadata.getNamespace());
-      return;
+      ContainerMetadata containerMetadata, Collection<Instance> instancesInDB, DeploymentSummary deploymentSummary)
+      throws WingsException {
+    List<K8sPod> currentPods = null;
+    try {
+      currentPods = k8sStateHelper.getPodList(
+          containerInfraMapping, containerMetadata.getNamespace(), containerMetadata.getReleaseName());
+    } catch (Exception e) {
+      throw new K8sPodSyncException(format("Exception in fetching podList for release %s, namespace %s",
+                                        containerMetadata.getReleaseName(), containerMetadata.getNamespace()),
+          e);
     }
 
     Map<String, K8sPod> currentPodsMap = new HashMap<>();
@@ -272,7 +276,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
     Set<String> instanceIdsToBeDeleted =
         instancesToBeDeleted.stream().map(instancePodName -> dbPodMap.get(instancePodName).getUuid()).collect(toSet());
 
-    logger.info(String.format(
+    logger.info(format(
         "[InstanceSync for infra %s namespace %s release %s] Got %d running Pods. InstancesToBeAdded:%d InstancesToBeDeleted:%d",
         containerInfraMapping.getUuid(), containerMetadata.getNamespace(), containerMetadata.getReleaseName(),
         currentPods.size(), instancesToBeAdded.size(), instanceIdsToBeDeleted.size()));
