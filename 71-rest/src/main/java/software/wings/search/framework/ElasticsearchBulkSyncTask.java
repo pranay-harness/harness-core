@@ -36,7 +36,7 @@ import java.util.Set;
 @Slf4j
 public class ElasticsearchBulkSyncTask extends ElasticsearchSyncTask {
   @Inject RestHighLevelClient client;
-  @Inject ElasticsearchDao elasticsearchDao;
+  @Inject SearchDao searchDao;
   @Inject ElasticsearchIndexManager elasticsearchIndexManager;
   private Queue<ChangeEvent> changeEventsDuringBulkSync = new LinkedList<>();
   private Map<Class, Boolean> isFirstChangeReceived = new HashMap<>();
@@ -136,8 +136,7 @@ public class ElasticsearchBulkSyncTask extends ElasticsearchSyncTask {
         if (!jsonString.isPresent()) {
           return false;
         }
-        boolean isUpserted =
-            elasticsearchDao.upsertDocument(searchEntity.getType(), entityBaseView.getId(), jsonString.get());
+        boolean isUpserted = searchDao.upsertDocument(searchEntity.getType(), entityBaseView.getId(), jsonString.get());
         if (!isUpserted) {
           return false;
         }

@@ -14,7 +14,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.search.entities.application.ApplicationSearchEntity;
 import software.wings.search.entities.pipeline.PipelineView.PipelineViewKeys;
 import software.wings.search.framework.ChangeHandler;
-import software.wings.search.framework.ElasticsearchDao;
+import software.wings.search.framework.SearchDao;
 import software.wings.search.framework.SearchEntityUtils;
 import software.wings.search.framework.changestreams.ChangeEvent;
 import software.wings.search.framework.changestreams.ChangeType;
@@ -30,7 +30,7 @@ import java.util.Optional;
 
 @Slf4j
 public class PipelineChangeHandler implements ChangeHandler {
-  @Inject private ElasticsearchDao elasticsearchDao;
+  @Inject private SearchDao searchDao;
   @Inject private WingsPersistence wingsPersistence;
   private static final Mapper mapper = new Mapper();
   private static final EntityCache entityCache = new DefaultEntityCache();
@@ -48,7 +48,7 @@ public class PipelineChangeHandler implements ChangeHandler {
         String newValue = application.getName();
         String filterKey = PipelineViewKeys.appId;
         String filterValue = application.getUuid();
-        return elasticsearchDao.updateKeyInMultipleDocuments(
+        return searchDao.updateKeyInMultipleDocuments(
             PipelineSearchEntity.TYPE, keyToUpdate, newValue, filterKey, filterValue);
       }
     }
@@ -73,12 +73,12 @@ public class PipelineChangeHandler implements ChangeHandler {
 
         Optional<String> jsonString = SearchEntityUtils.convertToJson(pipelineView);
         if (jsonString.isPresent()) {
-          return elasticsearchDao.upsertDocument(PipelineSearchEntity.TYPE, pipelineView.getId(), jsonString.get());
+          return searchDao.upsertDocument(PipelineSearchEntity.TYPE, pipelineView.getId(), jsonString.get());
         }
         return false;
       }
       case DELETE: {
-        return elasticsearchDao.deleteDocument(PipelineSearchEntity.TYPE, changeEvent.getUuid());
+        return searchDao.deleteDocument(PipelineSearchEntity.TYPE, changeEvent.getUuid());
       }
       default:
     }

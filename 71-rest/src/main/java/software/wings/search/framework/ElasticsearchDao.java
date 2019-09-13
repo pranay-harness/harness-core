@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
-public final class ElasticsearchDao {
+public final class ElasticsearchDao implements SearchDao {
   @Inject RestHighLevelClient client;
   @Inject ElasticsearchIndexManager elasticsearchIndexManager;
 
