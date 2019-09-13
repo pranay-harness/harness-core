@@ -19,6 +19,7 @@ import migrations.all.DeleteStaleThirdPartyApiCallLogsMigration;
 import migrations.all.ExplodeLogMLFeedbackRecordsMigration;
 import migrations.all.FetchAndSaveAccounts;
 import migrations.all.FetchAndSaveAccounts2;
+import migrations.all.InfraMappingToDefinitionMigration;
 import migrations.all.InitInfraProvisionerCounters;
 import migrations.all.InitPipelineCounters;
 import migrations.all.InitServiceCounters;
@@ -109,6 +110,8 @@ public class MigrationBackgroundList {
         .add(Pair.of(56, BaseMigration.class))
         .add(Pair.of(57, BaseMigration.class))
         .add(Pair.of(58, MigrateTimeSeriesRawDataToGoogle.class))
+        .add(Pair.of(59, InfraMappingToDefinitionMigration.class))
+        .add(Pair.of(60, BaseMigration.class))
         .build();
   }
 }
