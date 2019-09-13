@@ -141,7 +141,7 @@ public class EcsBGUpdateListnerState extends State {
           (EcsListenerUpdateStateExecutionData) context.getStateExecutionData();
       stateExecutionData.setStatus(executionStatus);
       stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
-
+      stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
       return ExecutionResponse.builder()
           .stateExecutionData(stateExecutionData)
           .errorMessage(executionResponse.getErrorMessage())

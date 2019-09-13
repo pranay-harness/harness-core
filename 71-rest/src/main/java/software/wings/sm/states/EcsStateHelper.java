@@ -578,6 +578,7 @@ public class EcsStateHelper {
 
       executionData.setOldInstanceData(deployResponse.getOldInstanceData());
       executionData.setNewInstanceData(deployResponse.getNewInstanceData());
+      executionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
 
       return ExecutionResponse.builder()
           .stateExecutionData(executionData)

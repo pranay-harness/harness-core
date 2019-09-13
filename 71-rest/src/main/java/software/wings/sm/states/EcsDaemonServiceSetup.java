@@ -207,7 +207,7 @@ public class EcsDaemonServiceSetup extends State {
         buildContainerServiceElement(context, setupExecutionData, imageDetails);
 
     ecsStateHelper.populateFromDelegateResponse(setupExecutionData, executionData, containerServiceElement);
-
+    executionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
     return ExecutionResponse.builder()
         .stateExecutionData(executionData)
         .executionStatus(executionStatus)

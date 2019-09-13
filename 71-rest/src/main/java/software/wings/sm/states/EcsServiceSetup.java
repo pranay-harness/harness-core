@@ -191,6 +191,7 @@ public class EcsServiceSetup extends State {
         getDesiredInstanceCount(), getResizeStrategy(), getServiceSteadyStateTimeout(), logger);
 
     ecsStateHelper.populateFromDelegateResponse(setupExecutionData, executionData, containerServiceElement);
+    executionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
 
     return ExecutionResponse.builder()
         .stateExecutionData(executionData)

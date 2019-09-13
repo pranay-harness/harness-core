@@ -186,6 +186,7 @@ public class EcsBlueGreenServiceSetup extends State {
 
     CommandStateExecutionData executionData = (CommandStateExecutionData) context.getStateExecutionData();
     ecsStateHelper.populateFromDelegateResponse(setupExecutionData, executionData, containerServiceElement);
+    executionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
 
     return ExecutionResponse.builder()
         .stateExecutionData(context.getStateExecutionData())
