@@ -17,6 +17,10 @@ if [[ "" != "$UI_SERVER_URL" ]]; then
   yq write -i /opt/harness/config.yml portal.url "$UI_SERVER_URL"
 fi
 
+if [[ "" != "$GRAPHQL_RATE_LIMIT" ]]; then
+  yq write -i /opt/harness/config.yml portal.graphQLRateLimitPerMinute "$GRAPHQL_RATE_LIMIT"
+fi
+
 if [[ "" != "$ALLOWED_ORIGINS" ]]; then
   yq write -i /opt/harness/config.yml portal.allowedOrigins "$ALLOWED_ORIGINS"
 fi

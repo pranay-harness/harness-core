@@ -93,6 +93,16 @@ public class DefaultLimitsServiceImpl implements DefaultLimitsService {
     defaultLimits.put(
         new LimitKey(ActionType.CREATE_INFRA_PROVISIONER, AccountType.ESSENTIALS), new StaticLimit(MAX_APP_COUNT * 10));
 
+    // GraphQL API call Limits
+    defaultLimits.put(new LimitKey(ActionType.GRAPHQL_CALL, AccountType.TRIAL),
+        new RateLimit(RATE_LIMIT_ACCOUNT_DEFAULT, RATE_LIMIT_DURATION_IN_MINUTE, TimeUnit.MINUTES));
+    defaultLimits.put(new LimitKey(ActionType.GRAPHQL_CALL, AccountType.PAID),
+        new RateLimit(RATE_LIMIT_ACCOUNT_DEFAULT, RATE_LIMIT_DURATION_IN_MINUTE, TimeUnit.MINUTES));
+    defaultLimits.put(new LimitKey(ActionType.GRAPHQL_CALL, AccountType.COMMUNITY),
+        new RateLimit(RATE_LIMIT_ACCOUNT_DEFAULT, RATE_LIMIT_DURATION_IN_MINUTE, TimeUnit.MINUTES));
+    defaultLimits.put(new LimitKey(ActionType.GRAPHQL_CALL, AccountType.ESSENTIALS),
+        new RateLimit(RATE_LIMIT_ACCOUNT_DEFAULT, RATE_LIMIT_DURATION_IN_MINUTE, TimeUnit.MINUTES));
+
     defaults = ImmutableMap.copyOf(defaultLimits);
   }
 
