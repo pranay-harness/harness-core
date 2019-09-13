@@ -96,6 +96,11 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
     ExecutionStatus executionStatus =
         CommandExecutionStatus.SUCCESS.equals(executionResponse.getCommandExecutionStatus()) ? SUCCESS : FAILED;
     activityService.updateStatus(activityId, context.getAppId(), executionStatus);
+    EcsRoute53WeightUpdateStateExecutionData stateExecutionData =
+        (EcsRoute53WeightUpdateStateExecutionData) context.getStateExecutionData();
+    if (stateExecutionData != null) {
+      stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
+    }
     return ExecutionResponse.builder()
         .errorMessage(executionResponse.getErrorMessage())
         .executionStatus(executionStatus)

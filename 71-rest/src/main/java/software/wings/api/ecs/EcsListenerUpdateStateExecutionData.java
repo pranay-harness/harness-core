@@ -1,7 +1,5 @@
 package software.wings.api.ecs;
 
-import com.google.common.collect.Maps;
-
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -39,7 +37,7 @@ public class EcsListenerUpdateStateExecutionData extends StateExecutionData impl
   }
 
   private Map<String, ExecutionDataValue> getInternalExecutionDetails() {
-    Map<String, ExecutionDataValue> execDetails = Maps.newLinkedHashMap();
+    Map<String, ExecutionDataValue> execDetails = super.getExecutionDetails();
     putNotNull(execDetails, "commandName",
         ExecutionDataValue.builder().value(commandName).displayName("Command Name").build());
     putNotNull(execDetails, "ClusterName",
