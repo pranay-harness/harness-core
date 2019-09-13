@@ -76,6 +76,7 @@ import io.harness.eraro.ResponseMessage;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
+import io.harness.exception.YamlException;
 import io.harness.rest.RestResponse;
 import io.harness.rest.RestResponse.Builder;
 import lombok.extern.slf4j.Slf4j;
@@ -384,7 +385,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           changeContextList.add(manifestFileChangeContext);
         } else if (yamlFilePath.endsWith(YAML_EXTENSION)) {
           validateYaml(change.getFileContent());
-          YamlType yamlType = findYamlType(yamlFilePath);
+          YamlType yamlType = findYamlType(yamlFilePath, change.getAccountId());
           String yamlSubType = getYamlSubType(change.getFileContent());
 
           if (ignoreIfFeatureFlagEnabled(
@@ -408,7 +409,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           changeContextList.add(changeContext);
         } else if (yamlFilePath.contains(YamlConstants.CONFIG_FILES_FOLDER)) {
           // Special handling for config files
-          YamlType yamlType = findYamlType(yamlFilePath);
+          YamlType yamlType = findYamlType(yamlFilePath, change.getAccountId());
           if (YamlType.CONFIG_FILE_CONTENT == yamlType || YamlType.CONFIG_FILE_OVERRIDE_CONTENT == yamlType) {
             ChangeContext.Builder changeContextBuilder =
                 ChangeContext.Builder.aChangeContext().withChange(change).withYamlType(yamlType);
@@ -691,12 +692,24 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     }
   }
 
-  private YamlType findYamlType(String yamlFilePath) throws HarnessException {
+  private YamlType findYamlType(String yamlFilePath, String accountId) throws YamlException {
     Optional<YamlType> first = yamlProcessingOrder.stream()
                                    .filter(yamlType -> Pattern.matches(yamlType.getPathExpression(), yamlFilePath))
                                    .findFirst();
 
-    return first.orElseThrow(() -> new HarnessException("Unknown yaml type for path: " + yamlFilePath));
+    if (first.isPresent()) {
+      if (first.get().equals(TRIGGER) && isTriggerRefactor(accountId)) {
+        return DEPLOYMENT_TRIGGER;
+      } else {
+        return first.get();
+      }
+    } else {
+      throw new YamlException("Unknown yaml type for path: " + yamlFilePath, null);
+    }
+  }
+
+  private boolean isTriggerRefactor(String accountId) {
+    return featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId);
   }
 
   /**

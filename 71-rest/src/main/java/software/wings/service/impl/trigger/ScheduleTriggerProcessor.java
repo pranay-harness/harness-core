@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.TriggerException;
 import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Value;
@@ -110,6 +111,10 @@ public class ScheduleTriggerProcessor implements TriggerProcessor {
       DeploymentTrigger deploymentTrigger, DeploymentTrigger existingTrigger, ScheduledCondition scheduledCondition) {
     try {
       String cronExpression = scheduledCondition.getCronExpression();
+      if (cronExpression == null) {
+        throw new TriggerException("cronExpression is null for trigger " + deploymentTrigger.getName(), null);
+      }
+
       if (isNotBlank(scheduledCondition.getCronExpression())) {
         ScheduledCondition scheduledConditionWithDesc =
             ScheduledCondition.builder()
@@ -126,7 +131,7 @@ public class ScheduleTriggerProcessor implements TriggerProcessor {
     } catch (Exception ex) {
       logger.warn("Error parsing cron expression: {} : {}", scheduledCondition.getCronExpression(),
           ExceptionUtils.getMessage(ex));
-      throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", "Invalid cron expression");
+      throw new TriggerException(ex.getMessage(), null);
     }
   }
 

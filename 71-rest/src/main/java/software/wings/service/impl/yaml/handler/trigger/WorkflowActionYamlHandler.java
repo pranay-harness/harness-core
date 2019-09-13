@@ -61,14 +61,19 @@ public class WorkflowActionYamlHandler extends ActionYamlHandler<WorkflowActionY
     String appId = yamlHelper.getAppId(accountId, change.getFilePath());
     WorkflowActionYaml yaml = changeContext.getYaml();
 
-    Workflow workflow = yamlHelper.getWorkflow(appId, yaml.getWorkflowName());
+    Workflow workflow = yamlHelper.getWorkflowFromName(appId, yaml.getWorkflowName());
     notNullCheck("Invalid Workflow " + yaml.getWorkflowName(), workflow, USER);
 
     List<Variable> triggerVariables = new ArrayList<>();
-    getTriggerVariablesBean(accountId, appId, workflow.getEnvId(), yaml.getVariables(), triggerVariables);
+    if (isNotEmpty(yaml.getVariables())) {
+      getTriggerVariablesBean(accountId, appId, workflow.getEnvId(), yaml.getVariables(), triggerVariables);
+    }
 
     List<TriggerArtifactVariable> triggerArtifactVariables = new ArrayList<>();
-    getArtifactVariableBean(changeContext, changeSetContext, yaml.getArtifactSelections(), triggerArtifactVariables);
+    if (isNotEmpty(yaml.getArtifactSelections())) {
+      getArtifactVariableBean(
+          accountId, appId, changeContext, changeSetContext, yaml.getArtifactSelections(), triggerArtifactVariables);
+    }
 
     TriggerArgs triggerArgs = TriggerArgs.builder()
                                   .excludeHostsWithSameArtifact(yaml.isExcludeHostsWithSameArtifact())

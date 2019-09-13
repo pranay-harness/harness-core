@@ -293,7 +293,7 @@ public class WebhookTriggerDeploymentExecution {
             artifactServerId = settingAttribute.getUuid();
           } else {
             throw new TriggerException(
-                "Artifact server " + serverName + " does not exist for variable name" + variableName, USER);
+                "Artifact server " + serverName + " does not exist for variable name " + variableName, USER);
           }
         }
 
@@ -305,7 +305,7 @@ public class WebhookTriggerDeploymentExecution {
             artifactStreamId = artifactStream.getUuid();
           } else {
             throw new TriggerException(
-                "Artifact stream " + streamName + " does not exist for variable name" + variableName, USER);
+                "Artifact stream " + streamName + " does not exist for variable name " + variableName, USER);
           }
         }
 
@@ -365,11 +365,11 @@ public class WebhookTriggerDeploymentExecution {
             }
           }
 
-          String buildNumber = getSubstitutedValue(triggerArtifactSelectionWebhook.getBuildNumber(), payLoadMap);
+          String buildNumber = getSubstitutedValue(triggerArtifactSelectionWebhook.getArtifactFilter(), payLoadMap);
           return TriggerArtifactSelectionWebhook.builder()
               .artifactServerId(webhookArtifactServerId)
               .artifactStreamId(webhookArtifactStreamId)
-              .buildNumber(buildNumber)
+              .artifactFilter(buildNumber)
               .build();
         } catch (Exception e) {
           throw new TriggerException("Failed to resolve buildNumber in input webhook request", null);

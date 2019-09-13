@@ -37,7 +37,7 @@ public class TriggerArtifactLastDeployedYamlHandler
     String appId = yamlHelper.getAppId(accountId, change.getFilePath());
     TriggerArtifactSelectionLastDeployedYaml yaml = changeContext.getYaml();
 
-    Workflow workflow = yamlHelper.getWorkflow(appId, yaml.getWorkflowName());
+    Workflow workflow = yamlHelper.getWorkflowFromName(appId, yaml.getWorkflowName());
     notNullCheck("Invalid workflow", workflow, USER);
 
     return TriggerArtifactSelectionLastDeployed.builder()

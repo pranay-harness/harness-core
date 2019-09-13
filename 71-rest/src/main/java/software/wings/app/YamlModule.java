@@ -191,6 +191,7 @@ import software.wings.service.impl.yaml.handler.setting.verificationprovider.Ver
 import software.wings.service.impl.yaml.handler.trigger.ActionYamlHandler;
 import software.wings.service.impl.yaml.handler.trigger.BitbucketPayloadSourceYamlHandler;
 import software.wings.service.impl.yaml.handler.trigger.ConditionYamlHandler;
+import software.wings.service.impl.yaml.handler.trigger.CustomPayloadSourceYamlHandler;
 import software.wings.service.impl.yaml.handler.trigger.GithubPayloadSourceYamlHandler;
 import software.wings.service.impl.yaml.handler.trigger.GitlabPayloadSourceYamlHandler;
 import software.wings.service.impl.yaml.handler.trigger.NewArtifactConditionYamlHandler;
@@ -460,6 +461,7 @@ public class YamlModule extends AbstractModule {
     payloadSourceMapBinder.addBinding(PayloadSource.Type.BITBUCKET.name()).to(BitbucketPayloadSourceYamlHandler.class);
     payloadSourceMapBinder.addBinding(PayloadSource.Type.GITHUB.name()).to(GithubPayloadSourceYamlHandler.class);
     payloadSourceMapBinder.addBinding(PayloadSource.Type.GITLAB.name()).to(GitlabPayloadSourceYamlHandler.class);
+    payloadSourceMapBinder.addBinding(PayloadSource.Type.CUSTOM.name()).to(CustomPayloadSourceYamlHandler.class);
 
     MapBinder<String, TriggerArtifactValueYamlHandler> triggerArtifactValueMapBinder =
         MapBinder.newMapBinder(binder(), String.class, TriggerArtifactValueYamlHandler.class);

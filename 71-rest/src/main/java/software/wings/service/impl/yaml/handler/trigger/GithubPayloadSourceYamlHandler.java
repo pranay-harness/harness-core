@@ -25,12 +25,18 @@ public class GithubPayloadSourceYamlHandler extends PayloadSourceYamlHandler<Git
     }
 
     WebhookGitParam webhookGitParam = gitHubPayloadSource.getWebhookGitParam();
+    if (webhookGitParam != null) {
+      return GithubPayloadSourceYaml.builder()
+          .customPayloadExpressions(gitHubPayloadSource.getCustomPayloadExpressions())
+          .events(eventsYaml)
+          .branchName(webhookGitParam.getBranchName())
+          .filePaths(webhookGitParam.getFilePaths())
+          .gitConnectorName(webhookGitParam.getGitConnectorId())
+          .build();
+    }
     return GithubPayloadSourceYaml.builder()
         .customPayloadExpressions(gitHubPayloadSource.getCustomPayloadExpressions())
         .events(eventsYaml)
-        .branchName(webhookGitParam.getBranchName())
-        .filePaths(webhookGitParam.getFilePaths())
-        .gitConnectorName(webhookGitParam.getGitConnectorId())
         .build();
   }
 

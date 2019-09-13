@@ -6,6 +6,7 @@ import static software.wings.beans.trigger.Action.ActionType.PIPELINE;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.TriggerException;
 import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Value;
@@ -84,6 +85,10 @@ public class PipelineTriggerProcessor implements TriggerProcessor {
   private void validatePipelineId(DeploymentTrigger deploymentTrigger, PipelineCondition pipelineCondition) {
     String pipelineName;
     try {
+      if (pipelineCondition.getPipelineId() == null) {
+        throw new TriggerException("pipeline Id is null for trigger " + deploymentTrigger.getName(), null);
+      }
+
       pipelineName = pipelineService.fetchPipelineName(deploymentTrigger.getAppId(), pipelineCondition.getPipelineId());
     } catch (WingsException exception) {
       throw new WingsException("Pipeline does not exist for pipeline id " + pipelineCondition.getPipelineId(), USER);

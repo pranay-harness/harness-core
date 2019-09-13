@@ -118,7 +118,7 @@ public class DeploymentTriggerResource {
     Validator.notNullCheck("trigger", trigger);
     trigger.setAppId(appId);
     if (trigger.getUuid() != null) {
-      DeploymentTrigger existingTrigger = deploymentTriggerService.get(appId, trigger.getUuid());
+      DeploymentTrigger existingTrigger = deploymentTriggerService.getWithoutRead(appId, trigger.getUuid());
       if (existingTrigger == null) {
         throw new WingsException("Trigger does not exist for uuid:" + trigger.getUuid(), USER);
       }
@@ -146,7 +146,7 @@ public class DeploymentTriggerResource {
       @QueryParam("appId") String appId, @PathParam("triggerId") String triggerId, DeploymentTrigger trigger) {
     trigger.setUuid(triggerId);
     trigger.setAppId(appId);
-    DeploymentTrigger existingTrigger = deploymentTriggerService.get(appId, trigger.getUuid());
+    DeploymentTrigger existingTrigger = deploymentTriggerService.getWithoutRead(appId, trigger.getUuid());
     if (existingTrigger == null) {
       throw new WingsException("Trigger doesn't exist for uuid: " + triggerId, USER);
     }

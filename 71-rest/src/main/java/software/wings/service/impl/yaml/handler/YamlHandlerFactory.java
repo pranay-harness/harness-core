@@ -254,6 +254,9 @@ public class YamlHandlerFactory {
       case TRIGGER_ARTIFACT_VALUE:
         yamlHandler = triggerArtifactValueMapBinder.get(subType);
         break;
+      case PAYLOAD_SOURCE:
+        yamlHandler = payloadSourceMapBinder.get(subType);
+        break;
       case PROVISIONER:
         yamlHandler = provisionerYamlHandlerMap.get(subType);
         break;

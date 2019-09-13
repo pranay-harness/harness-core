@@ -75,6 +75,8 @@ public class DeploymentTrigger implements PersistentEntity, UuidAware, CreatedAt
   @EntityName @NotEmpty @Trimmed private String name;
   private String description;
   private boolean triggerDisabled;
+  private boolean triggerInvalid;
+  private String errorMsg;
 
   private List<Long> nextIterations;
   private Action action;

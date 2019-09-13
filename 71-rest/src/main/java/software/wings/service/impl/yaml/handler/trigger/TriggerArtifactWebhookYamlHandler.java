@@ -31,7 +31,7 @@ public class TriggerArtifactWebhookYamlHandler
     ArtifactStream artifactStream = artifactStreamService.get(triggerArtifactSelectionWebhook.getArtifactStreamId());
 
     return TriggerArtifactSelectionWebhookYaml.builder()
-        .buildNumber(triggerArtifactSelectionWebhook.getBuildNumber())
+        .buildNumber(triggerArtifactSelectionWebhook.getArtifactFilter())
         .artifactStreamName(artifactStream.getName())
         .artifactStreamType(artifactStream.getArtifactStreamType())
         .artifactServerName(artifactStream.getArtifactServerName())
@@ -53,7 +53,7 @@ public class TriggerArtifactWebhookYamlHandler
     notNullCheck("Invalid artifact stream", artifactStream, USER);
 
     return TriggerArtifactSelectionWebhook.builder()
-        .buildNumber(yaml.getBuildNumber())
+        .artifactFilter(yaml.getBuildNumber())
         .artifactServerName(yaml.getArtifactServerName())
         .artifactStreamName(yaml.getArtifactStreamName())
         .artifactStreamType(yaml.getArtifactStreamType())

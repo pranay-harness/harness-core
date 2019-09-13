@@ -68,6 +68,9 @@ public class DeploymentTriggerServiceHelper {
     if (action.getActionType() == ActionType.PIPELINE) {
       PipelineAction pipelineAction = (PipelineAction) action;
       try {
+        if (pipelineAction.getPipelineId() == null) {
+          throw new TriggerException("pipelineId is null for trigger " + trigger.getName(), null);
+        }
         pipelineService.fetchPipelineName(trigger.getAppId(), pipelineAction.getPipelineId());
       } catch (WingsException exception) {
         throw new WingsException("Pipeline does not exist for pipeline id " + pipelineAction.getPipelineId());
@@ -77,6 +80,10 @@ public class DeploymentTriggerServiceHelper {
     } else if (action.getActionType() == ActionType.WORKFLOW) {
       WorkflowAction workflowAction = (WorkflowAction) action;
       try {
+        if (workflowAction.getWorkflowId() == null) {
+          throw new TriggerException("workflow Id is null for trigger " + trigger.getName(), null);
+        }
+
         workflowService.fetchWorkflowName(trigger.getAppId(), workflowAction.getWorkflowId());
       } catch (WingsException exception) {
         throw new WingsException("workflow does not exist for workflowId " + workflowAction.getWorkflowId());
@@ -149,6 +156,9 @@ public class DeploymentTriggerServiceHelper {
     switch (webhookSource) {
       case "GITHUB":
         GitHubEventType.GHEventHolder.getMap().values().forEach(gitHubEventType -> {
+          if (gitHubEventType.getEventType().name().equals("PING")) {
+            return;
+          }
           if (events.containsKey(gitHubEventType.getEventType().name())) {
             WebhookSource.WebhookEventInfo webhookEventInfo = events.get(gitHubEventType.getEventType().name());
             if (gitHubEventType.getEventType().equals(PULL_REQUEST)) {
@@ -180,6 +190,10 @@ public class DeploymentTriggerServiceHelper {
         break;
       case "GITLAB":
         GitLabEventType.GitLabEventHolder.getMap().values().forEach(gitLabEventType -> {
+          if (gitLabEventType.getEventType().name().equals("PING")
+              || gitLabEventType.getEventType().name().equals("ANY")) {
+            return;
+          }
           WebhookSource.WebhookEventInfo webhookEventInfo =
               WebhookSource.WebhookEventInfo.builder()
                   .displayValue(gitLabEventType.getEventType().getDisplayName())
@@ -191,6 +205,9 @@ public class DeploymentTriggerServiceHelper {
         break;
       case "BITBUCKET":
         BitBucketEventType.BitBucketEventHolder.getMap().values().forEach(bitBucketEventType -> {
+          if (bitBucketEventType.getEventType().name().equals("PING")) {
+            return;
+          }
           if (events.containsKey(bitBucketEventType.getEventType().name())) {
             WebhookSource.WebhookEventInfo webhookEventInfo = events.get(bitBucketEventType.getEventType().name());
             if (bitBucketEventType.getEventType().equals(PULL_REQUEST)

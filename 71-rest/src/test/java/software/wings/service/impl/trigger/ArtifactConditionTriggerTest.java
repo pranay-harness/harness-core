@@ -101,6 +101,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.trigger.DeploymentTriggerService;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -166,6 +167,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
         ServiceVariable.builder().type(Type.ARTIFACT).name(VARIABLE_NAME).value(VARIABLE_VALUE.toCharArray()).build());
 
     when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
+    when(pipelineService.readPipelineWithResolvedVariables(APP_ID, PIPELINE_ID, new HashMap<>())).thenReturn(pipeline);
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(buildWorkflow());
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
     when(artifactStreamServiceBindingService.listServiceIds(ARTIFACT_STREAM_ID)).thenReturn(asList(SERVICE_ID));
@@ -219,10 +221,6 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
     assertThat(((ArtifactCondition) savedTrigger.getCondition()).getArtifactStreamId())
         .isNotNull()
         .isEqualTo(ARTIFACT_STREAM_ID);
-
-    assertThat(((ArtifactCondition) savedTrigger.getCondition()).getArtifactServerName())
-        .isNotNull()
-        .isEqualTo(SETTING_NAME);
 
     savedTrigger = deploymentTriggerService.get(savedTrigger.getAppId(), savedTrigger.getUuid());
 
@@ -336,8 +334,11 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldTriggerExecutionPostArtifactCollectionRegexDoesNotMatch() {
-    trigger.setCondition(
-        ArtifactCondition.builder().artifactStreamId(ARTIFACT_STREAM_ID).artifactFilter("^release").build());
+    trigger.setCondition(ArtifactCondition.builder()
+                             .artifactStreamId(ARTIFACT_STREAM_ID)
+                             .artifactServerId(SETTING_ID)
+                             .artifactFilter("^release")
+                             .build());
 
     deploymentTriggerService.save(trigger);
 
@@ -464,6 +465,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
                                                 .build())
                                     .condition(ArtifactCondition.builder()
                                                    .artifactStreamId(ARTIFACT_STREAM_ID)
+                                                   .artifactServerId(SETTING_ID)
                                                    .artifactFilter(ARTIFACT_FILTER)
                                                    .build())
                                     .build();
@@ -507,7 +509,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
     Mockito.verify(workflowExecutionService)
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
     Mockito.verify(workflowService, times(2)).readWorkflow(APP_ID, WORKFLOW_ID);
-    Mockito.verify(workflowService, times(4)).fetchWorkflowName(APP_ID, WORKFLOW_ID);
+    Mockito.verify(workflowService, times(2)).fetchWorkflowName(APP_ID, WORKFLOW_ID);
   }
 
   private List<TriggerArtifactVariable> buildArtifactVariables() {
