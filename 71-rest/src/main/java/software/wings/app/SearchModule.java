@@ -15,7 +15,9 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import software.wings.search.entities.application.ApplicationSearchEntity;
 import software.wings.search.entities.pipeline.PipelineSearchEntity;
+import software.wings.search.framework.SearchDao;
 import software.wings.search.framework.SearchEntity;
+import software.wings.search.framework.SynchronousElasticsearchDao;
 import software.wings.service.impl.ElasticsearchServiceImpl;
 import software.wings.service.intfc.SearchService;
 
@@ -50,6 +52,7 @@ public class SearchModule extends AbstractModule {
     bind(ManagedExecutorService.class)
         .toInstance(new ManagedExecutorService(ThreadPool.create(4, 20, 1, TimeUnit.SECONDS)));
     bind(ScheduledExecutorService.class).toInstance(Executors.newScheduledThreadPool(1));
+    bind(SearchDao.class).to(SynchronousElasticsearchDao.class);
     bindEntities();
   }
 

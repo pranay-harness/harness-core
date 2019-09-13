@@ -11,7 +11,7 @@ import org.mongodb.morphia.mapping.cache.EntityCache;
 import software.wings.beans.Application;
 import software.wings.dl.WingsPersistence;
 import software.wings.search.framework.ChangeHandler;
-import software.wings.search.framework.ElasticsearchDao;
+import software.wings.search.framework.SearchDao;
 import software.wings.search.framework.SearchEntityUtils;
 import software.wings.search.framework.changestreams.ChangeEvent;
 
@@ -27,7 +27,7 @@ import java.util.Optional;
 @Slf4j
 @Singleton
 public class ApplicationChangeHandler implements ChangeHandler {
-  @Inject private ElasticsearchDao elasticsearchDao;
+  @Inject private SearchDao searchDao;
   @Inject private WingsPersistence wingsPersistence;
   private static final Mapper mapper = new Mapper();
   private static final EntityCache entityCache = new DefaultEntityCache();
@@ -45,13 +45,13 @@ public class ApplicationChangeHandler implements ChangeHandler {
         ApplicationView applicationView = ApplicationView.fromApplication(application);
         Optional<String> applicationViewJson = SearchEntityUtils.convertToJson(applicationView);
         if (applicationViewJson.isPresent()) {
-          return elasticsearchDao.upsertDocument(
+          return searchDao.upsertDocument(
               ApplicationSearchEntity.TYPE, applicationView.getId(), applicationViewJson.get());
         }
         return false;
       }
       case DELETE: {
-        return elasticsearchDao.deleteDocument(ApplicationSearchEntity.TYPE, changeEvent.getUuid());
+        return searchDao.deleteDocument(ApplicationSearchEntity.TYPE, changeEvent.getUuid());
       }
       default:
     }
