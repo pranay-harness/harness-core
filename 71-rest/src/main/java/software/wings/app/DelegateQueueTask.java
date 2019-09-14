@@ -9,7 +9,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.service.impl.DelegateServiceImpl.VALIDATION_TIMEOUT;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
@@ -31,9 +30,9 @@ import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.WhereCriteria;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.DelegateTaskBroadcastHelper;
 import software.wings.service.intfc.AssignDelegateService;
 
 import java.time.Clock;
@@ -49,10 +48,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 public class DelegateQueueTask implements Runnable {
-  private static final long ASYNC_TASK_REBROADCAST_FACTOR = TimeUnit.SECONDS.toMillis(16);
-
-  private static final long SYNC_TASK_REBROADCAST_FACTOR = TimeUnit.SECONDS.toMillis(5);
-  private static final int MAX_SYNC_REBROADCAST_TRIES = 3;
+  private static final long REBROADCAST_FACTOR = TimeUnit.SECONDS.toMillis(2);
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private BroadcasterFactory broadcasterFactory;
@@ -61,6 +57,7 @@ public class DelegateQueueTask implements Runnable {
   @Inject private VersionInfoManager versionInfoManager;
   @Inject private TimeLimiter timeLimiter;
   @Inject private AssignDelegateService assignDelegateService;
+  @Inject private DelegateTaskBroadcastHelper broadcastHelper;
   @Inject private ConfigurationController configurationController;
 
   /* (non-Javadoc)
@@ -78,10 +75,7 @@ public class DelegateQueueTask implements Runnable {
           markTimedOutTasksAsFailed();
           markLongQueuedTasksAsFailed();
         }
-
-        rebroadcastUnassignedSyncTasks();
-        rebroadcastUnassignedAsyncTasks();
-
+        rebroadcastUnassignedTasks();
         return true;
       }, 1L, TimeUnit.MINUTES, true);
     } catch (UncheckedTimeoutException exception) {
@@ -198,94 +192,55 @@ public class DelegateQueueTask implements Runnable {
     }
   }
 
-  /*
-    Rebroadcast async tasks at below intervals in seconds
-    0 32 64 128 256 512 1024 2048
-   */
-  private void rebroadcastUnassignedAsyncTasks() {
-    long now = clock.millis();
-    String criteria = new StringBuilder(128)
-                          .append("this.")
-                          .append(DelegateTaskKeys.lastBroadcastAt)
-                          .append(" < ")
-                          .append(now)
-                          .append(" - Math.pow(2, this.")
-                          .append(DelegateTaskKeys.broadcastCount)
-                          .append(") * ")
-                          .append(ASYNC_TASK_REBROADCAST_FACTOR)
-                          .toString();
-
-    rebroadcastUnassignedTasks(true, criteria, now);
-  }
-
-  // Rebroadcast sync tasks only once after 5 seconds
-  private void rebroadcastUnassignedSyncTasks() {
-    long now = clock.millis();
-    String criteria = new StringBuilder(128)
-                          .append("this.")
-                          .append(DelegateTaskKeys.lastBroadcastAt)
-                          .append(" < ")
-                          .append(now)
-                          .append(" - (this.")
-                          .append(DelegateTaskKeys.broadcastCount)
-                          .append(" * ")
-                          .append(SYNC_TASK_REBROADCAST_FACTOR)
-                          .append(')')
-                          .toString();
-
-    rebroadcastUnassignedTasks(false, criteria, now);
-  }
-
-  private void rebroadcastUnassignedTasks(boolean async, String broadCastTimeoutCriteria, long currentTime) {
+  private void rebroadcastUnassignedTasks() {
     // Re-broadcast queued tasks not picked up by any Delegate and not in process of validation
+    long now = clock.millis();
+
     Query<DelegateTask> unassignedTasksQuery =
         wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
             .filter(DelegateTaskKeys.status, QUEUED)
             .filter(DelegateTaskKeys.version, versionInfoManager.getVersionInfo().getVersion())
-            .filter(DelegateTaskKeys.async, async)
+            .field(DelegateTaskKeys.nextBroadast)
+            .lessThan(now)
             .field(DelegateTaskKeys.delegateId)
             .doesNotExist();
-
-    if (!async) {
-      // Don't rebroadcast sync task after MAX_SYNC_REBROADCAST_TRIES attempts
-      unassignedTasksQuery.field(DelegateTaskKeys.broadcastCount).lessThan(MAX_SYNC_REBROADCAST_TRIES);
-    }
-
-    unassignedTasksQuery.and(
-        unassignedTasksQuery.or(unassignedTasksQuery.criteria(DelegateTaskKeys.validationStartedAt).doesNotExist(),
-            unassignedTasksQuery.criteria(DelegateTaskKeys.validationStartedAt)
-                .lessThan(currentTime - VALIDATION_TIMEOUT)),
-        unassignedTasksQuery.or(unassignedTasksQuery.criteria(DelegateTaskKeys.lastBroadcastAt).doesNotExist(),
-            new WhereCriteria(broadCastTimeoutCriteria)));
 
     try (HIterator<DelegateTask> iterator = new HIterator(unassignedTasksQuery.fetch())) {
       int count = 0;
       while (iterator.hasNext()) {
         DelegateTask delegateTask = iterator.next();
-
         Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
                                         .filter(DelegateTaskKeys.uuid, delegateTask.getUuid())
                                         .filter(DelegateTaskKeys.broadcastCount, delegateTask.getBroadcastCount());
+
         UpdateOperations<DelegateTask> updateOperations =
             wingsPersistence.createUpdateOperations(DelegateTask.class)
-                .set(DelegateTaskKeys.lastBroadcastAt, currentTime)
+                .set(DelegateTaskKeys.lastBroadcastAt, now)
                 .set(DelegateTaskKeys.broadcastCount, delegateTask.getBroadcastCount() + 1)
+                .set(DelegateTaskKeys.nextBroadast, broadcastHelper.findNextBroadcastTimeForTask(delegateTask))
                 .unset(DelegateTaskKeys.preAssignedDelegateId);
 
         delegateTask =
             wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions().returnNew(true));
+        // update failed, means this was broadcasted by some other manager
         if (delegateTask == null) {
           continue;
         }
 
-        logger.info("Rebroadcast queued task [{}], broadcast count: {}", delegateTask.getUuid(),
-            delegateTask.getBroadcastCount());
-        delegateTask.setPreAssignedDelegateId(null);
-        broadcasterFactory.lookup("/stream/delegate/" + delegateTask.getAccountId(), true).broadcast(delegateTask);
-        count++;
-      }
+        // This is first broadcast for Async task, try to unicast for whitelisted delegate
+        // Fo for this scenario, we take a different path.
+        if (delegateTask.isAsync() && delegateTask.getBroadcastCount() == 0) {
+          broadcastHelper.broadcastNewDelegateTask(delegateTask);
+        } else {
+          logger.info("Rebroadcast queued task [{}], broadcast count: {}", delegateTask.getUuid(),
+              delegateTask.getBroadcastCount());
+          delegateTask.setPreAssignedDelegateId(null);
+          broadcastHelper.rebroadcastDelegateTask(delegateTask);
+          count++;
+        }
 
-      logger.info("{} tasks were rebroadcast", count);
+        logger.info("{} tasks were rebroadcast", count);
+      }
     }
   }
 }
