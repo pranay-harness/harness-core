@@ -16,7 +16,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
-import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
@@ -171,7 +170,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
                                                               .withEnvId(ENV_ID)
                                                               .withArtifactIds(Lists.newArrayList(ARTIFACT_ID))
                                                               .build();
-  private ServiceElement serviceElement = aServiceElement().withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
+  private ServiceElement serviceElement = ServiceElement.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build();
 
   @InjectMocks
   private PhaseElement phaseElement = PhaseElement.builder()

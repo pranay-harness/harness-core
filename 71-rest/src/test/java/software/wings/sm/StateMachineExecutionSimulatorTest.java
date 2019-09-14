@@ -10,7 +10,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
-import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
@@ -108,7 +107,7 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
     Application app = anApplication().name("App1").uuid(generateUuid()).build();
     Environment env = anEnvironment().name("DEV").uuid(generateUuid()).appId(app.getUuid()).build();
 
-    ServiceElement service = aServiceElement().withUuid(generateUuid()).withName("service1").build();
+    ServiceElement service = ServiceElement.builder().uuid(generateUuid()).name("service1").build();
     List<InstanceElement> instances =
         Lists.newArrayList(anInstanceElement().uuid(generateUuid()).displayName("instance1").build(),
             anInstanceElement().uuid(generateUuid()).displayName("instance2").build());
@@ -163,7 +162,7 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
     Application app = anApplication().name("App1").uuid(generateUuid()).build();
     Environment env = anEnvironment().name("DEV").uuid(generateUuid()).appId(app.getUuid()).build();
 
-    ServiceElement service = aServiceElement().withUuid(generateUuid()).withName("service1").build();
+    ServiceElement service = ServiceElement.builder().uuid(generateUuid()).name("service1").build();
     InstanceElement inst1 = anInstanceElement().uuid(generateUuid()).displayName("instance1").build();
     InstanceElement inst2 = anInstanceElement().uuid(generateUuid()).displayName("instance2").build();
 
@@ -180,14 +179,14 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
                                      .uuid(generateUuid())
                                      .displayName(s2.getName())
                                      .parentInstanceId(si1.getUuid())
-                                     .contextElement(aServiceElement().withName(service.getName()).build())
+                                     .contextElement(ServiceElement.builder().name(service.getName()).build())
                                      .status(ExecutionStatus.SUCCESS)
                                      .build();
     StateExecutionInstance si3 = aStateExecutionInstance()
                                      .uuid(generateUuid())
                                      .displayName(s3.getName())
                                      .parentInstanceId(si1.getUuid())
-                                     .contextElement(aServiceElement().withName(service.getName()).build())
+                                     .contextElement(ServiceElement.builder().name(service.getName()).build())
                                      .status(ExecutionStatus.RUNNING)
                                      .build();
     StateExecutionInstance si4 = aStateExecutionInstance()
@@ -260,7 +259,7 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
     Application app = anApplication().name("App1").uuid(generateUuid()).build();
     Environment env = anEnvironment().name("DEV").uuid(generateUuid()).appId(app.getUuid()).build();
 
-    ServiceElement service = aServiceElement().withUuid(generateUuid()).withName("service1").build();
+    ServiceElement service = ServiceElement.builder().uuid(generateUuid()).name("service1").build();
     InstanceElement inst1 = anInstanceElement().uuid(generateUuid()).displayName("instance1").build();
     InstanceElement inst2 = anInstanceElement().uuid(generateUuid()).displayName("instance2").build();
 
@@ -277,14 +276,14 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
                                      .uuid(generateUuid())
                                      .displayName(s2.getName())
                                      .parentInstanceId(si1.getUuid())
-                                     .contextElement(aServiceElement().withName(service.getName()).build())
+                                     .contextElement(ServiceElement.builder().name(service.getName()).build())
                                      .status(ExecutionStatus.SUCCESS)
                                      .build();
     StateExecutionInstance si3 = aStateExecutionInstance()
                                      .uuid(generateUuid())
                                      .displayName(s3.getName())
                                      .parentInstanceId(si1.getUuid())
-                                     .contextElement(aServiceElement().withName(service.getName()).build())
+                                     .contextElement(ServiceElement.builder().name(service.getName()).build())
                                      .status(ExecutionStatus.RUNNING)
                                      .build();
     StateExecutionInstance si4 = aStateExecutionInstance()

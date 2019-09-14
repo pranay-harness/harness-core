@@ -1068,9 +1068,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     stateExecutionInstance.setExecutionUuid(workflowExecutionId);
     stateExecutionInstance.setStatus(ExecutionStatus.ABORTED);
     stateExecutionInstance.getContextElements().push(
-        PhaseElement.builder()
-            .serviceElement(ServiceElement.Builder.aServiceElement().withUuid(serviceId).build())
-            .build());
+        PhaseElement.builder().serviceElement(ServiceElement.builder().uuid(serviceId).build()).build());
     wingsPersistence.save(stateExecutionInstance);
 
     WorkflowExecution execution =

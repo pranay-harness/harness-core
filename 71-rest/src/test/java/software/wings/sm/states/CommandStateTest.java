@@ -20,7 +20,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
-import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.api.SimpleWorkflowParam.Builder.aSimpleWorkflowParam;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -87,6 +86,7 @@ import software.wings.WingsBaseTest;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
+import software.wings.api.ServiceElement;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
 import software.wings.beans.HostConnectionAttributes;
@@ -288,7 +288,7 @@ public class CommandStateTest extends WingsBaseTest {
                         .withDeploymentType("ECS")
                         .build());
     when(context.getContextElement(ContextElementType.SERVICE))
-        .thenReturn(aServiceElement().withUuid(SERVICE_ID).build());
+        .thenReturn(ServiceElement.builder().uuid(SERVICE_ID).build());
     when(context.getContextElement(ContextElementType.INSTANCE))
         .thenReturn(anInstanceElement()
                         .uuid(SERVICE_INSTANCE_ID)

@@ -4,7 +4,6 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Mockito.when;
-import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_REGISTRY_URL_KEY;
@@ -115,7 +114,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
     std.setAppId(app.getUuid());
     std.setEnvId(env.getUuid());
 
-    ServiceElement serviceElement = aServiceElement().withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
+    ServiceElement serviceElement = ServiceElement.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build();
     when(context.getContextElement(ContextElementType.SERVICE)).thenReturn(serviceElement);
 
     Map<String, Object> map = std.paramMap(context);
@@ -180,7 +179,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
     artifactIds.add(ARTIFACT_ID);
     std.setArtifactIds(artifactIds);
 
-    ServiceElement serviceElement = aServiceElement().withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
+    ServiceElement serviceElement = ServiceElement.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build();
     when(context.getContextElement(ContextElementType.SERVICE)).thenReturn(serviceElement);
     when(artifactService.get(ARTIFACT_ID))
         .thenReturn(anArtifact()

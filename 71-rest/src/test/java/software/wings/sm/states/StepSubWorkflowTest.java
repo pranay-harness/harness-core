@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
-import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
@@ -64,7 +63,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
     PhaseElement phaseElement =
         PhaseElement.builder()
             .uuid(generateUuid())
-            .serviceElement(aServiceElement().withUuid(generateUuid()).withName("service1").build())
+            .serviceElement(ServiceElement.builder().uuid(generateUuid()).name("service1").build())
             .build();
     StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
                                                         .displayName(STATE_NAME)
@@ -91,7 +90,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldValidateContainerDeploy() {
-    ServiceElement serviceElement = aServiceElement().withUuid(generateUuid()).withName("service1").build();
+    ServiceElement serviceElement = ServiceElement.builder().uuid(generateUuid()).name("service1").build();
     PhaseElement phaseElement = PhaseElement.builder().uuid(generateUuid()).serviceElement(serviceElement).build();
     StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
                                                         .displayName(STATE_NAME)
@@ -149,7 +148,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
                                                           .withServiceId(serviceId)
                                                           .build();
 
-    ServiceElement serviceElement = aServiceElement().withUuid(serviceId).withName("service1").build();
+    ServiceElement serviceElement = ServiceElement.builder().uuid(serviceId).name("service1").build();
     PhaseElement phaseElement = PhaseElement.builder()
                                     .uuid(generateUuid())
                                     .serviceElement(serviceElement)
@@ -185,7 +184,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
         .thenReturn(elementExecutionSummaries);
 
     String serviceId = generateUuid();
-    ServiceElement serviceElement = aServiceElement().withUuid(serviceId).withName("service1").build();
+    ServiceElement serviceElement = ServiceElement.builder().uuid(serviceId).name("service1").build();
     PhaseElement phaseElement = PhaseElement.builder()
                                     .uuid(generateUuid())
                                     .serviceElement(serviceElement)
@@ -221,7 +220,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
         .thenReturn(elementExecutionSummaries);
 
     String serviceId = generateUuid();
-    ServiceElement serviceElement = aServiceElement().withUuid(serviceId).withName("service1").build();
+    ServiceElement serviceElement = ServiceElement.builder().uuid(serviceId).name("service1").build();
     PhaseElement phaseElement = PhaseElement.builder()
                                     .uuid(generateUuid())
                                     .serviceElement(serviceElement)
@@ -252,7 +251,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
         .thenReturn(elementExecutionSummaries);
 
     String serviceId = generateUuid();
-    ServiceElement serviceElement = aServiceElement().withUuid(serviceId).withName("service1").build();
+    ServiceElement serviceElement = ServiceElement.builder().uuid(serviceId).name("service1").build();
     PhaseElement phaseElement = PhaseElement.builder()
                                     .uuid(generateUuid())
                                     .serviceElement(serviceElement)
@@ -288,7 +287,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
         .thenReturn(elementExecutionSummaries);
 
     String serviceId = generateUuid();
-    ServiceElement serviceElement = aServiceElement().withUuid(serviceId).withName("service1").build();
+    ServiceElement serviceElement = ServiceElement.builder().uuid(serviceId).name("service1").build();
     PhaseElement phaseElement = PhaseElement.builder()
                                     .uuid(generateUuid())
                                     .serviceElement(serviceElement)

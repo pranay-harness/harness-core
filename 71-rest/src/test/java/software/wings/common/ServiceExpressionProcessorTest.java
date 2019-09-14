@@ -11,7 +11,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
@@ -58,8 +57,8 @@ public class ServiceExpressionProcessorTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void shouldReturnMatchingServices() {
-    List<ServiceElement> services = Lists.newArrayList(aServiceElement().withName("A1234").build(),
-        aServiceElement().withName("B1234").build(), aServiceElement().withName("C1234").build());
+    List<ServiceElement> services = Lists.newArrayList(ServiceElement.builder().name("A1234").build(),
+        ServiceElement.builder().name("B1234").build(), ServiceElement.builder().name("C1234").build());
 
     when(context.getApp()).thenReturn(Application.Builder.anApplication().uuid(appId).build());
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(aWorkflowStandardParams().build());
@@ -124,8 +123,7 @@ public class ServiceExpressionProcessorTest extends CategoryTest {
   public void shouldReturnListAllFromContext() {
     Service serviceC = Service.builder().name("C1234").uuid(SERVICE_ID).build();
 
-    ServiceElement serviceCElement =
-        aServiceElement().withName(serviceC.getName()).withUuid(serviceC.getUuid()).build();
+    ServiceElement serviceCElement = ServiceElement.builder().name(serviceC.getName()).uuid(serviceC.getUuid()).build();
 
     when(context.getApp()).thenReturn(Application.Builder.anApplication().uuid(appId).build());
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(aWorkflowStandardParams().build());
@@ -177,10 +175,11 @@ public class ServiceExpressionProcessorTest extends CategoryTest {
   public void shouldReturnSelectedListSomeByName() {
     when(context.getApp()).thenReturn(Application.Builder.anApplication().uuid(appId).build());
     when(context.getContextElement(ContextElementType.STANDARD))
-        .thenReturn(aWorkflowStandardParams()
-                        .withServices(Lists.newArrayList(aServiceElement().withName("A1234").build(),
-                            aServiceElement().withName("B1234").build(), aServiceElement().withName("C1234").build()))
-                        .build());
+        .thenReturn(
+            aWorkflowStandardParams()
+                .withServices(Lists.newArrayList(ServiceElement.builder().name("A1234").build(),
+                    ServiceElement.builder().name("B1234").build(), ServiceElement.builder().name("C1234").build()))
+                .build());
 
     ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context);
     List<ServiceElement> matchingServices = processor.withNames("B1234", "C12*").list();
@@ -203,8 +202,7 @@ public class ServiceExpressionProcessorTest extends CategoryTest {
     List<Service> services =
         Lists.newArrayList(Service.builder().name("A1234").build(), Service.builder().name("B1234").build(), serviceC);
 
-    ServiceElement serviceCElement = new ServiceElement();
-    serviceCElement.setName(serviceC.getName());
+    ServiceElement serviceCElement = ServiceElement.builder().name(serviceC.getName()).build();
 
     when(context.getApp()).thenReturn(Application.Builder.anApplication().uuid(appId).build());
     when(context.getContextElement(ContextElementType.SERVICE)).thenReturn(serviceCElement);

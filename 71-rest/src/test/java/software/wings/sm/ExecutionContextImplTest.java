@@ -6,7 +6,6 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Mockito.when;
-import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -99,19 +98,13 @@ public class ExecutionContextImplTest extends WingsBaseTest {
 
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
 
-    ServiceElement element1 = new ServiceElement();
-    element1.setUuid(generateUuid());
-    element1.setName("svc1");
+    ServiceElement element1 = ServiceElement.builder().uuid(generateUuid()).name("svc1").build();
     context.pushContextElement(element1);
 
-    ServiceElement element2 = new ServiceElement();
-    element2.setUuid(generateUuid());
-    element2.setName("svc2");
+    ServiceElement element2 = ServiceElement.builder().uuid(generateUuid()).name("svc2").build();
     context.pushContextElement(element2);
 
-    ServiceElement element3 = new ServiceElement();
-    element3.setUuid(generateUuid());
-    element3.setName("svc3");
+    ServiceElement element3 = ServiceElement.builder().uuid(generateUuid()).name("svc3").build();
     context.pushContextElement(element3);
 
     ServiceElement element = context.getContextElement(ContextElementType.SERVICE);
@@ -122,15 +115,13 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
     injector.injectMembers(context);
 
-    ServiceElement svc = new ServiceElement();
-    svc.setUuid(generateUuid());
-    svc.setName("svc1");
+    ServiceElement svc = ServiceElement.builder().uuid(generateUuid()).name("svc1").build();
     context.pushContextElement(svc);
 
     ServiceTemplateElement st = new ServiceTemplateElement();
     st.setUuid(generateUuid());
     st.setName("st1");
-    st.setServiceElement(aServiceElement().withUuid(generateUuid()).withName("svc2").build());
+    st.setServiceElement(ServiceElement.builder().uuid(generateUuid()).name("svc2").build());
     context.pushContextElement(st);
 
     HostElement host = new HostElement();

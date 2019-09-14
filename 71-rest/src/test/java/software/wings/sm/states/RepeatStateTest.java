@@ -125,12 +125,10 @@ public class RepeatStateTest extends CategoryTest {
 
   private List<ContextElement> getTestRepeatElements() {
     List<ContextElement> repeatElements = new ArrayList<>();
-    ServiceElement ui = new ServiceElement();
-    ui.setName("ui");
+    ServiceElement ui = ServiceElement.builder().name("ui").build();
     repeatElements.add(ui);
 
-    ServiceElement svr = new ServiceElement();
-    svr.setName("server");
+    ServiceElement svr = ServiceElement.builder().name("server").build();
     repeatElements.add(svr);
     return repeatElements;
   }

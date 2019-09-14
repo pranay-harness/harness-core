@@ -121,8 +121,7 @@ public class APMStateVerificationTestBase extends WingsBaseTest {
     when(executionContext.getWorkflowExecutionName()).thenReturn("dummy workflow");
     when(executionContext.renderExpression(anyString())).then(returnsFirstArg());
     when(executionContext.getWorkflowId()).thenReturn(workflowId);
-    when(phaseElement.getServiceElement())
-        .thenReturn(ServiceElement.Builder.aServiceElement().withName("dummy").withUuid("1").build());
+    when(phaseElement.getServiceElement()).thenReturn(ServiceElement.builder().name("dummy").uuid("1").build());
     when(executionContext.getContextElement(ContextElementType.PARAM, ExecutionContextImpl.PHASE_PARAM))
         .thenReturn(phaseElement);
     when(environment.getName()).thenReturn("dummy env");
