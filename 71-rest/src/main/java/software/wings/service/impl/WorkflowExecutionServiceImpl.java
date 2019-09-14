@@ -36,7 +36,6 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ApprovalDetails.Action.APPROVE;
 import static software.wings.beans.ApprovalDetails.Action.REJECT;
@@ -1024,7 +1023,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       pipeline.getServices().forEach(service -> {
         serviceExecutionSummaries.add(
             anElementExecutionSummary()
-                .withContextElement(aServiceElement().withUuid(service.getUuid()).withName(service.getName()).build())
+                .withContextElement(ServiceElement.builder().uuid(service.getUuid()).name(service.getName()).build())
                 .build());
       });
       workflowExecution.setServiceExecutionSummaries(serviceExecutionSummaries);
@@ -1560,7 +1559,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             }
 
             serviceIdsSet.add(relatedService.getUuid());
-            ServiceElement se = new ServiceElement();
+            ServiceElement se = ServiceElement.builder().build();
             MapperUtils.mapObject(relatedService, se);
             services.add(se);
             keywords.add(se.getName());
@@ -1627,7 +1626,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         }
         serviceIdsSet.add(serviceId);
         Service service = serviceResourceService.get(serviceId);
-        ServiceElement se = new ServiceElement();
+        ServiceElement se = ServiceElement.builder().build();
         MapperUtils.mapObject(service, se);
         services.add(se);
         keywords.add(se.getName());
@@ -2180,7 +2179,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         List<InfrastructureDefinition> finalInfrastructureDefinitions = infrastructureDefinitions;
         services.forEach(service -> {
           ServiceElement serviceElement =
-              aServiceElement().withUuid(service.getUuid()).withName(service.getName()).build();
+              ServiceElement.builder().uuid(service.getUuid()).name(service.getName()).build();
           ElementExecutionSummary elementSummary =
               anElementExecutionSummary().withContextElement(serviceElement).withStatus(ExecutionStatus.QUEUED).build();
 

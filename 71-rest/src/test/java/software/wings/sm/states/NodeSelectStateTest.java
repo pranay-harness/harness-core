@@ -8,7 +8,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
-import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
@@ -39,6 +38,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement;
 import software.wings.api.SelectedNodeExecutionData;
+import software.wings.api.ServiceElement;
 import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.HostConnectionType;
@@ -122,7 +122,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(context.getApp()).thenReturn(anApplication().uuid(APP_ID).build());
     when(context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM))
         .thenReturn(PhaseElement.builder()
-                        .serviceElement(aServiceElement().withUuid(SERVICE_ID).build())
+                        .serviceElement(ServiceElement.builder().uuid(SERVICE_ID).build())
                         .infraMappingId(INFRA_MAPPING_ID)
                         .build());
     when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);

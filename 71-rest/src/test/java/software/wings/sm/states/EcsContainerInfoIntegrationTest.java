@@ -125,9 +125,7 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
     when(stateExecutionInstance.getStateExecutionMap()).thenReturn(Collections.emptyMap());
 
     ExecutionContext context = spy(new ExecutionContextImpl(stateExecutionInstance));
-    doReturn(PhaseElement.builder()
-                 .serviceElement(ServiceElement.Builder.aServiceElement().withUuid("serviceA").build())
-                 .build())
+    doReturn(PhaseElement.builder().serviceElement(ServiceElement.builder().uuid("serviceA").build()).build())
         .when(context)
         .getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     doReturn(appId).when(context).getAppId();

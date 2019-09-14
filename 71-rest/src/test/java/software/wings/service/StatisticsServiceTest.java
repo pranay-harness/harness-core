@@ -13,7 +13,6 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.when;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
-import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
@@ -39,6 +38,7 @@ import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.api.ServiceElement;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.PipelineStageExecution;
@@ -83,12 +83,12 @@ public class StatisticsServiceTest extends WingsBaseTest {
     List<ElementExecutionSummary> serviceExecutionSummaries =
         asList(anElementExecutionSummary()
                    .withStatus(SUCCESS)
-                   .withContextElement(aServiceElement().withName(SERVICE_NAME).withUuid(SERVICE_ID).build())
+                   .withContextElement(ServiceElement.builder().name(SERVICE_NAME).uuid(SERVICE_ID).build())
                    .build());
     List<ElementExecutionSummary> serviceFailureExecutionSummaries =
         asList(anElementExecutionSummary()
                    .withStatus(FAILED)
-                   .withContextElement(aServiceElement().withName(SERVICE_NAME).withUuid(SERVICE_ID).build())
+                   .withContextElement(ServiceElement.builder().name(SERVICE_NAME).uuid(SERVICE_ID).build())
                    .build());
 
     List<WorkflowExecution> executions =
@@ -122,12 +122,12 @@ public class StatisticsServiceTest extends WingsBaseTest {
     List<ElementExecutionSummary> serviceExecutionSummaries =
         asList(anElementExecutionSummary()
                    .withStatus(SUCCESS)
-                   .withContextElement(aServiceElement().withName(SERVICE_NAME).withUuid(SERVICE_ID).build())
+                   .withContextElement(ServiceElement.builder().name(SERVICE_NAME).uuid(SERVICE_ID).build())
                    .build());
     List<ElementExecutionSummary> serviceFailureExecutionSummaries =
         asList(anElementExecutionSummary()
                    .withStatus(FAILED)
-                   .withContextElement(aServiceElement().withName(SERVICE_NAME).withUuid(SERVICE_ID).build())
+                   .withContextElement(ServiceElement.builder().name(SERVICE_NAME).uuid(SERVICE_ID).build())
                    .build());
 
     List<WorkflowExecution> executions =

@@ -13,7 +13,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
-import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -54,6 +53,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.HttpStateExecutionData;
+import software.wings.api.ServiceElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Environment.EnvironmentType;
@@ -389,7 +389,7 @@ public class HttpStateTest extends WingsBaseTest {
                 aServiceTemplateElement()
                     .withName(TEMPLATE_NAME)
                     .withUuid(TEMPLATE_ID)
-                    .withServiceElement(aServiceElement().withName(SERVICE_NAME).withUuid(SERVICE_ID).build())
+                    .withServiceElement(ServiceElement.builder().name(SERVICE_NAME).uuid(SERVICE_ID).build())
                     .build())
             .uuid(SERVICE_INSTANCE_ID)
             .build());

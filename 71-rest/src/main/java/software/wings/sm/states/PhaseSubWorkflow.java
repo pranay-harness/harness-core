@@ -257,7 +257,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
                                                   .phaseNameForRollback(phaseNameForRollback);
 
     if (service != null) {
-      ServiceElement serviceElement = new ServiceElement();
+      ServiceElement serviceElement = ServiceElement.builder().build();
       MapperUtils.mapObject(service, serviceElement);
       phaseElementBuilder.serviceElement(serviceElement);
     }

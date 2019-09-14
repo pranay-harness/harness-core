@@ -14,7 +14,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
-import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.CloudFormationSourceType.TEMPLATE_BODY;
@@ -177,7 +176,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
               WorkflowElement.builder().variables(ImmutableMap.of("CF_AWS_Config", SETTING_ID)).build())
           .build();
 
-  private ServiceElement serviceElement = aServiceElement().withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
+  private ServiceElement serviceElement = ServiceElement.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build();
 
   @InjectMocks
   private PhaseElement phaseElement = PhaseElement.builder()

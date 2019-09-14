@@ -13,7 +13,6 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder.aPhaseExecutionData;
-import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
@@ -36,6 +35,7 @@ import software.wings.api.CanaryWorkflowStandardParams;
 import software.wings.api.DeploymentType;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
+import software.wings.api.ServiceElement;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.Environment;
@@ -114,7 +114,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
                 .build());
       }
       elementExecutionSummary.add(anElementExecutionSummary()
-                                      .withContextElement(aServiceElement().withUuid(service).build())
+                                      .withContextElement(ServiceElement.builder().uuid(service).build())
                                       .withInstanceStatusSummaries(instanceStatusSummaryList)
                                       .build());
     }
@@ -139,7 +139,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     ExecutionContext context = spy(new ExecutionContextImpl(new StateExecutionInstance()));
     doReturn(PhaseElement.builder()
                  .infraMappingId(infraMappingId)
-                 .serviceElement(aServiceElement().withUuid("serviceA").build())
+                 .serviceElement(ServiceElement.builder().uuid("serviceA").build())
                  .build())
         .when(context)
         .getContextElement(ContextElementType.PARAM, PHASE_PARAM);
@@ -187,7 +187,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
                 .build());
       }
       elementExecutionSummary.add(anElementExecutionSummary()
-                                      .withContextElement(aServiceElement().withUuid(service).build())
+                                      .withContextElement(ServiceElement.builder().uuid(service).build())
                                       .withInstanceStatusSummaries(instanceStatusSummaryList)
                                       .build());
     }
@@ -216,8 +216,9 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
         aPhaseExecutionData()
             .withElementStatusSummary(Lists.newArrayList(
                 anElementExecutionSummary()
-                    .withContextElement(
-                        PhaseElement.builder().serviceElement(aServiceElement().withUuid("serviceA").build()).build())
+                    .withContextElement(PhaseElement.builder()
+                                            .serviceElement(ServiceElement.builder().uuid("serviceA").build())
+                                            .build())
                     .withInstanceStatusSummaries(Lists.newArrayList(
                         anInstanceStatusSummary()
                             .withInstanceElement(anInstanceElement().hostName("serviceA-0.harness.com").build())
@@ -235,7 +236,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
 
     doReturn(PhaseElement.builder()
                  .infraMappingId(infraMappingId)
-                 .serviceElement(aServiceElement().withUuid("serviceA").build())
+                 .serviceElement(ServiceElement.builder().uuid("serviceA").build())
                  .build())
         .when(context)
         .getContextElement(ContextElementType.PARAM, PHASE_PARAM);

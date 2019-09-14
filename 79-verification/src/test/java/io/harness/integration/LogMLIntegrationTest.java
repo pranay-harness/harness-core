@@ -691,9 +691,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
     stateExecutionInstance.setExecutionUuid(workflowExecutionId);
     stateExecutionInstance.getContextElements().push(
-        PhaseElement.builder()
-            .serviceElement(ServiceElement.Builder.aServiceElement().withUuid(serviceId).build())
-            .build());
+        PhaseElement.builder().serviceElement(ServiceElement.builder().uuid(serviceId).build()).build());
     wingsPersistence.save(stateExecutionInstance);
 
     workflowExecution = WorkflowExecution.builder()
@@ -1034,9 +1032,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     stateExecutionInstance.setUuid(stateExecutionId);
     stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
     stateExecutionInstance.getContextElements().push(
-        PhaseElement.builder()
-            .serviceElement(ServiceElement.Builder.aServiceElement().withUuid(serviceId).build())
-            .build());
+        PhaseElement.builder().serviceElement(ServiceElement.builder().uuid(serviceId).build()).build());
     wingsPersistence.save(stateExecutionInstance);
 
     workflowExecution = WorkflowExecution.builder()

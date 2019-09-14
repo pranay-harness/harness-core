@@ -71,7 +71,7 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
    * @return the service element
    */
   static ServiceElement convertToServiceElement(Service service) {
-    ServiceElement element = new ServiceElement();
+    ServiceElement element = ServiceElement.builder().build();
     MapperUtils.mapObject(service, element);
     return element;
   }
