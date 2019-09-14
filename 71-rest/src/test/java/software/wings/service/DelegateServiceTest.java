@@ -378,30 +378,6 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldSaveDelegateTaskWithPreAssignedDelegateId() {
-    when(assignDelegateService.pickFirstAttemptDelegate(any(DelegateTask.class))).thenReturn(DELEGATE_ID);
-
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .async(true)
-                                    .accountId(ACCOUNT_ID)
-                                    .waitId(generateUuid())
-                                    .appId(APP_ID)
-                                    .version(VERSION)
-                                    .data(TaskData.builder()
-                                              .taskType(TaskType.HTTP.name())
-                                              .parameters(new Object[] {})
-                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                                              .build())
-                                    .tags(new ArrayList<>())
-                                    .build();
-    delegateService.queueTask(delegateTask);
-    DelegateTask delegateTask1 =
-        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.appId, APP_ID).get();
-    assertThat(delegateTask1.getPreAssignedDelegateId()).isEqualTo(DELEGATE_ID);
-  }
-
-  @Test
-  @Category(UnitTests.class)
   public void shouldProcessDelegateTaskResponse() {
     DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)

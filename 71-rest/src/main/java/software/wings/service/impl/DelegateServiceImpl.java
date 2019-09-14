@@ -246,6 +246,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ArtifactCollectionUtils artifactCollectionUtils;
   @Inject private PersistentLocker persistentLocker;
+  @Inject private DelegateTaskBroadcastHelper broadcastHelper;
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
 
   private final Map<String, Object> syncTaskWaitMap = new ConcurrentHashMap<>();
@@ -1410,7 +1411,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   @Override
   public String queueTask(DelegateTask task) {
-    return saveAndBroadcastTask(task, true).getUuid();
+    return saveDelegataeTask(task, true).getUuid();
   }
 
   @Override
@@ -1420,11 +1421,13 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     if (isEmpty(eligibleDelegateIds)) {
       throw new WingsException(UNAVAILABLE_DELEGATES, USER_ADMIN);
     }
-    DelegateTask delegateTask = saveAndBroadcastTask(task, false);
 
     // Wait for task to complete
     DelegateTask completedTask;
+    DelegateTask delegateTask = saveDelegataeTask(task, false);
     try {
+      // Immediately broadcast sync task.
+      broadcastHelper.broadcastNewDelegateTask(delegateTask);
       syncTaskWaitMap.put(delegateTask.getUuid(), new Object());
       synchronized (syncTaskWaitMap.get(delegateTask.getUuid())) {
         syncTaskWaitMap.get(delegateTask.getUuid()).wait(task.getData().getTimeout());
@@ -1456,25 +1459,18 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     return (T) responseData;
   }
 
-  private DelegateTask saveAndBroadcastTask(DelegateTask task, boolean async) {
+  @VisibleForTesting
+  DelegateTask saveDelegataeTask(DelegateTask task, boolean async) {
     task.setStatus(QUEUED);
     task.setAsync(async);
     task.setVersion(getVersion());
-    task.setBroadcastCount(1);
+    // For SYNC task, we per form broadcast immediately, so set count to 1.
+    task.setBroadcastCount(async ? 0 : 1);
     task.setLastBroadcastAt(clock.millis());
     generateCapabilitiesForTaskIfFeatureEnabled(task);
-    wingsPersistence.save(task);
-
-    String preAssignedDelegateId = assignDelegateService.pickFirstAttemptDelegate(task);
-
-    // Update fields for DelegateTask, preAssignedDelegateId and executionCapabilities if not empty
-    task = updateDelegateTaskWithPreAssignedDelegateId(task, preAssignedDelegateId, task.getExecutionCapabilities());
-
-    logger.info("{} task: uuid: {}, accountId: {}, type: {}, correlationId: {}",
-        async ? "Queueing async" : "Executing sync", task.getUuid(), task.getAccountId(), task.getData().getTaskType(),
-        task.getCorrelationId());
-
-    broadcasterFactory.lookup("/stream/delegate/" + task.getAccountId(), true).broadcast(task);
+    task.setNextBroadast(System.currentTimeMillis());
+    String id = wingsPersistence.save(task);
+    task.setUuid(id);
     return task;
   }
 
@@ -1625,38 +1621,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       return assignTask(delegateId, taskId, delegateTask);
     }
     return null;
-  }
-
-  private DelegateTask updateDelegateTaskWithPreAssignedDelegateId(
-      DelegateTask delegateTask, String preAssignedDelegateId, List<ExecutionCapability> executionCapabilities) {
-    if (isBlank(preAssignedDelegateId) && isEmpty(executionCapabilities)) {
-      // Reason here we are fetching delegateTask again from DB  is,
-      // Before this call is made, we try to generate Capabilities required for this delegate Task.
-      // During this, we try to evaluateExpressions, which will replace secrets in parameters with expressions,
-      // like secretFunctor.obtain(),
-      // We want to broadcast original DelegateTask and not this modified one.
-      // So here we fetch original task and return it, so it will be broadcasted.
-      return wingsPersistence.get(DelegateTask.class, delegateTask.getUuid());
-    }
-
-    Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
-                                    .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
-                                    .filter(DelegateTaskKeys.status, QUEUED)
-                                    .field(DelegateTaskKeys.delegateId)
-                                    .doesNotExist()
-                                    .filter(ID_KEY, delegateTask.getUuid());
-
-    UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class);
-
-    if (isNotBlank(preAssignedDelegateId)) {
-      updateOperations.set(DelegateTaskKeys.preAssignedDelegateId, preAssignedDelegateId);
-    }
-
-    if (isNotEmpty(executionCapabilities)) {
-      updateOperations.set(DelegateTaskKeys.executionCapabilities, executionCapabilities);
-    }
-
-    return wingsPersistence.findAndModifySystemData(query, updateOperations, HPersistence.returnNewOptions);
   }
 
   @Override

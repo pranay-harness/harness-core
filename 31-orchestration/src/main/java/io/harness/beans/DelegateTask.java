@@ -66,6 +66,7 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
   private String correlationId;
   private String workflowExecutionId;
   private ResponseData notifyResponse;
+  private long nextBroadast;
 
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   @Default
