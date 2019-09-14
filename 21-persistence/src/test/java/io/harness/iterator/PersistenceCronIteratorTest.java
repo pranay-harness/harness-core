@@ -2,7 +2,10 @@ package io.harness.iterator;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.iterator.PersistenceIterator.ProcessMode.LOOP;
+import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.IRREGULAR_SKIP_MISSED;
 import static java.time.Duration.ofSeconds;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 
 import com.google.inject.Inject;
@@ -24,6 +27,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
@@ -51,16 +56,80 @@ public class PersistenceCronIteratorTest extends PersistenceTest {
                    .clazz(CronIterableEntity.class)
                    .fieldName(CronIterableEntityKeys.nextIterations)
                    .targetInterval(ofSeconds(10))
-                   .acceptableDelay(ofSeconds(1))
+                   .acceptableNoAlertDelay(ofSeconds(1))
                    .maximumDelayForCheck(ofSeconds(1))
                    .executorService(executorService)
                    .semaphore(new Semaphore(10))
                    .handler(new TestHandler())
-                   .regular(false)
+                   .schedulingType(IRREGULAR_SKIP_MISSED)
                    .redistribute(true)
                    .build();
     on(iterator).set("persistence", persistence);
     on(iterator).set("queueController", queueController);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testExpandNextIterationsAllStay() {
+    long now = System.currentTimeMillis();
+    final CronIterableEntity cronIterableEntity =
+        CronIterableEntity.builder()
+            .nextIterations(new ArrayList<Long>(asList(now + 1000, now + 2000)))
+            .expression("* * * * * ?")
+            .build();
+
+    final List<Long> longs = cronIterableEntity.recalculateNextIterations("", true, now);
+
+    assertThat(longs).hasSize(10);
+    assertThat(longs.get(0)).isEqualTo(now + 1000);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testExpandNextIterationsAllOld() {
+    long now = System.currentTimeMillis();
+    final CronIterableEntity cronIterableEntity =
+        CronIterableEntity.builder()
+            .nextIterations(new ArrayList<Long>(asList(now - 2000, now - 1000)))
+            .expression("* * * * * ?")
+            .build();
+
+    final List<Long> longs = cronIterableEntity.recalculateNextIterations("", true, now);
+
+    assertThat(longs).hasSize(10);
+    assertThat(longs.get(0)).isNotEqualTo(now - 2000).isNotEqualTo(now - 1000);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testExpandNextIterationsTruncatedMatch() {
+    long now = System.currentTimeMillis();
+    final CronIterableEntity cronIterableEntity =
+        CronIterableEntity.builder()
+            .nextIterations(new ArrayList<Long>(asList(now - 2000, now - 1000, now, now + 1000, now + 2000)))
+            .expression("* * * * * ?")
+            .build();
+
+    final List<Long> longs = cronIterableEntity.recalculateNextIterations("", true, now);
+
+    assertThat(longs).hasSize(10);
+    assertThat(longs.get(0)).isEqualTo(now + 1000);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testExpandNextIterationsTruncatedNoMatch() {
+    long now = System.currentTimeMillis();
+    final CronIterableEntity cronIterableEntity =
+        CronIterableEntity.builder()
+            .nextIterations(new ArrayList<Long>(asList(now - 2000, now - 1000, now, now + 1000, now + 2000)))
+            .expression("* * * * * ?")
+            .build();
+
+    final List<Long> longs = cronIterableEntity.recalculateNextIterations("", true, now + 1);
+
+    assertThat(longs).hasSize(10);
+    assertThat(longs.get(0)).isEqualTo(now + 1000);
   }
 
   @Test

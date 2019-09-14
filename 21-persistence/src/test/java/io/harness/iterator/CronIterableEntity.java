@@ -29,21 +29,16 @@ public class CronIterableEntity implements PersistentCronIterable {
   }
 
   @Override
-  public List<Long> recalculateNextIterations(String fieldName) {
+  public List<Long> recalculateNextIterations(String fieldName, boolean skipMissing, long throttled) {
     if (nextIterations == null) {
       nextIterations = new ArrayList<>();
     }
 
-    if (expandNextIterations(expression, nextIterations)) {
+    if (expandNextIterations(skipMissing, throttled, expression, nextIterations)) {
       logger.info(expression);
       return nextIterations;
     }
 
     return null;
-  }
-
-  @Override
-  public boolean skipMissed() {
-    return true;
   }
 }

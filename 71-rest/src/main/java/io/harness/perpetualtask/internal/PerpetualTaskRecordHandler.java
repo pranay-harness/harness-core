@@ -1,5 +1,6 @@
 package io.harness.perpetualtask.internal;
 
+import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.time.Duration.ofSeconds;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -46,12 +47,12 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord> 
               .clazz(PerpetualTaskRecord.class)
               .fieldName(PerpetualTaskRecordKeys.nextIteration)
               .targetInterval(ofSeconds(5))
-              .acceptableDelay(ofSeconds(45))
+              .acceptableNoAlertDelay(ofSeconds(45))
               .executorService(executor)
               .semaphore(new Semaphore(1)) //
               .handler(handler)
               .filterExpander(query -> query.field(PerpetualTaskRecordKeys.delegateId).equal(""))
-              .regular(true)
+              .schedulingType(REGULAR)
               .redistribute(true)
               .build();
 

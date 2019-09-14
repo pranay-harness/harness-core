@@ -3,6 +3,7 @@ package io.harness.iterator;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.iterator.PersistenceIterator.ProcessMode.LOOP;
 import static io.harness.iterator.PersistenceIterator.ProcessMode.PUMP;
+import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
@@ -55,12 +56,12 @@ public class PersistenceRegularIteratorTest extends PersistenceTest {
                    .clazz(RegularIterableEntity.class)
                    .fieldName(RegularIterableEntityKeys.nextIteration)
                    .targetInterval(ofSeconds(10))
-                   .acceptableDelay(ofSeconds(1))
+                   .acceptableNoAlertDelay(ofSeconds(1))
                    .maximumDelayForCheck(ofSeconds(5))
                    .executorService(executorService)
                    .semaphore(new Semaphore(10))
                    .handler(new TestHandler())
-                   .regular(true)
+                   .schedulingType(REGULAR)
                    .redistribute(true)
                    .build();
     on(iterator).set("persistence", persistence);

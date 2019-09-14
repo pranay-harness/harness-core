@@ -1,5 +1,6 @@
 package software.wings.scheduler.ecs;
 
+import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.time.Duration.ofMinutes;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -42,11 +43,11 @@ public class ECSPollingHandler implements Handler<ECSPollingJobEntity> {
                                          .clazz(ECSPollingJobEntity.class)
                                          .fieldName(ECSPollingJobEntityKeys.nextIteration)
                                          .targetInterval(ofMinutes(60))
-                                         .acceptableDelay(ofMinutes(1))
+                                         .acceptableNoAlertDelay(ofMinutes(1))
                                          .executorService(executor)
                                          .semaphore(semaphore)
                                          .handler(handler)
-                                         .regular(true)
+                                         .schedulingType(REGULAR)
                                          .redistribute(true)
                                          .build();
 

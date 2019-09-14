@@ -1,6 +1,7 @@
 package software.wings.scheduler.events.segment;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.REGULAR;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
@@ -52,11 +53,11 @@ public class SegmentGroupEventJob implements Handler<SegmentGroupEventJobContext
                                            .clazz(SegmentGroupEventJobContext.class)
                                            .fieldName(SegmentGroupEventJobContextKeys.nextIteration)
                                            .targetInterval(INTERVAL)
-                                           .acceptableDelay(ACCEPTABLE_DELAY)
+                                           .acceptableNoAlertDelay(ACCEPTABLE_DELAY)
                                            .executorService(executor)
                                            .semaphore(semaphore)
                                            .handler(handler)
-                                           .regular(true)
+                                           .schedulingType(REGULAR)
                                            .redistribute(true)
                                            .build();
 
