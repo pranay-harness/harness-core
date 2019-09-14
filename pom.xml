@@ -54,6 +54,7 @@
         <gitCommitId>default</gitCommitId>
         <grpc.version>1.21.0</grpc.version>
         <ibatis.core.version>3.0</ibatis.core.version>
+        <jacoco.skip>true</jacoco.skip>
         <jgit.version>5.3.0.201903130848-r</jgit.version>
         <maven.build.timestamp.format>yyMMdd-HHmm</maven.build.timestamp.format>
         <maven.deploy.skip>true</maven.deploy.skip>
@@ -1714,6 +1715,25 @@
             </plugins>
         </pluginManagement>
         <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.4</version>
+                <configuration>
+                    <append>true</append>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${jacoco.skip}</skip>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.xolstice.maven.plugins</groupId>
                 <artifactId>protobuf-maven-plugin</artifactId>
