@@ -14,6 +14,8 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.entityinterface.AccountAccess;
+import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
@@ -47,7 +49,7 @@ import software.wings.beans.infrastructure.instance.key.PodInstanceKey;
 })
 
 @FieldNameConstants(innerTypeName = "InstanceKeys")
-public class Instance extends Base {
+public class Instance extends Base implements AccountAccess, ApplicationAccess {
   @NotEmpty private InstanceType instanceType;
   private HostInstanceKey hostInstanceKey;
   private ContainerInstanceKey containerInstanceKey;

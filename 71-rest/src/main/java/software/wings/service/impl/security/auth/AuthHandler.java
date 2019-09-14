@@ -172,6 +172,8 @@ public class AuthHandler {
     userPermissionInfoBuilder.appPermissionMapInternal(appPermissionMap)
         .accountPermissionSummary(accountPermissionSummaryBuilder.build());
 
+    userPermissionInfoBuilder.hasAllAppAccess(allAppIds.size() <= appPermissionMap.keySet().size());
+
     UserPermissionInfo userPermissionInfo = userPermissionInfoBuilder.build();
     setAppPermissionMap(userPermissionInfo);
 

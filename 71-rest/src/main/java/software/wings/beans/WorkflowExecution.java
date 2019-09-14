@@ -35,6 +35,7 @@ import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionArgs.ExecutionArgsKeys;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.entityinterface.AccountAccess;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateMachine;
@@ -85,7 +86,8 @@ import javax.validation.constraints.NotNull;
       })
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, KeywordsAware {
+public class WorkflowExecution
+    implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, KeywordsAware, AccountAccess {
   // TODO: Determine the right expiry duration for workflow exceptions
   public static final Duration EXPIRY = Duration.ofDays(7);
 

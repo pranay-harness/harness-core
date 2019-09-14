@@ -23,6 +23,8 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
+import software.wings.beans.entityinterface.AccountAccess;
+import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
@@ -41,7 +43,7 @@ import javax.validation.constraints.NotNull;
 @HarnessExportableEntity
 @FieldNameConstants(innerTypeName = "WorkflowKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Workflow extends Base implements KeywordsAware, NameAccess, TagAware {
+public class Workflow extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, ApplicationAccess {
   public static final String NAME_KEY = "name";
   public static final String LINKED_TEMPLATE_UUIDS_KEY = "linkedTemplateUuids";
   public static final String ORCHESTRATION_KEY = "orchestration";

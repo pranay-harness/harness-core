@@ -19,6 +19,7 @@ public class UserPermissionInfo {
   private AccountPermissionSummary accountPermissionSummary;
   // Key - appId, Value - app permission summary
   private Map<String, AppPermissionSummaryForUI> appPermissionMap = new HashMap<>();
+  private boolean hasAllAppAccess;
 
   // Key - appId, Value - app permission summary
   // This structure is optimized for AuthRuleFilter for faster lookup

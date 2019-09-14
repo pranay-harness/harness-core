@@ -15,6 +15,8 @@ import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
+import software.wings.beans.entityinterface.AccountAccess;
+import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
 import software.wings.yaml.BaseEntityYaml;
@@ -34,7 +36,8 @@ import javax.validation.Valid;
 @Entity(value = "infrastructureProvisioner")
 @HarnessExportableEntity
 @FieldNameConstants(innerTypeName = "InfrastructureProvisionerKeys")
-public abstract class InfrastructureProvisioner extends Base implements NameAccess, TagAware {
+public abstract class InfrastructureProvisioner
+    extends Base implements NameAccess, TagAware, AccountAccess, ApplicationAccess {
   public static final String INFRASTRUCTURE_PROVISIONER_TYPE_KEY = "infrastructureProvisionerType";
   public static final String MAPPING_BLUEPRINTS_KEY = "mappingBlueprints";
   public static final String NAME_KEY = "name";

@@ -26,6 +26,7 @@ import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.beans.trigger.ArtifactSelection.ArtifactSelectionKeys;
 import software.wings.beans.trigger.ArtifactTriggerCondition.ArtifactTriggerConditionKeys;
@@ -59,7 +60,7 @@ import javax.validation.constraints.NotNull;
     @Field(TriggerKeys.artifactSelections + "." + ArtifactSelectionKeys.artifactStreamId)
   })
 })
-public class Trigger extends Base implements NameAccess, TagAware {
+public class Trigger extends Base implements NameAccess, TagAware, ApplicationAccess {
   @NotEmpty private String name;
   private String description;
   @NotNull private TriggerCondition condition;

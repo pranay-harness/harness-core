@@ -24,6 +24,8 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Environment.EnvironmentKeys;
+import software.wings.beans.entityinterface.AccountAccess;
+import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.infra.InfrastructureDefinition;
@@ -51,7 +53,7 @@ import javax.validation.constraints.NotNull;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "EnvironmentKeys")
-public class Environment extends Base implements KeywordsAware, NameAccess, TagAware {
+public class Environment extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, ApplicationAccess {
   public static final String GLOBAL_ENV_ID = "__GLOBAL_ENV_ID__";
 
   @NotEmpty @EntityName private String name;
