@@ -1,14 +1,9 @@
 package software.wings.service.impl;
 
-import org.slf4j.MDC;
+import io.harness.logging.AutoLogContext;
 
-public class ExecutionLogContext implements AutoCloseable {
+public class ExecutionLogContext extends AutoLogContext {
   public ExecutionLogContext(String executionId) {
-    MDC.put("executionId", '[' + executionId + ']');
-  }
-
-  @Override
-  public void close() throws Exception {
-    MDC.remove("executionId");
+    super("executionId", '[' + executionId + ']');
   }
 }
