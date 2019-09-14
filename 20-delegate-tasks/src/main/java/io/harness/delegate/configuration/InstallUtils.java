@@ -487,6 +487,11 @@ public class InstallUtils {
 
   public static boolean installTerraformConfigInspect(DelegateConfiguration configuration) {
     try {
+      if (isWindows()) {
+        logger.info("Skipping terraform-config-inspect install on Windows");
+        return true;
+      }
+
       final String terraformConfigInspectVersionedDirectory =
           Paths.get(getTerraformConfigInspectPath()).getParent().toString();
       if (validateTerraformConfigInspectExists(terraformConfigInspectVersionedDirectory)) {
