@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.distribution.barrier.Barrier.State.STANDING;
 import static io.harness.eraro.ErrorCode.BARRIERS_NOT_RUNNING_CONCURRENTLY;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.time.Duration.ofMinutes;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -81,12 +82,12 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
             .clazz(BarrierInstance.class)
             .fieldName(BarrierInstanceKeys.nextIteration)
             .targetInterval(ofMinutes(1))
-            .acceptableDelay(ofMinutes(1))
+            .acceptableNoAlertDelay(ofMinutes(1))
             .executorService(executor)
             .semaphore(new Semaphore(threads))
             .handler(barrierInstance -> barrierService.update(barrierInstance))
             .filterExpander(query -> query.filter(BarrierInstanceKeys.state, STANDING.name()))
-            .regular(true)
+            .schedulingType(REGULAR)
             .redistribute(true)
             .build();
 

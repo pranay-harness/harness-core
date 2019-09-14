@@ -26,7 +26,7 @@ public class IrregularIterableEntity implements PersistentIrregularIterable {
   }
 
   @Override
-  public List<Long> recalculateNextIterations(String fieldName) {
+  public List<Long> recalculateNextIterations(String fieldName, boolean skipMissing, long throttled) {
     if (nextIterations != null && nextIterations.size() > 1) {
       // If no new items are provided we need to remove the first item to prevent it being added again with merge
       nextIterations.remove(0);

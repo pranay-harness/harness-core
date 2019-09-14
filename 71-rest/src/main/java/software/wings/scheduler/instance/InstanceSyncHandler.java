@@ -1,5 +1,6 @@
 package software.wings.scheduler.instance;
 
+import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.time.Duration.ofMinutes;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -40,11 +41,11 @@ public class InstanceSyncHandler implements Handler<InfrastructureMapping> {
                                          .clazz(InfrastructureMapping.class)
                                          .fieldName(InfrastructureMappingKeys.nextIteration)
                                          .targetInterval(ofMinutes(10))
-                                         .acceptableDelay(ofMinutes(10))
+                                         .acceptableNoAlertDelay(ofMinutes(10))
                                          .executorService(executor)
                                          .semaphore(new Semaphore(POOL_SIZE))
                                          .handler(handler)
-                                         .regular(true)
+                                         .schedulingType(REGULAR)
                                          .redistribute(true)
                                          .build();
 

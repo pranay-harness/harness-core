@@ -86,19 +86,15 @@ public class DeploymentTrigger implements PersistentEntity, UuidAware, CreatedAt
   private transient List<HarnessTagLink> tagLinks;
 
   @Override
-  public boolean skipMissed() {
-    return true;
-  }
-
-  @Override
-  public List<Long> recalculateNextIterations(String fieldName) {
+  public List<Long> recalculateNextIterations(String fieldName, boolean skipMissing, long throttled) {
     if (nextIterations == null) {
       nextIterations = new ArrayList<>();
     }
 
     try {
       ScheduledCondition scheduledCondition = (ScheduledCondition) condition;
-      if (expandNextIterations(PREFIX + scheduledCondition.getCronExpression(), nextIterations)) {
+      if (expandNextIterations(
+              skipMissing, throttled, PREFIX + scheduledCondition.getCronExpression(), nextIterations)) {
         return nextIterations;
       }
     } catch (Exception ex) {

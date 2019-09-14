@@ -2,6 +2,7 @@ package software.wings.scheduler.audit;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
@@ -40,11 +41,11 @@ public class EntityAuditRecordHandler implements Handler<AuditRecord> {
                                          .clazz(AuditRecord.class)
                                          .fieldName(AuditRecordKeys.nextIteration)
                                          .targetInterval(ofMinutes(30))
-                                         .acceptableDelay(ofSeconds(45))
+                                         .acceptableNoAlertDelay(ofSeconds(45))
                                          .executorService(executor)
                                          .semaphore(new Semaphore(POOL_SIZE))
                                          .handler(handler)
-                                         .regular(true)
+                                         .schedulingType(REGULAR)
                                          .redistribute(true)
                                          .build();
 

@@ -1,5 +1,6 @@
 package software.wings.service.impl.trigger;
 
+import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.IRREGULAR_SKIP_MISSED;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static software.wings.beans.trigger.Condition.Type.SCHEDULED;
@@ -37,13 +38,14 @@ public class ScheduleTriggerHandler implements Handler<DeploymentTrigger> {
       MongoPersistenceIterator.<DeploymentTrigger>builder()
           .clazz(DeploymentTrigger.class)
           .fieldName("nextIterations")
-          .acceptableDelay(ofSeconds(5))
+          .acceptableNoAlertDelay(ofSeconds(5))
           .maximumDelayForCheck(ofMinutes(30))
           .executorService(executorService)
           .semaphore(new Semaphore(10))
           .handler(handler)
           .filterExpander(query -> query.filter(DeploymentTriggerKeys.type, SCHEDULED))
-          .regular(false)
+          .schedulingType(IRREGULAR_SKIP_MISSED)
+          .throttleInterval(ofSeconds(45))
           .build();
 
   public static void registerIterators(Injector injector) {

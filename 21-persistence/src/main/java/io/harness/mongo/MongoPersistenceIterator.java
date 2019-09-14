@@ -1,7 +1,10 @@
 package io.harness.mongo;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.govern.Switch.unhandled;
 import static io.harness.iterator.PersistenceIterator.ProcessMode.PUMP;
+import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.IRREGULAR_SKIP_MISSED;
+import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofMillis;
@@ -9,6 +12,8 @@ import static java.time.Duration.ofSeconds;
 
 import com.google.inject.Inject;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistentIrregularIterable;
 import io.harness.iterator.PersistentIterable;
@@ -18,6 +23,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.FilterOperator;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -38,17 +44,20 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
   public interface Handler<T> { void handle(T entity); }
   public interface FilterExpander<T> { void filter(Query<T> query); }
 
+  public enum SchedulingType { REGULAR, IRREGULAR, IRREGULAR_SKIP_MISSED }
+
   private Class<T> clazz;
   private String fieldName;
   private Duration targetInterval;
   private Duration maximumDelayForCheck;
-  private Duration acceptableDelay;
+  private Duration acceptableNoAlertDelay;
+  private Duration throttleInterval;
   private Handler<T> handler;
   private FilterExpander<T> filterExpander;
   private ExecutorService executorService;
   private Semaphore semaphore;
   private boolean redistribute;
-  private boolean regular;
+  private SchedulingType schedulingType;
 
   private long movingAvg(long current, long sample) {
     return (15 * current + sample) / 16;
@@ -81,8 +90,9 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
         semaphore.acquire();
 
         long base = currentTimeMillis();
+        long throttled = base + (throttleInterval == null ? 0 : throttleInterval.toMillis());
         // redistribution make sense only for regular iteration
-        if (redistribute && regular && previous != 0) {
+        if (redistribute && schedulingType == REGULAR && previous != 0) {
           base = movingAvg(previous + movingAverage, base);
           movingAverage = movingAvg(movingAverage, base - previous);
         }
@@ -91,18 +101,19 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
 
         T entity = null;
         try {
-          entity = next(base);
+          entity = next(base, throttled);
         } finally {
           semaphore.release();
         }
 
         if (entity != null) {
           // Make sure that if the object is updated we reset the scheduler for it
-          if (!regular) {
+          if (schedulingType != REGULAR) {
             final Long nextIteration = entity.obtainNextIteration(fieldName);
 
             final List<Long> nextIterations =
-                ((PersistentIrregularIterable) entity).recalculateNextIterations(fieldName);
+                ((PersistentIrregularIterable) entity)
+                    .recalculateNextIterations(fieldName, schedulingType == IRREGULAR_SKIP_MISSED, throttled);
             if (isNotEmpty(nextIterations)) {
               final UpdateOperations<T> operations =
                   persistence.createUpdateOperations(clazz).set(fieldName, nextIterations);
@@ -160,16 +171,31 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
     }
   }
 
-  public T next(long base) {
+  public T next(long base, long throttled) {
+    final DBCollection collection = persistence.getCollection(clazz);
+
+    final long now = currentTimeMillis();
+
     final Query<T> query = persistence.createQuery(clazz).order(Sort.ascending(fieldName));
-    query.or(query.criteria(fieldName).lessThan(currentTimeMillis()), query.criteria(fieldName).doesNotExist());
+    query.or(query.criteria(fieldName).lessThan(now), query.criteria(fieldName).doesNotExist());
     if (filterExpander != null) {
       filterExpander.filter(query);
     }
 
-    UpdateOperations<T> updateOperations = regular
-        ? persistence.createUpdateOperations(clazz).set(fieldName, base + targetInterval.toMillis())
-        : persistence.createUpdateOperations(clazz).removeFirst(fieldName);
+    UpdateOperations<T> updateOperations = persistence.createUpdateOperations(clazz);
+    switch (schedulingType) {
+      case REGULAR:
+        updateOperations.set(fieldName, base + targetInterval.toMillis());
+        break;
+      case IRREGULAR:
+        updateOperations.removeFirst(fieldName);
+        break;
+      case IRREGULAR_SKIP_MISSED:
+        updateOperations.removeAll(fieldName, new BasicDBObject(FilterOperator.LESS_THAN_OR_EQUAL.val(), throttled));
+        break;
+      default:
+        unhandled(schedulingType);
+    }
 
     return persistence.findAndModifySystemData(query, updateOperations, HPersistence.returnOldOptions);
   }
@@ -187,16 +213,16 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
     }
 
     final Long nextIteration = entity.obtainNextIteration(fieldName);
-    if (regular) {
+    if (schedulingType == REGULAR) {
       ((PersistentRegularIterable) entity).updateNextIteration(fieldName, null);
     }
 
     long delay = nextIteration == null ? 0 : currentTimeMillis() - nextIteration;
-    if (delay < acceptableDelay.toMillis()) {
+    if (delay < acceptableNoAlertDelay.toMillis()) {
       logger.info("Working on entity {}.{} with delay {}", clazz.getCanonicalName(), entity.getUuid(), delay);
     } else {
       logger.error("Entity {}.{} was delayed {} which is more than the acceptable {}", clazz.getCanonicalName(),
-          entity.getUuid(), delay, acceptableDelay.toMillis());
+          entity.getUuid(), delay, acceptableNoAlertDelay.toMillis());
     }
 
     try {

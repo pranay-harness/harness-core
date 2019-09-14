@@ -1,5 +1,6 @@
 package software.wings.scheduler.marketplace.gcp;
 
+import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.time.Duration.ofMinutes;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -37,11 +38,11 @@ public class GCPBillingHandler implements Handler<GCPBillingJobEntity> {
                                          .clazz(GCPBillingJobEntity.class)
                                          .fieldName(GCPBillingJobEntityKeys.nextIteration)
                                          .targetInterval(ofMinutes(60))
-                                         .acceptableDelay(ofMinutes(1))
+                                         .acceptableNoAlertDelay(ofMinutes(1))
                                          .executorService(executor)
                                          .semaphore(semaphore)
                                          .handler(handler)
-                                         .regular(true)
+                                         .schedulingType(REGULAR)
                                          .redistribute(true)
                                          .build();
 

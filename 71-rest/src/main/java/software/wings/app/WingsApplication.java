@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.lock.PersistentLocker.LOCKS_STORE;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
+import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
@@ -590,11 +591,11 @@ public class WingsApplication extends Application<MainConfiguration> {
                                                          .clazz(ArtifactStream.class)
                                                          .fieldName(ArtifactStreamKeys.nextIteration)
                                                          .targetInterval(ofMinutes(1))
-                                                         .acceptableDelay(ofSeconds(30))
+                                                         .acceptableNoAlertDelay(ofSeconds(30))
                                                          .executorService(artifactCollectionExecutor)
                                                          .semaphore(new Semaphore(25))
                                                          .handler(artifactCollectionHandler)
-                                                         .regular(true)
+                                                         .schedulingType(REGULAR)
                                                          .redistribute(true)
                                                          .build();
 
@@ -610,13 +611,13 @@ public class WingsApplication extends Application<MainConfiguration> {
             .clazz(ArtifactStream.class)
             .fieldName(ArtifactStreamKeys.nextCleanupIteration)
             .targetInterval(ofHours(2))
-            .acceptableDelay(ofMinutes(15))
+            .acceptableNoAlertDelay(ofMinutes(15))
             .executorService(artifactCollectionExecutor)
             .semaphore(new Semaphore(5))
             .handler(artifactCleanupHandler)
             .filterExpander(
                 query -> query.filter(ArtifactStreamKeys.artifactStreamType, ArtifactStreamType.DOCKER.name()))
-            .regular(true)
+            .schedulingType(REGULAR)
             .redistribute(true)
             .build();
 

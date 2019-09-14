@@ -1,5 +1,6 @@
 package software.wings.scheduler.approval;
 
+import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.time.Duration.ofMinutes;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -41,11 +42,11 @@ public class ApprovalPollingHandler implements Handler<ApprovalPollingJobEntity>
                                          .clazz(ApprovalPollingJobEntity.class)
                                          .fieldName(ApprovalPollingJobEntityKeys.nextIteration)
                                          .targetInterval(ofMinutes(1))
-                                         .acceptableDelay(ofMinutes(1))
+                                         .acceptableNoAlertDelay(ofMinutes(1))
                                          .executorService(executor)
                                          .semaphore(new Semaphore(POOL_SIZE))
                                          .handler(handler)
-                                         .regular(true)
+                                         .schedulingType(REGULAR)
                                          .redistribute(true)
                                          .build();
 

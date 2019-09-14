@@ -3,6 +3,7 @@ package io.harness.iterator;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.iterator.PersistenceIterator.ProcessMode.LOOP;
 import static io.harness.iterator.PersistenceIterator.ProcessMode.PUMP;
+import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.IRREGULAR_SKIP_MISSED;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 import static org.joor.Reflect.on;
@@ -53,12 +54,12 @@ public class PersistenceIrregularIteratorTest extends PersistenceTest {
                    .clazz(IrregularIterableEntity.class)
                    .fieldName(IrregularIterableEntityKeys.nextIterations)
                    .targetInterval(ofSeconds(10))
-                   .acceptableDelay(ofSeconds(1))
+                   .acceptableNoAlertDelay(ofSeconds(1))
                    .maximumDelayForCheck(ofSeconds(1))
                    .executorService(executorService)
                    .semaphore(new Semaphore(10))
                    .handler(new TestHandler())
-                   .regular(false)
+                   .schedulingType(IRREGULAR_SKIP_MISSED)
                    .redistribute(true)
                    .build();
     on(iterator).set("persistence", persistence);
@@ -88,6 +89,10 @@ public class PersistenceIrregularIteratorTest extends PersistenceTest {
         final IrregularIterableEntity iterableEntity = IrregularIterableEntity.builder().uuid(generateUuid()).build();
         persistence.save(iterableEntity);
       }
+
+      iterator.process(PUMP);
+
+      Morpheus.sleep(ofSeconds(30));
 
       final Future<?> future1 = executorService.submit(() -> iterator.process(LOOP));
       //    final Future<?> future2 = executorService.submit(() -> iterator.process());

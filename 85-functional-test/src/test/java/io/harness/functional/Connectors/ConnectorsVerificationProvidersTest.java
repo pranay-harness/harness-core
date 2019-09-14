@@ -182,7 +182,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
   }
 
   @Test
-  @Owner(emails = SHASWAT, resent = false)
+  @Owner(emails = SHASWAT, resent = false, intermittent = true)
   @Category(FunctionalTests.class)
   public void TC8_createAndDeletePrometheusConnector() {
     String connectorName = CONNECTOR_PROMETHEUS_PREFIX + System.currentTimeMillis();
