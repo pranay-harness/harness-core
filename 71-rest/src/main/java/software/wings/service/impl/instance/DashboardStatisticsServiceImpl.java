@@ -1071,14 +1071,9 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
           if (isNotEmpty(allowedAppIds)) {
             // This is an optimization. Instead of a large IN() Query, if the user has access to all apps,
-            // we could just pull it using accountId. For example, QA has 212 apps in our account.
-            if (allowedAppIds.size() > 10) {
-              List<String> allApps = appService.getAppIdsByAccountId(accountId);
-              if (allowedAppIds.size() == allApps.size()) {
-                query.filter("accountId", accountId);
-              } else {
-                query.field("appId").in(allowedAppIds);
-              }
+            // we could just pull it using accountId. For example, QA has 500 apps in our account.
+            if (userRequestContext.getUserPermissionInfo().isHasAllAppAccess()) {
+              query.filter("accountId", accountId);
             } else {
               query.field("appId").in(allowedAppIds);
             }

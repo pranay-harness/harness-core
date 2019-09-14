@@ -23,6 +23,8 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
+import software.wings.beans.entityinterface.AccountAccess;
+import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.yaml.BaseEntityYaml;
@@ -47,7 +49,7 @@ import javax.validation.constraints.NotNull;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "PipelineKeys")
-public class Pipeline extends Base implements KeywordsAware, NameAccess, TagAware {
+public class Pipeline extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, ApplicationAccess {
   public static final String NAME_KEY = "name";
   public static final String DESCRIPTION_KEY = "description";
 

@@ -1,7 +1,5 @@
 package software.wings.security;
 
-import com.google.common.collect.Maps;
-
 import lombok.Builder;
 import lombok.Data;
 
@@ -24,7 +22,7 @@ public class UserRequestContext {
   private boolean entityIdFilterRequired;
 
   // Key - Entity class name   Value - EntityInfo
-  private Map<String, EntityInfo> entityInfoMap = Maps.newHashMap();
+  private Map<String, EntityInfo> entityInfoMap;
 
   @Data
   @Builder

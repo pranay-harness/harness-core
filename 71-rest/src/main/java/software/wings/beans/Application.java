@@ -21,6 +21,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Application.ApplicationKeys;
+import software.wings.beans.entityinterface.AccountAccess;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.yaml.BaseEntityYaml;
@@ -44,7 +45,7 @@ import java.util.Set;
 @Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true),
     fields = { @Field(ApplicationKeys.accountId)
                , @Field(ApplicationKeys.name) }))
-public class Application extends Base implements KeywordsAware, NameAccess, TagAware {
+public class Application extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess {
   public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
 
   @NotEmpty private String name;

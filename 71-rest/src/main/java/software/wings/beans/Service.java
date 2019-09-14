@@ -28,6 +28,7 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamBinding;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.entityinterface.AccountAccess;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.utils.ArtifactType;
@@ -51,7 +52,7 @@ import java.util.Set;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "ServiceKeys")
-public class Service extends Base implements KeywordsAware, NameAccess, TagAware {
+public class Service extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess {
   @Trimmed @EntityName @NotEmpty private String name;
   private String description;
   private ArtifactType artifactType;

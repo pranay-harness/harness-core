@@ -48,6 +48,8 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
+import software.wings.beans.entityinterface.AccountAccess;
+import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserRequestContext.EntityInfo;
 import software.wings.security.UserThreadLocal;
@@ -306,7 +308,12 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
 
     if (userRequestContext.isAppIdFilterRequired()) {
       if (CollectionUtils.isNotEmpty(userRequestContext.getAppIds())) {
-        pageRequest.addFilter("appId", Operator.IN, userRequestContext.getAppIds().toArray());
+        UserPermissionInfo userPermissionInfo = userRequestContext.getUserPermissionInfo();
+        if (AccountAccess.class.isAssignableFrom(beanClass) && userPermissionInfo.isHasAllAppAccess()) {
+          pageRequest.addFilter("accountId", Operator.EQ, userRequestContext.getAccountId());
+        } else {
+          pageRequest.addFilter("appId", Operator.IN, userRequestContext.getAppIds().toArray());
+        }
       } else {
         return false;
       }
@@ -347,7 +354,12 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
 
     if (userRequestContext.isAppIdFilterRequired()) {
       if (CollectionUtils.isNotEmpty(userRequestContext.getAppIds())) {
-        query.field("appId").in(userRequestContext.getAppIds());
+        UserPermissionInfo userPermissionInfo = userRequestContext.getUserPermissionInfo();
+        if (AccountAccess.class.isAssignableFrom(beanClass) && userPermissionInfo.isHasAllAppAccess()) {
+          query.field("accountId").equal(userRequestContext.getAccountId());
+        } else {
+          query.field("appId").in(userRequestContext.getAppIds());
+        }
       } else {
         return false;
       }
