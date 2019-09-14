@@ -1,5 +1,7 @@
 package software.wings.scheduler;
 
+import static io.harness.beans.ExecutionStatus.ERROR;
+import static io.harness.beans.ExecutionStatus.EXPIRED;
 import static io.harness.beans.ExecutionStatus.NEW;
 import static io.harness.beans.ExecutionStatus.PAUSED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
@@ -8,7 +10,6 @@ import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
-import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 import static software.wings.sm.ExecutionInterruptType.MARK_EXPIRED;
@@ -47,6 +48,7 @@ public class WorkflowExecutionMonitorJob implements Job {
   public static final String NAME = "OBSERVER";
   public static final String GROUP = "WORKFLOW_MONITOR_CRON_GROUP";
   private static final Duration POLL_INTERVAL = Duration.ofMinutes(1);
+  private static final Duration INACTIVITY_TIMEOUT = Duration.ofSeconds(30);
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutionInterruptManager executionInterruptManager;
@@ -113,8 +115,7 @@ public class WorkflowExecutionMonitorJob implements Job {
           logger.error(format("Error in cleaning up the workflow execution %s", workflowExecution.getUuid()), e);
         }
 
-        if (!hasActiveStates
-            && workflowExecution.getCreatedAt() < System.currentTimeMillis() - WorkflowExecution.EXPIRY.toMillis()) {
+        if (!hasActiveStates) {
           logger.warn("WorkflowExecution {} is in non final state, but there is no active state execution for it.",
               workflowExecution.getUuid());
 
@@ -134,7 +135,7 @@ public class WorkflowExecutionMonitorJob implements Job {
             continue;
           }
 
-          if (stateExecutionInstance.getLastUpdatedAt() > System.currentTimeMillis() - ofSeconds(10).toMillis()) {
+          if (stateExecutionInstance.getLastUpdatedAt() > System.currentTimeMillis() - INACTIVITY_TIMEOUT.toMillis()) {
             logger.warn("WorkflowExecution {} last callbackable state {} is very recent."
                     + "Lets give more time to the system it might be just in the middle of things.",
                 workflowExecution.getUuid(), stateExecutionInstance.getUuid());
@@ -145,9 +146,11 @@ public class WorkflowExecutionMonitorJob implements Job {
               stateMachineExecutor.getExecutionContext(stateExecutionInstance.getAppId(),
                   stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid());
 
+          boolean expired =
+              workflowExecution.getCreatedAt() < System.currentTimeMillis() - WorkflowExecution.EXPIRY.toMillis();
           // We lost the eventual exception, but its better than doing nothing
           stateMachineExecutor.executeCallback(
-              executionContext, stateExecutionInstance, stateExecutionInstance.getStatus(), null);
+              executionContext, stateExecutionInstance, expired ? EXPIRED : ERROR, null);
         }
       }
     } catch (WingsException exception) {
