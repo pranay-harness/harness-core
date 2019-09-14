@@ -147,18 +147,36 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> results = new HashMap<>();
-    if (isEmpty(applicationId) || isEmpty(analysisServerConfigId) || isEmpty(tierId)) {
-      results.put("Required Fields missing", "AppId and tierId should be provided");
-    } else {
-      if (isEmpty(getTemplateExpressions())) {
-        try {
-          Long.parseLong(applicationId);
-          Long.parseLong(tierId);
-        } catch (NumberFormatException exception) {
-          results.put("Invalid Required Fields", "AppId and tierId should be provided");
-        }
+    if (isEmpty(getTemplateExpressions())) {
+      if (isEmpty(applicationId) || isEmpty(analysisServerConfigId) || isEmpty(tierId)) {
+        results.put("Required Fields missing", "Connector, Application and tier should be provided");
+        return results;
+      }
+
+      try {
+        Long.parseLong(applicationId);
+        Long.parseLong(tierId);
+      } catch (NumberFormatException exception) {
+        results.put("Invalid Required Fields", "Valid AppId and tierId should be provided");
+        return results;
+      }
+      return results;
+    }
+
+    if (hasExpression(getTemplateExpressions(), "analysisServerConfigId")) {
+      if (!hasExpression(getTemplateExpressions(), "applicationId")) {
+        results.put("Invalid templatization for application",
+            "If connector is templatized then application should be templatized as well");
       }
     }
+
+    if (hasExpression(getTemplateExpressions(), "applicationId")) {
+      if (!hasExpression(getTemplateExpressions(), "tierId")) {
+        results.put(
+            "Invalid templatization for tier", "If application is templatized then tier should be templatized as well");
+      }
+    }
+
     logger.info("AppDynamics State Validated");
     return results;
   }

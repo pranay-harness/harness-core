@@ -363,7 +363,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
       } catch (GoogleJsonResponseException ge) {
         if (ge.getStatusCode() == RATE_LIMIT_STATUS) {
           hasReachedRateLimit = true;
-          int randomNum = ThreadLocalRandom.current().nextInt(1, 11);
+          int randomNum = ThreadLocalRandom.current().nextInt(1, 5);
           logger.info("Encountered Rate limiting from stackdriver. Sleeping {} seconds for state {} ", randomNum,
               apiCallLog.getStateExecutionId());
           apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
