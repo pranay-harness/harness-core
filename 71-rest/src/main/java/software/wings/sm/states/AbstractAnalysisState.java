@@ -63,6 +63,7 @@ import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
+import software.wings.beans.TemplateExpression;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.Host;
@@ -861,6 +862,20 @@ public abstract class AbstractAnalysisState extends State {
   }
 
   protected boolean isCVTaskEnqueuingEnabled(String accountId) {
+    return false;
+  }
+
+  protected boolean hasExpression(List<TemplateExpression> templateExpressions, String fieldName) {
+    if (templateExpressions == null) {
+      return false;
+    }
+
+    for (TemplateExpression templateExpression : templateExpressions) {
+      if (templateExpression.getFieldName().equals(fieldName)) {
+        return true;
+      }
+    }
+
     return false;
   }
 }

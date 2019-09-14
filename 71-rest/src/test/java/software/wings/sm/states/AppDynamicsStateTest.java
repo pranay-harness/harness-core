@@ -17,6 +17,7 @@ import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrast
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import io.harness.beans.EmbeddedUser;
@@ -316,6 +317,124 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     Map<String, String> invalidFields = appDynamicsState.validateFields();
     assertThat(invalidFields.size() == 1).isTrue();
     assertThat(invalidFields.keySet().iterator().next()).isEqualTo("Invalid Required Fields");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testEmptyParam() {
+    AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");
+    final Map<String, String> validationResult = appDynamicsState.validateFields();
+    assertThat(validationResult.size()).isEqualTo(1);
+    assertThat(validationResult.get("Required Fields missing"))
+        .isEqualTo("Connector, Application and tier should be provided");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testInvalidApp() {
+    AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");
+    appDynamicsState.setAnalysisServerConfigId(generateUuid());
+    appDynamicsState.setApplicationId(generateUuid());
+    appDynamicsState.setTierId(generateUuid());
+
+    final Map<String, String> validationResult = appDynamicsState.validateFields();
+    assertThat(validationResult.size()).isEqualTo(1);
+    assertThat(validationResult.get("Invalid Required Fields")).isEqualTo("Valid AppId and tierId should be provided");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testInvalidTier() {
+    AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");
+    appDynamicsState.setAnalysisServerConfigId(generateUuid());
+    appDynamicsState.setApplicationId("123");
+    appDynamicsState.setTierId(generateUuid());
+
+    final Map<String, String> validationResult = appDynamicsState.validateFields();
+    assertThat(validationResult.size()).isEqualTo(1);
+    assertThat(validationResult.get("Invalid Required Fields")).isEqualTo("Valid AppId and tierId should be provided");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidNonTemplatized() {
+    AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");
+    appDynamicsState.setAnalysisServerConfigId(generateUuid());
+    appDynamicsState.setApplicationId("123");
+    appDynamicsState.setTierId("456");
+
+    final Map<String, String> validationResult = appDynamicsState.validateFields();
+    assertThat(validationResult.size()).isEqualTo(0);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testOnlyConnectorTemplatized() {
+    AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");
+    appDynamicsState.setAnalysisServerConfigId("${AppDynamics_Server}");
+    appDynamicsState.setApplicationId("123");
+    appDynamicsState.setTierId("456");
+    appDynamicsState.setTemplateExpressions(
+        Lists.newArrayList(TemplateExpression.builder()
+                               .fieldName("analysisServerConfigId")
+                               .expression("${AppDynamics_Server}")
+                               .metadata(ImmutableMap.of("entityType", "APPDYNAMICS_CONFIGID"))
+                               .build()));
+
+    final Map<String, String> validationResult = appDynamicsState.validateFields();
+    assertThat(validationResult.size()).isEqualTo(1);
+    assertThat(validationResult.get("Invalid templatization for application"))
+        .isEqualTo("If connector is templatized then application should be templatized as well");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testConnectorAndAppTemplatized() {
+    AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");
+    appDynamicsState.setAnalysisServerConfigId("${AppDynamics_Server}");
+    appDynamicsState.setApplicationId("123");
+    appDynamicsState.setTierId("456");
+    appDynamicsState.setTemplateExpressions(
+        Lists.newArrayList(TemplateExpression.builder()
+                               .fieldName("analysisServerConfigId")
+                               .expression("${AppDynamics_Server}")
+                               .metadata(ImmutableMap.of("entityType", "APPDYNAMICS_CONFIGID"))
+                               .build(),
+            TemplateExpression.builder()
+                .fieldName("applicationId")
+                .expression("${AppDynamics_App}")
+                .metadata(ImmutableMap.of("entityType", "APPDYNAMICS_APPID"))
+                .build()));
+
+    final Map<String, String> validationResult = appDynamicsState.validateFields();
+    assertThat(validationResult.size()).isEqualTo(1);
+    assertThat(validationResult.get("Invalid templatization for tier"))
+        .isEqualTo("If application is templatized then tier should be templatized as well");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testAllTemplatized() {
+    AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");
+    appDynamicsState.setTemplateExpressions(
+        Lists.newArrayList(TemplateExpression.builder()
+                               .fieldName("analysisServerConfigId")
+                               .expression("${AppDynamics_Server}")
+                               .metadata(ImmutableMap.of("entityType", "APPDYNAMICS_CONFIGID"))
+                               .build(),
+            TemplateExpression.builder()
+                .fieldName("applicationId")
+                .expression("${AppDynamics_App}")
+                .metadata(ImmutableMap.of("entityType", "APPDYNAMICS_APPID"))
+                .build(),
+            TemplateExpression.builder()
+                .fieldName("tierId")
+                .expression("${AppDynamics_Tier}")
+                .metadata(ImmutableMap.of("entityType", "APPDYNAMICS_TIERID"))
+                .build()));
+
+    final Map<String, String> validationResult = appDynamicsState.validateFields();
+    assertThat(validationResult.size()).isEqualTo(0);
   }
 
   @Test
