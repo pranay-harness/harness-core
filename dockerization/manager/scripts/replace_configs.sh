@@ -44,6 +44,11 @@ else
   yq delete -i /opt/harness/config.yml logging.appenders[1]
 fi
 
+if [[ "" != "$COMPANYNAME" ]]; then
+  yq write -i /opt/harness/config.yml server.requestLog.appenders[0].programName "manager-${COMPANYNAME}-${DEPLOY_MODE}-accesslogs"
+  yq write -i /opt/harness/config.yml logging.appenders[1].programName "manager-${COMPANYNAME}-${DEPLOY_MODE}"
+fi
+
 if [[ "$SKIP_LOGS" == "true" ]]; then
   yq delete -i /opt/harness/config.yml server.requestLog.appenders[0]
   yq delete -i /opt/harness/config.yml logging.appenders[1]
@@ -124,11 +129,6 @@ fi
 
 if [[ "" != "$SAMPLE_TARGET_STATUS_HOST" ]]; then
   yq write -i /opt/harness/config.yml sampleTargetStatusHost "$SAMPLE_TARGET_STATUS_HOST"
-fi
-
-if [[ "" != "$COMPANYNAME" ]]; then
-  yq write -i /opt/harness/config.yml server.requestLog.appenders[0].programName "manager-${COMPANYNAME}-${DEPLOY_MODE}-accesslogs"
-  yq write -i /opt/harness/config.yml logging.appenders[1].programName "manager-${COMPANYNAME}-${DEPLOY_MODE}"
 fi
 
 if [[ "" != "$GLOBAL_WHITELIST" ]]; then

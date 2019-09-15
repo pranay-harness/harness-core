@@ -22,6 +22,13 @@ if [[ "" != "$MANAGER_URL" ]]; then
   yq write -i /opt/harness/verification-config.yml managerUrl "$MANAGER_URL"
 fi
 
+if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
+  yq delete -i /opt/harness/verification-config.yml logging.appenders[0]
+  yq write -i /opt/harness/verification-config.yml logging.appenders[0].stackdriverLogEnabled "true"
+else
+  yq delete -i /opt/harness/verification-config.yml logging.appenders[1]
+fi
+
 if [[ "" != "$ENV" ]]; then
   yq write -i /opt/harness/verification-config.yml server.requestLog.appenders[0].programName "verification-saas-accesslogs-${ENV}"
   yq write -i /opt/harness/verification-config.yml logging.appenders[1].programName "verification-service-${ENV}"
@@ -37,8 +44,4 @@ fi
 
 if [[ "" != "$DATA_STORE" ]]; then
   yq write -i /opt/harness/verification-config.yml dataStorageMode "$DATA_STORE"
-fi
-
-if [[ "" != "$STACK_DRIVER_LOGGING_ENABLED" ]]; then
-  yq write -i /opt/harness/verification-config.yml logging.appenders[2].stackdriverLogEnabled "$STACK_DRIVER_LOGGING_ENABLED"
 fi

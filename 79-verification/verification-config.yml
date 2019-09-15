@@ -51,16 +51,15 @@ logging:
       threshold: TRACE
       target: STDOUT
       logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %blue(%X{executionId}) %cyan(%logger) - %msg %n"
+    - type: gke-console
+      threshold: TRACE
+      target: STDOUT
+      stackdriverLogEnabled: false
     - type: rest-log
       threshold: TRACE
       logFormat: "%blue([${VERSION}]) %green([%thread]) %highlight(%-5level) %blue(%X{executionId}) %cyan(%logger) - %msg %n"
       key: 9a3e6eac4dcdbdc41a93ca99100537df
       programName: verification-service
-    - type: gke-console
-      threshold: TRACE
-      target: STDOUT
-      logFormat: "%blue([${VERSION}]) %green([%thread]) %highlight(%-5level) %blue(%X{executionId}) %cyan(%logger) - %msg %n"
-      stackdriverLogEnabled: false
 
 mongo:
   uri: mongodb://localhost:27017/harness
