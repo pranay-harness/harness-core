@@ -27,41 +27,42 @@ public class ContainerMasterUrlHelper {
 
   public boolean fetchMasterUrlAndUpdateInfraMapping(ContainerInfrastructureMapping containerInfraMapping,
       ContainerServiceParams containerServiceParams, SyncTaskContext syncTaskContext) {
-    String masterUrl = fetchMasterUrl(containerInfraMapping, containerServiceParams, syncTaskContext);
-    if (masterUrl != null) {
-      if (containerInfraMapping instanceof GcpKubernetesInfrastructureMapping) {
-        ((GcpKubernetesInfrastructureMapping) containerInfraMapping).setMasterUrl(masterUrl);
-      } else {
-        ((AzureKubernetesInfrastructureMapping) containerInfraMapping).setMasterUrl(masterUrl);
-      }
-      InfrastructureMapping infrastructureMapping = infrastructureMappingService.save(containerInfraMapping);
-      return infrastructureMapping != null;
+    String masterUrl = fetchMasterUrl(containerServiceParams, syncTaskContext);
+    if (containerInfraMapping instanceof GcpKubernetesInfrastructureMapping) {
+      ((GcpKubernetesInfrastructureMapping) containerInfraMapping).setMasterUrl(masterUrl);
+    } else {
+      ((AzureKubernetesInfrastructureMapping) containerInfraMapping).setMasterUrl(masterUrl);
     }
-    return false;
+    InfrastructureMapping infrastructureMapping = infrastructureMappingService.save(containerInfraMapping);
+    return infrastructureMapping != null;
   }
 
-  public String fetchMasterUrl(ContainerInfrastructureMapping containerInfraMapping,
-      ContainerServiceParams containerServiceParams, SyncTaskContext syncTaskContext) {
-    String masterUrl = null;
-    if ((containerInfraMapping instanceof GcpKubernetesInfrastructureMapping
-            && ((GcpKubernetesInfrastructureMapping) containerInfraMapping).getMasterUrl() == null)
-        || containerInfraMapping instanceof AzureKubernetesInfrastructureMapping
-            && ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getMasterUrl() == null) {
-      try {
-        masterUrl =
-            delegateProxyFactory.get(ContainerService.class, syncTaskContext)
-                .fetchMasterUrl(
-                    MasterUrlFetchTaskParameter.builder().containerServiceParams(containerServiceParams).build());
-      } catch (Exception e) {
-        logger.warn(ExceptionUtils.getMessage(e), e);
-        throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
-      }
+  public String fetchMasterUrl(ContainerServiceParams containerServiceParams, SyncTaskContext syncTaskContext) {
+    try {
+      return delegateProxyFactory.get(ContainerService.class, syncTaskContext)
+          .fetchMasterUrl(MasterUrlFetchTaskParameter.builder().containerServiceParams(containerServiceParams).build());
+    } catch (Exception e) {
+      logger.warn(ExceptionUtils.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
-    return masterUrl;
   }
 
   public boolean masterUrlRequired(ContainerInfrastructureMapping containerInfraMapping) {
-    return (containerInfraMapping instanceof GcpKubernetesInfrastructureMapping)
-        || (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping);
+    if (containerInfraMapping instanceof GcpKubernetesInfrastructureMapping) {
+      return ((GcpKubernetesInfrastructureMapping) containerInfraMapping).getMasterUrl() == null;
+    } else if (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping) {
+      return ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getMasterUrl() == null;
+    } else {
+      return false;
+    }
+  }
+
+  public boolean masterUrlRequiredWithProvisioner(ContainerInfrastructureMapping containerInfraMapping) {
+    boolean required = masterUrlRequired(containerInfraMapping);
+    if (!required) {
+      return false;
+    } else {
+      return containerInfraMapping.getProvisionerId() == null;
+    }
   }
 }

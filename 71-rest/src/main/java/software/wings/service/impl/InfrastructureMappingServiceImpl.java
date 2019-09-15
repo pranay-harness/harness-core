@@ -289,10 +289,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         gcpKubernetesInfrastructureMapping.setNamespace("default");
       }
       validateGcpInfraMapping(gcpKubernetesInfrastructureMapping);
-      if (gcpKubernetesInfrastructureMapping.getProvisionerId() == null) {
-        gcpKubernetesInfrastructureMapping.setMasterUrl(containerMasterUrlHelper.fetchMasterUrl(
-            gcpKubernetesInfrastructureMapping, getGcpContainerServiceParams(gcpKubernetesInfrastructureMapping),
-            getSyncTaskContext(gcpKubernetesInfrastructureMapping)));
+      if (containerMasterUrlHelper.masterUrlRequiredWithProvisioner(gcpKubernetesInfrastructureMapping)) {
+        gcpKubernetesInfrastructureMapping.setMasterUrl(
+            containerMasterUrlHelper.fetchMasterUrl(getGcpContainerServiceParams(gcpKubernetesInfrastructureMapping),
+                getSyncTaskContext(gcpKubernetesInfrastructureMapping)));
       }
     }
 
@@ -300,9 +300,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       AzureKubernetesInfrastructureMapping azureKubernetesInfrastructureMapping =
           (AzureKubernetesInfrastructureMapping) infraMapping;
       validateAzureKubernetesInfraMapping(azureKubernetesInfrastructureMapping);
-      if (azureKubernetesInfrastructureMapping.getProvisionerId() == null) {
+      if (containerMasterUrlHelper.masterUrlRequiredWithProvisioner(azureKubernetesInfrastructureMapping)) {
         azureKubernetesInfrastructureMapping.setMasterUrl(containerMasterUrlHelper.fetchMasterUrl(
-            azureKubernetesInfrastructureMapping, getAzureContainerServiceParams(azureKubernetesInfrastructureMapping),
+            getAzureContainerServiceParams(azureKubernetesInfrastructureMapping),
             getSyncTaskContext(azureKubernetesInfrastructureMapping)));
       }
     }
