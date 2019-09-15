@@ -989,6 +989,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             long minuteForFeedbackAnalysis = lastFeedbackAnalysisMinute + CRON_POLL_INTERVAL_IN_MINUTES;
             long lastLogMLAnalysisMinute = logAnalysisService.getLastCVAnalysisMinute(logsCVConfiguration.getAppId(),
                 logsCVConfiguration.getUuid(), LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+            if (isBeforeTwoHours(minuteForFeedbackAnalysis)) {
+              long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+              minuteForFeedbackAnalysis = getFlooredTime(currentMinute, PREDECTIVE_HISTORY_MINUTES);
+            }
             if (lastFeedbackAnalysisMinute <= 0) {
               if (lastLogMLAnalysisMinute <= 0) {
                 logger.info(
