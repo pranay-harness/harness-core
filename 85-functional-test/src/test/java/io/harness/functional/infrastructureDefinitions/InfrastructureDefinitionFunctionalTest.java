@@ -38,6 +38,7 @@ import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
+import software.wings.infra.AzureInstanceInfrastructure;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
@@ -47,6 +48,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -90,7 +92,7 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
 
     resetCache(service.getAccountId());
 
-    Workflow workflow = workflowUtils.createCanaryAwsSshWorkflow("ec2-ssh-", service, infrastructureDefinition);
+    Workflow workflow = workflowUtils.createCanarySshWorkflow("ec2-ssh-", service, infrastructureDefinition);
     workflow = workflowGenerator.ensureWorkflow(seed, owners, workflow);
 
     Artifact artifact = getArtifact(service, service.getAppId());
@@ -170,11 +172,11 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
     infrastructureDefinition =
         infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureType.AWS_INSTANCE, bearerToken);
     Workflow workflow_1 = workflowGenerator.ensureWorkflow(
-        seed, owners, workflowUtils.createCanaryAwsSshWorkflow("aws-ssh-1-", service, infrastructureDefinition));
+        seed, owners, workflowUtils.createCanarySshWorkflow("aws-ssh-1-", service, infrastructureDefinition));
     Workflow workflow_2 = workflowGenerator.ensureWorkflow(
-        seed, owners, workflowUtils.createCanaryAwsSshWorkflow("aws-ssh-2-", service, infrastructureDefinition));
+        seed, owners, workflowUtils.createCanarySshWorkflow("aws-ssh-2-", service, infrastructureDefinition));
     Workflow workflow_3 = workflowGenerator.ensureWorkflow(
-        seed, owners, workflowUtils.createCanaryAwsSshWorkflow("aws-ssh-3-", service, infrastructureDefinition));
+        seed, owners, workflowUtils.createCanarySshWorkflow("aws-ssh-3-", service, infrastructureDefinition));
 
     Artifact artifact = getArtifact(service, service.getAppId());
 
@@ -202,6 +204,45 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
             infrastructureDefinition.getAppId(), infrastructureDefinition.getUuid());
 
     Assertions.assertThat(infrastructureMappings).hasSize(1);
+  }
+
+  @Test
+  @Owner(emails = OwnerRule.YOGESH_CHAUHAN)
+  @Category(FunctionalTests.class)
+  @Ignore("Enable once feature flag is enabled")
+  public void shouldRunAzureWinRmCanaryWorkflow() {
+    service = serviceGenerator.ensurePredefined(seed, owners, Services.WINDOWS_TEST);
+
+    final String appId = service.getAppId();
+    final String accountId = service.getAccountId();
+
+    resetCache(service.getAccountId());
+    infrastructureDefinition =
+        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureType.AZURE_SSH, bearerToken);
+
+    checkScopedService(infrastructureDefinition.getDeploymentType(), service);
+    checkListInfraDefinitionByService(service, infrastructureDefinition);
+    checkListHosts(infrastructureDefinition);
+
+    AzureInstanceInfrastructure azureInfrastructure =
+        (AzureInstanceInfrastructure) infrastructureDefinition.getInfrastructure();
+    Map<String, String> azureSubscriptions = InfrastructureDefinitionRestUtils.listAzureSubscriptions(
+        bearerToken, accountId, azureInfrastructure.getCloudProviderId());
+    Set<String> azureTags = InfrastructureDefinitionRestUtils.listAzureTags(
+        bearerToken, appId, azureInfrastructure.getSubscriptionId(), azureInfrastructure.getCloudProviderId());
+    Set<String> azureResources = InfrastructureDefinitionRestUtils.listAzureResources(
+        bearerToken, appId, azureInfrastructure.getSubscriptionId(), azureInfrastructure.getCloudProviderId());
+    Assertions.assertThat(azureSubscriptions).isNotEmpty();
+    Assertions.assertThat(azureTags).isNotEmpty();
+    Assertions.assertThat(azureResources).isNotEmpty();
+
+    resetCache(service.getAccountId());
+
+    Workflow workflow = workflowUtils.createCanarySshWorkflow("azure-winrm-", service, infrastructureDefinition);
+    workflow = workflowGenerator.ensureWorkflow(seed, owners, workflow);
+
+    Artifact artifact = getArtifact(service, service.getAppId());
+    executeWorkflow(workflow, service, Arrays.asList(artifact), ImmutableMap.<String, String>builder().build());
   }
 
   private void executePipeline(final Pipeline pipeline, List<Artifact> artifacts, String someEnvId) {
