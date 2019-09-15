@@ -1,14 +1,15 @@
 package io.harness.delegate.task;
 
-import org.slf4j.MDC;
+import com.google.common.collect.ImmutableMap;
 
-public class TaskLogContext implements AutoCloseable {
+import io.harness.logging.AutoLogContext;
+
+public class TaskLogContext extends AutoLogContext {
   public TaskLogContext(String taskId) {
-    MDC.put("taskId", '[' + taskId + ']');
+    super("taskId", taskId);
   }
 
-  @Override
-  public void close() throws Exception {
-    MDC.remove("taskId");
+  public TaskLogContext(String taskId, String taskType) {
+    super(ImmutableMap.of("taskId", taskId, "taskType", taskType));
   }
 }

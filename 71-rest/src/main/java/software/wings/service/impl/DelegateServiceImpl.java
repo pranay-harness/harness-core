@@ -85,6 +85,7 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.CapabilityUtils;
+import io.harness.delegate.task.TaskLogContext;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
@@ -1411,7 +1412,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   @Override
   public String queueTask(DelegateTask task) {
-    return saveDelegataeTask(task, true).getUuid();
+    return saveDelegateTask(task, true).getUuid();
   }
 
   @Override
@@ -1424,7 +1425,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     // Wait for task to complete
     DelegateTask completedTask;
-    DelegateTask delegateTask = saveDelegataeTask(task, false);
+    DelegateTask delegateTask = saveDelegateTask(task, false);
     try {
       // Immediately broadcast sync task.
       broadcastHelper.broadcastNewDelegateTask(delegateTask);
@@ -1460,7 +1461,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @VisibleForTesting
-  DelegateTask saveDelegataeTask(DelegateTask task, boolean async) {
+  DelegateTask saveDelegateTask(DelegateTask task, boolean async) {
     task.setStatus(QUEUED);
     task.setAsync(async);
     task.setVersion(getVersion());
@@ -1567,31 +1568,32 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   @Override
   public DelegatePackage acquireDelegateTask(String accountId, String delegateId, String taskId) {
-    logger.info("Acquiring delegate task {} for delegate {}", taskId, delegateId);
-
-    try {
+    try (TaskLogContext ignore = new TaskLogContext(taskId)) {
+      logger.info("Acquiring delegate task {} for delegate {}", taskId, delegateId);
       DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
       if (delegateTask == null) {
         return null;
       }
 
-      if (!assignDelegateService.canAssign(delegateId, delegateTask)) {
-        logger.info("Delegate {} is not scoped for task {}", delegateId, taskId);
-        ensureDelegateAvailableToExecuteTask(delegateTask); // Raises an alert if there are no eligible delegates.
-        return null;
-      }
+      try (TaskLogContext ignore2 = new TaskLogContext(taskId, delegateTask.getData().getTaskType())) {
+        if (!assignDelegateService.canAssign(delegateId, delegateTask)) {
+          logger.info("Delegate {} is not scoped for task {}", delegateId, taskId);
+          ensureDelegateAvailableToExecuteTask(delegateTask); // Raises an alert if there are no eligible delegates.
+          return null;
+        }
 
-      if (assignDelegateService.isWhitelisted(delegateTask, delegateId)) {
-        return assignTask(delegateId, taskId, delegateTask);
-      } else if (assignDelegateService.shouldValidate(delegateTask, delegateId)) {
-        setValidationStarted(delegateId, delegateTask);
-        return DelegatePackage.builder().delegateTask(delegateTask).build();
-      } else {
-        logger.info("Delegate {} is blacklisted for task {}", delegateId, taskId);
-        return null;
+        if (assignDelegateService.isWhitelisted(delegateTask, delegateId)) {
+          return assignTask(delegateId, taskId, delegateTask);
+        } else if (assignDelegateService.shouldValidate(delegateTask, delegateId)) {
+          setValidationStarted(delegateId, delegateTask);
+          return DelegatePackage.builder().delegateTask(delegateTask).build();
+        } else {
+          logger.info("Delegate {} is blacklisted for task {}", delegateId, taskId);
+          return null;
+        }
       }
     } finally {
-      logger.info("Done acquiring delegate task {} for delegate {}", taskId, delegateId);
+      logger.info("Done with acquire delegate task method for task {} for delegate {}", taskId, delegateId);
     }
   }
 

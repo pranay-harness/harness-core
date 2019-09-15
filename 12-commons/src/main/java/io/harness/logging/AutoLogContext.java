@@ -1,13 +1,28 @@
 package io.harness.logging;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 @Slf4j
 public class AutoLogContext implements AutoCloseable {
-  private String key;
+  private Set<String> keys = new HashSet<>();
 
+  protected AutoLogContext(Map<String, String> values) {
+    for (Map.Entry<String, String> entry : values.entrySet()) {
+      addKeyValue(entry.getKey(), entry.getValue());
+    }
+  }
   protected AutoLogContext(String key, String value) {
+    addKeyValue(key, value);
+  }
+
+  private void addKeyValue(String key, String value) {
     final String original = MDC.get(key);
     if (original != null) {
       if (!original.equals(value)) {
@@ -18,14 +33,16 @@ public class AutoLogContext implements AutoCloseable {
       // initializer is hit.
       return;
     }
-    this.key = key;
+    keys.add(key);
     MDC.put(key, value);
   }
 
   @Override
-  public void close() throws Exception {
-    if (key != null) {
-      MDC.remove(key);
+  public void close() {
+    if (isNotEmpty(keys)) {
+      for (String key : keys) {
+        MDC.remove(key);
+      }
     }
   }
 }

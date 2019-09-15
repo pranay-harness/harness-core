@@ -37,6 +37,13 @@ if [[ "" != "$MONGO_LOCK_URI" ]]; then
   yq write -i /opt/harness/config.yml mongo.locksUri "${MONGO_LOCK_URI//\\&/&}"
 fi
 
+if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
+  yq delete -i /opt/harness/config.yml logging.appenders[0]
+  yq write -i /opt/harness/config.yml logging.appenders[0].stackdriverLogEnabled "true"
+else
+  yq delete -i /opt/harness/config.yml logging.appenders[1]
+fi
+
 if [[ "$SKIP_LOGS" == "true" ]]; then
   yq delete -i /opt/harness/config.yml server.requestLog.appenders[0]
   yq delete -i /opt/harness/config.yml logging.appenders[1]
@@ -312,10 +319,6 @@ fi
 
 if [[ "" != "$TIMESCALEDB_LOGGERLEVEL" ]]; then
   yq write -i /opt/harness/config.yml timescaledb.loggerLevel "$TIMESCALEDB_LOGGERLEVEL"
-fi
-
-if [[ "" != "$STACK_DRIVER_LOGGING_ENABLED" ]]; then
-  yq write -i /opt/harness/config.yml logging.appenders[2].stackdriverLogEnabled "$STACK_DRIVER_LOGGING_ENABLED"
 fi
 
 if [[ "$SEARCH_ENABLED" == "true" ]]; then
