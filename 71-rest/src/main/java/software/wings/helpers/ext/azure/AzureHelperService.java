@@ -170,10 +170,10 @@ public class AzureHelperService {
     }
 
     AzureConfig azureConfig = validateAndGetAzureConfig(computeProviderSetting);
-    if (DeploymentType.WINRM.name().equals(deploymentType)) {
+    if (DeploymentType.WINRM.equals(deploymentType)) {
       return listVmsByTagsAndResourceGroup(
           azureConfig, encryptedDataDetails, subscriptionId, resourceGroup, tagsMap, OSType.WINDOWS);
-    } else if (DeploymentType.SSH.name().equals(deploymentType)) {
+    } else if (DeploymentType.SSH.equals(deploymentType)) {
       return listVmsByTagsAndResourceGroup(
           azureConfig, encryptedDataDetails, subscriptionId, resourceGroup, tagsMap, OSType.LINUX);
     }

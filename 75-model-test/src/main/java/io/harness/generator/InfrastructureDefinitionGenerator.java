@@ -1,6 +1,8 @@
 package io.harness.generator;
 
+import static io.harness.generator.SettingGenerator.Settings.AZURE_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.DEV_TEST_CONNECTOR;
+import static io.harness.generator.SettingGenerator.Settings.WINRM_TEST_CONNECTOR;
 
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
@@ -12,6 +14,7 @@ import io.harness.generator.EnvironmentGenerator.Environments;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.SettingGenerator.Settings;
+import io.harness.generator.constants.InfraDefinitionGeneratorConstants;
 import io.harness.testframework.restutils.InfrastructureDefinitionRestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.Assertions;
@@ -26,6 +29,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.infra.AwsAmiInfrastructure;
 import software.wings.infra.AwsEcsInfrastructure;
 import software.wings.infra.AwsInstanceInfrastructure;
+import software.wings.infra.AzureInstanceInfrastructure;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.InfrastructureDefinition.InfrastructureDefinitionKeys;
@@ -53,6 +57,8 @@ public class InfrastructureDefinitionGenerator {
         return ensureAwsSsh(seed, owners, bearerToken);
       case InfrastructureType.AWS_ECS:
         return ensureAwsEcs(seed, owners, bearerToken);
+      case InfrastructureType.AZURE_SSH:
+        return ensureAzureInstance(seed, owners, bearerToken);
       default:
         return null;
     }
@@ -187,6 +193,37 @@ public class InfrastructureDefinitionGenerator {
                                                             .envId(environment.getUuid())
                                                             .infrastructure(awsAmiInfrastructure)
                                                             .build();
+    return GeneratorUtils.suppressDuplicateException(
+        ()
+            -> InfrastructureDefinitionRestUtils.save(bearerToken, infrastructureDefinition),
+        () -> exists(infrastructureDefinition));
+  }
+
+  private InfrastructureDefinition ensureAzureInstance(Randomizer.Seed seed, Owners owners, String bearerToken) {
+    Environment environment = ensureEnv(seed, owners);
+    final SettingAttribute azureCloudProvider =
+        settingGenerator.ensurePredefined(seed, owners, AZURE_TEST_CLOUD_PROVIDER);
+    final SettingAttribute winRmConnectionAttr = settingGenerator.ensurePredefined(seed, owners, WINRM_TEST_CONNECTOR);
+
+    String name = Joiner.on(StringUtils.EMPTY).join("azure-winrm-", System.currentTimeMillis());
+
+    AzureInstanceInfrastructure azureInstanceInfrastructure =
+        AzureInstanceInfrastructure.builder()
+            .cloudProviderId(azureCloudProvider.getUuid())
+            .winRmConnectionAttributes(winRmConnectionAttr.getUuid())
+            .subscriptionId(InfraDefinitionGeneratorConstants.AZURE_SUBSCRIPTION_ID)
+            .resourceGroup(InfraDefinitionGeneratorConstants.AZURE_RESOURCE_GROUP)
+            .build();
+
+    InfrastructureDefinition infrastructureDefinition = InfrastructureDefinition.builder()
+                                                            .name(name)
+                                                            .cloudProviderType(CloudProviderType.AZURE)
+                                                            .deploymentType(DeploymentType.WINRM)
+                                                            .appId(environment.getAppId())
+                                                            .envId(environment.getUuid())
+                                                            .infrastructure(azureInstanceInfrastructure)
+                                                            .build();
+
     return GeneratorUtils.suppressDuplicateException(
         ()
             -> InfrastructureDefinitionRestUtils.save(bearerToken, infrastructureDefinition),

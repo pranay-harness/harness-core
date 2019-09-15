@@ -11,6 +11,8 @@ import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.ws.rs.core.GenericType;
 
@@ -172,6 +174,66 @@ public class InfrastructureDefinitionRestUtils {
             .as(restResponseGenericType.getType());
     if (restResponse.getResource() == null) {
       throw new EmptyRestResponseException("/infrastructure-definitions/" + infraDefinitionId + "/ami/runningcount",
+          String.valueOf(restResponse.getResponseMessages()));
+    }
+    return restResponse.getResource();
+  }
+
+  public static Set<String> listAzureTags(
+      String bearerToken, String appId, String subscriptionId, String computeProviderId) {
+    GenericType<RestResponse<Set<String>>> restResponseGenericType = new GenericType<RestResponse<Set<String>>>() {};
+    RestResponse<Set<String>> restResponse =
+        Setup.portal()
+            .auth()
+            .oauth2(bearerToken)
+            .contentType(ContentType.JSON)
+            .queryParam("appId", appId)
+            .queryParam("subscriptionId", subscriptionId)
+            .queryParam("computeProviderId", computeProviderId)
+            .get("infrastructure-mappings/compute-providers/" + computeProviderId + "/azure-tags")
+            .as(restResponseGenericType.getType());
+    if (restResponse.getResource() == null) {
+      throw new EmptyRestResponseException(
+          "infrastructure-mappings/compute-providers/" + computeProviderId + "/azure-tags",
+          String.valueOf(restResponse.getResponseMessages()));
+    }
+    return restResponse.getResource();
+  }
+
+  public static Map<String, String> listAzureSubscriptions(
+      String bearerToken, String accountId, String cloudProviderId) {
+    GenericType<RestResponse<Map<String, String>>> restResponseGenericType =
+        new GenericType<RestResponse<Map<String, String>>>() {};
+    RestResponse<Map<String, String>> restResponse = Setup.portal()
+                                                         .auth()
+                                                         .oauth2(bearerToken)
+                                                         .contentType(ContentType.JSON)
+                                                         .queryParams("accountId", accountId)
+                                                         .queryParam("cloudProviderId", cloudProviderId)
+                                                         .get("azure/subscriptions")
+                                                         .as(restResponseGenericType.getType());
+    if (restResponse.getResource() == null) {
+      throw new EmptyRestResponseException("azure/subscriptions", String.valueOf(restResponse.getResponseMessages()));
+    }
+    return restResponse.getResource();
+  }
+
+  public static Set<String> listAzureResources(
+      String bearerToken, String appId, String subscriptionId, String computeProviderId) {
+    GenericType<RestResponse<Set<String>>> restResponseGenericType = new GenericType<RestResponse<Set<String>>>() {};
+    RestResponse<Set<String>> restResponse =
+        Setup.portal()
+            .auth()
+            .oauth2(bearerToken)
+            .contentType(ContentType.JSON)
+            .queryParam("appId", appId)
+            .queryParam("subscriptionId", subscriptionId)
+            .queryParam("computeProviderId", computeProviderId)
+            .get("infrastructure-mappings/compute-providers/" + computeProviderId + "/resource-groups")
+            .as(restResponseGenericType.getType());
+    if (restResponse.getResource() == null) {
+      throw new EmptyRestResponseException(
+          "infrastructure-mappings/compute-providers/" + computeProviderId + "/resource-groups",
           String.valueOf(restResponse.getResponseMessages()));
     }
     return restResponse.getResource();

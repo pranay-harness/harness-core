@@ -181,7 +181,7 @@ public class WorkflowUtils {
         .build();
   }
 
-  public Workflow createCanaryAwsSshWorkflow(
+  public Workflow createCanarySshWorkflow(
       String name, Service service, InfrastructureDefinition infrastructureDefinition) {
     name = Joiner.on(StringUtils.EMPTY).join(name, System.currentTimeMillis());
 
