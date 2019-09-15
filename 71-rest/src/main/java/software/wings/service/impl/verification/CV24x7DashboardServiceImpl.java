@@ -540,15 +540,14 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
     CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
 
     // First check to see if there are any LE tasks running for this configId.
-    LearningEngineAnalysisTask analysisTask =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter(LearningEngineAnalysisTaskKeys.cvConfigId, cvConfigId)
-            .field(LearningEngineAnalysisTaskKeys.executionStatus)
-            .in(Arrays.asList(ExecutionStatus.QUEUED, ExecutionStatus.RUNNING))
-            .field(LearningEngineAnalysisTaskKeys.ml_analysis_type)
-            .in(Arrays.asList(MLAnalysisType.LOG_ML, MLAnalysisType.FEEDBACK_ANALYSIS, MLAnalysisType.TIME_SERIES))
-            .order(LearningEngineAnalysisTaskKeys.analysis_minute)
-            .get();
+    LearningEngineAnalysisTask analysisTask = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                                                  .filter(LearningEngineAnalysisTaskKeys.cvConfigId, cvConfigId)
+                                                  .field(LearningEngineAnalysisTaskKeys.executionStatus)
+                                                  .in(Arrays.asList(ExecutionStatus.QUEUED, ExecutionStatus.RUNNING))
+                                                  .field(LearningEngineAnalysisTaskKeys.ml_analysis_type)
+                                                  .in(Arrays.asList(MLAnalysisType.LOG_ML, MLAnalysisType.TIME_SERIES))
+                                                  .order(LearningEngineAnalysisTaskKeys.analysis_minute)
+                                                  .get();
     if (analysisTask != null) {
       logger.info("For {} found an analysis task in {} status. Returning analysisMinute {}", cvConfigId,
           analysisTask.getExecutionStatus(), analysisTask.getAnalysis_minute());
