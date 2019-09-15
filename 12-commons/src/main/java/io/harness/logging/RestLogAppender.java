@@ -125,7 +125,7 @@ public class RestLogAppender<E> extends AppenderBase<E> {
       // We have the logs any way in StackDriver
       retrofit.create(LogdnaRestClient.class).postLogs(getAuthHeader(), localhostName, logLines).execute();
     } catch (Exception ex) {
-      logger.error("Failed to submit logs after 10 tries to {}", retrofit.baseUrl(), ex);
+      logger.warn("Failed to submit logs to {}", retrofit.baseUrl(), ex);
     }
   }
 

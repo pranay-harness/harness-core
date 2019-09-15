@@ -1666,7 +1666,7 @@ public class StateMachineExecutor implements StateInspectionListener {
      */
     @Override
     public void run() {
-      try (ExecutionLogContext ctx = new ExecutionLogContext(context.getWorkflowExecutionId())) {
+      try (ExecutionLogContext ignore = new ExecutionLogContext(context.getWorkflowExecutionId())) {
         populateDelegateMetaData();
         if (asyncError) {
           StateExecutionData stateExecutionData = context.getStateExecutionInstance().fetchStateExecutionData();

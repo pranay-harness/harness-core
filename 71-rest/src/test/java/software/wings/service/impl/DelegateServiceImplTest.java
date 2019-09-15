@@ -52,7 +52,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     DelegateTask delegateTask = getDelegateTask();
     when(broadcastHelper.broadcastNewDelegateTask(any())).thenReturn(delegateTask);
     delegateTask.setAsync(false);
-    delegateService.saveDelegataeTask(delegateTask, false);
+    delegateService.saveDelegateTask(delegateTask, false);
     assertThat(delegateTask.getBroadcastCount()).isEqualTo(1);
     verify(broadcastHelper, times(0)).broadcastNewDelegateTask(any());
   }
@@ -64,7 +64,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
 
     DelegateTask delegateTask = getDelegateTask();
     delegateTask.setAsync(true);
-    DelegateTask task = delegateService.saveDelegataeTask(delegateTask, true);
+    DelegateTask task = delegateService.saveDelegateTask(delegateTask, true);
     assertThat(delegateTask.getBroadcastCount()).isEqualTo(0);
     verify(broadcastHelper, times(0)).broadcastNewDelegateTask(any());
   }

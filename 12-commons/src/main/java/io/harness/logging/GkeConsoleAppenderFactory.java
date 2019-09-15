@@ -1,5 +1,7 @@
 package io.harness.logging;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.contrib.jackson.JacksonJsonFormatter;
@@ -25,19 +27,22 @@ import java.util.Map;
  *
  * It outputs a json per line Stackdriver [LogEntry](https://cloud.google.com/logging/docs/view/logs_index)
  *
- *
  */
 @JsonTypeName("gke-console")
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class GkeConsoleAppenderFactory<E extends DeferredProcessingAware> extends ConsoleAppenderFactory<E> {
+  private static final String SEVERITY = "severity";
+  private static final String VERSION = "version";
+  private static final String HARNESS = "harness";
   private boolean stackdriverLogEnabled;
+
   @Override
   public Appender<E> build(LoggerContext context, String applicationName, LayoutFactory<E> layoutFactory,
       LevelFilterFactory<E> levelFilterFactory, AsyncAppenderFactory<E> asyncAppenderFactory) {
     Appender<E> appender;
     if (!stackdriverLogEnabled) {
-      appender = new NOPAppender();
+      appender = new NOPAppender<>();
     } else {
       appender = new ConsoleAppender<>();
 
@@ -47,8 +52,7 @@ public class GkeConsoleAppenderFactory<E extends DeferredProcessingAware> extend
       consoleAppender.setTarget(getTarget().get());
 
       final LayoutWrappingEncoder<E> layoutEncoder = new LayoutWrappingEncoder<>();
-      JsonLayout jsonLayout = new StackdriverLoggingJsonLayout(context);
-      layoutEncoder.setLayout((Layout<E>) jsonLayout);
+      layoutEncoder.setLayout(initJsonLayout(context));
 
       consoleAppender.setEncoder(layoutEncoder);
       consoleAppender.addFilter(levelFilterFactory.build(getThreshold()));
@@ -60,17 +64,35 @@ public class GkeConsoleAppenderFactory<E extends DeferredProcessingAware> extend
     return wrapAsync(appender, asyncAppenderFactory);
   }
 
-  private static class StackdriverLoggingJsonLayout extends JsonLayout {
-    StackdriverLoggingJsonLayout(LoggerContext context) {
-      this.includeLevel = false;
-      this.setAppendLineSeparator(true);
-      this.setJsonFormatter(new JacksonJsonFormatter());
-      this.setContext(context);
-    }
+  private Layout<E> initJsonLayout(LoggerContext context) {
+    JsonLayout jsonLayout = new JsonLayout() {
+      @Override
+      protected void addCustomDataToJsonMap(Map<String, Object> map, ILoggingEvent event) {
+        map.put(SEVERITY, String.valueOf(event.getLevel()));
+      }
 
-    @Override
-    protected void addCustomDataToJsonMap(Map<String, Object> map, ILoggingEvent event) {
-      map.put("severity", String.valueOf(event.getLevel()));
-    }
+      @Override
+      protected Map toJsonMap(ILoggingEvent event) {
+        Map<String, Object> jsonMap = super.toJsonMap(event);
+        Map<String, String> mdc = (Map<String, String>) jsonMap.remove(MDC_ATTR_NAME);
+        if (isNotEmpty(mdc)) {
+          jsonMap.put(HARNESS, mdc);
+        }
+        jsonMap.put(VERSION, System.getenv("VERSION"));
+        return jsonMap;
+      }
+    };
+
+    jsonLayout.setContext(context);
+
+    jsonLayout.setIncludeLevel(false);
+    jsonLayout.setIncludeContextName(false);
+    jsonLayout.setIncludeTimestamp(false);
+
+    jsonLayout.setAppendLineSeparator(true);
+    jsonLayout.setJsonFormatter(new JacksonJsonFormatter());
+    jsonLayout.setThrowableProxyConverter(new StackTraceProxyConverter());
+
+    return (Layout<E>) jsonLayout;
   }
 }

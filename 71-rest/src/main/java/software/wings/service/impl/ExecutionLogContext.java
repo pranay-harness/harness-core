@@ -4,6 +4,6 @@ import io.harness.logging.AutoLogContext;
 
 public class ExecutionLogContext extends AutoLogContext {
   public ExecutionLogContext(String executionId) {
-    super("executionId", '[' + executionId + ']');
+    super("executionId", executionId);
   }
 }
