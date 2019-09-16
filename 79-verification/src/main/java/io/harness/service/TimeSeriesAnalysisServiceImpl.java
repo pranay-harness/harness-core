@@ -796,13 +796,15 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
               .getResponse();
       if (isNotEmpty(thresholds)) {
         for (SupervisedTSThreshold threshold : thresholds) {
-          updateThresholdDefinitionSkeleton(threshold.getTransactionName(), threshold.getMetricName(),
-              threshold.getMetricType(), metricDefinitionMap);
           List<Threshold> supervisedThresholds = SupervisedTSThreshold.getThresholds(threshold);
-          metricDefinitionMap.get(threshold.getTransactionName())
-              .get(threshold.getMetricName())
-              .getCategorizedThresholds()
-              .put(ThresholdCategory.SUPERVISED, supervisedThresholds);
+          if (isNotEmpty(supervisedThresholds)) {
+            updateThresholdDefinitionSkeleton(threshold.getTransactionName(), threshold.getMetricName(),
+                threshold.getMetricType(), metricDefinitionMap);
+            metricDefinitionMap.get(threshold.getTransactionName())
+                .get(threshold.getMetricName())
+                .getCategorizedThresholds()
+                .put(ThresholdCategory.SUPERVISED, supervisedThresholds);
+          }
         }
       }
     } catch (Exception e) {
