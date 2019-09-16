@@ -230,11 +230,22 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
 
   private void logActivityOnLETaskPickup(LearningEngineAnalysisTask task) {
     if (task != null && task.getMl_analysis_type() == MLAnalysisType.TIME_SERIES) {
-      cvActivityLogService.getLogger(task.getCvConfigId(), task.getAnalysis_minute(), task.getState_execution_id())
-          .info("Time series analysis started for time range %t to %t",
-              TimeUnit.MINUTES.toMillis(task.getAnalysis_minute()),
-              TimeUnit.MINUTES.toMillis(task.getAnalysis_minute() + 1));
+      if (isAnalysisMinuteAbsoluteTimestamp(task.getAnalysis_minute())) {
+        cvActivityLogService.getLogger(task.getCvConfigId(), task.getAnalysis_minute(), task.getState_execution_id())
+            .info("Time series analysis started for time range %t to %t",
+                TimeUnit.MINUTES.toMillis(task.getAnalysis_minute()),
+                TimeUnit.MINUTES.toMillis(task.getAnalysis_minute() + 1));
+      } else {
+        cvActivityLogService.getLogger(task.getCvConfigId(), task.getAnalysis_minute(), task.getState_execution_id())
+            .info("Time series analysis started for minute " + task.getAnalysis_minute() + ".");
+      }
     }
+  }
+
+  private boolean isAnalysisMinuteAbsoluteTimestamp(long analysisMinute) {
+    // this is extremely hacky solution to generate proper activity logs regardless of if this is absolute minute of
+    // relative minute. We are already moving to absolute analysis minute and need to remove this after that.
+    return analysisMinute > 10000;
   }
 
   @Override
@@ -313,8 +324,14 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   private void logActivityOnAnalysisComplete(
       Logger activityLogger, MLAnalysisType mlAnalysisType, long analysisMinute) {
     String prefix = mlAnalysisType == MLAnalysisType.TIME_SERIES ? "Time series " : "Log ";
-    activityLogger.info(prefix + "analysis completed for time range %t to %t.",
-        TimeUnit.MINUTES.toMillis(analysisMinute), TimeUnit.MINUTES.toMillis(analysisMinute + 1));
+
+    // TODO: clean this up once analysisMinute becomes absolute for everything.
+    if (isAnalysisMinuteAbsoluteTimestamp(analysisMinute)) {
+      activityLogger.info(prefix + "analysis completed for time range %t to %t.",
+          TimeUnit.MINUTES.toMillis(analysisMinute), TimeUnit.MINUTES.toMillis(analysisMinute + 1));
+    } else {
+      activityLogger.info(prefix + "analysis completed for minute " + analysisMinute + ".");
+    }
   }
   @Override
   public void markExpTaskCompleted(String taskId) {
