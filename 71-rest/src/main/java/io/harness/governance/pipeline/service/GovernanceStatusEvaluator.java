@@ -1,10 +1,9 @@
 package io.harness.governance.pipeline.service;
 
-import static java.util.stream.Collectors.toList;
-
 import io.harness.governance.pipeline.enforce.GovernanceRuleStatus;
 import io.harness.governance.pipeline.model.PipelineGovernanceRule;
 import io.harness.governance.pipeline.model.Tag;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.entityinterface.TagAware;
 
@@ -19,12 +18,21 @@ public interface GovernanceStatusEvaluator<T extends TagAware> {
   GovernanceRuleStatus status(String accountId, T entity, PipelineGovernanceRule rule);
 
   static boolean containsAll(List<HarnessTagLink> links, List<Tag> tagsToLookFor) {
-    List<Tag> linksAsTags = links.stream().map(link -> new Tag(link.getKey(), link.getValue())).collect(toList());
-    return linksAsTags.containsAll(tagsToLookFor);
+    // all tags should have a `match` in the links
+    return tagsToLookFor.stream().allMatch(tag -> links.stream().anyMatch(link -> matches(link, tag)));
   }
 
   static boolean containsAny(List<HarnessTagLink> links, List<Tag> tagsToLookFor) {
-    List<Tag> linksAsTags = links.stream().map(link -> new Tag(link.getKey(), link.getValue())).collect(toList());
-    return tagsToLookFor.stream().anyMatch(linksAsTags::contains);
+    // any tag should have a `match` in the links
+    return tagsToLookFor.stream().anyMatch(tag -> links.stream().anyMatch(link -> matches(link, tag)));
+  }
+
+  static boolean matches(HarnessTagLink tagLink, Tag tagToLookFor) {
+    if (StringUtils.isEmpty(tagToLookFor.getValue())) {
+      return StringUtils.equals(tagToLookFor.getKey(), tagLink.getKey());
+    } else {
+      return StringUtils.equals(tagToLookFor.getKey(), tagLink.getKey())
+          && StringUtils.equals(tagToLookFor.getValue(), tagLink.getValue());
+    }
   }
 }

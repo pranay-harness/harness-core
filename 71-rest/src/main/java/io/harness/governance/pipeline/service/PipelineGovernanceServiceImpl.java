@@ -8,6 +8,9 @@ import io.harness.persistence.HQuery;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.dl.WingsPersistence;
+import software.wings.features.PipelineGovernanceFeature;
+import software.wings.features.api.AccountId;
+import software.wings.features.api.RestrictedApi;
 
 import java.util.List;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -38,7 +41,9 @@ public class PipelineGovernanceServiceImpl implements PipelineGovernanceService 
   }
 
   @Override
-  public PipelineGovernanceConfig update(final String uuid, final PipelineGovernanceConfig config) {
+  @RestrictedApi(PipelineGovernanceFeature.class)
+  public PipelineGovernanceConfig update(
+      @AccountId final String accountId, final String uuid, final PipelineGovernanceConfig config) {
     Query<PipelineGovernanceConfig> query =
         persistence.createQuery(PipelineGovernanceConfig.class).field(PipelineGovernanceConfigKeys.uuid).equal(uuid);
 
@@ -46,13 +51,15 @@ public class PipelineGovernanceServiceImpl implements PipelineGovernanceService 
         persistence.createUpdateOperations(PipelineGovernanceConfig.class)
             .set(PipelineGovernanceConfigKeys.rules, config.getRules())
             .set(PipelineGovernanceConfigKeys.name, config.getName())
+            .set(PipelineGovernanceConfigKeys.restrictions, config.getRestrictions())
             .set(PipelineGovernanceConfigKeys.description, config.getDescription());
 
     return persistence.findAndModify(query, updateOperations, WingsPersistence.upsertReturnNewOptions);
   }
 
   @Override
-  public PipelineGovernanceConfig add(final PipelineGovernanceConfig config) {
+  @RestrictedApi(PipelineGovernanceFeature.class)
+  public PipelineGovernanceConfig add(@AccountId final String accountId, final PipelineGovernanceConfig config) {
     persistence.save(config);
     return config;
   }

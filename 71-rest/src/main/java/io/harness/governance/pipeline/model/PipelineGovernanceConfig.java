@@ -38,13 +38,13 @@ public class PipelineGovernanceConfig implements PersistentEntity, UuidAccess {
   @Nonnull private String name;
   @Nonnull private String description;
   @Nonnull private List<PipelineGovernanceRule> rules;
-  @Nonnull private List<String> appIds;
+  @Nonnull private List<Restriction> restrictions;
 
   @JsonCreator
   public PipelineGovernanceConfig(@Nullable @JsonProperty("uuid") String uuid,
       @JsonProperty("accountId") String accountId, @JsonProperty("name") String name,
       @JsonProperty("description") String description, @JsonProperty("rules") List<PipelineGovernanceRule> rules,
-      @JsonProperty("appIds") List<String> appIds) {
+      @JsonProperty("restrictions") List<Restriction> restrictions) {
     if (null == uuid) {
       this.uuid = UUIDGenerator.generateUuid();
     } else {
@@ -55,7 +55,7 @@ public class PipelineGovernanceConfig implements PersistentEntity, UuidAccess {
     this.accountId = Objects.requireNonNull(accountId, "accountId must be present");
     this.name = name;
     this.rules = rules;
-    this.appIds = appIds;
+    this.restrictions = restrictions;
   }
 
   public List<PipelineGovernanceRule> getRules() {
@@ -63,8 +63,8 @@ public class PipelineGovernanceConfig implements PersistentEntity, UuidAccess {
   }
 
   @Nonnull
-  public List<String> getAppIds() {
-    return CollectionUtils.emptyIfNull(appIds);
+  public List<Restriction> getRestrictions() {
+    return CollectionUtils.emptyIfNull(restrictions);
   }
 
   @Override

@@ -27,11 +27,14 @@ import com.google.inject.name.Named;
 
 import com.mongodb.BasicDBObject;
 import io.harness.beans.PageRequest;
+import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.TriggerException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UuidAccess;
 import io.harness.validation.Update;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotBlank;
@@ -711,5 +714,15 @@ public class HarnessTagServiceImpl implements HarnessTagService {
 
     List<HarnessTagLink> harnessTagLinks = query.project("entityId", true).asList();
     return harnessTagLinks.stream().map(HarnessTagLink::getEntityId).collect(Collectors.toSet());
+  }
+
+  @Override
+  public <T extends UuidAccess> PageResponse<HarnessTagLink> fetchTagsForEntity(String accountId, T entity) {
+    PageRequest<HarnessTagLink> request = PageRequestBuilder.aPageRequest()
+                                              .addFilter(HarnessTagLinkKeys.entityId, Operator.EQ, entity.getUuid())
+                                              .addFilter(HarnessTagLinkKeys.accountId, Operator.EQ, accountId)
+                                              .build();
+
+    return this.listResourcesWithTag(accountId, request);
   }
 }

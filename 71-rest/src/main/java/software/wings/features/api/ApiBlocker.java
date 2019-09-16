@@ -24,7 +24,12 @@ public class ApiBlocker implements MethodInterceptor {
   public Object invoke(MethodInvocation methodInvocation) throws Throwable {
     String accountId;
     if ((accountId = getAccountIdFromRequestContext()) == null) {
-      accountId = getAccountId(methodInvocation).orElseThrow(IllegalStateException::new);
+      accountId =
+          getAccountId(methodInvocation)
+              .orElseThrow(
+                  ()
+                      -> new IllegalStateException(
+                          "Could not get accountId from method arguments. Use software.wings.features.api.@AccountId , or software.wings.features.api.@GetAccountId annotation on method arguments."));
     }
 
     if (accountId.equals(GLOBAL_ACCOUNT_ID) || getFeature(methodInvocation).isAvailableForAccount(accountId)) {
