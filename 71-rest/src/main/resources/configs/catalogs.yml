@@ -172,6 +172,8 @@ REPAIR_ACTION_CODE:
       value: RETRY
     - name: End Execution
       value: END_EXECUTION
+    - name: Abort Workflow
+      value: ABORT_WORKFLOW_EXECUTION
 
 ACTION_AFTER_RETRY:
     - name: Manual Intervention
