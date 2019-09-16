@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.persistence.UuidAccess;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotBlank;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
@@ -53,4 +54,7 @@ public interface HarnessTagService {
    * @return set of entityIds
    */
   Set<String> getEntityIdsWithTag(String accountId, String key, EntityType entityType, String value);
+
+  // fetches tags for an entity
+  <T extends UuidAccess> PageResponse<HarnessTagLink> fetchTagsForEntity(String accountId, T entity);
 }

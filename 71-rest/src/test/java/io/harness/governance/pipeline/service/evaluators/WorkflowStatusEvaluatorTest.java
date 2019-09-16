@@ -5,13 +5,13 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.governance.pipeline.enforce.GovernanceRuleStatus;
 import io.harness.governance.pipeline.model.MatchType;
 import io.harness.governance.pipeline.model.PipelineGovernanceRule;
 import io.harness.governance.pipeline.model.Tag;
+import io.harness.persistence.UuidAccess;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -36,7 +36,7 @@ public class WorkflowStatusEvaluatorTest extends WingsBaseTest {
   public void testStatus() {
     PageResponse<HarnessTagLink> pageResponse = new PageResponse<>();
     pageResponse.setResponse(Arrays.asList(HarnessTagLink.builder().key("tag1").build()));
-    when(harnessTagService.listResourcesWithTag(Mockito.eq(SOME_ACCOUNT_ID), Mockito.any(PageRequest.class)))
+    when(harnessTagService.fetchTagsForEntity(Mockito.eq(SOME_ACCOUNT_ID), Mockito.any(UuidAccess.class)))
         .thenReturn(pageResponse);
 
     Workflow workflow = new Workflow();
@@ -45,12 +45,12 @@ public class WorkflowStatusEvaluatorTest extends WingsBaseTest {
     workflow.setUuid("some-uuid");
 
     List<Tag> tags = Arrays.asList(new Tag("tag1", null), new Tag("tag2", "tag2val"));
-    PipelineGovernanceRule rule = new PipelineGovernanceRule(tags, MatchType.ALL, 10, "note", false);
+    PipelineGovernanceRule rule = new PipelineGovernanceRule(tags, MatchType.ALL, 10, "note");
     GovernanceRuleStatus status = workflowStatusEvaluator.status(SOME_ACCOUNT_ID, workflow, rule);
     assertThat(status.isTagsIncluded()).isFalse();
 
     tags = Arrays.asList(new Tag("tag1", null), new Tag("tag2", "tag2val"));
-    rule = new PipelineGovernanceRule(tags, MatchType.ANY, 10, "note", true);
+    rule = new PipelineGovernanceRule(tags, MatchType.ANY, 10, "note");
     status = workflowStatusEvaluator.status(SOME_ACCOUNT_ID, workflow, rule);
     assertThat(status.isTagsIncluded()).isTrue();
   }

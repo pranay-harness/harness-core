@@ -18,7 +18,6 @@ public class PipelineGovernanceRule {
   @Nonnull private MatchType matchType;
   private int weight;
   @Nullable private String note;
-  private boolean distributedEqually;
 
   public List<Tag> getTags() {
     List<Tag> tags = CollectionUtils.emptyIfNull(this.tags);

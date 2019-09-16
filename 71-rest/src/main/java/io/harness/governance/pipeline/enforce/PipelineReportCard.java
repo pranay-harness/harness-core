@@ -18,6 +18,7 @@ public class PipelineReportCard {
   static class GovernanceStandard {
     private String id;
     private String name;
+    private String description;
   }
 
   private GovernanceStandard governanceStandard;
@@ -26,8 +27,8 @@ public class PipelineReportCard {
 
   public PipelineReportCard(
       PipelineGovernanceConfig pipelineGovernanceConfig, String pipelineId, List<GovernanceRuleStatus> ruleStatuses) {
-    this.governanceStandard =
-        new GovernanceStandard(pipelineGovernanceConfig.getUuid(), pipelineGovernanceConfig.getName());
+    this.governanceStandard = new GovernanceStandard(pipelineGovernanceConfig.getUuid(),
+        pipelineGovernanceConfig.getName(), pipelineGovernanceConfig.getDescription());
     this.pipelineId = pipelineId;
     this.ruleStatuses = ruleStatuses;
   }

@@ -100,6 +100,7 @@ import software.wings.features.IpWhitelistingFeature;
 import software.wings.features.JiraNotificationFeature;
 import software.wings.features.LdapFeature;
 import software.wings.features.PagerDutyNotificationFeature;
+import software.wings.features.PipelineGovernanceFeature;
 import software.wings.features.RbacFeature;
 import software.wings.features.RestApiFeature;
 import software.wings.features.SamlFeature;
@@ -918,6 +919,9 @@ public class WingsModule extends DependencyModule {
         .to(PagerDutyNotificationFeature.class)
         .in(Singleton.class);
     mapBinder.addBinding(ApiKeysFeature.FEATURE_NAME).to(ApiKeysFeature.class).in(Singleton.class);
+    mapBinder.addBinding(PipelineGovernanceFeature.FEATURE_NAME)
+        .to(PipelineGovernanceFeature.class)
+        .in(Singleton.class);
     mapBinder.addBinding(TwoFactorAuthenticationFeature.FEATURE_NAME)
         .to(TwoFactorAuthenticationFeature.class)
         .in(Singleton.class);
@@ -976,6 +980,10 @@ public class WingsModule extends DependencyModule {
         .bind(PremiumFeature.class)
         .annotatedWith(Names.named(ApiKeysFeature.FEATURE_NAME))
         .to(ApiKeysFeature.class);
+    binder()
+        .bind(PremiumFeature.class)
+        .annotatedWith(Names.named(PipelineGovernanceFeature.FEATURE_NAME))
+        .to(PipelineGovernanceFeature.class);
     binder()
         .bind(PremiumFeature.class)
         .annotatedWith(Names.named(TwoFactorAuthenticationFeature.FEATURE_NAME))

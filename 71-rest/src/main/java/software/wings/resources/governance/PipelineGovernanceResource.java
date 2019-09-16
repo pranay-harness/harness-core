@@ -54,7 +54,7 @@ public class PipelineGovernanceResource {
   public RestResponse<PipelineGovernanceConfig> add(@QueryParam("accountId") @NotEmpty String accountId,
       @NotNull(message = "governanceConfig missing while trying to add pipeline governance config")
       PipelineGovernanceConfig governanceConfig) {
-    return new RestResponse<>(pipelineGovernanceService.add(governanceConfig));
+    return new RestResponse<>(pipelineGovernanceService.add(accountId, governanceConfig));
   }
 
   @PUT
@@ -64,7 +64,7 @@ public class PipelineGovernanceResource {
       @PathParam("uuid") String uuid,
       @NotNull(message = "governanceConfig missing while trying to update pipeline governance config")
       PipelineGovernanceConfig governanceConfig) {
-    return new RestResponse<>(pipelineGovernanceService.update(uuid, governanceConfig));
+    return new RestResponse<>(pipelineGovernanceService.update(accountId, uuid, governanceConfig));
   }
 
   @DELETE

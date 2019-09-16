@@ -1,7 +1,9 @@
 package io.harness.governance.pipeline.service;
 
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.Application.Builder.anApplication;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -9,10 +11,13 @@ import io.harness.governance.pipeline.enforce.GovernanceRuleStatus;
 import io.harness.governance.pipeline.enforce.PipelineReportCard;
 import io.harness.governance.pipeline.model.PipelineGovernanceConfig;
 import io.harness.governance.pipeline.model.PipelineGovernanceRule;
+import io.harness.governance.pipeline.model.Restriction;
+import io.harness.governance.pipeline.model.Tag;
 import io.harness.governance.pipeline.service.evaluators.OnPipeline;
 import io.harness.governance.pipeline.service.evaluators.OnWorkflow;
 import lombok.Value;
-import software.wings.beans.HarnessTag;
+import org.apache.commons.collections4.CollectionUtils;
+import software.wings.beans.HarnessTagLink;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
 import software.wings.features.api.Usage;
@@ -48,9 +53,6 @@ public class PipelineGovernanceReportEvaluator {
    */
   private PipelineReportCard getPipelineReportForGovernanceConfig(final String accountId, final String appId,
       final PipelineGovernanceConfig pipelineGovernanceConfig, final ReportEvaluationContext reportEvaluationContext) {
-    List<String> accountTagIds =
-        harnessTagService.listTags(accountId).stream().map(HarnessTag::getUuid).collect(toList());
-
     List<PipelineGovernanceRule> governanceConfigRules = pipelineGovernanceConfig.getRules();
 
     // this holds the result of each rule
@@ -90,10 +92,11 @@ public class PipelineGovernanceReportEvaluator {
 
   public List<PipelineReportCard> getPipelineReportCard(
       final String accountId, final String appId, final String pipelineId) {
-    List<PipelineGovernanceConfig> governanceConfigs = pipelineGovernanceService.list(accountId)
-                                                           .stream()
-                                                           .filter(config -> isConfigValidForApp(config, appId))
-                                                           .collect(Collectors.toList());
+    List<PipelineGovernanceConfig> governanceConfigs =
+        pipelineGovernanceService.list(accountId)
+            .stream()
+            .filter(config -> isConfigValidForApp(accountId, config.getRestrictions(), appId))
+            .collect(Collectors.toList());
 
     List<PipelineReportCard> pipelineReport = new LinkedList<>();
     Pipeline pipeline = pipelineService.readPipelineWithResolvedVariables(appId, pipelineId, Collections.emptyMap());
@@ -113,11 +116,27 @@ public class PipelineGovernanceReportEvaluator {
     return pipelineReport;
   }
 
-  private boolean isConfigValidForApp(final PipelineGovernanceConfig config, final String appId) {
-    if (!config.getAppIds().isEmpty()) {
-      return config.getAppIds().contains(appId);
-    } else {
+  @VisibleForTesting
+  boolean isConfigValidForApp(final String accountId, final List<Restriction> restrictions, final String appId) {
+    // no restrictions
+    if (restrictions.isEmpty()) {
       return true;
     }
+
+    for (Restriction restriction : restrictions) {
+      if (restriction.getAppIds().contains(appId)) {
+        return true;
+      }
+
+      if (!restriction.getTags().isEmpty()) {
+        List<HarnessTagLink> appTagLinks =
+            harnessTagService.fetchTagsForEntity(accountId, anApplication().uuid(appId).build());
+        List<Tag> appTags = appTagLinks.stream().map(Tag::fromTagLink).collect(toList());
+
+        return CollectionUtils.containsAny(appTags, restriction.getTags());
+      }
+    }
+
+    return false;
   }
 }

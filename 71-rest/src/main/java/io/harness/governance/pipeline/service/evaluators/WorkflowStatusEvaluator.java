@@ -2,15 +2,11 @@ package io.harness.governance.pipeline.service.evaluators;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.PageRequest;
-import io.harness.beans.PageRequest.PageRequestBuilder;
-import io.harness.beans.SearchFilter.Operator;
 import io.harness.govern.Switch;
 import io.harness.governance.pipeline.enforce.GovernanceRuleStatus;
 import io.harness.governance.pipeline.model.PipelineGovernanceRule;
 import io.harness.governance.pipeline.service.GovernanceStatusEvaluator;
 import software.wings.beans.HarnessTagLink;
-import software.wings.beans.HarnessTagLink.HarnessTagLinkKeys;
 import software.wings.beans.Workflow;
 import software.wings.features.api.Usage;
 import software.wings.service.intfc.HarnessTagService;
@@ -24,16 +20,16 @@ public class WorkflowStatusEvaluator implements GovernanceStatusEvaluator<Workfl
   @Override
   public GovernanceRuleStatus status(
       final String accountId, final Workflow workflow, final PipelineGovernanceRule rule) {
-    List<HarnessTagLink> pipelineTags = fetchWorkflowTags(workflow.getUuid(), accountId);
+    List<HarnessTagLink> workflowTags = harnessTagService.fetchTagsForEntity(accountId, workflow);
 
     boolean tagsIncluded = false;
 
     switch (rule.getMatchType()) {
       case ALL:
-        tagsIncluded = GovernanceStatusEvaluator.containsAll(pipelineTags, rule.getTags());
+        tagsIncluded = GovernanceStatusEvaluator.containsAll(workflowTags, rule.getTags());
         break;
       case ANY:
-        tagsIncluded = GovernanceStatusEvaluator.containsAny(pipelineTags, rule.getTags());
+        tagsIncluded = GovernanceStatusEvaluator.containsAny(workflowTags, rule.getTags());
         break;
       default:
         Switch.unhandled(rule.getMatchType());
@@ -52,15 +48,5 @@ public class WorkflowStatusEvaluator implements GovernanceStatusEvaluator<Workfl
       return new GovernanceRuleStatus(
           rule.getTags(), rule.getWeight(), false, rule.getMatchType(), Collections.emptyList());
     }
-  }
-
-  // fetches all tags related to given workflowId
-  private List<HarnessTagLink> fetchWorkflowTags(final String workflowId, final String accountId) {
-    PageRequest<HarnessTagLink> request = PageRequestBuilder.aPageRequest()
-                                              .addFilter(HarnessTagLinkKeys.entityId, Operator.EQ, workflowId)
-                                              .addFilter(HarnessTagLinkKeys.accountId, Operator.EQ, accountId)
-                                              .build();
-
-    return harnessTagService.listResourcesWithTag(accountId, request);
   }
 }
