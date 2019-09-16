@@ -622,9 +622,13 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
   @VisibleForTesting
   public Map<String, Object> getAllFields(InfraMappingInfrastructureProvider infrastructure) {
+    // TODO: we should reconsider using reflection for this goal
     Map<String, Object> fieldValueMap = new HashMap<>();
     Field[] declaredFields = infrastructure.getClass().getDeclaredFields();
     for (Field declaredField : declaredFields) {
+      if ("$jacocoData".equals(declaredField.getName())) {
+        continue;
+      }
       try {
         declaredField.setAccessible(true);
         fieldValueMap.put(declaredField.getName(), declaredField.get(infrastructure));
