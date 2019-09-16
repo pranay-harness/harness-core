@@ -53,6 +53,18 @@ public class UsageMetricsEventPublisher {
   }
 
   public void publishDeploymentTimeSeriesEvent(String accountId, WorkflowExecution workflowExecution) {
+    DeploymentTimeSeriesEvent event = constructDeploymentTimeSeriesEvent(accountId, workflowExecution);
+    executorService.submit(() -> {
+      try {
+        deploymentTimeSeriesEventQueue.send(event);
+      } catch (Exception e) {
+        logger.error("Failed to publish deployment time series event:[{}]", event.getId(), e);
+      }
+    });
+  }
+
+  public DeploymentTimeSeriesEvent constructDeploymentTimeSeriesEvent(
+      String accountId, WorkflowExecution workflowExecution) {
     Map<String, String> stringData = new HashMap<>();
     Map<String, List<String>> listData = new HashMap<>();
     Map<String, Long> longData = new HashMap<>();
@@ -113,14 +125,7 @@ public class UsageMetricsEventPublisher {
     if (isEmpty(eventInfo.getListData())) {
       logger.info("TimeSeriesEventInfo has listData empty eventInfo=[{}]", eventInfo);
     }
-    DeploymentTimeSeriesEvent event = DeploymentTimeSeriesEvent.builder().timeSeriesEventInfo(eventInfo).build();
-    executorService.submit(() -> {
-      try {
-        deploymentTimeSeriesEventQueue.send(event);
-      } catch (Exception e) {
-        logger.error("Failed to publish deployment time series event:[{}]", event.getId(), e);
-      }
-    });
+    return DeploymentTimeSeriesEvent.builder().timeSeriesEventInfo(eventInfo).build();
   }
 
   public void publishCV247MetadataMetric(String accountId, boolean isEnabled) {

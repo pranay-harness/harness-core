@@ -52,6 +52,8 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.event.EventsModule;
 import io.harness.event.listener.EventListener;
+import io.harness.event.reconciliation.service.DeploymentReconExecutorService;
+import io.harness.event.reconciliation.service.DeploymentReconTask;
 import io.harness.event.usagemetrics.EventsModuleHelper;
 import io.harness.exception.WingsException;
 import io.harness.govern.ProviderModule;
@@ -548,6 +550,9 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
         .scheduleWithFixedDelay(
             injector.getInstance(PersistentLockCleanup.class), rand.nextInt(60), 60L, TimeUnit.MINUTES);
+    injector.getInstance(DeploymentReconExecutorService.class)
+        .scheduleWithFixedDelay(
+            injector.getInstance(DeploymentReconTask.class), rand.nextInt(60), 15 * 60L, TimeUnit.SECONDS);
   }
 
   public static void registerObservers(Injector injector) {

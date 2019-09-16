@@ -1,6 +1,7 @@
 package io.harness.serializer.morphia;
 
 import io.harness.dashboard.DashboardSettings;
+import io.harness.event.reconciliation.deployment.DeploymentReconRecord;
 import io.harness.governance.pipeline.model.PipelineGovernanceConfig;
 import io.harness.marketplace.gcp.events.AccountActiveEvent;
 import io.harness.marketplace.gcp.events.GcpMarketplaceEvent;
@@ -900,6 +901,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(CyberArkConfig.class);
     set.add(SupervisedTrainingStatus.class);
     set.add(PipelineGovernanceConfig.class);
+    set.add(DeploymentReconRecord.class);
   }
 
   @Override

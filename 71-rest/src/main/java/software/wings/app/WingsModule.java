@@ -15,6 +15,8 @@ import io.harness.dashboard.DashboardSettingsService;
 import io.harness.dashboard.DashboardSettingsServiceImpl;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobServiceImpl;
+import io.harness.event.reconciliation.service.DeploymentReconService;
+import io.harness.event.reconciliation.service.DeploymentReconServiceImpl;
 import io.harness.exception.WingsException;
 import io.harness.govern.DependencyModule;
 import io.harness.governance.pipeline.service.GovernanceStatusEvaluator;
@@ -872,13 +874,18 @@ public class WingsModule extends DependencyModule {
                 .setPriority(Thread.MIN_PRIORITY)
                 .build()));
 
+    bind(ExecutorService.class)
+        .annotatedWith(Names.named("DeploymentReconTaskExecutor"))
+        .toInstance(ThreadPool.create(1, 5, 10, TimeUnit.SECONDS,
+            new ThreadFactoryBuilder().setNameFormat("DeploymentReconTaskExecutor-%d").build()));
+
     bind(DashboardSettingsService.class).to(DashboardSettingsServiceImpl.class);
     bind(NameService.class).to(NameServiceImpl.class);
     bind(TimeScaleDBService.class).toInstance(new TimeScaleDBServiceImpl(configuration.getTimeScaleDBConfig()));
     if (configuration.getExecutionLogsStorageMode() == null) {
       configuration.setExecutionLogsStorageMode(DataStorageMode.MONGO);
     }
-
+    bind(DeploymentReconService.class).to(DeploymentReconServiceImpl.class);
     bindFeatures();
 
     bind(FeatureService.class).to(FeatureServiceImpl.class);
