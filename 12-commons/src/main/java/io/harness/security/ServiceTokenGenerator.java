@@ -9,7 +9,6 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import io.harness.exception.WingsException;
-import io.harness.grpc.auth.EventServiceTokenGenerator;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
@@ -19,9 +18,8 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * Created by rsingh on 9/17/18.
  */
-public class ServiceTokenGenerator implements EventServiceTokenGenerator {
+public class ServiceTokenGenerator {
   public static final AtomicReference<String> VERIFICATION_SERVICE_SECRET = new AtomicReference<>();
-  public static final AtomicReference<String> EVENT_SERVICE_SECRET = new AtomicReference<>();
 
   public String getVerificationServiceToken() {
     Preconditions.checkState(isNotEmpty(VERIFICATION_SERVICE_SECRET.get()),
@@ -29,16 +27,9 @@ public class ServiceTokenGenerator implements EventServiceTokenGenerator {
     return getToken(VERIFICATION_SERVICE_SECRET.get());
   }
 
-  @Override
-  public String getEventServiceToken() {
-    Preconditions.checkState(
-        isNotEmpty(EVENT_SERVICE_SECRET.get()), "could not read event service secret from system or env properties");
-    return getToken(EVENT_SERVICE_SECRET.get());
-  }
-
-  private String getToken(String eventServiceSecret) {
+  private String getToken(String serviceSecret) {
     try {
-      Algorithm algorithm = Algorithm.HMAC256(eventServiceSecret);
+      Algorithm algorithm = Algorithm.HMAC256(serviceSecret);
 
       return JWT.create()
           .withIssuer("Harness Inc")

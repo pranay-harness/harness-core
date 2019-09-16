@@ -8,6 +8,6 @@ import java.util.EnumSet;
 
 public class UnauthorizedException extends WingsException {
   public UnauthorizedException(String message, EnumSet<ReportTarget> reportTarget) {
-    super(message, null, INVALID_TOKEN, Level.ERROR, null, null);
+    super(message, null, INVALID_TOKEN, Level.ERROR, reportTarget, null);
   }
 }

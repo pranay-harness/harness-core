@@ -15,7 +15,7 @@ import io.harness.event.EventPublisherGrpc;
 import io.harness.event.EventPublisherGrpc.EventPublisherBlockingStub;
 import io.harness.event.PublishMessage;
 import io.harness.grpc.auth.DelegateAuthCallCredentials;
-import io.harness.grpc.auth.EventServiceTokenGenerator;
+import io.harness.security.TokenGenerator;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.Value;
@@ -58,8 +58,10 @@ public class PublisherModule extends AbstractModule {
   }
 
   @Provides
-  CallCredentials callCredentials(EventServiceTokenGenerator eventServiceTokenGenerator) {
-    return new DelegateAuthCallCredentials(eventServiceTokenGenerator, config.accountId, true);
+  @Singleton
+  CallCredentials callCredentials() {
+    return new DelegateAuthCallCredentials(
+        new TokenGenerator(config.accountId, config.accountSecret), config.accountId, true);
   }
 
   @Named("event-server-channel")
@@ -87,6 +89,7 @@ public class PublisherModule extends AbstractModule {
     private final String publishTarget;
     private final String publishAuthority;
     private final String accountId;
+    private final String accountSecret;
     private final String queueFilePath;
   }
 }

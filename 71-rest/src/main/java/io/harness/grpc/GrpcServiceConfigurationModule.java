@@ -11,10 +11,11 @@ import com.google.inject.multibindings.Multibinder;
 
 import io.grpc.BindableService;
 import io.grpc.ServerInterceptor;
-import io.harness.grpc.auth.AuthService;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.grpc.server.GrpcServerModule;
 import io.harness.perpetualtask.grpc.PerpetualTaskServiceGrpc;
+import io.harness.security.KeySource;
+import software.wings.security.AccountKeySource;
 
 import java.util.Set;
 
@@ -27,9 +28,7 @@ public class GrpcServiceConfigurationModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    // TODO(avmohan): Remove this once [CCM-47] is done.
-    bind(AuthService.class).toProvider(() -> token -> {}).in(Singleton.class);
-
+    bind(KeySource.class).to(AccountKeySource.class).in(Singleton.class);
     Multibinder<BindableService> bindableServiceMultibinder = Multibinder.newSetBinder(binder(), BindableService.class);
     bindableServiceMultibinder.addBinding().to(PerpetualTaskServiceGrpc.class);
 
