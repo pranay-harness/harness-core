@@ -65,7 +65,7 @@ import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisionerDetails;
 import software.wings.beans.InfrastructureProvisionerDetails.InfrastructureProvisionerDetailsBuilder;
-import software.wings.beans.Log;
+import software.wings.beans.Log.Builder;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
@@ -105,6 +105,7 @@ import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -112,7 +113,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.core.StreamingOutput;
@@ -154,6 +156,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     return LimitEnforcementUtils.withLimitCheck(checker, () -> {
       populateDerivedFields(infrastructureProvisioner);
 
+      validateProvisioner(infrastructureProvisioner);
+
       InfrastructureProvisioner finalInfraProvisioner =
           wingsPersistence.saveAndGet(InfrastructureProvisioner.class, infrastructureProvisioner);
 
@@ -162,6 +166,13 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
       return finalInfraProvisioner;
     });
+  }
+
+  @VisibleForTesting
+  void validateProvisioner(InfrastructureProvisioner provisioner) {
+    if (provisioner instanceof TerraformInfrastructureProvisioner) {
+      validateTerraformProvisioner((TerraformInfrastructureProvisioner) provisioner);
+    }
   }
 
   private void populateDerivedFields(InfrastructureProvisioner infrastructureProvisioner) {
@@ -178,6 +189,9 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @ValidationGroups(Update.class)
   public InfrastructureProvisioner update(@Valid InfrastructureProvisioner infrastructureProvisioner) {
     populateDerivedFields(infrastructureProvisioner);
+
+    validateProvisioner(infrastructureProvisioner);
+
     InfrastructureProvisioner savedInfraProvisioner =
         get(infrastructureProvisioner.getAppId(), infrastructureProvisioner.getUuid());
 
@@ -419,7 +433,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
         String propertyName = property.getName();
         Object evaluatedValue = propertyNameEvaluatedMap.get(propertyName);
         if (evaluatedValue == null) {
-          throw new InvalidRequestException(String.format("Property %s not found for resolving fields", propertyName));
+          throw new InvalidRequestException(format("Property %s not found for resolving fields", propertyName));
         }
         List<NameValuePair> fields = property.getFields();
         if (evaluatedValue instanceof List) {
@@ -459,14 +473,14 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
         evaluated = evaluator.evaluate(property.getValue(), contextMap);
       } catch (Exception exception) {
         String errorMsg =
-            String.format("The infrastructure provisioner mapping %s was not resolved from the provisioner outputs",
+            format("The infrastructure provisioner mapping %s was not resolved from the provisioner outputs",
                 property.getName());
         addToExecutionLog(executionLogCallbackOptional, errorMsg);
         throw new InvalidRequestException(errorMsg, exception, USER);
       }
       if (evaluated == null) {
         String errorMsg =
-            String.format("The infrastructure provisioner mapping %s was not resolved from the provisioner outputs",
+            format("The infrastructure provisioner mapping %s was not resolved from the provisioner outputs",
                 property.getName());
         addToExecutionLog(executionLogCallbackOptional, errorMsg);
         throw new InvalidRequestException(errorMsg);
@@ -697,7 +711,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     }
     TerraformInfrastructureProvisioner terraformInfrastructureProvisioner =
         (TerraformInfrastructureProvisioner) infrastructureProvisioner;
-    validateProvisioner(terraformInfrastructureProvisioner);
+    validateTerraformProvisioner(terraformInfrastructureProvisioner);
     if (isTemplatizedProvisioner(terraformInfrastructureProvisioner)) {
       throw new WingsException(ErrorCode.INVALID_TERRAFORM_TARGETS_REQUEST);
     }
@@ -750,14 +764,30 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
         || (isNotEmpty(infrastructureProvisioner.getPath()) && infrastructureProvisioner.getPath().charAt(0) == '$');
   }
 
-  private void validateProvisioner(TerraformInfrastructureProvisioner terraformInfrastructureProvisioner) {
-    if (isEmpty(terraformInfrastructureProvisioner.getSourceRepoBranch())) {
+  private void validateTerraformProvisioner(TerraformInfrastructureProvisioner terraformProvisioner) {
+    if (isEmpty(terraformProvisioner.getSourceRepoBranch())) {
       throw new InvalidRequestException("Provisioner Branch cannot be empty");
-    } else if (terraformInfrastructureProvisioner.getPath() == null) {
+    } else if (terraformProvisioner.getPath() == null) {
       throw new InvalidRequestException("Provisioner path cannot be null");
-    } else if (isEmpty(terraformInfrastructureProvisioner.getSourceRepoSettingId())) {
+    } else if (isEmpty(terraformProvisioner.getSourceRepoSettingId())) {
       throw new InvalidRequestException("Provisioner should have a source repo");
     }
+
+    boolean areVariablesValid =
+        areKeysMongoCompliant(terraformProvisioner.getVariables(), terraformProvisioner.getBackendConfigs());
+    if (!areVariablesValid) {
+      throw new InvalidRequestException("The following characters are not allowed in terraform "
+          + "variable names: . and $");
+    }
+  }
+
+  private boolean areKeysMongoCompliant(List<NameValuePair>... variables) {
+    Predicate<String> terraformVariableNameCheckFail = value -> value.contains(".") || value.contains("$");
+    return Stream.of(variables)
+        .filter(list -> isNotEmpty(list))
+        .flatMap(Collection::stream)
+        .map(NameValuePair::getName)
+        .noneMatch(terraformVariableNameCheckFail);
   }
 
   private String normalizeScriptPath(String terraformDirectory) {
@@ -830,8 +860,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Override
   public ManagerExecutionLogCallback getManagerExecutionCallback(
       String appId, String activityId, String commandUnitName) {
-    Log.Builder logBuilder =
-        Log.Builder.aLog().withCommandUnitName(commandUnitName).withAppId(appId).withActivityId(activityId);
+    Builder logBuilder =
+        Builder.aLog().withCommandUnitName(commandUnitName).withAppId(appId).withActivityId(activityId);
     return new ManagerExecutionLogCallback(logService, logBuilder, activityId);
   }
 
@@ -866,7 +896,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
               .stream()
               .filter(expression -> !expression.getKey().equals(PhysicalInfra.hostArrayPath))
               .map(expression -> NameValuePair.builder().name(expression.getKey()).value(expression.getValue()).build())
-              .collect(Collectors.toList());
+              .collect(toList());
       hostArrayPathProperty.setFields(fields);
       properties.add(hostArrayPathProperty);
 
