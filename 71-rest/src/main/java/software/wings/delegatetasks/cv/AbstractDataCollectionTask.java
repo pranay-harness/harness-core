@@ -12,11 +12,14 @@ import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
+import software.wings.delegatetasks.DelegateCVActivityLogService;
+import software.wings.delegatetasks.DelegateCVActivityLogService.Logger;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
+import software.wings.service.intfc.security.EncryptionService;
 
 import java.lang.reflect.InvocationTargetException;
 import java.time.Duration;
@@ -29,9 +32,12 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
   @Inject private DelegateLogService delegateLogService;
   @Inject private Injector injector;
   @Inject private DataCollectorFactory dataCollectorFactory;
+  @Inject private EncryptionService encryptionService;
+  @Inject private DelegateCVActivityLogService cvActivityLogService;
   private DataCollectionInfoV2 dataCollectionInfo;
   private DataCollector<T> dataCollector;
   private DataCollectionCallback dataCollectionCallback;
+  private Logger activityLogger;
 
   public AbstractDataCollectionTask(String delegateId, DelegateTask delegateTask,
       Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
@@ -46,24 +52,32 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
   @Override
   public ResponseData run(TaskParameters parameters) {
     dataCollectionInfo = (DataCollectionInfoV2) parameters;
-    initializeDataCollector();
-    dataCollectionCallback = createDataCollectionCallback();
+    decryptIfHasEncryptableSetting(dataCollectionInfo);
     DataCollectionTaskResult taskResult = DataCollectionTaskResult.builder()
                                               .status(DataCollectionTaskStatus.SUCCESS)
                                               .stateType(dataCollectionInfo.getStateType())
                                               .build();
-    RetryPolicy<Object> retryPolicy =
-        new RetryPolicy<>()
-            .handle(Exception.class)
-            .withDelay(RETRY_SLEEP_DURATION)
-            .withMaxRetries(MAX_RETRIES)
-            .onFailedAttempt(event -> taskResult.setErrorMessage(event.getLastFailure().getMessage()))
-            .onFailure(event -> {
-              logger.error("DataCollectionException: ", event.getFailure());
-              taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-              taskResult.setErrorMessage(event.getFailure().getMessage());
-            });
     try {
+      initializeDataCollector();
+      dataCollectionCallback = createDataCollectionCallback();
+      RetryPolicy<Object> retryPolicy =
+          new RetryPolicy<>()
+              .handle(Exception.class)
+              .withDelay(RETRY_SLEEP_DURATION)
+              .withMaxRetries(MAX_RETRIES)
+              .onFailedAttempt(event -> {
+                activityLogger.warn(
+                    "[Retrying] Data collection task failed with exception: " + event.getLastFailure().getMessage());
+                taskResult.setErrorMessage(event.getLastFailure().getMessage());
+              })
+              .onFailure(event -> {
+                activityLogger.error("Data collection failed with exception: " + event.getFailure().getMessage());
+                logger.error("DataCollectionException: ", event.getFailure());
+                taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
+                taskResult.setErrorMessage(event.getFailure().getMessage());
+              });
+      activityLogger.info("Starting data collection.");
+
       Failsafe.with(retryPolicy).run(() -> {
         dataCollector.init(dataCollectionCallback, (T) dataCollectionInfo);
         collectAndSaveData((T) dataCollectionInfo);
@@ -74,10 +88,22 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
     }
 
     logger.info("Data collection task completed {}", dataCollectionInfo.getStateExecutionId());
+    activityLogger.info("Finished data collection with status: " + taskResult.getStatus());
     return taskResult;
   }
 
+  private void decryptIfHasEncryptableSetting(DataCollectionInfoV2 dataCollectionInfo) {
+    if (dataCollectionInfo.getEncryptableSetting().isPresent()) {
+      encryptionService.decrypt(
+          dataCollectionInfo.getEncryptableSetting().get(), dataCollectionInfo.getEncryptedDataDetails());
+    }
+  }
+
   private void initializeDataCollector() {
+    activityLogger = cvActivityLogService.getLogger(dataCollectionInfo.getAccountId(),
+        dataCollectionInfo.getCvConfigId(), dataCollectionInfo.getEndTime().toEpochMilli(),
+        dataCollectionInfo.getStateExecutionId(), " Time range %t to %t",
+        dataCollectionInfo.getStartTime().toEpochMilli(), dataCollectionInfo.getEndTime().toEpochMilli() + 1);
     try {
       this.dataCollector =
           (DataCollector<T>) dataCollectorFactory.newInstance(dataCollectionInfo.getDataCollectorImplClass());
@@ -97,6 +123,11 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
       @Override
       public void saveThirdPartyApiCallLog(ThirdPartyApiCallLog thirdPartyApiCallLog) {
         AbstractDataCollectionTask.this.saveThirdPartyApiCallLog(thirdPartyApiCallLog);
+      }
+
+      @Override
+      public Logger getActivityLogger() {
+        return activityLogger;
       }
     };
   }

@@ -3,10 +3,12 @@ package software.wings.service.impl.splunk;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.EncryptionConfig;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.cv.DataCollector;
@@ -17,6 +19,7 @@ import software.wings.sm.StateType;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Data
@@ -54,5 +57,20 @@ public class SplunkDataCollectionInfoV2 extends LogDataCollectionInfoV2 implemen
   @Override
   public Class<? extends DataCollector<?>> getDataCollectorImplClass() {
     return SplunkDataCollector.class;
+  }
+
+  @Override
+  public Optional<String> getUrlForValidation() {
+    return Optional.of(splunkConfig.getSplunkUrl());
+  }
+
+  @Override
+  public Optional<EncryptionConfig> getEncryptionConfig() {
+    return Optional.of(getEncryptedDataDetails().get(0).getEncryptionConfig());
+  }
+
+  @Override
+  public Optional<EncryptableSetting> getEncryptableSetting() {
+    return Optional.of(splunkConfig);
   }
 }

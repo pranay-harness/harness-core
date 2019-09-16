@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CVTaskService {
-  CVTask enqueueTask(String accountId, String cvConfigId, long startMilliSec, long endMilliSec);
-
   void saveCVTask(CVTask cvTask);
 
   void enqueueSequentialTasks(List<CVTask> cvTasks);

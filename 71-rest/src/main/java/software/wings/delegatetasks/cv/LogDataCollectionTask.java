@@ -33,11 +33,14 @@ public class LogDataCollectionTask<T extends LogDataCollectionInfoV2> extends Ab
     this.logDataCollector = (LogDataCollector<T>) getDataCollector();
     final List<LogElement> logElements = new ArrayList<>();
     final List<Callable<List<LogElement>>> callables = new ArrayList<>();
-    for (String host : dataCollectionInfo.getHosts()) {
-      addHeartbeats(host, dataCollectionInfo, logElements);
-      callables.add(()
-                        -> logDataCollector.fetchLogs(
-                            host.equals(VerificationConstants.DUMMY_HOST_NAME) ? Optional.empty() : Optional.of(host)));
+    if (dataCollectionInfo.getHosts().isEmpty()) {
+      addHeartbeats(Optional.empty(), dataCollectionInfo, logElements);
+      callables.add(() -> logDataCollector.fetchLogs(Optional.empty()));
+    } else {
+      for (String host : dataCollectionInfo.getHosts()) {
+        addHeartbeats(Optional.of(host), dataCollectionInfo, logElements);
+        callables.add(() -> logDataCollector.fetchLogs(Optional.of(host)));
+      }
     }
     List<Optional<List<LogElement>>> results = execute(callables);
     results.forEach(result -> {
@@ -75,19 +78,23 @@ public class LogDataCollectionTask<T extends LogDataCollectionInfoV2> extends Ab
   }
 
   protected void addHeartbeats(
-      String host, LogDataCollectionInfoV2 logDataCollectionInfo, List<LogElement> logElements) {
+      Optional<String> host, LogDataCollectionInfoV2 logDataCollectionInfo, List<LogElement> logElements) {
     for (long heartbeatMin = TimeUnit.MILLISECONDS.toMinutes(logDataCollectionInfo.getStartTime().toEpochMilli());
          heartbeatMin <= TimeUnit.MILLISECONDS.toMinutes(logDataCollectionInfo.getEndTime().toEpochMilli());
          heartbeatMin++) {
-      logElements.add(LogElement.builder()
-                          .query(logDataCollectionInfo.getQuery())
-                          .clusterLabel(String.valueOf(ClusterLevel.H2.getLevel()))
-                          .host(host)
-                          .count(0)
-                          .logMessage("")
-                          .timeStamp(TimeUnit.MINUTES.toMillis(heartbeatMin))
-                          .logCollectionMinute((int) heartbeatMin)
-                          .build());
+      logElements.add(
+          LogElement.builder()
+              .query(logDataCollectionInfo.getQuery())
+              .clusterLabel(String.valueOf(ClusterLevel.H2.getLevel()))
+              .host(host.isPresent()
+                      ? host.get()
+                      : VerificationConstants.DUMMY_HOST_NAME) // TODO: we should get rid of this requirement and
+                                                               // everything should work without setting the host.
+              .count(0)
+              .logMessage("")
+              .timeStamp(TimeUnit.MINUTES.toMillis(heartbeatMin))
+              .logCollectionMinute((int) heartbeatMin)
+              .build());
     }
   }
 }

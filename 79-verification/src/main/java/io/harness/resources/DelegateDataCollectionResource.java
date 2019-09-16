@@ -16,9 +16,12 @@ import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
+import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.sm.StateType;
+import software.wings.verification.CVActivityLog;
 
 import java.util.List;
+import javax.validation.Valid;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -32,7 +35,7 @@ import javax.ws.rs.QueryParam;
 public class DelegateDataCollectionResource {
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Inject private LogAnalysisService analysisService;
-
+  @Inject private CVActivityLogService cvActivityLogService;
   @POST
   @Path("/save-metrics")
   @Timed
@@ -58,5 +61,17 @@ public class DelegateDataCollectionResource {
       @QueryParam("stateType") StateType stateType, List<LogElement> logData) {
     return new RestResponse<>(analysisService.saveLogData(stateType, accountId, appId, cvConfigId, stateExecutionId,
         workflowId, workflowExecutionId, serviceId, clusterLevel, delegateTaskId, logData));
+  }
+
+  @Produces({"application/json", "application/v1+json"})
+  @POST
+  @Path(VerificationConstants.SAVE_CV_ACTIVITY_LOGS_PATH)
+  @Timed
+  @DelegateAuth
+  @ExceptionMetered
+  public RestResponse<Void> saveActivityLogs(
+      @QueryParam("accountId") @Valid final String accountId, List<CVActivityLog> cvActivityLogs) {
+    cvActivityLogService.saveActivityLogs(cvActivityLogs);
+    return new RestResponse<>(null);
   }
 }
