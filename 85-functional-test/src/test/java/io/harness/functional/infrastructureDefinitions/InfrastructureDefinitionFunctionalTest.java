@@ -161,7 +161,7 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
   @Owner(emails = OwnerRule.YOGESH_CHAUHAN)
   @Category(FunctionalTests.class)
   @Ignore("Enable once feature flag is enabled")
-  public void shouldCreateandRunGcpK8sTemplatizedWorkflow() {
+  public void shouldCreateAndRunGcpK8sTemplatizedWorkflow() {
     service = serviceGenerator.ensureK8sTest(seed, owners, "k8s-service");
     infrastructureDefinition = infrastructureDefinitionGenerator.ensurePredefined(
         seed, owners, InfrastructureType.GCP_KUBERNETES_ENGINE, bearerToken);

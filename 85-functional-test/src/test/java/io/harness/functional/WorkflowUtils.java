@@ -3,11 +3,13 @@ package io.harness.functional;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.BlueGreenOrchestrationWorkflow.BlueGreenOrchestrationWorkflowBuilder.aBlueGreenOrchestrationWorkflow;
+import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
+import static software.wings.beans.PhaseStepType.PREPARE_STEPS;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.RollingOrchestrationWorkflow.RollingOrchestrationWorkflowBuilder.aRollingOrchestrationWorkflow;
@@ -28,6 +30,7 @@ import io.harness.beans.WorkflowType;
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.StringUtils;
 import org.awaitility.Awaitility;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.api.DeploymentType;
 import software.wings.beans.EntityType;
 import software.wings.beans.GraphNode;
@@ -326,6 +329,37 @@ public class WorkflowUtils {
                             .orchestrationWorkflow(aBasicOrchestrationWorkflow().build())
                             .build();
     return workflow;
+  }
+
+  // Unique name of the workflow is ensured here
+  public Workflow createBuildWorkflow(@NotEmpty String name, String appId, @NotEmpty List<String> artifactStreamIds) {
+    List<PhaseStep> phaseSteps = new ArrayList<>();
+    List<GraphNode> steps = new ArrayList<>();
+    for (String artifactStreamId : artifactStreamIds) {
+      steps.add(
+          GraphNode.builder()
+              .name("collect-artifact-" + artifactStreamId)
+              .type(StateType.ARTIFACT_COLLECTION.toString())
+              .properties(ImmutableMap.<String, Object>builder().put("artifactStreamId", artifactStreamId).build())
+              .build());
+    }
+    phaseSteps.add(aPhaseStep(PhaseStepType.PREPARE_STEPS, PREPARE_STEPS.toString()).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.COLLECT_ARTIFACT, PhaseStepType.COLLECT_ARTIFACT.toString())
+                       .addAllSteps(steps)
+                       .build());
+    phaseSteps.add(aPhaseStep(WRAP_UP, WRAP_UP_CONSTANT).build());
+
+    Workflow buildWorkflow =
+        aWorkflow()
+            .name(name + System.currentTimeMillis())
+            .appId(appId)
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(
+                aBuildOrchestrationWorkflow()
+                    .withWorkflowPhases(Arrays.asList(aWorkflowPhase().phaseSteps(phaseSteps).build()))
+                    .build())
+            .build();
+    return buildWorkflow;
   }
 
   private TemplateExpression getTemplateExpressionsForEnv() {
