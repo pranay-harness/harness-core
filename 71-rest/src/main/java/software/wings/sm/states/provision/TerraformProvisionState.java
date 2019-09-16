@@ -8,7 +8,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
-import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
@@ -94,7 +93,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -370,18 +368,9 @@ public abstract class TerraformProvisionState extends State {
     List<NameValuePair> validVariables = new ArrayList<>();
     if (isNotEmpty(workflowVariables)) {
       workflowVariables.stream()
-          .filter(variable -> {
-            if (!variableTypesMap.containsKey(variable.getName())) {
-              return false;
-            }
-
-            if (!Objects.equals(variableTypesMap.get(variable.getName()), variable.getValueType())) {
-              throw new InvalidRequestException(format(
-                  "The type of variable %s has changed. Please correct it in the workflow step.", variable.getName()));
-            }
-            return true;
-          })
-          .forEach(variable -> validVariables.add(variable));
+          .distinct()
+          .filter(variable -> variableTypesMap.containsKey(variable.getName()))
+          .forEach(validVariables::add);
     }
 
     return validVariables;
