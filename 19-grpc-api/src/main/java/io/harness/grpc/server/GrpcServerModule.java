@@ -30,7 +30,7 @@ public class GrpcServerModule extends AbstractModule {
   protected void configure() {
     bind(HealthStatusManager.class).in(Singleton.class);
     Multibinder<BindableService> bindableServiceMultibinder = Multibinder.newSetBinder(binder(), BindableService.class);
-    bindableServiceMultibinder.addBinding().toProvider(() -> ProtoReflectionService.newInstance());
+    bindableServiceMultibinder.addBinding().toProvider(ProtoReflectionService::newInstance).in(Singleton.class);
     Provider<HealthStatusManager> healthStatusManagerProvider = getProvider(HealthStatusManager.class);
     bindableServiceMultibinder.addBinding().toProvider(() -> healthStatusManagerProvider.get().getHealthService());
 

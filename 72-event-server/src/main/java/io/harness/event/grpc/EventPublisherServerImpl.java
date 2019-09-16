@@ -3,6 +3,7 @@ package io.harness.event.grpc;
 import static java.util.Objects.requireNonNull;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.grpc.Context;
 import io.grpc.Status;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
+@Singleton
 public class EventPublisherServerImpl extends EventPublisherGrpc.EventPublisherImplBase {
   private final HPersistence hPersistence;
 
