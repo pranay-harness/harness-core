@@ -307,7 +307,7 @@ public class InfrastructureDefinitionServiceTest extends WingsBaseTest {
         (InfrastructureDefinitionServiceImpl) this.infrastructureDefinitionService;
     GoogleKubernetesEngine googleKubernetesEngine = GoogleKubernetesEngine.builder().build();
     Map<String, Object> allFields = infrastructureDefinitionService.getAllFields(googleKubernetesEngine);
-    assertThat(allFields.size() == 5).isTrue();
+    assertThat(allFields).hasSize(5);
     googleKubernetesEngine.setReleaseName("rel");
     allFields = infrastructureDefinitionService.getAllFields(googleKubernetesEngine);
     assertThat(allFields.get(GoogleKubernetesEngineKeys.releaseName).equals("rel")).isTrue();

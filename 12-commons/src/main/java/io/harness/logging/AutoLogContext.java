@@ -4,14 +4,15 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.slf4j.MDC.MDCCloseable;
 
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @Slf4j
 public class AutoLogContext implements AutoCloseable {
-  private Set<String> keys = new HashSet<>();
+  private List<MDCCloseable> handles;
 
   protected AutoLogContext(Map<String, String> values) {
     for (Map.Entry<String, String> entry : values.entrySet()) {
@@ -33,16 +34,16 @@ public class AutoLogContext implements AutoCloseable {
       // initializer is hit.
       return;
     }
-    keys.add(key);
-    MDC.put(key, value);
+    if (handles == null) {
+      handles = new ArrayList<>();
+    }
+    handles.add(MDC.putCloseable(key, value));
   }
 
   @Override
   public void close() {
-    if (isNotEmpty(keys)) {
-      for (String key : keys) {
-        MDC.remove(key);
-      }
+    if (isNotEmpty(handles)) {
+      handles.forEach(handle -> handle.close());
     }
   }
 }

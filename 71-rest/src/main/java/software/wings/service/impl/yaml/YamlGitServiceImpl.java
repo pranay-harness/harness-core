@@ -979,7 +979,6 @@ public class YamlGitServiceImpl implements YamlGitService {
       try {
         fullSyncForEntireAccount(accountId);
       } catch (WingsException ex) {
-        ex.addContext(Account.class, accountId);
         ExceptionLogger.logProcessedMessages(ex, MANAGER, logger);
       } catch (Exception e) {
         logger.error(format("Exception while performing async full git sync for account %s", accountId), e);
