@@ -1,9 +1,10 @@
 package software.wings.service.impl.yaml.gitdiff;
 
+import static io.harness.manage.GlobalContextManager.ensureGlobalContextGuard;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.manage.GlobalContextManager;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.audit.AuditHeader;
@@ -13,7 +14,6 @@ import software.wings.service.impl.yaml.gitdiff.gitaudit.YamlAuditRecordGenerati
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.yaml.YamlGitService;
 
-import java.io.IOException;
 import java.util.Map;
 
 @Singleton
@@ -42,7 +42,7 @@ public class GitChangeSetProcesser {
 
     Map<String, ChangeWithErrorMsg> changeWithErrorMsgs = null;
 
-    try (GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
+    try (GlobalContextGuard guard = ensureGlobalContextGuard()) {
       // changeWithErrorMsgs is a map of <YamlPath, ErrorMessage> for failed yaml changes
       changeWithErrorMsgs = gitChangesToEntityConverter.ingestGitYamlChangs(accountId, gitDiffResult);
 
@@ -51,8 +51,6 @@ public class GitChangeSetProcesser {
       // 2. Set status code 200 / 207 (multi-status code (indicating success and failure for some paths)
       // 3. Set detailed message
       gitChangeAuditRecordHandler.finalizeAuditRecord(accountId, gitDiffResult, changeWithErrorMsgs);
-    } catch (IOException e) {
-      logger.warn("Error occured in  in GlobalContextGuard..." + e);
     }
   }
 }

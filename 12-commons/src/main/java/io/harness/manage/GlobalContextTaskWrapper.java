@@ -6,8 +6,6 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
-
 @Value
 @Builder
 @Slf4j
@@ -24,8 +22,6 @@ public class GlobalContextTaskWrapper implements Runnable {
   public void run() {
     try (GlobalContextGuard guard = new GlobalContextGuard(context)) {
       task.run();
-    } catch (IOException e) {
-      logger.error("Something went wrong in task execution.. ALERT", e);
     }
   }
 }

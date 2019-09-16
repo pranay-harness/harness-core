@@ -1,10 +1,12 @@
 package io.harness.manage;
 
+import static io.harness.manage.GlobalContextManager.ensureGlobalContextGuard;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.context.GlobalContext;
+import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -14,6 +16,18 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ManagedExecutorServiceTest extends CategoryTest {
+  @Test
+  @Category(UnitTests.class)
+  public void testEnsureGlobalContext() {
+    try (GlobalContextGuard contextGuard1 = ensureGlobalContextGuard()) {
+      try (GlobalContextGuard contextGuard2 = ensureGlobalContextGuard()) {
+        assertThat(GlobalContextManager.isAvailable()).isTrue();
+      }
+      assertThat(GlobalContextManager.isAvailable()).isTrue();
+    }
+    assertThat(GlobalContextManager.isAvailable()).isFalse();
+  }
+
   @Test
   @Category(UnitTests.class)
   public void testSubmit_Runnable() throws Exception {

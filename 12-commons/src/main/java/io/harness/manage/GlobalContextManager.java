@@ -5,36 +5,33 @@ import io.harness.context.GlobalContextData;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Closeable;
-import java.io.IOException;
 
 @Slf4j
 public class GlobalContextManager {
   private static final ThreadLocal<GlobalContext> contextThreadLocal = new ThreadLocal<>();
+
   public static class GlobalContextGuard implements Closeable {
-    GlobalContextGuard(GlobalContext globalContext) {
-      set(globalContext);
+    private boolean unset;
+    protected GlobalContextGuard(GlobalContext globalContext) {
+      if (unset = globalContext != null) {
+        set(globalContext);
+      }
     }
 
     @Override
-    public void close() throws IOException {
-      unset();
+    public void close() {
+      if (unset) {
+        unset();
+      }
     }
-  }
-
-  public static GlobalContextGuard globalContextGuard(GlobalContextData globalContextData) {
-    GlobalContext globalContext = getGlobalContext();
-    if (globalContext == null) {
-      globalContext = new GlobalContext();
-    }
-    globalContext.setGlobalContextRecord(globalContextData);
-    return new GlobalContextGuard(globalContext);
   }
 
   public static GlobalContextGuard ensureGlobalContextGuard() {
-    GlobalContext globalContext = getGlobalContext();
-    if (globalContext == null) {
-      globalContext = new GlobalContext();
+    GlobalContext globalContext = contextThreadLocal.get();
+    if (globalContext != null) {
+      return new GlobalContextGuard(null);
     }
+    globalContext = new GlobalContext();
     return new GlobalContextGuard(globalContext);
   }
 
@@ -76,6 +73,10 @@ public class GlobalContextManager {
     }
 
     globalContext.upsertGlobalContextRecord(data);
+  }
+
+  public static boolean isAvailable() {
+    return contextThreadLocal.get() != null;
   }
 
   public static GlobalContext getGlobalContext() {

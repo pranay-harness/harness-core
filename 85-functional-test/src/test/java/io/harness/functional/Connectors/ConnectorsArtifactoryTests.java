@@ -68,7 +68,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = MEENAKSHI, resent = false)
+  @Owner(emails = MEENAKSHI, resent = false, intermittent = true)
   @Category(FunctionalTests.class)
   public void runJenkinsConnectorCRUDTests() {
     retry.executeWithRetry(this ::TC4_createJenkinsConnector, booleanMatcher, true);
@@ -80,7 +80,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = MEENAKSHI, resent = false)
+  @Owner(emails = MEENAKSHI, resent = false, intermittent = true)
   @Category(FunctionalTests.class)
   public void runDockerConnectorCRUDTests() {
     retry.executeWithRetry(this ::TC7_createDockerConnector, booleanMatcher, true);
