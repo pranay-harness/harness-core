@@ -29,6 +29,7 @@ import io.harness.beans.SortOrder.OrderType;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.VerificationOperationException;
 import io.harness.exception.WingsException;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.persistence.HIterator;
@@ -471,11 +472,16 @@ public class AnalysisServiceImpl implements AnalysisService {
     }
     String jiraLink = jiraExecutionData.getIssueUrl();
 
-    // create a feedback for this config/time as ADD_TO_BASELINE
-    cvJiraParameters.getCvFeedbackRecord().setPriority(
-        FeedbackPriority.valueOf(cvJiraParameters.getJiraTaskParameters().getPriority()));
-    cvJiraParameters.getCvFeedbackRecord().setJiraLink(jiraLink);
-    addToBaseline(accountId, cvConfigId, stateExecutionId, cvJiraParameters.getCvFeedbackRecord());
+    if (isEmpty(cvJiraParameters.getCvFeedbackRecord().getUuid())) {
+      logger.error(
+          "Creating a jira before giving user feedback or priority. This is not allowed. cvCOnfigId: {}", cvConfigId);
+      throw new VerificationOperationException(
+          ErrorCode.DEFAULT_ERROR_CODE, "Cannot create jira without a user feedback");
+    }
+    CVFeedbackRecord feedbackRecord =
+        dataStoreService.getEntity(CVFeedbackRecord.class, cvJiraParameters.getCvFeedbackRecord().getUuid());
+    feedbackRecord.setJiraLink(jiraLink);
+    dataStoreService.save(CVFeedbackRecord.class, Arrays.asList(feedbackRecord), false);
     return jiraLink;
   }
 
@@ -863,6 +869,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                                                      .logMLFeedbackId(record.getUuid())
                                                      .jiraLink(record.getJiraLink())
                                                      .priority(record.getPriority())
+                                                     .feedbackNote(record.getFeedbackNote())
                                                      .lastUpdatedAt(record.getLastUpdatedAt())
                                                      .lastUpdatedBy(record.getLastUpdatedBy())
                                                      .build();

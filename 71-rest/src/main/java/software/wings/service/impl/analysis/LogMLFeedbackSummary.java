@@ -13,6 +13,7 @@ public class LogMLFeedbackSummary {
   private FeedbackPriority priority;
   private String logMLFeedbackId;
   private String jiraLink;
+  private String feedbackNote;
   private EmbeddedUser lastUpdatedBy;
   private long lastUpdatedAt;
 }

@@ -70,6 +70,8 @@ public class CVFeedbackRecord implements GoogleDataStoreAware {
 
   private FeedbackAction actionTaken;
 
+  private String feedbackNote;
+
   private boolean isDuplicate;
 
   private long createdAt;
@@ -129,6 +131,7 @@ public class CVFeedbackRecord implements GoogleDataStoreAware {
     addFieldIfNotEmpty(recordBuilder, CVFeedbackRecordKeys.createdBy, JsonUtils.asJson(createdBy), true);
     addFieldIfNotEmpty(recordBuilder, CVFeedbackRecordKeys.lastUpdatedBy, JsonUtils.asJson(lastUpdatedBy), true);
     addFieldIfNotEmpty(recordBuilder, CVFeedbackRecordKeys.isDuplicate, isDuplicate, true);
+    addFieldIfNotEmpty(recordBuilder, CVFeedbackRecordKeys.feedbackNote, feedbackNote, true);
     return recordBuilder.build();
   }
 
@@ -154,6 +157,7 @@ public class CVFeedbackRecord implements GoogleDataStoreAware {
             .supervisedLabel(readString(entity, CVFeedbackRecordKeys.supervisedLabel))
             .accountId(readString(entity, CVFeedbackRecordKeys.accountId))
             .isDuplicate(readBoolean(entity, CVFeedbackRecordKeys.isDuplicate))
+            .feedbackNote(readString(entity, CVFeedbackRecordKeys.feedbackNote))
             .build();
 
     String createdBy = readString(entity, CVFeedbackRecordKeys.createdBy);
