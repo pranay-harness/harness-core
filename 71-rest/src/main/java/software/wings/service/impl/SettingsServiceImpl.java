@@ -23,19 +23,6 @@ import static software.wings.beans.SettingAttribute.ENV_ID_KEY;
 import static software.wings.beans.SettingAttribute.NAME_KEY;
 import static software.wings.beans.SettingAttribute.VALUE_TYPE_KEY;
 import static software.wings.beans.StringValue.Builder.aStringValue;
-import static software.wings.beans.artifact.ArtifactStreamType.ACR;
-import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
-import static software.wings.beans.artifact.ArtifactStreamType.AMI;
-import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
-import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
-import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
-import static software.wings.beans.artifact.ArtifactStreamType.ECR;
-import static software.wings.beans.artifact.ArtifactStreamType.GCR;
-import static software.wings.beans.artifact.ArtifactStreamType.GCS;
-import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
-import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
-import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
-import static software.wings.beans.artifact.ArtifactStreamType.SMB;
 import static software.wings.common.Constants.BACKUP_PATH;
 import static software.wings.common.Constants.DEFAULT_BACKUP_PATH;
 import static software.wings.common.Constants.DEFAULT_RUNTIME_PATH;
@@ -44,6 +31,7 @@ import static software.wings.common.Constants.DEFAULT_WINDOWS_RUNTIME_PATH;
 import static software.wings.common.Constants.RUNTIME_PATH;
 import static software.wings.common.Constants.STAGING_PATH;
 import static software.wings.common.Constants.WINDOWS_RUNTIME_PATH;
+import static software.wings.service.impl.ArtifactStreamServiceImpl.addFilterToArtifactStreamQuery;
 import static software.wings.service.intfc.security.SecretManager.ENCRYPTED_FIELD_MASK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AMAZON_S3_HELM_REPO;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCS_HELM_REPO;
@@ -77,8 +65,8 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.validation.Create;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.Nullable;
 import org.mongodb.morphia.annotations.Transient;
+import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.annotation.EncryptableSetting;
@@ -103,7 +91,6 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.beans.artifact.ArtifactStreamSummary;
-import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -139,8 +126,6 @@ import software.wings.settings.UsageRestrictions;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.CacheManager;
 import software.wings.utils.CryptoUtils;
-import software.wings.utils.RepositoryFormat;
-import software.wings.utils.RepositoryType;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -160,10 +145,6 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class SettingsServiceImpl implements SettingsService {
-  // restrict to docker only artifact streams
-  private static final List<String> dockerOnlyArtifactStreams = Collections.unmodifiableList(
-      asList(ArtifactStreamType.DOCKER.name(), ECR.name(), GCR.name(), ACR.name(), CUSTOM.name()));
-
   @Inject private Map<Class<? extends SettingValue>, Class<? extends BuildService>> buildServiceMap;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private ServiceClassLocator serviceLocator;
@@ -243,12 +224,16 @@ public class SettingsServiceImpl implements SettingsService {
       }
 
       List<SettingAttribute> resp;
-      int total = filteredSettingAttributes.size();
-      if (total <= offset) {
-        resp = new ArrayList<>();
+      if (isEmpty(filteredSettingAttributes)) {
+        resp = Collections.emptyList();
       } else {
-        int endIdx = Math.min(offset + limit, total);
-        resp = filteredSettingAttributes.subList(offset, endIdx);
+        int total = filteredSettingAttributes.size();
+        if (total <= offset) {
+          resp = Collections.emptyList();
+        } else {
+          int endIdx = Math.min(offset + limit, total);
+          resp = filteredSettingAttributes.subList(offset, endIdx);
+        }
       }
 
       return aPageResponse()
@@ -262,99 +247,44 @@ public class SettingsServiceImpl implements SettingsService {
     }
   }
 
-  @Nullable
   private List<SettingAttribute> filterSettingsAndArtifactStreamsWithCount(String accountId,
       String artifactStreamSearchString, int maxArtifactStreams, ArtifactType artifactType,
       List<SettingAttribute> filteredSettingAttributes) {
     List<SettingAttribute> newSettingAttributes = new ArrayList<>();
-    String[] settingIds = filteredSettingAttributes.stream().map(SettingAttribute::getUuid).toArray(String[] ::new);
-    for (String settingId : settingIds) {
-      SettingAttribute settingAttribute = get(settingId);
-      if (settingAttribute == null) {
-        continue;
-      }
-
+    for (SettingAttribute settingAttribute : filteredSettingAttributes) {
       Query<ArtifactStream> artifactStreamQuery = wingsPersistence.createQuery(ArtifactStream.class)
                                                       .disableValidation()
-                                                      .filter(ArtifactStreamKeys.settingId, settingId)
+                                                      .filter(ArtifactStreamKeys.settingId, settingAttribute.getUuid())
                                                       .filter(ArtifactStreamKeys.accountId, accountId)
                                                       .project(ArtifactStreamKeys.settingId, true)
                                                       .project(ArtifactStreamKeys.name, true)
                                                       .project(ArtifactStreamKeys.sourceName, true);
       if (isNotEmpty(artifactStreamSearchString)) {
-        artifactStreamQuery.field(ArtifactStreamKeys.name).contains(artifactStreamSearchString);
+        artifactStreamQuery.field(ArtifactStreamKeys.name).containsIgnoreCase(artifactStreamSearchString);
       }
 
-      artifactStreamQuery.limit(maxArtifactStreams);
-
-      addFilterToArtifactStreamPageRequest(artifactType, artifactStreamQuery);
+      addFilterToArtifactStreamQuery(artifactType, artifactStreamQuery);
       long totalArtifactStreamCount = artifactStreamQuery.count();
       if (totalArtifactStreamCount == 0L) {
         continue;
       }
-      List<ArtifactStream> artifactStreams = artifactStreamQuery.asList();
-      if (isNotEmpty(artifactStreams)) {
-        List<ArtifactStreamSummary> artifactStreamSummaries = new ArrayList<>();
-        artifactStreams.forEach(artifactStream -> {
-          Artifact lastCollectedArtifact = artifactService.fetchLastCollectedArtifact(artifactStream);
-          ArtifactStreamSummary artifactStreamSummary =
-              ArtifactStreamSummary.prepareSummaryFromArtifactStream(artifactStream, lastCollectedArtifact);
-          artifactStreamSummaries.add(artifactStreamSummary);
-        });
-        settingAttribute.setArtifactStreamCount(totalArtifactStreamCount);
-        settingAttribute.setArtifactStreams(artifactStreamSummaries);
-        newSettingAttributes.add(settingAttribute);
+      List<ArtifactStream> artifactStreams = artifactStreamQuery.asList(new FindOptions().limit(maxArtifactStreams));
+      if (isEmpty(artifactStreams)) {
+        continue;
       }
+
+      List<ArtifactStreamSummary> artifactStreamSummaries = new ArrayList<>();
+      artifactStreams.forEach(artifactStream -> {
+        Artifact lastCollectedArtifact = artifactService.fetchLastCollectedArtifact(artifactStream);
+        ArtifactStreamSummary artifactStreamSummary =
+            ArtifactStreamSummary.prepareSummaryFromArtifactStream(artifactStream, lastCollectedArtifact);
+        artifactStreamSummaries.add(artifactStreamSummary);
+      });
+      settingAttribute.setArtifactStreamCount(totalArtifactStreamCount);
+      settingAttribute.setArtifactStreams(artifactStreamSummaries);
+      newSettingAttributes.add(settingAttribute);
     }
     return newSettingAttributes;
-  }
-
-  private void addFilterToArtifactStreamPageRequest(
-      ArtifactType artifactType, Query<ArtifactStream> artifactStreamQuery) {
-    if (artifactType != null) {
-      switch (artifactType) {
-        case DOCKER: // Deployment type: K8S, ECS, Helm
-          artifactStreamQuery.or(
-              artifactStreamQuery.criteria(ArtifactStreamKeys.artifactStreamType).in(dockerOnlyArtifactStreams),
-              artifactStreamQuery.criteria(ArtifactStreamKeys.repositoryFormat).equal(RepositoryFormat.docker.name()),
-              artifactStreamQuery.criteria(ArtifactStreamKeys.repositoryType).equal(RepositoryType.docker.name()));
-          break;
-        case AWS_LAMBDA:
-          artifactStreamQuery.criteria(ArtifactStreamKeys.artifactStreamType)
-              .in(asList(AMAZON_S3.name(), CUSTOM.name())); // TODO: verify this
-          break;
-        case AMI:
-          artifactStreamQuery.criteria(ArtifactStreamKeys.artifactStreamType).equal(AMI.name());
-          break;
-        case AWS_CODEDEPLOY: // Deployment Type: AWS_CODEDEPLOY,
-        case PCF: // Deployment Type: PCF,
-        case WAR: // Deployment type: ssh
-        case JAR:
-        case TAR:
-        case RPM:
-        case ZIP:
-        case IIS: // Deployment type: WinRM
-        case IIS_APP:
-        case IIS_VirtualDirectory:
-          artifactStreamQuery.and(
-              artifactStreamQuery.criteria(ArtifactStreamKeys.artifactStreamType)
-                  .in(asList(JENKINS.name(), BAMBOO.name(), GCS.name(), NEXUS.name(), ARTIFACTORY.name(),
-                      AMAZON_S3.name(), SMB.name(), AMI.name(), SFTP.name(), CUSTOM.name())),
-              artifactStreamQuery.criteria(ArtifactStreamKeys.repositoryFormat)
-                  .notEqual(RepositoryFormat.docker.name()),
-              artifactStreamQuery.criteria(ArtifactStreamKeys.repositoryType)
-                  .notEqual(RepositoryType.docker.name())); // TODO: verify this
-          break;
-        case OTHER:
-          artifactStreamQuery.criteria(ArtifactStreamKeys.artifactStreamType)
-              .in(asList(ArtifactStreamType.DOCKER.name(), ECR.name(), GCR.name(), ACR.name(), JENKINS.name(),
-                  BAMBOO.name(), GCS.name(), NEXUS.name(), ARTIFACTORY.name(), AMAZON_S3.name(), SMB.name(), AMI.name(),
-                  SFTP.name(), CUSTOM.name()));
-          break;
-        default:
-          throw new WingsException("Unsupported artifact type");
-      }
-    }
   }
 
   @Override
@@ -658,7 +588,6 @@ public class SettingsServiceImpl implements SettingsService {
   /* (non-Javadoc)
    * @see software.wings.service.intfc.SettingsService#get(java.lang.String, java.lang.String)
    */
-
   @Override
   public SettingAttribute get(String appId, String varId) {
     return get(appId, GLOBAL_ENV_ID, varId);
@@ -676,7 +605,6 @@ public class SettingsServiceImpl implements SettingsService {
   /* (non-Javadoc)
    * @see software.wings.service.intfc.SettingsService#get(java.lang.String)
    */
-
   @Override
   public SettingAttribute get(String varId) {
     SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, varId);

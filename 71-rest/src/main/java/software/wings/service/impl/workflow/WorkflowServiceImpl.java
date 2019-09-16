@@ -2616,7 +2616,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
     boolean isBuildWorkflow = BUILD.equals(canaryOrchestrationWorkflow.getOrchestrationWorkflowType());
 
-    // map of serviceId to artifact variables used in the workflow
+    // Map of serviceId to artifact variables used in the workflow.
     Map<String, Set<String>> serviceArtifactVariableNamesMap = new HashMap<>();
 
     // Process PreDeploymentSteps.
