@@ -1,4 +1,4 @@
-package software.wings.service;
+package software.wings.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -7,12 +7,15 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_INSTANCE_FILTER;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.inject.Inject;
 
@@ -22,6 +25,7 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import org.apache.commons.lang3.StringUtils;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -41,10 +45,12 @@ import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.InfrastructureProvisioner;
+import software.wings.beans.NameValuePair;
+import software.wings.beans.ServiceVariable.Type;
+import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
-import software.wings.service.impl.InfrastructureProvisionerServiceImpl;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
@@ -53,6 +59,7 @@ import software.wings.sm.ExecutionContext;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -215,5 +222,117 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
             -> infrastructureProvisionerService.getCFTemplateParamKeys("TEMPLATE_URL", defaultString, defaultString, "",
                 defaultString, defaultString, defaultString, defaultString, defaultString, true))
         .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldValidateInfrastructureProvisioner() {
+    TerraformInfrastructureProvisioner terraformProvisioner = TerraformInfrastructureProvisioner.builder()
+                                                                  .accountId(ACCOUNT_ID)
+                                                                  .appId(APP_ID)
+                                                                  .name("tf-test")
+                                                                  .sourceRepoBranch("master")
+                                                                  .path("module/main.tf")
+                                                                  .sourceRepoSettingId(SETTING_ID)
+                                                                  .build();
+    InfrastructureProvisionerServiceImpl provisionerService = spy(InfrastructureProvisionerServiceImpl.class);
+    provisionerService.validateProvisioner(terraformProvisioner);
+
+    shouldValidateRepoBranch(terraformProvisioner, provisionerService);
+    provisionerService.validateProvisioner(terraformProvisioner);
+
+    shouldValidatePath(terraformProvisioner, provisionerService);
+    provisionerService.validateProvisioner(terraformProvisioner);
+
+    shouldValidateSourceRepo(terraformProvisioner, provisionerService);
+    provisionerService.validateProvisioner(terraformProvisioner);
+
+    shouldVariablesValidation(terraformProvisioner, provisionerService);
+    provisionerService.validateProvisioner(terraformProvisioner);
+
+    shouldBackendConfigValidation(terraformProvisioner, provisionerService);
+    provisionerService.validateProvisioner(terraformProvisioner);
+  }
+
+  private void shouldBackendConfigValidation(TerraformInfrastructureProvisioner terraformProvisioner,
+      InfrastructureProvisionerServiceImpl provisionerService) {
+    terraformProvisioner.setBackendConfigs(
+        Arrays.asList(NameValuePair.builder().name("access.key").valueType(Type.TEXT.toString()).build(),
+            NameValuePair.builder().name("secret_key").valueType(Type.TEXT.toString()).build()));
+    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> provisionerService.validateProvisioner(terraformProvisioner));
+
+    terraformProvisioner.setBackendConfigs(
+        Arrays.asList(NameValuePair.builder().name("$access_key").valueType(Type.TEXT.toString()).build(),
+            NameValuePair.builder().name("secret_key").valueType(Type.TEXT.toString()).build()));
+    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> provisionerService.validateProvisioner(terraformProvisioner));
+
+    terraformProvisioner.setBackendConfigs(null);
+    provisionerService.validateProvisioner(terraformProvisioner);
+
+    terraformProvisioner.setBackendConfigs(Collections.emptyList());
+    provisionerService.validateProvisioner(terraformProvisioner);
+
+    terraformProvisioner.setBackendConfigs(
+        Arrays.asList(NameValuePair.builder().name("access_key").valueType(Type.TEXT.toString()).build(),
+            NameValuePair.builder().name("secret_key").valueType(Type.TEXT.toString()).build()));
+    provisionerService.validateProvisioner(terraformProvisioner);
+  }
+
+  private void shouldVariablesValidation(TerraformInfrastructureProvisioner terraformProvisioner,
+      InfrastructureProvisionerServiceImpl provisionerService) {
+    terraformProvisioner.setVariables(
+        Arrays.asList(NameValuePair.builder().name("access.key").valueType(Type.TEXT.toString()).build(),
+            NameValuePair.builder().name("secret_key").valueType(Type.TEXT.toString()).build()));
+    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> provisionerService.validateProvisioner(terraformProvisioner));
+
+    terraformProvisioner.setVariables(
+        Arrays.asList(NameValuePair.builder().name("$access_key").valueType(Type.TEXT.toString()).build(),
+            NameValuePair.builder().name("secret_key").valueType(Type.TEXT.toString()).build()));
+    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> provisionerService.validateProvisioner(terraformProvisioner));
+
+    terraformProvisioner.setVariables(null);
+    provisionerService.validateProvisioner(terraformProvisioner);
+
+    terraformProvisioner.setVariables(Collections.emptyList());
+    provisionerService.validateProvisioner(terraformProvisioner);
+
+    terraformProvisioner.setVariables(
+        Arrays.asList(NameValuePair.builder().name("access_key").valueType(Type.TEXT.toString()).build(),
+            NameValuePair.builder().name("secret_key").valueType(Type.TEXT.toString()).build()));
+    provisionerService.validateProvisioner(terraformProvisioner);
+  }
+
+  private void shouldValidateSourceRepo(TerraformInfrastructureProvisioner terraformProvisioner,
+      InfrastructureProvisionerServiceImpl provisionerService) {
+    terraformProvisioner.setSourceRepoSettingId("");
+    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> provisionerService.validateProvisioner(terraformProvisioner));
+    terraformProvisioner.setSourceRepoSettingId(null);
+    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> provisionerService.validateProvisioner(terraformProvisioner));
+    terraformProvisioner.setSourceRepoSettingId("settingId");
+  }
+
+  private void shouldValidatePath(TerraformInfrastructureProvisioner terraformProvisioner,
+      InfrastructureProvisionerServiceImpl provisionerService) {
+    terraformProvisioner.setPath(null);
+    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> provisionerService.validateProvisioner(terraformProvisioner));
+    terraformProvisioner.setPath("module/main.tf");
+  }
+
+  private void shouldValidateRepoBranch(TerraformInfrastructureProvisioner terraformProvisioner,
+      InfrastructureProvisionerServiceImpl provisionerService) {
+    terraformProvisioner.setSourceRepoBranch("");
+    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> provisionerService.validateProvisioner(terraformProvisioner));
+    terraformProvisioner.setSourceRepoBranch(null);
+    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> provisionerService.validateProvisioner(terraformProvisioner));
+    terraformProvisioner.setSourceRepoBranch("master");
   }
 }
