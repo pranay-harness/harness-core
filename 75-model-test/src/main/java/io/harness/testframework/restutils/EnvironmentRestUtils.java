@@ -9,6 +9,7 @@ import io.restassured.mapper.ObjectMapperType;
 import io.restassured.path.json.JsonPath;
 import software.wings.beans.Account;
 import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping;
@@ -84,6 +85,20 @@ public class EnvironmentRestUtils {
         .queryParam("appId", applicationId)
         .queryParam("envId", environmentId)
         .body(infrastructureMapping, ObjectMapperType.GSON)
+        .contentType(ContentType.JSON)
+        .post("/infrastructure-mappings")
+        .jsonPath();
+  }
+
+  public static JsonPath configureInfraMapping(String bearerToken, String accountId, String applicationId,
+      String environmentId, EcsInfrastructureMapping ecsInfrastructureMapping) {
+    return Setup.portal()
+        .auth()
+        .oauth2(bearerToken)
+        .queryParam("accountId", accountId)
+        .queryParam("appId", applicationId)
+        .queryParam("envId", environmentId)
+        .body(ecsInfrastructureMapping, ObjectMapperType.GSON)
         .contentType(ContentType.JSON)
         .post("/infrastructure-mappings")
         .jsonPath();
