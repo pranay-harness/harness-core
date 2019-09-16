@@ -2,6 +2,7 @@ package io.harness.grpc.auth;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.grpc.Context;
 import io.grpc.Contexts;
@@ -11,6 +12,7 @@ import io.grpc.ServerCall.Listener;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import io.grpc.Status;
+import io.harness.security.TokenAuthenticator;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Set;
@@ -20,17 +22,18 @@ import java.util.Set;
  * rpc implementation on server-side.
  */
 @Slf4j
+@Singleton
 public class DelegateAuthServerInterceptor implements ServerInterceptor {
   public static final Context.Key<String> ACCOUNT_ID_CTX_KEY = Context.key("accountId");
   private static final ServerCall.Listener NOOP_LISTENER = new ServerCall.Listener() {};
   private static final Set<String> EXCLUDED_SERVICES =
       ImmutableSet.of("grpc.health.v1.Health", "grpc.reflection.v1alpha.ServerReflection");
 
-  private final AuthService authService;
+  private final TokenAuthenticator tokenAuthenticator;
 
   @Inject
-  public DelegateAuthServerInterceptor(AuthService authService) {
-    this.authService = authService;
+  public DelegateAuthServerInterceptor(TokenAuthenticator tokenAuthenticator) {
+    this.tokenAuthenticator = tokenAuthenticator;
   }
 
   @Override
@@ -54,10 +57,10 @@ public class DelegateAuthServerInterceptor implements ServerInterceptor {
     }
     Context ctx;
     try {
-      authService.validateToken(token);
+      tokenAuthenticator.validateToken(accountId, token);
       ctx = Context.current().withValue(ACCOUNT_ID_CTX_KEY, accountId);
     } catch (Exception e) {
-      logger.warn("Token verification failed. Unauthenticated");
+      logger.warn("Token verification failed. Unauthenticated", e);
       call.close(Status.UNAUTHENTICATED.withDescription(e.getMessage()).withCause(e), metadata);
       return noopListener;
     }

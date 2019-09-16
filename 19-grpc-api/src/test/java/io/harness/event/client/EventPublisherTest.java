@@ -25,7 +25,6 @@ import io.harness.event.PublishMessage;
 import io.harness.event.client.PublisherModule.Config;
 import io.harness.event.payloads.Lifecycle;
 import io.harness.event.payloads.Lifecycle.EventType;
-import io.harness.grpc.auth.EventServiceTokenGenerator;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.threading.Concurrent;
@@ -60,10 +59,6 @@ public class EventPublisherTest {
             @Singleton
             EventPublisherBlockingStub eventPublisherBlockingStub() {
               return EventPublisherGrpc.newBlockingStub(InProcessChannelBuilder.forName(SERVER_NAME).build());
-            }
-            @Provides
-            EventServiceTokenGenerator fakeTokenGenerator() {
-              return () -> "event-token";
             }
           }));
   @Inject private EventPublisherBlockingStub blockingStub;

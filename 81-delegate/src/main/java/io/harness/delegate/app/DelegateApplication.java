@@ -111,6 +111,7 @@ public class DelegateApplication {
     modules.add(new KubernetesClientFactoryModule());
     modules.add(new PublisherModule(Config.builder()
                                         .accountId(configuration.getAccountId())
+                                        .accountSecret(configuration.getAccountSecret())
                                         .publishTarget(configuration.getPublishTarget())
                                         .publishAuthority(configuration.getPublishAuthority())
                                         .queueFilePath(configuration.getQueueFilePath())

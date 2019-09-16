@@ -1,5 +1,7 @@
 package io.harness.event.app;
 
+import static io.harness.event.app.EventServiceTestRule.DEFAULT_ACCOUNT_ID;
+import static io.harness.event.app.EventServiceTestRule.DEFAULT_ACCOUNT_SECRET;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,6 +22,7 @@ import org.awaitility.Awaitility;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import software.wings.beans.Account;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -39,6 +42,8 @@ public class EventServiceIntegrationTest {
   @Category(IntegrationTests.class)
   @RealMongo
   public void shouldEventuallyPersistPublishedEvent() throws Exception {
+    hPersistence.save(
+        Account.Builder.anAccount().withUuid(DEFAULT_ACCOUNT_ID).withAccountKey(DEFAULT_ACCOUNT_SECRET).build());
     Lifecycle message = Lifecycle.newBuilder()
                             .setInstanceId("instanceId-123")
                             .setType(EVENT_TYPE_START)
@@ -50,7 +55,7 @@ public class EventServiceIntegrationTest {
     Awaitility.await().atMost(10, TimeUnit.SECONDS).pollInterval(100, TimeUnit.MILLISECONDS).until(() -> {
       PublishedMessage publishedMessage = hPersistence.createQuery(PublishedMessage.class).get();
       assertThat(publishedMessage).isNotNull();
-      assertThat(publishedMessage.getAccountId()).isEqualTo(EventServiceTestRule.DEFAULT_ACCOUNT_ID);
+      assertThat(publishedMessage.getAccountId()).isEqualTo(DEFAULT_ACCOUNT_ID);
       assertThat(publishedMessage.getAttributes()).isEqualTo(attributes);
       assertThat(publishedMessage.getMessage()).isEqualTo(message);
     });

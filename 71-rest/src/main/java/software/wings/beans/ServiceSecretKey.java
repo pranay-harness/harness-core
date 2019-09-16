@@ -26,7 +26,7 @@ public class ServiceSecretKey extends Base {
   private String serviceSecret;
   private ServiceType serviceType;
 
-  public enum ServiceType { LEARNING_ENGINE, EVENT_SERVICE }
+  public enum ServiceType { LEARNING_ENGINE }
 
   // add version in the end
   public enum ServiceApiVersion { V1 }

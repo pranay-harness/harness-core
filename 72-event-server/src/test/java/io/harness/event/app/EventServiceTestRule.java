@@ -2,21 +2,18 @@ package io.harness.event.app;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ServiceManager;
-import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
-import com.google.inject.util.Modules;
 
 import io.harness.event.client.EventPublisher;
 import io.harness.event.client.PublisherModule;
 import io.harness.event.client.PublisherModule.Config;
 import io.harness.factory.ClosingFactory;
-import io.harness.grpc.auth.AuthService;
-import io.harness.grpc.auth.EventServiceTokenGenerator;
 import io.harness.grpc.server.Connector;
 import io.harness.module.TestMongoModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.QueryFactory;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.rule.MongoRuleMixin;
 import lombok.Getter;
@@ -26,6 +23,7 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
+import software.wings.security.ThreadLocalUserProvider;
 
 import java.io.File;
 import java.lang.annotation.Annotation;
@@ -35,6 +33,8 @@ import java.util.UUID;
 
 public class EventServiceTestRule implements MethodRule, MongoRuleMixin, InjectorRuleMixin {
   static final String DEFAULT_ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
+  static final String DEFAULT_ACCOUNT_SECRET = "2f6b0988b6fb3370073c3d0505baee59";
+
   private static final String QUEUE_FILE_PATH =
       Paths.get(FileUtils.getTempDirectoryPath(), UUID.randomUUID().toString()).toString();
   private static final int PORT = 9890;
@@ -48,26 +48,16 @@ public class EventServiceTestRule implements MethodRule, MongoRuleMixin, Injecto
     morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
     AdvancedDatastore datastore = (AdvancedDatastore) morphia.createDatastore(mongoInfo.getClient(), databaseName());
     datastore.setQueryFactory(new QueryFactory());
-    return ImmutableList.of(
-        Modules
-            .override(new PublisherModule(Config.builder()
-                                              .publishTarget("localhost:" + PORT)
-                                              .publishAuthority("localhost")
-                                              .queueFilePath(QUEUE_FILE_PATH)
-                                              .accountId(DEFAULT_ACCOUNT_ID)
-                                              .build()),
-                new EventServiceModule(
-                    EventServiceConfig.builder().connector(new Connector(PORT, true, "cert.pem", "key.pem")).build()),
-                new TestMongoModule(datastore, null))
-
-            // TODO(avmohan): Remove this once [CCM-47] is done.
-            .with(new AbstractModule() {
-              @Override
-              protected void configure() {
-                bind(EventServiceTokenGenerator.class).toInstance(() -> "dummy");
-                bind(AuthService.class).toInstance(token -> {});
-              }
-            }));
+    return ImmutableList.of(new PublisherModule(Config.builder()
+                                                    .publishTarget("localhost:" + PORT)
+                                                    .publishAuthority("localhost")
+                                                    .queueFilePath(QUEUE_FILE_PATH)
+                                                    .accountId(DEFAULT_ACCOUNT_ID)
+                                                    .accountSecret(DEFAULT_ACCOUNT_SECRET)
+                                                    .build()),
+        new EventServiceModule(
+            EventServiceConfig.builder().connector(new Connector(PORT, true, "cert.pem", "key.pem")).build()),
+        new TestMongoModule(datastore, null));
   }
 
   @Override
@@ -88,6 +78,7 @@ public class EventServiceTestRule implements MethodRule, MongoRuleMixin, Injecto
   @Override
   public void initialize(Injector injector, List<Module> modules) {
     injector.getInstance(ServiceManager.class).startAsync().awaitHealthy();
+    injector.getInstance(HPersistence.class).registerUserProvider(new ThreadLocalUserProvider());
   }
 
   @Override

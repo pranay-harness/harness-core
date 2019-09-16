@@ -1,31 +1,42 @@
 package io.harness.security;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import com.nimbusds.jose.EncryptionMethod;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEAlgorithm;
+import com.nimbusds.jose.JWEEncrypter;
 import com.nimbusds.jose.JWEHeader;
 import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.crypto.DirectEncrypter;
 import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWTClaimsSet;
+import io.harness.exception.EncryptDecryptException;
+import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
+import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAmount;
 import java.util.Date;
 import java.util.UUID;
 import javax.crypto.spec.SecretKeySpec;
 
 @Slf4j
+@Singleton
 public class TokenGenerator {
-  private String accountId;
-  private String accountSecret;
+  private static final TemporalAmount EXP_DURATION = Duration.ofMinutes(5);
 
+  private final String accountId;
+  private final JWEEncrypter encrypter;
+
+  @Inject
   public TokenGenerator(String accountId, String accountSecret) {
     this.accountId = accountId;
-    this.accountSecret = accountSecret;
+    this.encrypter = makeEncrypter(accountSecret);
   }
 
   public String getToken(String scheme, String host, int port, String issuer) {
@@ -38,33 +49,29 @@ public class TokenGenerator {
                                  .issuer(issuer)
                                  .subject(accountId)
                                  .audience(audience)
-                                 .expirationTime(Date.from(now.plus(5, ChronoUnit.MINUTES)))
+                                 .expirationTime(Date.from(now.plus(EXP_DURATION)))
                                  .notBeforeTime(Date.from(now))
                                  .issueTime(Date.from(now))
                                  .jwtID(UUID.randomUUID().toString())
                                  .build();
 
-    JWEHeader header = new JWEHeader(JWEAlgorithm.DIR, EncryptionMethod.A128GCM);
+    JWEHeader header = new JWEHeader.Builder(JWEAlgorithm.DIR, EncryptionMethod.A128GCM).build();
     EncryptedJWT jwt = new EncryptedJWT(header, jwtClaims);
-    DirectEncrypter directEncrypter = null;
-    byte[] encodedKey = new byte[0];
-    try {
-      encodedKey = Hex.decodeHex(accountSecret.toCharArray());
-    } catch (DecoderException e) {
-      logger.error("", e);
-    }
-    try {
-      directEncrypter = new DirectEncrypter(new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES"));
-    } catch (KeyLengthException e) {
-      logger.error("", e);
-    }
 
     try {
-      jwt.encrypt(directEncrypter);
+      jwt.encrypt(encrypter);
     } catch (JOSEException e) {
       logger.error("", e);
     }
-
     return jwt.serialize();
+  }
+
+  private JWEEncrypter makeEncrypter(String accountSecret) {
+    try {
+      byte[] encodedKey = Hex.decodeHex(accountSecret.toCharArray());
+      return new DirectEncrypter(new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES"));
+    } catch (DecoderException | KeyLengthException e) {
+      throw new EncryptDecryptException("Failed to initalize token generator", e, WingsException.USER_SRE);
+    }
   }
 }

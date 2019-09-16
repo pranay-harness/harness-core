@@ -39,7 +39,6 @@ import static software.wings.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aD
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.FeatureName.CCM_EVENT_COLLECTION;
 import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK;
-import static software.wings.beans.ServiceSecretKey.ServiceType.EVENT_SERVICE;
 import static software.wings.beans.TaskType.HOST_VALIDATION;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.common.Constants.DELEGATE_DIR;
@@ -1242,7 +1241,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       broadcasterFactory.lookup("/stream/delegate/" + delegate.getAccountId(), true).broadcast(message.toString());
 
       alertService.activeDelegateUpdated(registeredDelegate.getAccountId(), registeredDelegate.getUuid());
-      registeredDelegate.setEventServiceSecret(learningEngineService.getServiceSecretKey(EVENT_SERVICE));
     }
     return registeredDelegate;
   }
