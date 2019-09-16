@@ -465,6 +465,7 @@ public class K8sStateHelper {
 
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();
+    // NOTE: This is no longer used for multi-artifact. Here for backwards compatibility.
     Artifact artifact = ((DeploymentExecutionContext) context).getArtifactForService(serviceId);
     String artifactStreamId = artifact == null ? null : artifact.getArtifactStreamId();
 

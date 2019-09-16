@@ -11,7 +11,6 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.joor.Reflect.on;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
-import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
@@ -24,7 +23,6 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.SweepingOutput;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
@@ -35,7 +33,6 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
@@ -48,7 +45,6 @@ import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
-import software.wings.beans.ArtifactVariable;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.EntityType;
@@ -1201,46 +1197,8 @@ public class CommandState extends State {
   }
 
   private Map<String, Artifact> findArtifacts(String serviceId, ExecutionContext context) {
-    if (isRollback()) {
-      return findPreviousArtifacts(serviceId, context);
-    }
-    // todo: get all overrides - workflow + service level
+    // NOTE: This function also takes care of rollback.
     return ((DeploymentExecutionContext) context).getArtifactsForService(serviceId);
-  }
-
-  private Map<String, Artifact> findPreviousArtifacts(String serviceId, ExecutionContext context) {
-    Map<String, Artifact> map = new HashMap<>();
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    List<ArtifactVariable> artifactVariables = workflowStandardParams.getWorkflowElement().getArtifactVariables();
-    Map<String, Artifact> artifactVariablesForPhase = getArtifactVariablesForPhase(context);
-    Artifact artifact = null;
-    if (isNotEmpty(artifactVariables) && isNotEmpty(artifactVariablesForPhase)) {
-      for (ArtifactVariable artifactVariable : artifactVariables) {
-        if (SERVICE.equals(artifactVariable.getEntityType()) && artifactVariable.getEntityId().equals(serviceId)) {
-          artifact = artifactVariablesForPhase.get(artifactVariable.getName());
-        } else if (EntityType.WORKFLOW.equals(artifactVariable.getEntityType())) {
-          artifact = artifactVariablesForPhase.get(artifactVariable.getName());
-        }
-        // todo: throw error if null?
-        if (artifact != null) {
-          map.put(artifactVariable.getName(), artifact);
-        }
-      }
-    }
-    return map;
-  }
-
-  private Map<String, Artifact> getArtifactVariablesForPhase(ExecutionContext context) {
-    SweepingOutput sweepingOutputInput =
-        context.prepareSweepingOutputBuilder(SweepingOutput.Scope.PHASE).name("artifacts").build();
-    SweepingOutput result = sweepingOutputService.find(sweepingOutputInput.getAppId(), sweepingOutputInput.getName(),
-        sweepingOutputInput.getPipelineExecutionId(), sweepingOutputInput.getWorkflowExecutionId(),
-        sweepingOutputInput.getPhaseExecutionId(), null);
-
-    if (result == null) {
-      return null;
-    }
-    return (Map<String, Artifact>) KryoUtils.asInflatedObject(result.getOutput());
   }
 
   private ScriptType getScriptType(List<CommandUnit> commandUnits) {
