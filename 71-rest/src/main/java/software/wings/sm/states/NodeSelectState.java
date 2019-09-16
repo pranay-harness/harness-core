@@ -276,6 +276,7 @@ public abstract class NodeSelectState extends State {
     if (isEmpty(serviceInstances)) {
       return serviceInstances;
     }
+    // TODO: ASR: change this.
     Artifact artifact = findArtifact(context, serviceId);
     if (artifact == null) {
       return serviceInstances;

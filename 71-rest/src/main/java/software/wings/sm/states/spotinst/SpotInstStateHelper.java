@@ -88,7 +88,7 @@ public class SpotInstStateHelper {
     Environment env = workflowStandardParams.getEnv();
     ServiceElement serviceElement = phaseElement.getServiceElement();
 
-    Artifact artifact = ((DeploymentExecutionContext) context).getArtifactForService(serviceElement.getUuid());
+    Artifact artifact = ((DeploymentExecutionContext) context).getDefaultArtifactForService(serviceElement.getUuid());
     if (artifact == null) {
       throw new WingsException(format("Unable to find artifact for service id: %s", serviceElement.getUuid()));
     }

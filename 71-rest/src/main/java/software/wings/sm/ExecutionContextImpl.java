@@ -344,21 +344,26 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   @Override
   public Map<String, Artifact> getArtifactsForService(String serviceId) {
     WorkflowStandardParams workflowStandardParams = getContextElement(ContextElementType.STANDARD);
-
     Map<String, Artifact> map = new HashMap<>();
     List<ArtifactVariable> artifactVariables = workflowStandardParams.getWorkflowElement().getArtifactVariables();
-    Map<String, Artifact> artifactMapForPhase = getArtifactMapForPhase();
-    if (isNotEmpty(artifactVariables) && isNotEmpty(artifactMapForPhase)) {
-      for (ArtifactVariable artifactVariable : artifactVariables) {
-        if (!isArtifactVariableForService(serviceId, artifactVariable)) {
-          continue;
-        }
+    if (isEmpty(artifactVariables)) {
+      return map;
+    }
 
-        Artifact artifact = artifactMapForPhase.getOrDefault(artifactVariable.getName(), null);
-        // TODO: ASR: throw error if null?
-        if (artifact != null) {
-          map.put(artifactVariable.getName(), artifact);
-        }
+    Map<String, Artifact> artifactMapForPhase = getArtifactMapForPhase();
+    if (isEmpty(artifactMapForPhase)) {
+      return map;
+    }
+
+    for (ArtifactVariable artifactVariable : artifactVariables) {
+      if (!isArtifactVariableForService(serviceId, artifactVariable)) {
+        continue;
+      }
+
+      Artifact artifact = artifactMapForPhase.getOrDefault(artifactVariable.getName(), null);
+      // TODO: ASR: throw error if null?
+      if (artifact != null) {
+        map.put(artifactVariable.getName(), artifact);
       }
     }
     return map;

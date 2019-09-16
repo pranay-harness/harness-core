@@ -231,6 +231,7 @@ public abstract class AbstractAnalysisState extends State {
       WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(
           executionContext.getAppId(), executionContext.getWorkflowExecutionId());
 
+      // TODO: ASR: update this for multi-artifact
       final Artifact artifactForService =
           ((ExecutionContextImpl) executionContext).getArtifactForService(getPhaseServiceId(executionContext));
       ContinuousVerificationExecutionMetaDataBuilder cvExecutionMetaDataBuilder =
