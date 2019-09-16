@@ -16,11 +16,17 @@ import io.harness.generator.artifactstream.ArtifactStreamManager;
 import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
+import software.wings.beans.LambdaSpecification;
+import software.wings.beans.LambdaSpecification.DefaultSpecification;
+import software.wings.beans.LambdaSpecification.FunctionSpecification;
 import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceKeys;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.ArtifactType;
+
+import java.util.Collections;
 
 @Singleton
 public class ServiceGenerator {
@@ -105,6 +111,31 @@ public class ServiceGenerator {
     owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
     return ensureService(
         seed, owners, builder().name(KUBERNETES_GENERIC_TEST.name()).artifactType(ArtifactType.DOCKER).build());
+  }
+
+  public Service ensureAwsLambdaGenericTest(Randomizer.Seed seed, Owners owners, String name) {
+    owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
+    owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.AWS_LAMBDA).build()));
+    ArtifactStream artifactStream =
+        artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_EXAMPLE_LAMBDA);
+    Service service = owners.obtainService();
+    service.setArtifactStreamIds(Collections.singletonList(artifactStream.getUuid()));
+    if (serviceResourceService.getLambdaSpecification(service.getAppId(), service.getUuid()) == null) {
+      LambdaSpecification lambdaSpecification =
+          LambdaSpecification.builder()
+              .serviceId(service.getUuid())
+              .defaults(DefaultSpecification.builder().runtime("nodejs8.10").memorySize(128).timeout(3).build())
+              .functions(Collections.singletonList(FunctionSpecification.builder()
+                                                       .functionName("functional-test-lambda")
+                                                       .memorySize(128)
+                                                       .runtime("nodejs8.10")
+                                                       .handler("index.handler")
+                                                       .build()))
+              .build();
+      lambdaSpecification.setAppId(owners.obtainApplication().getUuid());
+      serviceResourceService.createLambdaSpecification(lambdaSpecification);
+    }
+    return service;
   }
 
   public Service ensureRandom(Randomizer.Seed seed, Owners owners) {

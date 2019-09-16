@@ -122,6 +122,26 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
   @Owner(emails = OwnerRule.YOGESH_CHAUHAN)
   @Category(FunctionalTests.class)
   @Ignore("Enable once feature flag is enabled")
+  public void shouldCreateAndRunAwsLambdaWorkflow() {
+    service = serviceGenerator.ensureAwsLambdaGenericTest(seed, owners, "lambda-service");
+    resetCache(service.getAccountId());
+    infrastructureDefinition =
+        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureType.AWS_LAMBDA, bearerToken);
+
+    checkScopedService(infrastructureDefinition.getDeploymentType(), service);
+    checkListInfraDefinitionByService(service, infrastructureDefinition);
+
+    Workflow workflow = workflowUtils.createBasicWorkflow("aws-lamda-", service, infrastructureDefinition);
+    workflow = workflowGenerator.ensureWorkflow(seed, owners, workflow);
+
+    Artifact artifact = getArtifact(service, service.getAppId());
+    executeWorkflow(workflow, service, Arrays.asList(artifact), ImmutableMap.<String, String>builder().build());
+  }
+
+  @Test
+  @Owner(emails = OwnerRule.YOGESH_CHAUHAN)
+  @Category(FunctionalTests.class)
+  @Ignore("Enable once feature flag is enabled")
   public void shouldCreateAndRunGcpK8sWorkflow() {
     service = serviceGenerator.ensureK8sTest(seed, owners, "k8s-service");
     infrastructureDefinition = infrastructureDefinitionGenerator.ensurePredefined(

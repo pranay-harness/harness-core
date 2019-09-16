@@ -14,6 +14,7 @@ public class ArtifactStreamGeneratorFactory {
   @Inject private AmazonS3ArtifactStreamStreamsGenerator amazonS3ArtifactStreamStreamsGenerator;
   @Inject private ArtifactoryArtifactStreamStreamsGenerator artifactoryArtifactStreamStreamsGenerator;
   @Inject private AmazonAmiArtifactStreamsGenerator amazonAmiArtifactStreamsGenerator;
+  @Inject private AmazonLambdaArtifactStreamGenerator amazonLambdaArtifactStreamGenerator;
 
   public ArtifactStreamsGenerator getArtifactStreamGenerator(ArtifactStreams artifactStreams) {
     if (ArtifactStreams.HARNESS_SAMPLE_ECR.equals(artifactStreams)) {
@@ -33,6 +34,9 @@ public class ArtifactStreamGeneratorFactory {
     }
     if (ArtifactStreams.AWS_AMI.equals(artifactStreams)) {
       return amazonAmiArtifactStreamsGenerator;
+    }
+    if (ArtifactStreams.HARNESS_EXAMPLE_LAMBDA.equals(artifactStreams)) {
+      return amazonLambdaArtifactStreamGenerator;
     }
     return null;
   }
