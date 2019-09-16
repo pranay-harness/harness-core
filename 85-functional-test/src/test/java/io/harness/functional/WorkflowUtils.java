@@ -1,6 +1,7 @@
 package io.harness.functional;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.BlueGreenOrchestrationWorkflow.BlueGreenOrchestrationWorkflowBuilder.aBlueGreenOrchestrationWorkflow;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
@@ -312,6 +313,19 @@ public class WorkflowUtils {
                                                          .build())
                                    .build())
         .build();
+  }
+
+  public Workflow createBasicWorkflow(String name, Service service, InfrastructureDefinition infrastructureDefinition) {
+    Workflow workflow = aWorkflow()
+                            .name(name + System.currentTimeMillis())
+                            .appId(service.getAppId())
+                            .envId(infrastructureDefinition.getEnvId())
+                            .infraDefinitionId(infrastructureDefinition.getUuid())
+                            .serviceId(service.getUuid())
+                            .workflowType(WorkflowType.ORCHESTRATION)
+                            .orchestrationWorkflow(aBasicOrchestrationWorkflow().build())
+                            .build();
+    return workflow;
   }
 
   private TemplateExpression getTemplateExpressionsForEnv() {

@@ -29,6 +29,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.infra.AwsAmiInfrastructure;
 import software.wings.infra.AwsEcsInfrastructure;
 import software.wings.infra.AwsInstanceInfrastructure;
+import software.wings.infra.AwsLambdaInfrastructure;
 import software.wings.infra.AzureInstanceInfrastructure;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.InfrastructureDefinition;
@@ -59,6 +60,8 @@ public class InfrastructureDefinitionGenerator {
         return ensureAwsEcs(seed, owners, bearerToken);
       case InfrastructureType.AZURE_SSH:
         return ensureAzureInstance(seed, owners, bearerToken);
+      case InfrastructureType.AWS_LAMBDA:
+        return ensureAwsLambda(seed, owners, bearerToken);
       default:
         return null;
     }
@@ -88,7 +91,7 @@ public class InfrastructureDefinitionGenerator {
                                                     .launchType(LaunchType.EC2.toString())
                                                     .build();
 
-    String name = Joiner.on(StringUtils.EMPTY).join("aws-ecs", System.currentTimeMillis());
+    String name = Joiner.on(StringUtils.EMPTY).join("aws-ecs-", System.currentTimeMillis());
     InfrastructureDefinition infrastructureDefinition = InfrastructureDefinition.builder()
                                                             .name(name)
                                                             .infrastructure(awsEcsInfrastructure)
@@ -117,7 +120,7 @@ public class InfrastructureDefinitionGenerator {
                                                               .awsInstanceFilter(AwsInstanceFilter.builder().build())
                                                               .build();
 
-    String name = Joiner.on(StringUtils.EMPTY).join("aws-ssh", System.currentTimeMillis());
+    String name = Joiner.on(StringUtils.EMPTY).join("aws-ssh-", System.currentTimeMillis());
 
     InfrastructureDefinition infrastructureDefinition = InfrastructureDefinition.builder()
                                                             .name(name)
@@ -142,7 +145,7 @@ public class InfrastructureDefinitionGenerator {
 
     final String nameSpaceUnique = Joiner.on(StringUtils.EMPTY).join(namespace, System.currentTimeMillis());
 
-    String name = Joiner.on(StringUtils.EMPTY).join("gcp-k8s", System.currentTimeMillis());
+    String name = Joiner.on(StringUtils.EMPTY).join("gcp-k8s-", System.currentTimeMillis());
 
     GoogleKubernetesEngine gcpK8sInfra = GoogleKubernetesEngine.builder()
                                              .cloudProviderId(gcpK8sCloudProvider.getUuid())
@@ -184,7 +187,7 @@ public class InfrastructureDefinitionGenerator {
                                                     .autoScalingGroupName(autoScalingGroups.get(0))
                                                     .build();
 
-    String name = Joiner.on(StringUtils.EMPTY).join("aws-ami", System.currentTimeMillis());
+    String name = Joiner.on(StringUtils.EMPTY).join("aws-ami-", System.currentTimeMillis());
     InfrastructureDefinition infrastructureDefinition = InfrastructureDefinition.builder()
                                                             .name(name)
                                                             .cloudProviderType(CloudProviderType.AWS)
@@ -192,6 +195,34 @@ public class InfrastructureDefinitionGenerator {
                                                             .appId(environment.getAppId())
                                                             .envId(environment.getUuid())
                                                             .infrastructure(awsAmiInfrastructure)
+                                                            .build();
+    return GeneratorUtils.suppressDuplicateException(
+        ()
+            -> InfrastructureDefinitionRestUtils.save(bearerToken, infrastructureDefinition),
+        () -> exists(infrastructureDefinition));
+  }
+
+  private InfrastructureDefinition ensureAwsLambda(Randomizer.Seed seed, Owners owners, String bearerToken) {
+    Environment environment = ensureEnv(seed, owners);
+    final String region = "us-east-1";
+
+    final SettingAttribute awsCloudProvider =
+        settingGenerator.ensurePredefined(seed, owners, Settings.AWS_TEST_CLOUD_PROVIDER);
+
+    AwsLambdaInfrastructure awsLambdaInfrastructure = AwsLambdaInfrastructure.builder()
+                                                          .cloudProviderId(awsCloudProvider.getUuid())
+                                                          .region(region)
+                                                          .role(GeneratorConstants.AWS_TEST_LAMBDA_ROLE)
+                                                          .build();
+
+    String name = Joiner.on(StringUtils.EMPTY).join("aws-lamda-", System.currentTimeMillis());
+    InfrastructureDefinition infrastructureDefinition = InfrastructureDefinition.builder()
+                                                            .name(name)
+                                                            .cloudProviderType(CloudProviderType.AWS)
+                                                            .deploymentType(DeploymentType.AWS_LAMBDA)
+                                                            .appId(environment.getAppId())
+                                                            .envId(environment.getUuid())
+                                                            .infrastructure(awsLambdaInfrastructure)
                                                             .build();
     return GeneratorUtils.suppressDuplicateException(
         ()
