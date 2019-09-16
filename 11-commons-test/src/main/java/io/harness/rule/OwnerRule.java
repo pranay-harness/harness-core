@@ -60,6 +60,7 @@ public class OwnerRule extends RepeatRule {
   public static final String VAIBHAV_SI = "vaibhav.si@harness.io";
   public static final String VAIBHAV_TULSYAN = "vaibhav.tulsyan@harness.io";
   public static final String YOGESH_CHAUHAN = "yogesh.chauhan@harness.io";
+  public static final String VENKATESH = "venkatesh.kotrike@harness.io";
 
   private static List<String> active = ImmutableList.<String>builder()
                                            .add(AADITI)
@@ -101,6 +102,7 @@ public class OwnerRule extends RepeatRule {
                                            .add(VAIBHAV_SI)
                                            .add(VAIBHAV_TULSYAN)
                                            .add(YOGESH_CHAUHAN)
+                                           .add(VENKATESH)
                                            .add(KAMAL)
                                            .build();
 

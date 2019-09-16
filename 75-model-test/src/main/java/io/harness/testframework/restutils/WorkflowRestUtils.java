@@ -1,5 +1,13 @@
 package io.harness.testframework.restutils;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
+import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
+import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
+import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
+import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
+
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
@@ -8,6 +16,9 @@ import io.harness.testframework.framework.Setup;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.GraphNode;
+import software.wings.beans.PhaseStep;
+import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
@@ -18,6 +29,10 @@ import javax.ws.rs.core.GenericType;
 
 @Singleton
 public class WorkflowRestUtils {
+  static final String SETUP_CONTAINER_CONSTANT = "Setup Container";
+  static final String ECS_SERVICE_SETUP_CONSTANT = "ECS Service Setup";
+  static final String UPGRADE_CONTAINERS_CONSTANT = "Upgrade Containers";
+  static final String DEPLOY_CONTAINERS_CONSTANT = "Deploy Containers";
   public static Workflow createWorkflow(String bearerToken, String accountId, String appId, Workflow workflow) {
     GenericType<RestResponse<Workflow>> workflowType = new GenericType<RestResponse<Workflow>>() {};
 
@@ -93,5 +108,39 @@ public class WorkflowRestUtils {
                                      .as(workflowType.getType());
 
     return savedResponse.getResource();
+  }
+
+  public static PhaseStep ecsContainerDeployPhaseStep() {
+    return aPhaseStep(CONTAINER_DEPLOY, DEPLOY_CONTAINERS_CONSTANT)
+        .addStep(GraphNode.builder()
+                     .id(generateUuid())
+                     .type(ECS_SERVICE_DEPLOY.name())
+                     .name(UPGRADE_CONTAINERS_CONSTANT)
+                     .properties(ImmutableMap.<String, Object>builder()
+                                     .put("instanceUnitType", "PERCENTAGE")
+                                     .put("instanceCount", 100)
+                                     .put("downsizeInstanceUnitType", "PERCENTAGE")
+                                     .put("downsizeInstanceCount", 0)
+                                     .build())
+                     .build())
+        .build();
+  }
+
+  public static PhaseStep ecsContainerSetupPhaseStep() {
+    return aPhaseStep(CONTAINER_SETUP, SETUP_CONTAINER_CONSTANT)
+        .addStep(GraphNode.builder()
+                     .id(generateUuid())
+                     .type(ECS_SERVICE_SETUP.name())
+                     .name(ECS_SERVICE_SETUP_CONSTANT)
+                     .properties(ImmutableMap.<String, Object>builder()
+                                     .put("fixedInstances", "1")
+                                     .put("useLoadBalancer", false)
+                                     .put("ecsServiceName", "${app.name}__${service.name}__BASIC")
+                                     .put("desiredInstanceCount", "fixedInstances")
+                                     .put("resizeStrategy", ResizeStrategy.DOWNSIZE_OLD_FIRST)
+                                     .put("serviceSteadyStateTimeout", 10)
+                                     .build())
+                     .build())
+        .build();
   }
 }
