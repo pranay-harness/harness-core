@@ -11,6 +11,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 
@@ -18,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 public class TerraformProvisionStateTest extends WingsBaseTest {
@@ -60,5 +62,32 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     assertThat(state.handleDefaultWorkspace(null) == null).isTrue();
     assertThat(state.handleDefaultWorkspace("default") == null).isTrue();
     assertThat(state.handleDefaultWorkspace("abc").equals("abc")).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateAndFilterVariables() {
+    NameValuePair prov_var_1 = NameValuePair.builder().name("access_key").valueType("TEXT").build();
+    NameValuePair prov_var_2 = NameValuePair.builder().name("secret_key").valueType("TEXT").build();
+
+    NameValuePair wf_var_1 = NameValuePair.builder().name("access_key").valueType("TEXT").value("value-1").build();
+    NameValuePair wf_var_2 = NameValuePair.builder().name("secret_key").valueType("TEXT").value("value-2").build();
+    NameValuePair wf_var_3 = NameValuePair.builder().name("region").valueType("TEXT").value("value-3").build();
+
+    final List<NameValuePair> workflowVars = Arrays.asList(wf_var_1, wf_var_2, wf_var_3);
+    final List<NameValuePair> provVars = Arrays.asList(prov_var_1, prov_var_2);
+
+    List<NameValuePair> filteredVars_1 = TerraformProvisionState.validateAndFilterVariables(workflowVars, provVars);
+
+    final List<NameValuePair> expected_1 = Arrays.asList(wf_var_1, wf_var_2);
+    assertThat(filteredVars_1).isEqualTo(expected_1);
+
+    wf_var_1.setValueType("ENCRYPTED_TEXT");
+
+    final List<NameValuePair> filteredVars_2 =
+        TerraformProvisionState.validateAndFilterVariables(workflowVars, provVars);
+
+    final List<NameValuePair> expected_2 = Arrays.asList(wf_var_1, wf_var_2);
+    assertThat(filteredVars_2).isEqualTo(expected_2);
   }
 }
