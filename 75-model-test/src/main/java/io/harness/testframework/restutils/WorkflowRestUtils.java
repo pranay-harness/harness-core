@@ -12,6 +12,8 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.ws.rs.core.GenericType;
 
 @Singleton
@@ -41,11 +43,16 @@ public class WorkflowRestUtils {
     GenericType<RestResponse<WorkflowExecution>> workflowExecutionType =
         new GenericType<RestResponse<WorkflowExecution>>() {};
 
+    Map<String, String> queryParams = new HashMap<>();
+    queryParams.put("appId", appId);
+    if (envId != null) {
+      queryParams.put("envId", envId);
+    }
+
     RestResponse<WorkflowExecution> savedWorkflowExecutionResponse = Setup.portal()
                                                                          .auth()
                                                                          .oauth2(bearerToken)
-                                                                         .queryParam("appId", appId)
-                                                                         .queryParam("envId", envId)
+                                                                         .queryParams(queryParams)
                                                                          .contentType(ContentType.JSON)
                                                                          .body(executionArgs, ObjectMapperType.GSON)
                                                                          .post("/executions")

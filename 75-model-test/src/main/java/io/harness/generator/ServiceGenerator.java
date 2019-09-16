@@ -74,8 +74,11 @@ public class ServiceGenerator {
             .deploymentType(DeploymentType.KUBERNETES)
             .isK8sV2(true)
             .build()));
-    artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_DOCKER);
-    return owners.obtainService();
+    ArtifactStream artifactStream =
+        artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_DOCKER);
+    Service service = owners.obtainService();
+    service.setArtifactStreamIds(Collections.singletonList(artifactStream.getUuid()));
+    return service;
   }
 
   public Service ensureEcsTest(Randomizer.Seed seed, Owners owners, String name) {
