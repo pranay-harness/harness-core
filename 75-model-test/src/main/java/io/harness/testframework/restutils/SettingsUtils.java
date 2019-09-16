@@ -52,7 +52,6 @@ public class SettingsUtils {
         .queryParam(ACCOUNT_ID, accountId)
         .formParam("name", cloudProviderName)
         .formParam("type", "GCP")
-        .formParam("usageRestrictions", DEFAULT_USAGE_RESTRICTION)
         .contentType("multipart/form-data")
         .put(SETTINGS_ENDPOINT + "/" + GCPcloudProviderId + "/upload")
         .jsonPath();
