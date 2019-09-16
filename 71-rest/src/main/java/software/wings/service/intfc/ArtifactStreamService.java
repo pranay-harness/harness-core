@@ -9,6 +9,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.service.intfc.ownership.OwnedByService;
+import software.wings.utils.ArtifactType;
 
 import java.util.Collection;
 import java.util.List;
@@ -23,6 +24,9 @@ public interface ArtifactStreamService extends OwnedByService {
 
   PageResponse<ArtifactStream> list(
       PageRequest<ArtifactStream> req, String accountId, boolean withArtifactCount, String artifactSearchString);
+
+  PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req, String accountId, boolean withArtifactCount,
+      String artifactSearchString, ArtifactType artifactType, int maxArtifacts);
 
   ArtifactStream get(String artifactStreamId);
 

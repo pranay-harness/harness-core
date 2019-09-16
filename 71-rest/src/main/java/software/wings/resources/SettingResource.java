@@ -101,6 +101,7 @@ import javax.ws.rs.QueryParam;
 @Scope(ResourceType.SETTING)
 public class SettingResource {
   private static final String LIMIT = "" + Integer.MAX_VALUE;
+
   @Inject private SettingsService settingsService;
   @Inject private BuildSourceService buildSourceService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
@@ -115,6 +116,7 @@ public class SettingResource {
   @Inject private K8sWatchPerpetualTaskServiceClient k8SWatchPerpetualTaskServiceClient;
   @Inject private K8sClusterConfigFactory k8sClusterConfigFactory;
   @Inject private FeatureFlagService featureFlagService;
+
   /**
    * List.
    *
@@ -147,12 +149,13 @@ public class SettingResource {
     }
     PageResponse<SettingAttribute> result;
     if (withArtifactStreamCount || artifactStreamSearchString != null || entityId != null || gitSshConfigOnly) {
+      // Get artifact type from entityType and entityId.
       ArtifactType artifactType = null;
       if (entityType != null && entityId != null) {
         if (entityType.equals(EntityType.SERVICE.name())) {
           Service service = serviceResourceService.get(entityId);
           if (service == null) {
-            throw new WingsException(format("Service with id: [%s] not found", entityId));
+            throw new InvalidRequestException(format("Service with id: [%s] not found", entityId), USER);
           }
           artifactType = service.getArtifactType();
         }
@@ -687,12 +690,6 @@ public class SettingResource {
     return new RestResponse<>(buildSourceService.getArtifactPathsByStreamType(settingId, streamType));
   }
 
-  /**
-   * Save rest response.
-   *
-   * @param artifactStream the artifact stream
-   * @return the rest response
-   */
   @POST
   @Path("artifact-streams")
   @Timed
@@ -702,12 +699,6 @@ public class SettingResource {
     return new RestResponse<>(artifactStreamService.create(artifactStream));
   }
 
-  /**
-   * List.
-   *
-   * @param pageRequest the page request
-   * @return the rest response
-   */
   @GET
   @Path("artifact-streams")
   @Timed
@@ -716,7 +707,8 @@ public class SettingResource {
       @QueryParam("currentEnvId") String currentEnvId, @QueryParam("accountId") String accountId,
       @QueryParam("settingId") String settingId, @QueryParam("withArtifactCount") boolean withArtifactCount,
       @QueryParam("artifactSearchString") String artifactSearchString,
-      @BeanParam PageRequest<ArtifactStream> pageRequest) {
+      @DefaultValue(LIMIT) @QueryParam("maxArtifacts") int maxArtifacts, @QueryParam("entityId") String entityId,
+      @QueryParam("entityType") String entityType, @BeanParam PageRequest<ArtifactStream> pageRequest) {
     if (settingId != null) {
       SettingAttribute settingAttribute = settingsService.get(settingId);
       if (settingAttribute == null || !settingAttribute.getAccountId().equals(accountId)
@@ -725,16 +717,28 @@ public class SettingResource {
         throw new InvalidRequestException("Setting attribute does not exist", USER);
       }
     }
-    return new RestResponse<>(
-        artifactStreamService.list(pageRequest, accountId, withArtifactCount, artifactSearchString));
+
+    // Get artifact type from entityType and entityId.
+    ArtifactType artifactType = null;
+    if (entityType != null && entityId != null) {
+      if (entityType.equals(EntityType.SERVICE.name())) {
+        Service service = serviceResourceService.get(entityId);
+        if (service == null) {
+          throw new InvalidRequestException(format("Service with id: [%s] not found", entityId), USER);
+        }
+        artifactType = service.getArtifactType();
+      }
+    }
+
+    PageResponse<ArtifactStream> artifactStreams = artifactStreamService.list(
+        pageRequest, accountId, withArtifactCount, artifactSearchString, artifactType, maxArtifacts);
+    if (artifactStreams != null) {
+      // Add artifactStreamId as a duplicate of uuid.
+      artifactStreams.forEach(artifactStream -> artifactStream.setArtifactStreamId(artifactStream.getUuid()));
+    }
+    return new RestResponse<>(artifactStreams);
   }
 
-  /**
-   * Gets the.
-   *
-   * @param streamId the stream id
-   * @return the rest response
-   */
   @GET
   @Path("artifact-streams/{streamId}")
   @Timed
@@ -743,13 +747,6 @@ public class SettingResource {
     return new RestResponse<>(artifactStreamService.get(streamId));
   }
 
-  /**
-   * Update rest response.
-   *
-   * @param streamId       the stream id
-   * @param artifactStream the artifact stream
-   * @return the rest response
-   */
   @PUT
   @Path("artifact-streams/{streamId}")
   @Timed
@@ -760,26 +757,14 @@ public class SettingResource {
     return new RestResponse<>(artifactStreamService.update(artifactStream));
   }
 
-  /**
-   * Delete.
-   *
-   * @param id    the id
-   * @return the rest response
-   */
   @DELETE
-  @Path("artifact-streams/{id}")
+  @Path("artifact-streams/{streamId}")
   @Timed
   @ExceptionMetered
-  public RestResponse delete(@PathParam("id") String id) {
-    return new RestResponse<>(artifactStreamService.delete(id, false));
+  public RestResponse delete(@PathParam("streamId") String streamId) {
+    return new RestResponse<>(artifactStreamService.delete(streamId, false));
   }
 
-  /**
-   * List.
-   *
-   * @param pageRequest the page request
-   * @return the rest response
-   */
   @GET
   @Path("artifact-streams/artifacts")
   @Timed

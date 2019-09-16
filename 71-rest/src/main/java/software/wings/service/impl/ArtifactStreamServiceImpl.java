@@ -2,9 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
-import static io.harness.beans.SearchFilter.Operator.CONTAINS;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.beans.SearchFilter.Operator.STARTS_WITH;
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -20,11 +18,13 @@ import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
+import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCS;
+import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
@@ -36,8 +36,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
-import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter;
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
@@ -103,11 +104,13 @@ import software.wings.settings.SettingValue;
 import software.wings.stencils.DataProvider;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryFormat;
+import software.wings.utils.RepositoryType;
 import software.wings.utils.Utils;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -125,6 +128,10 @@ import javax.ws.rs.NotFoundException;
 @Slf4j
 public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataProvider {
   private static final Integer REFERENCED_ENTITIES_TO_SHOW = 10;
+
+  // Restrict to docker only artifact streams.
+  private static final List<String> dockerOnlyArtifactStreams = Collections.unmodifiableList(
+      asList(ArtifactStreamType.DOCKER.name(), ECR.name(), GCR.name(), ACR.name(), CUSTOM.name()));
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
@@ -157,6 +164,12 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Override
   public PageResponse<ArtifactStream> list(
       PageRequest<ArtifactStream> req, String accountId, boolean withArtifactCount, String artifactSearchString) {
+    return list(req, accountId, withArtifactCount, artifactSearchString, null, Integer.MAX_VALUE);
+  }
+
+  @Override
+  public PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req, String accountId, boolean withArtifactCount,
+      String artifactSearchString, ArtifactType artifactType, int maxArtifacts) {
     if (!withArtifactCount) {
       return list(req);
     }
@@ -168,71 +181,33 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
       pageRequest.setOffset("0");
       pageRequest.setLimit(String.valueOf(Integer.MAX_VALUE));
+      addFilterToArtifactStreamPageRequest(artifactType, pageRequest);
       PageResponse<ArtifactStream> pageResponse = wingsPersistence.query(ArtifactStream.class, pageRequest);
 
       List<ArtifactStream> filteredArtifactStreams = pageResponse.getResponse();
 
       if (isNotEmpty(filteredArtifactStreams)) {
-        String[] artifactStreamIds =
-            filteredArtifactStreams.stream().map(ArtifactStream::getUuid).toArray(String[] ::new);
-        PageRequest<Artifact> artifactPageRequest = PageRequestBuilder.aPageRequest().build();
-        artifactPageRequest.addFilter(ArtifactKeys.accountId, EQ, accountId);
-        artifactPageRequest.addFilter(ArtifactKeys.artifactStreamId, IN, (Object[]) artifactStreamIds);
-        artifactPageRequest.setFieldsIncluded(
-            asList(ArtifactKeys.artifactStreamId, ArtifactKeys.uiDisplayName, ArtifactKeys.metadata));
-        if (isNotEmpty(artifactSearchString)) {
-          artifactPageRequest.addFilter(ArtifactKeys.metadata_buildNo, CONTAINS, artifactSearchString);
-        }
-        PageResponse<Artifact> artifactPageResponse = artifactService.listUnsorted(artifactPageRequest);
-        List<Artifact> artifacts = artifactPageResponse.getResponse();
-        if (isEmpty(artifacts)) {
-          filteredArtifactStreams = new ArrayList<>();
-        }
-
-        Map<String, List<ArtifactSummary>> artifactStreamIdToArtifactSummaries = new HashMap<>();
-        artifacts.forEach(artifact -> {
-          String artifactStreamId = artifact.getArtifactStreamId();
-          ArtifactSummary artifactSummary = ArtifactSummary.builder()
-                                                .artifactId(artifact.getUuid())
-                                                .uiDisplayName(artifact.getUiDisplayName())
-                                                .buildNo(artifact.getBuildNo())
-                                                .build();
-          if (artifactStreamIdToArtifactSummaries.containsKey(artifactStreamId)) {
-            artifactStreamIdToArtifactSummaries.get(artifactStreamId).add(artifactSummary);
-          } else {
-            List<ArtifactSummary> artifactSummaries = new ArrayList<>();
-            artifactSummaries.add(artifactSummary);
-            artifactStreamIdToArtifactSummaries.put(artifactStreamId, artifactSummaries);
-          }
-        });
-
-        List<ArtifactStream> newArtifactStreams = new ArrayList<>();
-        for (ArtifactStream artifactStream : filteredArtifactStreams) {
-          String artifactStreamId = artifactStream.getUuid();
-          if (artifactStreamIdToArtifactSummaries.containsKey(artifactStreamId)) {
-            artifactStream.setArtifactCount(artifactStreamIdToArtifactSummaries.get(artifactStreamId).size());
-            artifactStream.setArtifacts(artifactStreamIdToArtifactSummaries.get(artifactStreamId));
-            newArtifactStreams.add(artifactStream);
-          }
-        }
-
-        filteredArtifactStreams = newArtifactStreams;
+        filteredArtifactStreams = filterArtifactStreamsAndArtifactsWithCount(
+            accountId, artifactSearchString, maxArtifacts, filteredArtifactStreams);
       }
 
-      filteredArtifactStreams.forEach(artifactStream -> {
-        SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
-        if (settingAttribute != null) {
-          artifactStream.setArtifactServerName(settingAttribute.getName());
-        }
-      });
-
       List<ArtifactStream> resp;
-      int total = filteredArtifactStreams.size();
-      if (total <= offset) {
-        resp = new ArrayList<>();
+      if (isEmpty(filteredArtifactStreams)) {
+        resp = Collections.emptyList();
       } else {
-        int endIdx = Math.min(offset + limit, total);
-        resp = filteredArtifactStreams.subList(offset, endIdx);
+        int total = filteredArtifactStreams.size();
+        if (total <= offset) {
+          resp = Collections.emptyList();
+        } else {
+          int endIdx = Math.min(offset + limit, total);
+          resp = filteredArtifactStreams.subList(offset, endIdx);
+          resp.forEach(artifactStream -> {
+            SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
+            if (settingAttribute != null) {
+              artifactStream.setArtifactServerName(settingAttribute.getName());
+            }
+          });
+        }
       }
 
       return aPageResponse()
@@ -244,6 +219,140 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     } catch (Exception e) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
+  }
+
+  private List<ArtifactStream> filterArtifactStreamsAndArtifactsWithCount(
+      String accountId, String artifactSearchString, int maxArtifacts, List<ArtifactStream> filteredArtifactStreams) {
+    List<ArtifactStream> newArtifactStreams = new ArrayList<>();
+    for (ArtifactStream artifactStream : filteredArtifactStreams) {
+      Query<Artifact> artifactQuery = wingsPersistence.createQuery(Artifact.class)
+                                          .disableValidation()
+                                          .filter(ArtifactKeys.artifactStreamId, artifactStream.getUuid())
+                                          .filter(ArtifactKeys.accountId, accountId)
+                                          .project(ArtifactKeys.artifactStreamId, true)
+                                          .project(ArtifactKeys.uiDisplayName, true)
+                                          .project(ArtifactKeys.metadata, true);
+      if (isNotEmpty(artifactSearchString)) {
+        artifactQuery.field(ArtifactKeys.metadata_buildNo).containsIgnoreCase(artifactSearchString);
+      }
+
+      long totalArtifactCount = artifactQuery.count();
+      if (totalArtifactCount == 0L) {
+        continue;
+      }
+      List<Artifact> artifacts = artifactQuery.asList(new FindOptions().limit(maxArtifacts));
+      if (isEmpty(artifacts)) {
+        continue;
+      }
+
+      List<ArtifactSummary> artifactSummaries =
+          artifacts.stream().map(ArtifactSummary::prepareSummaryFromArtifact).collect(toList());
+      artifactStream.setArtifactCount(totalArtifactCount);
+      artifactStream.setArtifacts(artifactSummaries);
+      newArtifactStreams.add(artifactStream);
+    }
+    return newArtifactStreams;
+  }
+
+  static void addFilterToArtifactStreamQuery(ArtifactType artifactType, Query<ArtifactStream> artifactStreamQuery) {
+    if (artifactType == null) {
+      return;
+    }
+
+    switch (artifactType) {
+      case DOCKER: // Deployment type: K8S, ECS, Helm
+        artifactStreamQuery.or(
+            artifactStreamQuery.criteria(ArtifactStreamKeys.artifactStreamType).in(dockerOnlyArtifactStreams),
+            artifactStreamQuery.criteria(ArtifactStreamKeys.repositoryFormat).equal(RepositoryFormat.docker.name()),
+            artifactStreamQuery.criteria(ArtifactStreamKeys.repositoryType).equal(RepositoryType.docker.name()));
+        break;
+      case AWS_LAMBDA:
+        artifactStreamQuery.criteria(ArtifactStreamKeys.artifactStreamType)
+            .in(asList(AMAZON_S3.name(), CUSTOM.name())); // TODO: verify this
+        break;
+      case AMI:
+        artifactStreamQuery.criteria(ArtifactStreamKeys.artifactStreamType).equal(AMI.name());
+        break;
+      case AWS_CODEDEPLOY: // Deployment Type: AWS_CODEDEPLOY,
+      case PCF: // Deployment Type: PCF,
+      case WAR: // Deployment type: ssh
+      case JAR:
+      case TAR:
+      case RPM:
+      case ZIP:
+      case IIS: // Deployment type: WinRM
+      case IIS_APP:
+      case IIS_VirtualDirectory:
+        artifactStreamQuery.and(
+            artifactStreamQuery.criteria(ArtifactStreamKeys.artifactStreamType)
+                .in(asList(JENKINS.name(), BAMBOO.name(), GCS.name(), NEXUS.name(), ARTIFACTORY.name(),
+                    AMAZON_S3.name(), SMB.name(), AMI.name(), SFTP.name(), CUSTOM.name())),
+            artifactStreamQuery.criteria(ArtifactStreamKeys.repositoryFormat).notEqual(RepositoryFormat.docker.name()),
+            artifactStreamQuery.criteria(ArtifactStreamKeys.repositoryType)
+                .notEqual(RepositoryType.docker.name())); // TODO: verify this
+        break;
+      case OTHER:
+        artifactStreamQuery.criteria(ArtifactStreamKeys.artifactStreamType)
+            .in(asList(ArtifactStreamType.DOCKER.name(), ECR.name(), GCR.name(), ACR.name(), JENKINS.name(),
+                BAMBOO.name(), GCS.name(), NEXUS.name(), ARTIFACTORY.name(), AMAZON_S3.name(), SMB.name(), AMI.name(),
+                SFTP.name(), CUSTOM.name()));
+        break;
+      default:
+        throw new InvalidRequestException(format("Unsupported artifact type: [%s]", artifactType.name()));
+    }
+  }
+
+  private static void addFilterToArtifactStreamPageRequest(
+      ArtifactType artifactType, PageRequest<ArtifactStream> artifactStreamPageRequest) {
+    if (artifactType == null) {
+      return;
+    }
+
+    switch (artifactType) {
+      case DOCKER: // Deployment type: K8S, ECS, Helm
+        artifactStreamPageRequest.addFilter("", Operator.OR,
+            createSearchFilter(ArtifactStreamKeys.artifactStreamType, Operator.IN, dockerOnlyArtifactStreams.toArray()),
+            createSearchFilter(ArtifactStreamKeys.repositoryFormat, Operator.EQ, RepositoryFormat.docker.name()),
+            createSearchFilter(ArtifactStreamKeys.repositoryType, Operator.EQ, RepositoryType.docker.name()));
+        break;
+      case AWS_LAMBDA:
+        artifactStreamPageRequest.addFilter(
+            ArtifactStreamKeys.artifactStreamType, Operator.IN, AMAZON_S3.name(), CUSTOM.name()); // TODO: verify this
+        break;
+      case AMI:
+        artifactStreamPageRequest.addFilter(ArtifactStreamKeys.artifactStreamType, Operator.EQ, AMI.name());
+        break;
+      case AWS_CODEDEPLOY: // Deployment Type: AWS_CODEDEPLOY,
+      case PCF: // Deployment Type: PCF,
+      case WAR: // Deployment type: ssh
+      case JAR:
+      case TAR:
+      case RPM:
+      case ZIP:
+      case IIS: // Deployment type: WinRM
+      case IIS_APP:
+      case IIS_VirtualDirectory:
+        artifactStreamPageRequest.addFilter("", Operator.AND,
+            createSearchFilter(ArtifactStreamKeys.artifactStreamType, Operator.IN, JENKINS.name(), BAMBOO.name(),
+                GCS.name(), NEXUS.name(), ARTIFACTORY.name(), AMAZON_S3.name(), SMB.name(), AMI.name(), SFTP.name(),
+                CUSTOM.name()),
+            createSearchFilter(ArtifactStreamKeys.repositoryFormat, Operator.NOT_EQ, RepositoryFormat.docker.name()),
+            createSearchFilter(
+                ArtifactStreamKeys.repositoryType, Operator.NOT_EQ, RepositoryType.docker.name())); // TODO: verify this
+        break;
+      case OTHER:
+        artifactStreamPageRequest.addFilter(ArtifactStreamKeys.artifactStreamType, Operator.IN,
+            ArtifactStreamType.DOCKER.name(), ECR.name(), GCR.name(), ACR.name(), JENKINS.name(), BAMBOO.name(),
+            GCS.name(), NEXUS.name(), ARTIFACTORY.name(), AMAZON_S3.name(), SMB.name(), AMI.name(), SFTP.name(),
+            CUSTOM.name());
+        break;
+      default:
+        throw new InvalidRequestException(format("Unsupported artifact type: [%s]", artifactType.name()));
+    }
+  }
+
+  private static SearchFilter createSearchFilter(String fieldName, Operator op, Object... fieldValues) {
+    return SearchFilter.builder().fieldName(fieldName).op(op).fieldValues(fieldValues).build();
   }
 
   @Override

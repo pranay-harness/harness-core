@@ -64,6 +64,7 @@ public abstract class ArtifactStream
     extends Base implements ArtifactSourceable, PersistentRegularIterable, NameAccess, KeywordsAware {
   protected static final String dateFormat = "HHMMSS";
 
+  @Transient private String artifactStreamId;
   private String artifactStreamType;
   private String sourceName;
   private String settingId;
@@ -83,7 +84,7 @@ public abstract class ArtifactStream
   private List<Variable> templateVariables = new ArrayList<>();
   private String accountId;
   @SchemaIgnore private Set<String> keywords;
-  @Transient private int artifactCount;
+  @Transient private long artifactCount;
   @Transient private List<ArtifactSummary> artifacts;
   private boolean sample;
 
