@@ -80,8 +80,14 @@ public class AnalysisServiceTest extends WingsBaseTest {
                                           .cvConfigId(cvConfiguration.getUuid())
                                           .logMessage("This is a log message")
                                           .clusterType(CLUSTER_TYPE.UNKNOWN)
+                                          .priority(FeedbackPriority.P4)
+                                          .envId(envId)
+                                          .serviceId(serviceId)
+                                          .uuid("feedbackRecord1")
+                                          .actionTaken(FeedbackAction.UPDATE_PRIORITY)
                                           .clusterLabel(2)
                                           .build();
+    wingsPersistence.save(feedbackRecord);
     cvJiraParameters.setCvFeedbackRecord(feedbackRecord);
     cvJiraParameters.setJiraTaskParameters(taskParameters);
 
@@ -93,7 +99,8 @@ public class AnalysisServiceTest extends WingsBaseTest {
                                   .filter(CVFeedbackRecordKeys.serviceId, serviceId)
                                   .get();
 
-    assertThat(record.getActionTaken()).isEqualTo(FeedbackAction.ADD_TO_BASELINE);
+    assertThat(record.getActionTaken()).isEqualTo(FeedbackAction.UPDATE_PRIORITY);
+    assertThat(record.getJiraLink()).isEqualTo(jiraLink);
     assertThat(record.getLogMessage()).isEqualTo("This is a log message");
   }
 
