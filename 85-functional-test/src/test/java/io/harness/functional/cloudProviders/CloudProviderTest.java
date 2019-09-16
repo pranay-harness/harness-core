@@ -84,7 +84,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
   public void runGCPCloudProviderCRUDTests() {
     retry.executeWithRetry(this ::createGCPCloudProvider, booleanMatcher, true);
     logger.info(String.format("Created GCP Cloud provider with id %s", GCPCloudProviderId));
-    updateGCPCloudProvider();
+    retry.executeWithRetry(this ::updateGCPCloudProvider, booleanMatcher, true);
     logger.info(String.format("Updated GCP Cloud provider with id %s", GCPCloudProviderId));
     deleteGCPCloudProvider();
     logger.info(String.format("Deleted GCP Cloud provider with id %s", GCPCloudProviderId));
@@ -264,7 +264,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
     assertThat(connectorFound).isTrue();
   }
 
-  private void updateGCPCloudProvider() {
+  private boolean updateGCPCloudProvider() {
     String GCP_CONNECTOR_NAME = String.format(CONNECTOR_NAME, GCP_NAMESPACE) + MODIFIED_SUFFIX;
     logger.info(String.format("GCP connector has id %s", GCPCloudProviderId));
     JsonPath setAttrResponse =
@@ -277,6 +277,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
     boolean connectorFound = SettingsUtils.checkCloudproviderConnectorExist(
         bearerToken, getAccount().getUuid(), CATEGORY, GCP_CONNECTOR_NAME);
     assertThat(connectorFound).isTrue();
+    return connectorFound;
   }
 
   private void deleteAWSCloudProvider() {
@@ -289,7 +290,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
     assertThat(connectorFound).isFalse();
   }
 
-  private void deleteGCPCloudProvider() {
+  private boolean deleteGCPCloudProvider() {
     String GCP_CONNECTOR_NAME = String.format(CONNECTOR_NAME, GCP_NAMESPACE) + MODIFIED_SUFFIX;
     logger.info(String.format("GCP connector has id %s", GCPCloudProviderId));
     SettingsUtils.delete(bearerToken, getAccount().getUuid(), GCPCloudProviderId);
@@ -297,6 +298,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
     boolean connectorFound = SettingsUtils.checkCloudproviderConnectorExist(
         bearerToken, getAccount().getUuid(), CATEGORY, GCP_CONNECTOR_NAME);
     assertThat(connectorFound).isFalse();
+    return connectorFound;
   }
 
   private void deleteAzureCloudProvider() {
