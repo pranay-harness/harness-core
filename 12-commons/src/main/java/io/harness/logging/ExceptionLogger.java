@@ -1,6 +1,5 @@
 package io.harness.logging;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.Level.ERROR;
 import static io.harness.exception.WingsException.ReportTarget.DELEGATE_LOG_SYSTEM;
 import static io.harness.exception.WingsException.ReportTarget.LOG_SYSTEM;
@@ -20,44 +19,16 @@ import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 import java.util.stream.Stream;
 
 public class ExceptionLogger {
-  protected static String calculateContextObjectsMessage(WingsException exception) {
-    // TODO: use string buffer
-
-    Map<String, Object> context = new TreeMap<>();
-    Throwable t = exception;
-    while (t != null) {
-      if (t instanceof WingsException) {
-        ((WingsException) t).getContextObjects().forEach((clz, value) -> context.put(clz.getCanonicalName(), value));
-      }
-      t = t.getCause();
-    }
-
-    if (isEmpty(context)) {
-      return null;
-    }
-
-    return "Context objects: "
-        + context.entrySet()
-              .stream()
-              .map(entry -> entry.getKey() + ": " + entry.getValue())
-              .collect(joining("\n                 "));
-  }
-
   protected static String calculateResponseMessage(List<ResponseMessage> responseMessages) {
-    // TODO: use string buffer
     return "Response message: "
         + responseMessages.stream().map(ResponseMessage::getMessage).collect(joining("\n                  "));
   }
 
   protected static String calculateErrorMessage(WingsException exception, List<ResponseMessage> responseMessages) {
-    return Stream
-        .of(calculateResponseMessage(responseMessages), calculateContextObjectsMessage(exception),
-            "Exception occurred: " + exception.getMessage())
+    return Stream.of(calculateResponseMessage(responseMessages), "Exception occurred: " + exception.getMessage())
         .filter(EmptyPredicate::isNotEmpty)
         .collect(joining("\n"));
   }
@@ -67,9 +38,7 @@ public class ExceptionLogger {
   }
 
   protected static String calculateDebugMessage(WingsException exception) {
-    return Stream.of(calculateContextObjectsMessage(exception), "Exception occurred: " + exception.getMessage())
-        .filter(EmptyPredicate::isNotEmpty)
-        .collect(joining("\n"));
+    return "Exception occurred: " + exception.getMessage();
   }
 
   public static List<ResponseMessage> getResponseMessageList(WingsException wingsException, ReportTarget reportTarget) {
@@ -98,7 +67,8 @@ public class ExceptionLogger {
   }
 
   public static void logProcessedMessages(WingsException exception, ExecutionContext context, Logger logger) {
-    try {
+    Exception processedException = null;
+    try (AutoLogContext ignore = new AutoLogContext(exception.calcRecursiveContextObjects())) {
       ReportTarget target = LOG_SYSTEM;
 
       switch (context) {
@@ -121,8 +91,12 @@ public class ExceptionLogger {
         logger.info(calculateDebugMessage(exception), exception);
       }
     } catch (Exception e) {
-      logger.error("Error processing messages.", e);
+      processedException = e;
       logger.error("Original exception:", exception);
+    }
+
+    if (processedException != null) {
+      logger.error("Error processing messages.", processedException);
     }
   }
 }

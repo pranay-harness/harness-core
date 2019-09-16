@@ -64,7 +64,7 @@ public class WingsException extends RuntimeException {
 
   private Map<String, Object> params = new HashMap<>();
 
-  private Map<Class, Object> contextObjects = new HashMap<>();
+  private Map<String, String> contextObjects = new HashMap<>();
 
   private EnumSet<FailureType> failureTypes = EnumSet.noneOf(FailureType.class);
 
@@ -153,8 +153,26 @@ public class WingsException extends RuntimeException {
     this.params = params;
   }
 
+  private Map<String, String> getContextObjects() {
+    return contextObjects;
+  }
+
+  public Map<String, String> calcRecursiveContextObjects() {
+    Map<String, String> result = new HashMap<>();
+    Throwable t = this;
+    while (t != null) {
+      if (t instanceof WingsException) {
+        result.putAll(getContextObjects());
+      }
+      t = t.getCause();
+    }
+
+    return result;
+  }
+
+  @Deprecated
   public <T> WingsException addContext(Class<?> clz, T object) {
-    contextObjects.put(clz, object);
+    contextObjects.put(clz.getName(), object.toString());
     return this;
   }
 

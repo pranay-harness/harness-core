@@ -58,8 +58,6 @@ public class ExceptionLoggerTest extends CategoryTest {
     final List<ResponseMessage> responseMessages = ExceptionLogger.getResponseMessageList(exception, LOG_SYSTEM);
     assertThat(ExceptionLogger.calculateErrorMessage(exception, responseMessages))
         .isEqualTo("Response message: An error has occurred. Please contact the Harness support team.\n"
-            + "Context objects: java.lang.Integer: 0\n"
-            + "                 java.lang.String: test\n"
             + "Exception occurred: DEFAULT_ERROR_CODE");
   }
 
@@ -75,8 +73,6 @@ public class ExceptionLoggerTest extends CategoryTest {
     final List<ResponseMessage> responseMessages = ExceptionLogger.getResponseMessageList(outerException, LOG_SYSTEM);
     assertThat(ExceptionLogger.calculateErrorMessage(outerException, responseMessages))
         .isEqualTo("Response message: An error has occurred. Please contact the Harness support team.\n"
-            + "Context objects: java.lang.Integer: 0\n"
-            + "                 java.lang.String: test\n"
             + "Exception occurred: DEFAULT_ERROR_CODE");
   }
 }

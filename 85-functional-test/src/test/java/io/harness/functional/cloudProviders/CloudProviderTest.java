@@ -79,7 +79,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = UTKARSH, resent = false)
+  @Owner(emails = UTKARSH, resent = false, intermittent = true)
   @Category(FunctionalTests.class)
   public void runGCPCloudProviderCRUDTests() {
     retry.executeWithRetry(this ::createGCPCloudProvider, booleanMatcher, true);
