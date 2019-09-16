@@ -40,18 +40,6 @@ public class CVTaskServiceImpl implements CVTaskService {
   @Inject(optional = true) @Nullable private WaitNotifyEngine waitNotifyEngine;
 
   @Override
-  public CVTask enqueueTask(String accountId, String cvConfigId, long startMilliSec, long endMilliSec) {
-    CVTask cvTask = CVTask.builder()
-                        .accountId(accountId)
-                        .cvConfigId(cvConfigId)
-                        .status(ExecutionStatus.SUCCESS) // TODO: Change this to queued. marking this passed for the
-                                                         // first release. This is a migration strategy to fill cvTasks.
-                        .build();
-    wingsPersistence.save(cvTask);
-    return cvTask;
-  }
-
-  @Override
   public void saveCVTask(CVTask cvTask) {
     wingsPersistence.save(cvTask);
   }
@@ -107,7 +95,6 @@ public class CVTaskServiceImpl implements CVTaskService {
       cvTask.setStatus(ExecutionStatus.FAILED);
       markWaitingTasksFailed(cvTask);
       markStateFailed(cvTask);
-      sendNotificationIfRequired(cvTask);
     } else if (result.getStatus() == DataCollectionTaskStatus.SUCCESS) {
       wingsPersistence.updateField(CVTask.class, cvTaskId, CVTaskKeys.status, ExecutionStatus.SUCCESS);
       enqueueNextTask(cvTask);
@@ -161,12 +148,8 @@ public class CVTaskServiceImpl implements CVTaskService {
     // TODO
   }
 
-  private void sendNotificationIfRequired(CVTask cvTask) {
-    // TODO: send notification in case of 24 * 7 task failure
-  }
-
   private void markStateFailed(CVTask cvTask) {
-    if (cvTask.getStateExecutionId() != null) {
+    if (isWorkflowTask(cvTask)) {
       logger.info("Marking stateExecutionId {} as failed", cvTask.getStateExecutionId());
       VerificationStateAnalysisExecutionData analysisExecutionData =
           VerificationStateAnalysisExecutionData.builder()
@@ -183,7 +166,7 @@ public class CVTaskServiceImpl implements CVTaskService {
   }
 
   private void markWaitingTasksFailed(CVTask cvTask) {
-    if (cvTask.getStateExecutionId() != null) {
+    if (isWorkflowTask(cvTask)) {
       String exceptionMsg =
           cvTask.getStatus() == ExecutionStatus.EXPIRED ? "Previous task timed out" : "Previous task failed";
       logger.info("Marking queued task failed for stateExecutionId {}", cvTask.getStateExecutionId());
@@ -201,7 +184,7 @@ public class CVTaskServiceImpl implements CVTaskService {
   }
 
   private Logger getActivityLogger(CVTask cvTask) {
-    return activityLogService.getLogger(cvTask.getDataCollectionInfo().getCvConfigId(),
+    return activityLogService.getLogger(cvTask.getCvConfigId(),
         cvTask.getDataCollectionInfo().getEndTime().toEpochMilli(), cvTask.getStateExecutionId());
   }
 
@@ -211,5 +194,13 @@ public class CVTaskServiceImpl implements CVTaskService {
                                           .addFilter(CVTaskKeys.status, Operator.EQ, executionStatus)
                                           .build();
     return wingsPersistence.query(CVTask.class, pageRequest).getResponse();
+  }
+
+  private boolean is24X7Task(CVTask cvTask) {
+    return cvTask.getCvConfigId() != null;
+  }
+
+  private boolean isWorkflowTask(CVTask cvTask) {
+    return cvTask.getStateExecutionId() != null;
   }
 }

@@ -11,6 +11,7 @@ public interface CVActivityLogService {
   Logger getLoggerByCVConfigId(String cvConfigId, long dataCollectionMinute);
   Logger getLoggerByStateExecutionId(String stateExecutionId);
   List<CVActivityLog> findByStateExecutionId(String stateExecutionId);
+  void saveActivityLogs(List<CVActivityLog> cvActivityLogs);
 
   interface Logger {
     default void info(String log, long... timestampParams) {

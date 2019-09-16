@@ -11,9 +11,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -458,10 +456,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   public void testLogsCollection() throws IOException {
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
     when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
-        .thenReturn(managerFeatureFlagCall);
+
     continuousVerificationService.triggerLogDataCollection(accountId);
-    verify(cvTaskService, times(2)).enqueueTask(eq(accountId), anyString(), anyLong(), anyLong());
     List<DelegateTask> delegateTasks =
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
     assertThat(delegateTasks).hasSize(2);
@@ -498,7 +494,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
       wingsPersistence.save(logDataRecord);
     }
     continuousVerificationService.triggerLogDataCollection(accountId);
-    verify(cvTaskService, times(4)).enqueueTask(eq(accountId), anyString(), anyLong(), anyLong());
     delegateTasks =
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
     assertThat(delegateTasks).hasSize(4);

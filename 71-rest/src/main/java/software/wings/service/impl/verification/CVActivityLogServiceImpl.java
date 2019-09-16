@@ -67,6 +67,11 @@ public class CVActivityLogServiceImpl implements CVActivityLogService {
     return wingsPersistence.query(CVActivityLog.class, pageRequest, excludeAuthority).getResponse();
   }
 
+  @Override
+  public void saveActivityLogs(List<CVActivityLog> cvActivityLogs) {
+    wingsPersistence.save(cvActivityLogs);
+  }
+
   private class LoggerImpl implements Logger {
     private String cvConfigId;
     private long dataCollectionMinute;

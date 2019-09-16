@@ -14,6 +14,7 @@ import software.wings.verification.TransactionTimeSeries;
 import software.wings.verification.VerificationDataAnalysisResponse;
 
 import java.text.ParseException;
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,4 +63,6 @@ public interface ContinuousVerificationService {
       PageRequest<ContinuousVerificationExecutionMetaData> pageRequest);
 
   boolean collectCVData(String cvTaskId);
+
+  boolean createCVTask247(String cvTaskId, Instant startTime, Instant endTime);
 }

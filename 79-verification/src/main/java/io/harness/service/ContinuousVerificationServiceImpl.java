@@ -82,6 +82,7 @@ import software.wings.verification.CVTask;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.verification.log.LogsCVConfiguration;
+import software.wings.verification.log.SplunkCVConfiguration;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -129,7 +130,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           long startTime = getDataCollectionStartMinForAPM(cvConfiguration, endMinute);
           long endTime = TimeUnit.MINUTES.toMillis(endMinute);
           if (endTime - startTime >= TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES / 3)) {
-            enqueueTask(accountId, cvConfiguration.getUuid(), startTime, endTime);
             activityLogCVDataCollection(cvConfiguration.getUuid(), endMinute, startTime, endTime);
             logger.info("triggering data collection for state {} config {} startTime {} endTime {} collectionMinute {}",
                 cvConfiguration.getStateType(), cvConfiguration.getUuid(), startTime, endTime, endMinute);
@@ -167,12 +167,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   private void activityLogCVDataCollection(String cvConfigId, long endMinute, long startTime, long endTime) {
     cvActivityLogService.getLoggerByCVConfigId(cvConfigId, TimeUnit.MINUTES.toMillis(endMinute))
         .info("Submitting Data collection task to manager for time range %t to %t", startTime, endTime);
-  }
-
-  private void enqueueTask(String accountId, String cvConfigId, long startTime, long endTime) {
-    if (isFeatureFlagEnabled(FeatureName.CV_TASKS, accountId)) {
-      cvTaskService.enqueueTask(accountId, cvConfigId, startTime, endTime);
-    }
   }
 
   private long getAnalysisStartMinuteForAPM(CVConfiguration cvConfiguration, long lastCVDataCollectionMinute) {
@@ -592,15 +586,17 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 return;
               }
             }
-
             if (endTime < TimeUnit.MINUTES.toMillis(endMinute)) {
-              enqueueTask(accountId, cvConfiguration.getUuid(), startTime, endTime);
-              logger.info(
-                  "triggering data collection for state {} config {} startTime {} endTime {} collectionMinute {}",
-                  cvConfiguration.getStateType(), cvConfiguration.getUuid(), startTime, endTime, endMinute);
-              activityLogCVDataCollection(cvConfiguration.getUuid(), endMinute, startTime, endTime);
-              verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVDataCollection(
-                  cvConfiguration.getUuid(), cvConfiguration.getStateType(), startTime, endTime));
+              if (isCVTaskBasedCollectionEnabled(cvConfiguration)) {
+                createCVTask(cvConfiguration, startTime, endTime);
+              } else {
+                logger.info(
+                    "triggering data collection for state {} config {} startTime {} endTime {} collectionMinute {}",
+                    cvConfiguration.getStateType(), cvConfiguration.getUuid(), startTime, endTime, endMinute);
+                activityLogCVDataCollection(cvConfiguration.getUuid(), endMinute, startTime, endTime);
+                verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVDataCollection(
+                    cvConfiguration.getUuid(), cvConfiguration.getStateType(), startTime, endTime));
+              }
               totalDataCollectionTasks.getAndIncrement();
             }
           } catch (Exception ex) {
@@ -610,6 +606,16 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         });
     metricRegistry.recordGaugeValue(DATA_COLLECTION_TASKS_PER_MINUTE, null, totalDataCollectionTasks.get());
     return true;
+  }
+
+  private boolean isCVTaskBasedCollectionEnabled(CVConfiguration cvConfiguration) {
+    return cvConfiguration instanceof SplunkCVConfiguration
+        && isFeatureFlagEnabled(FeatureName.SPLUNK_24_7_CV_TASK, cvConfiguration.getAccountId());
+  }
+
+  private void createCVTask(CVConfiguration cvConfiguration, long startTime, long endTime) {
+    verificationManagerClientHelper.callManagerWithRetry(
+        verificationManagerClient.createCVTask(cvConfiguration.getUuid(), startTime, endTime));
   }
 
   @Override

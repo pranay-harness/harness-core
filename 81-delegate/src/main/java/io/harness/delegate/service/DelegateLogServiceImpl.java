@@ -19,6 +19,7 @@ import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
 import static software.wings.beans.Log.doneColoring;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -30,12 +31,15 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.managerclient.ManagerClient;
 import io.harness.observer.Subject;
 import io.harness.rest.RestResponse;
+import io.harness.verification.VerificationServiceClient;
 import lombok.extern.slf4j.Slf4j;
+import retrofit2.Response;
 import software.wings.beans.Log;
 import software.wings.beans.Log.LogLevel;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.LogSanitizer;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.verification.CVActivityLog;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -55,12 +59,16 @@ import javax.validation.executable.ValidateOnExecution;
 public class DelegateLogServiceImpl implements DelegateLogService {
   private Cache<String, List<Log>> cache;
   private Cache<String, List<ThirdPartyApiCallLog>> apiCallLogCache;
+  private Cache<String, List<CVActivityLog>> cvActivityLogCache;
   private ManagerClient managerClient;
   private final Subject<LogSanitizer> logSanitizerSubject = new Subject<>();
+  private VerificationServiceClient verificationServiceClient;
 
   @Inject
-  public DelegateLogServiceImpl(ManagerClient managerClient, @Named("asyncExecutor") ExecutorService executorService) {
+  public DelegateLogServiceImpl(ManagerClient managerClient, @Named("asyncExecutor") ExecutorService executorService,
+      VerificationServiceClient verificationServiceClient) {
     this.managerClient = managerClient;
+    this.verificationServiceClient = verificationServiceClient;
     this.cache = Caffeine.newBuilder()
                      .executor(executorService)
                      .expireAfterWrite(1000, TimeUnit.MILLISECONDS)
@@ -71,11 +79,17 @@ public class DelegateLogServiceImpl implements DelegateLogService {
                                .expireAfterWrite(1000, TimeUnit.MILLISECONDS)
                                .removalListener(this ::dispatchApiCallLogs)
                                .build();
+    this.cvActivityLogCache = Caffeine.newBuilder()
+                                  .executor(executorService)
+                                  .expireAfterWrite(1000, TimeUnit.MILLISECONDS)
+                                  .removalListener(this ::dispatchCVActivityLogs)
+                                  .build();
     Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
         ()
             -> {
           this.cache.cleanUp();
           this.apiCallLogCache.cleanUp();
+          this.cvActivityLogCache.cleanUp();
         },
         1000, 1000,
         TimeUnit.MILLISECONDS); // periodic cleanup for expired keys
@@ -107,7 +121,11 @@ public class DelegateLogServiceImpl implements DelegateLogService {
     Optional.ofNullable(apiCallLogCache.get(accountId, s -> new ArrayList<>()))
         .ifPresent(logs -> logs.add(thirdPartyApiCallLog));
   }
-
+  @Override
+  public synchronized void save(String accountId, CVActivityLog cvActivityLog) {
+    Optional.ofNullable(cvActivityLogCache.get(accountId, s -> new ArrayList<>()))
+        .ifPresent(cvActivityLogs -> cvActivityLogs.add(cvActivityLog));
+  }
   @Override
   public void registerLogSanitizer(LogSanitizer sanitizer) {
     logSanitizerSubject.register(sanitizer);
@@ -207,5 +225,28 @@ public class DelegateLogServiceImpl implements DelegateLogService {
             logger.error("Finished printing lost logs");
           }
         });
+  }
+
+  private void dispatchCVActivityLogs(String accountId, List<CVActivityLog> logs, RemovalCause removalCause) {
+    if (accountId == null || logs.isEmpty()) {
+      logger.error("Unexpected Cache eviction accountId={}, logs={}, removalCause={}", accountId, logs, removalCause);
+      return;
+    }
+    Iterables.partition(logs, 100).forEach(batch -> {
+      try {
+        safeExecute(verificationServiceClient.saveActivityLogs(accountId, logs));
+        logger.info("Dispatched {} cv activity logs [{}]", batch.size(), accountId);
+      } catch (Exception e) {
+        logger.error("Dispatch log failed. printing lost activity logs[{}]", batch.size(), e);
+        batch.forEach(log -> logger.error(log.toString()));
+        logger.error("Finished printing lost activity logs");
+      }
+    });
+  }
+  private void safeExecute(retrofit2.Call<?> call) throws IOException {
+    Response<?> response = call.execute();
+    if (!response.isSuccessful()) {
+      throw new RuntimeException("Response code: " + response.code() + ", error body: " + response.errorBody());
+    }
   }
 }

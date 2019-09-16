@@ -11,6 +11,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.StateType;
+import software.wings.verification.CVActivityLog;
 
 import java.util.List;
 
@@ -30,4 +31,7 @@ public interface VerificationServiceClient {
       @Query("serviceId") String serviceId, @Query("clusterLevel") ClusterLevel clusterLevel,
       @Query("delegateTaskId") String delegateTaskId, @Query("stateType") StateType stateType,
       @Body List<LogElement> metricData);
+  @POST(VerificationConstants.DELEGATE_DATA_COLLETION + VerificationConstants.SAVE_CV_ACTIVITY_LOGS_PATH)
+  Call<RestResponse<Void>> saveActivityLogs(
+      @Query("accountId") String accountId, @Body List<CVActivityLog> activityLogs);
 }

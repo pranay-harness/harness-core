@@ -331,6 +331,7 @@ import software.wings.service.impl.verification.CVConfigurationServiceImpl;
 import software.wings.service.impl.verification.CVTaskServiceImpl;
 import software.wings.service.impl.verification.CvValidationService;
 import software.wings.service.impl.verification.CvValidationServiceImpl;
+import software.wings.service.impl.verification.DataCollectionInfoServiceImpl;
 import software.wings.service.impl.workflow.WorkflowServiceImpl;
 import software.wings.service.impl.yaml.AppYamlResourceServiceImpl;
 import software.wings.service.impl.yaml.EntityUpdateServiceImpl;
@@ -498,6 +499,7 @@ import software.wings.service.intfc.verification.CV24x7DashboardService;
 import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.verification.CVTaskService;
+import software.wings.service.intfc.verification.DataCollectionInfoService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.GitClient;
@@ -787,9 +789,10 @@ public class WingsModule extends DependencyModule {
     bind(PcfDeploymentManager.class).to(PcfDeploymentManagerUnsupported.class).in(Singleton.class);
 
     bind(LogVerificationService.class).to(LogVerificationServiceImpl.class);
-    bind(CVConfigurationService.class).to(CVConfigurationServiceImpl.class);
     bind(CVTaskService.class).to(CVTaskServiceImpl.class);
+    bind(CVConfigurationService.class).to(CVConfigurationServiceImpl.class);
     bind(CVActivityLogService.class).to(CVActivityLogServiceImpl.class);
+    bind(DataCollectionInfoService.class).to(DataCollectionInfoServiceImpl.class);
     bind(CvValidationService.class).to(CvValidationServiceImpl.class);
 
     bind(LimitCheckerFactory.class).to(LimitCheckerFactoryImpl.class);

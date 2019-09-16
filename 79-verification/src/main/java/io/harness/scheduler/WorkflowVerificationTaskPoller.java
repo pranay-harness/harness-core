@@ -117,6 +117,7 @@ public class WorkflowVerificationTaskPoller {
         || GA_PER_MINUTE_CV_STATES.contains(context.getStateType())) {
       logger.info("PER MINUTE data collection will be triggered for accountId : {} and stateExecutionId : {}",
           context.getAccountId(), context.getStateExecutionId());
+      // TODO: add logs here after triggering data collection.
       logger.info("Current stateType is present in PER_MINUTE_CV_STATES, creating job for context : {}", context);
       Date startDate = new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(DELAY_MINUTES));
       JobDetail job = JobBuilder.newJob(WorkflowDataCollectionJob.class)

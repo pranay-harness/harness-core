@@ -4,7 +4,6 @@ import static software.wings.common.VerificationConstants.URL_STRING;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
-import com.google.inject.Inject;
 
 import com.splunk.Event;
 import com.splunk.HttpService;
@@ -15,7 +14,6 @@ import com.splunk.ResultsReaderJson;
 import com.splunk.SSLSecurityProtocol;
 import com.splunk.Service;
 import com.splunk.ServiceArgs;
-import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.FastDateFormat;
@@ -27,7 +25,6 @@ import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfoV2;
-import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.InputStream;
 import java.net.URI;
@@ -50,7 +47,6 @@ public class SplunkDataCollector implements LogDataCollector<SplunkDataCollectio
       FastDateFormat.getInstance("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone("UTC"));
   private static final int HTTP_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(25);
 
-  @Inject private EncryptionService encryptionService;
   private SplunkDataCollectionInfoV2 splunkDataCollectionInfo;
   private DataCollectionCallback dataCollectionCallback;
 
@@ -58,12 +54,11 @@ public class SplunkDataCollector implements LogDataCollector<SplunkDataCollectio
   public void init(DataCollectionCallback dataCollectionCallback, SplunkDataCollectionInfoV2 splunkDataCollectionInfo) {
     this.splunkDataCollectionInfo = splunkDataCollectionInfo;
     this.dataCollectionCallback = dataCollectionCallback;
-    initSplunkService(splunkDataCollectionInfo.getSplunkConfig(), splunkDataCollectionInfo.getEncryptedDataDetails());
+    initSplunkService(splunkDataCollectionInfo.getSplunkConfig());
   }
   @Override
-  public List<LogElement> fetchLogs(Optional<String> host) throws DataCollectionException {
-    Service splunkService = initSplunkService(
-        splunkDataCollectionInfo.getSplunkConfig(), splunkDataCollectionInfo.getEncryptedDataDetails());
+  public List<LogElement> fetchLogs(Optional<String> host) {
+    Service splunkService = initSplunkService(splunkDataCollectionInfo.getSplunkConfig());
     String splunkQuery = getSplunkQuery(splunkDataCollectionInfo.getQuery(),
         splunkDataCollectionInfo.getHostnameField(), host, splunkDataCollectionInfo.isAdvancedQuery());
     ThirdPartyApiCallLog apiCallLog = dataCollectionCallback.createApiCallLog();
@@ -208,10 +203,7 @@ public class SplunkDataCollector implements LogDataCollector<SplunkDataCollectio
     }
   }
 
-  private Service initSplunkService(SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    // TODO: define encryption data details in abstract class and move this to common place. Implementation class does
-    // not have to know about encryption/decryption details.
-    encryptionService.decrypt(splunkConfig, encryptedDataDetails);
+  private Service initSplunkService(SplunkConfig splunkConfig) {
     try {
       return initSplunkServiceWithToken(splunkConfig);
     } catch (Exception ex1) {
@@ -228,7 +220,6 @@ public class SplunkDataCollector implements LogDataCollector<SplunkDataCollectio
     searchQuery += " | bin _time span=1m | cluster t=0.9999 showcount=t labelonly=t"
         + "| table _time, _raw,cluster_label, " + hostNameField + " | "
         + "stats latest(_raw) as _raw count as cluster_count by _time,cluster_label," + hostNameField;
-
     return searchQuery;
   }
 

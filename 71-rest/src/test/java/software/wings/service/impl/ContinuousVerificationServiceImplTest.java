@@ -1,17 +1,25 @@
 package software.wings.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Sets;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
 import io.harness.category.element.UnitTests;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -26,13 +34,21 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserPermissionInfo;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationServiceImpl;
+import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.apm.APMMetricInfo;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.verification.CVConfigurationService;
+import software.wings.service.intfc.verification.CVTaskService;
+import software.wings.service.intfc.verification.DataCollectionInfoService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.DatadogState.Metric;
+import software.wings.verification.CVConfiguration;
+import software.wings.verification.CVTask;
 import software.wings.verification.HeatMapResolution;
 
 import java.text.ParseException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -59,9 +75,13 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   @Mock private AuthService mockAuthService;
   @Mock private WingsPersistence mockWingsPersistence;
   @Mock private UserPermissionInfo mockUserPermissionInfo;
-  @InjectMocks private ContinuousVerificationServiceImpl cvService;
+  @Mock private CVConfigurationService cvConfigurationService;
+  @Mock private DataCollectionInfoService dataCollectionInfoService;
+  @Mock private CVTaskService cvTaskService;
+  @InjectMocks private ContinuousVerificationServiceImpl continuousVerificationService;
 
-  private void setupMocks() {
+  @Before
+  public void setupMocks() throws IllegalAccessException {
     accountId = UUID.randomUUID().toString();
     appId = UUID.randomUUID().toString();
     stateExecutionId = UUID.randomUUID().toString();
@@ -83,6 +103,9 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
     });
 
     when(mockAuthService.getUserPermissionInfo(accountId, user, false)).thenReturn(mockUserPermissionInfo);
+    FieldUtils.writeField(continuousVerificationService, "cvConfigurationService", cvConfigurationService, true);
+    FieldUtils.writeField(continuousVerificationService, "dataCollectionInfoService", dataCollectionInfoService, true);
+    FieldUtils.writeField(continuousVerificationService, "cvTaskService", cvTaskService, true);
   }
 
   private ContinuousVerificationExecutionMetaData getExecutionMetadata() {
@@ -131,13 +154,14 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   }
   @Test
   @Category(UnitTests.class)
-  public void testNullUser() throws ParseException {
+  public void testNullUser() throws ParseException, IllegalAccessException {
     setupMocks();
     LinkedHashMap<Long,
         LinkedHashMap<String,
             LinkedHashMap<String,
                 LinkedHashMap<String, LinkedHashMap<String, List<ContinuousVerificationExecutionMetaData>>>>>>
-        execData = cvService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L, null);
+        execData =
+            continuousVerificationService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L, null);
 
     assertThat(execData).isNotNull();
     assertThat(execData).hasSize(0);
@@ -146,12 +170,12 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testAllValidPermissions() throws ParseException {
-    setupMocks();
     LinkedHashMap<Long,
         LinkedHashMap<String,
             LinkedHashMap<String,
                 LinkedHashMap<String, LinkedHashMap<String, List<ContinuousVerificationExecutionMetaData>>>>>>
-        execData = cvService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L, user);
+        execData =
+            continuousVerificationService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L, user);
 
     assertThat(execData).isNotNull();
     assertThat(execData).hasSize(1);
@@ -160,7 +184,6 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testNoPermissionsForEnvironment() throws ParseException {
-    setupMocks();
     AppPermissionSummary permissionSummary = buildAppPermissionSummary();
     permissionSummary.setEnvPermissions(new HashMap<>());
     when(mockUserPermissionInfo.getAppPermissionMapInternal()).thenReturn(new HashMap<String, AppPermissionSummary>() {
@@ -171,7 +194,8 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
         LinkedHashMap<String,
             LinkedHashMap<String,
                 LinkedHashMap<String, LinkedHashMap<String, List<ContinuousVerificationExecutionMetaData>>>>>>
-        execData = cvService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L, user);
+        execData =
+            continuousVerificationService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L, user);
 
     assertThat(execData).isNotNull();
     assertThat(execData).isEmpty();
@@ -180,7 +204,6 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testNoPermissionsForService() throws ParseException {
-    setupMocks();
     AppPermissionSummary permissionSummary = buildAppPermissionSummary();
     permissionSummary.setServicePermissions(new HashMap<>());
     when(mockUserPermissionInfo.getAppPermissionMapInternal()).thenReturn(new HashMap<String, AppPermissionSummary>() {
@@ -190,7 +213,8 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
         LinkedHashMap<String,
             LinkedHashMap<String,
                 LinkedHashMap<String, LinkedHashMap<String, List<ContinuousVerificationExecutionMetaData>>>>>>
-        execData = cvService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L, user);
+        execData =
+            continuousVerificationService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L, user);
     assertThat(execData).isNotNull();
     assertThat(execData).hasSize(0);
   }
@@ -222,7 +246,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
                     .build());
     customMetricsMap.put("service_name:harness", metrics);
     Map<String, List<APMMetricInfo>> metricEndPoints =
-        cvService.createDatadogMetricEndPointMap(dockerMetrics, ecsMetrics, null, customMetricsMap);
+        continuousVerificationService.createDatadogMetricEndPointMap(dockerMetrics, ecsMetrics, null, customMetricsMap);
 
     assertThat(4).isEqualTo(metricEndPoints.size());
     assertThat(metricEndPoints.keySet().contains(expectedDockerCPUMetricURL)).isTrue();
@@ -279,5 +303,26 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
 
     assertThat(heatMapResolution.getEventsPerHeatMapUnit(heatMapResolution))
         .isEqualTo(thirtyDayResolutionDurationInMinutes / VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCreateCVTask247() {
+    CVConfiguration cvConfiguration = mock(CVConfiguration.class);
+    Instant startTime = Instant.now().minus(5, ChronoUnit.MINUTES);
+    Instant endTime = Instant.now();
+    String cvConfigId = UUID.randomUUID().toString();
+    when(cvConfigurationService.getConfiguration(eq(cvConfigId))).thenReturn(cvConfiguration);
+    when(cvConfiguration.getUuid()).thenReturn(cvConfigId);
+    when(cvConfiguration.getAccountId()).thenReturn(accountId);
+    DataCollectionInfoV2 dataCollectionInfo = mock(DataCollectionInfoV2.class);
+    when(dataCollectionInfoService.create(any(), any(), any())).thenReturn(dataCollectionInfo);
+    continuousVerificationService.createCVTask247(cvConfigId, startTime, endTime);
+    verify(dataCollectionInfoService).create(eq(cvConfiguration), eq(startTime), eq(endTime));
+    ArgumentCaptor<CVTask> cvTaskArgumentCaptor = ArgumentCaptor.forClass(CVTask.class);
+    verify(cvTaskService).saveCVTask(cvTaskArgumentCaptor.capture());
+    assertEquals(ExecutionStatus.QUEUED, cvTaskArgumentCaptor.getValue().getStatus());
+    assertEquals(accountId, cvTaskArgumentCaptor.getValue().getAccountId());
+    assertEquals(dataCollectionInfo, cvTaskArgumentCaptor.getValue().getDataCollectionInfo());
   }
 }

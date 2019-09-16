@@ -134,6 +134,7 @@ import software.wings.service.intfc.verification.CV24x7DashboardService;
 import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.verification.CVTaskService;
+import software.wings.service.intfc.verification.DataCollectionInfoService;
 import software.wings.settings.SettingValue;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateExecutionData;
@@ -222,6 +223,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private ContinuousVerificationService continuousVerificationService;
   @Inject private CVActivityLogService cvActivityLogService;
   @Inject private CVTaskService cvTaskService;
+  @Inject private DataCollectionInfoService dataCollectionInfoService;
 
   private static final int PAGE_LIMIT = 999;
   private static final int START_OFFSET = 0;
@@ -1680,6 +1682,20 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     DelegateTask delegateTask = createDataCollectionDelegateTask(cvTask);
     delegateService.queueTask(delegateTask);
     return true;
+  }
+
+  @Override
+  public boolean createCVTask247(String cvConfigId, Instant startTime, Instant endTime) {
+    CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
+    DataCollectionInfoV2 dataCollectionInfo = dataCollectionInfoService.create(cvConfiguration, startTime, endTime);
+    CVTask cvTask = CVTask.builder()
+                        .status(ExecutionStatus.QUEUED)
+                        .cvConfigId(cvConfiguration.getUuid())
+                        .accountId(cvConfiguration.getAccountId())
+                        .dataCollectionInfo(dataCollectionInfo)
+                        .build();
+    cvTaskService.saveCVTask(cvTask);
+    return false;
   }
 
   private StateExecutionData getExecutionData(CVConfiguration cvConfiguration, String waitId, int timeDuration) {

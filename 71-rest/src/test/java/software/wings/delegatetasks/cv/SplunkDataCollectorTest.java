@@ -12,17 +12,15 @@ import com.splunk.Job;
 import com.splunk.Service;
 import io.harness.category.element.UnitTests;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.reflect.FieldUtils;
 import org.intellij.lang.annotations.Language;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
 import software.wings.beans.SplunkConfig;
+import software.wings.delegatetasks.DelegateCVActivityLogService.Logger;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfoV2;
-import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -33,7 +31,6 @@ import java.util.Optional;
 public class SplunkDataCollectorTest {
   private SplunkConfig config;
   private SplunkDataCollector splunkDataCollector;
-  @Mock EncryptionService encryptionService;
 
   @Before
   public void setUp() throws IllegalAccessException {
@@ -45,7 +42,6 @@ public class SplunkDataCollectorTest {
                  .password("123".toCharArray())
                  .build();
     splunkDataCollector = spy(new SplunkDataCollector());
-    FieldUtils.writeField(splunkDataCollector, "encryptionService", encryptionService, true);
   }
 
   @Test
@@ -61,6 +57,7 @@ public class SplunkDataCollectorTest {
   @Category(UnitTests.class)
   public void testFetchLogsWithoutHost() {
     DataCollectionCallback dataCollectionCallback = mock(DataCollectionCallback.class);
+    when(dataCollectionCallback.getActivityLogger()).thenReturn(mock(Logger.class));
     SplunkDataCollectionInfoV2 splunkDataCollectionInfoV2 = createDataCollectionInfo();
     splunkDataCollector.init(dataCollectionCallback, splunkDataCollectionInfoV2);
     Service service = mock(Service.class);
