@@ -2,8 +2,10 @@ package software.wings.resources.dashboard;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.ResourceType.CUSTOM_DASHBOARD;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -16,24 +18,41 @@ import io.harness.dashboard.Action;
 import io.harness.dashboard.DashboardSettings;
 import io.harness.dashboard.DashboardSettingsService;
 import io.harness.eraro.ErrorCode;
+import io.harness.eraro.Level;
+import io.harness.eraro.ResponseMessage;
+import io.harness.event.reconciliation.deployment.ReconciliationStatus;
+import io.harness.event.reconciliation.service.DeploymentReconService;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
+import io.harness.rest.RestResponse.Builder;
 import io.swagger.annotations.Api;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotBlank;
+import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.FeatureName;
+import software.wings.beans.User;
 import software.wings.features.CustomDashboardFeature;
 import software.wings.features.api.AccountId;
 import software.wings.features.api.RestrictedApi;
 import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ListAPI;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.security.auth.DashboardAuthHandler;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.HarnessUserGroupService;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -45,6 +64,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+@Slf4j
 @Api("custom-dashboard")
 @Path("/custom-dashboard")
 @Scope(CUSTOM_DASHBOARD)
@@ -53,13 +73,21 @@ public class CustomDashboardResource {
   private DashboardSettingsService dashboardSettingsService;
   private FeatureFlagService featureFlagService;
   private DashboardAuthHandler dashboardAuthHandler;
+  private HarnessUserGroupService harnessUserGroupService;
+  private DeploymentReconService deploymentReconService;
+  private AccountService accountService;
 
   @Inject
   public CustomDashboardResource(DashboardSettingsService dashboardSettingsService,
-      FeatureFlagService featureFlagService, DashboardAuthHandler dashboardAuthHandler) {
+      FeatureFlagService featureFlagService, DashboardAuthHandler dashboardAuthHandler,
+      HarnessUserGroupService harnessUserGroupService, DeploymentReconService deploymentReconService,
+      AccountService accountService) {
     this.dashboardSettingsService = dashboardSettingsService;
     this.featureFlagService = featureFlagService;
     this.dashboardAuthHandler = dashboardAuthHandler;
+    this.harnessUserGroupService = harnessUserGroupService;
+    this.deploymentReconService = deploymentReconService;
+    this.accountService = accountService;
   }
 
   @POST
@@ -141,5 +169,113 @@ public class CustomDashboardResource {
     DashboardSettings dashboardSetting = dashboardSettingsService.get(accountId, dashboardId);
     dashboardAuthHandler.authorize(dashboardSetting, accountId, Action.READ);
     return new RestResponse<>(dashboardSetting);
+  }
+
+  /**
+   * Perform reconciliation
+   *
+   * @return the rest response
+   */
+  @PUT
+  @Path("deployment-recon-per-account")
+  @Scope(value = ResourceType.USER, scope = LOGGED_IN)
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = LOGGED_IN)
+  public RestResponse performReconciliationSingleAccount(
+      @QueryParam("targetAccountId") @NotEmpty String targetAccountId,
+      @QueryParam("durationStartTs") Long durationStartTs, @QueryParam("durationEndTs") Long durationEndTs) {
+    User authUser = UserThreadLocal.get();
+
+    if (harnessUserGroupService.isHarnessSupportUser(authUser.getUuid())) {
+      if (durationEndTs == null || durationStartTs == null || durationStartTs <= 0 || durationEndTs <= 0) {
+        return Builder.aRestResponse()
+            .withResponseMessages(Lists.newArrayList(ResponseMessage.builder()
+                                                         .message("durationStartTs or endTs is null or invalid")
+
+                                                         .build()))
+            .build();
+      }
+
+      Account account = accountService.get(targetAccountId);
+      if (account == null) {
+        return Builder.aRestResponse()
+            .withResponseMessages(Lists.newArrayList(ResponseMessage.builder()
+                                                         .message(targetAccountId + " not found")
+                                                         .code(ErrorCode.INVALID_ARGUMENT)
+                                                         .build()))
+            .build();
+      }
+      ReconciliationStatus status =
+          deploymentReconService.performReconciliation(targetAccountId, durationStartTs, durationEndTs);
+      return Builder.aRestResponse()
+          .withResponseMessages(Lists.newArrayList(ResponseMessage.builder()
+                                                       .message(targetAccountId + ":" + status.name())
+                                                       .code(null)
+                                                       .level(Level.INFO)
+                                                       .build()))
+          .build();
+    } else {
+      return Builder.aRestResponse()
+          .withResponseMessages(
+              Lists.newArrayList(ResponseMessage.builder()
+                                     .message("User not allowed to perform the deployment-recon-per-account operation")
+                                     .build()))
+          .build();
+    }
+  }
+
+  /**
+   * Perform reconciliation
+   *
+   * @return the rest response
+   */
+  @PUT
+  @Path("deployment-recon-all-accounts")
+  @Scope(value = ResourceType.USER, scope = LOGGED_IN)
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = LOGGED_IN)
+  public RestResponse performReconciliationAllAccounts(
+      @QueryParam("durationStartTs") Long durationStartTs, @QueryParam("durationEndTs") Long durationEndTs) {
+    User authUser = UserThreadLocal.get();
+    if (harnessUserGroupService.isHarnessSupportUser(authUser.getUuid())) {
+      if (durationEndTs == null || durationStartTs == null || durationStartTs <= 0 || durationEndTs <= 0) {
+        return Builder.aRestResponse()
+            .withResponseMessages(Lists.newArrayList(ResponseMessage.builder()
+                                                         .message("durationStartTs or endTs is null or invalid")
+                                                         .code(ErrorCode.INVALID_ARGUMENT)
+                                                         .build()))
+            .build();
+      }
+
+      List<Account> accountList = accountService.listAllAccountWithDefaultsWithoutLicenseInfo();
+      Map<String, String> accountReconStatusMap = new HashMap<>();
+      for (Account account : accountList) {
+        ReconciliationStatus status =
+            deploymentReconService.performReconciliation(account.getUuid(), durationStartTs, durationEndTs);
+        accountReconStatusMap.put(account.getAccountName(), status.name());
+        logger.info("Reconcilation completed for accountID:[{}],accountName:[{}],status:[{}]", account.getUuid(),
+            account.getAccountName(), status);
+      }
+      return Builder.aRestResponse()
+          .withResponseMessages(accountReconStatusMap.entrySet()
+                                    .stream()
+                                    .map(stringStringEntry
+                                        -> ResponseMessage.builder()
+                                               .message(stringStringEntry.getKey() + ":" + stringStringEntry.getValue())
+                                               .code(null)
+                                               .level(Level.INFO)
+                                               .build())
+                                    .collect(Collectors.toList()))
+          .build();
+    } else {
+      return Builder.aRestResponse()
+          .withResponseMessages(
+              Lists.newArrayList(ResponseMessage.builder()
+                                     .message("User not allowed to perform the deployment-recon-all-account operation")
+                                     .build()))
+          .build();
+    }
   }
 }
