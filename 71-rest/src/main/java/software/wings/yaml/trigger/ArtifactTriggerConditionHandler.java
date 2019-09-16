@@ -1,5 +1,9 @@
 package software.wings.yaml.trigger;
 
+import static io.harness.exception.WingsException.USER;
+import static java.lang.String.format;
+import static software.wings.utils.Validator.notNullCheck;
+
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
@@ -47,6 +51,7 @@ public class ArtifactTriggerConditionHandler extends TriggerConditionYamlHandler
     String artifactSourceName = null;
     if (EmptyPredicate.isNotEmpty(serviceName) && EmptyPredicate.isNotEmpty(artifactStreamName)) {
       artifactStream = yamlHelper.getArtifactStreamWithName(appId, serviceName, artifactStreamName);
+      notNullCheck(format("Artifact stream [%s] does not exist", artifactStreamName), artifactStream, USER);
       artiFactStreamId = artifactStream.getUuid();
       artifactSourceName = artifactStream.generateSourceName();
     }
