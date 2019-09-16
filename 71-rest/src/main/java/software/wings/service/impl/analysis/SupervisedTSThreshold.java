@@ -17,14 +17,16 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Id;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.Threshold;
 import software.wings.metrics.ThresholdComparisonType;
-import software.wings.metrics.ThresholdType;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @org.mongodb.morphia.annotations.Entity(value = "supervisedTSThreshold", noClassnameStored = true)
 @Data
@@ -34,6 +36,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
+@Slf4j
 public class SupervisedTSThreshold implements GoogleDataStoreAware, CreatedAtAware {
   public static final String connector = ":";
 
@@ -97,17 +100,42 @@ public class SupervisedTSThreshold implements GoogleDataStoreAware, CreatedAtAwa
     return tsThreshold;
   }
 
-  public static List<Threshold> getThresholds(SupervisedTSThreshold threshold) {
-    Threshold minThreshold = Threshold.builder()
-                                 .thresholdType(ThresholdType.ALERT_WHEN_LOWER)
-                                 .comparisonType(ThresholdComparisonType.DELTA)
-                                 .ml(threshold.getMinThreshold())
-                                 .build();
-    Threshold maxThreshold = Threshold.builder()
-                                 .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
-                                 .comparisonType(ThresholdComparisonType.DELTA)
-                                 .ml(threshold.getMaxThreshold())
-                                 .build();
-    return Arrays.asList(minThreshold, maxThreshold);
+  public static List<Threshold> getThresholds(SupervisedTSThreshold supervisedThreshold) {
+    Optional<Threshold> defaultThreshold = supervisedThreshold.getMetricType()
+                                               .getThresholds()
+                                               .stream()
+                                               .filter(t -> t.getComparisonType().equals(ThresholdComparisonType.DELTA))
+                                               .findAny();
+
+    Optional<Double> thresholdValue = Optional.empty();
+
+    if (defaultThreshold.isPresent()) {
+      switch (defaultThreshold.get().getThresholdType()) {
+        case ALERT_HIGHER_OR_LOWER:
+          thresholdValue = Optional.of(Math.min(
+              Math.abs(supervisedThreshold.getMinThreshold()), Math.abs(supervisedThreshold.getMaxThreshold())));
+          break;
+        case ALERT_WHEN_HIGHER:
+          thresholdValue = Optional.of(Math.abs(supervisedThreshold.getMinThreshold()));
+          break;
+        case ALERT_WHEN_LOWER:
+          thresholdValue = Optional.of(Math.abs(supervisedThreshold.getMaxThreshold()));
+          break;
+        default:
+          logger.info(
+              "Comparision type not handled for supervised thresholds {}", defaultThreshold.get().getThresholdType());
+          break;
+      }
+
+      if (thresholdValue.isPresent() && defaultThreshold.get().getMl() > thresholdValue.get()) {
+        Threshold threshold = Threshold.builder()
+                                  .thresholdType(defaultThreshold.get().getThresholdType())
+                                  .comparisonType(ThresholdComparisonType.DELTA)
+                                  .ml(thresholdValue.get())
+                                  .build();
+        return Collections.singletonList(threshold);
+      }
+    }
+    return new ArrayList<>();
   }
 }
