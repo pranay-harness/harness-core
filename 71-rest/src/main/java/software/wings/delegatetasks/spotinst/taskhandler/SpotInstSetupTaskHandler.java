@@ -11,7 +11,10 @@ import static io.harness.spotinst.model.SpotInstConstants.CAPACITY_MINIMUM_CONFI
 import static io.harness.spotinst.model.SpotInstConstants.CAPACITY_TARGET_CONFIG_ELEMENT;
 import static io.harness.spotinst.model.SpotInstConstants.CAPACITY_UNIT_CONFIG_ELEMENT;
 import static io.harness.spotinst.model.SpotInstConstants.COMPUTE;
+import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_CREATED_AT;
+import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_ID;
 import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_IMAGE_CONFIG;
+import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_UPDATED_AT;
 import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_USER_DATA_CONFIG;
 import static io.harness.spotinst.model.SpotInstConstants.GROUP_CONFIG_ELEMENT;
 import static io.harness.spotinst.model.SpotInstConstants.LAUNCH_SPECIFICATION;
@@ -208,11 +211,26 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
 
     Map<String, Object> elastiGroupConfigMap = (Map<String, Object>) jsonConfigMap.get(GROUP_CONFIG_ELEMENT);
 
+    removeUnsupportedFieldsForCreatingNewGroup(elastiGroupConfigMap);
     updateName(elastiGroupConfigMap, newElastiGroupName);
     updateInitialCapacity(elastiGroupConfigMap);
     updateWithLoadBalancerAndImageConfig(setupTaskParameters.getAwsLoadBalancerConfigs(), elastiGroupConfigMap,
         setupTaskParameters.getImage(), setupTaskParameters.getUserData());
     return gson.toJson(jsonConfigMap);
+  }
+
+  private void removeUnsupportedFieldsForCreatingNewGroup(Map<String, Object> elastiGroupConfigMap) {
+    if (elastiGroupConfigMap.containsKey(ELASTI_GROUP_ID)) {
+      elastiGroupConfigMap.remove(ELASTI_GROUP_ID);
+    }
+
+    if (elastiGroupConfigMap.containsKey(ELASTI_GROUP_CREATED_AT)) {
+      elastiGroupConfigMap.remove(ELASTI_GROUP_CREATED_AT);
+    }
+
+    if (elastiGroupConfigMap.containsKey(ELASTI_GROUP_UPDATED_AT)) {
+      elastiGroupConfigMap.remove(ELASTI_GROUP_UPDATED_AT);
+    }
   }
 
   private void updateName(Map<String, Object> elastiGroupConfigMap, String stageElastiGroupName) {

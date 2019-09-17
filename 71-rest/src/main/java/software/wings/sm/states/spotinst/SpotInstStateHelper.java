@@ -11,6 +11,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.sm.states.spotinst.SpotInstServiceSetup.SPOTINST_SERVICE_SETUP_COMMAND;
 import static software.wings.utils.Validator.notNullCheck;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.BaseEncoding;
@@ -32,6 +33,7 @@ import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
+import org.jetbrains.annotations.NotNull;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
@@ -66,6 +68,7 @@ import software.wings.utils.Misc;
 import software.wings.utils.ServiceVersionConvention;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -173,21 +176,40 @@ public class SpotInstStateHelper {
         .build();
   }
 
-  private List<LoadBalancerDetailsForBGDeployment> addLoadBalancerConfigAfterExpressionEvaluation(
+  @VisibleForTesting
+  List<LoadBalancerDetailsForBGDeployment> addLoadBalancerConfigAfterExpressionEvaluation(
       List<LoadBalancerDetailsForBGDeployment> awsLoadBalancerConfigs, ExecutionContext context) {
     List<LoadBalancerDetailsForBGDeployment> loadBalancerConfigs = new ArrayList<>();
 
-    awsLoadBalancerConfigs.forEach(awsLoadBalancerConfig -> {
-      loadBalancerConfigs.add(
-          LoadBalancerDetailsForBGDeployment.builder()
-              .loadBalancerName(context.renderExpression(awsLoadBalancerConfig.getLoadBalancerName()))
-              .loadBalancerArn(context.renderExpression(awsLoadBalancerConfig.getLoadBalancerArn()))
-              .prodListenerPort(context.renderExpression(awsLoadBalancerConfig.getProdListenerPort()))
-              .stageListenerPort(context.renderExpression(awsLoadBalancerConfig.getStageListenerPort()))
-              .build());
-    });
+    Map<String, LoadBalancerDetailsForBGDeployment> lbMap = new HashMap<>();
+    // Use a map with key as <lbName + prodPort + stagePort>, and value as actual LbConfig.
+    // This will get rid of any duplicate config.
+    if (isNotEmpty(awsLoadBalancerConfigs)) {
+      awsLoadBalancerConfigs.forEach(awsLoadBalancerConfig -> {
+        lbMap.put(getLBKey(awsLoadBalancerConfig),
+            LoadBalancerDetailsForBGDeployment.builder()
+                .loadBalancerName(context.renderExpression(awsLoadBalancerConfig.getLoadBalancerName()))
+                .loadBalancerArn(context.renderExpression(awsLoadBalancerConfig.getLoadBalancerArn()))
+                .prodListenerPort(context.renderExpression(awsLoadBalancerConfig.getProdListenerPort()))
+                .stageListenerPort(context.renderExpression(awsLoadBalancerConfig.getStageListenerPort()))
+                .build());
+      });
+
+      loadBalancerConfigs.addAll(lbMap.values());
+    }
 
     return loadBalancerConfigs;
+  }
+
+  @NotNull
+  private String getLBKey(LoadBalancerDetailsForBGDeployment awsLoadBalancerConfig) {
+    return new StringBuilder(128)
+        .append(awsLoadBalancerConfig.getLoadBalancerName())
+        .append('_')
+        .append(awsLoadBalancerConfig.getProdListenerPort())
+        .append('_')
+        .append(awsLoadBalancerConfig.getStageListenerPort())
+        .toString();
   }
 
   private int getPortNum(String port) {

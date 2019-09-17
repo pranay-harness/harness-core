@@ -39,4 +39,8 @@ public interface SpotInstConstants {
   String RENAME_OLD_COMMAND_UNIT = "Rename old Elastigroup";
   String RENAME_NEW_COMMAND_UNIT = "Rename new Elastigroup";
   String DEPLOYMENT_ERROR = "Final Deployment status";
+
+  String ELASTI_GROUP_ID = "id";
+  String ELASTI_GROUP_CREATED_AT = "createdAt";
+  String ELASTI_GROUP_UPDATED_AT = "updatedAt";
 }
