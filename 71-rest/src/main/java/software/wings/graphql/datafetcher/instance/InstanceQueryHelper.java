@@ -1,7 +1,6 @@
 package software.wings.graphql.datafetcher.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -24,7 +23,6 @@ import software.wings.graphql.schema.type.aggregation.instance.QLInstanceTagFilt
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceTagType;
 import software.wings.graphql.schema.type.aggregation.tag.QLTagInput;
 import software.wings.graphql.schema.type.instance.QLInstanceType;
-import software.wings.service.intfc.HarnessTagService;
 
 import java.util.List;
 import java.util.Set;
@@ -36,7 +34,6 @@ import java.util.Set;
 @Slf4j
 public class InstanceQueryHelper {
   @Inject protected DataFetcherUtils utils;
-  @Inject protected HarnessTagService tagService;
   @Inject protected TagHelper tagHelper;
 
   public void setQuery(String accountId, List<QLInstanceFilter> filters, Query query) {
@@ -92,21 +89,19 @@ public class InstanceQueryHelper {
         List<QLTagInput> tags = tagFilter.getTags();
         Set<String> entityIds =
             tagHelper.getEntityIdsFromTags(accountId, tags, getEntityType(tagFilter.getEntityType()));
-        if (isNotEmpty(entityIds)) {
-          switch (tagFilter.getEntityType()) {
-            case APPLICATION:
-              query.field("appId").in(entityIds);
-              break;
-            case SERVICE:
-              query.field("serviceId").in(entityIds);
-              break;
-            case ENVIRONMENT:
-              query.field("envId").in(entityIds);
-              break;
-            default:
-              logger.error("EntityType {} not supported in query", tagFilter.getEntityType());
-              throw new InvalidRequestException("Error while compiling query", WingsException.USER);
-          }
+        switch (tagFilter.getEntityType()) {
+          case APPLICATION:
+            query.field("appId").in(entityIds);
+            break;
+          case SERVICE:
+            query.field("serviceId").in(entityIds);
+            break;
+          case ENVIRONMENT:
+            query.field("envId").in(entityIds);
+            break;
+          default:
+            logger.error("EntityType {} not supported in query", tagFilter.getEntityType());
+            throw new InvalidRequestException("Error while compiling query", WingsException.USER);
         }
       }
     });

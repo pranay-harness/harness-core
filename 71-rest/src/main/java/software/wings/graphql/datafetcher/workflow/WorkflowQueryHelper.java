@@ -1,7 +1,6 @@
 package software.wings.graphql.datafetcher.workflow;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -58,15 +57,13 @@ public class WorkflowQueryHelper {
         List<QLTagInput> tags = triggerTagFilter.getTags();
         Set<String> entityIds =
             tagHelper.getEntityIdsFromTags(accountId, tags, getEntityType(triggerTagFilter.getEntityType()));
-        if (isNotEmpty(entityIds)) {
-          switch (triggerTagFilter.getEntityType()) {
-            case APPLICATION:
-              query.field("appId").in(entityIds);
-              break;
-            default:
-              logger.error("EntityType {} not supported in query", triggerTagFilter.getEntityType());
-              throw new InvalidRequestException("Error while compiling query", WingsException.USER);
-          }
+        switch (triggerTagFilter.getEntityType()) {
+          case APPLICATION:
+            query.field("appId").in(entityIds);
+            break;
+          default:
+            logger.error("EntityType {} not supported in query", triggerTagFilter.getEntityType());
+            throw new InvalidRequestException("Error while compiling query", WingsException.USER);
         }
       }
     });

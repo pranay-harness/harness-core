@@ -1,7 +1,6 @@
 package software.wings.graphql.datafetcher.execution;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -137,21 +136,19 @@ public class ExecutionQueryHelper {
         List<QLTagInput> tags = tagFilter.getTags();
         Set<String> entityIds =
             tagHelper.getEntityIdsFromTags(accountId, tags, getEntityType(tagFilter.getEntityType()));
-        if (isNotEmpty(entityIds)) {
-          switch (tagFilter.getEntityType()) {
-            case APPLICATION:
-              query.field(WorkflowExecutionKeys.appId).in(entityIds);
-              break;
-            case SERVICE:
-              query.field(WorkflowExecutionKeys.serviceIds).in(entityIds);
-              break;
-            case ENVIRONMENT:
-              query.field(WorkflowExecutionKeys.envIds).in(entityIds);
-              break;
-            default:
-              logger.error("EntityType {} not supported in execution query", tagFilter.getEntityType());
-              throw new InvalidRequestException("Error while compiling execution query", WingsException.USER);
-          }
+        switch (tagFilter.getEntityType()) {
+          case APPLICATION:
+            query.field(WorkflowExecutionKeys.appId).in(entityIds);
+            break;
+          case SERVICE:
+            query.field(WorkflowExecutionKeys.serviceIds).in(entityIds);
+            break;
+          case ENVIRONMENT:
+            query.field(WorkflowExecutionKeys.envIds).in(entityIds);
+            break;
+          default:
+            logger.error("EntityType {} not supported in execution query", tagFilter.getEntityType());
+            throw new InvalidRequestException("Error while compiling execution query", WingsException.USER);
         }
       }
     });

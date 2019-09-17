@@ -1,7 +1,6 @@
 package software.wings.graphql.datafetcher.environment;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -65,15 +64,13 @@ public class EnvironmentQueryHelper {
         List<QLTagInput> tags = environmentTagFilter.getTags();
         Set<String> entityIds =
             tagHelper.getEntityIdsFromTags(accountId, tags, getEntityType(environmentTagFilter.getEntityType()));
-        if (isNotEmpty(entityIds)) {
-          switch (environmentTagFilter.getEntityType()) {
-            case APPLICATION:
-              query.field("appId").in(entityIds);
-              break;
-            default:
-              logger.error("EntityType {} not supported in query", environmentTagFilter.getEntityType());
-              throw new InvalidRequestException("Error while compiling query", WingsException.USER);
-          }
+        switch (environmentTagFilter.getEntityType()) {
+          case APPLICATION:
+            query.field("appId").in(entityIds);
+            break;
+          default:
+            logger.error("EntityType {} not supported in query", environmentTagFilter.getEntityType());
+            throw new InvalidRequestException("Error while compiling query", WingsException.USER);
         }
       }
     });
