@@ -6,6 +6,7 @@ import static java.time.Duration.ofSeconds;
 import static java.util.Collections.singletonList;
 import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
+import static software.wings.service.impl.aws.model.AwsConstants.AWS_SIMPLE_HTTP_CONNECTIVITY_URL;
 import static software.wings.utils.SshHelperUtils.createSshSessionConfig;
 
 import com.google.inject.Inject;
@@ -152,13 +153,9 @@ public class CommandValidation extends AbstractDelegateValidateTask {
   }
 
   private DelegateConnectionResult validateAwsCodeDelpoy(CommandExecutionContext context) {
-    String region = null;
-    if (context.getCodeDeployParams() != null) {
-      region = context.getCodeDeployParams().getRegion();
-    }
     return DelegateConnectionResult.builder()
         .criteria(getCriteria(context))
-        .validated(region == null || AwsHelperService.isInAwsRegion(region) || isLocalDev())
+        .validated(connectableHttpUrl(AWS_SIMPLE_HTTP_CONNECTIVITY_URL))
         .build();
   }
 
@@ -275,10 +272,7 @@ public class CommandValidation extends AbstractDelegateValidateTask {
         }
         return "ECS Cluster: " + cluster + ", " + getAwsRegionCriteria(region);
       case AWS_CODEDEPLOY:
-        if (context.getCodeDeployParams() != null) {
-          region = context.getCodeDeployParams().getRegion();
-        }
-        return getAwsRegionCriteria(region);
+        return AWS_SIMPLE_HTTP_CONNECTIVITY_URL;
       case WINRM:
       case SSH:
         if (context.isExecuteOnDelegate()) {

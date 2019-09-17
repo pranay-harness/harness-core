@@ -1,7 +1,9 @@
 package software.wings.beans.command;
 
+import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability;
 import static io.harness.govern.Switch.unhandled;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.service.impl.aws.model.AwsConstants.AWS_SIMPLE_HTTP_CONNECTIVITY_URL;
 
 import com.google.common.collect.Maps;
 
@@ -207,8 +209,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
         }
         return Collections.singletonList(AwsRegionCapabilityGenerator.buildAwsRegionCapability(region));
       case AWS_CODEDEPLOY:
-        region = codeDeployParams != null ? codeDeployParams.getRegion() : null;
-        return Collections.singletonList(AwsRegionCapabilityGenerator.buildAwsRegionCapability(region));
+        return Collections.singletonList(buildHttpConnectionExecutionCapability(AWS_SIMPLE_HTTP_CONNECTIVITY_URL));
       case AMI:
       case AWS_LAMBDA:
         return Collections.singletonList(IgnoreValidationCapabilityGenerator.buildIgnoreValidationCapability());

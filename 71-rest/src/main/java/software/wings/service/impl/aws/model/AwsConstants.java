@@ -1,6 +1,7 @@
 package software.wings.service.impl.aws.model;
 
 public interface AwsConstants {
+  String AWS_SIMPLE_HTTP_CONNECTIVITY_URL = "https://aws.amazon.com/";
   int DEFAULT_AMI_ASG_MAX_INSTANCES = 10;
   int DEFAULT_AMI_ASG_MIN_INSTANCES = 0;
   int DEFAULT_AMI_ASG_DESIRED_INSTANCES = 6;
