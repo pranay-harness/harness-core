@@ -13,23 +13,31 @@ import static software.wings.metrics.RiskLevel.getRiskLevel;
 import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
+import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Sort;
+import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord.ExperimentalLogMLAnalysisRecordKeys;
+import software.wings.service.impl.analysis.ExperimentalMessageComparisonResult.ExperimentalMessageComparisonResultKeys;
 import software.wings.service.impl.analysis.ExperimentalMetricAnalysisRecord.ExperimentalMetricAnalysisRecordKeys;
 import software.wings.service.impl.analysis.MetricAnalysisRecord.MetricAnalysisRecordKeys;
 import software.wings.service.impl.newrelic.ExperimentalMetricRecord;
 import software.wings.service.impl.splunk.LogMLClusterScores;
+import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ExperimentalAnalysisService;
 import software.wings.sm.StateType;
+import software.wings.verification.CVConfiguration;
+import software.wings.verification.CVConfiguration.CVConfigurationKeys;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,6 +58,8 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
   @Inject private WingsPersistence wingsPersistence;
 
   @Inject private AnalysisService analysisService;
+
+  @Inject private DataStoreService dataStoreService;
 
   @Override
   public ExperimentPerformance getMetricExpAnalysisPerformance(
@@ -458,5 +468,69 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
     analysisSummary.setRiskLevel(riskLevel);
     analysisSummary.setAnalysisSummaryMessage(analysisSummaryMsg);
     return analysisSummary;
+  }
+
+  @Override
+  public List<ExperimentalMessageComparisonResult> getMessagePairsToVote(String serviceId) {
+    List<ExperimentalMessageComparisonResult> messagesToShow = new ArrayList<>();
+    User currentUser = UserThreadLocal.get();
+
+    List<CVConfiguration> cvConfigurationList = wingsPersistence.createQuery(CVConfiguration.class, excludeAuthority)
+                                                    .filter(CVConfigurationKeys.serviceId, serviceId)
+                                                    .asList();
+    try (HIterator<CVConfiguration> cvConfigurationHIterator =
+             new HIterator<>(wingsPersistence.createQuery(CVConfiguration.class, excludeAuthority)
+                                 .filter(CVConfigurationKeys.serviceId, serviceId)
+                                 .fetch())) {
+      if (!cvConfigurationHIterator.hasNext() || messagesToShow.size() >= 10) {
+        return messagesToShow;
+      }
+      CVConfiguration cvConfiguration = cvConfigurationHIterator.next();
+      PageRequest<ExperimentalMessageComparisonResult> comparisonResultPageRequest =
+          PageRequestBuilder.aPageRequest()
+              .addFilter(ExperimentalMessageComparisonResultKeys.cvConfigId, Operator.EQ, cvConfiguration.getUuid())
+              .addFilter(ExperimentalMessageComparisonResultKeys.numVotes, Operator.LT, 3)
+              .build();
+      List<ExperimentalMessageComparisonResult> comparisonResults =
+          dataStoreService.list(ExperimentalMessageComparisonResult.class, comparisonResultPageRequest);
+      if (isNotEmpty(comparisonResults)) {
+        for (ExperimentalMessageComparisonResult result : comparisonResults) {
+          if (messagesToShow.size() >= 10) {
+            break;
+          }
+
+          if (isEmpty(result.getUserVotes())) {
+            messagesToShow.add(result);
+            continue;
+          }
+
+          if (!result.getUserVotes().containsKey(currentUser.getName())) {
+            messagesToShow.add(result);
+            continue;
+          }
+        }
+      }
+    }
+    return messagesToShow;
+  }
+
+  @Override
+  public boolean saveMessagePairsToVote(String serviceId, Map<String, String> userVotes) {
+    User currentUser = UserThreadLocal.get();
+    if (isNotEmpty(userVotes)) {
+      List<ExperimentalMessageComparisonResult> resultsToSave = new ArrayList<>();
+      userVotes.forEach((uuid, vote) -> {
+        ExperimentalMessageComparisonResult result =
+            dataStoreService.getEntity(ExperimentalMessageComparisonResult.class, uuid);
+        if (result.getUserVotes() == null) {
+          result.setUserVotes(new HashMap<>());
+        }
+        result.getUserVotes().put(currentUser.getName(), vote);
+        result.incrementNumVotes();
+        resultsToSave.add(result);
+      });
+      dataStoreService.save(ExperimentalMessageComparisonResult.class, resultsToSave, false);
+    }
+    return true;
   }
 }

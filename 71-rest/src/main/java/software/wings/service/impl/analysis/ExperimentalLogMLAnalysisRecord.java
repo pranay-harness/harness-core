@@ -4,6 +4,7 @@ import static software.wings.common.VerificationConstants.ML_RECORDS_TTL_MONTHS;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.IgnoreUnusedIndex;
 import lombok.Data;
@@ -59,7 +60,12 @@ public class ExperimentalLogMLAnalysisRecord extends Base {
   private Map<String, Map<String, SplunkAnalysisCluster>> unknown_clusters;
   private Map<String, Map<String, SplunkAnalysisCluster>> test_clusters;
   private Map<String, Map<String, SplunkAnalysisCluster>> ignore_clusters;
+  private LogMLAnalysisStatus analysisStatus;
+  @Indexed private String cvConfigId;
   private LogMLClusterScores cluster_scores;
+  @JsonProperty("comparison_msg_pairs") private transient List<ExperimentalMessageComparisonResult> comparisonMsgPairs;
+  @JsonProperty("model_version") private String modelVersion;
+  @JsonProperty("analysis_metadata") private Map<String, String> analysisMetadata;
 
   @JsonIgnore
   @SchemaIgnore

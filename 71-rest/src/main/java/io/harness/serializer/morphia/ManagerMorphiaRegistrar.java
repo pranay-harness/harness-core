@@ -452,6 +452,7 @@ import software.wings.service.impl.analysis.CustomLogDataCollectionInfo;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
+import software.wings.service.impl.analysis.ExperimentalMessageComparisonResult;
 import software.wings.service.impl.analysis.ExperimentalMetricAnalysisRecord;
 import software.wings.service.impl.analysis.LabeledLogRecord;
 import software.wings.service.impl.analysis.LogDataRecord;
@@ -902,6 +903,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(SupervisedTrainingStatus.class);
     set.add(PipelineGovernanceConfig.class);
     set.add(DeploymentReconRecord.class);
+    set.add(ExperimentalMessageComparisonResult.class);
   }
 
   @Override

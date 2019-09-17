@@ -16,6 +16,7 @@ import javax.ws.rs.QueryParam;
 public interface ExperimentalLogAnalysisResource {
   String ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL = "/save-analysis-records";
   String ANALYSIS_STATE_GET_EXP_ANALYSIS_INFO_URL = "/get-exp-analysis-info";
+  String MSG_PAIRS_TO_VOTE = "/msg-pairs-to-vote";
   String ANALYSIS_STATE_RE_QUEUE_TASK = "/experimentalTask";
   String LEARNING_EXP_URL = "learning-exp";
 

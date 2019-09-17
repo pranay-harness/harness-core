@@ -62,6 +62,7 @@ import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaD
 import software.wings.service.impl.analysis.ExpAnalysisInfo;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord.ExperimentalLogMLAnalysisRecordKeys;
+import software.wings.service.impl.analysis.ExperimentalMessageComparisonResult;
 import software.wings.service.impl.analysis.FeedbackAction;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
@@ -660,6 +661,39 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   }
 
   @Override
+  public boolean save24X7ExpLogAnalysisRecords(String appId, String cvConfigId, int analysisMinute,
+      AnalysisComparisonStrategy comparisonStrategy, ExperimentalLogMLAnalysisRecord mlAnalysisResponse,
+      Optional<String> taskId, Optional<Boolean> isFeedbackAnalysis) {
+    mlAnalysisResponse.setValidUntil(Date.from(OffsetDateTime.now().plusMonths(1).toInstant()));
+    List<ExperimentalMessageComparisonResult> comparisonResults = mlAnalysisResponse.getComparisonMsgPairs();
+    Map<String, Map<String, SplunkAnalysisCluster>> unknownClusters = mlAnalysisResponse.getUnknown_clusters();
+    mlAnalysisResponse.setCvConfigId(cvConfigId);
+    mlAnalysisResponse.setAppId(appId);
+    mlAnalysisResponse.setLogCollectionMinute(analysisMinute);
+    if (!isFeedbackAnalysis.isPresent() || !isFeedbackAnalysis.get()) {
+      mlAnalysisResponse.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+    } else {
+      mlAnalysisResponse.setAnalysisStatus(LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
+    }
+    wingsPersistence.save(mlAnalysisResponse);
+
+    if (taskId.isPresent()) {
+      learningEngineService.markExpTaskCompleted(taskId.get());
+    }
+
+    if (isNotEmpty(comparisonResults)) {
+      comparisonResults.forEach(result -> {
+        result.setCvConfigId(cvConfigId);
+        result.setLogCollectionMinute(mlAnalysisResponse.getLogCollectionMinute());
+        result.setStateExecutionId(mlAnalysisResponse.getStateExecutionId());
+        result.setModelVersion(mlAnalysisResponse.getModelVersion());
+      });
+      dataStoreService.save(ExperimentalMessageComparisonResult.class, comparisonResults, true);
+    }
+    return true;
+  }
+
+  @Override
   public Map<FeedbackAction, List<CVFeedbackRecord>> getUserFeedback(
       String cvConfigId, String stateExecutionId, String appId) {
     List<CVFeedbackRecord> feedbackRecords =
@@ -701,6 +735,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     if (mlAnalysisResponse.getIgnore_clusters() != null) {
       mlAnalysisResponse.setIgnore_clusters(getClustersWithDotsReplaced(mlAnalysisResponse.getIgnore_clusters()));
     }
+    List<ExperimentalMessageComparisonResult> messageComparisonResult = mlAnalysisResponse.getComparisonMsgPairs();
 
     if (mlAnalysisResponse.getLogCollectionMinute() == -1 || !isEmpty(mlAnalysisResponse.getControl_events())
         || !isEmpty(mlAnalysisResponse.getTest_events())) {

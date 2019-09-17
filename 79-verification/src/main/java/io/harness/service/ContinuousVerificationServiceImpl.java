@@ -69,6 +69,7 @@ import software.wings.service.impl.analysis.TimeSeriesMetricTemplates.TimeSeries
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.newrelic.MLExperiments;
+import software.wings.service.impl.newrelic.MLExperiments.MLExperimentsKeys;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -251,7 +252,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               analysisStartMinute += 1;
 
               Set<String> tags = getTags(cvConfiguration.getUuid(), cvConfiguration.getAppId());
-              List<MLExperiments> experiments = get24x7Experiments();
+              List<MLExperiments> experiments = get24x7Experiments(MLAnalysisType.TIME_SERIES.name());
               if (isEmpty(tags)) {
                 LearningEngineAnalysisTask learningEngineAnalysisTask =
                     createLearningEngineAnalysisTask(accountId, cvConfiguration, analysisStartMinute, endMinute, null);
@@ -318,8 +319,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return tags;
   }
 
-  private List<MLExperiments> get24x7Experiments() {
-    return wingsPersistence.createQuery(MLExperiments.class, excludeAuthority).filter("is24x7", true).asList();
+  private List<MLExperiments> get24x7Experiments(String analysisType) {
+    return wingsPersistence.createQuery(MLExperiments.class, excludeAuthority)
+        .filter("is24x7", true)
+        .filter(MLExperimentsKeys.ml_analysis_type, analysisType)
+        .asList();
   }
 
   private LearningEngineAnalysisTask createLearningEngineAnalysisTask(
@@ -778,7 +782,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                     cvConfiguration.getUuid(), hosts, logRecordMinute);
               }
 
-              List<MLExperiments> experiments = get24x7Experiments();
+              List<MLExperiments> experiments = get24x7Experiments(MLAnalysisType.LOG_CLUSTER.name());
               for (MLExperiments experiment : experiments) {
                 LearningEngineExperimentalAnalysisTask expTask =
                     LearningEngineExperimentalAnalysisTask.builder()
@@ -939,7 +943,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 logger.info("L2 Clustering queued for cvConfig {} from minute {} to minute {}",
                     cvConfiguration.getUuid(), minLogRecordL1Minute, maxLogRecordL1Minute);
               }
-              List<MLExperiments> experiments = get24x7Experiments();
+              List<MLExperiments> experiments = get24x7Experiments(MLAnalysisType.LOG_CLUSTER.name());
               for (MLExperiments experiment : experiments) {
                 LearningEngineExperimentalAnalysisTask expTask =
                     LearningEngineExperimentalAnalysisTask.builder()
@@ -1026,9 +1030,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               logAnalysisService.createAndUpdateFeedbackAnalysis(
                   LogMLAnalysisRecordKeys.cvConfigId, cvConfiguration.getUuid(), lastLogMLAnalysisMinute);
             } else {
-              createFeedbackAnalysisTask(logsCVConfiguration, minuteForFeedbackAnalysis);
+              boolean feedbackTask = createFeedbackAnalysisTask(logsCVConfiguration, minuteForFeedbackAnalysis);
               logger.info("Created Feedback analysis task for {} and minute {}", logsCVConfiguration.getUuid(),
                   minuteForFeedbackAnalysis);
+              if (feedbackTask) {
+                createExperimentalFeedbackTask(logsCVConfiguration, minuteForFeedbackAnalysis);
+              }
             }
           }
         });
@@ -1039,7 +1046,52 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(featureName, accountId))
         .getResource();
   }
+  private void createExperimentalFeedbackTask(LogsCVConfiguration logsCVConfiguration, long logCollectionMinute) {
+    try {
+      String stateExecutionIdForLETask =
+          "LOG_24X7_EXP_FEEDBACK_ANALYSIS_" + logsCVConfiguration.getUuid() + "_" + logCollectionMinute;
+      logger.info("Creating Experimental Feedback analysis task for {} and minute {}", logsCVConfiguration.getUuid(),
+          logCollectionMinute);
+      String feedbackUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS + GET_LOG_FEEDBACKS
+          + "?cvConfigId=" + logsCVConfiguration.getUuid() + "&appId=" + logsCVConfiguration.getAppId();
+      final String logMLResultUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
+          + LogAnalysisResource.ANALYSIS_GET_24X7_ANALYSIS_RECORDS_URL + "?appId=" + logsCVConfiguration.getAppId()
+          + "&cvConfigId=" + logsCVConfiguration.getUuid() + "&analysisMinute=" + logCollectionMinute;
+      final String taskId = generateUuid();
+      final String logAnalysisSaveUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
+          + LogAnalysisResource.ANALYSIS_SAVE_EXP_24X7_ANALYSIS_RECORDS_URL
+          + "?cvConfigId=" + logsCVConfiguration.getUuid() + "&appId=" + logsCVConfiguration.getAppId()
+          + "&analysisMinute=" + logCollectionMinute + "&taskId=" + taskId + "&isFeedbackAnalysis=true";
+      List<MLExperiments> experiments = get24x7Experiments(MLAnalysisType.FEEDBACK_ANALYSIS.name());
+      for (MLExperiments experiment : experiments) {
+        LearningEngineExperimentalAnalysisTask expTask =
+            LearningEngineExperimentalAnalysisTask.builder()
+                .feedback_url(feedbackUrl)
+                .logMLResultUrl(logMLResultUrl)
+                .state_execution_id(stateExecutionIdForLETask)
+                .query(Arrays.asList(logsCVConfiguration.getQuery()))
+                .ml_analysis_type(MLAnalysisType.FEEDBACK_ANALYSIS)
+                .analysis_save_url(logAnalysisSaveUrl)
+                .cvConfigId(logsCVConfiguration.getUuid())
+                .service_id(logsCVConfiguration.getServiceId())
+                //        .shouldUseSupervisedModel(learningEngineService.shouldUseSupervisedModel(
+                //          SupervisedTrainingStatusKeys.serviceId, logsCVConfiguration.getServiceId()))
+                .analysis_minute(logCollectionMinute)
+                .stateType(logsCVConfiguration.getStateType())
+                .analysis_comparison_strategy(logsCVConfiguration.getComparisonStrategy())
+                .shouldUseSupervisedModel(true)
+                .experiment_name(experiment.getExperimentName())
+                .build();
 
+        expTask.setAppId(logsCVConfiguration.getAppId());
+        expTask.setUuid(taskId);
+
+        learningEngineService.addLearningEngineExperimentalAnalysisTask(expTask);
+      }
+    } catch (Exception ex) {
+      logger.info("Exception while creating experimental feedback task", ex);
+    }
+  }
   private boolean createFeedbackAnalysisTask(LogsCVConfiguration logsCVConfiguration, long logCollectionMinute) {
     String stateExecutionIdForLETask =
         "LOG_24X7_FEEDBACK_ANALYSIS_" + logsCVConfiguration.getUuid() + "_" + logCollectionMinute;
@@ -1313,7 +1365,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               logger.info("Queuing analysis task for state {} config {} with analysisMin {}",
                   logsCVConfiguration.getStateType(), logsCVConfiguration.getUuid(), analysisEndMin);
 
-              List<MLExperiments> experiments = get24x7Experiments();
+              List<MLExperiments> experiments = get24x7Experiments(MLAnalysisType.LOG_ML.name());
               for (MLExperiments experiment : experiments) {
                 LearningEngineExperimentalAnalysisTask expTask =
                     LearningEngineExperimentalAnalysisTask.builder()
