@@ -1,7 +1,6 @@
 package software.wings.graphql.datafetcher.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -58,15 +57,13 @@ public class ServiceQueryHelper {
         List<QLTagInput> tags = serviceTagFilter.getTags();
         Set<String> entityIds =
             tagHelper.getEntityIdsFromTags(accountId, tags, getEntityType(serviceTagFilter.getEntityType()));
-        if (isNotEmpty(entityIds)) {
-          switch (serviceTagFilter.getEntityType()) {
-            case APPLICATION:
-              query.field("appId").in(entityIds);
-              break;
-            default:
-              logger.error("EntityType {} not supported in query", serviceTagFilter.getEntityType());
-              throw new InvalidRequestException("Error while compiling query", WingsException.USER);
-          }
+        switch (serviceTagFilter.getEntityType()) {
+          case APPLICATION:
+            query.field("appId").in(entityIds);
+            break;
+          default:
+            logger.error("EntityType {} not supported in query", serviceTagFilter.getEntityType());
+            throw new InvalidRequestException("Error while compiling query", WingsException.USER);
         }
       }
     });
