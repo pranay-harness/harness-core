@@ -23,6 +23,7 @@ import software.wings.beans.HostValidationResponse;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
@@ -62,6 +63,7 @@ public class InfrastructureMappingResource {
   @GET
   @Timed
   @ExceptionMetered
+  @ExternalFacingApiAuth
   @AuthRule(permissionType = ENV, action = READ)
   public RestResponse<PageResponse<InfrastructureMapping>> list(
       @BeanParam PageRequest<InfrastructureMapping> pageRequest) {
