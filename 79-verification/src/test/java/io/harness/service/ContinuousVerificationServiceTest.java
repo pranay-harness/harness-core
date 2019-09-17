@@ -21,6 +21,7 @@ import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 import static software.wings.common.VerificationConstants.TIME_DELAY_QUERY_MINS;
 import static software.wings.common.VerificationConstants.VERIFICATION_SERVICE_BASE_URL;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
+import static software.wings.service.impl.analysis.MLAnalysisType.FEEDBACK_ANALYSIS;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.service.intfc.analysis.LogAnalysisResource.ANALYSIS_GET_24X7_ALL_LOGS_URL;
 import static software.wings.service.intfc.analysis.LogAnalysisResource.ANALYSIS_GET_24X7_LOG_URL;
@@ -1233,7 +1234,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     continuousVerificationService.triggerFeedbackAnalysis(accountId);
     List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, MLAnalysisType.FEEDBACK_ANALYSIS)
+            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
             .asList();
     assertThat(learningEngineAnalysisTasks).isEmpty();
 
@@ -1247,10 +1248,9 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     wingsPersistence.save(oldLogAnalysisRecord);
 
     continuousVerificationService.triggerFeedbackAnalysis(accountId);
-    learningEngineAnalysisTasks =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, MLAnalysisType.FEEDBACK_ANALYSIS)
-            .asList();
+    learningEngineAnalysisTasks = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                                      .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
+                                      .asList();
     assertThat(learningEngineAnalysisTasks).hasSize(1);
     assertThat(learningEngineAnalysisTasks.get(0).getAnalysis_minute()).isEqualTo(oldMinute);
   }
@@ -1264,7 +1264,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     continuousVerificationService.triggerFeedbackAnalysis(accountId);
     List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, MLAnalysisType.FEEDBACK_ANALYSIS)
+            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
             .asList();
     assertThat(learningEngineAnalysisTasks).isEmpty();
 
@@ -1278,10 +1278,9 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     wingsPersistence.save(oldFeedbackRecord);
 
     continuousVerificationService.triggerFeedbackAnalysis(accountId);
-    learningEngineAnalysisTasks =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, MLAnalysisType.FEEDBACK_ANALYSIS)
-            .asList();
+    learningEngineAnalysisTasks = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                                      .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
+                                      .asList();
     assertThat(learningEngineAnalysisTasks).isEmpty();
   }
 
@@ -1294,7 +1293,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     continuousVerificationService.triggerFeedbackAnalysis(accountId);
     List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, MLAnalysisType.FEEDBACK_ANALYSIS)
+            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
             .asList();
     assertThat(learningEngineAnalysisTasks).isEmpty();
 
@@ -1315,10 +1314,9 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     wingsPersistence.save(oldLERecord);
 
     continuousVerificationService.triggerFeedbackAnalysis(accountId);
-    learningEngineAnalysisTasks =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, MLAnalysisType.FEEDBACK_ANALYSIS)
-            .asList();
+    learningEngineAnalysisTasks = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                                      .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
+                                      .asList();
     assertThat(learningEngineAnalysisTasks).isEmpty();
   }
 
@@ -1331,7 +1329,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     continuousVerificationService.triggerFeedbackAnalysis(accountId);
     List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, MLAnalysisType.FEEDBACK_ANALYSIS)
+            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
             .asList();
     assertThat(learningEngineAnalysisTasks).isEmpty();
 
@@ -1349,10 +1347,9 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     wingsPersistence.save(oldLERecord);
 
     continuousVerificationService.triggerFeedbackAnalysis(accountId);
-    learningEngineAnalysisTasks =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, MLAnalysisType.FEEDBACK_ANALYSIS)
-            .asList();
+    learningEngineAnalysisTasks = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                                      .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
+                                      .asList();
     assertThat(learningEngineAnalysisTasks).hasSize(1);
     assertThat(learningEngineAnalysisTasks.get(0).getAnalysis_minute()).isEqualTo(oldMinute);
   }
@@ -1799,5 +1796,95 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     SumoDataCollectionInfo info = (SumoDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
     assertThat(TimeUnit.MINUTES.toMillis(sumoConfig.getBaselineStartMinute())).isEqualTo(info.getStartTime());
     assertThat(TimeUnit.MINUTES.toMillis(expectedEnd)).isEqualTo(info.getEndTime());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testFeedbackEngineTaskRestartAfter2HoursNoNewLogTask() throws Exception {
+    // mock setup
+    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, accountId))
+        .thenReturn(managerFeatureFlagCall);
+    setupFeedbacks(true);
+
+    long currentTime = Timestamp.currentMinuteBoundary();
+    long currentMinute = TimeUnit.MILLISECONDS.toMinutes(currentTime);
+    int lastLogTime = (int) getFlooredTime(currentMinute, PREDECTIVE_HISTORY_MINUTES) - 1 - PREDECTIVE_HISTORY_MINUTES;
+    LogMLAnalysisRecord record = LogMLAnalysisRecord.builder()
+                                     .cvConfigId(cvConfigId)
+                                     .logCollectionMinute(lastLogTime)
+                                     .stateExecutionId(cvConfigId + "stateExecutionId")
+                                     .appId(appId)
+                                     .uuid(generateUuid())
+                                     .build();
+    record.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+
+    LogMLAnalysisRecord record2 = LogMLAnalysisRecord.builder()
+                                      .cvConfigId(cvConfigId)
+                                      .logCollectionMinute(lastLogTime)
+                                      .stateExecutionId(cvConfigId + "stateExecutionId2")
+                                      .appId(appId)
+                                      .uuid(generateUuid())
+                                      .build();
+    record2.setAnalysisStatus(LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
+
+    wingsPersistence.save(Arrays.asList(record, record2));
+
+    continuousVerificationService.triggerFeedbackAnalysis(accountId);
+
+    List<LearningEngineAnalysisTask> tasks =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+            .filter(LearningEngineAnalysisTaskKeys.cvConfigId, cvConfigId)
+            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
+            .asList();
+    assertThat(tasks).isNullOrEmpty();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testFeedbackEngineTaskRestartAfter2HoursNewLogTask() throws Exception {
+    // mock setup
+    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, accountId))
+        .thenReturn(managerFeatureFlagCall);
+    setupFeedbacks(true);
+
+    long currentTime = Timestamp.currentMinuteBoundary();
+    long currentMinute = TimeUnit.MILLISECONDS.toMinutes(currentTime);
+    int lastLogTime = (int) getFlooredTime(currentMinute, PREDECTIVE_HISTORY_MINUTES) - 1 - PREDECTIVE_HISTORY_MINUTES;
+
+    LogMLAnalysisRecord record2 = LogMLAnalysisRecord.builder()
+                                      .cvConfigId(cvConfigId)
+                                      .logCollectionMinute(lastLogTime)
+                                      .stateExecutionId(cvConfigId + "stateExecutionId2")
+                                      .appId(appId)
+                                      .uuid(generateUuid())
+                                      .build();
+    record2.setAnalysisStatus(LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
+
+    lastLogTime = (int) getFlooredTime(currentMinute, PREDECTIVE_HISTORY_MINUTES) - 1 + CRON_POLL_INTERVAL_IN_MINUTES;
+    LogMLAnalysisRecord record = LogMLAnalysisRecord.builder()
+                                     .cvConfigId(cvConfigId)
+                                     .logCollectionMinute(lastLogTime)
+                                     .stateExecutionId(cvConfigId + "stateExecutionId")
+                                     .appId(appId)
+                                     .uuid(generateUuid())
+                                     .build();
+    record.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+
+    wingsPersistence.save(Arrays.asList(record, record2));
+
+    continuousVerificationService.triggerFeedbackAnalysis(accountId);
+
+    List<LearningEngineAnalysisTask> tasks =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+            .filter(LearningEngineAnalysisTaskKeys.cvConfigId, cvConfigId)
+            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, FEEDBACK_ANALYSIS)
+            .asList();
+    assertThat(tasks).isNotEmpty();
+    assertThat(tasks.size()).isEqualTo(1);
+    assertThat(tasks.get(0).getAnalysis_minute()).isEqualTo(record.getLogCollectionMinute());
   }
 }

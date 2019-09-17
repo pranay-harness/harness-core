@@ -519,7 +519,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             logsCVConfiguration.getUuid(), maxCvCollectionMinute + 1);
         return maxCvCollectionMinute + 1;
       } else {
-        long expectedStart = getFlooredTime(currentMinute, PREDECTIVE_HISTORY_MINUTES);
+        long expectedStart = getFlooredStartTime(currentMinute, PREDECTIVE_HISTORY_MINUTES);
         logger.info(
             "For {} baselineEnd was more than 2 hours ago, we will start the collection from 2hours ago now: {}",
             logsCVConfiguration.getUuid(), expectedStart);
@@ -532,7 +532,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             logsCVConfiguration.getUuid(), maxCvCollectionMinute + 1);
         return maxCvCollectionMinute + 1;
       } else {
-        long expectedStart = getFlooredTime(currentMinute, PREDECTIVE_HISTORY_MINUTES);
+        long expectedStart = getFlooredStartTime(currentMinute, PREDECTIVE_HISTORY_MINUTES);
         logger.info(
             "It has been more than 2 hours since last collection. For {}, the collection start time is going to be {}",
             logsCVConfiguration.getUuid(), expectedStart);
@@ -541,10 +541,18 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
   }
 
-  private long getFlooredTime(long currentTime, long delta) {
+  private long getFlooredStartTime(long currentTime, long delta) {
     long expectedStart = currentTime - delta;
     if (Math.floorMod(expectedStart - 1, CRON_POLL_INTERVAL_IN_MINUTES) != 0) {
       expectedStart -= Math.floorMod(expectedStart - 1, CRON_POLL_INTERVAL_IN_MINUTES);
+    }
+    return expectedStart;
+  }
+
+  private long getFlooredEndTime(long currentTime, long delta) {
+    long expectedStart = currentTime - delta;
+    if (Math.floorMod(expectedStart, CRON_POLL_INTERVAL_IN_MINUTES) != 0) {
+      expectedStart -= Math.floorMod(expectedStart, CRON_POLL_INTERVAL_IN_MINUTES);
     }
     return expectedStart;
   }
@@ -974,6 +982,42 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         });
   }
 
+  private long getFeedbackAnalysisMinute(LogsCVConfiguration logsCVConfiguration) {
+    long lastFeedbackAnalysisMinute = logAnalysisService.getLastCVAnalysisMinute(
+        logsCVConfiguration.getAppId(), logsCVConfiguration.getUuid(), LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
+    long minuteForFeedbackAnalysis = lastFeedbackAnalysisMinute + CRON_POLL_INTERVAL_IN_MINUTES;
+    long lastLogMLAnalysisMinute = logAnalysisService.getLastCVAnalysisMinute(
+        logsCVConfiguration.getAppId(), logsCVConfiguration.getUuid(), LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+    if (isBeforeTwoHours(minuteForFeedbackAnalysis)) {
+      if (isBeforeTwoHours(lastLogMLAnalysisMinute)) {
+        logger.info(
+            "The last LogML analysis was also more than 2 hours ago, we dont have anything to do for feedback tasks.");
+        return -1;
+      }
+
+      while (isBeforeTwoHours(minuteForFeedbackAnalysis)) {
+        minuteForFeedbackAnalysis += CRON_POLL_INTERVAL_IN_MINUTES;
+      }
+    }
+
+    if (lastFeedbackAnalysisMinute <= 0) {
+      if (lastLogMLAnalysisMinute <= 0) {
+        logger.info(
+            "For account {} and CV config {} name {} type {} no LogML analysis has happened yet. Skipping feedback analysis",
+            logsCVConfiguration.getAccountId(), logsCVConfiguration.getUuid(), logsCVConfiguration.getName(),
+            logsCVConfiguration.getStateType());
+        return -1;
+      } else {
+        minuteForFeedbackAnalysis = lastLogMLAnalysisMinute;
+      }
+    } else if (minuteForFeedbackAnalysis > lastLogMLAnalysisMinute) {
+      logger.info("It is not time for the next feedback analysis yet. We'll wait for some time.");
+      return -1;
+    }
+
+    return minuteForFeedbackAnalysis;
+  }
+
   @Override
   @Counted
   @Timed
@@ -994,29 +1038,15 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         .forEach(cvConfiguration -> {
           LogsCVConfiguration logsCVConfiguration = (LogsCVConfiguration) cvConfiguration;
           if (!logsCVConfiguration.isWorkflowConfig()) {
-            long lastFeedbackAnalysisMinute = logAnalysisService.getLastCVAnalysisMinute(logsCVConfiguration.getAppId(),
-                logsCVConfiguration.getUuid(), LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
-            long minuteForFeedbackAnalysis = lastFeedbackAnalysisMinute + CRON_POLL_INTERVAL_IN_MINUTES;
-            long lastLogMLAnalysisMinute = logAnalysisService.getLastCVAnalysisMinute(logsCVConfiguration.getAppId(),
-                logsCVConfiguration.getUuid(), LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
-            if (isBeforeTwoHours(minuteForFeedbackAnalysis)) {
-              long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
-              minuteForFeedbackAnalysis = getFlooredTime(currentMinute, PREDECTIVE_HISTORY_MINUTES);
-            }
-            if (lastFeedbackAnalysisMinute <= 0) {
-              if (lastLogMLAnalysisMinute <= 0) {
-                logger.info(
-                    "For account {} and CV config {} name {} type {} no data LogML clustering has happened yet. Skipping feedback analysis",
-                    logsCVConfiguration.getAccountId(), logsCVConfiguration.getUuid(), logsCVConfiguration.getName(),
-                    logsCVConfiguration.getStateType());
-                return;
-              } else {
-                minuteForFeedbackAnalysis = lastLogMLAnalysisMinute;
-              }
-            } else if (minuteForFeedbackAnalysis > lastLogMLAnalysisMinute) {
-              logger.info("It is not time for the next feedback analysis yet. We'll wait for some time.");
+            long minuteForFeedbackAnalysis = getFeedbackAnalysisMinute(logsCVConfiguration);
+
+            if (minuteForFeedbackAnalysis <= 0) {
               return;
             }
+
+            long lastLogMLAnalysisMinute = logAnalysisService.getLastCVAnalysisMinute(logsCVConfiguration.getAppId(),
+                logsCVConfiguration.getUuid(), LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+
             AtomicBoolean isEmptyFeedbacks = new AtomicBoolean(true);
 
             Map<FeedbackAction, List<CVFeedbackRecord>> feedbacks =
@@ -1174,7 +1204,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               "For {}, last L2 was more than 2 hours ago, we dont have anything to do now", cvConfiguration.getUuid());
           return -1;
         } else {
-          long restartTime = getFlooredTime(currentMinute, PREDECTIVE_HISTORY_MINUTES);
+          long restartTime = getFlooredStartTime(currentMinute, PREDECTIVE_HISTORY_MINUTES);
 
           // check to see if there was any task created for this cvConfig for one hour before expected restart time. If
           // yes, dont do this. Return -1
