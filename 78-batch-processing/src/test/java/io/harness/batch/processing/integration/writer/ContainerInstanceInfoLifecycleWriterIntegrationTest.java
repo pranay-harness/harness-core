@@ -7,8 +7,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.protobuf.Timestamp;
 
 import io.harness.batch.processing.ccm.InstanceState;
-import io.harness.batch.processing.entities.ActiveInstance;
-import io.harness.batch.processing.entities.ActiveInstance.ActiveInstanceKeys;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.entities.InstanceData.InstanceDataKeys;
 import io.harness.batch.processing.integration.EcsEventGenerator;
@@ -60,7 +58,8 @@ public class ContainerInstanceInfoLifecycleWriterIntegrationTest implements EcsE
   @Test
   @Category(IntegrationTests.class)
   public void shouldCreateContainerInstanceData() throws Exception {
-    PublishedMessage ec2InstanceInfoMessage = getEc2InstanceInfoMessage(TEST_INSTANCE_ID, TEST_ACCOUNT_ID);
+    PublishedMessage ec2InstanceInfoMessage =
+        getEc2InstanceInfoMessage(TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ARN);
     ec2InstanceInfoWriter.write(getMessageList(ec2InstanceInfoMessage));
 
     PublishedMessage containerInstanceInfoMessage =
@@ -113,8 +112,5 @@ public class ContainerInstanceInfoLifecycleWriterIntegrationTest implements EcsE
     val instanceDataDs = hPersistence.getDatastore(InstanceData.class);
     instanceDataDs.delete(
         instanceDataDs.createQuery(InstanceData.class).filter(InstanceDataKeys.accountId, TEST_ACCOUNT_ID));
-
-    val activeDs = hPersistence.getDatastore(ActiveInstance.class);
-    activeDs.delete(activeDs.createQuery(ActiveInstance.class).filter(ActiveInstanceKeys.accountId, TEST_ACCOUNT_ID));
   }
 }

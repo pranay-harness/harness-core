@@ -7,8 +7,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.protobuf.Timestamp;
 
 import io.harness.batch.processing.ccm.InstanceState;
-import io.harness.batch.processing.entities.ActiveInstance;
-import io.harness.batch.processing.entities.ActiveInstance.ActiveInstanceKeys;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.entities.InstanceData.InstanceDataKeys;
 import io.harness.batch.processing.integration.EcsEventGenerator;
@@ -63,7 +61,8 @@ public class TaskInfoLifecycleWriterIntegrationTest implements EcsEventGenerator
   @Test
   @Category(IntegrationTests.class)
   public void shouldCreateTaskData() throws Exception {
-    PublishedMessage ec2InstanceInfoMessage = getEc2InstanceInfoMessage(TEST_INSTANCE_ID, TEST_ACCOUNT_ID);
+    PublishedMessage ec2InstanceInfoMessage =
+        getEc2InstanceInfoMessage(TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ARN);
     ec2InstanceInfoWriter.write(getMessageList(ec2InstanceInfoMessage));
 
     PublishedMessage containerInstanceInfoMessage =
@@ -121,10 +120,6 @@ public class TaskInfoLifecycleWriterIntegrationTest implements EcsEventGenerator
 
   @After
   public void clearCollection() {
-    val activeDataStore = hPersistence.getDatastore(ActiveInstance.class);
-    activeDataStore.delete(
-        activeDataStore.createQuery(ActiveInstance.class).filter(ActiveInstanceKeys.accountId, TEST_ACCOUNT_ID));
-
     val instanceDataDataSore = hPersistence.getDatastore(InstanceData.class);
     instanceDataDataSore.delete(
         instanceDataDataSore.createQuery(InstanceData.class).filter(InstanceDataKeys.accountId, TEST_ACCOUNT_ID));

@@ -4,9 +4,7 @@ import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_STOP;
 
 import io.harness.batch.processing.ccm.InstanceState;
-import io.harness.batch.processing.entities.ActiveInstance;
 import io.harness.batch.processing.entities.InstanceData;
-import io.harness.batch.processing.service.intfc.ActiveInstanceService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.event.payloads.Lifecycle;
 import io.harness.exception.InvalidRequestException;
@@ -18,29 +16,12 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 public abstract class EventWriter {
-  @Autowired protected ActiveInstanceService activeInstanceService;
   @Autowired protected InstanceDataService instanceDataService;
-
-  protected boolean createActiveInstance(String accountId, String instanceId, String clusterId) {
-    ActiveInstance activeInstance = activeInstanceService.fetchActiveInstance(accountId, instanceId);
-    if (null == activeInstance) {
-      activeInstance =
-          ActiveInstance.builder().accountId(accountId).instanceId(instanceId).clusterId(clusterId).build();
-      return activeInstanceService.create(activeInstance);
-    }
-    return true;
-  }
-
-  protected boolean deleteActiveInstance(String accountId, String instanceId) {
-    ActiveInstance activeInstance = activeInstanceService.fetchActiveInstance(accountId, instanceId);
-    if (null != activeInstance) {
-      return activeInstanceService.delete(activeInstance);
-    }
-    return true;
-  }
 
   protected InstanceData fetchActiveInstanceData(String accountId, String instanceId) {
     List<InstanceState> instanceStates =
@@ -64,7 +45,9 @@ public abstract class EventWriter {
     if (null != currentInstanceState && null != updateInstanceState) {
       InstanceData instanceData = instanceDataService.fetchActiveInstanceData(
           accountId, instanceId, new ArrayList<>(Arrays.asList(currentInstanceState)));
-      if (null != instanceData) {
+      if (null != instanceData
+          && !(instanceData.getInstanceState() == InstanceState.RUNNING
+                 && instanceData.getUsageStartTime().isAfter(instanceTime))) {
         instanceDataService.updateInstanceState(instanceData, instanceTime, updateInstanceState);
       } else {
         logger.info("Received past duplicate event {} {} {} ", accountId, instanceId, lifecycle.toString());
@@ -83,15 +66,12 @@ public abstract class EventWriter {
 
   protected void handleLifecycleEvent(String accountId, Lifecycle lifecycle) {
     String instanceId = lifecycle.getInstanceId();
+    updateInstanceDataLifecycle(accountId, instanceId, lifecycle);
+  }
 
-    boolean updateInstanceLifecycle = true;
-    if (lifecycle.getType().equals(EVENT_TYPE_STOP)) {
-      updateInstanceLifecycle = deleteActiveInstance(accountId, instanceId);
-    }
-
-    if (updateInstanceLifecycle) {
-      logger.info("Updating instance lifecycle {} ", instanceId);
-      updateInstanceDataLifecycle(accountId, instanceId, lifecycle);
-    }
+  protected Set<String> fetchActiveInstanceAtTime(String accountId, String clusterId, Instant startTime) {
+    List<InstanceData> activeInstances =
+        instanceDataService.fetchClusterActiveInstanceData(accountId, clusterId, startTime);
+    return activeInstances.stream().map(InstanceData::getInstanceId).collect(Collectors.toSet());
   }
 }

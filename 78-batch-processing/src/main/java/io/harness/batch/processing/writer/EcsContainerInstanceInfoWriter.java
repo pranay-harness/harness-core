@@ -39,36 +39,33 @@ public class EcsContainerInstanceInfoWriter extends EventWriter implements ItemW
           String clusterArn = ecsContainerInstanceDescription.getClusterArn();
           String ec2InstanceId = ecsContainerInstanceDescription.getEc2InstanceId();
 
-          boolean activeInstance = createActiveInstance(accountId, containerInstanceArn, clusterArn);
-          if (activeInstance) {
-            InstanceData instanceData = fetchActiveInstanceData(accountId, containerInstanceArn);
+          InstanceData instanceData = fetchActiveInstanceData(accountId, containerInstanceArn);
 
-            if (null == instanceData) {
-              InstanceData ec2InstanceData = fetchInstanceData(accountId, ec2InstanceId);
-              Map<String, String> metaData = new HashMap<>();
-              metaData.put(
-                  EcsCCMConstants.INSTANCE_FAMILY, ec2InstanceData.getMetaData().get(EcsCCMConstants.INSTANCE_FAMILY));
-              metaData.put(EcsCCMConstants.EC2_INSTANCE_ID, ec2InstanceId);
-              metaData.put(EcsCCMConstants.OPERATING_SYSTEM, ecsContainerInstanceDescription.getOperatingSystem());
-              metaData.put(EcsCCMConstants.REGION, ecsContainerInstanceDescription.getRegion());
+          if (null == instanceData) {
+            InstanceData ec2InstanceData = fetchInstanceData(accountId, ec2InstanceId);
+            Map<String, String> metaData = new HashMap<>();
+            metaData.put(
+                EcsCCMConstants.INSTANCE_FAMILY, ec2InstanceData.getMetaData().get(EcsCCMConstants.INSTANCE_FAMILY));
+            metaData.put(EcsCCMConstants.EC2_INSTANCE_ID, ec2InstanceId);
+            metaData.put(EcsCCMConstants.OPERATING_SYSTEM, ecsContainerInstanceDescription.getOperatingSystem());
+            metaData.put(EcsCCMConstants.REGION, ecsContainerInstanceDescription.getRegion());
 
-              InstanceResource instanceResource = InstanceResource.builder()
-                                                      .cpu(ecsContainerInstanceResource.getCpu())
-                                                      .memory(ecsContainerInstanceResource.getMemory())
-                                                      .build();
+            InstanceResource instanceResource = InstanceResource.builder()
+                                                    .cpu(ecsContainerInstanceResource.getCpu())
+                                                    .memory(ecsContainerInstanceResource.getMemory())
+                                                    .build();
 
-              instanceData = InstanceData.builder()
-                                 .accountId(accountId)
-                                 .instanceId(containerInstanceArn)
-                                 .clusterName(clusterArn)
-                                 .instanceType(InstanceType.ECS_CONTAINER_INSTANCE)
-                                 .instanceState(InstanceState.INITIALIZING)
-                                 .instanceResource(instanceResource)
-                                 .metaData(metaData)
-                                 .build();
-              logger.info("Creating container instance {} ", containerInstanceArn);
-              instanceDataService.create(instanceData);
-            }
+            instanceData = InstanceData.builder()
+                               .accountId(accountId)
+                               .instanceId(containerInstanceArn)
+                               .clusterName(clusterArn)
+                               .instanceType(InstanceType.ECS_CONTAINER_INSTANCE)
+                               .instanceState(InstanceState.INITIALIZING)
+                               .instanceResource(instanceResource)
+                               .metaData(metaData)
+                               .build();
+            logger.info("Creating container instance {} ", containerInstanceArn);
+            instanceDataService.create(instanceData);
           }
         });
   }

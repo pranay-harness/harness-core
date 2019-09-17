@@ -54,4 +54,20 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
         .filter(InstanceDataKeys.instanceId, instanceId)
         .get();
   }
+
+  /**
+   * fetching only those instances which were started before given time and are still active
+   */
+  @Override
+  public List<InstanceData> fetchClusterActiveInstanceData(
+      String accountId, String clusterName, List<InstanceState> instanceState, Instant startTime) {
+    return hPersistence.createQuery(InstanceData.class)
+        .filter(InstanceDataKeys.accountId, accountId)
+        .filter(InstanceDataKeys.clusterName, clusterName)
+        .field(InstanceDataKeys.instanceState)
+        .in(instanceState)
+        .field(InstanceDataKeys.usageStartTime)
+        .lessThanOrEq(startTime)
+        .asList();
+  }
 }
