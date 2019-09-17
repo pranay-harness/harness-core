@@ -229,7 +229,7 @@ public class DelegateQueueTask implements Runnable {
 
         // This is first broadcast for Async task, try to unicast for whitelisted delegate
         // Fo for this scenario, we take a different path.
-        if (delegateTask.isAsync() && delegateTask.getBroadcastCount() == 0) {
+        if (delegateTask.isAsync() && delegateTask.getBroadcastCount() == 1) {
           broadcastHelper.broadcastNewDelegateTask(delegateTask);
         } else {
           logger.info("Rebroadcast queued task [{}], broadcast count: {}", delegateTask.getUuid(),
@@ -238,9 +238,9 @@ public class DelegateQueueTask implements Runnable {
           broadcastHelper.rebroadcastDelegateTask(delegateTask);
           count++;
         }
-
-        logger.info("{} tasks were rebroadcast", count);
       }
+
+      logger.info("{} tasks were rebroadcast", count);
     }
   }
 }
