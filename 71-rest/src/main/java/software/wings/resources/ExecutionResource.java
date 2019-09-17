@@ -331,6 +331,7 @@ public class ExecutionResource {
   @Path("deployment-metadata")
   @Timed
   @ExceptionMetered
+  @ExternalFacingApiAuth
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   public RestResponse<DeploymentMetadata> getDeploymentMetadata(
       @QueryParam("appId") String appId, ExecutionArgs executionArgs) {
