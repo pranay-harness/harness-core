@@ -9,6 +9,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ReportTarget;
 import io.harness.persistence.UuidAccess;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.EnumSet;
 import java.util.Objects;
@@ -27,6 +28,12 @@ public class Validator {
   public static void notNullCheck(String message, Object value) {
     if (value == null) {
       throw new WingsException(GENERAL_ERROR).addParam("message", message);
+    }
+  }
+
+  public static void notEmptyCheck(String message, String value) {
+    if (StringUtils.isEmpty(value)) {
+      throw new InvalidRequestException(message);
     }
   }
 

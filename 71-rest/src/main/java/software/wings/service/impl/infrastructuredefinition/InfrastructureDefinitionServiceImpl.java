@@ -320,6 +320,16 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @VisibleForTesting
   public void validateInfraDefinition(@Valid InfrastructureDefinition infraDefinition) {
     validateCloudProviderAndDeploymentType(infraDefinition.getCloudProviderType(), infraDefinition.getDeploymentType());
+    if (infraDefinition.getDeploymentType() == DeploymentType.SSH
+        && infraDefinition.getInfrastructure() instanceof SshBasedInfrastructure) {
+      Validator.notEmptyCheck("Connection Attributes can't be empty",
+          ((SshBasedInfrastructure) infraDefinition.getInfrastructure()).getHostConnectionAttrs());
+    }
+    if (infraDefinition.getDeploymentType() == DeploymentType.WINRM
+        && infraDefinition.getInfrastructure() instanceof WinRmBasedInfrastructure) {
+      Validator.notEmptyCheck("Connection Attributes can't be empty",
+          ((WinRmBasedInfrastructure) infraDefinition.getInfrastructure()).getWinRmConnectionAttributes());
+    }
     if (isNotEmpty(infraDefinition.getProvisionerId())) {
       ProvisionerAware provisionerAwareInfra = (ProvisionerAware) infraDefinition.getInfrastructure();
       Map<String, String> expressions = provisionerAwareInfra.getExpressions();
