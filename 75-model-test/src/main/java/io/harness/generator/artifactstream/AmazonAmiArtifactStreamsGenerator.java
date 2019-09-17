@@ -1,5 +1,7 @@
 package io.harness.generator.artifactstream;
 
+import static software.wings.beans.Application.GLOBAL_APP_ID;
+
 import com.google.inject.Inject;
 
 import io.harness.generator.OwnerManager.Owners;
@@ -22,20 +24,25 @@ public class AmazonAmiArtifactStreamsGenerator implements ArtifactStreamsGenerat
 
   @Override
   public ArtifactStream ensureArtifactStream(Seed seed, Owners owners) {
+    return ensureArtifactStream(seed, owners, false);
+  }
+
+  @Override
+  public ArtifactStream ensureArtifactStream(Seed seed, Owners owners, boolean atConnector) {
     Service service = owners.obtainService();
     Application application = owners.obtainApplication();
-
     final SettingAttribute settingAttribute =
         settingGenerator.ensurePredefined(seed, owners, Settings.AWS_TEST_CLOUD_PROVIDER);
 
     return ensureArtifactStream(seed,
         AmiArtifactStream.builder()
             .name("aws-playground-ami")
-            .appId(application.getAppId())
-            .serviceId(service.getUuid())
+            .appId(atConnector ? GLOBAL_APP_ID : application.getUuid())
+            .serviceId(atConnector ? settingAttribute.getUuid() : service != null ? service.getUuid() : null)
             .settingId(settingAttribute.getUuid())
             .region("us-east-1")
             .sourceName("us-east-1")
+            .autoPopulate(false)
             .build(),
         owners);
   }

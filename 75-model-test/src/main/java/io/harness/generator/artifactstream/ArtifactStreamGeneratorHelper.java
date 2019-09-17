@@ -1,5 +1,7 @@
 package io.harness.generator.artifactstream;
 
+import static software.wings.beans.Application.GLOBAL_APP_ID;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -25,7 +27,7 @@ public class ArtifactStreamGeneratorHelper {
   public ArtifactStream exists(ArtifactStream artifactStream) {
     // TODO: ASR: IMP: update this after refactor
     return wingsPersistence.createQuery(ArtifactStream.class)
-        .filter(ArtifactStream.APP_ID_KEY, artifactStream.getAppId())
+        .filter(ArtifactStream.APP_ID_KEY, artifactStream.fetchAppId())
         .filter(ArtifactStreamKeys.serviceId, artifactStream.getServiceId())
         .filter(ArtifactStreamKeys.name, artifactStream.getName())
         .get();
@@ -38,22 +40,23 @@ public class ArtifactStreamGeneratorHelper {
 
   private ArtifactStream createArtifactStream(ArtifactStream artifactStream, Owners owners) {
     ArtifactStream savedArtifactStream = artifactStreamService.create(artifactStream, false);
-    Service service = owners.obtainService();
-    if (service == null) {
-      return savedArtifactStream;
-    }
+    if (!savedArtifactStream.getAppId().equals(GLOBAL_APP_ID)) {
+      Service service = owners.obtainService();
+      if (service == null) {
+        return savedArtifactStream;
+      }
 
-    // TODO: ASR: update this method after refactor
+      // TODO: ASR: update this method after refactor
 
-    List<String> artifactStreamIds = service.getArtifactStreamIds();
-    if (artifactStreamIds == null) {
-      artifactStreamIds = new ArrayList<>();
+      List<String> artifactStreamIds = service.getArtifactStreamIds();
+      if (artifactStreamIds == null) {
+        artifactStreamIds = new ArrayList<>();
+      }
+      if (!artifactStreamIds.contains(savedArtifactStream.getUuid())) {
+        artifactStreamIds.add(savedArtifactStream.getUuid());
+        serviceResourceService.updateArtifactStreamIds(service, artifactStreamIds);
+      }
     }
-    if (!artifactStreamIds.contains(savedArtifactStream.getUuid())) {
-      artifactStreamIds.add(savedArtifactStream.getUuid());
-      serviceResourceService.updateArtifactStreamIds(service, artifactStreamIds);
-    }
-
     return savedArtifactStream;
   }
 }

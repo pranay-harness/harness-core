@@ -2,7 +2,7 @@ package io.harness.functional.template;
 
 import static io.harness.generator.AccountGenerator.adminUserEmail;
 import static io.harness.generator.AccountGenerator.readOnlyEmail;
-import static io.harness.generator.TemplateFolderGenerator.TemplateFolders.TEMPLATE_FOLDER;
+import static io.harness.generator.TemplateFolderGenerator.TemplateFolders.TEMPLATE_FOLDER_SHELL_SCRIPTS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
@@ -88,7 +88,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void createUpdateDeleteShellScriptTemplate() {
     // Create template
-    TemplateFolder parentFolder = templateFolderGenerator.ensurePredefined(seed, owners, TEMPLATE_FOLDER);
+    TemplateFolder parentFolder = templateFolderGenerator.ensurePredefined(seed, owners, TEMPLATE_FOLDER_SHELL_SCRIPTS);
     ShellScriptTemplate shellScriptTemplate = ShellScriptTemplate.builder()
                                                   .scriptType(ScriptType.BASH.name())
                                                   .scriptString("echo \"Hello\" ${name}\n"
@@ -213,7 +213,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
     String bearerToken = Setup.getAuthToken(readOnlyEmail, readOnlyPassword);
 
     // Create template
-    TemplateFolder parentFolder = templateFolderGenerator.ensurePredefined(seed, owners, TEMPLATE_FOLDER);
+    TemplateFolder parentFolder = templateFolderGenerator.ensurePredefined(seed, owners, TEMPLATE_FOLDER_SHELL_SCRIPTS);
     ShellScriptTemplate shellScriptTemplate = ShellScriptTemplate.builder()
                                                   .scriptType(ScriptType.BASH.name())
                                                   .scriptString("echo \"Hello\" ${name}\n"
@@ -331,7 +331,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
 
   private Template createTemplateAndValidate(String name) {
     // Create template
-    TemplateFolder parentFolder = templateFolderGenerator.ensurePredefined(seed, owners, TEMPLATE_FOLDER);
+    TemplateFolder parentFolder = templateFolderGenerator.ensurePredefined(seed, owners, TEMPLATE_FOLDER_SHELL_SCRIPTS);
     ShellScriptTemplate shellScriptTemplate = ShellScriptTemplate.builder()
                                                   .scriptType(ScriptType.BASH.name())
                                                   .scriptString("echo \"Hello\" ${name}\n"

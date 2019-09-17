@@ -25,6 +25,7 @@ import io.harness.generator.EnvironmentGenerator.Environments;
 import io.harness.generator.InfrastructureProvisionerGenerator.InfrastructureProvisioners;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.ServiceGenerator.Services;
+import org.jetbrains.annotations.NotNull;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
@@ -84,7 +85,8 @@ public class InfrastructureMappingGenerator {
     ECS_FARGATE_TEST,
     K8S_ROLLING_TEST,
     K8S_CANARY_TEST,
-    K8S_BLUE_GREEN_TEST
+    K8S_BLUE_GREEN_TEST,
+    MULTI_ARTIFACT_AWS_SSH_FUNCTIONAL_TEST
   }
 
   public InfrastructureMapping ensurePredefined(
@@ -108,6 +110,8 @@ public class InfrastructureMappingGenerator {
         return ensureK8sTest(seed, owners, "fn-test-bg");
       case K8S_CANARY_TEST:
         return ensureK8sTest(seed, owners, "fn-test-canary");
+      case MULTI_ARTIFACT_AWS_SSH_FUNCTIONAL_TEST:
+        return ensureMultiArtifactAwsSshFunctionalTest(seed, owners);
       default:
         unhandled(predefined);
     }
@@ -217,7 +221,7 @@ public class InfrastructureMappingGenerator {
                                                 .withDeploymentType(DeploymentType.KUBERNETES.name())
                                                 .withComputeProviderType(SettingVariableTypes.GCP.name())
                                                 .withComputeProviderSettingId(gcpCloudProvider.getUuid())
-                                                .withClusterName("us-west1-a/harness-test")
+                                                .withClusterName("us-central1-a/harness-test")
                                                 .withNamespace(namespaceUnique)
                                                 .withServiceId(service.getUuid())
                                                 .withEnvId(environment.getUuid())
@@ -262,15 +266,31 @@ public class InfrastructureMappingGenerator {
   }
 
   private InfrastructureMapping ensureAwsSshTest(Randomizer.Seed seed, Owners owners) {
+    return ensureAwsSshInfraMapping(
+        seed, owners, Environments.GENERIC_TEST, Services.GENERIC_TEST, "Aws non prod - ssh workflow test");
+  }
+
+  private InfrastructureMapping ensureAwsSshFunctionalTest(Randomizer.Seed seed, Owners owners) {
+    return ensureAwsSshInfraMapping(
+        seed, owners, Environments.FUNCTIONAL_TEST, Services.FUNCTIONAL_TEST, "Aws non prod - ssh workflow test");
+  }
+
+  private InfrastructureMapping ensureMultiArtifactAwsSshFunctionalTest(Randomizer.Seed seed, Owners owners) {
+    return ensureAwsSshInfraMapping(seed, owners, Environments.FUNCTIONAL_TEST, Services.MULTI_ARTIFACT_FUNCTIONAL_TEST,
+        "Aws non prod - ssh workflow test-multi-artifact");
+  }
+
+  private InfrastructureMapping ensureAwsSshInfraMapping(
+      Randomizer.Seed seed, Owners owners, Environments environments, Services services, String name) {
     Environment environment = owners.obtainEnvironment();
     if (environment == null) {
-      environment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
+      environment = environmentGenerator.ensurePredefined(seed, owners, environments);
       owners.add(environment);
     }
 
     Service service = owners.obtainService();
     if (service == null) {
-      service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);
+      service = serviceGenerator.ensurePredefined(seed, owners, services);
       owners.add(service);
     }
 
@@ -281,56 +301,26 @@ public class InfrastructureMappingGenerator {
         settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);
     final SettingAttribute devKeySettingAttribute = settingGenerator.ensurePredefined(seed, owners, DEV_TEST_CONNECTOR);
 
-    return ensureInfrastructureMapping(seed, owners,
-        anAwsInfrastructureMapping()
-            .withName("Aws non prod - ssh workflow test")
-            .withAutoPopulate(false)
-            .withInfraMappingType(AWS_SSH.name())
-            .withDeploymentType(DeploymentType.SSH.name())
-            .withComputeProviderType(SettingVariableTypes.AWS.name())
-            .withComputeProviderSettingId(awsTestSettingAttribute.getUuid())
-            .withHostConnectionAttrs(devKeySettingAttribute.getUuid())
-            .withUsePublicDns(true)
-            .withHostConnectionType(HostConnectionType.PUBLIC_DNS.name())
-            .withRegion("us-east-1")
-            .withAwsInstanceFilter(AwsInstanceFilter.builder().tags(tags).build())
-            .build());
+    return ensureInfrastructureMapping(
+        seed, owners, createInfraMapping(tags, awsTestSettingAttribute, devKeySettingAttribute, name));
   }
 
-  private InfrastructureMapping ensureAwsSshFunctionalTest(Randomizer.Seed seed, Owners owners) {
-    Environment environment = owners.obtainEnvironment();
-    if (environment == null) {
-      environment = environmentGenerator.ensurePredefined(seed, owners, Environments.FUNCTIONAL_TEST);
-      owners.add(environment);
-    }
-
-    Service service = owners.obtainService();
-    if (service == null) {
-      service = serviceGenerator.ensurePredefined(seed, owners, Services.FUNCTIONAL_TEST);
-      owners.add(service);
-    }
-
-    final List<Tag> tags =
-        asList(Tag.builder().key("Purpose").value("test").build(), Tag.builder().key("User").value("root").build());
-
-    final SettingAttribute awsTestSettingAttribute =
-        settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);
-    final SettingAttribute devKeySettingAttribute = settingGenerator.ensurePredefined(seed, owners, DEV_TEST_CONNECTOR);
-
-    return ensureInfrastructureMapping(seed, owners,
-        anAwsInfrastructureMapping()
-            .withName("Aws non prod - ssh workflow test")
-            .withAutoPopulate(false)
-            .withInfraMappingType(AWS_SSH.name())
-            .withDeploymentType(DeploymentType.SSH.name())
-            .withComputeProviderType(SettingVariableTypes.AWS.name())
-            .withComputeProviderSettingId(awsTestSettingAttribute.getUuid())
-            .withHostConnectionAttrs(devKeySettingAttribute.getUuid())
-            .withUsePublicDns(true)
-            .withHostConnectionType(HostConnectionType.PUBLIC_DNS.name())
-            .withRegion("us-east-1")
-            .withAwsInstanceFilter(AwsInstanceFilter.builder().tags(tags).build())
-            .build());
+  @NotNull
+  private AwsInfrastructureMapping createInfraMapping(
+      List<Tag> tags, SettingAttribute awsTestSettingAttribute, SettingAttribute devKeySettingAttribute, String name) {
+    return anAwsInfrastructureMapping()
+        .withName(name)
+        .withAutoPopulate(false)
+        .withInfraMappingType(AWS_SSH.name())
+        .withDeploymentType(DeploymentType.SSH.name())
+        .withComputeProviderType(SettingVariableTypes.AWS.name())
+        .withComputeProviderSettingId(awsTestSettingAttribute.getUuid())
+        .withHostConnectionAttrs(devKeySettingAttribute.getUuid())
+        .withUsePublicDns(true)
+        .withHostConnectionType(HostConnectionType.PUBLIC_DNS.name())
+        .withRegion("us-east-1")
+        .withAwsInstanceFilter(AwsInstanceFilter.builder().tags(tags).build())
+        .build();
   }
 
   private InfrastructureMapping ensureTerraformAwsSshTest(Randomizer.Seed seed, Owners owners) {

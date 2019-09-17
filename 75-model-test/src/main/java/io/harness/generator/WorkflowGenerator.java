@@ -11,20 +11,31 @@ import static io.harness.generator.SettingGenerator.Settings.HARNESS_JENKINS_CON
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
+import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
+import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
+import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
+import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PREPARE_STEPS;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
+import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.RollingOrchestrationWorkflow.RollingOrchestrationWorkflowBuilder.aRollingOrchestrationWorkflow;
 import static software.wings.beans.TaskType.JENKINS;
+import static software.wings.beans.Variable.VariableBuilder.aVariable;
+import static software.wings.beans.VariableType.ARTIFACT;
+import static software.wings.beans.VariableType.TEXT;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.INFRASTRUCTURE_NODE_NAME;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.SELECT_NODE_NAME;
+import static software.wings.sm.StateType.COMMAND;
+import static software.wings.sm.StateType.DC_NODE_SELECT;
 import static software.wings.sm.StateType.HTTP;
 import static software.wings.sm.StateType.RESOURCE_CONSTRAINT;
 import static software.wings.sm.StateType.TERRAFORM_DESTROY;
@@ -50,30 +61,41 @@ import io.harness.scm.SecretName;
 import lombok.Builder;
 import lombok.Value;
 import software.wings.beans.Application;
+import software.wings.beans.ArtifactVariable;
 import software.wings.beans.BasicOrchestrationWorkflow;
 import software.wings.beans.Environment;
+import software.wings.beans.ExecutionArgs;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
+import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.ResourceConstraint;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
+import software.wings.beans.deployment.DeploymentMetadata;
+import software.wings.beans.template.ReferencedTemplate;
 import software.wings.beans.template.Template;
+import software.wings.beans.template.TemplateReference;
 import software.wings.beans.template.command.ShellScriptTemplate;
+import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.HttpState.HttpStateKeys;
 import software.wings.sm.states.JenkinsState;
 import software.wings.sm.states.ResourceConstraintState.HoldingScope;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Singleton
@@ -95,6 +117,7 @@ public class WorkflowGenerator {
   @Inject private WorkflowGenerator workflowGenerator;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private TemplateGenerator templateGenerator;
+  @Inject private WorkflowExecutionService workflowExecutionService;
 
   /**
    * The constant COLLECT_ARTIFACT.
@@ -109,7 +132,8 @@ public class WorkflowGenerator {
     PERMANENTLY_BLOCKED_RESOURCE_CONSTRAINT,
     BUILD_JENKINS,
     BUILD_SHELL_SCRIPT,
-    BASIC_ECS
+    BASIC_ECS,
+    BASIC_SIMPLE_MULTI_ARTIFACT
   }
 
   public Workflow ensurePredefined(Randomizer.Seed seed, Owners owners, Workflows predefined) {
@@ -128,6 +152,8 @@ public class WorkflowGenerator {
         return ensureBuildJenkins(seed, owners);
       case BUILD_SHELL_SCRIPT:
         return ensureBuildShellScript(seed, owners);
+      case BASIC_SIMPLE_MULTI_ARTIFACT:
+        return ensureBasicSimpleMultiArtifact(seed, owners);
       default:
         unhandled(predefined);
     }
@@ -417,6 +443,121 @@ public class WorkflowGenerator {
             .build());
   }
 
+  private Workflow ensureBasicSimpleMultiArtifact(Randomizer.Seed seed, Owners owners) {
+    Template commandTemplate1 =
+        templateGenerator.ensureServiceCommandTemplate(seed, owners, TemplateGenerator.Templates.SERVICE_COMMAND_1);
+    Template commandTemplate2 =
+        templateGenerator.ensureServiceCommandTemplate(seed, owners, TemplateGenerator.Templates.SERVICE_COMMAND_2);
+
+    Template multiArtifactCommandTemplate =
+        templateGenerator.ensurePredefined(seed, owners, TemplateGenerator.Templates.MULTI_ARTIFACT_COMMAND_TEMPLATE);
+    SshCommandTemplate templateObject = (SshCommandTemplate) multiArtifactCommandTemplate.getTemplateObject();
+
+    Service savedService = serviceGenerator.ensurePredefined(seed, owners, Services.MULTI_ARTIFACT_FUNCTIONAL_TEST);
+    Environment savedEnvironment = environmentGenerator.ensurePredefined(seed, owners, Environments.FUNCTIONAL_TEST);
+    InfrastructureMapping infrastructureMapping = infrastructureMappingGenerator.ensurePredefined(
+        seed, owners, InfrastructureMappings.MULTI_ARTIFACT_AWS_SSH_FUNCTIONAL_TEST);
+
+    Map<String, Object> selectNodeProperties = new HashMap<>();
+    selectNodeProperties.put("specificHosts", false);
+    selectNodeProperties.put("instanceCount", 1);
+    selectNodeProperties.put("excludeSelectedHostsFromFuturePhases", false);
+    List<PhaseStep> phaseSteps = new ArrayList<>();
+
+    phaseSteps.add(aPhaseStep(INFRASTRUCTURE_NODE, WorkflowServiceHelper.INFRASTRUCTURE_NODE_NAME)
+                       .withPhaseStepType(PhaseStepType.INFRASTRUCTURE_NODE)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .name(SELECT_NODE_NAME)
+                                    .type(DC_NODE_SELECT.name())
+                                    .properties(selectNodeProperties)
+                                    .build())
+                       .build());
+    phaseSteps.add(aPhaseStep(DISABLE_SERVICE, WorkflowServiceHelper.DISABLE_SERVICE)
+                       .withPhaseStepType(PhaseStepType.DISABLE_SERVICE)
+                       .build());
+
+    Map<String, Variable> variableMap1 = new HashMap<>();
+    variableMap1.put("t_artifact1", aVariable().name("m_artifact1").type(ARTIFACT).build());
+    variableMap1.put("var1", aVariable().name("var1").type(TEXT).build());
+
+    Map<String, Variable> variableMap2 = new HashMap<>();
+    variableMap2.put("t_artifact1", aVariable().name("m_artifact2").type(ARTIFACT).build());
+    variableMap2.put("var2", aVariable().name("var2").type(TEXT).build());
+
+    Map<String, Object> commandProperties = new HashMap<>();
+    commandProperties.put("commandName", "MyCommand");
+    commandProperties.put("commandType", "OTHER");
+    commandProperties.put("executeOnDelegate", "true");
+    //    commandProperties.put("sshKeyRef", "MyCommand");
+    //    commandProperties.put("commandUnits", ((SshCommandTemplate)
+    //    multiArtifactCommandTemplate.getTemplateObject()).getCommandUnits());
+    List<ReferencedTemplate> referencedTemplates = new ArrayList<>();
+    referencedTemplates.add(ReferencedTemplate.builder()
+                                .templateReference(TemplateReference.builder()
+                                                       .templateUuid(commandTemplate1.getUuid())
+                                                       .templateVersion(commandTemplate1.getVersion())
+                                                       .build())
+                                .variableMapping(variableMap1)
+                                .build());
+    referencedTemplates.add(ReferencedTemplate.builder()
+                                .templateReference(TemplateReference.builder()
+                                                       .templateUuid(commandTemplate2.getUuid())
+                                                       .templateVersion(commandTemplate2.getVersion())
+                                                       .build())
+                                .variableMapping(variableMap2)
+                                .build());
+    phaseSteps.add(
+        aPhaseStep(DEPLOY_SERVICE, WorkflowServiceHelper.DEPLOY_SERVICE)
+            .withPhaseStepType(PhaseStepType.DEPLOY_SERVICE)
+            .addStep(GraphNode.builder()
+                         .id(generateUuid())
+                         .name("MyCommand")
+                         .type(COMMAND.name())
+                         .properties(commandProperties)
+                         .templateUuid(multiArtifactCommandTemplate.getUuid())
+                         .templateVersion(String.valueOf(multiArtifactCommandTemplate.getVersion()))
+                         .templateVariables(asList(
+                             aVariable().type(ARTIFACT).name("m_artifact1").value("${artifacts.artifact1}").build(),
+                             aVariable().type(TEXT).name("var1").value("Another Jane Doe").build(),
+                             aVariable().type(ARTIFACT).name("m_artifact2").value("${artifacts.artifact2}").build(),
+                             aVariable().type(TEXT).name("var2").value("Another John Doe").build()))
+                         .build())
+            .build());
+    phaseSteps.add(aPhaseStep(ENABLE_SERVICE, WorkflowServiceHelper.ENABLE_SERVICE)
+                       .withPhaseStepType(PhaseStepType.ENABLE_SERVICE)
+                       .build());
+    phaseSteps.add(aPhaseStep(VERIFY_SERVICE, WorkflowServiceHelper.VERIFY_SERVICE)
+                       .withPhaseStepType(PhaseStepType.VERIFY_SERVICE)
+                       .build());
+    phaseSteps.add(aPhaseStep(WRAP_UP, WorkflowServiceHelper.WRAP_UP).withPhaseStepType(PhaseStepType.WRAP_UP).build());
+    return ensureWorkflow(seed, owners,
+        aWorkflow()
+            .name("MultiArtifact - Basic - simple")
+            .serviceId(savedService.getUuid())
+            .envId(savedEnvironment.getUuid())
+            .infraMappingId(infrastructureMapping.getUuid())
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(aBasicOrchestrationWorkflow()
+                                       .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT)
+                                                                   .addStep(GraphNode.builder()
+                                                                                .id(generateUuid())
+                                                                                .name("Artifact Check")
+                                                                                .type(StateType.ARTIFACT_CHECK.name())
+                                                                                .build())
+                                                                   .build())
+                                       .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                       .addWorkflowPhase(aWorkflowPhase()
+                                                             .name("Phase1")
+                                                             .serviceId(savedService.getUuid())
+                                                             .deploymentType(SSH)
+                                                             .infraMappingId(infrastructureMapping.getUuid())
+                                                             .phaseSteps(phaseSteps)
+                                                             .build())
+                                       .build())
+            .build());
+  }
+
   public Workflow exists(Workflow workflow) {
     return workflowService.readWorkflowByName(workflow.getAppId(), workflow.getName());
   }
@@ -534,5 +675,14 @@ public class WorkflowGenerator {
     }
 
     return workflowService.updateWorkflow(workflow, false);
+  }
+
+  public List<ArtifactVariable> getArtifactVariablesFromDeploymentMetadataForWorkflow(
+      String appId, String orchestrationId) {
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setOrchestrationId(orchestrationId);
+    executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
+    DeploymentMetadata deploymentMetadata = workflowExecutionService.fetchDeploymentMetadata(appId, executionArgs);
+    return deploymentMetadata.getArtifactVariables();
   }
 }

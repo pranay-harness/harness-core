@@ -1,5 +1,7 @@
 package io.harness.generator.artifactstream;
 
+import static software.wings.beans.Application.GLOBAL_APP_ID;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -20,21 +22,24 @@ public class DockerArtifactStreamStreamsGenerator implements ArtifactStreamsGene
 
   @Override
   public ArtifactStream ensureArtifactStream(Seed seed, Owners owners) {
+    return ensureArtifactStream(seed, owners, false);
+  }
+
+  @Override
+  public ArtifactStream ensureArtifactStream(Seed seed, Owners owners, boolean atConnector) {
     Service service = owners.obtainService();
-    String serviceId = service.getUuid();
-
     Application application = owners.obtainApplication();
-
     final SettingAttribute settingAttribute =
         settingGenerator.ensurePredefined(seed, owners, Settings.HARNESS_DOCKER_REGISTRY);
 
-    ArtifactStream artifactStream = DockerArtifactStream.builder()
-                                        .appId(application.getUuid())
-                                        .name("nginx")
-                                        .serviceId(serviceId)
-                                        .settingId(settingAttribute.getUuid())
-                                        .imageName("library/nginx")
-                                        .build();
+    ArtifactStream artifactStream =
+        DockerArtifactStream.builder()
+            .appId(atConnector ? GLOBAL_APP_ID : application.getUuid())
+            .name(atConnector ? "nginx-atConnector" : "nginx")
+            .serviceId(atConnector ? settingAttribute.getUuid() : service != null ? service.getUuid() : null)
+            .settingId(settingAttribute.getUuid())
+            .imageName("library/nginx")
+            .build();
     return ensureArtifactStream(seed, artifactStream, owners);
   }
 

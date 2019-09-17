@@ -31,13 +31,19 @@ public class ArtifactStreamManager {
     HARNESS_SAMPLE_ECR,
     HARNESS_SAMPLE_DOCKER,
     AWS_AMI,
-    HARNESS_EXAMPLE_LAMBDA
+    HARNESS_EXAMPLE_LAMBDA,
+    HARNESS_SAMPLE_ECHO_WAR_AT_CONNECTOR,
+    HARNESS_SAMPLE_DOCKER_AT_CONNECTOR
   }
 
   public ArtifactStream ensurePredefined(Seed seed, Owners owners, ArtifactStreams predefined) {
+    return ensurePredefined(seed, owners, predefined, false);
+  }
+
+  public ArtifactStream ensurePredefined(Seed seed, Owners owners, ArtifactStreams predefined, boolean atConnector) {
     ArtifactStreamsGenerator streamsGenerator = streamGeneratorFactory.getArtifactStreamGenerator(predefined);
     if (streamsGenerator != null) {
-      return streamsGenerator.ensureArtifactStream(seed, owners);
+      return streamsGenerator.ensureArtifactStream(seed, owners, atConnector);
     }
     return null;
   }

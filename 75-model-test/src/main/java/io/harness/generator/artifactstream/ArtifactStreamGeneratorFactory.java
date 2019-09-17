@@ -38,6 +38,12 @@ public class ArtifactStreamGeneratorFactory {
     if (ArtifactStreams.HARNESS_EXAMPLE_LAMBDA.equals(artifactStreams)) {
       return amazonLambdaArtifactStreamGenerator;
     }
+    if (ArtifactStreams.HARNESS_SAMPLE_ECHO_WAR_AT_CONNECTOR.equals(artifactStreams)) {
+      return jenkinsArtifactStreamStreamsGenerator;
+    }
+    if (ArtifactStreams.HARNESS_SAMPLE_DOCKER_AT_CONNECTOR.equals(artifactStreams)) {
+      return dockerArtifactStreamGenerator;
+    }
     return null;
   }
 }
