@@ -1,5 +1,7 @@
 package io.harness.generator.artifactstream;
 
+import static software.wings.beans.Application.GLOBAL_APP_ID;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -22,21 +24,26 @@ public class ArtifactoryArtifactStreamStreamsGenerator implements ArtifactStream
 
   @Override
   public ArtifactStream ensureArtifactStream(Seed seed, Owners owners) {
+    return ensureArtifactStream(seed, owners, false);
+  }
+
+  @Override
+  public ArtifactStream ensureArtifactStream(Seed seed, Owners owners, boolean atConnector) {
     Service service = owners.obtainService();
     Application application = owners.obtainApplication();
-
     final SettingAttribute settingAttribute =
         settingGenerator.ensurePredefined(seed, owners, Settings.HARNESS_ARTIFACTORY_CONNECTOR);
 
-    ArtifactStream artifactStream = ArtifactoryArtifactStream.builder()
-                                        .appId(application.getUuid())
-                                        .serviceId(service.getUuid())
-                                        .name("artifactory-echo-war")
-                                        .jobname("functional-test")
-                                        .autoPopulate(true)
-                                        .artifactPattern("/io/harness/e2e/echo/*/*.war")
-                                        .settingId(settingAttribute.getUuid())
-                                        .build();
+    ArtifactStream artifactStream =
+        ArtifactoryArtifactStream.builder()
+            .appId(atConnector ? GLOBAL_APP_ID : application.getUuid())
+            .serviceId(atConnector ? settingAttribute.getUuid() : service != null ? service.getUuid() : null)
+            .name("artifactory-echo-war")
+            .jobname("functional-test")
+            .autoPopulate(true)
+            .artifactPattern("/io/harness/e2e/echo/*/*.war")
+            .settingId(settingAttribute.getUuid())
+            .build();
     return ensureArtifactStream(seed, artifactStream, owners);
   }
 

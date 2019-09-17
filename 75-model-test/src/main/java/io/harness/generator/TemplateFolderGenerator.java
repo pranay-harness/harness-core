@@ -22,13 +22,16 @@ public class TemplateFolderGenerator {
   @Inject TemplateFolderService templateFolderService;
   @Inject WingsPersistence wingsPersistence;
 
-  public enum TemplateFolders { TEMPLATE_FOLDER }
+  public enum TemplateFolders { TEMPLATE_FOLDER_SHELL_SCRIPTS, TEMPLATE_FOLDER_SERVICE_COMMANDS }
 
   public TemplateFolder ensurePredefined(Randomizer.Seed seed, OwnerManager.Owners owners, TemplateFolders predefined) {
     switch (predefined) {
-      case TEMPLATE_FOLDER:
+      case TEMPLATE_FOLDER_SHELL_SCRIPTS:
         return ensureTemplateFolder(
             seed, owners, TemplateFolder.builder().name("Functional Test - Shell Scripts").build());
+      case TEMPLATE_FOLDER_SERVICE_COMMANDS:
+        return ensureTemplateFolder(
+            seed, owners, TemplateFolder.builder().name("Functional Test - Service Commands").build());
       default:
         unhandled(predefined);
     }

@@ -1,6 +1,7 @@
 package io.harness.generator.artifactstream;
 
 import static java.util.Arrays.asList;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -24,17 +25,19 @@ public class JenkinsArtifactStreamStreamsGenerator implements ArtifactStreamsGen
 
   @Override
   public ArtifactStream ensureArtifactStream(Seed seed, Owners owners) {
+    return ensureArtifactStream(seed, owners, false);
+  }
+
+  @Override
+  public ArtifactStream ensureArtifactStream(Seed seed, Owners owners, boolean atConnector) {
     Service service = owners.obtainService();
-
     Application application = owners.obtainApplication();
-
     final SettingAttribute settingAttribute =
         settingGenerator.ensurePredefined(seed, owners, Settings.HARNESS_JENKINS_CONNECTOR);
-
     return ensureArtifactStream(seed,
         JenkinsArtifactStream.builder()
-            .appId(application.getUuid())
-            .serviceId(service != null ? service.getUuid() : null)
+            .appId(atConnector ? GLOBAL_APP_ID : application.getUuid())
+            .serviceId(atConnector ? settingAttribute.getUuid() : service != null ? service.getUuid() : null)
             .autoPopulate(false)
             .name("harness-samples")
             .sourceName(settingAttribute.getName())

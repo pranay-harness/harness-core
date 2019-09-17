@@ -1,5 +1,7 @@
 package io.harness.generator.artifactstream;
 
+import static software.wings.beans.Application.GLOBAL_APP_ID;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -20,23 +22,25 @@ public class EcrArtifactStreamStreamsGenerator implements ArtifactStreamsGenerat
 
   @Override
   public ArtifactStream ensureArtifactStream(Seed seed, Owners owners) {
+    return ensureArtifactStream(seed, owners, false);
+  }
+
+  @Override
+  public ArtifactStream ensureArtifactStream(Seed seed, Owners owners, boolean atConnector) {
     Service service = owners.obtainService();
-    String serviceId = service.getUuid();
-
     Application application = owners.obtainApplication();
-
     final SettingAttribute settingAttribute =
         settingGenerator.ensurePredefined(seed, owners, Settings.AWS_TEST_CLOUD_PROVIDER);
-
-    ArtifactStream artifactStream = EcrArtifactStream.builder()
-                                        .appId(application.getUuid())
-                                        .serviceId(serviceId)
-                                        .region("us-east-1")
-                                        .imageName("hello-world")
-                                        .name("hello-world")
-                                        .autoPopulate(true)
-                                        .settingId(settingAttribute.getUuid())
-                                        .build();
+    ArtifactStream artifactStream =
+        EcrArtifactStream.builder()
+            .appId(atConnector ? GLOBAL_APP_ID : application.getUuid())
+            .serviceId(atConnector ? settingAttribute.getUuid() : service != null ? service.getUuid() : null)
+            .region("us-east-1")
+            .imageName("hello-world")
+            .name("hello-world")
+            .autoPopulate(true)
+            .settingId(settingAttribute.getUuid())
+            .build();
     return ensureArtifactStream(seed, artifactStream, owners);
   }
 

@@ -37,7 +37,16 @@ public class ServiceGenerator {
   @Inject ServiceResourceService serviceResourceService;
   @Inject WingsPersistence wingsPersistence;
 
-  public enum Services { GENERIC_TEST, KUBERNETES_GENERIC_TEST, FUNCTIONAL_TEST, WINDOWS_TEST, ECS_TEST, K8S_V2_TEST }
+  public enum Services {
+    GENERIC_TEST,
+    KUBERNETES_GENERIC_TEST,
+    FUNCTIONAL_TEST,
+    WINDOWS_TEST,
+    ECS_TEST,
+    K8S_V2_TEST,
+    MULTI_ARTIFACT_FUNCTIONAL_TEST,
+    MULTI_ARTIFACT_K8S_V2_TEST
+  }
 
   public Service ensurePredefined(Randomizer.Seed seed, Owners owners, Services predefined) {
     switch (predefined) {
@@ -51,6 +60,10 @@ public class ServiceGenerator {
         return ensureWindowsTest(seed, owners, "Test IIS APP Service");
       case K8S_V2_TEST:
         return ensureK8sTest(seed, owners, "Test K8sV2 Service");
+      case MULTI_ARTIFACT_FUNCTIONAL_TEST:
+        return ensureMultiArtifactFunctionalTest(seed, owners, "MA-FunctionalTest Service");
+      case MULTI_ARTIFACT_K8S_V2_TEST:
+        return ensureMultiArtifactK8sTest(seed, owners, "MA-Test K8sV2 Service");
       default:
         unhandled(predefined);
     }
@@ -81,6 +94,18 @@ public class ServiceGenerator {
     return service;
   }
 
+  public Service ensureMultiArtifactK8sTest(Randomizer.Seed seed, Owners owners, String name) {
+    owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
+    owners.add(ensureService(seed, owners,
+        builder()
+            .name(name)
+            .artifactType(ArtifactType.DOCKER)
+            .deploymentType(DeploymentType.KUBERNETES)
+            .isK8sV2(true)
+            .build()));
+    return owners.obtainService();
+  }
+
   public Service ensureEcsTest(Randomizer.Seed seed, Owners owners, String name) {
     owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
     owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.DOCKER).build()));
@@ -100,6 +125,12 @@ public class ServiceGenerator {
     owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.FUNCTIONAL_TEST));
     owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.WAR).build()));
     artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.ARTIFACTORY_ECHO_WAR);
+    return owners.obtainService();
+  }
+
+  public Service ensureMultiArtifactFunctionalTest(Randomizer.Seed seed, Owners owners, String name) {
+    owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.FUNCTIONAL_TEST));
+    owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.WAR).build()));
     return owners.obtainService();
   }
 

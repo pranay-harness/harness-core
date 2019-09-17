@@ -1,6 +1,7 @@
 package io.harness.generator.artifactstream;
 
 import static java.util.Arrays.asList;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -24,16 +25,20 @@ public class AmazonS3ArtifactStreamStreamsGenerator implements ArtifactStreamsGe
 
   @Override
   public ArtifactStream ensureArtifactStream(Seed seed, Owners owners) {
+    return ensureArtifactStream(seed, owners, false);
+  }
+
+  @Override
+  public ArtifactStream ensureArtifactStream(Seed seed, Owners owners, boolean atConnector) {
     Service service = owners.obtainService();
     Application application = owners.obtainApplication();
-
     final SettingAttribute settingAttribute =
         settingGenerator.ensurePredefined(seed, owners, Settings.AWS_TEST_CLOUD_PROVIDER);
 
     return ensureArtifactStream(seed,
         AmazonS3ArtifactStream.builder()
-            .appId(application.getUuid())
-            .serviceId(service.getUuid())
+            .appId(atConnector ? GLOBAL_APP_ID : application.getUuid())
+            .serviceId(atConnector ? settingAttribute.getUuid() : service != null ? service.getUuid() : null)
             .name("harness-iis-app")
             .sourceName(settingAttribute.getName())
             .jobname("iis-app-example")
