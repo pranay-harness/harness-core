@@ -2,7 +2,6 @@ package software.wings.service.impl.trigger;
 
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.inject.Inject;
@@ -14,15 +13,11 @@ import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.ArtifactVariable;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.trigger.Action.ActionType;
 import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.ScheduledCondition;
-import software.wings.beans.trigger.WorkflowAction;
 import software.wings.service.intfc.WorkflowExecutionService;
 
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 @Singleton
@@ -64,42 +59,9 @@ public class ScheduleTriggerProcessor implements TriggerProcessor {
           (ScheduledTriggerExecutionParams) triggerExecutionParams;
 
       DeploymentTrigger trigger = scheduledTriggerExecutionParams.getTrigger();
-      if (trigger.isTriggerDisabled()) {
-        logger.warn("Trigger is disabled for appId {}, Trigger Id {} and name {} with the scheduled fire time ",
-            trigger.getAppId(), trigger.getUuid(), trigger.getName());
-        return;
-      }
+
       logger.info("Received scheduled trigger for appId {}, Trigger Id {} and name {} with the scheduled fire time ",
           trigger.getAppId(), trigger.getUuid(), trigger.getName());
-
-      ScheduledCondition scheduledCondition = (ScheduledCondition) (trigger.getCondition());
-      if (scheduledCondition.isOnNewArtifactOnly()) {
-        if (trigger.getAction() != null && trigger.getAction().getActionType().equals(ActionType.WORKFLOW)) {
-          List<ArtifactVariable> artifactVariables =
-              triggerArtifactVariableHandler.fetchArtifactVariablesForExecution(trigger.getAppId(), trigger, null);
-
-          WorkflowAction workflowAction = (WorkflowAction) trigger.getAction();
-
-          List<ArtifactVariable> lastDeployedArtifactVariables =
-              workflowExecutionService.obtainLastGoodDeployedArtifactsVariables(appId, workflowAction.getWorkflowId());
-
-          if (lastDeployedArtifactVariables.stream()
-                  .map(artifactVariable -> artifactVariable.getValue())
-                  .collect(toList())
-                  .containsAll(artifactVariables.stream()
-                                   .map(artifactVariable -> artifactVariable.getValue())
-                                   .collect(toList()))) {
-            logger.info("No new version of artifacts found from the last successful execution "
-                    + "of pipeline/ workflow {}. So, not triggering execution",
-                workflowAction.getWorkflowId());
-            return;
-          } else {
-            logger.info("New version of artifacts found from the last successful execution "
-                    + "of pipeline/ workflow {}. So, triggering  execution",
-                workflowAction.getWorkflowId());
-          }
-        }
-      }
 
       triggerDeploymentExecution.executeDeployment(trigger,
           triggerArtifactVariableHandler.fetchArtifactVariablesForExecution(trigger.getAppId(), trigger, null));

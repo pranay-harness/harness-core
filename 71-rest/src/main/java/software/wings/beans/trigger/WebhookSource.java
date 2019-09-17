@@ -21,7 +21,8 @@ public enum WebhookSource {
     PING("Ping", "ping", WebhookEventType.PING),
     DELETE("Delete", "delete", WebhookEventType.DELETE),
     ANY("Any", "any", WebhookEventType.ANY),
-    OTHER("Other", "other", WebhookEventType.OTHER),
+    // OTHER("Other", "other", WebhookEventType.OTHER),
+    PULL_REQUEST_ANY("Any", "any", WebhookEventType.PULL_REQUEST),
     PULL_REQUEST_CLOSED("Closed", "closed", WebhookEventType.PULL_REQUEST),
     PULL_REQUEST_EDITED("Edited", "edited", WebhookEventType.PULL_REQUEST),
     PULL_REQUEST_OPENED("Opened", "opened", WebhookEventType.PULL_REQUEST),
@@ -54,43 +55,46 @@ public enum WebhookSource {
   }
 
   public enum BitBucketEventType implements WebhookEvent {
-    PING("Ping", "ping", WebhookEventType.PING),
-    DIAGNOSTICS_PING("Diagnostics Ping", "diagnostics:ping", WebhookEventType.PING),
-    ALL("All", "all", WebhookEventType.ANY),
+    PING("Ping", "ping", WebhookEventType.PING, 1),
+    DIAGNOSTICS_PING("Diagnostics Ping", "diagnostics:ping", WebhookEventType.PING, 1),
+    ALL("All", "all", WebhookEventType.ANY, 1),
 
-    ANY("Any", "any", WebhookEventType.ANY),
-    OTHER("Other", "other", WebhookEventType.OTHER),
-    FORK("Fork", "repo:fork", WebhookEventType.PUSH),
-    UPDATED("Updated", "repo:updated", WebhookEventType.PUSH),
-    COMMIT_COMMENT_CREATED("Commit Comment Created", "repo:commit_comment_created", WebhookEventType.PUSH),
-    BUILD_STATUS_CREATED("Build Status Created", "repo:commit_status_created", WebhookEventType.PUSH),
-    BUILD_STATUS_UPDATED("Build Status Updated", "repo:commit_status_updated", WebhookEventType.PUSH),
-    PUSH("Push", "repo:push", WebhookEventType.PUSH),
-    REFS_CHANGED("Refs Changed", "repo:refs_changed", WebhookEventType.PUSH),
+    PUSH_ANY("Any", "repo:any", WebhookEventType.PUSH, 1),
+    ANY("Any", "any", WebhookEventType.ANY, 1),
+    // OTHER("Other", "other", WebhookEventType.OTHER),
+    FORK("Fork", "repo:fork", WebhookEventType.PUSH, 3),
+    UPDATED("Updated", "repo:updated", WebhookEventType.PUSH, 8),
+    COMMIT_COMMENT_CREATED("Commit Comment Created", "repo:commit_comment_created", WebhookEventType.PUSH, 3),
+    BUILD_STATUS_CREATED("Build Status Created", "repo:commit_status_created", WebhookEventType.PUSH, 4),
+    BUILD_STATUS_UPDATED("Build Status Updated", "repo:commit_status_updated", WebhookEventType.PUSH, 5),
+    PUSH("Push", "repo:push", WebhookEventType.PUSH, 6),
+    REFS_CHANGED("Refs Changed", "repo:refs_changed", WebhookEventType.PUSH, 7),
 
-    ISSUE_CREATED("Issue Created", "issue:created", WebhookEventType.ISSUE),
-    ISSUE_UPDATED("Issue Updated", "issue:updated", WebhookEventType.ISSUE),
-    ISSUE_COMMENT_CREATED("Issue Comment Created", "issue:comment_created", WebhookEventType.ISSUE),
+    ISSUE_ANY("Any", "issue:any", WebhookEventType.ISSUE, 1),
+    ISSUE_CREATED("Issue Created", "issue:created", WebhookEventType.ISSUE, 2),
+    ISSUE_UPDATED("Issue Updated", "issue:updated", WebhookEventType.ISSUE, 3),
+    ISSUE_COMMENT_CREATED("Issue Comment Created", "issue:comment_created", WebhookEventType.ISSUE, 4),
 
-    PULL_REQUEST_CREATED("Pull Request Created", "pullrequest:created", WebhookEventType.PULL_REQUEST),
-    PULL_REQUEST_UPDATED("Pull Request Updated", "pullrequest:updated", WebhookEventType.PULL_REQUEST),
-    PULL_REQUEST_APPROVED("Pull Request Approved", "pullrequest:approved", WebhookEventType.PULL_REQUEST),
+    PULL_REQUEST_ANY("Any", "pullrequest:any", WebhookEventType.PULL_REQUEST, 1),
+    PULL_REQUEST_CREATED("Pull Request Created", "pullrequest:created", WebhookEventType.PULL_REQUEST, 2),
+    PULL_REQUEST_UPDATED("Pull Request Updated", "pullrequest:updated", WebhookEventType.PULL_REQUEST, 3),
+    PULL_REQUEST_APPROVED("Pull Request Approved", "pullrequest:approved", WebhookEventType.PULL_REQUEST, 4),
     PULL_REQUEST_APPROVAL_REMOVED(
-        "Pull Request Approval Removed", "pullrequest:unapproved", WebhookEventType.PULL_REQUEST),
-    PULL_REQUEST_MERGED("Pull Request Merged", "pullrequest:fulfilled", WebhookEventType.PULL_REQUEST),
-    PULL_REQUEST_DECLINED("Pull Request Declined", "pullrequest:rejected", WebhookEventType.PULL_REQUEST),
+        "Pull Request Approval Removed", "pullrequest:unapproved", WebhookEventType.PULL_REQUEST, 5),
+    PULL_REQUEST_MERGED("Pull Request Merged", "pullrequest:fulfilled", WebhookEventType.PULL_REQUEST, 6),
+    PULL_REQUEST_DECLINED("Pull Request Declined", "pullrequest:rejected", WebhookEventType.PULL_REQUEST, 7),
     PULL_REQUEST_COMMENT_CREATED(
-        "Pull Request Comment Created", "pullrequest:comment_created", WebhookEventType.PULL_REQUEST),
+        "Pull Request Comment Created", "pullrequest:comment_created", WebhookEventType.PULL_REQUEST, 8),
     PULL_REQUEST_COMMENT_UPDATED(
-        "Pull Request Comment Updated", "pullrequest:comment_updated", WebhookEventType.PULL_REQUEST),
+        "Pull Request Comment Updated", "pullrequest:comment_updated", WebhookEventType.PULL_REQUEST, 9),
     PULL_REQUEST_COMMENT_DELETED(
-        "Pull Request Comment Deleted", "pullrequest:comment_deleted", WebhookEventType.PULL_REQUEST);
+        "Pull Request Comment Deleted", "pullrequest:comment_deleted", WebhookEventType.PULL_REQUEST, 10);
 
     @Getter private String displayName;
     @Getter private String value;
     @Getter private WebhookEventType eventType;
 
-    BitBucketEventType(String displayName, String value, WebhookEventType eventType) {
+    BitBucketEventType(String displayName, String value, WebhookEventType eventType, int counter) {
       this.displayName = displayName;
       this.value = value;
       this.eventType = eventType;
@@ -116,8 +120,8 @@ public enum WebhookSource {
     PULL_REQUEST("Pull Request", "Merge Request Hook", WebhookEventType.PULL_REQUEST),
     PUSH("Push", "Push Hook", WebhookEventType.PUSH),
     PING("Ping", "ping", WebhookEventType.PING),
-    ANY("Any", "any", WebhookEventType.ANY),
-    OTHER("Other", "other", WebhookEventType.OTHER);
+    ANY("Any", "any", WebhookEventType.ANY);
+    // OTHER("Other", "other", WebhookEventType.OTHER);
 
     @Getter private String displayName;
     @Getter private String value;

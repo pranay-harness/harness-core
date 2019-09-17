@@ -156,7 +156,7 @@ public class DeploymentTriggerServiceHelper {
     switch (webhookSource) {
       case "GITHUB":
         GitHubEventType.GHEventHolder.getMap().values().forEach(gitHubEventType -> {
-          if (gitHubEventType.getEventType().name().equals("PING")) {
+          if (gitHubEventType.getEventType().name().equals("PING") || gitHubEventType.name().equals("PULL_REQUEST")) {
             return;
           }
           if (events.containsKey(gitHubEventType.getEventType().name())) {

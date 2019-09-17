@@ -34,6 +34,7 @@ import software.wings.beans.instance.dashboard.ArtifactSummary;
 import software.wings.beans.trigger.Action;
 import software.wings.beans.trigger.Action.ActionType;
 import software.wings.beans.trigger.DeploymentTrigger;
+import software.wings.beans.trigger.PayloadSource.Type;
 import software.wings.beans.trigger.PipelineAction;
 import software.wings.beans.trigger.PrAction;
 import software.wings.beans.trigger.Trigger;
@@ -125,19 +126,42 @@ public class WebHookServiceImpl implements WebHookService {
 
         return prepareResponse(webHookResponse, Response.Status.BAD_REQUEST);
       }
-      logger.info("Received the Webhook Request {}  ", String.valueOf(webHookRequest));
-      String appId = webHookRequest.getApplication();
-      Application app = appService.get(appId);
-      if (app == null) {
-        WebHookResponse webHookResponse = WebHookResponse.builder().error("Application does not exist").build();
-        return prepareResponse(webHookResponse, Response.Status.BAD_REQUEST);
-      }
 
-      if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, app.getAccountId())) {
-        // Todo Harsh Make sure old curl command should work with new triggers even after migration
-        return executeDepTriggerWebRequest(appId, token, app, webHookRequest);
+      logger.info("Received the Webhook Request {}  ", String.valueOf(webHookRequest));
+      Trigger trigger = triggerService.getTriggerByWebhookToken(token);
+      DeploymentTrigger deploymentTrigger = deploymentTriggerService.getTriggerByWebhookToken(token);
+      String accountId = getAccountId(token, trigger, deploymentTrigger);
+
+      if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+        if (deploymentTrigger == null) {
+          WebHookResponse webHookResponse =
+              WebHookResponse.builder().error("No trigger associated with the given token").build();
+
+          return prepareResponse(webHookResponse, Response.Status.BAD_REQUEST);
+        }
+        Application app = appService.get(deploymentTrigger.getAppId());
+        if (app == null) {
+          WebHookResponse webHookResponse =
+              WebHookResponse.builder().error("No App associated with the given token").build();
+
+          return prepareResponse(webHookResponse, Response.Status.BAD_REQUEST);
+        }
+        return executeDepTriggerWebRequest(deploymentTrigger.getAppId(), token, app, webHookRequest);
       } else {
-        return executeTriggerWebRequest(appId, token, app, webHookRequest);
+        if (trigger == null) {
+          WebHookResponse webHookResponse =
+              WebHookResponse.builder().error("No trigger associated with the given token").build();
+
+          return prepareResponse(webHookResponse, Response.Status.BAD_REQUEST);
+        }
+        Application app = appService.get(trigger.getAppId());
+        if (app == null) {
+          WebHookResponse webHookResponse =
+              WebHookResponse.builder().error("No App associated with the given token").build();
+
+          return prepareResponse(webHookResponse, Response.Status.BAD_REQUEST);
+        }
+        return executeTriggerWebRequest(trigger.getAppId(), token, app, webHookRequest);
       }
 
     } catch (WingsException ex) {
@@ -154,17 +178,13 @@ public class WebHookServiceImpl implements WebHookService {
   private Response executeDepTriggerWebRequest(
       String appId, String token, Application app, WebHookRequest webHookRequest) {
     DeploymentTrigger deploymentTrigger = deploymentTriggerService.getTriggerByWebhookToken(token);
-    if (deploymentTrigger == null) {
-      WebHookResponse webHookResponse =
-          WebHookResponse.builder().error("No trigger associated with the given token").build();
-
-      return prepareResponse(webHookResponse, Response.Status.BAD_REQUEST);
-    }
 
     Map<String, Map<String, ArtifactSummary>> serviceBuildNumbers = new HashMap<>();
-    Map<String, Object> payLoadMap = webHookRequest.getParameters().entrySet().stream().collect(
-        Collectors.toMap(Map.Entry::getKey, e -> (Object) e.getValue()));
-
+    Map<String, Object> payLoadMap = new HashMap<>();
+    if (webHookRequest.getParameters() != null) {
+      payLoadMap = webHookRequest.getParameters().entrySet().stream().collect(
+          Collectors.toMap(Map.Entry::getKey, e -> (Object) e.getValue()));
+    }
     Response response =
         resolveServiceBuildNumbersWithArtifactVariables(appId, webHookRequest, serviceBuildNumbers, payLoadMap);
 
@@ -172,8 +192,9 @@ public class WebHookServiceImpl implements WebHookService {
       return response;
     }
 
-    WorkflowExecution workflowExecution = webhookTriggerDeploymentExecution.validateExpressionsAndTriggerDeployment(
-        deploymentTrigger, payLoadMap, serviceBuildNumbers);
+    WorkflowExecution workflowExecution =
+        webhookTriggerDeploymentExecution.validateExpressionsAndCustomTriggerDeployment(
+            deploymentTrigger, payLoadMap, serviceBuildNumbers);
 
     return constructSuccessResponse(appId, app, workflowExecution);
   }
@@ -192,6 +213,9 @@ public class WebHookServiceImpl implements WebHookService {
     return constructSuccessResponse(appId, app, workflowExecution);
   }
   private boolean isGithubPingEvent(HttpHeaders httpHeaders) {
+    if (httpHeaders == null) {
+      return false;
+    }
     WebhookSource webhookSource = webhookEventUtils.obtainWebhookSource(httpHeaders);
 
     if (!WebhookSource.GITHUB.equals(webhookSource)) {
@@ -203,6 +227,7 @@ public class WebHookServiceImpl implements WebHookService {
 
   @Override
   public Response executeByEvent(String token, String webhookEventPayload, HttpHeaders httpHeaders) {
+    logger.info("Received the Webhook Request for token token {}  ", token);
     TriggerExecutionBuilder triggerExecutionBuilder = TriggerExecution.builder();
     TriggerExecution triggerExecution = triggerExecutionBuilder.build();
     try {
@@ -262,7 +287,9 @@ public class WebHookServiceImpl implements WebHookService {
       return prepareResponse(webHookResponse, Response.Status.BAD_REQUEST);
     }
 
-    if (isGithubPingEvent(httpHeaders)) {
+    Type payloadType = ((WebhookCondition) deploymentTrigger.getCondition()).getPayloadSource().getType();
+
+    if (!payloadType.equals(Type.CUSTOM) && isGithubPingEvent(httpHeaders)) {
       return prepareResponse(WebHookResponse.builder().message("Received ping event").build(), Response.Status.OK);
     }
 
@@ -277,8 +304,17 @@ public class WebHookServiceImpl implements WebHookService {
 
     WorkflowExecution workflowExecution = null;
     try {
-      workflowExecution = webhookTriggerDeploymentExecution.validateExpressionsAndTriggerDeployment(
-          webhookEventPayload, httpHeaders, deploymentTrigger, triggerExecution.getWebhookEventDetails());
+      if (payloadType.equals(Type.CUSTOM)) {
+        logger.info("Executing custom request for trigger {}  ", deploymentTrigger.getName());
+        Map<String, Object> payLoadMap =
+            JsonUtils.asObject(webhookEventPayload, new TypeReference<Map<String, Object>>() {});
+        workflowExecution = webhookTriggerDeploymentExecution.validateExpressionsAndCustomTriggerDeployment(
+            deploymentTrigger, payLoadMap, null);
+      } else {
+        logger.info("Executing git request for trigger {}  ", deploymentTrigger.getName());
+        workflowExecution = webhookTriggerDeploymentExecution.validateExpressionsAndTriggerDeployment(
+            webhookEventPayload, httpHeaders, deploymentTrigger, triggerExecution.getWebhookEventDetails());
+      }
     } catch (WingsException ex) {
       ExceptionLogger.logProcessedMessages(ex, MANAGER, logger);
       triggerExecution.setMessage(ExceptionUtils.getMessage(ex));
@@ -401,8 +437,8 @@ public class WebHookServiceImpl implements WebHookService {
                 WebHookResponse.builder().error("Service Name [" + serviceName + "] does not exist").build(),
                 Response.Status.BAD_REQUEST);
           }
-          serviceArtifactMapping.put(
-              service.getUuid(), ArtifactSummary.builder().name(artifactStreamName).buildNo(buildNumber).build());
+          serviceArtifactMapping.put(service.getUuid(),
+              ArtifactSummary.builder().artifactSourceName(artifactStreamName).buildNo(buildNumber).build());
         }
       }
     }
@@ -418,10 +454,6 @@ public class WebHookServiceImpl implements WebHookService {
         String artifactStreamName = artifact.get("artifactSourceName");
         String serviceName = artifact.get("service");
         String artifactVariableName = ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME;
-
-        if (artifact.containsKey("artifactVariableName")) {
-          artifactVariableName = artifact.get("artifactVariableName");
-        }
 
         String appName = appService.get(appId).getName();
         // TODO harsh use common method to generate from
@@ -441,14 +473,14 @@ public class WebHookServiceImpl implements WebHookService {
 
           if (serviceArtifactMapping.containsKey(service.getUuid())) {
             Map<String, ArtifactSummary> stringArtifactSummaryMap = serviceArtifactMapping.get(service.getUuid());
-            stringArtifactSummaryMap.put(
-                artifactVariableName, ArtifactSummary.builder().name(artifactStreamName).buildNo(buildNumber).build());
+            stringArtifactSummaryMap.put(artifactVariableName,
+                ArtifactSummary.builder().artifactSourceName(artifactStreamName).buildNo(buildNumber).build());
 
             serviceArtifactMapping.put(service.getUuid(), stringArtifactSummaryMap);
           } else {
             Map<String, ArtifactSummary> serviceBuildNumbers = new HashMap<>();
-            serviceBuildNumbers.put(
-                artifactVariableName, ArtifactSummary.builder().name(artifactStreamName).buildNo(buildNumber).build());
+            serviceBuildNumbers.put(artifactVariableName,
+                ArtifactSummary.builder().artifactSourceName(artifactStreamName).buildNo(buildNumber).build());
             serviceArtifactMapping.put(service.getUuid(), serviceBuildNumbers);
           }
         }

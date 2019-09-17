@@ -18,7 +18,6 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
-import software.wings.beans.ArtifactVariable;
 import software.wings.beans.Variable;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.WorkflowExecution;
@@ -45,6 +44,7 @@ public class WebhookConditionTriggerProcessor implements TriggerProcessor {
   @Inject private transient TriggerDeploymentExecution triggerDeploymentExecution;
   @Inject private ManagerExpressionEvaluator expressionEvaluator;
 
+  private static String placeholder = "_placeholder";
   @Override
   public void validateTriggerConditionSetup(DeploymentTrigger deploymentTrigger, DeploymentTrigger existingTrigger) {
     WebhookCondition webhookCondition = (WebhookCondition) deploymentTrigger.getCondition();
@@ -72,12 +72,10 @@ public class WebhookConditionTriggerProcessor implements TriggerProcessor {
     WebhookTriggerExecutionParams webhookTriggerExecutionParams =
         (WebhookTriggerExecutionParams) triggerExecutionParams;
 
-    List<ArtifactVariable> artifactVariables = triggerArtifactVariableHandler.fetchArtifactVariablesForExecution(
-        webhookTriggerExecutionParams.trigger.getAppId(), webhookTriggerExecutionParams.trigger, null);
-
+    // Workflow variables Id's are not resolved so deferring artifact variable fetch
     try {
       return triggerDeploymentExecution.triggerDeployment(
-          artifactVariables, webhookTriggerExecutionParams.parameters, webhookTriggerExecutionParams.trigger, null);
+          null, webhookTriggerExecutionParams.parameters, webhookTriggerExecutionParams.trigger, null);
     } catch (WingsException exception) {
       exception.addContext(Application.class, appId);
       exception.addContext(DeploymentTrigger.class, webhookTriggerExecutionParams.trigger.getUuid());
@@ -114,26 +112,24 @@ public class WebhookConditionTriggerProcessor implements TriggerProcessor {
     }
 
     Map<String, Object> payload = new HashMap<>();
-    payload.put("application", deploymentTrigger.getAppId());
     addParametersToPayload(deploymentTrigger, payload);
     webHookToken.setPayload(new Gson().toJson(payload));
     return webHookToken;
   }
 
   private void addParametersToPayload(DeploymentTrigger deploymentTrigger, Map<String, Object> payload) {
-    Map<String, String> parameters = new HashMap<>();
     if (deploymentTrigger.getAction() != null) {
       switch (deploymentTrigger.getAction().getActionType()) {
         case PIPELINE:
           PipelineAction pipelineAction = (PipelineAction) deploymentTrigger.getAction();
           if (pipelineAction.getTriggerArgs() != null) {
             if (pipelineAction.getTriggerArgs().getVariables() != null) {
-              updateWFVariables(pipelineAction.getTriggerArgs().getVariables(), parameters);
+              updateWFVariables(pipelineAction.getTriggerArgs().getVariables(), payload);
             }
 
             if (pipelineAction.getTriggerArgs().getTriggerArtifactVariables() != null) {
               pipelineAction.getTriggerArgs().getTriggerArtifactVariables().forEach(artifactVariable -> {
-                addArtifactVariablesexpression(artifactVariable.getVariableValue(), parameters);
+                addArtifactVariablesexpression(artifactVariable.getVariableValue(), payload);
               });
             }
           }
@@ -142,12 +138,12 @@ public class WebhookConditionTriggerProcessor implements TriggerProcessor {
           WorkflowAction workflowAction = (WorkflowAction) deploymentTrigger.getAction();
           if (workflowAction.getTriggerArgs() != null) {
             if (workflowAction.getTriggerArgs().getVariables() != null) {
-              updateWFVariables(workflowAction.getTriggerArgs().getVariables(), parameters);
+              updateWFVariables(workflowAction.getTriggerArgs().getVariables(), payload);
             }
 
             if (workflowAction.getTriggerArgs().getTriggerArtifactVariables() != null) {
               workflowAction.getTriggerArgs().getTriggerArtifactVariables().forEach(artifactVariable -> {
-                addArtifactVariablesexpression(artifactVariable.getVariableValue(), parameters);
+                addArtifactVariablesexpression(artifactVariable.getVariableValue(), payload);
               });
             }
           }
@@ -157,17 +153,15 @@ public class WebhookConditionTriggerProcessor implements TriggerProcessor {
           unhandled(deploymentTrigger.getAction().getActionType());
       }
     }
-    if (isNotEmpty(parameters)) {
-      payload.put("parameters", parameters);
-    }
   }
 
-  private void updateWFVariables(List<Variable> variables, Map<String, String> parameters) {
+  private void updateWFVariables(List<Variable> variables, Map<String, Object> parameters) {
     if (isNotEmpty(variables)) {
       variables.stream().filter(v -> isNotEmpty(v.getValue())).forEach(variable -> {
         String wfVariableValue = variable.getValue();
         if (matchesVariablePattern(wfVariableValue)) {
-          parameters.put(getNameFromExpression(variable.getValue()), variable.getValue());
+          String name = getNameFromExpression(variable.getValue());
+          parameters.put(name, name + placeholder);
         }
       });
     }
@@ -178,24 +172,25 @@ public class WebhookConditionTriggerProcessor implements TriggerProcessor {
   }
 
   private void addArtifactVariablesexpression(
-      TriggerArtifactSelectionValue triggerArtifactVariableValue, Map<String, String> parameters) {
+      TriggerArtifactSelectionValue triggerArtifactVariableValue, Map<String, Object> parameters) {
     switch (triggerArtifactVariableValue.getArtifactSelectionType()) {
       case LAST_COLLECTED:
         TriggerArtifactSelectionLastCollected lastCollected =
             (TriggerArtifactSelectionLastCollected) triggerArtifactVariableValue;
 
         if (matchesVariablePattern(lastCollected.getArtifactStreamId())) {
-          parameters.put(
-              getNameFromExpression(lastCollected.getArtifactStreamId()), lastCollected.getArtifactStreamId());
+          String name = getNameFromExpression(lastCollected.getArtifactStreamId());
+          parameters.put(name, name + placeholder);
         }
 
         if (matchesVariablePattern(lastCollected.getArtifactFilter())) {
-          parameters.put(getNameFromExpression(lastCollected.getArtifactStreamId()), lastCollected.getArtifactFilter());
+          String name = getNameFromExpression(lastCollected.getArtifactFilter());
+          parameters.put(name, name + placeholder);
         }
 
         if (matchesVariablePattern(lastCollected.getArtifactServerId())) {
-          parameters.put(
-              getNameFromExpression(lastCollected.getArtifactServerId()), lastCollected.getArtifactServerId());
+          String name = getNameFromExpression(lastCollected.getArtifactServerId());
+          parameters.put(name, name + placeholder);
         }
         break;
       case LAST_DEPLOYED:
@@ -203,22 +198,26 @@ public class WebhookConditionTriggerProcessor implements TriggerProcessor {
             (TriggerArtifactSelectionLastDeployed) triggerArtifactVariableValue;
 
         if (ExpressionEvaluator.matchesVariablePattern(lastDeployed.getWorkflowId())) {
-          parameters.put(getNameFromExpression(lastDeployed.getWorkflowId()), lastDeployed.getWorkflowId());
+          String name = getNameFromExpression(lastDeployed.getWorkflowId());
+          parameters.put(name, name + placeholder);
         }
         break;
       case WEBHOOK_VARIABLE:
         TriggerArtifactSelectionWebhook webhook = (TriggerArtifactSelectionWebhook) triggerArtifactVariableValue;
 
         if (matchesVariablePattern(webhook.getArtifactStreamId())) {
-          parameters.put(getNameFromExpression(webhook.getArtifactStreamId()), webhook.getArtifactStreamId());
+          String name = getNameFromExpression(webhook.getArtifactStreamId());
+          parameters.put(name, name + placeholder);
         }
 
         if (matchesVariablePattern(webhook.getArtifactFilter())) {
-          parameters.put(getNameFromExpression(webhook.getArtifactFilter()), webhook.getArtifactFilter());
+          String name = getNameFromExpression(webhook.getArtifactFilter());
+          parameters.put(name, name + placeholder);
         }
 
         if (matchesVariablePattern(webhook.getArtifactServerId())) {
-          parameters.put(getNameFromExpression(webhook.getArtifactServerId()), webhook.getArtifactServerId());
+          String name = getNameFromExpression(webhook.getArtifactServerId());
+          parameters.put(name, name + placeholder);
         }
         break;
       default:

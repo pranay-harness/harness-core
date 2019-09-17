@@ -186,6 +186,11 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
     ScheduleTriggerProcessor triggerProcessor =
         (ScheduleTriggerProcessor) triggerProcessorMapBinder.get(SCHEDULED.name());
 
+    if (trigger.isTriggerDisabled()) {
+      logger.warn("Trigger is disabled for appId {}, Trigger Id {} and name {} with the scheduled fire time ",
+          trigger.getAppId(), trigger.getUuid(), trigger.getName());
+      return;
+    }
     triggerProcessor.executeTriggerOnEvent(
         trigger.getAppId(), ScheduledTriggerExecutionParams.builder().trigger(trigger).build());
   }
