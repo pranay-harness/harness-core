@@ -2,8 +2,6 @@ package software.wings.verification;
 
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -144,16 +142,17 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
   @Category(IntegrationTests.class)
   public void testIfCVTaskValidUntilIsBeingSetToOneMonth() {
     CVTask cvTask = createAndSaveCVTaskWithStateExecutionId();
-    assertTrue(cvTask.getValidUntil().getTime() > Instant.now().toEpochMilli());
-    assertTrue(cvTask.getValidUntil().getTime() > Instant.now().plus(29, ChronoUnit.DAYS).toEpochMilli()
-        && cvTask.getValidUntil().getTime() < Instant.now().plus(31, ChronoUnit.DAYS).toEpochMilli());
+    assertThat(cvTask.getValidUntil().getTime() > Instant.now().toEpochMilli()).isTrue();
+    assertThat(cvTask.getValidUntil().getTime() > Instant.now().plus(29, ChronoUnit.DAYS).toEpochMilli()
+        && cvTask.getValidUntil().getTime() < Instant.now().plus(31, ChronoUnit.DAYS).toEpochMilli())
+        .isTrue();
   }
 
   @Test
   @Category(IntegrationTests.class)
   public void testGetCVTaskById() {
     CVTask cvTask = createAndSaveCVTaskWithStateExecutionId();
-    assertEquals(cvTask.getUuid(), cvTaskService.getCVTask(cvTask.getUuid()).getUuid());
+    assertThat(cvTask.getUuid()).isEqualTo(cvTaskService.getCVTask(cvTask.getUuid()).getUuid());
   }
 
   @Test

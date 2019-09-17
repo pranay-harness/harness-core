@@ -3,7 +3,6 @@ package io.harness.governance.pipeline.service;
 import static graphql.Assert.assertNotEmpty;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 import static software.wings.beans.Account.Builder.anAccount;
 
 import com.google.inject.Inject;
@@ -105,6 +104,6 @@ public class PipelineGovernanceServiceImplIntegrationTest extends BaseIntegratio
         null, SOME_ACCOUNT_ID, "name", "description", Collections.emptyList(), Collections.emptyList());
 
     PipelineGovernanceConfig addedConfig = pipelineGovernanceService.add(SOME_ACCOUNT_ID, config);
-    assertNotNull(addedConfig.getUuid());
+    assertThat(addedConfig.getUuid()).isNotNull();
   }
 }

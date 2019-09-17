@@ -1,7 +1,6 @@
 package software.wings.verification;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 import static software.wings.sm.StateType.SPLUNKV2;
@@ -51,13 +50,13 @@ public class DataCollectionInfoServiceTest extends BaseIntegrationTest {
     when(settingsService.get(splunkCVConfiguration.getConnectorId())).thenReturn(settingAttribute);
     DataCollectionInfoV2 dataCollectionInfo =
         dataCollectionInfoService.create(splunkCVConfiguration, startTime, endTime);
-    assertEquals(splunkCVConfiguration.getAccountId(), dataCollectionInfo.getAccountId());
-    assertEquals(splunkCVConfiguration.getUuid(), dataCollectionInfo.getCvConfigId());
-    assertEquals(
-        CV_24x7_STATE_EXECUTION + "-" + splunkCVConfiguration.getUuid(), dataCollectionInfo.getStateExecutionId());
-    assertEquals(startTime, dataCollectionInfo.getStartTime());
-    assertEquals(endTime, dataCollectionInfo.getEndTime());
-    assertTrue(dataCollectionInfo instanceof SplunkDataCollectionInfoV2);
+    assertThat(dataCollectionInfo.getAccountId()).isEqualTo(splunkCVConfiguration.getAccountId());
+    assertThat(dataCollectionInfo.getCvConfigId()).isEqualTo(splunkCVConfiguration.getUuid());
+    assertThat(dataCollectionInfo.getStateExecutionId())
+        .isEqualTo(CV_24x7_STATE_EXECUTION + "-" + splunkCVConfiguration.getUuid());
+    assertThat(dataCollectionInfo.getStartTime()).isEqualTo(startTime);
+    assertThat(dataCollectionInfo.getEndTime()).isEqualTo(endTime);
+    assertThat(dataCollectionInfo instanceof SplunkDataCollectionInfoV2).isTrue();
   }
 
   private SplunkCVConfiguration createSplunkCVConfig() {

@@ -2,7 +2,6 @@ package software.wings.verification;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
@@ -174,7 +173,7 @@ public class CVActivityLogServiceTest extends BaseIntegrationTest {
         IntStream.range(0, 10).mapToObj(i -> getActivityLog()).collect(Collectors.toList());
     cvActivityLogService.saveActivityLogs(cvActivityLogs);
     List<CVActivityLog> savedActivityLogs = cvActivityLogService.findByStateExecutionId(stateExecuteionId);
-    assertEquals(cvActivityLogs, savedActivityLogs);
+    assertThat(cvActivityLogs).isEqualTo(savedActivityLogs);
   }
   @Test
   @Category(IntegrationTests.class)

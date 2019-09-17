@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -321,8 +320,8 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
     verify(dataCollectionInfoService).create(eq(cvConfiguration), eq(startTime), eq(endTime));
     ArgumentCaptor<CVTask> cvTaskArgumentCaptor = ArgumentCaptor.forClass(CVTask.class);
     verify(cvTaskService).saveCVTask(cvTaskArgumentCaptor.capture());
-    assertEquals(ExecutionStatus.QUEUED, cvTaskArgumentCaptor.getValue().getStatus());
-    assertEquals(accountId, cvTaskArgumentCaptor.getValue().getAccountId());
-    assertEquals(dataCollectionInfo, cvTaskArgumentCaptor.getValue().getDataCollectionInfo());
+    assertThat(cvTaskArgumentCaptor.getValue().getStatus()).isEqualTo(ExecutionStatus.QUEUED);
+    assertThat(cvTaskArgumentCaptor.getValue().getAccountId()).isEqualTo(accountId);
+    assertThat(cvTaskArgumentCaptor.getValue().getDataCollectionInfo()).isEqualTo(dataCollectionInfo);
   }
 }

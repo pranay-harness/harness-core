@@ -1,7 +1,6 @@
 package io.harness.governance.pipeline.service;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
@@ -45,14 +44,14 @@ public class PipelineGovernanceReportEvaluatorTest extends WingsBaseTest {
         RestrictionType.APP_BASED, Collections.singletonList("restricted-app-id"), Collections.emptyList()));
     boolean configValidForApp =
         pipelineGovernanceReportEvaluator.isConfigValidForApp(SOME_ACCOUNT_ID, restrictions, "some-app-id");
-    assertFalse("should fail because appId is not present under restrictions", configValidForApp);
+    assertThat(configValidForApp).as("should fail because appId is not present under restrictions").isFalse();
 
     restrictions.clear();
     restrictions.add(new Restriction(
         RestrictionType.APP_BASED, Collections.singletonList("restricted-app-id"), Collections.emptyList()));
     configValidForApp =
         pipelineGovernanceReportEvaluator.isConfigValidForApp(SOME_ACCOUNT_ID, restrictions, "restricted-app-id");
-    assertTrue("should pass true because appId present under restrictions", configValidForApp);
+    assertThat(configValidForApp).as("should pass true because appId present under restrictions").isTrue();
 
     restrictions.clear();
     restrictions.add(new Restriction(
@@ -61,7 +60,7 @@ public class PipelineGovernanceReportEvaluatorTest extends WingsBaseTest {
         RestrictionType.TAG_BASED, Collections.emptyList(), Collections.singletonList(new Tag("color", "red"))));
     configValidForApp =
         pipelineGovernanceReportEvaluator.isConfigValidForApp(SOME_ACCOUNT_ID, restrictions, "some-app-id");
-    assertTrue("should pass because tags under restrictions match tags of entity", configValidForApp);
+    assertThat(configValidForApp).as("should pass because tags under restrictions match tags of entity").isTrue();
 
     restrictions.clear();
     restrictions.add(new Restriction(
@@ -70,12 +69,14 @@ public class PipelineGovernanceReportEvaluatorTest extends WingsBaseTest {
         RestrictionType.TAG_BASED, Collections.emptyList(), Collections.singletonList(new Tag("color", "blue"))));
     configValidForApp =
         pipelineGovernanceReportEvaluator.isConfigValidForApp(SOME_ACCOUNT_ID, restrictions, "some-app-id");
-    assertFalse("should fail because tags under restrictions do NOT match tags of entity", configValidForApp);
+    assertThat(configValidForApp)
+        .as("should fail because tags under restrictions do NOT match tags of entity")
+        .isFalse();
 
     restrictions.clear();
     configValidForApp =
         pipelineGovernanceReportEvaluator.isConfigValidForApp(SOME_ACCOUNT_ID, restrictions, "some-app-id");
-    assertTrue("should pass because there are no restrictions", configValidForApp);
+    assertThat(configValidForApp).as("should pass because there are no restrictions").isTrue();
   }
 
   private HarnessTagLink tagLink(String key, String value) {
