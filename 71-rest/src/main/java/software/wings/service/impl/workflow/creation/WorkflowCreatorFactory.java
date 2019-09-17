@@ -1,5 +1,8 @@
 package software.wings.service.impl.workflow.creation;
 
+import static io.harness.exception.WingsException.USER;
+import static io.harness.govern.Switch.unhandled;
+
 import com.google.inject.Inject;
 
 import io.harness.beans.OrchestrationWorkflowType;
@@ -37,9 +40,8 @@ public class WorkflowCreatorFactory {
         case ROLLING:
           return k8V2RollingWorkflowCreator;
         default:
-          logger.error("Unknown OrchestrationWorkflowType : {}", orchestrationWorkflowType);
           throw new InvalidRequestException(
-              "Unknown OrchestrationWorkflowType : " + orchestrationWorkflowType.toString());
+              String.format("WorkflowType %s not supported for Kubernetes V2", orchestrationWorkflowType), USER);
       }
     } else {
       switch (orchestrationWorkflowType) {
@@ -55,9 +57,8 @@ public class WorkflowCreatorFactory {
         case CUSTOM:
           return customWorkflowCreator;
         default:
-          logger.error("Unknown OrchestrationWorkflowType : {}", orchestrationWorkflowType);
-          throw new InvalidRequestException(
-              "Unknown OrchestrationWorkflowType : " + orchestrationWorkflowType.toString());
+          unhandled(orchestrationWorkflowType);
+          throw new InvalidRequestException("Unknown workflowType : " + orchestrationWorkflowType, USER);
       }
     }
   }
