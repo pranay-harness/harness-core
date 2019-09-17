@@ -31,6 +31,15 @@ public class WebHookResource {
   @POST
   @Timed
   @ExceptionMetered
+  @Path("triggers/{webHookToken}")
+  public Response execute(
+      @PathParam("webHookToken") String webHookToken, String eventPayload, @Context HttpHeaders httpHeaders) {
+    return webHookService.executeByEvent(webHookToken, eventPayload, httpHeaders);
+  }
+
+  @POST
+  @Timed
+  @ExceptionMetered
   @Path("{webHookToken}")
   public Response execute(@PathParam("webHookToken") String webHookToken, WebHookRequest webHookRequest) {
     return webHookService.execute(webHookToken, webHookRequest);

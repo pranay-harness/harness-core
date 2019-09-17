@@ -93,6 +93,7 @@ public class TriggerDeploymentExecution {
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
   @Inject private transient ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private transient ArtifactService artifactService;
+  @Inject private transient TriggerArtifactVariableHandler triggerArtifactVariableHandler;
 
   public WorkflowExecution triggerDeployment(List<ArtifactVariable> artifactVariables,
       Map<String, String> webhookParameters, DeploymentTrigger deploymentTrigger, TriggerExecution triggerExecution) {
@@ -132,7 +133,7 @@ public class TriggerDeploymentExecution {
         executionArgs.setWorkflowType(ORCHESTRATION);
         executionArgs.setExcludeHostsWithSameArtifact(workflowAction.getTriggerArgs().isExcludeHostsWithSameArtifact());
 
-        return triggerOrchestrationDeployment(deploymentTrigger, executionArgs, triggerExecution, artifactVariables);
+        return triggerOrchestrationDeployment(deploymentTrigger, executionArgs, triggerExecution);
 
       default:
         unhandled(deploymentTrigger.getAction().getActionType());
@@ -256,14 +257,14 @@ public class TriggerDeploymentExecution {
         pipelineService.readPipeline(deploymentTrigger.getAppId(), pipelineAction.getPipelineId(), true);
     notNullCheck("Pipeline was deleted or does not exist", pipeline, USER);
 
-    Map<String, String> triggerWorkflowVariableValues = overrideTriggerVariables(deploymentTrigger, executionArgs);
-
     List<Variable> pipelineVariables = pipeline.getPipelineVariables();
+    Map<String, String> triggerPipelineVariableValues = overrideTriggerVariables(deploymentTrigger, executionArgs);
+
     String envId = null;
     String templatizedEnvName = getTemplatizedEnvVariableName(pipelineVariables);
     if (templatizedEnvName != null) {
       logger.info("One of the environment is parameterized in the pipeline and Variable name {}", templatizedEnvName);
-      String envNameOrId = triggerWorkflowVariableValues.get(templatizedEnvName);
+      String envNameOrId = triggerPipelineVariableValues.get(templatizedEnvName);
       if (envNameOrId == null) {
         String msg = "Pipeline contains environment as variable [" + templatizedEnvName
             + "]. However, there is no mapping associated in the trigger."
@@ -273,15 +274,15 @@ public class TriggerDeploymentExecution {
         throw new TriggerException(msg, USER);
       }
       envId = resolveEnvId(deploymentTrigger.getAppId(), envNameOrId);
-      triggerWorkflowVariableValues.put(templatizedEnvName, envId);
+      triggerPipelineVariableValues.put(templatizedEnvName, envId);
     }
 
-    resolveServices(deploymentTrigger.getAppId(), triggerWorkflowVariableValues, pipelineVariables);
+    resolveServices(deploymentTrigger.getAppId(), triggerPipelineVariableValues, pipelineVariables);
     resolveServiceInfrastructures(
-        deploymentTrigger.getAppId(), triggerWorkflowVariableValues, envId, pipelineVariables);
-    resolveInfraDefinitions(deploymentTrigger.getAppId(), triggerWorkflowVariableValues, envId, pipelineVariables);
+        deploymentTrigger.getAppId(), triggerPipelineVariableValues, envId, pipelineVariables);
+    resolveInfraDefinitions(deploymentTrigger.getAppId(), triggerPipelineVariableValues, envId, pipelineVariables);
 
-    executionArgs.setWorkflowVariables(triggerWorkflowVariableValues);
+    executionArgs.setWorkflowVariables(triggerPipelineVariableValues);
 
     if (pipeline.isHasBuildWorkflow() || pipeline.isEnvParameterized()) {
       // TODO: Once artifact needed serviceIds implemented for templated pipeline then this logic has to be modified
@@ -291,8 +292,22 @@ public class TriggerDeploymentExecution {
     DeploymentMetadata deploymentMetadata = pipelineService.fetchDeploymentMetadata(
         deploymentTrigger.getAppId(), pipeline, null, null, Include.ARTIFACT_SERVICE);
 
-    matchTriggerAndDeploymentArtifactVariables(deploymentTrigger.getUuid(), deploymentTrigger.getAppId(),
-        executionArgs.getArtifactVariables(), deploymentMetadata.getArtifactVariables());
+    List<ArtifactVariable> artifactVariables = deploymentMetadata.getArtifactVariables();
+    if (deploymentTrigger.getType().equals(Condition.Type.WEBHOOK)) {
+      artifactVariables = deploymentMetadata.getArtifactVariables();
+      if (artifactVariables != null && pipelineAction.getTriggerArgs() != null) {
+        artifactVariables.forEach(artifactVariable -> {
+          String value = triggerArtifactVariableHandler.fetchArtifactVariableValue(deploymentTrigger.getAppId(),
+              pipelineAction.getTriggerArgs().getTriggerArtifactVariables(), artifactVariable, deploymentTrigger, null);
+          artifactVariable.setValue(value);
+        });
+      }
+    }
+
+    executionArgs.setArtifactVariables(artifactVariables);
+
+    /*matchTriggerAndDeploymentArtifactVariables(deploymentTrigger.getUuid(), deploymentTrigger.getAppId(),
+        executionArgs.getArtifactVariables(), deploymentMetadata.getArtifactVariables());*/
 
     List<String> artifactNeededServiceIds = isEmpty(pipeline.getServices())
         ? new ArrayList<>()
@@ -453,8 +468,8 @@ public class TriggerDeploymentExecution {
     return triggerWorkflowVariableValues;
   }
 
-  private WorkflowExecution triggerOrchestrationDeployment(DeploymentTrigger deploymentTrigger,
-      ExecutionArgs executionArgs, TriggerExecution triggerExecution, List<ArtifactVariable> triggerArtifactVariables) {
+  private WorkflowExecution triggerOrchestrationDeployment(
+      DeploymentTrigger deploymentTrigger, ExecutionArgs executionArgs, TriggerExecution triggerExecution) {
     WorkflowAction workflowAction = (WorkflowAction) deploymentTrigger.getAction();
     logger.info("Triggering  workflow execution of appId {} with with workflow id {}", deploymentTrigger.getAppId(),
         workflowAction.getWorkflowId());
@@ -463,34 +478,52 @@ public class TriggerDeploymentExecution {
     notNullCheck("Workflow was deleted", workflow, USER);
     notNullCheck("Orchestration Workflow not present", workflow.getOrchestrationWorkflow(), USER);
 
+    List<Variable> workflowVariables = workflow.getOrchestrationWorkflow().getUserVariables();
     Map<String, String> triggerWorkflowVariableValues = overrideTriggerVariables(deploymentTrigger, executionArgs);
 
     String envId = null;
     if (BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
       executionArgs.setArtifactVariables(new ArrayList<>());
     } else {
-      List<Variable> workflowVariables = workflow.getOrchestrationWorkflow().getUserVariables();
-
       envId =
           resolveEnvironment(deploymentTrigger.getAppId(), workflow, workflowVariables, triggerWorkflowVariableValues);
       resolveServices(deploymentTrigger.getAppId(), triggerWorkflowVariableValues, workflowVariables);
       resolveServiceInfrastructures(
           deploymentTrigger.getAppId(), triggerWorkflowVariableValues, envId, workflowVariables);
 
+      resolveInfraDefinitions(deploymentTrigger.getAppId(), triggerWorkflowVariableValues, envId, workflowVariables);
+
       /* Fetch the deployment data to find out the required entity types */
       DeploymentMetadata deploymentMetadata = workflowService.fetchDeploymentMetadata(
           deploymentTrigger.getAppId(), workflow, triggerWorkflowVariableValues, null, null, Include.ARTIFACT_SERVICE);
 
-      matchTriggerAndDeploymentArtifactVariables(deploymentTrigger.getUuid(), deploymentTrigger.getAppId(),
-          triggerArtifactVariables, deploymentMetadata.getArtifactVariables());
+      List<ArtifactVariable> artifactVariables = deploymentMetadata.getArtifactVariables();
+      if (deploymentTrigger.getType().equals(Condition.Type.WEBHOOK)) {
+        // We have to find artifact variable value because of resolved variables here
+        artifactVariables = deploymentMetadata.getArtifactVariables();
+        if (artifactVariables != null && workflowAction.getTriggerArgs() != null) {
+          artifactVariables.forEach(artifactVariable -> {
+            String value = triggerArtifactVariableHandler.fetchArtifactVariableValue(deploymentTrigger.getAppId(),
+                workflowAction.getTriggerArgs().getTriggerArtifactVariables(), artifactVariable, deploymentTrigger,
+                null);
+            artifactVariable.setValue(value);
+          });
+        }
+      }
+
+      // Todo harsh validate with trigger args
+      //      matchTriggerAndDeploymentArtifactVariables(deploymentTrigger.getUuid(), deploymentTrigger.getAppId(),
+      //          triggerArtifactVariables, deploymentMetadata.getArtifactVariables());
 
       // Fetch the service
       List<String> artifactNeededServiceIds =
           deploymentMetadata == null ? new ArrayList<>() : deploymentMetadata.getArtifactRequiredServiceIds();
       validateRequiredArtifacts(deploymentTrigger, executionArgs, artifactNeededServiceIds);
+      executionArgs.setArtifactVariables(artifactVariables);
     }
 
     executionArgs.setWorkflowVariables(triggerWorkflowVariableValues);
+
     // Validate if the file path content changed
     logger.info("Triggering workflow execution of appId {} with workflow id {} triggered", deploymentTrigger.getAppId(),
         workflowAction.getWorkflowId());

@@ -15,7 +15,6 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.exception.TriggerException;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import lombok.Builder;
@@ -65,17 +64,10 @@ public class ArtifactTriggerProcessor implements TriggerProcessor {
   public void validateTriggerConditionSetup(DeploymentTrigger trigger, DeploymentTrigger existingTrigger) {
     // TODO: ASR: update when index added on setting_id + name
     ArtifactCondition artifactCondition = (ArtifactCondition) trigger.getCondition();
-
+    notNullCheck("Artifact stream Id is null in condition for trigger: " + trigger.getName(),
+        artifactCondition.getArtifactStreamId());
     ArtifactStream artifactStream = artifactStreamService.get(artifactCondition.getArtifactStreamId());
     notNullCheck("Artifact Source is mandatory for New Artifact Condition Trigger", artifactStream, USER);
-
-    if (artifactCondition.getArtifactServerId() == null) {
-      throw new TriggerException("artifact server Id is null for trigger " + trigger.getName(), null);
-    }
-
-    if (artifactCondition.getArtifactStreamId() == null) {
-      throw new TriggerException("artifact stream Id is null for trigger " + trigger.getName(), null);
-    }
 
     validateArtifactFilter(artifactCondition.getArtifactFilter());
     trigger.setCondition(ArtifactCondition.builder()

@@ -4,8 +4,15 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.trigger.WebhookEventType.ANY;
+import static software.wings.beans.trigger.WebhookEventType.ISSUE;
 import static software.wings.beans.trigger.WebhookEventType.OTHER;
 import static software.wings.beans.trigger.WebhookEventType.PULL_REQUEST;
+import static software.wings.beans.trigger.WebhookEventType.PUSH;
+import static software.wings.beans.trigger.WebhookSource.BitBucketEventType.ISSUE_ANY;
+import static software.wings.beans.trigger.WebhookSource.BitBucketEventType.PULL_REQUEST_ANY;
+import static software.wings.beans.trigger.WebhookSource.BitBucketEventType.PUSH_ANY;
 import static software.wings.service.impl.trigger.WebhookEventUtils.X_BIT_BUCKET_EVENT;
 import static software.wings.service.impl.trigger.WebhookEventUtils.X_GIT_HUB_EVENT;
 
@@ -101,14 +108,16 @@ public class WebhookTriggerDeploymentExecution {
     return deploymentTriggerService.triggerExecutionByWebHook(deploymentTrigger, wfVariables, artifactVariables, null);
   }
 
-  public WorkflowExecution validateExpressionsAndTriggerDeployment(DeploymentTrigger deploymentTrigger,
+  public WorkflowExecution validateExpressionsAndCustomTriggerDeployment(DeploymentTrigger deploymentTrigger,
       Map<String, Object> payLoadMap, Map<String, Map<String, ArtifactSummary>> serviceArtifactMapping) {
     WebhookCondition webhookCondition = (WebhookCondition) deploymentTrigger.getCondition();
 
     validateCustomPayloadExpressionFromInput(payLoadMap, webhookCondition, deploymentTrigger);
 
+    logger.info("resolving workflow variables for trigger {}  ", deploymentTrigger.getName());
     Map<String, String> wfVariables = resolveWorkflowVariables(payLoadMap, deploymentTrigger);
 
+    logger.info("workflow variables reolved successfully for trigger {}  ", deploymentTrigger.getName());
     List<TriggerArtifactVariable> artifactVariables =
         resolveArtifactVariables(deploymentTrigger.getAppId(), payLoadMap, deploymentTrigger, serviceArtifactMapping);
 
@@ -131,7 +140,9 @@ public class WebhookTriggerDeploymentExecution {
                 pipelineAction.getTriggerArgs()
                     .getTriggerArtifactVariables()
                     .stream()
-                    .map(artifactVariable -> { return fetchArtifactVariable(appId, artifactVariable, payLoadMap); })
+                    .map(artifactVariable -> {
+                      return fetchArtifactVariable(appId, artifactVariable, payLoadMap, serviceArtifactMapping);
+                    })
                     .collect(toList());
 
             deploymentTrigger.setAction(
@@ -158,7 +169,9 @@ public class WebhookTriggerDeploymentExecution {
                 workflowAction.getTriggerArgs()
                     .getTriggerArtifactVariables()
                     .stream()
-                    .map(artifactVariable -> { return fetchArtifactVariable(appId, artifactVariable, payLoadMap); })
+                    .map(artifactVariable -> {
+                      return fetchArtifactVariable(appId, artifactVariable, payLoadMap, serviceArtifactMapping);
+                    })
                     .collect(toList());
 
             deploymentTrigger.setAction(
@@ -250,8 +263,9 @@ public class WebhookTriggerDeploymentExecution {
     }
   }
 
-  private TriggerArtifactVariable fetchArtifactVariable(
-      String appId, TriggerArtifactVariable triggerArtifactVariable, Map<String, Object> payLoadMap) {
+  private TriggerArtifactVariable fetchArtifactVariable(String appId, TriggerArtifactVariable triggerArtifactVariable,
+      Map<String, Object> payLoadMap, Map<String, Map<String, ArtifactSummary>> serviceArtifactMapping) {
+    logger.info("fetching trigger artifact variable for trigger {}  ", triggerArtifactVariable.getVariableName());
     String variableName = getSubstitutedValue(triggerArtifactVariable.getVariableName(), payLoadMap);
 
     String entityName = triggerArtifactVariable.getEntityName();
@@ -264,8 +278,17 @@ public class WebhookTriggerDeploymentExecution {
       entityId = fetchEntityId(appId, EntityType.SERVICE, entityName);
     }
 
-    TriggerArtifactSelectionValue triggerArtifactSelectionValue =
-        mapTriggerArtifactVariableToValue(appId, triggerArtifactVariable.getVariableValue(), payLoadMap, variableName);
+    TriggerArtifactVariable triggerArtifactVariableWithEntity =
+        TriggerArtifactVariable.builder()
+            .variableName(variableName)
+            .entityId(entityId)
+            .entityType(entityType)
+            .entityName(entityName)
+            .variableValue(triggerArtifactVariable.getVariableValue())
+            .build();
+
+    TriggerArtifactSelectionValue triggerArtifactSelectionValue = mapTriggerArtifactVariableToValue(
+        appId, triggerArtifactVariableWithEntity, payLoadMap, variableName, serviceArtifactMapping);
 
     return TriggerArtifactVariable.builder()
         .variableName(variableName)
@@ -277,7 +300,10 @@ public class WebhookTriggerDeploymentExecution {
   }
 
   private TriggerArtifactSelectionValue mapTriggerArtifactVariableToValue(String appId,
-      TriggerArtifactSelectionValue triggerArtifactVariableValue, Map<String, Object> payLoadMap, String variableName) {
+      TriggerArtifactVariable triggerArtifactVariable, Map<String, Object> payLoadMap, String variableName,
+      Map<String, Map<String, ArtifactSummary>> serviceArtifactMapping) {
+    TriggerArtifactSelectionValue triggerArtifactVariableValue = triggerArtifactVariable.getVariableValue();
+
     switch (triggerArtifactVariableValue.getArtifactSelectionType()) {
       case LAST_COLLECTED:
         TriggerArtifactSelectionLastCollected lastCollected =
@@ -365,14 +391,50 @@ public class WebhookTriggerDeploymentExecution {
             }
           }
 
-          String buildNumber = getSubstitutedValue(triggerArtifactSelectionWebhook.getArtifactFilter(), payLoadMap);
+          String buildNumber = triggerArtifactSelectionWebhook.getArtifactFilter();
+          if (ExpressionEvaluator.matchesVariablePattern(buildNumber)) {
+            buildNumber = getSubstitutedValue(triggerArtifactSelectionWebhook.getArtifactFilter(), payLoadMap);
+
+            logger.info("resolving build number for webhook trigger variable {}", variableName);
+            if (isNotEmpty(serviceArtifactMapping)
+                && serviceArtifactMapping.get(triggerArtifactVariable.getEntityId()) != null
+                && serviceArtifactMapping.get(triggerArtifactVariable.getEntityId()).get(variableName) != null) {
+              buildNumber =
+                  serviceArtifactMapping.get(triggerArtifactVariable.getEntityId()).get(variableName).getBuildNo();
+
+              logger.info("input build number in input map {}", buildNumber);
+              if (isNotEmpty(serviceArtifactMapping)) {
+                String artifactStreamName = serviceArtifactMapping.get(triggerArtifactVariable.getEntityId())
+                                                .get(variableName)
+                                                .getArtifactSourceName();
+
+                logger.info("input artifactStreamName in input map {} entityId {}", artifactStreamName,
+                    triggerArtifactVariable.getEntityId());
+
+                if (artifactStreamName != null) {
+                  // Artifact stream will have global app id
+                  ArtifactStream artifactStream = artifactStreamService.getArtifactStreamByName(
+                      GLOBAL_APP_ID, triggerArtifactVariable.getEntityId(), artifactStreamName);
+
+                  if (artifactStream != null) {
+                    webhookArtifactStreamId = artifactStream.getUuid();
+                    webhookArtifactServerId = artifactStream.getSettingId();
+                  } else {
+                    throw new TriggerException(
+                        "Artifact stream does not exist for stream name " + webhookArtifactStreamId, USER);
+                  }
+                }
+              }
+            }
+          }
           return TriggerArtifactSelectionWebhook.builder()
               .artifactServerId(webhookArtifactServerId)
               .artifactStreamId(webhookArtifactStreamId)
               .artifactFilter(buildNumber)
               .build();
         } catch (Exception e) {
-          throw new TriggerException("Failed to resolve buildNumber in input webhook request", null);
+          logger.error("Failed to resolve buildNumber in input webhook request");
+          throw e;
         }
       default:
         unhandled(triggerArtifactVariableValue.getArtifactSelectionType());
@@ -410,8 +472,8 @@ public class WebhookTriggerDeploymentExecution {
     switch (webhookCondition.getPayloadSource().getType()) {
       case GITHUB:
         GitHubPayloadSource gitHubPayloadSource = (GitHubPayloadSource) webhookCondition.getPayloadSource();
-        boolean otherEventPresent =
-            gitHubPayloadSource.getGitHubEventTypes().stream().anyMatch(event -> event.getEventType().equals(OTHER));
+        boolean otherEventPresent = gitHubPayloadSource.getGitHubEventTypes().stream().anyMatch(
+            event -> event.getEventType().equals(OTHER) || event.getEventType().equals(ANY));
 
         if (otherEventPresent) {
           return;
@@ -429,7 +491,7 @@ public class WebhookTriggerDeploymentExecution {
           Object prAction = payLoadMap.get("action");
 
           boolean actionExists = gitHubPayloadSource.getGitHubEventTypes().stream().anyMatch(event
-              -> event.getEventType().equals(GitHubEventType.ANY)
+              -> event.getEventType().equals(GitHubEventType.PULL_REQUEST_ANY)
                   || event.getEventType().equals(GitHubEventType.find(prAction.toString())));
 
           if (!actionExists) {
@@ -470,6 +532,20 @@ public class WebhookTriggerDeploymentExecution {
                    || (BitBucketEventType.containsAllEvent(bitBucketPayloadSource.getBitBucketEvents())))) {
           return;
         } else {
+          if (bitBucketEventType.getEventType().equals(PULL_REQUEST)
+              && (bitBucketPayloadSource.getBitBucketEvents().contains(PULL_REQUEST_ANY))) {
+            return;
+          }
+
+          if (bitBucketEventType.getEventType().equals(ISSUE)
+              && (bitBucketPayloadSource.getBitBucketEvents().contains(ISSUE_ANY))) {
+            return;
+          }
+
+          if (bitBucketEventType.getEventType().equals(PUSH)
+              && (bitBucketPayloadSource.getBitBucketEvents().contains(PUSH_ANY))) {
+            return;
+          }
           throw new TriggerException(errorMsg, USER);
         }
       default:

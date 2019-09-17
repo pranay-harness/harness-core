@@ -185,6 +185,7 @@ public class WebHookServiceTest extends WingsBaseTest {
         .when(triggerService)
         .triggerExecutionByWebHook(anyString(), anyString(), anyMap(), anyMap(), any());
 
+    doReturn(trigger).when(triggerService).getTriggerByWebhookToken(anyString());
     on(webhookTriggerDeploymentExecution).set("appService", appService);
     on(webhookTriggerDeploymentExecution).set("settingsService", settingsService);
     on(webhookTriggerDeploymentExecution).set("artifactStreamService", artifactStreamService);

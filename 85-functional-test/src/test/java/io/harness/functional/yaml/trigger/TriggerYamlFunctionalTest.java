@@ -18,6 +18,7 @@ import io.harness.rule.OwnerRule.Owner;
 import org.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
@@ -61,8 +62,9 @@ public class TriggerYamlFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = HARSH, intermittent = true)
+  @Owner(emails = HARSH)
   @Category(FunctionalTests.class)
+  @Ignore("TODO: We are refactoring trigger and it does not require now")
   public void testTriggerYamlSupport() {
     Awaitility.await().atMost(120, TimeUnit.SECONDS).pollInterval(5, TimeUnit.SECONDS).until(() -> {
       yamlFunctionalTestHelper.uploadYamlZipFile(
