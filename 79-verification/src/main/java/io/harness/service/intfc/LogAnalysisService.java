@@ -49,6 +49,10 @@ public interface LogAnalysisService {
       AnalysisComparisonStrategy comparisonStrategy, LogMLAnalysisRecord mlAnalysisResponse, Optional<String> taskId,
       Optional<Boolean> isFeedbackAnalysis);
 
+  boolean save24X7ExpLogAnalysisRecords(String appId, String cvConfigId, int analysisMinute,
+      AnalysisComparisonStrategy comparisonStrategy, ExperimentalLogMLAnalysisRecord mlAnalysisResponse,
+      Optional<String> taskId, Optional<Boolean> isFeedbackAnalysis);
+
   LogMLAnalysisRecord getLogAnalysisRecords(
       String fieldName, String fieldValue, int analysisMinute, boolean isCompressed);
 

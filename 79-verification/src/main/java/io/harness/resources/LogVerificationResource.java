@@ -17,6 +17,7 @@ import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.CVFeedbackRecord;
+import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
 import software.wings.service.impl.analysis.FeedbackAction;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
@@ -253,5 +254,21 @@ public class LogVerificationResource {
   public RestResponse<Map<String, InstanceElement>> getLastExecutionNodes(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, @QueryParam("workflowId") String workflowId) {
     return new RestResponse<>(analysisService.getLastExecutionNodes(appId, workflowId));
+  }
+
+  @Produces({"application/json", "application/v1+json"})
+  @POST
+  @Path(LogAnalysisResource.ANALYSIS_SAVE_EXP_24X7_ANALYSIS_RECORDS_URL)
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  public RestResponse<Boolean> saveExperimentalLogAnalysisMLRecords(@QueryParam("appId") String appId,
+      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("analysisMinute") int analysisMinute,
+      @QueryParam("taskId") String taskId,
+      @QueryParam("comparisonStrategy") AnalysisComparisonStrategy comparisonStrategy,
+      @QueryParam("isFeedbackAnalysis") boolean isFeedbackAnalysis,
+      ExperimentalLogMLAnalysisRecord mlAnalysisResponse) {
+    return new RestResponse<>(analysisService.save24X7ExpLogAnalysisRecords(appId, cvConfigId, analysisMinute,
+        comparisonStrategy, mlAnalysisResponse, Optional.of(taskId), Optional.of(isFeedbackAnalysis)));
   }
 }

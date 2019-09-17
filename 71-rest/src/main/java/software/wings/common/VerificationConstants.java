@@ -64,6 +64,7 @@ public class VerificationConstants {
   public static final String ANALYSIS_STATE_RE_QUEUE_TASK = "/experimentalTask";
   public static final String LEARNING_EXP_URL = "learning-exp";
   public static final String LEARNING_METRIC_EXP_URL = "learning-exp-metric";
+  public static final String MSG_PAIRS_TO_VOTE = "/msg-pairs-to-vote";
   public static final String LOG_CLASSIFY_URL = "log-classify";
   public static final String GET_CLASSIFY_LABELS_URL = "/list-labels-to-classify";
   public static final String POST_CLASSIFY_LABELS_LIST_URL = "/save-classify-label-list";

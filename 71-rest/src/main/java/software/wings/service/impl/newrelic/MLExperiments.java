@@ -3,6 +3,7 @@ package software.wings.service.impl.newrelic;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -18,6 +19,7 @@ import software.wings.service.impl.analysis.MLAnalysisType;
   }, options = @IndexOptions(unique = true, name = "expUniqueIdx"))
 })
 @Data
+@FieldNameConstants(innerTypeName = "MLExperimentsKeys")
 @Builder
 @EqualsAndHashCode(callSuper = false)
 public class MLExperiments extends Base {

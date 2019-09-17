@@ -8,15 +8,19 @@ import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.common.VerificationConstants;
 import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.ExpAnalysisInfo;
+import software.wings.service.impl.analysis.ExperimentalMessageComparisonResult;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.intfc.analysis.ExperimentalAnalysisService;
 import software.wings.sm.StateType;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -46,5 +50,25 @@ public class ExperimentalLogResource {
       @QueryParam("stateType") StateType stateType, @QueryParam("expName") String expName) throws IOException {
     return new RestResponse<>(
         analysisService.getExperimentalAnalysisSummary(stateExecutionId, applicationId, stateType, expName));
+  }
+
+  @GET
+  @Path(VerificationConstants.MSG_PAIRS_TO_VOTE)
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  public RestResponse<List<ExperimentalMessageComparisonResult>> getMessageComparisonList(
+      @QueryParam("accountId") String accountId, @QueryParam("serviceId") String serviceId) {
+    return new RestResponse<>(analysisService.getMessagePairsToVote(serviceId));
+  }
+
+  @PUT
+  @Path(VerificationConstants.MSG_PAIRS_TO_VOTE)
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  public RestResponse<Boolean> saveMessageComparisonList(@QueryParam("accountId") String accountId,
+      @QueryParam("serviceId") String serviceId, Map<String, String> userVotes) {
+    return new RestResponse<>(analysisService.saveMessagePairsToVote(serviceId, userVotes));
   }
 }

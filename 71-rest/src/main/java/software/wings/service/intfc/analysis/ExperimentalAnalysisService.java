@@ -5,12 +5,14 @@ import io.harness.beans.PageResponse;
 import software.wings.service.impl.analysis.ExpAnalysisInfo;
 import software.wings.service.impl.analysis.ExperimentPerformance;
 import software.wings.service.impl.analysis.ExperimentStatus;
+import software.wings.service.impl.analysis.ExperimentalMessageComparisonResult;
 import software.wings.service.impl.analysis.ExperimentalMetricAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.newrelic.ExperimentalMetricRecord;
 import software.wings.sm.StateType;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ExperimentalAnalysisService {
   ExperimentPerformance getMetricExpAnalysisPerformance(PageRequest<ExperimentalMetricAnalysisRecord> pageRequest);
@@ -29,4 +31,7 @@ public interface ExperimentalAnalysisService {
 
   LogMLAnalysisSummary getExperimentalAnalysisSummary(
       String stateExecutionId, String appId, StateType stateType, String expName);
+
+  List<ExperimentalMessageComparisonResult> getMessagePairsToVote(String serviceId);
+  boolean saveMessagePairsToVote(String serviceId, Map<String, String> userVotes);
 }

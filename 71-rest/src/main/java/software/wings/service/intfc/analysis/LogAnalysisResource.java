@@ -36,6 +36,8 @@ public interface LogAnalysisResource {
 
   String ANALYSIS_SAVE_24X7_ANALYSIS_RECORDS_URL = "/save-24X7-analysis-records";
 
+  String ANALYSIS_SAVE_EXP_24X7_ANALYSIS_RECORDS_URL = "/save-24X7-exp-analysis-records";
+
   /**
    * url for UI to get analysis summary
    */

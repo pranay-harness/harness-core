@@ -1,6 +1,7 @@
 package software.wings.service.impl.newrelic;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.beans.ExecutionStatus;
@@ -90,6 +91,8 @@ public class LearningEngineExperimentalAnalysisTask extends Base {
   private AnalysisComparisonStrategy analysis_comparison_strategy;
   @Indexed private ExecutionStatus executionStatus;
   private Double alertThreshold;
+  @JsonProperty("log_ml_result_url") private String logMLResultUrl;
+  @JsonProperty("use_supervised_model") private boolean shouldUseSupervisedModel;
 
   @Builder.Default
   private ServiceApiVersion version = ServiceApiVersion.values()[ServiceApiVersion.values().length - 1];
