@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -45,5 +47,12 @@ public class InstanceDataServiceImpl implements InstanceDataService {
   @Override
   public InstanceData fetchInstanceData(String accountId, String instanceId) {
     return instanceDataDao.fetchInstanceData(accountId, instanceId);
+  }
+
+  @Override
+  public List<InstanceData> fetchClusterActiveInstanceData(String accountId, String clusterId, Instant startTime) {
+    List<InstanceState> instanceStates =
+        new ArrayList<>(Arrays.asList(InstanceState.INITIALIZING, InstanceState.RUNNING));
+    return instanceDataDao.fetchClusterActiveInstanceData(accountId, clusterId, instanceStates, startTime);
   }
 }

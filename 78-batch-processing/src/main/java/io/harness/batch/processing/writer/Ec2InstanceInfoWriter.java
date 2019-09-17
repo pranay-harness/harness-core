@@ -32,25 +32,22 @@ public class Ec2InstanceInfoWriter extends EventWriter implements ItemWriter<Pub
           String clusterArn = ec2InstanceInfo.getClusterArn();
           String instanceId = ec2InstanceInfo.getInstanceId();
 
-          boolean activeInstance = createActiveInstance(accountId, instanceId, clusterArn);
-          if (activeInstance) {
-            InstanceData instanceData = fetchActiveInstanceData(accountId, instanceId);
-            if (null == instanceData) {
-              String instanceFamily = ec2InstanceInfo.getInstanceType();
-              Map<String, String> metaData = new HashMap<>();
-              metaData.put(EcsCCMConstants.INSTANCE_FAMILY, instanceFamily);
-              metaData.put(EcsCCMConstants.REGION, ec2InstanceInfo.getRegion());
-              instanceData = InstanceData.builder()
-                                 .accountId(accountId)
-                                 .instanceId(instanceId)
-                                 .clusterName(clusterArn)
-                                 .instanceType(InstanceType.EC2_INSTANCE)
-                                 .instanceState(InstanceState.INITIALIZING)
-                                 .metaData(metaData)
-                                 .build();
-              logger.info("Creating ec2 instance {} ", instanceId);
-              instanceDataService.create(instanceData);
-            }
+          InstanceData instanceData = fetchActiveInstanceData(accountId, instanceId);
+          if (null == instanceData) {
+            String instanceFamily = ec2InstanceInfo.getInstanceType();
+            Map<String, String> metaData = new HashMap<>();
+            metaData.put(EcsCCMConstants.INSTANCE_FAMILY, instanceFamily);
+            metaData.put(EcsCCMConstants.REGION, ec2InstanceInfo.getRegion());
+            instanceData = InstanceData.builder()
+                               .accountId(accountId)
+                               .instanceId(instanceId)
+                               .clusterName(clusterArn)
+                               .instanceType(InstanceType.EC2_INSTANCE)
+                               .instanceState(InstanceState.INITIALIZING)
+                               .metaData(metaData)
+                               .build();
+            logger.info("Creating ec2 instance {} ", instanceId);
+            instanceDataService.create(instanceData);
           }
         });
   }

@@ -38,42 +38,39 @@ public class EcsTaskInfoWriter extends EventWriter implements ItemWriter<Publish
           String taskArn = ecsTaskDescription.getTaskArn();
           String clusterArn = ecsTaskDescription.getClusterArn();
 
-          boolean activeInstance = createActiveInstance(accountId, taskArn, clusterArn);
-          if (activeInstance) {
-            InstanceData instanceData = fetchActiveInstanceData(accountId, taskArn);
-            InstanceType instanceType = getInstanceType(ecsTaskDescription);
+          InstanceData instanceData = fetchActiveInstanceData(accountId, taskArn);
+          InstanceType instanceType = getInstanceType(ecsTaskDescription);
 
-            if (null == instanceData && null != instanceType) {
-              InstanceResource instanceResource =
-                  InstanceResource.builder().cpu(ecsTaskResource.getCpu()).memory(ecsTaskResource.getMemory()).build();
+          if (null == instanceData && null != instanceType) {
+            InstanceResource instanceResource =
+                InstanceResource.builder().cpu(ecsTaskResource.getCpu()).memory(ecsTaskResource.getMemory()).build();
 
-              Map<String, String> metaData = new HashMap<>();
-              if (InstanceType.ECS_TASK_EC2 == instanceType) {
-                InstanceData containerInstantData =
-                    fetchInstanceData(accountId, ecsTaskDescription.getContainerInstanceArn());
-                metaData.put(EcsCCMConstants.INSTANCE_FAMILY,
-                    containerInstantData.getMetaData().get(EcsCCMConstants.INSTANCE_FAMILY));
-                metaData.put(EcsCCMConstants.CONTAINER_INSTANCE_ARN, ecsTaskDescription.getContainerInstanceArn());
-              }
-              metaData.put(EcsCCMConstants.REGION, ecsTaskDescription.getRegion());
-              String serviceName = !ecsTaskDescription.getServiceName().equals("")
-                  ? ecsTaskDescription.getServiceName()
-                  : EcsCCMConstants.CLUSTER_DEFAULT_SERVICE_NAME;
-              metaData.put(EcsCCMConstants.ECS_SERVICE_NAME, serviceName);
-              instanceData = InstanceData.builder()
-                                 .accountId(accountId)
-                                 .instanceId(taskArn)
-                                 .clusterName(clusterArn)
-                                 .instanceType(instanceType)
-                                 .instanceState(InstanceState.INITIALIZING)
-                                 .instanceResource(instanceResource)
-                                 .serviceName(serviceName)
-                                 .metaData(metaData)
-                                 .build();
-
-              logger.info("Creating task {} ", taskArn);
-              instanceDataService.create(instanceData);
+            Map<String, String> metaData = new HashMap<>();
+            if (InstanceType.ECS_TASK_EC2 == instanceType) {
+              InstanceData containerInstantData =
+                  fetchInstanceData(accountId, ecsTaskDescription.getContainerInstanceArn());
+              metaData.put(EcsCCMConstants.INSTANCE_FAMILY,
+                  containerInstantData.getMetaData().get(EcsCCMConstants.INSTANCE_FAMILY));
+              metaData.put(EcsCCMConstants.CONTAINER_INSTANCE_ARN, ecsTaskDescription.getContainerInstanceArn());
             }
+            metaData.put(EcsCCMConstants.REGION, ecsTaskDescription.getRegion());
+            String serviceName = !ecsTaskDescription.getServiceName().equals("")
+                ? ecsTaskDescription.getServiceName()
+                : EcsCCMConstants.CLUSTER_DEFAULT_SERVICE_NAME;
+            metaData.put(EcsCCMConstants.ECS_SERVICE_NAME, serviceName);
+            instanceData = InstanceData.builder()
+                               .accountId(accountId)
+                               .instanceId(taskArn)
+                               .clusterName(clusterArn)
+                               .instanceType(instanceType)
+                               .instanceState(InstanceState.INITIALIZING)
+                               .instanceResource(instanceResource)
+                               .serviceName(serviceName)
+                               .metaData(metaData)
+                               .build();
+
+            logger.info("Creating task {} ", taskArn);
+            instanceDataService.create(instanceData);
           }
         });
   }

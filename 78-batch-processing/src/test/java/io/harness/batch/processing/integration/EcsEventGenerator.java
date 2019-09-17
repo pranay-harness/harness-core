@@ -10,6 +10,7 @@ import io.harness.event.payloads.Ec2Lifecycle;
 import io.harness.event.payloads.EcsContainerInstanceDescription;
 import io.harness.event.payloads.EcsContainerInstanceInfo;
 import io.harness.event.payloads.EcsContainerInstanceLifecycle;
+import io.harness.event.payloads.EcsSyncEvent;
 import io.harness.event.payloads.EcsTaskDescription;
 import io.harness.event.payloads.EcsTaskInfo;
 import io.harness.event.payloads.EcsTaskLifecycle;
@@ -32,12 +33,13 @@ public interface EcsEventGenerator {
   String INSTANCE_STATE_NAME = "running";
   String DEFAULT_AWS_REGION = "us-east-1";
 
-  default PublishedMessage getEc2InstanceInfoMessage(String instanceId, String accountId) {
+  default PublishedMessage getEc2InstanceInfoMessage(String instanceId, String accountId, String clusterId) {
     InstanceState instanceState =
         InstanceState.newBuilder().setCode(INSTANCE_STATE_CODE).setName(INSTANCE_STATE_NAME).build();
 
     Ec2InstanceInfo ec2InstanceInfo = Ec2InstanceInfo.newBuilder()
                                           .setInstanceId(instanceId)
+                                          .setClusterArn(clusterId)
                                           .setInstanceType(INSTANCE_TYPE)
                                           .setInstanceState(instanceState)
                                           .build();
@@ -108,6 +110,18 @@ public interface EcsEventGenerator {
                                   .setEcsTaskResource(getReservedResource())
                                   .build();
     return getPublishedMessage(accountId, ecsTaskInfo);
+  }
+
+  default PublishedMessage getEcsSyncEventMessage(String accountId, String clusterArn, List<String> activeTaskArns,
+      List<String> activeEc2InstanceArns, List<String> activeContainerInstanceArns, Timestamp lastProcessedTimestamp) {
+    EcsSyncEvent ecsSyncEvent = EcsSyncEvent.newBuilder()
+                                    .setClusterArn(clusterArn)
+                                    .addAllActiveTaskArns(activeTaskArns)
+                                    .addAllActiveEc2InstanceArns(activeEc2InstanceArns)
+                                    .addAllActiveContainerInstanceArns(activeContainerInstanceArns)
+                                    .setLastProcessedTimestamp(lastProcessedTimestamp)
+                                    .build();
+    return getPublishedMessage(accountId, ecsSyncEvent);
   }
 
   default PublishedMessage getPublishedMessage(String accountId, Message message) {

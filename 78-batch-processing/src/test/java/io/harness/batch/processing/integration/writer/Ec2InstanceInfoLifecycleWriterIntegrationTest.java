@@ -7,8 +7,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.protobuf.Timestamp;
 
 import io.harness.batch.processing.ccm.InstanceState;
-import io.harness.batch.processing.entities.ActiveInstance;
-import io.harness.batch.processing.entities.ActiveInstance.ActiveInstanceKeys;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.entities.InstanceData.InstanceDataKeys;
 import io.harness.batch.processing.integration.EcsEventGenerator;
@@ -38,6 +36,7 @@ import java.util.List;
 @RunWith(SpringJUnit4ClassRunner.class)
 public class Ec2InstanceInfoLifecycleWriterIntegrationTest implements EcsEventGenerator {
   private final String TEST_ACCOUNT_ID = "EC2_INSTANCE_INFO_ACCOUNT_ID_" + this.getClass().getSimpleName();
+  private final String TEST_CLUSTER_ARN = "EC2_INSTANCE_INFO_CLUSTER_ARN_" + this.getClass().getSimpleName();
   private final String TEST_INSTANCE_ID = "EC2_INSTANCE_INFO_INSTANCE_ID_" + this.getClass().getSimpleName();
 
   @Autowired @Qualifier("ec2InstanceInfoWriter") private ItemWriter<PublishedMessage> ec2InstanceInfoWriter;
@@ -49,13 +48,16 @@ public class Ec2InstanceInfoLifecycleWriterIntegrationTest implements EcsEventGe
   @Autowired private HPersistence hPersistence;
 
   private final Instant NOW = Instant.now();
-  private final Timestamp INSTANCE_START_TIMESTAMP = HTimestamps.fromInstant(NOW.minus(1, ChronoUnit.DAYS));
-  private final Timestamp INSTANCE_STOP_TIMESTAMP = HTimestamps.fromInstant(NOW);
+  private final Timestamp INSTANCE_START_TIMESTAMP = HTimestamps.fromInstant(NOW.minus(4, ChronoUnit.DAYS));
+  private final Timestamp INSTANCE_STOP_TIMESTAMP = HTimestamps.fromInstant(NOW.minus(3, ChronoUnit.DAYS));
+  private final Timestamp INSTANCE_NEXT_START_TIMESTAMP = HTimestamps.fromInstant(NOW.minus(2, ChronoUnit.DAYS));
+  private final Timestamp INSTANCE_NEXT_STOP_TIMESTAMP = HTimestamps.fromInstant(NOW);
 
   @Test
   @Category(IntegrationTests.class)
   public void shouldCreateEc2InstanceData() throws Exception {
-    PublishedMessage ec2InstanceInfoMessage = getEc2InstanceInfoMessage(TEST_INSTANCE_ID, TEST_ACCOUNT_ID);
+    PublishedMessage ec2InstanceInfoMessage =
+        getEc2InstanceInfoMessage(TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ARN);
     ec2InstanceInfoWriter.write(getMessageList(ec2InstanceInfoMessage));
 
     List<InstanceState> activeInstanceState = getActiveInstanceState();
@@ -70,7 +72,9 @@ public class Ec2InstanceInfoLifecycleWriterIntegrationTest implements EcsEventGe
   @Test
   @Category(IntegrationTests.class)
   public void shouldCreateEc2InstanceLifecycle() throws Exception {
-    shouldCreateEc2InstanceData();
+    PublishedMessage ec2InstanceInfoMessage =
+        getEc2InstanceInfoMessage(TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ARN);
+    ec2InstanceInfoWriter.write(getMessageList(ec2InstanceInfoMessage));
 
     // start instance
     PublishedMessage ec2InstanceLifecycleStartMessage =
@@ -96,13 +100,21 @@ public class Ec2InstanceInfoLifecycleWriterIntegrationTest implements EcsEventGe
     assertThat(stoppedInstanceData.getInstanceId()).isEqualTo(TEST_INSTANCE_ID);
     assertThat(stoppedInstanceData.getAccountId()).isEqualTo(TEST_ACCOUNT_ID);
     assertThat(HTimestamps.fromInstant(stoppedInstanceData.getUsageStopTime())).isEqualTo(INSTANCE_STOP_TIMESTAMP);
+
+    ec2InstanceInfoWriter.write(getMessageList(ec2InstanceInfoMessage));
+
+    PublishedMessage ec2InstanceLifecycleNextStartMessage = getEc2InstanceLifecycleMessage(
+        INSTANCE_NEXT_START_TIMESTAMP, EVENT_TYPE_START, TEST_INSTANCE_ID, TEST_ACCOUNT_ID);
+    ec2InstanceLifecycleWriter.write(getMessageList(ec2InstanceLifecycleNextStartMessage));
+
+    InstanceData nextInstanceData =
+        instanceDataService.fetchActiveInstanceData(TEST_ACCOUNT_ID, TEST_INSTANCE_ID, activeInstanceState);
+    assertThat(nextInstanceData.getInstanceState()).isEqualTo(InstanceState.RUNNING);
+    assertThat(HTimestamps.fromInstant(nextInstanceData.getUsageStartTime())).isEqualTo(INSTANCE_NEXT_START_TIMESTAMP);
   }
 
   @After
   public void clearCollection() {
-    val activeDs = hPersistence.getDatastore(ActiveInstance.class);
-    activeDs.delete(activeDs.createQuery(ActiveInstance.class).filter(ActiveInstanceKeys.accountId, TEST_ACCOUNT_ID));
-
     val instanceDs = hPersistence.getDatastore(InstanceData.class);
     instanceDs.delete(instanceDs.createQuery(InstanceData.class).filter(InstanceDataKeys.accountId, TEST_ACCOUNT_ID));
   }

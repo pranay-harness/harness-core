@@ -8,8 +8,6 @@ import com.google.protobuf.Timestamp;
 
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.InstanceState;
-import io.harness.batch.processing.entities.ActiveInstance;
-import io.harness.batch.processing.entities.ActiveInstance.ActiveInstanceKeys;
 import io.harness.batch.processing.entities.BatchJobScheduledData;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.entities.InstanceData.InstanceDataKeys;
@@ -47,6 +45,7 @@ import java.util.List;
 public class EcsJobIntegrationTest extends BaseIntegrationTest implements EcsEventGenerator {
   private final String TEST_ACCOUNT_ID = "EC2_INSTANCE_INFO_ACCOUNT_ID_" + this.getClass().getSimpleName();
   private final String TEST_INSTANCE_ID = "EC2_INSTANCE_INFO_INSTANCE_ID_" + this.getClass().getSimpleName();
+  private final String TEST_CLUSTER_ARN = "EC2_INSTANCE_INFO_CLUSTER_ARN_" + this.getClass().getSimpleName();
 
   private final Instant NOW = Instant.now();
   private final Timestamp INSTANCE_START_TIMESTAMP = HTimestamps.fromInstant(NOW.minus(1, ChronoUnit.DAYS));
@@ -65,11 +64,13 @@ public class EcsJobIntegrationTest extends BaseIntegrationTest implements EcsEve
     batchJobDataDs.delete(batchJobDataDs.createQuery(BatchJobScheduledData.class));
 
     Instant createdTimestamp = NOW.minus(28, ChronoUnit.HOURS);
-    PublishedMessage ec2InstanceInfoMessage = getEc2InstanceInfoMessage(TEST_INSTANCE_ID, TEST_ACCOUNT_ID);
+    PublishedMessage ec2InstanceInfoMessage =
+        getEc2InstanceInfoMessage(TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ARN);
     ec2InstanceInfoMessage.setCreatedAt(createdTimestamp.toEpochMilli());
     hPersistence.save(ec2InstanceInfoMessage);
 
-    PublishedMessage ec2InstanceInfoDuplicateMessage = getEc2InstanceInfoMessage(TEST_INSTANCE_ID, TEST_ACCOUNT_ID);
+    PublishedMessage ec2InstanceInfoDuplicateMessage =
+        getEc2InstanceInfoMessage(TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ARN);
     ec2InstanceInfoDuplicateMessage.setCreatedAt(createdTimestamp.plus(1, ChronoUnit.HOURS).toEpochMilli());
     hPersistence.save(ec2InstanceInfoDuplicateMessage);
 
@@ -125,9 +126,6 @@ public class EcsJobIntegrationTest extends BaseIntegrationTest implements EcsEve
 
     val ds = hPersistence.getDatastore(InstanceData.class);
     ds.delete(ds.createQuery(InstanceData.class).filter(InstanceDataKeys.accountId, TEST_ACCOUNT_ID));
-
-    val activeDs = hPersistence.getDatastore(ActiveInstance.class);
-    activeDs.delete(activeDs.createQuery(ActiveInstance.class).filter(ActiveInstanceKeys.accountId, TEST_ACCOUNT_ID));
 
     val publishedMessageDs = hPersistence.getDatastore(PublishedMessage.class);
     publishedMessageDs.delete(

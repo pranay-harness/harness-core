@@ -44,6 +44,8 @@ public class EcsBatchConfiguration {
 
   @Autowired @Qualifier("ecsTaskLifecycleWriter") private ItemWriter ecsTaskLifecycleWriter;
 
+  @Autowired @Qualifier("ecsSyncEventWriter") private ItemWriter ecsSyncEventWriter;
+
   @Autowired @Qualifier("mongoEventReader") private EventReader mongoEventReader;
 
   @Bean
@@ -113,6 +115,19 @@ public class EcsBatchConfiguration {
 
   @Bean
   @StepScope
+  public ItemReader<PublishedMessage> ecsSyncEventMessageReader(
+      @Value("#{jobParameters[startDate]}") Long startDate, @Value("#{jobParameters[endDate]}") Long endDate) {
+    try {
+      String messageType = EventTypeConstants.ECS_SYNC_EVENT;
+      return mongoEventReader.getEventReader(messageType, startDate, endDate);
+    } catch (Exception ex) {
+      logger.error("Exception ecsSyncEventMessageReader ", ex);
+      return null;
+    }
+  }
+
+  @Bean
+  @StepScope
   public ItemReader<PublishedMessage> ecsTaskLifecycleMessageReader(
       @Value("#{jobParameters[startDate]}") Long startDate, @Value("#{jobParameters[endDate]}") Long endDate) {
     try {
@@ -127,7 +142,7 @@ public class EcsBatchConfiguration {
   @Bean
   @Qualifier(value = "ecsJob")
   public Job ecsEventJob(Step ec2InstanceInfoStep, Step ec2InstanceLifecycleStep, Step ecsContainerInstanceInfoStep,
-      Step ecsContainerInstanceLifecycleStep, Step ecsTaskInfoStep, Step ecsTaskLifecycleStep) {
+      Step ecsContainerInstanceLifecycleStep, Step ecsTaskInfoStep, Step ecsTaskLifecycleStep, Step ecsSyncEventStep) {
     return jobBuilderFactory.get("ecsEventJob")
         .incrementer(new RunIdIncrementer())
         .start(ec2InstanceInfoStep)
@@ -136,6 +151,7 @@ public class EcsBatchConfiguration {
         .next(ecsContainerInstanceLifecycleStep)
         .next(ecsTaskInfoStep)
         .next(ecsTaskLifecycleStep)
+        .next(ecsSyncEventStep)
         .build();
   }
 
@@ -220,6 +236,21 @@ public class EcsBatchConfiguration {
         .<PublishedMessage, PublishedMessage>chunk(BATCH_SIZE)
         .reader(ecsTaskLifecycleMessageReader(null, null))
         .writer(ecsTaskLifecycleWriter)
+        .faultTolerant()
+        .retryLimit(RETRY_LIMIT)
+        .retry(Exception.class)
+        .skipLimit(SKIP_BATCH_SIZE)
+        .skip(Exception.class)
+        .listener(ecsStepSkipListener)
+        .build();
+  }
+
+  @Bean
+  public Step ecsSyncEventStep() {
+    return stepBuilderFactory.get("ecsSyncEventStep")
+        .<PublishedMessage, PublishedMessage>chunk(BATCH_SIZE)
+        .reader(ecsSyncEventMessageReader(null, null))
+        .writer(ecsSyncEventWriter)
         .faultTolerant()
         .retryLimit(RETRY_LIMIT)
         .retry(Exception.class)
