@@ -164,7 +164,6 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     preValidateInput(groupByEntityList, groupByTime);
 
     queryData = formQuery(accountId, aggregateFunction, filters, groupByEntityList, groupByTime, sortCriteria);
-    logger.info("Query : [{}]", queryData.getQuery());
 
     while (!successful && retryCount < MAX_RETRY) {
       try (Connection connection = timeScaleDBService.getDBConnection();
