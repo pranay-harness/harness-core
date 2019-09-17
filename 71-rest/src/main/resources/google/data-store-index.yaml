@@ -71,6 +71,47 @@ indexes:
   - name: dataCollectionMinute
     direction: desc
 
+- kind: timeSeriesMetricRecords
+  properties:
+  - name: stateExecutionId
+  - name: groupName
+  - name: dataCollectionMinute
+    direction: desc
+
+- kind: timeSeriesMetricRecords
+  properties:
+  - name: workflowExecutionId
+  - name: groupName
+  - name: dataCollectionMinute
+    direction: desc
+
+- kind: timeSeriesMetricRecords
+  properties:
+  - name: stateExecutionId
+  - name: groupName
+  - name: level
+  - name: dataCollectionMinute
+    direction: desc
+
+- kind: timeSeriesMetricRecords
+  properties:
+  - name: cvConfigId
+  - name: dataCollectionMinute
+    direction: desc
+
+- kind: timeSeriesMetricRecords
+  properties:
+  - name: cvConfigId
+  - name: dataCollectionMinute
+  - name: tag
+    direction: desc
+
+- kind: timeSeriesMetricRecords
+  properties:
+  - name: tag
+  - name: dataCollectionMinute
+    direction: desc
+
 - kind: logMlFeedbackRecords
   properties:
   - name: stateExecutionId
@@ -116,4 +157,10 @@ indexes:
   properties:
   - name: serviceId
   - name: timeStamp
+    direction: desc
+
+- kind: experimentalLogMessageComparisonResult
+  properties:
+  - name: cvConfigId
+  - name: numVotes
     direction: desc
