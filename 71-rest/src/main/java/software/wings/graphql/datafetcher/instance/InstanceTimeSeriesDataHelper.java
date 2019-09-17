@@ -183,9 +183,7 @@ public class InstanceTimeSeriesDataHelper {
           .append("' GROUP BY REPORTEDAT) INSTANCE_STATS GROUP BY GRP_BY_TIME ORDER BY GRP_BY_TIME");
 
       List<QLTimeSeriesDataPoint> dataPoints = new ArrayList<>();
-      final String query = queryBuilder.toString();
-      logger.info("Query executed:[{}],accountId:[{}]", query, accountId);
-      executeTimeSeriesQuery(accountId, query, dataPoints);
+      executeTimeSeriesQuery(accountId, queryBuilder.toString(), dataPoints);
       return QLTimeSeriesData.builder().dataPoints(dataPoints).build();
     } catch (Exception ex) {
       throw new WingsException("Error while getting time series data", ex);
