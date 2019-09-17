@@ -3,7 +3,7 @@ package io.harness.resources;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
@@ -36,12 +36,12 @@ public class DelegateDataCollectionResourceTest extends VerificationBaseIntegrat
         client.target(VERIFICATION_API_BASE + "/delegate-data-collection/save-cv-activity-logs?accountId=" + accountId);
     List<CVActivityLog> logs = IntStream.range(0, 10).mapToObj(i -> getActivityLog()).collect(Collectors.toList());
     Response response = getDelegateRequestBuilderWithAuthHeader(target).post(entity(logs, APPLICATION_JSON));
-    assertEquals(200, response.getStatus());
+    assertThat(response.getStatus()).isEqualTo(200);
     logs.forEach(log -> {
       CVActivityLog cvActivityLog = cvActivityLogService.findByStateExecutionId(log.getStateExecutionId()).get(0);
-      assertEquals(log.getStateExecutionId(), cvActivityLog.getStateExecutionId());
-      assertEquals(log.getLog(), cvActivityLog.getLog());
-      assertEquals(log.getLogLevel(), cvActivityLog.getLogLevel());
+      assertThat(cvActivityLog.getStateExecutionId()).isEqualTo(log.getStateExecutionId());
+      assertThat(cvActivityLog.getLog()).isEqualTo(log.getLog());
+      assertThat(cvActivityLog.getLogLevel()).isEqualTo(log.getLogLevel());
     });
   }
 

@@ -1,7 +1,6 @@
 package io.harness.governance.pipeline.service;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.governance.pipeline.model.Tag;
@@ -21,13 +20,13 @@ public class GovernanceStatusEvaluatorTest extends WingsBaseTest {
     List<HarnessTagLink> links = Arrays.asList(tagLink("color", "blue"), tagLink("onprem", null));
     List<Tag> tags = Collections.singletonList(new Tag("color", null));
 
-    assertTrue(GovernanceStatusEvaluator.containsAll(links, tags));
+    assertThat(GovernanceStatusEvaluator.containsAll(links, tags)).isTrue();
 
     tags = Collections.singletonList(new Tag("color", "red"));
-    assertFalse(GovernanceStatusEvaluator.containsAll(links, tags));
+    assertThat(GovernanceStatusEvaluator.containsAll(links, tags)).isFalse();
 
     tags = Arrays.asList(new Tag("color", null), new Tag("onprem", "yes"));
-    assertFalse(GovernanceStatusEvaluator.containsAll(links, tags));
+    assertThat(GovernanceStatusEvaluator.containsAll(links, tags)).isFalse();
   }
 
   @Test
@@ -36,7 +35,7 @@ public class GovernanceStatusEvaluatorTest extends WingsBaseTest {
     List<HarnessTagLink> links = Arrays.asList(tagLink("color", "blue"), tagLink("onprem", null));
     List<Tag> tags = Arrays.asList(new Tag("color", null), new Tag("onprem", "yes"));
 
-    assertTrue(GovernanceStatusEvaluator.containsAny(links, tags));
+    assertThat(GovernanceStatusEvaluator.containsAny(links, tags)).isTrue();
   }
 
   private HarnessTagLink tagLink(String key, String value) {
