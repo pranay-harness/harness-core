@@ -4,6 +4,7 @@ import static io.harness.event.payloads.NodeEvent.EventType.EVENT_TYPE_START;
 import static io.harness.event.payloads.NodeEvent.EventType.EVENT_TYPE_STOP;
 
 import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 
 import io.fabric8.kubernetes.api.model.Node;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -28,7 +29,7 @@ public class NodeWatcher implements Watcher<Node> {
   private final Set<String> publishedNodes;
 
   @Inject
-  public NodeWatcher(KubernetesClient client, EventPublisher eventPublisher) {
+  public NodeWatcher(@Assisted KubernetesClient client, EventPublisher eventPublisher) {
     this.watch = client.nodes().watch(this);
     this.eventPublisher = eventPublisher;
     this.publishedNodes = new ConcurrentSkipListSet<>();
@@ -63,6 +64,7 @@ public class NodeWatcher implements Watcher<Node> {
                                      .build();
     logger.debug("Publishing event: {}", nodeStoppedEvent);
     eventPublisher.publishMessage(nodeStoppedEvent);
+    publishedNodes.remove(node.getMetadata().getUid());
   }
 
   private void publishNodeInfo(Node node) {

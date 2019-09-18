@@ -11,13 +11,13 @@ import java.util.Collections;
 import java.util.Map;
 
 public abstract class EventPublisher {
-  abstract void publish(PublishMessage publishMessage);
+  protected abstract void publish(PublishMessage publishMessage);
 
-  public final void publishMessage(Message message) {
+  public void publishMessage(Message message) {
     publishMessageWithAttributes(message, Collections.emptyMap());
   }
 
-  public final void publishMessageWithAttributes(Message message, Map<String, String> attributes) {
+  public void publishMessageWithAttributes(Message message, Map<String, String> attributes) {
     checkArgument(!(message instanceof PublishMessage)); // to avoid accidental nesting
     publish(PublishMessage.newBuilder().setPayload(Any.pack(message)).putAllAttributes(attributes).build());
   }
