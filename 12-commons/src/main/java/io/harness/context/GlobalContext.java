@@ -11,12 +11,12 @@ import java.util.concurrent.ConcurrentHashMap;
 public class GlobalContext {
   private Map<String, GlobalContextData> map = new ConcurrentHashMap<>();
 
-  public GlobalContextData get(String key) {
+  public <T extends GlobalContextData> T get(String key) {
     GlobalContextData globalContextData = map.get(key);
     if (globalContextData != null && !key.equals(globalContextData.getKey())) {
       throw new RuntimeException("This should never happen");
     }
-    return globalContextData;
+    return (T) globalContextData;
   }
 
   public void setGlobalContextRecord(GlobalContextData data) {

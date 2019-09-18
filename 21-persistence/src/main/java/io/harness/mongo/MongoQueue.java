@@ -1,12 +1,12 @@
 package io.harness.mongo;
 
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.manage.GlobalContextManager.obtainGlobalContext;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
 
-import io.harness.manage.GlobalContextManager;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.Queuable;
 import io.harness.queue.Queuable.QueuableKeys;
@@ -191,7 +191,7 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
   @Override
   public void send(final T payload) {
     Objects.requireNonNull(payload);
-    payload.setGlobalContext(GlobalContextManager.getGlobalContext());
+    payload.setGlobalContext(obtainGlobalContext());
     payload.setVersion(versionInfoManager.getVersionInfo().getVersion());
 
     final AdvancedDatastore datastore = persistence.getDatastore(klass);

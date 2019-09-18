@@ -37,7 +37,7 @@ public class AuditHelper {
   /**
    * Creates a new Audit log entry in database.
    *
-   * @param header AuditHeader recieved from request.
+   * @param header AuditHeader received from request.
    * @return AuditHeader after saving.
    */
   public AuditHeader create(AuditHeader header) {
@@ -50,8 +50,6 @@ public class AuditHelper {
   }
 
   private void setGlobalContext(AuditHeader header) {
-    // if GlobalContextManager.getGlobalContext() is null, init will create new GlobalContext
-    GlobalContextManager.initGlobalContextGuard(GlobalContextManager.getGlobalContext());
     GlobalContextManager.upsertGlobalContextRecord(AuditGlobalContextData.builder().auditId(header.getUuid()).build());
   }
 
