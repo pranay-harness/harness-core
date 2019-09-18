@@ -38,10 +38,9 @@
       "createdAt" : {"type" : "long","index" : false},
       "description"
       : {"type" : "text", "analyzer" : "standard"},
-      "id" : {"type" : "keyword","index" : false},
+      "id" : {"type" : "keyword"},
       "lastUpdatedAt" : {"type" : "long","index" : false},
-      "name"
-      : {"type" : "text", "analyzer": "standard" },
+      "name" : {"type" : "text", "analyzer": "standard" },
       "type" : {
         "type" : "keyword",
         "index" : false

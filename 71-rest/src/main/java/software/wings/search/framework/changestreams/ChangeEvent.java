@@ -34,7 +34,8 @@ public class ChangeEvent {
   @NonNull private ChangeType changeType;
   @NonNull private Class<? extends PersistentEntity> entityType;
   @NonNull private String uuid;
-  private DBObject changeDocument;
+  private DBObject fullDocument;
+  private DBObject changes;
   private static final ObjectMapper mapper = new ObjectMapper();
   private static final JsonWriterSettings settings =
       JsonWriterSettings.builder().int64Converter((value, writer) -> writer.writeNumber(value.toString())).build();
@@ -66,13 +67,16 @@ public class ChangeEvent {
           (String) mapper.readValue(changeStreamDocument.getDocumentKey().toJson(settings), Map.class).get("_id");
       switch (this.changeType) {
         case INSERT:
-          this.changeDocument = changeStreamDocument.getFullDocument();
+          this.fullDocument = changeStreamDocument.getFullDocument();
+          this.changes = null;
           break;
         case UPDATE:
-          this.changeDocument = getChangeDocument(changeStreamDocument);
+          this.fullDocument = changeStreamDocument.getFullDocument();
+          this.changes = getChangeDocument(changeStreamDocument);
           break;
         case DELETE:
-          this.changeDocument = null;
+          this.fullDocument = null;
+          this.changes = null;
           break;
         default:
           throw new UnexpectedException("Unknown OperationType received while processing ChangeStreamEvent");

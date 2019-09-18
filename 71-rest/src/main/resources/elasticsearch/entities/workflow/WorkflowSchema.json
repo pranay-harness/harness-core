@@ -1,0 +1,36 @@
+{
+  "mappings": {
+    "properties": {
+      "appId": {
+        "type": "keyword"
+      },
+      "appName": {
+        "type": "text",
+        "index": false
+      },
+      "environment": {
+        "type": "keyword",
+        "index": false
+      },
+      "environmentId": {
+        "type": "keyword"
+      },
+      "workflowType": {
+        "type": "keyword",
+        "index": false
+      },
+      "services": {
+        "type": "nested",
+        "properties": {
+          "id": {
+            "type": "keyword"
+          },
+          "name": {
+            "type": "keyword",
+            "index": false
+          }
+        }
+      }
+    }
+  }
+}

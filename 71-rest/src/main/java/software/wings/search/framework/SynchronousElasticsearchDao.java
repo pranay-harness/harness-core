@@ -21,8 +21,8 @@ public class SynchronousElasticsearchDao implements SearchDao {
   });
 
   @Override
-  public boolean upsertDocument(String type, String id, String jsonString) {
-    Callable<Boolean> upsertDocumentCallable = () -> elasticsearchDao.upsertDocument(type, id, jsonString);
+  public boolean upsertDocument(String entityType, String entityId, String entityJson) {
+    Callable<Boolean> upsertDocumentCallable = () -> elasticsearchDao.upsertDocument(entityType, entityId, entityJson);
     try {
       Future<Boolean> upsertFuture = executorService.submit(upsertDocumentCallable);
       return upsertFuture.get();
@@ -39,9 +39,9 @@ public class SynchronousElasticsearchDao implements SearchDao {
 
   @Override
   public boolean updateKeyInMultipleDocuments(
-      String type, String keyToUpdate, String newValue, String filterKey, String filterValue) {
+      String entityType, String keyToUpdate, String newValue, String filterKey, String filterValue) {
     Callable<Boolean> updateKeyInMultipleDocumentsCallable =
-        () -> elasticsearchDao.updateKeyInMultipleDocuments(type, keyToUpdate, newValue, filterKey, filterValue);
+        () -> elasticsearchDao.updateKeyInMultipleDocuments(entityType, keyToUpdate, newValue, filterKey, filterValue);
 
     try {
       Future<Boolean> updateFuture = executorService.submit(updateKeyInMultipleDocumentsCallable);
@@ -58,8 +58,26 @@ public class SynchronousElasticsearchDao implements SearchDao {
   }
 
   @Override
-  public boolean deleteDocument(String type, String id) {
-    Callable<Boolean> deleteDocumentCallable = () -> elasticsearchDao.deleteDocument(type, id);
+  public boolean updateListInMultipleDocuments(String type, String listKey, String newElementValue, String elementId) {
+    Callable<Boolean> updateListInMultipleDocumentsCallable =
+        () -> elasticsearchDao.updateListInMultipleDocuments(type, listKey, newElementValue, elementId);
+    try {
+      Future<Boolean> updateFuture = executorService.submit(updateListInMultipleDocumentsCallable);
+      return updateFuture.get();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      logger.error("Could not update key in multiple documents, interrupted in between", e);
+    } catch (ExecutionException e) {
+      logger.error("Could not update keu in multiple documents, due to exception", e.getCause());
+    } catch (CancellationException e) {
+      logger.error("Updatekey in multiple documents task was cancelled. This should not happen at all", e);
+    }
+    return false;
+  }
+
+  @Override
+  public boolean deleteDocument(String entityType, String entityId) {
+    Callable<Boolean> deleteDocumentCallable = () -> elasticsearchDao.deleteDocument(entityType, entityId);
 
     try {
       Future<Boolean> deleteFuture = executorService.submit(deleteDocumentCallable);

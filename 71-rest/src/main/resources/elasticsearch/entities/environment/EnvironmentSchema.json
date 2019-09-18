@@ -1,0 +1,11 @@
+{
+  "mappings" : {
+    "properties" : {"appId" : {"type" : "keyword"},
+      "appName" : {"type" :  "text", "index" : false},
+      "environmentType" : {
+        "type" : "keyword",
+        "index" : false
+      }
+    }
+  }
+}

@@ -6,6 +6,7 @@ import com.mongodb.MongoInterruptedException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
+import com.mongodb.client.model.changestream.FullDocument;
 import io.harness.persistence.PersistentEntity;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -52,9 +53,10 @@ public class ChangeTrackingTask implements Runnable {
   }
 
   public void run() {
+    MongoCursor<ChangeStreamDocument<DBObject>> cursor = null;
     try {
+      cursor = openChangeStream();
       logger.info(String.format("changeStream opened on %s", morphiaClass.getCanonicalName()));
-      MongoCursor<ChangeStreamDocument<DBObject>> cursor = openChangeStream();
       while (!Thread.interrupted()) {
         try {
           handleChangeStreamTask(cursor.next());
@@ -64,21 +66,22 @@ public class ChangeTrackingTask implements Runnable {
         }
       }
       logger.warn(String.format("%s changeStream shutting down.", morphiaClass.getCanonicalName()));
-      closeChangeStream(cursor);
     } catch (RuntimeException e) {
       logger.error(String.format("Unexpectedly %s changeStream shutting down", morphiaClass.getCanonicalName()), e);
+    } finally {
+      closeChangeStream(cursor);
+      latch.countDown();
     }
-    latch.countDown();
   }
 
   private MongoCursor<ChangeStreamDocument<DBObject>> openChangeStream() {
     MongoCursor<ChangeStreamDocument<DBObject>> cursor;
     if (resumeToken == null) {
       logger.info("Opening changeStream without resumeToken");
-      cursor = collection.watch().iterator();
+      cursor = collection.watch().fullDocument(FullDocument.UPDATE_LOOKUP).iterator();
     } else {
       logger.info("Opening changeStream with resumeToken");
-      cursor = collection.watch().resumeAfter(resumeToken).iterator();
+      cursor = collection.watch().resumeAfter(resumeToken).fullDocument(FullDocument.UPDATE_LOOKUP).iterator();
     }
     return cursor;
   }
