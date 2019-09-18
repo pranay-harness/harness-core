@@ -40,6 +40,9 @@ fi
 if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
   yq delete -i /opt/harness/config.yml logging.appenders[0]
   yq write -i /opt/harness/config.yml logging.appenders[0].stackdriverLogEnabled "true"
+  yq write -i /opt/harness/config.yml server.requestLog.appenders[1].type "console"
+  yq write -i /opt/harness/config.yml server.requestLog.appenders[1].threshold "TRACE"
+  yq write -i /opt/harness/config.yml server.requestLog.appenders[1].target "STDOUT"
 else
   yq delete -i /opt/harness/config.yml logging.appenders[1]
 fi

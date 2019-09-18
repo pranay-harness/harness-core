@@ -15,6 +15,7 @@ import java.util.Map;
  * See {@link ch.qos.logback.contrib.json.classic.JsonLayout}
  */
 public class CustomJsonLayout extends JsonLayoutBase<ILoggingEvent> {
+  private static final String TIMESTAMP = "timestamp";
   private static final String SEVERITY = "severity";
   private static final String VERSION_ENV_VAR = "VERSION";
   private static final String VERSION = "version";
@@ -24,11 +25,11 @@ public class CustomJsonLayout extends JsonLayoutBase<ILoggingEvent> {
   private static final String HARNESS = "harness";
   private static final String EXCEPTION = "exception";
 
-  private ThrowableHandlingConverter throwableProxyConverter;
+  private final ThrowableHandlingConverter throwableProxyConverter;
 
   CustomJsonLayout(LoggerContext context) {
     this.context = context;
-    includeTimestamp = false;
+    timestampFormat = "yyyy-MM-dd HH:mm:ss.SSS Z";
     appendLineSeparator = true;
     jsonFormatter = new JacksonJsonFormatter();
     throwableProxyConverter = new StackTraceProxyConverter();
@@ -50,6 +51,7 @@ public class CustomJsonLayout extends JsonLayoutBase<ILoggingEvent> {
   protected Map toJsonMap(ILoggingEvent event) {
     Map<String, Object> map = new HashMap<>();
 
+    addTimestamp(TIMESTAMP, true, event.getTimeStamp(), map);
     add(SEVERITY, true, String.valueOf(event.getLevel()), map);
     add(VERSION, true, System.getenv(VERSION_ENV_VAR), map);
     add(THREAD, true, event.getThreadName(), map);

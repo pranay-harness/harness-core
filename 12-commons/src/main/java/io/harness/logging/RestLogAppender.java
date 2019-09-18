@@ -5,6 +5,7 @@ import static io.harness.network.Localhost.getLocalHostName;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.common.collect.Queues;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
@@ -13,18 +14,19 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import ch.qos.logback.core.Layout;
+import com.github.fge.jsonschema.report.LogLevel;
 import io.harness.flow.Flow;
 import io.harness.network.Http;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import retrofit2.Retrofit;
+import retrofit2.Retrofit.Builder;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -36,12 +38,14 @@ public class RestLogAppender<E> extends AppenderBase<E> {
   private static final String LOGDNA_HOST_PROXY = "https://app.harness.io/storage/applogs/";
   private static final String DUMMY_KEY = "9a3e6eac4dcdbdc41a93ca99100537df";
 
-  private Retrofit retrofit;
+  private LogdnaRestClient logdnaRestClient;
+  private LogLines logLines = new LogLines();
+  private String baseUrl;
   private String programName;
   private String key;
   private String localhostName = "localhost";
   private Layout<E> layout;
-  private Queue<LogLine> logQueue; // don't call size(), it runs in linear time
+  private BlockingQueue<LogLine> logQueue;
   private ExecutorService appenderPool = Executors.newSingleThreadScheduledExecutor();
 
   /**
@@ -61,71 +65,56 @@ public class RestLogAppender<E> extends AppenderBase<E> {
   }
 
   private void initializeRetrofit() {
-    retrofit = new Retrofit.Builder()
-                   .baseUrl(LOGDNA_HOST_DIRECT)
-                   .addConverterFactory(JacksonConverterFactory.create())
-                   .client(Http.getUnsafeOkHttpClient(LOGDNA_HOST_DIRECT))
-                   .build();
     try {
-      logger.info("Initializing logdna");
-      LogLines logLines = new LogLines();
-      logLines.add(new LogLine("Init logdna using " + LOGDNA_HOST_DIRECT, Level.INFO.toString(), programName));
-
-      new SimpleTimeLimiter().callWithTimeout(() -> {
-        Flow.retry(3, ofSeconds(1),
-            () -> retrofit.create(LogdnaRestClient.class).postLogs(getAuthHeader(), localhostName, logLines).execute());
-        return true;
-      }, 5, TimeUnit.SECONDS, true);
-      logger.info("Connection to logdna succeeded using direct connection: {}", LOGDNA_HOST_DIRECT);
+      this.logdnaRestClient = createLogdnaRestClient(LOGDNA_HOST_DIRECT);
+      baseUrl = LOGDNA_HOST_DIRECT;
     } catch (Exception e) {
       logger.info("Failed to connect directly to logdna", e);
-      retrofit = new Retrofit.Builder()
-                     .baseUrl(LOGDNA_HOST_PROXY)
-                     .addConverterFactory(JacksonConverterFactory.create())
-                     .client(Http.getUnsafeOkHttpClient(LOGDNA_HOST_PROXY))
-                     .build();
       try {
-        logger.info("Initializing logdna using proxy connection: {}", LOGDNA_HOST_PROXY);
-        LogLines logLines = new LogLines();
-        logLines.add(
-            new LogLine("Direct failed. Init logdna using " + LOGDNA_HOST_PROXY, Level.INFO.toString(), programName));
-
-        new SimpleTimeLimiter().callWithTimeout(() -> {
-          Flow.retry(3, ofSeconds(1),
-              ()
-                  -> retrofit.create(LogdnaRestClient.class)
-                         .postLogs(getAuthHeader(), localhostName, logLines)
-                         .execute());
-          return true;
-        }, 5, TimeUnit.SECONDS, true);
-        logger.info("Connection to logdna succeeded using proxy connection: {}", LOGDNA_HOST_PROXY);
+        logdnaRestClient = createLogdnaRestClient(LOGDNA_HOST_PROXY);
+        baseUrl = LOGDNA_HOST_PROXY;
       } catch (Exception ex) {
         logger.warn("Failed to connect via proxy to logdna", ex);
       }
     }
   }
 
+  private LogdnaRestClient createLogdnaRestClient(String baseUrl) throws Exception {
+    LogdnaRestClient restClient = new Builder()
+                                      .baseUrl(baseUrl)
+                                      .addConverterFactory(JacksonConverterFactory.create())
+                                      .client(Http.getUnsafeOkHttpClient(baseUrl))
+                                      .build()
+                                      .create(LogdnaRestClient.class);
+    logger.info("Initializing logdna");
+    LogLines lines = new LogLines();
+    lines.add(new LogLine("Init logdna using " + baseUrl, Level.INFO.toString(), programName));
+
+    new SimpleTimeLimiter().callWithTimeout(() -> {
+      Flow.retry(3, ofSeconds(1), () -> restClient.postLogs(getAuthHeader(), localhostName, logLines).execute());
+      return true;
+    }, 5, TimeUnit.SECONDS, true);
+    logger.info("Connection to logdna succeeded using connection: {}", baseUrl);
+    return restClient;
+  }
+
   private void submitLogs() {
     try {
-      int batchSize = 0;
-      LogLines logLines = new LogLines();
-      while (!logQueue.isEmpty() && batchSize < MAX_BATCH_SIZE) {
-        LogLine logLine = logQueue.poll();
-        if (logLine == null) { // no more element in the queue. break from loop
-          break;
+      if (!logQueue.isEmpty()) {
+        if (logQueue.size() > MAX_BATCH_SIZE) {
+          logLines.add(new LogLine(
+              "Log queue exceeds max batch size (" + MAX_BATCH_SIZE + "). Current queue size: " + logQueue.size(),
+              LogLevel.WARNING.toString(), logQueue.peek().getApp()));
         }
-        logLines.add(logLine);
-        batchSize++; // increment unconditionally to break the loop
+        logQueue.drainTo(logLines.getLines(), MAX_BATCH_SIZE);
+        // Do not retry here to post logs as if the request fails logs keep piling up.
+        logdnaRestClient.postLogs(getAuthHeader(), localhostName, logLines).execute();
       }
-
-      if (logLines.isEmpty()) {
-        return;
-      }
-      // Do not retry here to post logs as if the request fails logs keep piling up.
-      // We have the logs any way in StackDriver
-      retrofit.create(LogdnaRestClient.class).postLogs(getAuthHeader(), localhostName, logLines).execute();
     } catch (Exception ex) {
-      logger.warn("Failed to submit logs to {}", retrofit.baseUrl(), ex);
+      logger.warn("Failed to submit logs to {}. Requeuing.", baseUrl, ex);
+      logQueue.addAll(logLines.getLines());
+    } finally {
+      logLines.clear();
     }
   }
 
@@ -162,13 +151,19 @@ public class RestLogAppender<E> extends AppenderBase<E> {
 
     initializeRetrofit();
 
-    super.start();
+    if (isBlank(baseUrl)) {
+      logger.warn("Not starting RestLogAppender since logdna could not be reached");
+      return;
+    }
 
     synchronized (this) {
-      localhostName = getLocalHostName();
-      logQueue = Queues.newArrayBlockingQueue(500000);
-      Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
-          this ::submitLogs, 1000, 1000, TimeUnit.MILLISECONDS);
+      if (!started) {
+        super.start();
+        localhostName = getLocalHostName();
+        logQueue = Queues.newArrayBlockingQueue(500000);
+        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
+            this ::submitLogs, 1000, 1000, TimeUnit.MILLISECONDS);
+      }
     }
   }
 
@@ -194,28 +189,18 @@ public class RestLogAppender<E> extends AppenderBase<E> {
   }
 
   public static class LogLines {
-    List<LogLine> lines = new ArrayList<>();
+    private final List<LogLine> lines = new ArrayList<>(MAX_BATCH_SIZE + 1);
 
     public List<LogLine> getLines() {
       return lines;
     }
 
-    public void setLines(List<LogLine> lines) {
-      this.lines = lines;
-    }
-
     public void add(LogLine logLine) {
-      if (logLine != null) {
-        lines.add(logLine);
-      }
+      lines.add(logLine);
     }
 
-    public int size() {
-      return lines.size();
-    }
-
-    public boolean isEmpty() {
-      return lines.isEmpty();
+    public void clear() {
+      lines.clear();
     }
   }
 
