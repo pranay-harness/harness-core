@@ -45,6 +45,7 @@ import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.persistence.CreatedAtAware;
 import io.harness.queue.Queue;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
@@ -53,6 +54,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
@@ -231,7 +233,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                           .filter(ArtifactKeys.accountId, accountId)
                                           .project(ArtifactKeys.artifactStreamId, true)
                                           .project(ArtifactKeys.uiDisplayName, true)
-                                          .project(ArtifactKeys.metadata, true);
+                                          .project(ArtifactKeys.metadata, true)
+                                          .order(Sort.descending(CreatedAtAware.CREATED_AT_KEY));
       if (isNotEmpty(artifactSearchString)) {
         artifactQuery.field(ArtifactKeys.metadata_buildNo).containsIgnoreCase(artifactSearchString);
       }

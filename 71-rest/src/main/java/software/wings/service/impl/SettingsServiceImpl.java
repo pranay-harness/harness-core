@@ -59,6 +59,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.observer.Rejection;
 import io.harness.observer.Subject;
+import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.HIterator;
 import io.harness.queue.Queue;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -68,6 +69,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AccountEvent;
@@ -258,7 +260,8 @@ public class SettingsServiceImpl implements SettingsService {
                                                       .filter(ArtifactStreamKeys.accountId, accountId)
                                                       .project(ArtifactStreamKeys.settingId, true)
                                                       .project(ArtifactStreamKeys.name, true)
-                                                      .project(ArtifactStreamKeys.sourceName, true);
+                                                      .project(ArtifactStreamKeys.sourceName, true)
+                                                      .order(Sort.descending(CreatedAtAware.CREATED_AT_KEY));
       if (isNotEmpty(artifactStreamSearchString)) {
         artifactStreamQuery.field(ArtifactStreamKeys.name).containsIgnoreCase(artifactStreamSearchString);
       }
