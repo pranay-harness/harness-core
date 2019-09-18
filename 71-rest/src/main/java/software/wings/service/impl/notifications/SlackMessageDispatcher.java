@@ -1,6 +1,7 @@
 package software.wings.service.impl.notifications;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.stripToEmpty;
 import static software.wings.common.Constants.HARNESS_NAME;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
@@ -88,14 +89,37 @@ public class SlackMessageDispatcher {
 
     for (Notification notification : notifications) {
       if (notification.getNotificationTemplateVariables().containsKey(SlackApprovalMessageKeys.MESSAGE_IDENTIFIER)) {
+        boolean isChannelNameEmpty = true;
+        // Fetch Channel and add to Notification Template Variables
+        String slackChannel = stripToEmpty(slackConfig.getName());
+        if (isNotEmpty(slackChannel)) {
+          isChannelNameEmpty = false;
+          if (slackChannel.charAt(0) != '#') {
+            slackChannel = "#" + slackChannel;
+          }
+          notification.getNotificationTemplateVariables().put("channelName", slackChannel);
+        }
         // Enable this feature flag to allow user to approve via slack
         boolean slackApprovalsFeatureFlag = featureFlagService.isEnabled(FeatureName.SLACK_APPROVALS, accountId);
+
         URL url;
         if (slackApprovalsFeatureFlag) {
-          url = this.getClass().getResource(SlackApprovalMessageKeys.APPROVAL_MESSAGE_PAYLOAD_TEMPLATE);
+          if (isChannelNameEmpty) {
+            url = this.getClass().getResource(
+                SlackApprovalMessageKeys.APPROVAL_MESSAGE_WITHOUT_CHANNEL_NAME_PAYLOAD_TEMPLATE);
+          } else {
+            url = this.getClass().getResource(SlackApprovalMessageKeys.APPROVAL_MESSAGE_PAYLOAD_TEMPLATE);
+          }
         } else {
-          url = this.getClass().getResource(SlackApprovalMessageKeys.APPROVAL_MESSAGE_WITHOUT_BUTTONS_PAYLOAD_TEMPLATE);
+          if (isChannelNameEmpty) {
+            url = this.getClass().getResource(
+                SlackApprovalMessageKeys.APPROVAL_MESSAGE_WITHOUT_BUTTONS_WITHOUT_CHANNEL_NAME_PAYLOAD_TEMPLATE);
+          } else {
+            url =
+                this.getClass().getResource(SlackApprovalMessageKeys.APPROVAL_MESSAGE_WITHOUT_BUTTONS_PAYLOAD_TEMPLATE);
+          }
         }
+
         String approvalTemplate;
         StrSubstitutor sub = new StrSubstitutor(notification.getNotificationTemplateVariables());
         try {
@@ -106,7 +130,7 @@ public class SlackMessageDispatcher {
         String resolvedString = sub.replace(approvalTemplate);
         slackNotificationService.sendJSONMessage(
             resolvedString, Collections.singletonList(slackConfig.getOutgoingWebhookUrl()));
-        return;
+        continue;
       }
 
       String slackTemplate = notificationMessageResolver.getSlackTemplate(notification.getNotificationTemplateId());

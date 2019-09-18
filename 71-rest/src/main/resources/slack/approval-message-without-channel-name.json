@@ -1,5 +1,5 @@
 {
-  "channel" : "${channelName}", "blocks" : [
+  "blocks" : [
     {
       "text" : {
         "text" : "${approvalMessage} \n*Approval Pending*, would you like to _approve_?",
