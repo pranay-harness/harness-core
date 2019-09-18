@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.instance;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
 import static org.mongodb.morphia.aggregation.Group.grouping;
@@ -7,6 +8,7 @@ import static org.mongodb.morphia.aggregation.Projection.projection;
 import static org.mongodb.morphia.query.Sort.ascending;
 import static org.mongodb.morphia.query.Sort.descending;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
@@ -17,9 +19,12 @@ import org.mongodb.morphia.query.Query;
 import software.wings.beans.EntityType;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.graphql.datafetcher.RealTimeStatsDataFetcherWithTags;
+import software.wings.graphql.datafetcher.tag.TagHelper;
 import software.wings.graphql.schema.type.aggregation.QLAggregatedData;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLDataPoint;
+import software.wings.graphql.schema.type.aggregation.QLIdFilter;
+import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLNoOpAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.QLSinglePointData;
@@ -28,13 +33,16 @@ import software.wings.graphql.schema.type.aggregation.instance.QLInstanceAggrega
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceEntityAggregation;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceFilter;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceTagAggregation;
+import software.wings.graphql.schema.type.aggregation.instance.QLInstanceTagFilter;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceTagType;
+import software.wings.graphql.schema.type.aggregation.tag.QLTagInput;
 import software.wings.graphql.utils.nameservice.NameService;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.FlatEntitySummaryStats;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -43,6 +51,7 @@ public class InstanceStatsDataFetcher
         QLNoOpSortCriteria, QLInstanceTagType, QLInstanceTagAggregation, QLInstanceEntityAggregation> {
   @Inject private InstanceTimeSeriesDataHelper timeSeriesDataHelper;
   @Inject private InstanceQueryHelper instanceMongoHelper;
+  @Inject private TagHelper tagHelper;
 
   @Override
   protected QLInstanceTagAggregation getTagAggregation(QLInstanceAggregation groupBy) {
@@ -66,6 +75,34 @@ public class InstanceStatsDataFetcher
     groupByEntityList = getGroupByEntityListFromTags(groupByList, groupByEntityList, groupByTagList, groupByTime);
 
     if (groupByTime != null) {
+      if (isNotEmpty(filters)) {
+        filters.forEach(filter -> {
+          List<QLInstanceFilter> newFilters = new ArrayList<>();
+          if (filter.getTag() != null) {
+            QLInstanceTagFilter tagFilter = filter.getTag();
+            List<QLTagInput> tags = tagFilter.getTags();
+            Set<String> entityIds =
+                tagHelper.getEntityIdsFromTags(accountId, tags, getEntityType(tagFilter.getEntityType()));
+            switch (tagFilter.getEntityType()) {
+              case APPLICATION:
+                filter.setApplication(getMergedIdFilter(entityIds, filter.getApplication()));
+                break;
+              case SERVICE:
+                filter.setService(getMergedIdFilter(entityIds, filter.getService()));
+                break;
+              case ENVIRONMENT:
+                filter.setEnvironment(getMergedIdFilter(entityIds, filter.getEnvironment()));
+                break;
+              default:
+                logger.error("EntityType {} not supported in query", tagFilter.getEntityType());
+                throw new InvalidRequestException("Error while compiling query", WingsException.USER);
+            }
+          } else {
+            newFilters.add(filter);
+          }
+        });
+      }
+
       if (isNotEmpty(groupByEntityList)) {
         return timeSeriesDataHelper.getTimeSeriesAggregatedData(
             accountId, aggregateFunction, filters, groupByTime, groupByEntityList.get(0));
@@ -143,6 +180,21 @@ public class InstanceStatsDataFetcher
         long count = query.count();
         return QLSinglePointData.builder().dataPoint(QLDataPoint.builder().value(count).build()).build();
       }
+    }
+  }
+
+  private QLIdFilter getMergedIdFilter(Set<String> entityIds, QLIdFilter idFilter) {
+    if (isEmpty(entityIds)) {
+      return idFilter;
+    }
+
+    if (idFilter != null) {
+      String[] values = idFilter.getValues();
+      Set<String> valueSet = isNotEmpty(values) ? Sets.newHashSet(values) : Sets.newHashSet();
+      valueSet.addAll(entityIds);
+      return QLIdFilter.builder().operator(QLIdOperator.IN).values(valueSet.toArray(new String[0])).build();
+    } else {
+      return QLIdFilter.builder().operator(QLIdOperator.IN).values(entityIds.toArray(new String[0])).build();
     }
   }
 
