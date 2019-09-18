@@ -2,6 +2,7 @@ package software.wings.app;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
 
@@ -14,7 +15,11 @@ import org.apache.http.client.utils.URIBuilder;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import software.wings.search.entities.application.ApplicationSearchEntity;
+import software.wings.search.entities.deployment.DeploymentSearchEntity;
+import software.wings.search.entities.environment.EnvironmentSearchEntity;
 import software.wings.search.entities.pipeline.PipelineSearchEntity;
+import software.wings.search.entities.service.ServiceSearchEntity;
+import software.wings.search.entities.workflow.WorkflowSearchEntity;
 import software.wings.search.framework.SearchDao;
 import software.wings.search.framework.SearchEntity;
 import software.wings.search.framework.SynchronousElasticsearchDao;
@@ -36,6 +41,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class SearchModule extends AbstractModule {
   @Provides
+  @Singleton
   public RestHighLevelClient getClient(MainConfiguration mainConfiguration) {
     try {
       URI uri = new URIBuilder(mainConfiguration.getElasticsearchConfig().getUri()).build();
@@ -65,5 +71,12 @@ public class SearchModule extends AbstractModule {
         .to(ApplicationSearchEntity.class);
     sourceEntitiesToSearchEntitiesMap.addBinding(PipelineSearchEntity.SOURCE_ENTITY_CLASS)
         .to(PipelineSearchEntity.class);
+    sourceEntitiesToSearchEntitiesMap.addBinding(WorkflowSearchEntity.SOURCE_ENTITY_CLASS)
+        .to(WorkflowSearchEntity.class);
+    sourceEntitiesToSearchEntitiesMap.addBinding(ServiceSearchEntity.SOURCE_ENTITY_CLASS).to(ServiceSearchEntity.class);
+    sourceEntitiesToSearchEntitiesMap.addBinding(EnvironmentSearchEntity.SOURCE_ENTITY_CLASS)
+        .to(EnvironmentSearchEntity.class);
+    sourceEntitiesToSearchEntitiesMap.addBinding(DeploymentSearchEntity.SOURCE_ENTITY_CLASS)
+        .to(DeploymentSearchEntity.class);
   }
 }

@@ -4,11 +4,13 @@ import io.harness.beans.EmbeddedUser;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import software.wings.beans.EntityType;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldNameConstants(innerTypeName = "EntityBaseViewKeys")
 public class EntityBaseView {
   private String id;
   private String name;

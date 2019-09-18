@@ -6,7 +6,6 @@ import com.google.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.mapping.Mapper;
-import org.mongodb.morphia.mapping.cache.DefaultEntityCache;
 import org.mongodb.morphia.mapping.cache.EntityCache;
 import software.wings.beans.Application;
 import software.wings.dl.WingsPersistence;
@@ -29,17 +28,16 @@ import java.util.Optional;
 public class ApplicationChangeHandler implements ChangeHandler {
   @Inject private SearchDao searchDao;
   @Inject private WingsPersistence wingsPersistence;
-  private static final Mapper mapper = new Mapper();
-  private static final EntityCache entityCache = new DefaultEntityCache();
+  private static final Mapper mapper = SearchEntityUtils.getMapper();
+  private static final EntityCache entityCache = SearchEntityUtils.getEntityCache();
 
   private boolean handleApplicationChange(ChangeEvent changeEvent) {
     AdvancedDatastore advancedDatastore = wingsPersistence.getDatastore(changeEvent.getEntityType());
     switch (changeEvent.getChangeType()) {
       case INSERT:
       case UPDATE: {
-        logger.info(changeEvent.getChangeDocument().toString());
         Application application = (Application) mapper.fromDBObject(
-            advancedDatastore, changeEvent.getEntityType(), changeEvent.getChangeDocument(), entityCache);
+            advancedDatastore, changeEvent.getEntityType(), changeEvent.getFullDocument(), entityCache);
         application.setUuid(changeEvent.getUuid());
 
         ApplicationView applicationView = ApplicationView.fromApplication(application);

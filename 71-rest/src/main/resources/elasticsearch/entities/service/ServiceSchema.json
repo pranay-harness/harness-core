@@ -1,0 +1,16 @@
+{
+  "mappings" : {
+    "properties" : {"appId" : {"type" : "keyword"},
+      "appName" : {"type" :  "text", "index" : false},
+
+      "deploymentType" : {
+        "type" : "keyword",
+        "index" : false
+      },
+      "artifactType" : {
+        "type" : "keyword",
+        "index" : false
+      }
+    }
+  }
+}

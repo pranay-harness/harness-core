@@ -1,4 +1,4 @@
-package software.wings.search.entities.pipeline;
+package software.wings.search.entities.workflow;
 
 import io.harness.beans.EmbeddedUser;
 import lombok.Data;
@@ -14,16 +14,20 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@FieldNameConstants(innerTypeName = "PipelineViewKeys")
-public class PipelineView extends EntityBaseView {
+@FieldNameConstants(innerTypeName = "WorkflowViewKeys")
+public class WorkflowView extends EntityBaseView {
   private String appId;
   private String appName;
-  private Set<EntityInfo> workflows;
+  private String workflowType;
   private Set<EntityInfo> services;
+  private String environmentId;
+  private String environmentName;
 
-  public PipelineView(String uuid, String name, String description, String accountId, long createdAt,
-      long lastUpdatedAt, EntityType entityType, EmbeddedUser createdBy, EmbeddedUser lastUpdatedBy, String appId) {
+  public WorkflowView(String uuid, String name, String description, String accountId, long createdAt,
+      long lastUpdatedAt, EntityType entityType, EmbeddedUser createdBy, EmbeddedUser lastUpdatedBy, String appId,
+      String workflowType) {
     super(uuid, name, description, accountId, createdAt, lastUpdatedAt, entityType, createdBy, lastUpdatedBy);
     this.appId = appId;
+    this.workflowType = workflowType;
   }
 }
