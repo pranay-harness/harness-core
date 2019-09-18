@@ -139,7 +139,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
         Validator.notNullCheck("Service might have been deleted", service, USER);
       }
 
-      if (infraDefinitionId != null) {
+      if (infraDefinitionIdExpression == null && infraDefinitionId != null) {
         infrastructureDefinition = infrastructureDefinitionService.get(app.getAppId(), infraDefinitionId);
         Validator.notNullCheck("Infra Definition not found, check if it is deleted", infrastructureDefinition, USER);
       }
