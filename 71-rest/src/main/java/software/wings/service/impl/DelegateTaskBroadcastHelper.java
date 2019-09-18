@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.beans.DelegateTask.Status.QUEUED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -22,6 +23,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AssignDelegateService;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
@@ -31,6 +33,7 @@ public class DelegateTaskBroadcastHelper {
   @Inject private AssignDelegateService assignDelegateService;
   @Inject private BroadcasterFactory broadcasterFactory;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private ExecutorService executorService;
 
   // "broadcastCount: nextExecutionInterval for async tasks{0:0, 1:30 Sec, 2:1 Min, 3:2 Min, 4: 4 Min, 5:8 Min,
   // afterwards : every 10 min}
@@ -43,6 +46,16 @@ public class DelegateTaskBroadcastHelper {
    * This method will first update task with preAssignedDelegate if it finds one,
    * and then broadcast the task.
    */
+  public void broadcastNewDelegateTaskAsync(final DelegateTask task) {
+    executorService.submit(() -> {
+      try {
+        broadcastNewDelegateTask(task);
+      } catch (Exception e) {
+        logger.error(format("Failed to broadcast task %s for account %s", task.getUuid(), task.getAccountId()), e);
+      }
+    });
+  }
+
   public DelegateTask broadcastNewDelegateTask(DelegateTask task) {
     String preAssignedDelegateId = assignDelegateService.pickFirstAttemptDelegate(task);
 
