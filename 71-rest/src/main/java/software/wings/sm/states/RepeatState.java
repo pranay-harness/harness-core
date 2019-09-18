@@ -19,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.ExecutionStrategy;
-import software.wings.common.Constants;
 import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElement;
@@ -332,7 +331,7 @@ public class RepeatState extends State {
   @Override
   @SchemaIgnore
   public Integer getTimeoutMillis() {
-    return Constants.DEFAULT_PARENT_STATE_TIMEOUT_MILLIS;
+    return INFINITE_TIMEOUT;
   }
 
   @Override

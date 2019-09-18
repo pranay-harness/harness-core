@@ -25,6 +25,9 @@ import java.util.Map;
  * @author Rishi
  */
 public abstract class State {
+  protected static Integer UNDEFINED_TIMEOUT;
+  protected static Integer INFINITE_TIMEOUT = -1;
+
   @SchemaIgnore private String id;
 
   @SchemaIgnore private String parentId;

@@ -105,12 +105,6 @@ public interface Constants {
   long DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS = 5 * 60 * 1000; // 5 minutes
 
   /**
-   * O
-   * The constant DEFAULT_PARENT_STATE_TIMEOUT_MILLIS.
-   */
-  Integer DEFAULT_PARENT_STATE_TIMEOUT_MILLIS = 4 * 60 * 60 * 1000; // 4 hours
-
-  /**
    * The constant for Default Env State timeout
    */
   Integer ENV_STATE_TIMEOUT_MILLIS = 12 * 60 * 60 * 1000; // 12 hours
