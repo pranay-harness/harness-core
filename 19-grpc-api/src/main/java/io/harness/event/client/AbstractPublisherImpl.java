@@ -37,7 +37,7 @@ abstract class AbstractPublisherImpl extends EventPublisher {
   }
 
   @Override
-  final void publish(PublishMessage publishMessage) {
+  protected final void publish(PublishMessage publishMessage) {
     Preconditions.checkState(!shutDown.get(), "Publisher shut-down. Cannot publish any more messages");
     enqueue(publishMessage);
     acceptedCount.incrementAndGet();

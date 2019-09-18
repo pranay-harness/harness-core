@@ -1,34 +1,221 @@
 package io.harness.perpetualtask.k8s.watch;
 
-import static io.harness.rule.OwnerRule.HANTANG;
+import static io.harness.event.payloads.PodEvent.EventType.EVENT_TYPE_DELETED;
+import static io.harness.event.payloads.PodEvent.EventType.EVENT_TYPE_SCHEDULED;
+import static io.harness.rule.OwnerRule.AVMOHAN;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import io.fabric8.kubernetes.client.Config;
-import io.fabric8.kubernetes.client.ConfigBuilder;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.protobuf.Message;
+
+import io.fabric8.kubernetes.api.model.ContainerBuilder;
+import io.fabric8.kubernetes.api.model.DoneablePod;
+import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodBuilder;
+import io.fabric8.kubernetes.api.model.PodConditionBuilder;
+import io.fabric8.kubernetes.api.model.PodList;
+import io.fabric8.kubernetes.api.model.QuantityBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
-import io.harness.category.element.IntegrationTests;
+import io.fabric8.kubernetes.client.Watcher.Action;
+import io.fabric8.kubernetes.client.dsl.FilterWatchListMultiDeletable;
+import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.PodResource;
+import io.harness.category.element.UnitTests;
 import io.harness.event.client.EventPublisher;
+import io.harness.event.payloads.Container;
+import io.harness.event.payloads.Container.Resource;
+import io.harness.event.payloads.Container.Resource.Quantity;
+import io.harness.event.payloads.PodEvent;
+import io.harness.event.payloads.PodInfo;
+import io.harness.grpc.utils.HTimestamps;
 import io.harness.rule.OwnerRule.Owner;
-import org.junit.Ignore;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
+import org.mockito.ArgumentCaptor;
 
-import java.util.concurrent.TimeUnit;
+import java.util.List;
 
+@Slf4j
 public class PodWatcherTest {
-  @Mock EventPublisher eventPublisher;
-  Config config = new ConfigBuilder().build();
+  private PodWatcher podWatcher;
+  private EventPublisher eventPublisher;
+  private Watch watch;
+
+  @Before
+  public void setUp() throws Exception {
+    KubernetesClient kubernetesClient = mock(KubernetesClient.class);
+    eventPublisher = mock(EventPublisher.class);
+    watch = mock(Watch.class);
+    @SuppressWarnings("unchecked")
+    MixedOperation<Pod, PodList, DoneablePod, PodResource<Pod, DoneablePod>> podeOps = mock(MixedOperation.class);
+    @SuppressWarnings("unchecked")
+    FilterWatchListMultiDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> ks =
+        mock(FilterWatchListMultiDeletable.class);
+    when(kubernetesClient.pods()).thenReturn(podeOps);
+    when(podeOps.inAnyNamespace()).thenReturn(ks);
+    when(ks.watch(any())).thenReturn(watch);
+    podWatcher = new PodWatcher(kubernetesClient, eventPublisher);
+  }
 
   @Test
-  @Owner(emails = HANTANG)
-  @Category(IntegrationTests.class)
-  @Ignore("TODO: Not running it now, will run it in next iteration.")
-  public void testPodWatcher() throws Exception {
-    final KubernetesClient client = new DefaultKubernetesClient(config);
+  @Owner(emails = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldPublishPodScheduledAndPodInfo() throws Exception {
+    podWatcher.eventReceived(Action.MODIFIED, scheduledPod());
+    ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
+    verify(eventPublisher, times(2)).publishMessage(captor.capture());
+    assertThat(captor.getAllValues()).hasSize(2);
+    assertThat(captor.getAllValues().get(0)).isInstanceOfSatisfying(PodInfo.class, this ::infoMessageAssertions);
+    assertThat(captor.getAllValues().get(1)).isInstanceOfSatisfying(PodEvent.class, this ::scheduledMessageAssertions);
+  }
 
-    Watcher watcher = new PodWatcher(client, eventPublisher);
-    TimeUnit.MINUTES.sleep(1);
+  @Test
+  @Owner(emails = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldPublishPodDeleted() throws Exception {
+    podWatcher.eventReceived(Action.DELETED, scheduledAndDeletedPod());
+    ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
+    verify(eventPublisher, atLeastOnce()).publishMessage(captor.capture());
+    assertThat(captor.getAllValues().get(2)).isInstanceOfSatisfying(PodEvent.class, this ::deletedMessageAssertions);
+  }
+
+  @Test
+  @Owner(emails = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldNotPublishDuplicates() throws Exception {
+    podWatcher.eventReceived(Action.ADDED, podBuilder().build()); // none
+    podWatcher.eventReceived(Action.MODIFIED, scheduledPod()); // info, scheduled
+    podWatcher.eventReceived(Action.MODIFIED, scheduledPod()); // none
+    podWatcher.eventReceived(Action.DELETED, scheduledAndDeletedPod()); // deleted
+    ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
+    verify(eventPublisher, atLeastOnce()).publishMessage(captor.capture());
+    List<Message> publishedMessages = captor.getAllValues();
+    assertThat(publishedMessages).hasSize(3);
+    assertThat(publishedMessages.get(0)).isInstanceOfSatisfying(PodInfo.class, this ::infoMessageAssertions);
+    assertThat(publishedMessages.get(1)).isInstanceOfSatisfying(PodEvent.class, this ::scheduledMessageAssertions);
+    assertThat(publishedMessages.get(2)).isInstanceOfSatisfying(PodEvent.class, this ::deletedMessageAssertions);
+  }
+
+  @Test
+  @Owner(emails = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldCloseUnderlyingWatchOnClosingWatcher() throws Exception {
+    podWatcher.onClose(null);
+    verify(watch).close();
+  }
+
+  private Pod scheduledPod() {
+    return podBuilder()
+        .editSpec()
+        .withNodeName("gke-pr-private-pool-1-49d0f375-12xx")
+        .endSpec()
+        .withNewStatus()
+        .withConditions(new PodConditionBuilder()
+                            .withLastTransitionTime("2019-09-09T18:21:45.000+05:30")
+                            .withType("PodScheduled")
+                            .withStatus("True")
+                            .build())
+        .endStatus()
+        .build();
+  }
+
+  private Pod scheduledAndDeletedPod() {
+    return new PodBuilder(scheduledPod())
+        .editMetadata()
+        .withDeletionGracePeriodSeconds(0L)
+        .withDeletionTimestamp("2019-09-09T19:34:33.000+05:30")
+        .endMetadata()
+        .build();
+  }
+
+  private PodBuilder podBuilder() {
+    return new PodBuilder()
+        .withApiVersion("v1")
+        .withNewMetadata()
+        .withUid("948e988d-d300-11e9-b63d-4201ac100a04")
+        .withName("manager-79cc97bdfb-r6kzs")
+        .withCreationTimestamp("2019-09-09T18:21:45.000+05:30")
+        .withNamespace("harness")
+        .withLabels(
+            ImmutableMap.of("app", "manager", "harness.io/release-name", "2cb07f52-ee19-3ab3-a3e7-8b8de3e2d0d1"))
+        .withOwnerReferences(new OwnerReferenceBuilder()
+                                 .withKind("ReplicaSet")
+                                 .withName("manager-79cc97bdfb")
+                                 .withUid("948bcfca-d300-11e9-b63d-4201ac100a04")
+                                 .build())
+        .withResourceVersion("77330477")
+        .endMetadata()
+        .withNewStatus()
+        .endStatus()
+        .withNewSpec()
+        .withContainers(
+            new ContainerBuilder()
+                .withImage("us.gcr.io/platform-205701/harness/feature-manager:19204")
+                .withName("manager")
+                .withNewResources()
+                .addToLimits("cpu", new QuantityBuilder().withAmount("1").withFormat("DECIMAL_SI").build())
+                .addToLimits("memory", new QuantityBuilder().withAmount("2861563904").withFormat("BINARY_SI").build())
+                .addToRequests("cpu", new QuantityBuilder().withAmount("1").withFormat("DECIMAL_SI").build())
+                .addToRequests("memory", new QuantityBuilder().withAmount("2861563904").withFormat("BINARY_SI").build())
+                .endResources()
+                .build())
+        .endSpec();
+  }
+
+  private void deletedMessageAssertions(PodEvent podEvent) {
+    assertThat(podEvent.getUid()).isEqualTo("948e988d-d300-11e9-b63d-4201ac100a04");
+    assertThat(podEvent.getType()).isEqualTo(EVENT_TYPE_DELETED);
+    assertThat(podEvent.getTimestamp()).isEqualTo(HTimestamps.parse("2019-09-09T19:34:33.000+05:30"));
+  }
+
+  private void scheduledMessageAssertions(PodEvent podEvent) {
+    assertThat(podEvent.getUid()).isEqualTo("948e988d-d300-11e9-b63d-4201ac100a04");
+    assertThat(podEvent.getType()).isEqualTo(EVENT_TYPE_SCHEDULED);
+    assertThat(podEvent.getTimestamp()).isEqualTo(HTimestamps.parse("2019-09-09T18:21:45.000+05:30"));
+  }
+
+  private void infoMessageAssertions(PodInfo podInfo) {
+    assertThat(podInfo.getUid()).isEqualTo("948e988d-d300-11e9-b63d-4201ac100a04");
+    assertThat(podInfo.getName()).isEqualTo("manager-79cc97bdfb-r6kzs");
+    assertThat(podInfo.getCreationTimestamp()).isEqualTo(HTimestamps.parse("2019-09-09T18:21:45.000+05:30"));
+    assertThat(podInfo.getNamespace()).isEqualTo("harness");
+    assertThat(podInfo.getNodeName()).isEqualTo("gke-pr-private-pool-1-49d0f375-12xx");
+    assertThat(podInfo.getContainersList())
+        .containsExactly(
+            Container.newBuilder()
+                .setName("manager")
+                .setImage("us.gcr.io/platform-205701/harness/feature-manager:19204")
+                .setResource(
+                    Resource.newBuilder()
+                        .putLimits("cpu", Quantity.newBuilder().setAmount("1").setFormat("DECIMAL_SI").build())
+                        .putLimits(
+                            "memory", Quantity.newBuilder().setAmount("2861563904").setFormat("BINARY_SI").build())
+                        .putRequests("cpu", Quantity.newBuilder().setAmount("1").setFormat("DECIMAL_SI").build())
+                        .putRequests(
+                            "memory", Quantity.newBuilder().setAmount("2861563904").setFormat("BINARY_SI").build())
+                        .build())
+                .build());
+    assertThat(podInfo.getLabelsMap())
+        .isEqualTo(
+            ImmutableMap.of("app", "manager", "harness.io/release-name", "2cb07f52-ee19-3ab3-a3e7-8b8de3e2d0d1"));
+
+    assertThat(podInfo.getOwnerList())
+        .isEqualTo(ImmutableList.of(io.harness.event.payloads.Owner.newBuilder()
+                                        .setName("manager-79cc97bdfb")
+                                        .setUid("948bcfca-d300-11e9-b63d-4201ac100a04")
+                                        .setKind("ReplicaSet")
+                                        .build()));
   }
 }

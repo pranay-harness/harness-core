@@ -1,64 +1,185 @@
 package io.harness.perpetualtask.k8s.watch;
 
-import static io.harness.rule.OwnerRule.HANTANG;
+import static io.harness.rule.OwnerRule.AVMOHAN;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
 
-import io.harness.category.element.IntegrationTests;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
+import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-import org.powermock.core.classloader.annotations.PrepareForTest;
+import software.wings.delegatetasks.k8s.client.KubernetesClientFactory;
+import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 
-import java.nio.file.WatchService;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.UUID;
 
-@RunWith(JUnit4.class)
-@PrepareForTest(WatchService.class)
 @Slf4j
 public class K8sWatchServiceDelegateTest {
-  private String id;
-  private final CountDownLatch closeLatch = new CountDownLatch(1);
+  private static final String RESOURCE_KIND_POD = "Pod";
+  private static final String RESOURCE_KIND_NODE = "Node";
 
-  @Inject private static K8sWatchServiceDelegate watchServiceDelegate;
+  private K8sWatchServiceDelegate k8sWatchServiceDelegate;
+  private WatcherFactory watcherFactory;
 
-  @BeforeClass
-  public static void setup() {
-    // Injector injector = Guice.createInjector(new KubernetesClientFactoryModule());
+  private PodWatcher podWatcher;
+  private NodeWatcher nodeWatcher;
+
+  @Before
+  public void setUp() throws Exception {
+    KubernetesClientFactory kubernetesClientFactory = mock(KubernetesClientFactory.class);
+    watcherFactory = mock(WatcherFactory.class);
+    this.k8sWatchServiceDelegate = new K8sWatchServiceDelegate(watcherFactory, kubernetesClientFactory);
+    podWatcher = mock(PodWatcher.class);
+    nodeWatcher = mock(NodeWatcher.class);
+    when(watcherFactory.createPodWatcher(any())).thenReturn(podWatcher);
+    when(watcherFactory.createNodeWatcher(any())).thenReturn(nodeWatcher);
   }
 
   @Test
-  @Owner(emails = HANTANG)
-  @Category(IntegrationTests.class)
-  @Ignore("This test currently depends on access to a valid local kubeconfig file.")
-  public void testCreate() throws Exception {
-    logger.info("Test registering a K8WatchPerpetualTaskClientParams in a WatchService..");
-    K8sWatchTaskParams params = K8sWatchTaskParams.newBuilder().setK8SResourceKind("Pod").build();
-
-    id = watchServiceDelegate.create(params);
-    closeLatch.await(1, TimeUnit.MINUTES);
+  @Owner(emails = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldCreatePodWatch() throws Exception {
+    String cloudProviderId = UUID.randomUUID().toString();
+    ByteString k8sClusterConfig = ByteString.copyFrom(KryoUtils.asBytes(
+        K8sClusterConfig.builder().clusterName("test-cluster").namespace("namespace").cloudProvider(null).build()));
+    K8sWatchTaskParams k8sWatchTaskParams = K8sWatchTaskParams.newBuilder()
+                                                .setK8SResourceKind(RESOURCE_KIND_POD)
+                                                .setK8SClusterConfig(k8sClusterConfig)
+                                                .setCloudProviderId(cloudProviderId)
+                                                .build();
+    String watchId = k8sWatchServiceDelegate.create(k8sWatchTaskParams);
+    assertThat(watchId).isNotNull();
+    assertThat(k8sWatchServiceDelegate.watchIds()).contains(watchId);
+    verify(watcherFactory, atLeastOnce()).createPodWatcher(any());
   }
 
   @Test
-  @Owner(emails = HANTANG)
-  @Category(IntegrationTests.class)
-  @Ignore("This test currently has no clearly-defined assertion.")
-  public void testList() {
-    List<String> watchList = watchServiceDelegate.list();
+  @Owner(emails = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldCreateNodeWatch() throws Exception {
+    String cloudProviderId = UUID.randomUUID().toString();
+    ByteString k8sClusterConfig = ByteString.copyFrom(KryoUtils.asBytes(
+        K8sClusterConfig.builder().clusterName("test-cluster").namespace("namespace").cloudProvider(null).build()));
+    K8sWatchTaskParams k8sWatchTaskParams = K8sWatchTaskParams.newBuilder()
+                                                .setK8SResourceKind(RESOURCE_KIND_NODE)
+                                                .setK8SClusterConfig(k8sClusterConfig)
+                                                .setCloudProviderId(cloudProviderId)
+                                                .build();
+    String watchId = k8sWatchServiceDelegate.create(k8sWatchTaskParams);
+    assertThat(watchId).isNotNull();
+    assertThat(k8sWatchServiceDelegate.watchIds()).contains(watchId);
+    verify(watcherFactory, atLeastOnce()).createNodeWatcher(any());
   }
 
   @Test
-  @Owner(emails = HANTANG)
-  @Category(IntegrationTests.class)
-  @Ignore("This test currently has no clearly-defined assertion.")
-  public void testRemove() {
-    watchServiceDelegate.delete(id);
+  @Owner(emails = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldNotCreateDuplicateWatch() throws Exception {
+    String cloudProviderId = UUID.randomUUID().toString();
+    ByteString k8sClusterConfig = ByteString.copyFrom(KryoUtils.asBytes(
+        K8sClusterConfig.builder().clusterName("test-cluster").namespace("namespace").cloudProvider(null).build()));
+    K8sWatchTaskParams k8sWatchTaskParams = K8sWatchTaskParams.newBuilder()
+                                                .setK8SResourceKind(RESOURCE_KIND_POD)
+                                                .setK8SClusterConfig(k8sClusterConfig)
+                                                .setCloudProviderId(cloudProviderId)
+                                                .build();
+    String watch1 = k8sWatchServiceDelegate.create(k8sWatchTaskParams);
+    String watch2 = k8sWatchServiceDelegate.create(k8sWatchTaskParams);
+    assertThat(watch2).isEqualTo(watch1);
+    verify(watcherFactory, times(1)).createPodWatcher(any(KubernetesClient.class));
+  }
+
+  @Test
+  @Owner(emails = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldCreateMultipleWatchesIfNotDuplicate() throws Exception {
+    String cloudProviderId1 = UUID.randomUUID().toString();
+    ByteString k8sClusterConfig1 = ByteString.copyFrom(KryoUtils.asBytes(
+        K8sClusterConfig.builder().clusterName("test-cluster1").namespace("namespace1").cloudProvider(null).build()));
+    K8sWatchTaskParams k8sWatchTaskParams1 = K8sWatchTaskParams.newBuilder()
+                                                 .setK8SResourceKind(RESOURCE_KIND_POD)
+                                                 .setK8SClusterConfig(k8sClusterConfig1)
+                                                 .setCloudProviderId(cloudProviderId1)
+                                                 .build();
+    String cloudProviderId2 = UUID.randomUUID().toString();
+    ByteString k8sClusterConfig2 = ByteString.copyFrom(KryoUtils.asBytes(
+        K8sClusterConfig.builder().clusterName("test-cluster2").namespace("namespace2").cloudProvider(null).build()));
+    K8sWatchTaskParams k8sWatchTaskParams2 = K8sWatchTaskParams.newBuilder()
+                                                 .setK8SResourceKind(RESOURCE_KIND_POD)
+                                                 .setK8SClusterConfig(k8sClusterConfig2)
+                                                 .setCloudProviderId(cloudProviderId2)
+                                                 .build();
+    String watch1 = k8sWatchServiceDelegate.create(k8sWatchTaskParams1);
+    String watch2 = k8sWatchServiceDelegate.create(k8sWatchTaskParams2);
+    assertThat(watch2).isNotEqualTo(watch1);
+    verify(watcherFactory, times(2)).createPodWatcher(any(KubernetesClient.class));
+    assertThat(k8sWatchServiceDelegate.watchIds()).containsExactlyInAnyOrder(watch1, watch2);
+  }
+
+  @Test
+  @Owner(emails = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldDeletePodWatch() throws Exception {
+    String cloudProviderId = UUID.randomUUID().toString();
+    ByteString k8sClusterConfig = ByteString.copyFrom(KryoUtils.asBytes(
+        K8sClusterConfig.builder().clusterName("test-cluster").namespace("namespace").cloudProvider(null).build()));
+    K8sWatchTaskParams k8sWatchTaskParams = K8sWatchTaskParams.newBuilder()
+                                                .setK8SResourceKind(RESOURCE_KIND_POD)
+                                                .setK8SClusterConfig(k8sClusterConfig)
+                                                .setCloudProviderId(cloudProviderId)
+                                                .build();
+    String watchId = k8sWatchServiceDelegate.create(k8sWatchTaskParams);
+    assertThat(k8sWatchServiceDelegate.watchIds()).contains(watchId);
+    k8sWatchServiceDelegate.delete(watchId);
+    verify(podWatcher).onClose(null);
+    assertThat(k8sWatchServiceDelegate.watchIds()).doesNotContain(watchId);
+  }
+
+  @Test
+  @Owner(emails = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldDeleteNodeWatch() throws Exception {
+    String cloudProviderId = UUID.randomUUID().toString();
+    ByteString k8sClusterConfig = ByteString.copyFrom(KryoUtils.asBytes(
+        K8sClusterConfig.builder().clusterName("test-cluster").namespace("namespace").cloudProvider(null).build()));
+    K8sWatchTaskParams k8sWatchTaskParams = K8sWatchTaskParams.newBuilder()
+                                                .setK8SResourceKind(RESOURCE_KIND_NODE)
+                                                .setK8SClusterConfig(k8sClusterConfig)
+                                                .setCloudProviderId(cloudProviderId)
+                                                .build();
+    String watchId = k8sWatchServiceDelegate.create(k8sWatchTaskParams);
+    assertThat(k8sWatchServiceDelegate.watchIds()).contains(watchId);
+    k8sWatchServiceDelegate.delete(watchId);
+    verify(nodeWatcher).onClose(null);
+    assertThat(k8sWatchServiceDelegate.watchIds()).doesNotContain(watchId);
+  }
+
+  @Test
+  @Owner(emails = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldThrowIaeIfUnknownResourceKind() throws Exception {
+    String cloudProviderId = UUID.randomUUID().toString();
+    ByteString k8sClusterConfig = ByteString.copyFrom(KryoUtils.asBytes(
+        K8sClusterConfig.builder().clusterName("test-cluster").namespace("namespace").cloudProvider(null).build()));
+    K8sWatchTaskParams k8sWatchTaskParams = K8sWatchTaskParams.newBuilder()
+                                                .setK8SResourceKind("Deployment")
+                                                .setK8SClusterConfig(k8sClusterConfig)
+                                                .setCloudProviderId(cloudProviderId)
+                                                .build();
+    assertThatIllegalArgumentException()
+        .isThrownBy(() -> k8sWatchServiceDelegate.create(k8sWatchTaskParams))
+        .withMessage("Resource kind %s is not watchable", "Deployment");
   }
 }

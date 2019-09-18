@@ -4,11 +4,14 @@ import static io.harness.event.payloads.PodEvent.EventType.EVENT_TYPE_DELETED;
 import static io.harness.event.payloads.PodEvent.EventType.EVENT_TYPE_SCHEDULED;
 
 import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.Message;
 import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.JsonFormat;
 import com.google.protobuf.util.JsonFormat.TypeRegistry;
 
+import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodCondition;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -16,7 +19,6 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.harness.event.client.EventPublisher;
-
 import io.harness.event.payloads.Container;
 import io.harness.event.payloads.Container.Resource;
 import io.harness.event.payloads.Container.Resource.Quantity;
@@ -26,43 +28,37 @@ import io.harness.event.payloads.PodEvent;
 import io.harness.event.payloads.PodInfo;
 import io.harness.grpc.utils.HTimestamps;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.map.LRUMap;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class PodWatcher implements Watcher<Pod> {
-  private Watch watch;
-  private static final int POD_MAP_MAX_SIZE = 5000;
-  private LRUMap podMap;
-  TypeRegistry typeRegistry;
+  private static final TypeRegistry TYPE_REGISTRY =
+      TypeRegistry.newBuilder().add(PodInfo.getDescriptor()).add(PodEvent.getDescriptor()).build();
 
-  private EventPublisher eventPublisher;
+  private final Watch watch;
+  private final EventPublisher eventPublisher;
+  private final Set<String> publishedPods;
 
   @Inject
-  public PodWatcher(KubernetesClient client, EventPublisher eventPublisher) {
+  public PodWatcher(@Assisted KubernetesClient client, EventPublisher eventPublisher) {
     watch = client.pods().inAnyNamespace().watch(this);
-    podMap = new LRUMap<String, Boolean>(POD_MAP_MAX_SIZE);
-    typeRegistry = TypeRegistry.newBuilder().add(PodInfo.getDescriptor()).add(PodEvent.getDescriptor()).build();
+    publishedPods = new HashSet<>();
     this.eventPublisher = eventPublisher;
   }
 
   @Override
   public void eventReceived(Action action, Pod pod) {
     String uid = pod.getMetadata().getUid();
-    logger.debug("Pod Watcher received an event for pod with uid {}.", uid);
-    PodCondition podScheduledCondition = getPodScheduledCondition(pod); // check if the deletion timestamp is specified
-    boolean isPodDeleted = false;
-    String deletionTimestamp = pod.getMetadata().getDeletionTimestamp();
-    Long deletionGracePeriodSeconds = pod.getMetadata().getDeletionGracePeriodSeconds();
-    if (deletionTimestamp != null && deletionGracePeriodSeconds == 0L) {
-      isPodDeleted = true;
-    }
-
-    if (podScheduledCondition != null && !podMap.containsKey(uid)) {
+    logger.debug("Pod Watcher received an event for pod with uid={}, action={}", uid, action);
+    PodCondition podScheduledCondition = getPodScheduledCondition(pod);
+    if (podScheduledCondition != null && !publishedPods.contains(uid)) {
       // put the pod in the map and publish the spec
       Timestamp creationTimestamp = HTimestamps.parse(pod.getMetadata().getCreationTimestamp());
       PodInfo podInfo = PodInfo.newBuilder()
@@ -75,36 +71,30 @@ public class PodWatcher implements Watcher<Pod> {
                             .putAllLabels(pod.getMetadata().getLabels())
                             .addAllOwner(getAllOwners(pod.getMetadata().getOwnerReferences()))
                             .build();
-      try {
-        logger.debug(JsonFormat.printer().usingTypeRegistry(typeRegistry).print(podInfo));
-      } catch (InvalidProtocolBufferException e) {
-        logger.error(e.getMessage());
-      }
+      logMessage(podInfo);
       eventPublisher.publishMessage(podInfo);
-    }
-
-    if (podScheduledCondition != null) {
-      Timestamp timestamp = HTimestamps.parse(podScheduledCondition.getLastTransitionTime());
-      PodEvent podEvent =
-          PodEvent.newBuilder().setUid(uid).setType(EVENT_TYPE_SCHEDULED).setTimestamp(timestamp).build();
-      try {
-        logger.debug(JsonFormat.printer().usingTypeRegistry(typeRegistry).print(podEvent));
-      } catch (InvalidProtocolBufferException e) {
-        logger.error(e.getMessage());
-      }
+      PodEvent podEvent = PodEvent.newBuilder()
+                              .setUid(uid)
+                              .setType(EVENT_TYPE_SCHEDULED)
+                              .setTimestamp(HTimestamps.parse(podScheduledCondition.getLastTransitionTime()))
+                              .build();
+      logMessage(podEvent);
       eventPublisher.publishMessage(podEvent);
+      publishedPods.add(uid);
     }
 
-    if (isPodDeleted) {
+    if (isPodDeleted(pod)) {
+      String deletionTimestamp = pod.getMetadata().getDeletionTimestamp();
       Timestamp timestamp = HTimestamps.parse(deletionTimestamp);
       PodEvent podEvent = PodEvent.newBuilder().setUid(uid).setType(EVENT_TYPE_DELETED).setTimestamp(timestamp).build();
-      try {
-        logger.debug(JsonFormat.printer().usingTypeRegistry(typeRegistry).print(podEvent));
-      } catch (InvalidProtocolBufferException e) {
-        logger.error(e.getMessage());
-      }
+      logMessage(podEvent);
       eventPublisher.publishMessage(podEvent);
+      publishedPods.remove(uid);
     }
+  }
+
+  private boolean isPodDeleted(Pod pod) {
+    return pod.getMetadata().getDeletionTimestamp() != null && pod.getMetadata().getDeletionGracePeriodSeconds() == 0L;
   }
 
   @Override
@@ -146,7 +136,7 @@ public class PodWatcher implements Watcher<Pod> {
           }
           String memLimitFormat = resourceLimitsMap.get("memory").getFormat();
           if (!StringUtils.isBlank(memLimitFormat)) {
-            memLimitBuilder.setAmount(memLimitFormat);
+            memLimitBuilder.setFormat(memLimitFormat);
           }
         }
         resourceBuilder.putLimits("cpu", cpuLimitBuilder.build()).putLimits("memory", memLimitBuilder.build());
@@ -161,7 +151,7 @@ public class PodWatcher implements Watcher<Pod> {
           }
           String cpuRequestFormat = resourceRequestsMap.get("cpu").getFormat();
           if (!StringUtils.isBlank(cpuRequestFormat)) {
-            cpuRequestBuilder.setFormat(cpuRequestAmount);
+            cpuRequestBuilder.setFormat(cpuRequestFormat);
           }
         }
 
@@ -189,17 +179,15 @@ public class PodWatcher implements Watcher<Pod> {
     return containerList;
   }
 
-  private List<Owner> getAllOwners(List<io.fabric8.kubernetes.api.model.OwnerReference> k8sOwnerReferenceList) {
-    List<Owner> ownerList = new ArrayList<>();
-    for (io.fabric8.kubernetes.api.model.OwnerReference ownerReference : k8sOwnerReferenceList) {
-      ownerList.add(Owner.newBuilder()
-                        .setUid(ownerReference.getUid())
-                        .setName(ownerReference.getName())
-                        .setKind(ownerReference.getKind())
-                        .build());
-    }
-
-    return ownerList;
+  private Set<Owner> getAllOwners(List<OwnerReference> k8sOwnerReferences) {
+    return k8sOwnerReferences.stream()
+        .map(ownerReference
+            -> Owner.newBuilder()
+                   .setUid(ownerReference.getUid())
+                   .setName(ownerReference.getName())
+                   .setKind(ownerReference.getKind())
+                   .build())
+        .collect(Collectors.toSet());
   }
 
   /**
@@ -207,13 +195,21 @@ public class PodWatcher implements Watcher<Pod> {
    * A pod occupies resource when type=PodScheduled and status=True.
    */
   private PodCondition getPodScheduledCondition(Pod pod) {
-    PodCondition podScheduledCondition = null;
-    List<PodCondition> conditions = pod.getStatus().getConditions();
-    for (PodCondition c : conditions) {
-      if ("PodScheduled".equals(c.getType()) && "True".equals(c.getStatus())) {
-        podScheduledCondition = c;
+    return pod.getStatus()
+        .getConditions()
+        .stream()
+        .filter(c -> "PodScheduled".equals(c.getType()) && "True".equals(c.getStatus()))
+        .findFirst()
+        .orElse(null);
+  }
+
+  private static void logMessage(Message message) {
+    if (logger.isDebugEnabled()) {
+      try {
+        logger.debug(JsonFormat.printer().usingTypeRegistry(TYPE_REGISTRY).print(message));
+      } catch (InvalidProtocolBufferException e) {
+        logger.error(e.getMessage());
       }
     }
-    return podScheduledCondition;
   }
 }
