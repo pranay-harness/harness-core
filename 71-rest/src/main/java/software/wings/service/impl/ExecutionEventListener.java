@@ -127,7 +127,7 @@ public class ExecutionEventListener extends QueueListener<ExecutionEvent> {
         return;
       }
 
-      try (ExecutionLogContext ctx = new ExecutionLogContext(workflowExecution.getUuid())) {
+      try (WorkflowExecutionLogContext ctx = new WorkflowExecutionLogContext(workflowExecution.getUuid())) {
         logger.info("Starting Queued execution..");
 
         boolean started = stateMachineExecutor.startQueuedExecution(message.getAppId(), workflowExecution.getUuid());
