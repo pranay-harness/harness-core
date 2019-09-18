@@ -1,5 +1,7 @@
 package io.harness.iterator;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.cronutils.model.Cron;
 import com.cronutils.model.CronType;
 import com.cronutils.model.definition.CronDefinitionBuilder;
@@ -19,10 +21,13 @@ public interface PersistentCronIterable extends PersistentIrregularIterable {
   CronParser parser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.QUARTZ));
 
   default boolean expandNextIterations(boolean skipMissing, long throttled, String cronExpression, List<Long> times) {
-    // Take this item now, before we cleanup the list and potentially make it empty
-    ZonedDateTime time = Instant.ofEpochMilli(times.get(times.size() - 1)).atZone(ZoneOffset.UTC);
-
     final ZonedDateTime now = ZonedDateTime.now();
+
+    // Take this item here, before we cleanup the list and potentially make it empty. We would like to align the items
+    // based on the last previous one, instead of now, if they depend on each other.
+    ZonedDateTime time =
+        isNotEmpty(times) ? Instant.ofEpochMilli(times.get(times.size() - 1)).atZone(ZoneOffset.UTC) : now;
+
     final long epochMilli = now.toInstant().toEpochMilli();
 
     if (skipMissing) {

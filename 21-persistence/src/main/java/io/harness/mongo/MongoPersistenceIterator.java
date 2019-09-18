@@ -13,7 +13,6 @@ import static java.time.Duration.ofSeconds;
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistentIrregularIterable;
 import io.harness.iterator.PersistentIterable;
@@ -172,8 +171,6 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
   }
 
   public T next(long base, long throttled) {
-    final DBCollection collection = persistence.getCollection(clazz);
-
     final long now = currentTimeMillis();
 
     final Query<T> query = persistence.createQuery(clazz).order(Sort.ascending(fieldName));
