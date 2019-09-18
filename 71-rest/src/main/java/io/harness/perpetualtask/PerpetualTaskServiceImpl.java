@@ -6,6 +6,8 @@ import com.google.protobuf.Any;
 import com.google.protobuf.Message;
 import com.google.protobuf.util.Durations;
 
+import io.grpc.Context;
+import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordDao;
@@ -61,7 +63,9 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
 
   @Override
   public List<String> listAssignedTaskIds(String delegateId) {
-    return perpetualTaskRecordDao.listAssignedTaskIds(delegateId);
+    String accountId = DelegateAuthServerInterceptor.ACCOUNT_ID_CTX_KEY.get(Context.current());
+    logger.debug("Account id: {}", accountId);
+    return perpetualTaskRecordDao.listAssignedTaskIds(delegateId, accountId);
   }
 
   @Override
