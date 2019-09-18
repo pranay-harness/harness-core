@@ -1,9 +1,6 @@
 package io.harness.maintenance;
 
-import java.io.Closeable;
-import java.io.IOException;
-
-public class MaintenanceGuard implements Closeable {
+public class MaintenanceGuard implements AutoCloseable {
   private boolean old;
   public MaintenanceGuard(boolean maintenance) {
     old = MaintenanceController.isMaintenance();
@@ -11,7 +8,7 @@ public class MaintenanceGuard implements Closeable {
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() {
     MaintenanceController.forceMaintenance(old);
   }
 }

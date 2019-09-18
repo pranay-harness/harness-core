@@ -2,14 +2,8 @@ package software.wings.security;
 
 import software.wings.beans.User;
 
-import java.io.Closeable;
-import java.io.IOException;
-
-/**
- * Created by anubhaw on 4/20/16.
- */
 public class UserThreadLocal {
-  public static class Guard implements Closeable {
+  public static class Guard implements AutoCloseable {
     private User old;
     Guard(User user) {
       old = get();
@@ -17,7 +11,7 @@ public class UserThreadLocal {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
       set(old);
     }
   }

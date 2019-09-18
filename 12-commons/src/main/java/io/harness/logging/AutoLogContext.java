@@ -14,7 +14,7 @@ import java.util.Map;
 public class AutoLogContext implements AutoCloseable {
   private List<MDCCloseable> handles;
 
-  protected AutoLogContext(Map<String, String> values) {
+  public AutoLogContext(Map<String, String> values) {
     for (Map.Entry<String, String> entry : values.entrySet()) {
       addKeyValue(entry.getKey(), entry.getValue());
     }

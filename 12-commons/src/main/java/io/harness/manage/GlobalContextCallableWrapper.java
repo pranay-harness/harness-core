@@ -5,16 +5,18 @@ import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import lombok.Builder;
 import lombok.Value;
 
+import java.util.concurrent.Callable;
+
 @Value
 @Builder
-public class GlobalContextTaskWrapper implements Runnable {
-  private Runnable task;
+public class GlobalContextCallableWrapper<T> implements Callable<T> {
+  private Callable<T> task;
   private GlobalContext context;
 
   @Override
-  public void run() {
+  public T call() throws Exception {
     try (GlobalContextGuard guard = new GlobalContextGuard(context)) {
-      task.run();
+      return task.call();
     }
   }
 }

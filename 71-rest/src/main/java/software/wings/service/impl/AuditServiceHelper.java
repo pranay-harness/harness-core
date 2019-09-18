@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.context.GlobalContext;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.globalcontex.EntityOperationIdentifier;
 import io.harness.manage.GlobalContextManager;
@@ -59,15 +58,7 @@ public class AuditServiceHelper {
   }
 
   public void addEntityOperationIdentifierDataToAuditContext(EntityOperationIdentifier entityOperationIdentifier) {
-    GlobalContext globalContext = GlobalContextManager.getGlobalContext();
-    if (globalContext == null) {
-      logger.warn("GlobalContext Was found Null in addEntityOperationIdentifierDataToAuditContext(): "
-          + entityOperationIdentifier.toString());
-      return;
-    }
-
-    AuditGlobalContextData auditGlobalContextData =
-        (AuditGlobalContextData) globalContext.get(AuditGlobalContextData.AUDIT_ID);
+    AuditGlobalContextData auditGlobalContextData = GlobalContextManager.get(AuditGlobalContextData.AUDIT_ID);
     if (auditGlobalContextData == null) {
       logger.warn("auditGlobalContextData Was found Null in addEntityOperationIdentifierDataToAuditContext(): "
           + entityOperationIdentifier.toString());
