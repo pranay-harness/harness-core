@@ -1410,7 +1410,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   @Override
   public String queueTask(DelegateTask task) {
-    return saveDelegateTask(task, true).getUuid();
+    DelegateTask savedTask = saveDelegateTask(task, true);
+    broadcastHelper.broadcastNewDelegateTaskAsync(savedTask);
+
+    return savedTask.getUuid();
   }
 
   @Override
@@ -1464,10 +1467,15 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     task.setAsync(async);
     task.setVersion(getVersion());
     // For SYNC task, we per form broadcast immediately, so set count to 1.
-    task.setBroadcastCount(async ? 0 : 1);
+    // task.setBroadcastCount(async ? 0 : 1);
     task.setLastBroadcastAt(clock.millis());
     generateCapabilitiesForTaskIfFeatureEnabled(task);
-    task.setNextBroadast(System.currentTimeMillis());
+
+    // Ensure that broadcast happens atleast 5 seconds from current time for async tasks
+    if (async) {
+      task.setNextBroadast(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(5));
+    }
+
     String id = wingsPersistence.save(task);
     task.setUuid(id);
     return task;
