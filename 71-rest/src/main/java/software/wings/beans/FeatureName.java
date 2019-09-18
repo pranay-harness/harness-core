@@ -64,7 +64,8 @@ public enum FeatureName {
   SLACK_APPROVALS,
   SPLUNK_24_7_CV_TASK,
   SEARCH(Scope.GLOBAL),
-  GRAPHQL_STRESS_TESTING;
+  GRAPHQL_STRESS_TESTING,
+  PCF_MANIFEST_REDESIGN;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;
