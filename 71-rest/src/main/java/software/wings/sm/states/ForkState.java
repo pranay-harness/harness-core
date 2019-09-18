@@ -12,7 +12,6 @@ import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.ExecutionDataValue;
 import software.wings.api.ForkElement;
-import software.wings.common.Constants;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -120,7 +119,7 @@ public class ForkState extends State {
   @Override
   @SchemaIgnore
   public Integer getTimeoutMillis() {
-    return Constants.DEFAULT_PARENT_STATE_TIMEOUT_MILLIS;
+    return INFINITE_TIMEOUT;
   }
 
   /**

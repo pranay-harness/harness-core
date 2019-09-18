@@ -1522,7 +1522,7 @@
                         <dependency>
                             <groupId>com.github.sevntu-checkstyle</groupId>
                             <artifactId>sevntu-checkstyle-sonar-plugin</artifactId>
-                            <version>1.32.0</version>
+                            <version>1.35.0</version>
                         </dependency>
                         <dependency>
                             <groupId>com.puppycrawl.tools</groupId>
@@ -1711,6 +1711,11 @@
                     <groupId>com.github.chrisdchristo</groupId>
                     <artifactId>capsule-maven-plugin</artifactId>
                     <version>1.5.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.sonarsource.scanner.maven</groupId>
+                    <artifactId>sonar-maven-plugin</artifactId>
+                    <version>3.6.1.1688</version>
                 </plugin>
             </plugins>
         </pluginManagement>

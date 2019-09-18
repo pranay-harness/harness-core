@@ -297,13 +297,17 @@ public class StateMachineExecutor implements StateInspectionListener {
     }
 
     Integer timeout = state.getTimeoutMillis();
-    if (timeout == null) {
-      timeout = DEFAULT_STATE_TIMEOUT_MILLIS;
+    if (timeout == State.INFINITE_TIMEOUT) {
+      stateExecutionInstance.setExpiryTs(Long.MAX_VALUE);
+    } else {
+      if (timeout == State.UNDEFINED_TIMEOUT) {
+        timeout = DEFAULT_STATE_TIMEOUT_MILLIS;
+      }
+      if (state.getWaitInterval() != null) {
+        timeout += state.getWaitInterval() * 1000;
+      }
+      stateExecutionInstance.setExpiryTs(System.currentTimeMillis() + timeout);
     }
-    if (state.getWaitInterval() != null) {
-      timeout += state.getWaitInterval() * 1000;
-    }
-    stateExecutionInstance.setExpiryTs(System.currentTimeMillis() + timeout);
     wingsPersistence.save(stateExecutionInstance);
     return stateExecutionInstance;
   }

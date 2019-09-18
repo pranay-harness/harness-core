@@ -10,7 +10,6 @@ import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.NameValuePair;
-import software.wings.common.Constants;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -121,7 +120,7 @@ public class SubWorkflowState extends State {
   @Override
   @SchemaIgnore
   public Integer getTimeoutMillis() {
-    return Constants.DEFAULT_PARENT_STATE_TIMEOUT_MILLIS;
+    return INFINITE_TIMEOUT;
   }
 
   public String getSubWorkflowId() {
