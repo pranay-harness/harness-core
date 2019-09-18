@@ -5,6 +5,7 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
+import static junit.framework.TestCase.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -56,6 +57,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
@@ -72,6 +74,7 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
@@ -147,6 +150,7 @@ public class PipelineServiceTest extends WingsBaseTest {
 
     when(wingsPersistence.createQuery(Pipeline.class)).thenReturn(pipelineQuery);
     when(pipelineQuery.filter(any(), any())).thenReturn(pipelineQuery);
+    when(pipelineQuery.project(anyString(), anyBoolean())).thenReturn(pipelineQuery);
     when(wingsPersistence.createUpdateOperations(Pipeline.class)).thenReturn(updateOperations);
     when(appService.get(APP_ID)).thenReturn(anApplication().uuid(APP_ID).name(APP_NAME).build());
     when(updateOperations.set(any(), any())).thenReturn(updateOperations);
@@ -1127,5 +1131,51 @@ public class PipelineServiceTest extends WingsBaseTest {
                                                .build()))
                                        .build()))
                         .build());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCreatePipelineWithSameName() {
+    try {
+      when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
+          .thenReturn(new MockChecker(true, ActionType.CREATE_PIPELINE));
+      when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
+          .thenReturn(aWorkflow().orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build());
+      when(workflowService.stencilMap(any())).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
+
+      Pipeline pipeline =
+          pipelineService.save(Pipeline.builder().name("pipeline").appId(APP_ID).uuid(PIPELINE_ID).build());
+      assertThat(pipeline).isNotNull().hasFieldOrProperty("uuid");
+      when(pipelineQuery.project(anyString(), anyBoolean()).getKey())
+          .thenReturn(new Key<>(Pipeline.class, "pipelines", PIPELINE_ID));
+      pipeline.setUuid(null);
+      pipelineService.save(Pipeline.builder().name("pipeline").appId(APP_ID).uuid(PIPELINE_ID).build());
+      fail("Expected an InvalidRequestException to be thrown");
+    } catch (InvalidRequestException exception) {
+      assertThat(exception.getParams().get("message")).isEqualTo("Duplicate name pipeline");
+    }
+  }
+  @Test
+  @Category(UnitTests.class)
+  public void testClonePipelineWithSameName() {
+    try {
+      when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
+          .thenReturn(new MockChecker(true, ActionType.CREATE_PIPELINE));
+      when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
+          .thenReturn(aWorkflow().orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build());
+      when(workflowService.stencilMap(any())).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
+
+      Pipeline pipeline =
+          pipelineService.save(Pipeline.builder().name("pipeline").appId(APP_ID).uuid(PIPELINE_ID).build());
+      assertThat(pipeline).isNotNull().hasFieldOrProperty("uuid");
+
+      when(pipelineQuery.project(anyString(), anyBoolean()).getKey())
+          .thenReturn(new Key<>(Pipeline.class, "pipelines", PIPELINE_ID));
+      pipelineService.clonePipeline(
+          pipeline, Pipeline.builder().name("pipeline").appId(APP_ID).uuid(PIPELINE_ID).build());
+      fail("Expected an InvalidRequestException to be thrown");
+    } catch (InvalidRequestException exception) {
+      assertThat(exception.getParams().get("message")).isEqualTo("Duplicate name pipeline");
+    }
   }
 }

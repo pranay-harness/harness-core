@@ -523,7 +523,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldTriggerWorkflow() throws InterruptedException {
     String appId = app.getUuid();
-    triggerWorkflow(appId, env);
+    triggerWorkflow(appId, env, "workflow1");
   }
 
   /**
@@ -537,7 +537,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldTriggerWorkflowWithRelease() throws InterruptedException {
     String appId = app.getUuid();
-    Workflow workflow = createExecutableWorkflow(appId, env);
+    Workflow workflow = createExecutableWorkflow(appId, env, "workflow1");
     WorkflowExecution workflowExecution = triggerWorkflow(workflow, env);
     assertThat(workflowExecution).isNotNull().hasFieldOrPropertyWithValue("releaseNo", "1");
 
@@ -584,7 +584,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   public void shouldGetNodeDetails() throws InterruptedException {
     String appId = app.getUuid();
 
-    final WorkflowExecution triggerWorkflow = triggerWorkflow(appId, env);
+    final WorkflowExecution triggerWorkflow = triggerWorkflow(appId, env, "workflow1");
     WorkflowExecution execution =
         workflowExecutionService.getExecutionDetails(appId, triggerWorkflow.getUuid(), true, emptySet());
     GraphNode node0 = execution.getExecutionNode();
@@ -604,7 +604,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldUpdateFailedCount() throws InterruptedException {
     String appId = app.getUuid();
-    triggerWorkflow(appId, env);
+    triggerWorkflow(appId, env, "workflow1");
     WorkflowExecution workflowExecution =
         wingsPersistence.createQuery(WorkflowExecution.class).filter(WorkflowExecutionKeys.appId, appId).get();
     workflowExecutionService.incrementFailed(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
@@ -622,8 +622,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @return the string
    * @throws InterruptedException the interrupted exception
    */
-  public WorkflowExecution triggerWorkflow(String appId, Environment env) throws InterruptedException {
-    Workflow workflow = createExecutableWorkflow(appId, env);
+  public WorkflowExecution triggerWorkflow(String appId, Environment env, String workflowName)
+      throws InterruptedException {
+    Workflow workflow = createExecutableWorkflow(appId, env, workflowName);
     return triggerWorkflow(workflow, env);
   }
 
@@ -679,7 +680,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     licenseService.updateAccountLicense(account.getUuid(), licenseInfo);
 
     Thread.sleep(10000);
-    Workflow workflow = createExecutableWorkflow(app.getUuid(), env);
+    Workflow workflow = createExecutableWorkflow(app.getUuid(), env, "workflow1");
     String appId = workflow.getAppId();
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setArtifacts(asList(Artifact.Builder.anArtifact().withAppId(APP_ID).withUuid(ARTIFACT_ID).build()));
@@ -742,7 +743,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(workflowExecution).isNotNull();
   }
 
-  private Workflow createExecutableWorkflow(String appId, Environment env) {
+  private Workflow createExecutableWorkflow(String appId, Environment env, String workflowName) {
     Graph graph = aGraph()
                       .addNodes(GraphNode.builder()
                                     .id("n1")
@@ -767,7 +768,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         aWorkflow()
             .envId(env.getUuid())
             .appId(appId)
-            .name("workflow1")
+            .name(workflowName)
             .description("Sample Workflow")
             .orchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
             .workflowType(WorkflowType.ORCHESTRATION)
@@ -788,10 +789,10 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   public void shouldListWorkflow() throws InterruptedException {
     String appId = app.getUuid();
 
-    triggerWorkflow(appId, env);
+    triggerWorkflow(appId, env, "workflow1");
 
     // 2nd workflow
-    createExecutableWorkflow(appId, env);
+    createExecutableWorkflow(appId, env, "workflow2");
     PageRequest<Workflow> pageRequest = aPageRequest().addFilter(Workflow.APP_ID_KEY, EQ, appId).build();
     PageResponse<Workflow> res = workflowService.listWorkflows(pageRequest, null, false, null);
 
@@ -1882,7 +1883,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldObtainNoLastGoodDeployedArtifacts() {
     String appId = app.getUuid();
-    Workflow workflow = createExecutableWorkflow(appId, env);
+    Workflow workflow = createExecutableWorkflow(appId, env, "workflow1");
     List<Artifact> artifacts =
         workflowExecutionService.obtainLastGoodDeployedArtifacts(workflow.getAppId(), workflow.getUuid());
     assertThat(artifacts).isEmpty();
@@ -1894,7 +1895,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Ignore("this test is intermittent because of issue in triggerWorkflow")
   public void shouldObtainLastGoodDeployedArtifacts() throws InterruptedException {
     String appId = app.getUuid();
-    Workflow workflow = createExecutableWorkflow(appId, env);
+    Workflow workflow = createExecutableWorkflow(appId, env, "workflow1");
     WorkflowExecution workflowExecution = triggerWorkflow(workflow, env);
     assertThat(workflowExecution).isNotNull().hasFieldOrPropertyWithValue("releaseNo", "1");
     List<Artifact> artifacts =
@@ -1954,7 +1955,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldListWaitingOnDeployments() {
     String appId = app.getUuid();
-    Workflow workflow = createExecutableWorkflow(appId, env);
+    Workflow workflow = createExecutableWorkflow(appId, env, "workflow1");
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setArtifacts(asList(Artifact.Builder.anArtifact().withAppId(APP_ID).withUuid(ARTIFACT_ID).build()));
 
@@ -1978,7 +1979,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldFetchWorkflowExecutionStartTs() throws Exception {
     String appId = app.getUuid();
-    Workflow workflow = createExecutableWorkflow(appId, env);
+    Workflow workflow = createExecutableWorkflow(appId, env, "workflow1");
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setArtifacts(asList(Artifact.Builder.anArtifact().withAppId(APP_ID).withUuid(ARTIFACT_ID).build()));
 

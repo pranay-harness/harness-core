@@ -70,11 +70,14 @@ public class ConnectionTest extends GraphQLTest {
     final Application application =
         applicationGenerator.ensureApplication(seed, owners, anApplication().name("Application Pipelines").build());
     final String accountId = application.getAccountId();
-    final PipelineBuilder builder = Pipeline.builder().name("pipeline").appId(application.getUuid());
+    final PipelineBuilder builder = Pipeline.builder().appId(application.getUuid());
 
-    final Pipeline pipeline1 = pipelineGenerator.ensurePipeline(seed, owners, builder.uuid(generateUuid()).build());
-    final Pipeline pipeline2 = pipelineGenerator.ensurePipeline(seed, owners, builder.uuid(generateUuid()).build());
-    final Pipeline pipeline3 = pipelineGenerator.ensurePipeline(seed, owners, builder.uuid(generateUuid()).build());
+    final Pipeline pipeline1 =
+        pipelineGenerator.ensurePipeline(seed, owners, builder.uuid(generateUuid()).name("pipeline1").build());
+    final Pipeline pipeline2 =
+        pipelineGenerator.ensurePipeline(seed, owners, builder.uuid(generateUuid()).name("pipeline2").build());
+    final Pipeline pipeline3 =
+        pipelineGenerator.ensurePipeline(seed, owners, builder.uuid(generateUuid()).name("pipeline3").build());
 
     {
       String query = format(pattern, application.getUuid(), 2, 0);

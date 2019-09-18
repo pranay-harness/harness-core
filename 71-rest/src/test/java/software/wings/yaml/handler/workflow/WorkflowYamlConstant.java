@@ -331,7 +331,7 @@ public class WorkflowYamlConstant {
       + "  mandatory: true\n"
       + "  name: ServiceInfra_ECS";
 
-  public static final String BASIC_VALID_YAML_FILE_PATH = "Setup/Applications/APP_NAME/Workflows/basic.yaml";
+  public static final String BASIC_VALID_YAML_FILE_PATH_PREFIX = "Setup/Applications/APP_NAME/Workflows/";
   public static final String BASIC_INVALID_YAML_CONTENT = "envName: env1\nphaseInvalid: phase1\ntype: BASIC";
   public static final String BASIC_INVALID_YAML_FILE_PATH = "Setup/Applications/APP_NAME/WorkflowsInvalid/basic.yaml";
 
