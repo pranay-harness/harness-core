@@ -81,6 +81,8 @@ CV_SERVICE_GUARD_NOTIFICATION:
   email:
     subject: 24x7 Service Guard detected anomalies
     body: ${alert_message}
+  pagerDuty:
+    summary: ${alert_message}
 
 GENERIC_ALERT_NOTIFICATION:
     web: ${alert_message}
