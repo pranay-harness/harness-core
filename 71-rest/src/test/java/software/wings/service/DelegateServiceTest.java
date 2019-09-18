@@ -243,7 +243,8 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegate.setLastHeartBeat(System.currentTimeMillis());
     delegate.setStatus(Status.DISABLED);
     delegateService.update(delegate);
-    assertThat(wingsPersistence.get(Delegate.class, delegate.getUuid())).isEqualTo(delegate);
+    Delegate updatedDelegate = wingsPersistence.get(Delegate.class, delegate.getUuid());
+    assertThat(updatedDelegate).isEqualTo(delegate);
     verify(eventEmitter)
         .send(Channel.DELEGATES,
             anEvent().withOrgId(ACCOUNT_ID).withUuid(delegate.getUuid()).withType(Type.UPDATE).build());
@@ -295,7 +296,8 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldRegisterExistingDelegate() {
     Delegate delegate = delegateService.add(BUILDER.build());
     delegateService.register(delegate);
-    assertThat(delegateService.get(ACCOUNT_ID, delegate.getUuid(), true)).isEqualTo(delegate);
+    Delegate registeredDelegate = delegateService.get(ACCOUNT_ID, delegate.getUuid(), true);
+    assertThat(registeredDelegate).isEqualTo(delegate);
   }
 
   @Test

@@ -74,6 +74,7 @@ import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordHandler;
+import io.harness.perpetualtask.internal.RecentlyDisconnectedDelegateHandler;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
@@ -641,6 +642,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     if (injector.getInstance(FeatureFlagService.class).isGlobalEnabled(PERPETUAL_TASK_SERVICE)) {
       logger.info("Initializing Perpetual Task Assignor..");
       PerpetualTaskRecordHandler.PerpetualTaskRecordExecutor.registerIterators(injector);
+      RecentlyDisconnectedDelegateHandler.RecentlyDisconnectedDelegateExecutor.registerIterators(injector);
     }
   }
 

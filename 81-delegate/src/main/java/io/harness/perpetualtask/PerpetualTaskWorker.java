@@ -64,7 +64,7 @@ public class PerpetualTaskWorker {
 
   void startTask(PerpetualTaskId taskId) {
     try {
-      logger.info("Starting perpetual task {}.", taskId);
+      logger.info("Starting perpetual task with id: {}.", taskId);
       PerpetualTaskContext context = perpetualTaskServiceGrpcClient.getTaskContext(taskId);
       PerpetualTaskSchedule schedule = context.getTaskSchedule();
       long intervalSeconds = Durations.toSeconds(schedule.getInterval());
@@ -83,7 +83,6 @@ public class PerpetualTaskWorker {
     for (PerpetualTaskId taskId : this.getAssignedTaskIds()) {
       // start the task if the task is not currently running
       if (!runningTaskMap.containsKey(taskId)) {
-        logger.info("Starting the task with id: {}", taskId.getId());
         startTask(taskId);
       }
     }

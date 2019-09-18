@@ -2,8 +2,6 @@ package io.harness.perpetualtask.internal;
 
 import com.google.inject.Inject;
 
-import io.grpc.Context;
-import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
@@ -30,6 +28,16 @@ public class PerpetualTaskRecordDao {
     persistence.updateField(PerpetualTaskRecord.class, taskId, PerpetualTaskRecordKeys.delegateId, delegateId);
   }
 
+  public boolean resetDelegateId(String accountId, String delegateId) {
+    Query<PerpetualTaskRecord> query = persistence.createQuery(PerpetualTaskRecord.class)
+                                           .filter(PerpetualTaskRecordKeys.accountId, accountId)
+                                           .filter(PerpetualTaskRecordKeys.delegateId, delegateId);
+    UpdateOperations<PerpetualTaskRecord> updateOperations =
+        persistence.createUpdateOperations(PerpetualTaskRecord.class).set(PerpetualTaskRecordKeys.delegateId, "");
+    UpdateResults update = persistence.update(query, updateOperations);
+    return update.getUpdatedCount() > 0;
+  }
+
   public String save(PerpetualTaskRecord record) {
     return persistence.save(record);
   }
@@ -43,10 +51,7 @@ public class PerpetualTaskRecordDao {
     return persistence.delete(query);
   }
 
-  public List<String> listAssignedTaskIds(String delegateId) {
-    String accountId = DelegateAuthServerInterceptor.ACCOUNT_ID_CTX_KEY.get(Context.current());
-    logger.debug("Account id: {}", accountId);
-
+  public List<String> listAssignedTaskIds(String delegateId, String accountId) {
     List<PerpetualTaskRecord> records = persistence.createQuery(PerpetualTaskRecord.class)
                                             .field(PerpetualTaskRecordKeys.accountId)
                                             .equal(accountId)
