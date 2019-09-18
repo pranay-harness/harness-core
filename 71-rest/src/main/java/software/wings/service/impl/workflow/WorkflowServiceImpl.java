@@ -1029,6 +1029,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       workflow.setUuid(generateUuid());
     }
     final boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, workflow.getAccountId());
+
+    validateWorkflowNameForDuplicates(workflow);
+
     validateOrchestrationWorkflow(workflow);
     final OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     workflow.setDefaultVersion(1);
@@ -1097,6 +1100,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     return newWorkflow;
+  }
+
+  private void validateWorkflowNameForDuplicates(Workflow workflow) {
+    if (wingsPersistence.createQuery(Workflow.class)
+            .filter(WorkflowKeys.appId, workflow.getAppId())
+            .filter(WorkflowKeys.name, workflow.getName())
+            .getKey()
+        != null) {
+      throw new InvalidRequestException("Duplicate name " + workflow.getName(), USER);
+    }
   }
 
   private List<String> setLinkedArtifactStreamIdsAtWorkflowLevel(Workflow workflow) {
@@ -2066,6 +2079,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private Workflow cloneWorkflowInternal(String appId, Workflow originalWorkflow, Workflow workflow) {
     Workflow clonedWorkflow = cloneWorkflow(workflow, originalWorkflow);
+
+    validateWorkflowNameForDuplicates(clonedWorkflow);
 
     clonedWorkflow.setDefaultVersion(1);
     String key = wingsPersistence.save(clonedWorkflow);

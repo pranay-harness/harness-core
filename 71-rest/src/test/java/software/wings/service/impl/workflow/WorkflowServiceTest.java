@@ -154,6 +154,7 @@ import static software.wings.utils.WingsTestConstants.TARGET_SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -432,8 +433,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow2 = workflowService.createWorkflow(constructCanaryWorkflowWithPhase());
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
 
-    Workflow clonedWorkflow =
-        workflowService.cloneWorkflow(APP_ID, workflow2, CloneMetadata.builder().workflow(workflow2).build());
+    Workflow clonedWorkflow = workflowService.cloneWorkflow(APP_ID, workflow2,
+        CloneMetadata.builder().workflow(aWorkflow().name(WORKFLOW_NAME + "-clone").build()).build());
 
     assertClonedWorkflow(workflow2, clonedWorkflow);
   }
@@ -1614,6 +1615,16 @@ public class WorkflowServiceTest extends WingsBaseTest {
     return workflow2;
   }
 
+  public Workflow createCanaryWorkflowWithName(String workflowName) {
+    Workflow workflow = constructCanaryWorkflow();
+    workflow.setName(workflowName);
+
+    workflow = workflowService.createWorkflow(workflow);
+    assertThat(workflow).isNotNull().hasFieldOrProperty("uuid");
+    assertOrchestrationWorkflow((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow());
+    return workflow;
+  }
+
   public Workflow createMultiServiceWorkflow() {
     Workflow workflow2 = workflowService.createWorkflow(constructMultiServiceWorkflow());
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
@@ -2075,7 +2086,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testValidationFailuresForUpdateFailureStrategies() {
     try {
-      Workflow workflow1 = createCanaryWorkflow();
+      Workflow workflow1 = createCanaryWorkflowWithName(WORKFLOW_NAME + "-1");
 
       List<FailureStrategy> failureStrategies = newArrayList(FailureStrategy.builder().build());
       List<FailureStrategy> updated =
@@ -2086,7 +2097,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     }
 
     try {
-      Workflow workflow1 = createCanaryWorkflow();
+      Workflow workflow1 = createCanaryWorkflowWithName(WORKFLOW_NAME + "-2");
 
       List<FailureStrategy> failureStrategies =
           newArrayList(FailureStrategy.builder()
@@ -2101,7 +2112,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     }
 
     try {
-      Workflow workflow1 = createCanaryWorkflow();
+      Workflow workflow1 = createCanaryWorkflowWithName(WORKFLOW_NAME + "-3");
 
       List<FailureStrategy> failureStrategies =
           newArrayList(FailureStrategy.builder()
@@ -3041,6 +3052,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     // Create a workflow with a specific Jenkins Id
     phaseStep = createPhaseStep(uuid);
     workflow = constructWorkflowWithParam(phaseStep);
+    workflow.setName(WORKFLOW_NAME + "1");
     workflowService.createWorkflow(workflow);
     assertThat(workflowService.settingsServiceDeleting(settingAttribute).message()).isNotNull();
   }
@@ -3487,5 +3499,34 @@ public class WorkflowServiceTest extends WingsBaseTest {
             .build();
 
     assertThat(workflowCategorySteps.getSteps()).isEqualTo(stepMetaMap);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCloneWorkflowWithSameName() {
+    try {
+      Workflow workflow = workflowService.createWorkflow(constructCanaryWorkflowWithPhase());
+      assertThat(workflow).isNotNull().hasFieldOrProperty("uuid");
+
+      workflowService.cloneWorkflow(
+          APP_ID, workflow, CloneMetadata.builder().workflow(aWorkflow().name(WORKFLOW_NAME).build()).build());
+      fail("Expected an InvalidRequestException to be thrown");
+    } catch (InvalidRequestException exception) {
+      assertThat(exception.getParams().get("message")).isEqualTo("Duplicate name WORKFLOW_NAME");
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCreateWorkflowWithSameName() {
+    try {
+      Workflow workflow = workflowService.createWorkflow(constructCanaryWorkflowWithPhase());
+      assertThat(workflow).isNotNull().hasFieldOrProperty("uuid");
+
+      workflowService.createWorkflow(constructCanaryWorkflowWithPhase());
+      fail("Expected an InvalidRequestException to be thrown");
+    } catch (InvalidRequestException exception) {
+      assertThat(exception.getParams().get("message")).isEqualTo("Duplicate name WORKFLOW_NAME");
+    }
   }
 }

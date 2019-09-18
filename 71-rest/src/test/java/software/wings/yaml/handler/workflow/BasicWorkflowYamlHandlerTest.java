@@ -10,7 +10,7 @@ import static software.wings.yaml.handler.workflow.WorkflowYamlConstant.BASIC_IN
 import static software.wings.yaml.handler.workflow.WorkflowYamlConstant.BASIC_VALID_YAML_CONTENT;
 import static software.wings.yaml.handler.workflow.WorkflowYamlConstant.BASIC_VALID_YAML_CONTENT_TEMPLATIZED;
 import static software.wings.yaml.handler.workflow.WorkflowYamlConstant.BASIC_VALID_YAML_CONTENT_WITH_MULTILINE_USER_INPUT;
-import static software.wings.yaml.handler.workflow.WorkflowYamlConstant.BASIC_VALID_YAML_FILE_PATH;
+import static software.wings.yaml.handler.workflow.WorkflowYamlConstant.BASIC_VALID_YAML_FILE_PATH_PREFIX;
 
 import com.google.inject.Inject;
 
@@ -38,15 +38,17 @@ import java.util.Arrays;
  * @author rktummala on 1/9/18
  */
 public class BasicWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
-  private String workflowName = "basic";
-
   @Mock private LimitCheckerFactory limitCheckerFactory;
 
   @InjectMocks @Inject private BasicWorkflowYamlHandler yamlHandler;
 
   @Before
   public void runBeforeTest() {
-    setup(BASIC_VALID_YAML_FILE_PATH, workflowName);
+    setup(BASIC_VALID_YAML_FILE_PATH_PREFIX + "basic1.yaml", "basic1");
+    setup(BASIC_VALID_YAML_FILE_PATH_PREFIX + "basic2.yaml", "basic2");
+    setup(BASIC_VALID_YAML_FILE_PATH_PREFIX + "basic3.yaml", "basic3");
+    setup(BASIC_VALID_YAML_FILE_PATH_PREFIX + "basic4.yaml", "basic4");
+    setup(BASIC_VALID_YAML_FILE_PATH_PREFIX + "basic5.yaml", "basic5");
   }
 
   @Test
@@ -55,8 +57,8 @@ public class BasicWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_WORKFLOW)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_WORKFLOW));
 
-    testCRUD(BASIC_VALID_YAML_CONTENT);
-    testCRUD(BASIC_VALID_YAML_CONTENT_TEMPLATIZED);
+    testCRUD(BASIC_VALID_YAML_CONTENT, "basic1");
+    testCRUD(BASIC_VALID_YAML_CONTENT_TEMPLATIZED, "basic2");
     testCRUDWithYamlWithMultilineUserInput();
   }
 
@@ -64,8 +66,9 @@ public class BasicWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
     String yamlString = BASIC_VALID_YAML_CONTENT_WITH_MULTILINE_USER_INPUT;
 
     for (int count = 0; count < 3; count++) {
+      String workflowName = "basic" + Integer.toString(count + 3);
       ChangeContext<BasicWorkflowYaml> changeContext =
-          getChangeContext(yamlString, BASIC_VALID_YAML_FILE_PATH, yamlHandler);
+          getChangeContext(yamlString, BASIC_VALID_YAML_FILE_PATH_PREFIX + workflowName + ".yaml", yamlHandler);
 
       BasicWorkflowYaml yamlObject = (BasicWorkflowYaml) getYaml(yamlString, BasicWorkflowYaml.class);
       changeContext.setYaml(yamlObject);
@@ -84,9 +87,9 @@ public class BasicWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
     }
   }
 
-  private void testCRUD(String yamlString) throws IOException, HarnessException {
+  private void testCRUD(String yamlString, String workflowName) throws IOException, HarnessException {
     ChangeContext<BasicWorkflowYaml> changeContext =
-        getChangeContext(yamlString, BASIC_VALID_YAML_FILE_PATH, yamlHandler);
+        getChangeContext(yamlString, BASIC_VALID_YAML_FILE_PATH_PREFIX + workflowName + ".yaml", yamlHandler);
 
     BasicWorkflowYaml yamlObject = (BasicWorkflowYaml) getYaml(yamlString, BasicWorkflowYaml.class);
     changeContext.setYaml(yamlObject);
@@ -112,14 +115,14 @@ public class BasicWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
 
     yamlHandler.delete(changeContext);
 
-    Workflow deletedWorkflow = yamlHandler.get(ACCOUNT_ID, BASIC_VALID_YAML_FILE_PATH);
+    Workflow deletedWorkflow = yamlHandler.get(ACCOUNT_ID, BASIC_VALID_YAML_FILE_PATH_PREFIX);
     assertThat(deletedWorkflow).isNull();
   }
 
   @Test
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
-    testFailures(BASIC_VALID_YAML_CONTENT, BASIC_VALID_YAML_FILE_PATH, BASIC_INVALID_YAML_CONTENT,
+    testFailures(BASIC_VALID_YAML_CONTENT, BASIC_VALID_YAML_FILE_PATH_PREFIX + "basic.yaml", BASIC_INVALID_YAML_CONTENT,
         BASIC_INVALID_YAML_FILE_PATH, yamlHandler, BasicWorkflowYaml.class);
   }
 }

@@ -891,7 +891,9 @@ public class PipelineServiceImpl implements PipelineService {
   @Override
   @ValidationGroups(Create.class)
   public Pipeline save(Pipeline pipeline) {
+    validatePipelineNameForDuplicates(pipeline);
     ensurePipelineStageUuidAndParallelIndex(pipeline);
+
     String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
     pipeline.setAccountId(accountId);
     StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
@@ -916,6 +918,16 @@ public class PipelineServiceImpl implements PipelineService {
 
       return pipeline;
     });
+  }
+
+  private void validatePipelineNameForDuplicates(Pipeline pipeline) {
+    if (wingsPersistence.createQuery(Pipeline.class)
+            .filter(PipelineKeys.appId, pipeline.getAppId())
+            .filter(PipelineKeys.name, pipeline.getName())
+            .getKey()
+        != null) {
+      throw new InvalidRequestException("Duplicate name " + pipeline.getName(), USER);
+    }
   }
 
   @Override
