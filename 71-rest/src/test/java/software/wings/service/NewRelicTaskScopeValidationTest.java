@@ -67,7 +67,7 @@ public class NewRelicTaskScopeValidationTest extends CategoryTest {
   public void validationVaultReachable() throws Exception {
     PowerMockito.when(Http.connectableHttpUrl(newRelicUrl)).thenReturn(true);
     PowerMockito.when(Http.connectableHttpUrl(vaultConfig.getVaultUrl())).thenReturn(true);
-    when(vaultRestClient.writeSecret(anyString(), anyString(), anyString())).thenReturn(true);
+    when(vaultRestClient.writeSecret(anyString(), anyString(), anyString(), anyString())).thenReturn(true);
 
     validate(true);
   }

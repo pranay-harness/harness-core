@@ -4,8 +4,10 @@ import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.AZURE_KEY_VAULT_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.CYBERARK_OPERATION_ERROR;
+import static io.harness.eraro.ErrorCode.VAULT_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
@@ -54,8 +56,8 @@ import com.microsoft.azure.keyvault.models.SecretBundle;
 import com.microsoft.azure.keyvault.requests.SetSecretRequest;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.exception.DelegateRetryableException;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.KmsOperationException;
+import io.harness.exception.SecretManagementDelegateException;
 import io.harness.exception.WingsException;
 import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptedRecord;
@@ -65,6 +67,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import retrofit2.Response;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureVaultConfig;
@@ -73,12 +76,20 @@ import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.helpers.ext.cyberark.CyberArkRestClientFactory;
 import software.wings.helpers.ext.vault.VaultRestClientFactory;
+import software.wings.helpers.ext.vault.VaultSysAuthRestClient;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.service.impl.security.cyberark.CyberArkReadResponse;
+import software.wings.service.impl.security.vault.SecretEngineSummary;
+import software.wings.service.impl.security.vault.SysMount;
+import software.wings.service.impl.security.vault.SysMountsResponse;
+import software.wings.service.impl.security.vault.VaultAppRoleLoginRequest;
+import software.wings.service.impl.security.vault.VaultAppRoleLoginResponse;
+import software.wings.service.impl.security.vault.VaultAppRoleLoginResult;
 import software.wings.service.impl.security.vault.VaultSecretMetadata;
 import software.wings.service.impl.security.vault.VaultSecretMetadata.VersionMetadata;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
+import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.IOException;
@@ -92,6 +103,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import javax.crypto.BadPaddingException;
@@ -103,7 +115,6 @@ import javax.crypto.spec.SecretKeySpec;
 @Singleton
 @Slf4j
 public class SecretManagementDelegateServiceImpl implements SecretManagementDelegateService {
-  private static final String REASON_KEY = "reason";
   private static final String KEY_SEPARATOR = "#";
   private static final JsonParser JSON_PARSER = new JsonParser();
 
@@ -215,13 +226,13 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         logger.warn(format("encryption failed. trial num: %d", failedAttempts), e);
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
-            throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER, e)
-                .addParam(REASON_KEY, "encryption failed after " + NUM_OF_RETRIES + " retries");
+            String message = "encryption failed after " + NUM_OF_RETRIES + " retries";
+            throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, e, USER);
           }
           sleep(ofMillis(1000));
         } else {
-          throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, e.getMessage(), USER)
-              .addParam(REASON_KEY, "Failed to encrypt Vault secret " + name);
+          String message = "Failed to encrypt Vault secret " + name;
+          throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, e, USER);
         }
       }
     }
@@ -242,13 +253,13 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         logger.warn(format("decryption failed. trial num: %d", failedAttempts), e);
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
-            throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER, e)
-                .addParam(REASON_KEY, "Decryption failed after " + NUM_OF_RETRIES + " retries");
+            String message = "Decryption failed after " + NUM_OF_RETRIES + " retries";
+            throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, e, USER);
           }
           sleep(ofMillis(1000));
         } else {
-          throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, e.getMessage(), USER)
-              .addParam(REASON_KEY, "Failed to decrypt Vault secret " + data.getName());
+          String message = "Failed to decrypt Vault secret " + data.getName();
+          throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, e, USER);
         }
       }
     }
@@ -259,10 +270,10 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     try {
       String fullPath = getFullPath(vaultConfig.getBasePath(), path);
       return VaultRestClientFactory.create(vaultConfig)
-          .deleteSecret(String.valueOf(vaultConfig.getAuthToken()), fullPath);
+          .deleteSecret(String.valueOf(vaultConfig.getAuthToken()), vaultConfig.getSecretEngineName(), fullPath);
     } catch (IOException e) {
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER, e)
-          .addParam(REASON_KEY, "Deletion of secret failed");
+      String message = "Deletion of Vault secret at " + path + " failed";
+      throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, e, USER);
     }
   }
 
@@ -275,7 +286,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
 
     try {
       VaultSecretMetadata secretMetadata = VaultRestClientFactory.create(vaultConfig)
-                                               .readSecretMetadata(vaultConfig.getAuthToken(), encryptedData.getPath());
+                                               .readSecretMetadata(vaultConfig.getAuthToken(),
+                                                   vaultConfig.getSecretEngineName(), encryptedData.getPath());
       if (secretMetadata != null && isNotEmpty(secretMetadata.getVersions())) {
         for (Entry<Integer, VersionMetadata> entry : secretMetadata.getVersions().entrySet()) {
           int version = entry.getKey();
@@ -308,8 +320,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         }
       }
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER, e)
-          .addParam(REASON_KEY, "Retrieval of vault secret version history failed");
+      String message = "Retrieval of vault secret version history failed";
+      throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, e, USER);
     }
 
     return secretChangeLogs;
@@ -333,11 +345,89 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         failedAttempts++;
         logger.warn(format("renewal failed. trial num: %d", failedAttempts), e);
         if (failedAttempts == NUM_OF_RETRIES) {
-          throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER, e)
-              .addParam(REASON_KEY, "renewal failed after " + NUM_OF_RETRIES + " retries");
+          String message = "renewal failed after " + NUM_OF_RETRIES + " retries";
+          throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, e, USER);
         }
         sleep(ofMillis(1000));
       }
+    }
+  }
+
+  @Override
+  public List<SecretEngineSummary> listSecretEngines(VaultConfig vaultConfig) {
+    List<SecretEngineSummary> secretEngineSummaries = new ArrayList<>();
+    try {
+      String vaultToken = vaultConfig.getAuthToken();
+      if (isEmpty(vaultToken)) {
+        VaultAppRoleLoginResult loginResult = appRoleLogin(vaultConfig);
+        if (loginResult != null) {
+          vaultToken = loginResult.getClientToken();
+          vaultConfig.setAuthToken(vaultToken);
+        }
+      }
+
+      VaultSysAuthRestClient restClient =
+          VaultRestClientFactory.getVaultRetrofit(vaultConfig.getVaultUrl()).create(VaultSysAuthRestClient.class);
+      Response<SysMountsResponse> response = restClient.getAllMounts(vaultConfig.getAuthToken()).execute();
+      if (response.isSuccessful()) {
+        Map<String, SysMount> sysMountMap = response.body().getData();
+        logger.info("Found Vault sys mount points: {}", sysMountMap.keySet());
+
+        for (Entry<String, SysMount> entry : sysMountMap.entrySet()) {
+          String secretEngineName = StringUtils.removeEnd(entry.getKey(), "/");
+          SysMount sysMount = entry.getValue();
+          Integer version = sysMount.getOptions() == null ? null : sysMount.getOptions().getVersion();
+          SecretEngineSummary secretEngineSummary = SecretEngineSummary.builder()
+                                                        .name(secretEngineName)
+                                                        .description(sysMount.getDescription())
+                                                        .type(sysMount.getType())
+                                                        .version(version)
+                                                        .build();
+          secretEngineSummaries.add(secretEngineSummary);
+        }
+      } else {
+        // To be consistent with the old Vault secret management behavior we will take a default secret engine
+        SecretEngineSummary secretEngineSummary = SecretEngineSummary.builder()
+                                                      .name(VaultService.DEFAULT_SECRET_ENGINE_NAME)
+                                                      .type(VaultService.KEY_VALUE_SECRET_ENGINE_TYPE)
+                                                      .version(2)
+                                                      .build();
+        secretEngineSummaries.add(secretEngineSummary);
+      }
+    } catch (IOException e) {
+      String message = "Failed to list secret engines for secret manager " + vaultConfig.getName() + " at "
+          + vaultConfig.getVaultUrl();
+      throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, USER);
+    }
+
+    return secretEngineSummaries;
+  }
+
+  @Override
+  public VaultAppRoleLoginResult appRoleLogin(VaultConfig vaultConfig) {
+    try {
+      VaultSysAuthRestClient restClient =
+          VaultRestClientFactory.getVaultRetrofit(vaultConfig.getVaultUrl()).create(VaultSysAuthRestClient.class);
+
+      VaultAppRoleLoginRequest loginRequest = VaultAppRoleLoginRequest.builder()
+                                                  .roleId(vaultConfig.getAppRoleId())
+                                                  .secretId(vaultConfig.getSecretId())
+                                                  .build();
+      Response<VaultAppRoleLoginResponse> response = restClient.appRoleLogin(loginRequest).execute();
+
+      VaultAppRoleLoginResult result = null;
+      if (response.isSuccessful()) {
+        result = response.body().getAuth();
+      } else {
+        String message = "Failed to perform AppRole based login for secret manager " + vaultConfig.getName() + " at "
+            + vaultConfig.getVaultUrl();
+        throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, USER);
+      }
+      return result;
+    } catch (IOException e) {
+      String message = "Failed to perform AppRole based login for secret manager " + vaultConfig.getName() + " at "
+          + vaultConfig.getVaultUrl();
+      throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, e, USER);
     }
   }
 
@@ -356,13 +446,13 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         logger.warn(format("encryption failed. trial num: %d", failedAttempts), e);
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
-            throw new WingsException(ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR, USER, e)
-                .addParam(REASON_KEY, "encryption failed after " + NUM_OF_RETRIES + " retries");
+            String message = "Encryption failed after " + NUM_OF_RETRIES + " retries";
+            throw new SecretManagementDelegateException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, e, USER);
           }
           sleep(ofMillis(1000));
         } else {
-          throw new WingsException(ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR, USER, e)
-              .addParam(REASON_KEY, "Failed to encrypt secret " + name);
+          String message = "Failed to encrypt secret " + name;
+          throw new SecretManagementDelegateException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, e, USER);
         }
       }
     }
@@ -384,13 +474,13 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         logger.warn(format("decryption failed. trial num: %d", failedAttempts), e);
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
-            throw new WingsException(ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR, USER, e)
-                .addParam(REASON_KEY, "Decryption failed after " + NUM_OF_RETRIES + " retries");
+            String message = "Decryption failed after " + NUM_OF_RETRIES + " retries";
+            throw new SecretManagementDelegateException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, e, USER);
           }
           sleep(ofMillis(1000));
         } else {
-          throw new WingsException(ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR, USER, e)
-              .addParam(REASON_KEY, "Failed to decrypt secret " + data.getName());
+          String message = "Failed to decrypt secret " + data.getName();
+          throw new SecretManagementDelegateException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, e, USER);
         }
       }
     }
@@ -462,20 +552,20 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     // If it's a secret reference, the referred secret has to exist for this reference creation to succeed.
     if (pathReference) {
       if (secretValue == null) {
-        throw new WingsException(ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR, USER)
-            .addParam(REASON_KEY, "Secret name reference '" + savedEncryptedData.getPath() + "' is invalid");
+        String message = "Secret name reference '" + savedEncryptedData.getPath() + "' is invalid";
+        throw new SecretManagementDelegateException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, USER);
       } else {
         // Secret name exist, check to make sure the referenced Key name also exist as part of the secret value JSON.
         if (refKeyName != null) {
           try {
             JsonElement element = JSON_PARSER.parse(secretValue);
             if (!element.getAsJsonObject().has(refKeyName)) {
-              throw new WingsException(ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR, USER)
-                  .addParam(REASON_KEY, "Secret reference key name " + refKeyName + " is invalid");
+              String message = "Secret reference key name " + refKeyName + " is invalid";
+              throw new SecretManagementDelegateException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, USER);
             }
           } catch (JsonParseException e) {
-            throw new WingsException(ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR, USER, e)
-                .addParam(REASON_KEY, "Secret value for " + fullSecretName + " is not a valid JSON document");
+            String message = "Secret value for " + fullSecretName + " is not a valid JSON document";
+            throw new SecretManagementDelegateException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, e, USER);
           }
         }
       }
@@ -661,8 +751,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       // Try decrypting to make sure the 'path' specified is pointing to a valid Vault path.
       char[] referredSecretValue = decryptInternal(encryptedData, vaultConfig);
       if (isEmpty(referredSecretValue)) {
-        throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER)
-            .addParam(REASON_KEY, "Vault path '" + encryptedData.getPath() + "' is not referring to any valid secret.");
+        String message = "Vault path '" + encryptedData.getPath() + "' is not referring to any valid secret.";
+        throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, USER);
       }
 
       encryptedData.setEncryptionKey(keyUrl);
@@ -678,10 +768,12 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     logger.info("Deleting vault secret {} for {} in {} ms.", keyUrl, encryptedData.getUuid(),
         System.currentTimeMillis() - startTime);
     String fullPath = getFullPath(vaultConfig.getBasePath(), keyUrl);
-    VaultRestClientFactory.create(vaultConfig).deleteSecret(String.valueOf(vaultConfig.getAuthToken()), fullPath);
+    VaultRestClientFactory.create(vaultConfig)
+        .deleteSecret(String.valueOf(vaultConfig.getAuthToken()), vaultConfig.getSecretEngineName(), fullPath);
 
     boolean isSuccessful = VaultRestClientFactory.create(vaultConfig)
-                               .writeSecret(String.valueOf(vaultConfig.getAuthToken()), fullPath, value);
+                               .writeSecret(String.valueOf(vaultConfig.getAuthToken()),
+                                   vaultConfig.getSecretEngineName(), fullPath, value);
 
     if (isSuccessful) {
       logger.info("Done saving vault secret {} for {}", keyUrl, encryptedData.getUuid());
@@ -689,9 +781,9 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       encryptedData.setEncryptedValue(encryptedValue);
       return encryptedData;
     } else {
-      String errorMsg = "Request not successful.";
+      String errorMsg = "Encryption request for " + name + " was not successful.";
       logger.error(errorMsg);
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER).addParam(REASON_KEY, errorMsg);
+      throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, errorMsg, USER);
     }
   }
 
@@ -702,7 +794,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     logger.info("Reading secret {} from vault {}", fullPath, vaultConfig.getVaultUrl());
 
     String value =
-        VaultRestClientFactory.create(vaultConfig).readSecret(String.valueOf(vaultConfig.getAuthToken()), fullPath);
+        VaultRestClientFactory.create(vaultConfig)
+            .readSecret(String.valueOf(vaultConfig.getAuthToken()), vaultConfig.getSecretEngineName(), fullPath);
 
     if (isNotEmpty(value)) {
       logger.info("Done reading secret {} from vault {} in {} ms.", fullPath, vaultConfig.getVaultUrl(),
@@ -711,7 +804,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     } else {
       String errorMsg = "Secret key path '" + fullPath + "' is invalid.";
       logger.error(errorMsg);
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER).addParam(REASON_KEY, errorMsg);
+      throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, errorMsg, USER);
     }
   }
 
@@ -729,13 +822,13 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         logger.warn(format("encryption failed. trial num: %d", failedAttempts), e);
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
-            throw new WingsException(AZURE_KEY_VAULT_OPERATION_ERROR, USER, e)
-                .addParam(REASON_KEY, "encryption failed after " + NUM_OF_RETRIES + " retries");
+            String message = "Encryption failed after " + NUM_OF_RETRIES + " retries";
+            throw new SecretManagementDelegateException(AZURE_KEY_VAULT_OPERATION_ERROR, message, e, USER);
           }
           sleep(ofMillis(1000));
         } else {
-          throw new WingsException(AZURE_KEY_VAULT_OPERATION_ERROR, e.getMessage(), USER)
-              .addParam(REASON_KEY, "Failed to encrypt Vault secret " + name);
+          String message = "Failed to encrypt Vault secret " + name;
+          throw new SecretManagementDelegateException(AZURE_KEY_VAULT_OPERATION_ERROR, message, e, USER);
         }
       }
     }
@@ -756,13 +849,13 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         logger.warn(format("decryption failed. trial num: %d", failedAttempts), e);
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
-            throw new WingsException(AZURE_KEY_VAULT_OPERATION_ERROR, USER, e)
-                .addParam(REASON_KEY, "Decryption failed after " + NUM_OF_RETRIES + " retries");
+            String message = "Decryption failed after " + NUM_OF_RETRIES + " retries";
+            throw new SecretManagementDelegateException(AZURE_KEY_VAULT_OPERATION_ERROR, message, e, USER);
           }
           sleep(ofMillis(1000));
         } else {
-          throw new WingsException(AZURE_KEY_VAULT_OPERATION_ERROR, USER, e)
-              .addParam(REASON_KEY, "Failed to decrypt secret " + data.getName());
+          String message = "Failed to decrypt secret " + data.getName();
+          throw new SecretManagementDelegateException(AZURE_KEY_VAULT_OPERATION_ERROR, message, e, USER);
         }
       }
     }
@@ -806,9 +899,9 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     try {
       secretBundle = azureVaultClient.setSecret(setSecretRequest);
     } catch (Exception ex) {
-      logger.info("Failed to save secret in Azure Vault. Secret name: {}, Vault name: {}, accountId: {}",
-          fullSecretName, secretsManagerConfig.getVaultName(), accountId, ex);
-      throw new WingsException(AZURE_KEY_VAULT_OPERATION_ERROR);
+      String message = format("Failed to save secret in Azure Vault. Secret name: %s, Vault name: %s, accountId: %s",
+          fullSecretName, secretsManagerConfig.getVaultName(), accountId);
+      throw new SecretManagementDelegateException(AZURE_KEY_VAULT_OPERATION_ERROR, message, ex, USER);
     }
     encryptedData.setEncryptedValue(secretBundle.id().toCharArray());
     encryptedData.setEncryptionKey(fullSecretName);
@@ -828,9 +921,9 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       logger.info("Done decrypting Azure secret {} in {} ms", secretName, System.currentTimeMillis() - startTime);
       return secret.value().toCharArray();
     } catch (Exception ex) {
-      logger.error("Failed to decrypt secret {} in vault: {} in account {}", secretName, azureConfig.getName(),
-          azureConfig.getAccountId(), ex);
-      throw new WingsException(AZURE_KEY_VAULT_OPERATION_ERROR);
+      String message = format("Failed to decrypt Azure secret %s in vault %s in account %s", secretName,
+          azureConfig.getName(), azureConfig.getAccountId());
+      throw new SecretManagementDelegateException(AZURE_KEY_VAULT_OPERATION_ERROR, message, ex, USER);
     }
   }
 
@@ -858,13 +951,13 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         logger.warn(format("decryption failed. trial num: %d", failedAttempts), e);
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
-            throw new WingsException(ErrorCode.CYBERARK_OPERATION_ERROR, USER, e)
-                .addParam(REASON_KEY, "Decryption failed after " + NUM_OF_RETRIES + " retries");
+            String message = "Decryption failed after " + NUM_OF_RETRIES + " retries";
+            throw new SecretManagementDelegateException(CYBERARK_OPERATION_ERROR, message, e, USER);
           }
           sleep(ofMillis(1000));
         } else {
-          throw new WingsException(CYBERARK_OPERATION_ERROR, e.getMessage(), USER)
-              .addParam(REASON_KEY, "Failed to decrypt CyberArk secret " + data.getName());
+          String message = "Failed to decrypt CyberArk secret " + data.getName();
+          throw new SecretManagementDelegateException(CYBERARK_OPERATION_ERROR, message, e, USER);
         }
       }
     }
@@ -905,7 +998,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     } else {
       String errorMsg = "CyberArk query '" + query + "' is invalid in application '" + appId + "'";
       logger.error(errorMsg);
-      throw new WingsException(CYBERARK_OPERATION_ERROR, USER).addParam(REASON_KEY, errorMsg);
+      throw new SecretManagementDelegateException(CYBERARK_OPERATION_ERROR, errorMsg, USER);
     }
   }
 

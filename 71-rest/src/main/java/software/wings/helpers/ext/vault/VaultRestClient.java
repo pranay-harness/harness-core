@@ -11,13 +11,13 @@ import java.io.IOException;
  * Created by rsingh on 11/3/17.
  */
 public interface VaultRestClient {
-  boolean writeSecret(String authToken, String fullPath, String value) throws IOException;
+  boolean writeSecret(String authToken, String secretEngine, String fullPath, String value) throws IOException;
 
-  boolean deleteSecret(String authToken, String fullPath) throws IOException;
+  boolean deleteSecret(String authToken, String secretEngine, String fullPath) throws IOException;
 
-  String readSecret(String authToken, String fullPath) throws IOException;
+  String readSecret(String authToken, String secretEngine, String fullPath) throws IOException;
 
-  VaultSecretMetadata readSecretMetadata(String authToken, String fullPath) throws IOException;
+  VaultSecretMetadata readSecretMetadata(String authToken, String secretEngine, String fullPath) throws IOException;
 
   boolean renewToken(String authToken) throws IOException;
 }

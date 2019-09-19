@@ -11,8 +11,10 @@ import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.security.vault.SecretEngineSummary;
 import software.wings.service.intfc.security.VaultService;
 
+import java.util.List;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -44,5 +46,15 @@ public class VaultResource {
   public RestResponse<Boolean> deleteVaultConfig(
       @QueryParam("accountId") final String accountId, @QueryParam("vaultConfigId") final String vaultConfigId) {
     return new RestResponse<>(vaultService.deleteVaultConfig(accountId, vaultConfigId));
+  }
+
+  @POST
+  @Path("list-engines")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<SecretEngineSummary>> listSecretEngines(
+      @QueryParam("accountId") final String accountId, VaultConfig vaultConfig) {
+    vaultConfig.setAccountId(accountId);
+    return new RestResponse<>(vaultService.listSecretEngines(vaultConfig));
   }
 }

@@ -588,6 +588,8 @@ import software.wings.service.impl.newrelic.NewRelicMetricData;
 import software.wings.service.impl.newrelic.NewRelicSetupTestNodeData;
 import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
 import software.wings.service.impl.prometheus.PrometheusMetricDataResponse;
+import software.wings.service.impl.security.vault.SecretEngineSummary;
+import software.wings.service.impl.security.vault.VaultAppRoleLoginResult;
 import software.wings.service.impl.servicenow.ServiceNowDelegateServiceImpl;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowMetaDTO;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
@@ -1347,6 +1349,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SplunkDataCollectionInfoV2.class, 7236);
     kryo.register(PcfSetupStateExecutionData.class, 7237);
     kryo.register(AssignmentTaskResponse.class, 7238);
-    kryo.register(SpotInstSetupStateExecutionData.class, 7239);
+    kryo.register(SecretEngineSummary.class, 7239);
+    kryo.register(VaultAppRoleLoginResult.class, 7240);
+    kryo.register(SpotInstSetupStateExecutionData.class, 7241);
   }
 }
