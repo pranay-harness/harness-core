@@ -44,5 +44,5 @@ input WorkflowTagFilter {
 }
 
 enum WorkflowTagType {
-  APPLLICATION
+  APPLICATION
 }
