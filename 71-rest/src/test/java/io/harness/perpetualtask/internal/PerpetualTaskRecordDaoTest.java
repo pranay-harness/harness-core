@@ -1,7 +1,7 @@
 package io.harness.perpetualtask.internal;
 
 import static io.harness.rule.OwnerRule.HANTANG;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
@@ -36,9 +36,9 @@ public class PerpetualTaskRecordDaoTest extends BaseIntegrationTest {
     taskId2 = taskRecordDao.save(taskRecord2);
     taskRecordDao.resetDelegateId(accountId, delegateId1);
     // assert that the task with taskId=taskId1 has been reset
-    assertEquals("", taskRecordDao.getTask(taskId1).getDelegateId());
+    assertThat(taskRecordDao.getTask(taskId1).getDelegateId()).isEqualTo("");
     // assert that the task with taskId=taskId2 remain the same
-    assertEquals(delegateId2, taskRecordDao.getTask(taskId2).getDelegateId());
+    assertThat(taskRecordDao.getTask(taskId2).getDelegateId()).isEqualTo(delegateId2);
   }
 
   @After
