@@ -21,7 +21,6 @@ import static io.harness.spotinst.model.SpotInstConstants.LAUNCH_SPECIFICATION;
 import static io.harness.spotinst.model.SpotInstConstants.LB_TYPE_TG;
 import static io.harness.spotinst.model.SpotInstConstants.LOAD_BALANCERS_CONFIG;
 import static io.harness.spotinst.model.SpotInstConstants.NAME_CONFIG_ELEMENT;
-import static io.harness.spotinst.model.SpotInstConstants.PROD_ELASTI_GROUP_NAME_SUFFIX;
 import static io.harness.spotinst.model.SpotInstConstants.SETUP_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.STAGE_ELASTI_GROUP_NAME_SUFFIX;
 import static io.harness.spotinst.model.SpotInstConstants.UNIT_INSTANCE;
@@ -178,8 +177,7 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
     builder.newElastiGroup(stageElastiGroup);
 
     // Prod ELasti Groups
-    String prodElastiGroupName =
-        format("%s__%s", setupTaskParameters.getElastiGroupNamePrefix(), PROD_ELASTI_GROUP_NAME_SUFFIX);
+    String prodElastiGroupName = setupTaskParameters.getElastiGroupNamePrefix();
     logCallback.saveExecutionLog(format("Querying spot inst for elasti group with name: [%s]", prodElastiGroupName));
     Optional<ElastiGroup> prodOptionalElastiGroup =
         spotInstHelperServiceDelegate.getElastiGroupByName(spotInstToken, spotInstAccountId, prodElastiGroupName);

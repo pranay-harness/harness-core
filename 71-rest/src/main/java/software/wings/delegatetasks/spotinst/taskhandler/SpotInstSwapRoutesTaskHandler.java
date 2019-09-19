@@ -5,7 +5,6 @@ import static io.harness.delegate.command.CommandExecutionResult.CommandExecutio
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
-import static io.harness.spotinst.model.SpotInstConstants.PROD_ELASTI_GROUP_NAME_SUFFIX;
 import static io.harness.spotinst.model.SpotInstConstants.RENAME_NEW_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.RENAME_OLD_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.STAGE_ELASTI_GROUP_NAME_SUFFIX;
@@ -65,8 +64,7 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
       AwsConfig awsConfig, SpotInstSwapRoutesTaskParameters swapRoutesParameters, String workflowExecutionId)
       throws Exception {
     ExecutionLogCallback logCallback = getLogCallBack(swapRoutesParameters, SWAP_ROUTES_COMMAND_UNIT);
-    String prodElastiGroupName =
-        format("%s__%s", swapRoutesParameters.getElastiGroupNamePrefix(), PROD_ELASTI_GROUP_NAME_SUFFIX);
+    String prodElastiGroupName = swapRoutesParameters.getElastiGroupNamePrefix();
     String stageElastiGroupName =
         format("%s__%s", swapRoutesParameters.getElastiGroupNamePrefix(), STAGE_ELASTI_GROUP_NAME_SUFFIX);
     ElastiGroup newElastiGroup = swapRoutesParameters.getNewElastiGroup();
@@ -114,8 +112,7 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
   private SpotInstTaskExecutionResponse executeRollback(String spotInstAccountId, String spotInstToken,
       AwsConfig awsConfig, SpotInstSwapRoutesTaskParameters swapRoutesParameters, String workflowExecutionId)
       throws Exception {
-    String prodElastiGroupName =
-        format("%s__%s", swapRoutesParameters.getElastiGroupNamePrefix(), PROD_ELASTI_GROUP_NAME_SUFFIX);
+    String prodElastiGroupName = swapRoutesParameters.getElastiGroupNamePrefix();
     String stageElastiGroupName =
         format("%s__%s", swapRoutesParameters.getElastiGroupNamePrefix(), STAGE_ELASTI_GROUP_NAME_SUFFIX);
     ElastiGroup newElastiGroup = swapRoutesParameters.getNewElastiGroup();
