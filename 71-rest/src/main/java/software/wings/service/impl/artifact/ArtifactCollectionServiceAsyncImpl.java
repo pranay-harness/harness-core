@@ -55,6 +55,7 @@ import software.wings.service.intfc.SettingsService;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -80,7 +81,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
   // With Labels timeout of 2 minutes.
   private static final long WITH_LABELS_TIMEOUT = TimeUnit.MINUTES.toMillis(2);
 
-  public static final List<String> metadataOnlyStreams =
+  static final List<String> metadataOnlyStreams =
       Collections.unmodifiableList(asList(DOCKER.name(), ECR.name(), GCR.name(), NEXUS.name(), AMI.name(), ACR.name(),
           AMAZON_S3.name(), GCS.name(), SMB.name(), SFTP.name(), CUSTOM.name()));
 
@@ -90,7 +91,25 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
     if (artifactStream == null) {
       throw new InvalidRequestException("Artifact stream was deleted", USER);
     }
+    if (DOCKER.name().equals(artifactStream.getArtifactStreamType())) {
+      List<Map<String, String>> labelsMap =
+          buildSourceService.getLabels(artifactStream, Collections.singletonList(buildDetails.getNumber()));
+      if (isNotEmpty(labelsMap) && isNotEmpty(labelsMap.get(0))) {
+        buildDetails.setLabels(labelsMap.get(0));
+      }
+    }
+    return collectArtifactWithoutLabels(artifactStream, buildDetails);
+  }
 
+  private Artifact collectArtifactWithoutLabels(String artifactStreamId, BuildDetails buildDetails) {
+    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+    if (artifactStream == null) {
+      throw new InvalidRequestException("Artifact stream was deleted", USER);
+    }
+    return collectArtifactWithoutLabels(artifactStream, buildDetails);
+  }
+
+  private Artifact collectArtifactWithoutLabels(ArtifactStream artifactStream, BuildDetails buildDetails) {
     final Artifact savedArtifact =
         artifactService.create(artifactCollectionUtils.getArtifact(artifactStream, buildDetails));
     if (artifactStream.getFailedCronAttempts() != 0) {
@@ -208,7 +227,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
       Optional<BuildDetails> buildDetails =
           builds.stream().filter(build -> buildNumber.equals(build.getNumber())).findFirst();
       if (buildDetails.isPresent()) {
-        return collectArtifact(artifactStream.getUuid(), buildDetails.get());
+        return collectArtifactWithoutLabels(artifactStream.getUuid(), buildDetails.get());
       }
     }
     return null;
