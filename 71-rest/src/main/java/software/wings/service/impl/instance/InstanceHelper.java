@@ -452,7 +452,8 @@ public class InstanceHelper {
     // todo @rk: add the deployment key
     return deploymentSummary.getPcfDeploymentKey() != null || deploymentSummary.getK8sDeploymentKey() != null
         || deploymentSummary.getContainerDeploymentKey() != null || deploymentSummary.getAwsAmiDeploymentKey() != null
-        || deploymentSummary.getAwsCodeDeployDeploymentKey() != null;
+        || deploymentSummary.getAwsCodeDeployDeploymentKey() != null
+        || deploymentSummary.getSpotinstAmiDeploymentKey() != null;
   }
 
   private void processDeploymentSummaries(List<DeploymentSummary> deploymentSummaries, boolean isRollback) {
@@ -474,7 +475,7 @@ public class InstanceHelper {
       InfrastructureMappingType infrastructureMappingType =
           Utils.getEnumFromString(InfrastructureMappingType.class, infraMapping.getInfraMappingType());
       if (isSupported(infrastructureMappingType)) {
-        InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infrastructureMappingType);
+        InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infraMapping);
         instanceHandler.handleNewDeployment(deploymentSummaries, isRollback);
         logger.info("Handled deployment event for executionId [{}], infraMappingId [{}] of appId [{}] successfully",
             workflowExecutionId, infraMappingId, appId);
@@ -494,7 +495,7 @@ public class InstanceHelper {
     InfrastructureMappingType infrastructureMappingType =
         Utils.getEnumFromString(InfrastructureMappingType.class, infraMapping.getInfraMappingType());
     if (isSupported(infrastructureMappingType)) {
-      return Optional.of(instanceHandlerFactory.getInstanceHandler(infrastructureMappingType));
+      return Optional.of(instanceHandlerFactory.getInstanceHandler(infraMapping));
     }
     return Optional.empty();
   }
@@ -512,8 +513,6 @@ public class InstanceHelper {
 
   public boolean isDeployPhaseStep(PhaseStepType phaseStepType) {
     switch (phaseStepType) {
-        //      case PROVISION_NODE:
-        //      case DE_PROVISION_NODE:
       case DEPLOY_SERVICE:
       case CONTAINER_DEPLOY:
       case CONTAINER_SETUP:
@@ -524,6 +523,9 @@ public class InstanceHelper {
       case HELM_DEPLOY:
       case CLUSTER_SETUP:
       case K8S_PHASE_STEP:
+      case SPOTINST_DEPLOY:
+      case SPOTINST_ROLLBACK:
+      case SPOTINST_LISTENER_UPDATE_ROLLBACK:
         return true;
       default:
         return false;
@@ -594,7 +596,7 @@ public class InstanceHelper {
       }
 
       try {
-        InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infraMappingType);
+        InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infraMapping);
         if (instanceHandler == null) {
           logger.warn("Instance handler null for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
           return;

@@ -1,7 +1,10 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 
 import io.harness.beans.EmbeddedUser;
@@ -10,6 +13,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.api.DeploymentInfo;
 import software.wings.api.DeploymentSummary;
 import software.wings.api.PhaseExecutionData;
@@ -23,6 +27,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.Instance.InstanceBuilder;
 import software.wings.beans.infrastructure.instance.InstanceType;
+import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
@@ -39,8 +44,11 @@ import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * @author rktummala on 01/30/18
@@ -273,5 +281,41 @@ public abstract class InstanceHandler {
 
   protected Optional<Instance> getInstanceWithExecutionInfo(Collection<Instance> instances) {
     return instances.stream().filter(instance -> instance.getLastWorkflowExecutionId() != null).findFirst();
+  }
+
+  protected void handleEc2InstanceDelete(Map<String, Instance> instancesInDBMap,
+      Map<String, com.amazonaws.services.ec2.model.Instance> latestEc2InstanceMap) {
+    // Find the instances that are no longer present and to be deleted from db.
+    SetView<String> instancesToBeDeleted = Sets.difference(instancesInDBMap.keySet(), latestEc2InstanceMap.keySet());
+
+    Set<String> instanceIdsToBeDeleted = new HashSet<>();
+    instancesToBeDeleted.forEach(ec2InstanceId -> {
+      Instance instance = instancesInDBMap.get(ec2InstanceId);
+      if (instance != null) {
+        instanceIdsToBeDeleted.add(instance.getUuid());
+      }
+    });
+
+    if (isNotEmpty(instanceIdsToBeDeleted)) {
+      instanceService.delete(instanceIdsToBeDeleted);
+    }
+  }
+
+  /**
+   * @param ec2Instance     Ec2 instance
+   * @param infraMappingId  Infra mapping id
+   * @param instanceBuilder Instance builder
+   * @return privateDnsName private dns name
+   */
+  protected String buildHostInstanceKey(
+      com.amazonaws.services.ec2.model.Instance ec2Instance, String infraMappingId, InstanceBuilder instanceBuilder) {
+    String privateDnsNameWithSuffix = ec2Instance.getPrivateDnsName();
+    String privateDnsName = privateDnsNameWithSuffix == null
+        ? StringUtils.EMPTY
+        : privateDnsNameWithSuffix.substring(0, privateDnsNameWithSuffix.indexOf('.'));
+    HostInstanceKey hostInstanceKey =
+        HostInstanceKey.builder().hostName(privateDnsName).infraMappingId(infraMappingId).build();
+    instanceBuilder.hostInstanceKey(hostInstanceKey);
+    return privateDnsName;
   }
 }

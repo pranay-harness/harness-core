@@ -644,6 +644,7 @@ import software.wings.sm.states.spotinst.SpotInstListenerUpdateStateExecutionDat
 import software.wings.sm.states.spotinst.SpotInstSetupContextElement;
 import software.wings.sm.states.spotinst.SpotInstSetupExecutionSummary;
 import software.wings.sm.states.spotinst.SpotInstSetupStateExecutionData;
+import software.wings.sm.states.spotinst.SpotinstDeployExecutionSummary;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.ContainerFamily;
 import software.wings.utils.FileType;
@@ -1352,5 +1353,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SecretEngineSummary.class, 7239);
     kryo.register(VaultAppRoleLoginResult.class, 7240);
     kryo.register(SpotInstSetupStateExecutionData.class, 7241);
+    kryo.register(SpotinstDeployExecutionSummary.class, 7242);
   }
 }

@@ -116,6 +116,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   @InjectMocks @Inject private ContainerInstanceHandler containerInstanceHandler;
   @InjectMocks @Inject private PcfInstanceHandler pcfInstanceHandler;
   @InjectMocks @Inject private AzureInstanceHandler azureInstanceHandler;
+  @InjectMocks @Inject private SpotinstAmiInstanceHandler spotinstAmiInstanceHandler;
 
   @InjectMocks @Inject private InstanceHelper instanceHelper;
   private WorkflowExecution workflowExecution;
@@ -758,7 +759,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   public void testManualSyncSuccess() throws Exception {
     InstanceHandlerFactory instanceHandlerFactory =
         spy(new InstanceHandlerFactory(containerInstanceHandler, awsInstanceHandler, awsAmiInstanceHandler,
-            awsCodeDeployInstanceHandler, pcfInstanceHandler, azureInstanceHandler));
+            awsCodeDeployInstanceHandler, pcfInstanceHandler, azureInstanceHandler, spotinstAmiInstanceHandler));
     FieldUtils.writeField(instanceHelper, "instanceHandlerFactory", instanceHandlerFactory, true);
 
     doReturn(new InstanceHandler() {
@@ -786,7 +787,7 @@ public class InstanceHelperTest extends WingsBaseTest {
       protected void setDeploymentKey(DeploymentSummary deploymentSummary, DeploymentKey deploymentKey) {}
     })
         .when(instanceHandlerFactory)
-        .getInstanceHandler(any(InfrastructureMappingType.class));
+        .getInstanceHandler(any(InfrastructureMapping.class));
 
     doReturn(PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()
                  .withUuid(INFRA_MAP_ID)
@@ -814,7 +815,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   public void testManualSyncFailure() throws Exception {
     InstanceHandlerFactory instanceHandlerFactory =
         spy(new InstanceHandlerFactory(containerInstanceHandler, awsInstanceHandler, awsAmiInstanceHandler,
-            awsCodeDeployInstanceHandler, pcfInstanceHandler, azureInstanceHandler));
+            awsCodeDeployInstanceHandler, pcfInstanceHandler, azureInstanceHandler, spotinstAmiInstanceHandler));
     FieldUtils.writeField(instanceHelper, "instanceHandlerFactory", instanceHandlerFactory, true);
 
     doReturn(new InstanceHandler() {
@@ -844,7 +845,7 @@ public class InstanceHelperTest extends WingsBaseTest {
       protected void setDeploymentKey(DeploymentSummary deploymentSummary, DeploymentKey deploymentKey) {}
     })
         .when(instanceHandlerFactory)
-        .getInstanceHandler(any(InfrastructureMappingType.class));
+        .getInstanceHandler(any(InfrastructureMapping.class));
 
     doReturn(PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()
                  .withUuid(INFRA_MAP_ID)

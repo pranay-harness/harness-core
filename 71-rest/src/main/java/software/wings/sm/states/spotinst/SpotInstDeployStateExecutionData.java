@@ -74,7 +74,12 @@ public class SpotInstDeployStateExecutionData extends StateExecutionData impleme
   }
 
   @Override
-  public SpotInstSetupExecutionSummary getStepExecutionSummary() {
-    return SpotInstSetupExecutionSummary.builder().build();
+  public SpotinstDeployExecutionSummary getStepExecutionSummary() {
+    return SpotinstDeployExecutionSummary.builder()
+        .oldElastigroupId(oldElastiGroupId)
+        .oldElastigroupName(oldElastiGroupName)
+        .newElastigroupId(newElastiGroupId)
+        .newElastigroupName(newElastiGroupName)
+        .build();
   }
 }

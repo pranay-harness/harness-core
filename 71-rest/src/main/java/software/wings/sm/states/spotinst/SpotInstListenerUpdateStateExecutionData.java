@@ -37,6 +37,11 @@ public class SpotInstListenerUpdateStateExecutionData
   private String commandName;
   private boolean isRollback;
 
+  private String newElastiGroupId;
+  private String newElastiGroupName;
+  private String oldElastiGroupId;
+  private String oldElastiGroupName;
+
   private SpotInstCommandRequest spotinstCommandRequest;
 
   @Override
@@ -119,7 +124,12 @@ public class SpotInstListenerUpdateStateExecutionData
   }
 
   @Override
-  public SpotInstSetupExecutionSummary getStepExecutionSummary() {
-    return SpotInstSetupExecutionSummary.builder().build();
+  public SpotinstDeployExecutionSummary getStepExecutionSummary() {
+    return SpotinstDeployExecutionSummary.builder()
+        .oldElastigroupId(oldElastiGroupId)
+        .oldElastigroupName(oldElastiGroupName)
+        .newElastigroupId(newElastiGroupId)
+        .newElastigroupName(newElastiGroupName)
+        .build();
   }
 }
