@@ -857,7 +857,7 @@ public abstract class AbstractAnalysisState extends State {
   protected void logDataCollectionTriggeredMessage(CVActivityLogService.Logger activityLogger) {
     long dataCollectionStartTime = dataCollectionStartTimestampMillis();
     activityLogger.info("Triggered data collection for " + getTimeDuration()
-            + " minutes, Data will be collected for time range %t to %t waiting for " + DELAY_MINUTES
+            + " minutes, Data will be collected for time range %t to %t. Waiting for " + DELAY_MINUTES
             + " Minutes before starting data collection.",
         dataCollectionStartTime, dataCollectionEndTimestampMillis(dataCollectionStartTime));
   }

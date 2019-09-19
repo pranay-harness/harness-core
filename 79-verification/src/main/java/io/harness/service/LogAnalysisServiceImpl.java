@@ -609,8 +609,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       cvActivityLogService
           .getLogger(mlAnalysisResponse.getCvConfigId(), mlAnalysisResponse.getLogCollectionMinute(),
               mlAnalysisResponse.getStateExecutionId())
-          .warn("Learning engine: " + mlAnalysisResponse.getAnalysisSummaryMessage() + " Minute "
-              + mlAnalysisResponse.getLogCollectionMinute());
+          .warn("Learning engine: " + mlAnalysisResponse.getAnalysisSummaryMessage());
     }
   }
 

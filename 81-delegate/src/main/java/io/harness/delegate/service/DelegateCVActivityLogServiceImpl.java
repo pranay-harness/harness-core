@@ -7,7 +7,7 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.verification.CVActivityLog;
 import software.wings.verification.CVActivityLog.LogLevel;
 
-import java.util.ArrayList;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,7 +26,6 @@ public class DelegateCVActivityLogServiceImpl implements DelegateCVActivityLogSe
     private String cvConfigId;
     private long dataCollectionMinute;
     private String stateExecutionId;
-    private List<CVActivityLog> cvActivityLogs;
     private List<Long> suffixTimestampParams;
     LoggerImpl(String accountId, String cvConfigId, long dataCollectionMinute, String stateExecutionId, String suffix,
         long... suffixTimestampParams) {
@@ -34,7 +33,6 @@ public class DelegateCVActivityLogServiceImpl implements DelegateCVActivityLogSe
       this.dataCollectionMinute = dataCollectionMinute;
       this.accountId = accountId;
       this.stateExecutionId = stateExecutionId;
-      cvActivityLogs = new ArrayList<>();
       this.suffix = suffix;
       this.suffixTimestampParams = Arrays.stream(suffixTimestampParams).boxed().collect(Collectors.toList());
     }
@@ -47,6 +45,7 @@ public class DelegateCVActivityLogServiceImpl implements DelegateCVActivityLogSe
                                       .log("Delegate: " + log + suffix)
                                       .logLevel(logLevel)
                                       .cvConfigId(cvConfigId)
+                                      .createdAt(Instant.now().toEpochMilli())
                                       .stateExecutionId(stateExecutionId)
                                       .dataCollectionMinute(dataCollectionMinute)
                                       .timestampParams(timestampParamList)

@@ -3,6 +3,7 @@ package io.harness.service;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 import static software.wings.common.VerificationConstants.VERIFICATION_TASK_TIMEOUT;
 import static software.wings.service.impl.newrelic.LearningEngineAnalysisTask.TIME_SERIES_ANALYSIS_TASK_TIME_OUT;
@@ -231,10 +232,18 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   private void logActivityOnLETaskPickup(LearningEngineAnalysisTask task) {
     if (task != null && task.getMl_analysis_type() == MLAnalysisType.TIME_SERIES) {
       if (isAnalysisMinuteAbsoluteTimestamp(task.getAnalysis_minute())) {
-        cvActivityLogService.getLogger(task.getCvConfigId(), task.getAnalysis_minute(), task.getState_execution_id())
-            .info("Time series analysis started for time range %t to %t",
-                TimeUnit.MINUTES.toMillis(task.getAnalysis_minute()),
-                TimeUnit.MINUTES.toMillis(task.getAnalysis_minute() + 1));
+        if (task.is24x7Task()) {
+          cvActivityLogService.getLogger(task.getCvConfigId(), task.getAnalysis_minute(), task.getState_execution_id())
+              .info("Time series analysis started for time range %t to %t",
+                  TimeUnit.MINUTES.toMillis(task.getAnalysis_minute() - CRON_POLL_INTERVAL_IN_MINUTES),
+                  TimeUnit.MINUTES.toMillis(task.getAnalysis_minute()));
+        } else {
+          cvActivityLogService.getLogger(task.getCvConfigId(), task.getAnalysis_minute(), task.getState_execution_id())
+              .info("Time series analysis started for time range %t to %t",
+                  TimeUnit.MINUTES.toMillis(task.getAnalysis_minute()),
+                  TimeUnit.MINUTES.toMillis(task.getAnalysis_minute() + 1));
+        }
+
       } else {
         cvActivityLogService.getLogger(task.getCvConfigId(), task.getAnalysis_minute(), task.getState_execution_id())
             .info("Time series analysis started for minute " + task.getAnalysis_minute() + ".");
@@ -303,7 +312,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
             .set(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.SUCCESS);
     wingsPersistence.update(query, updateOperations);
     logActivityOnAnalysisComplete(
-        cvActivityLogService.getLoggerByStateExecutionId(stateExecutionId), type, analysisMinute);
+        cvActivityLogService.getLoggerByStateExecutionId(stateExecutionId), level, type, analysisMinute, false);
   }
 
   @Override
@@ -317,20 +326,29 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     LearningEngineAnalysisTask task = wingsPersistence.get(LearningEngineAnalysisTask.class, taskId);
     logActivityOnAnalysisComplete(
         cvActivityLogService.getLogger(task.getCvConfigId(), task.getAnalysis_minute(), task.getState_execution_id()),
-        task.getMl_analysis_type(), task.getAnalysis_minute());
+        ClusterLevel.valueOf(task.getCluster_level()), task.getMl_analysis_type(), task.getAnalysis_minute(),
+        task.is24x7Task());
     logger.info("Job has been marked as SUCCESS for taskId : {}", taskId);
   }
 
-  private void logActivityOnAnalysisComplete(
-      Logger activityLogger, MLAnalysisType mlAnalysisType, long analysisMinute) {
+  private void logActivityOnAnalysisComplete(Logger activityLogger, ClusterLevel level, MLAnalysisType mlAnalysisType,
+      long analysisMinute, boolean is247Task) {
     String prefix = mlAnalysisType == MLAnalysisType.TIME_SERIES ? "Time series " : "Log ";
-
-    // TODO: clean this up once analysisMinute becomes absolute for everything.
-    if (isAnalysisMinuteAbsoluteTimestamp(analysisMinute)) {
-      activityLogger.info(prefix + "analysis completed for time range %t to %t.",
-          TimeUnit.MINUTES.toMillis(analysisMinute), TimeUnit.MINUTES.toMillis(analysisMinute + 1));
-    } else {
-      activityLogger.info(prefix + "analysis completed for minute " + analysisMinute + ".");
+    if (level == ClusterLevel.HF) {
+      // TODO: clean this up once analysisMinute becomes absolute for everything.
+      if (isAnalysisMinuteAbsoluteTimestamp(analysisMinute)) {
+        // for workflow we do analysis for 1 min
+        if (is247Task) {
+          activityLogger.info(prefix + "analysis completed for time range %t to %t.",
+              TimeUnit.MINUTES.toMillis(analysisMinute - CRON_POLL_INTERVAL_IN_MINUTES),
+              TimeUnit.MINUTES.toMillis(analysisMinute));
+        } else {
+          activityLogger.info(prefix + "analysis completed for time range %t to %t.",
+              TimeUnit.MINUTES.toMillis(analysisMinute), TimeUnit.MINUTES.toMillis(analysisMinute + 1));
+        }
+      } else {
+        activityLogger.info(prefix + "analysis completed for minute " + analysisMinute + ".");
+      }
     }
   }
   @Override
