@@ -14,7 +14,6 @@ import com.google.inject.Singleton;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.AwsAutoScalingGroupDeploymentInfo;
 import software.wings.api.DeploymentInfo;
@@ -33,7 +32,6 @@ import software.wings.beans.infrastructure.instance.Instance.InstanceBuilder;
 import software.wings.beans.infrastructure.instance.info.AutoScalingGroupInstanceInfo;
 import software.wings.beans.infrastructure.instance.info.Ec2InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
-import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.AwsInfrastructureProvider;
@@ -41,7 +39,6 @@ import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
 import software.wings.utils.Validator;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -266,24 +263,6 @@ public class AwsInstanceHandler extends InstanceHandler {
     builder.instanceInfo(instanceInfo);
   }
 
-  /**
-   * @param ec2Instance     Ec2 instance
-   * @param infraMappingId  Infra mapping id
-   * @param instanceBuilder Instance builder
-   * @return privateDnsName private dns name
-   */
-  protected String buildHostInstanceKey(
-      com.amazonaws.services.ec2.model.Instance ec2Instance, String infraMappingId, InstanceBuilder instanceBuilder) {
-    String privateDnsNameWithSuffix = ec2Instance.getPrivateDnsName();
-    String privateDnsName = privateDnsNameWithSuffix == null
-        ? StringUtils.EMPTY
-        : privateDnsNameWithSuffix.substring(0, privateDnsNameWithSuffix.indexOf('.'));
-    HostInstanceKey hostInstanceKey =
-        HostInstanceKey.builder().hostName(privateDnsName).infraMappingId(infraMappingId).build();
-    instanceBuilder.hostInstanceKey(hostInstanceKey);
-    return privateDnsName;
-  }
-
   private void handleEc2InstanceSyncWithAwsInfraMapping(Map<String, Instance> ec2InstanceIdInstanceMap,
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region,
       AwsInfrastructureMapping awsInfrastructureMapping) {
@@ -329,24 +308,6 @@ public class AwsInstanceHandler extends InstanceHandler {
     if (isNotEmpty(instanceIdsToBeDeleted)) {
       logger.info("Total no of Ec2 instances to be deleted for InfraMappingId: {}, AppId: {} : {}",
           ec2instance.getInfraMappingId(), ec2instance.getAppId(), instanceIdsToBeDeleted.size());
-      instanceService.delete(instanceIdsToBeDeleted);
-    }
-  }
-
-  protected void handleEc2InstanceDelete(Map<String, Instance> instancesInDBMap,
-      Map<String, com.amazonaws.services.ec2.model.Instance> latestEc2InstanceMap) {
-    // Find the instances that are no longer present and to be deleted from db.
-    SetView<String> instancesToBeDeleted = Sets.difference(instancesInDBMap.keySet(), latestEc2InstanceMap.keySet());
-
-    Set<String> instanceIdsToBeDeleted = new HashSet<>();
-    instancesToBeDeleted.forEach(ec2InstanceId -> {
-      Instance instance = instancesInDBMap.get(ec2InstanceId);
-      if (instance != null) {
-        instanceIdsToBeDeleted.add(instance.getUuid());
-      }
-    });
-
-    if (isNotEmpty(instanceIdsToBeDeleted)) {
       instanceService.delete(instanceIdsToBeDeleted);
     }
   }

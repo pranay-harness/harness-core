@@ -19,6 +19,7 @@ import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.SpotInstConstants;
 import lombok.Getter;
 import lombok.Setter;
@@ -121,6 +122,8 @@ public class SpotInstListenerUpdateState extends State {
         requestBuilder.spotInstTaskParameters(spotInstTaskParameters).build();
 
     stateExecutionData.setSpotinstCommandRequest(spotInstCommandRequest);
+    setElastigroupFieldsInStateExecutionData(spotInstSetupContextElement, stateExecutionData);
+
     DelegateTask task = spotInstStateHelper.getDelegateTask(app.getAccountId(), app.getUuid(),
         TaskType.SPOTINST_COMMAND_TASK, activity.getUuid(), env.getUuid(), awsAmiInfrastructureMapping.getUuid(),
         new Object[] {spotInstCommandRequest},
@@ -161,6 +164,20 @@ public class SpotInstListenerUpdateState extends State {
         .stateExecutionData(stateExecutionData)
         .errorMessage(executionResponse.getErrorMessage())
         .build();
+  }
+
+  private void setElastigroupFieldsInStateExecutionData(
+      SpotInstSetupContextElement spotinstSetupContextElement, SpotInstListenerUpdateStateExecutionData data) {
+    ElastiGroup oldElastiGroupOriginalConfig = spotinstSetupContextElement.getOldElastiGroupOriginalConfig();
+    if (oldElastiGroupOriginalConfig != null) {
+      data.setOldElastiGroupId(oldElastiGroupOriginalConfig.getId());
+      data.setOldElastiGroupName(oldElastiGroupOriginalConfig.getName());
+    }
+    ElastiGroup newElastiGroupOriginalConfig = spotinstSetupContextElement.getNewElastiGroupOriginalConfig();
+    if (newElastiGroupOriginalConfig != null) {
+      data.setNewElastiGroupId(newElastiGroupOriginalConfig.getId());
+      data.setNewElastiGroupName(newElastiGroupOriginalConfig.getName());
+    }
   }
 
   protected SpotInstSwapRoutesTaskParameters getTaskParameters(ExecutionContext context, Application app,

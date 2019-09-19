@@ -18,6 +18,7 @@ import software.wings.beans.infrastructure.instance.key.deployment.ContainerDepl
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.K8sDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.PcfDeploymentKey;
+import software.wings.beans.infrastructure.instance.key.deployment.SpotinstAmiDeploymentKey;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.instance.DeploymentService;
@@ -86,6 +87,10 @@ public class DeploymentServiceImpl implements DeploymentService {
       AwsCodeDeployDeploymentKey awsCodeDeployDeploymentKey = deploymentSummary.getAwsCodeDeployDeploymentKey();
       query.filter("awsCodeDeployDeploymentKey.key", awsCodeDeployDeploymentKey.getKey());
       return awsCodeDeployDeploymentKey;
+    } else if (deploymentSummary.getSpotinstAmiDeploymentKey() != null) {
+      SpotinstAmiDeploymentKey spotinstAmiDeploymentKey = deploymentSummary.getSpotinstAmiDeploymentKey();
+      query.filter("spotinstAmiDeploymentKey.elastigroupId", spotinstAmiDeploymentKey.getElastigroupId());
+      return spotinstAmiDeploymentKey;
     } else {
       String msg = "Either AMI, CodeDeploy, container or pcf deployment key needs to be set";
       logger.error(msg);

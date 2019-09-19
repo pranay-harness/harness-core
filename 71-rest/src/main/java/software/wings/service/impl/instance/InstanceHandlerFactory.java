@@ -1,14 +1,16 @@
 package software.wings.service.impl.instance;
 
+import static software.wings.beans.AmiDeploymentType.SPOTINST;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
+import software.wings.beans.AwsAmiInfrastructureMapping;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
+import software.wings.utils.Utils;
 
-/**
- * @author rktummala on 02/04/18
- */
 @Singleton
 public class InstanceHandlerFactory {
   private ContainerInstanceHandler containerInstanceHandler;
@@ -17,26 +19,39 @@ public class InstanceHandlerFactory {
   private AwsCodeDeployInstanceHandler awsCodeDeployInstanceHandler;
   private PcfInstanceHandler pcfInstanceHandler;
   private AzureInstanceHandler azureInstanceHandler;
+  private SpotinstAmiInstanceHandler spotinstAmiInstanceHandler;
 
   @Inject
   public InstanceHandlerFactory(ContainerInstanceHandler containerInstanceHandler,
       AwsInstanceHandler awsInstanceHandler, AwsAmiInstanceHandler awsAmiInstanceHandler,
       AwsCodeDeployInstanceHandler awsCodeDeployInstanceHandler, PcfInstanceHandler pcfInstanceHandler,
-      AzureInstanceHandler azureInstanceHandler) {
+      AzureInstanceHandler azureInstanceHandler, SpotinstAmiInstanceHandler spotinstAmiInstanceHandler) {
     this.containerInstanceHandler = containerInstanceHandler;
     this.awsInstanceHandler = awsInstanceHandler;
     this.awsAmiInstanceHandler = awsAmiInstanceHandler;
     this.awsCodeDeployInstanceHandler = awsCodeDeployInstanceHandler;
     this.pcfInstanceHandler = pcfInstanceHandler;
     this.azureInstanceHandler = azureInstanceHandler;
+    this.spotinstAmiInstanceHandler = spotinstAmiInstanceHandler;
   }
 
-  public InstanceHandler getInstanceHandler(InfrastructureMappingType infraMappingType) {
+  private boolean isAmiSpotinstInfraMappingType(InfrastructureMapping infraMapping) {
+    return infraMapping instanceof AwsAmiInfrastructureMapping
+        && SPOTINST.equals(((AwsAmiInfrastructureMapping) infraMapping).getAmiDeploymentType());
+  }
+
+  public InstanceHandler getInstanceHandler(InfrastructureMapping infraMapping) {
+    InfrastructureMappingType infraMappingType =
+        Utils.getEnumFromString(InfrastructureMappingType.class, infraMapping.getInfraMappingType());
     switch (infraMappingType) {
       case AWS_SSH:
         return awsInstanceHandler;
       case AWS_AMI:
-        return awsAmiInstanceHandler;
+        if (isAmiSpotinstInfraMappingType(infraMapping)) {
+          return spotinstAmiInstanceHandler;
+        } else {
+          return awsAmiInstanceHandler;
+        }
       case AWS_AWS_CODEDEPLOY:
         return awsCodeDeployInstanceHandler;
       case GCP_KUBERNETES:

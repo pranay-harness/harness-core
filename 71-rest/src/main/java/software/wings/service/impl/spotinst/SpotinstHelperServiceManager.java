@@ -10,14 +10,17 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.amazonaws.services.ec2.model.Instance;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.spotinst.request.SpotInstGetElastigroupJsonParameters;
+import io.harness.delegate.task.spotinst.request.SpotInstListElastigroupInstancesParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstListElastigroupNamesParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstGetElastigroupJsonResponse;
+import io.harness.delegate.task.spotinst.response.SpotInstListElastigroupInstancesResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstListElastigroupNamesResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskResponse;
@@ -53,6 +56,15 @@ public class SpotinstHelperServiceManager {
         SpotInstGetElastigroupJsonParameters.builder().elastigroupId(elastigroupId).build(), spotInstConfig,
         encryptionDetails, null, emptyList(), appId);
     return ((SpotInstGetElastigroupJsonResponse) response).getElastigroupJson();
+  }
+
+  public List<Instance> listElastigroupInstances(SpotInstConfig spotinstConfig,
+      List<EncryptedDataDetail> spotinstEncryptionDetails, AwsConfig awsConfig,
+      List<EncryptedDataDetail> awsEncryptionDetails, String region, String appId, String elastigroupId) {
+    SpotInstTaskResponse response = executeTask(spotinstConfig.getAccountId(),
+        SpotInstListElastigroupInstancesParameters.builder().awsRegion(region).elastigroupId(elastigroupId).build(),
+        spotinstConfig, spotinstEncryptionDetails, awsConfig, awsEncryptionDetails, appId);
+    return ((SpotInstListElastigroupInstancesResponse) response).getElastigroupInstances();
   }
 
   private SpotInstTaskResponse executeTask(String accountId, SpotInstTaskParameters parameters,

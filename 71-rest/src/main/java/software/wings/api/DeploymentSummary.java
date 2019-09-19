@@ -12,6 +12,7 @@ import software.wings.beans.infrastructure.instance.key.deployment.AwsCodeDeploy
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.K8sDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.PcfDeploymentKey;
+import software.wings.beans.infrastructure.instance.key.deployment.SpotinstAmiDeploymentKey;
 
 @Entity(value = "deploymentSummary", noClassnameStored = true)
 @Data
@@ -39,6 +40,7 @@ public class DeploymentSummary extends Base {
   private AwsCodeDeployDeploymentKey awsCodeDeployDeploymentKey;
   private ContainerDeploymentKey containerDeploymentKey;
   private K8sDeploymentKey k8sDeploymentKey;
+  private SpotinstAmiDeploymentKey spotinstAmiDeploymentKey;
 
   @Builder
   public DeploymentSummary(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
@@ -48,7 +50,7 @@ public class DeploymentSummary extends Base {
       String artifactSourceName, String artifactStreamId, String artifactBuildNum, String deployedById,
       String deployedByName, long deployedAt, DeploymentInfo deploymentInfo, PcfDeploymentKey pcfDeploymentKey,
       AwsAmiDeploymentKey awsAmiDeploymentKey, AwsCodeDeployDeploymentKey awsCodeDeployDeploymentKey,
-      ContainerDeploymentKey containerDeploymentKey) {
+      ContainerDeploymentKey containerDeploymentKey, SpotinstAmiDeploymentKey spotinstAmiDeploymentKey) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.accountId = accountId;
     this.infraMappingId = infraMappingId;
@@ -71,5 +73,6 @@ public class DeploymentSummary extends Base {
     this.awsAmiDeploymentKey = awsAmiDeploymentKey;
     this.awsCodeDeployDeploymentKey = awsCodeDeployDeploymentKey;
     this.containerDeploymentKey = containerDeploymentKey;
+    this.spotinstAmiDeploymentKey = spotinstAmiDeploymentKey;
   }
 }

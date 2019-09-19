@@ -88,6 +88,11 @@ public class InstanceSyncTestConstants {
   public static final String SERVICE_6_ID = "service6_id";
   public static final String SERVICE_7_ID = "service7_id";
   public static final String SERVICE_8_ID = "service8_id";
+  public static final String EC2_INSTANCE_1_ID = "ec2_instance1_Id";
+  public static final String EC2_INSTANCE_2_ID = "ec2_instance2_Id";
+  public static final String EC2_INSTANCE_E_ID = "ec2_instance3_Id";
+  public static final String ELASTIGROUP_ID = "elastigroup_Id";
+  public static final String ELASTIGROUP_NAME = "elastigroup_Name";
 
   public static final String PRIVATE_DNS_1 = "ip-171-31-14-5.us-west-2.compute.internal";
   public static final String PRIVATE_DNS_2 = "ip-172-31-14-5.us-west-2.compute.internal";
