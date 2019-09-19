@@ -22,8 +22,7 @@ public interface SpotInstConstants {
   String CAPACITY = "capacity";
   String UNIT_INSTANCE = "instance";
   String PHASE_PARAM = "PHASE_PARAM";
-  String PROD_ELASTI_GROUP_NAME_SUFFIX = "PRODUCTION";
-  String STAGE_ELASTI_GROUP_NAME_SUFFIX = "STAGE";
+  String STAGE_ELASTI_GROUP_NAME_SUFFIX = "STAGE__Harness";
   String ELASTI_GROUP_IMAGE_CONFIG = "imageId";
   String ELASTI_GROUP_USER_DATA_CONFIG = "userData";
   String GROUP_CONFIG_ELEMENT = "group";

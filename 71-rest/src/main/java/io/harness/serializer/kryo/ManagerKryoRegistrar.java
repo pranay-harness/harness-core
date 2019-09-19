@@ -641,6 +641,7 @@ import software.wings.sm.states.spotinst.SpotInstDeployStateExecutionData;
 import software.wings.sm.states.spotinst.SpotInstListenerUpdateStateExecutionData;
 import software.wings.sm.states.spotinst.SpotInstSetupContextElement;
 import software.wings.sm.states.spotinst.SpotInstSetupExecutionSummary;
+import software.wings.sm.states.spotinst.SpotInstSetupStateExecutionData;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.ContainerFamily;
 import software.wings.utils.FileType;
@@ -1346,5 +1347,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SplunkDataCollectionInfoV2.class, 7236);
     kryo.register(PcfSetupStateExecutionData.class, 7237);
     kryo.register(AssignmentTaskResponse.class, 7238);
+    kryo.register(SpotInstSetupStateExecutionData.class, 7239);
   }
 }
