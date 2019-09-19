@@ -92,8 +92,10 @@ public class InfraMappingToDefinitionMigration implements Migration {
 
   public void migrate() {
     logger.info(StringUtils.join(DEBUG_LINE, "Starting Infra Definition migration for accountId ", accountId));
-    Account account = accountService.get(accountId);
-    if (account == null) {
+    Account account = null;
+    try {
+      account = accountService.get(accountId);
+    } catch (Exception e) {
       logger.info(StringUtils.join(DEBUG_LINE, "Account does not exist, accountId ", accountId));
       return;
     }
