@@ -542,7 +542,7 @@ public class K8sStateHelper {
       k8sStateExecutor.validateParameters(context);
 
       Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
-          applicationManifestUtils.getApplicationManifests(context);
+          applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES);
       boolean valuesInGit = isValuesInGit(appManifestMap);
       boolean valuesInHelmChartRepo = applicationManifestUtils.isValuesInHelmChartRepo(context);
 
@@ -794,7 +794,7 @@ public class K8sStateHelper {
     }
 
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
-        applicationManifestUtils.getApplicationManifests(context);
+        applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES);
 
     boolean valuesInGit = isValuesInGit(appManifestMap);
     if (valuesInGit) {

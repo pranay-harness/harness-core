@@ -191,7 +191,7 @@ public class HelmDeployState extends State {
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
 
     if (HELM_DEPLOY.name().equals(this.getStateType())) {
-      appManifestMap = applicationManifestUtils.getApplicationManifests(context);
+      appManifestMap = applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES);
       valuesInHelmChartRepo = applicationManifestUtils.isValuesInHelmChartRepo(context);
       valuesInGit = applicationManifestUtils.isValuesInGit(appManifestMap);
     }
@@ -412,7 +412,7 @@ public class HelmDeployState extends State {
     }
 
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
-        applicationManifestUtils.getValuesApplicationManifests(context);
+        applicationManifestUtils.getOverrideApplicationManifests(context, AppManifestKind.VALUES);
 
     boolean valuesInGit = applicationManifestUtils.isValuesInGit(appManifestMap);
     if (valuesInGit) {
