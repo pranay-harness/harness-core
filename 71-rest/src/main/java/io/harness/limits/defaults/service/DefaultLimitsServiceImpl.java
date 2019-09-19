@@ -93,15 +93,35 @@ public class DefaultLimitsServiceImpl implements DefaultLimitsService {
     defaultLimits.put(
         new LimitKey(ActionType.CREATE_INFRA_PROVISIONER, AccountType.ESSENTIALS), new StaticLimit(MAX_APP_COUNT * 10));
 
-    // GraphQL API call Limits
+    // GraphQL external API call Limits
     defaultLimits.put(new LimitKey(ActionType.GRAPHQL_CALL, AccountType.TRIAL),
-        new RateLimit(RATE_LIMIT_ACCOUNT_DEFAULT, RATE_LIMIT_DURATION_IN_MINUTE, TimeUnit.MINUTES));
+        new RateLimit(
+            GRAPHQL_EXTERNAL_RATE_LIMIT_ACCOUNT_DEFAULT, GRAPHQL_RATE_LIMIT_DURATION_IN_MINUTE, TimeUnit.MINUTES));
     defaultLimits.put(new LimitKey(ActionType.GRAPHQL_CALL, AccountType.PAID),
-        new RateLimit(RATE_LIMIT_ACCOUNT_DEFAULT, RATE_LIMIT_DURATION_IN_MINUTE, TimeUnit.MINUTES));
+        new RateLimit(
+            GRAPHQL_EXTERNAL_RATE_LIMIT_ACCOUNT_DEFAULT, GRAPHQL_RATE_LIMIT_DURATION_IN_MINUTE, TimeUnit.MINUTES));
+    // Use lower limit for Community/Essential account.
     defaultLimits.put(new LimitKey(ActionType.GRAPHQL_CALL, AccountType.COMMUNITY),
-        new RateLimit(RATE_LIMIT_ACCOUNT_DEFAULT, RATE_LIMIT_DURATION_IN_MINUTE, TimeUnit.MINUTES));
+        new RateLimit(GRAPHQL_EXTERNAL_RATE_LIMIT_COMMUNITY_ACCOUNT_DEFAULT, GRAPHQL_RATE_LIMIT_DURATION_IN_MINUTE,
+            TimeUnit.MINUTES));
     defaultLimits.put(new LimitKey(ActionType.GRAPHQL_CALL, AccountType.ESSENTIALS),
-        new RateLimit(RATE_LIMIT_ACCOUNT_DEFAULT, RATE_LIMIT_DURATION_IN_MINUTE, TimeUnit.MINUTES));
+        new RateLimit(GRAPHQL_EXTERNAL_RATE_LIMIT_COMMUNITY_ACCOUNT_DEFAULT, GRAPHQL_RATE_LIMIT_DURATION_IN_MINUTE,
+            TimeUnit.MINUTES));
+
+    // GraphQL internal API call Limits
+    defaultLimits.put(new LimitKey(ActionType.GRAPHQL_CUSTOM_DASH_CALL, AccountType.TRIAL),
+        new RateLimit(
+            GRAPHQL_INTERNAL_RATE_LIMIT_ACCOUNT_DEFAULT, GRAPHQL_RATE_LIMIT_DURATION_IN_MINUTE, TimeUnit.MINUTES));
+    defaultLimits.put(new LimitKey(ActionType.GRAPHQL_CUSTOM_DASH_CALL, AccountType.PAID),
+        new RateLimit(
+            GRAPHQL_INTERNAL_RATE_LIMIT_ACCOUNT_DEFAULT, GRAPHQL_RATE_LIMIT_DURATION_IN_MINUTE, TimeUnit.MINUTES));
+    // Use lower limit for Community/Essential account.
+    defaultLimits.put(new LimitKey(ActionType.GRAPHQL_CUSTOM_DASH_CALL, AccountType.COMMUNITY),
+        new RateLimit(GRAPHQL_INTERNAL_RATE_LIMIT_COMMUNITY_ACCOUNT_DEFAULT, GRAPHQL_RATE_LIMIT_DURATION_IN_MINUTE,
+            TimeUnit.MINUTES));
+    defaultLimits.put(new LimitKey(ActionType.GRAPHQL_CUSTOM_DASH_CALL, AccountType.ESSENTIALS),
+        new RateLimit(GRAPHQL_INTERNAL_RATE_LIMIT_COMMUNITY_ACCOUNT_DEFAULT, GRAPHQL_RATE_LIMIT_DURATION_IN_MINUTE,
+            TimeUnit.MINUTES));
 
     defaults = ImmutableMap.copyOf(defaultLimits);
   }

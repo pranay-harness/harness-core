@@ -3,8 +3,6 @@ package software.wings.resources.graphql;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
 import static io.harness.exception.WingsException.USER_ADMIN;
-import static io.harness.limits.defaults.service.DefaultLimitsService.RATE_LIMIT_ACCOUNT_DEFAULT;
-import static io.harness.limits.defaults.service.DefaultLimitsService.RATE_LIMIT_DURATION_IN_MINUTE;
 import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
 
 import com.google.common.collect.Maps;
@@ -12,11 +10,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import es.moki.ratelimitj.core.limiter.request.RequestLimitRule;
-import es.moki.ratelimitj.core.limiter.request.RequestRateLimiter;
-import es.moki.ratelimitj.inmemory.request.InMemorySlidingWindowRequestRateLimiter;
 import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.ExecutionResultImpl;
@@ -24,17 +17,11 @@ import graphql.GraphQL;
 import graphql.GraphQLContext;
 import graphql.GraphqlErrorBuilder;
 import io.harness.exception.WingsException;
-import io.harness.limits.ActionType;
-import io.harness.limits.ConfiguredLimit;
-import io.harness.limits.configuration.LimitConfigurationService;
-import io.harness.limits.lib.RateBasedLimit;
 import io.swagger.annotations.Api;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.app.MainConfiguration;
 import software.wings.audit.AuditSkip;
-import software.wings.beans.Account;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.FeatureName;
 import software.wings.beans.User;
@@ -53,10 +40,7 @@ import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.FeatureFlagService;
 
-import java.time.Duration;
-import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.HeaderParam;
@@ -80,40 +64,20 @@ public class GraphQLResource {
   ApiKeyService apiKeyService;
   PremiumFeature restApiFeature;
   DataLoaderRegistryHelper dataLoaderRegistryHelper;
-  LimitConfigurationService limitConfigurationService;
-
-  MainConfiguration mainConfiguration;
-  RequestRateLimiter globalRequestRateLimiter;
-  RequestRateLimiter defaultAccountRequestRateLimiter;
-
-  // PL-3447: account-level rate limiter limit will be refreshed every 10 minutes.
-  // This means account-level rate limiter changes will take effect after 10 minutes.
-  private Cache<String, RequestRateLimiter> rateLimiterCache =
-      Caffeine.newBuilder().maximumSize(10000).expireAfterWrite(10, TimeUnit.MINUTES).build();
+  GraphQLRateLimiter graphQLRateLimiter;
 
   @Inject
   public GraphQLResource(@NotNull QueryLanguageProvider<GraphQL> queryLanguageProvider,
       @NotNull FeatureFlagService featureFlagService, @NotNull ApiKeyService apiKeyService,
-      DataLoaderRegistryHelper dataLoaderRegistryHelper, @NotNull LimitConfigurationService limitConfigurationService,
-      @NotNull MainConfiguration mainConfiguration, @Named(RestApiFeature.FEATURE_NAME) PremiumFeature restApiFeature) {
+      DataLoaderRegistryHelper dataLoaderRegistryHelper, @NotNull GraphQLRateLimiter graphQLRateLimiter,
+      @Named(RestApiFeature.FEATURE_NAME) PremiumFeature restApiFeature) {
     this.privateGraphQL = queryLanguageProvider.getPrivateGraphQL();
     this.publicGraphQL = queryLanguageProvider.getPublicGraphQL();
     this.featureFlagService = featureFlagService;
     this.apiKeyService = apiKeyService;
     this.dataLoaderRegistryHelper = dataLoaderRegistryHelper;
     this.restApiFeature = restApiFeature;
-    this.limitConfigurationService = limitConfigurationService;
-    this.mainConfiguration = mainConfiguration;
-
-    // Default global GraphQL call rate limit per minute is 500, configurable through manager service variable
-    // $GRAPHQL_RATE_LIMIT
-    logger.info("Global GraphQL rate limit is {} calls per minute",
-        mainConfiguration.getPortal().getGraphQLRateLimitPerMinute());
-    globalRequestRateLimiter = new InMemorySlidingWindowRequestRateLimiter(
-        Collections.singleton(RequestLimitRule.of(Duration.ofMinutes(RATE_LIMIT_DURATION_IN_MINUTE),
-            mainConfiguration.getPortal().getGraphQLRateLimitPerMinute())));
-    defaultAccountRequestRateLimiter = new InMemorySlidingWindowRequestRateLimiter(Collections.singleton(
-        RequestLimitRule.of(Duration.ofMinutes(RATE_LIMIT_DURATION_IN_MINUTE), RATE_LIMIT_ACCOUNT_DEFAULT)));
+    this.graphQLRateLimiter = graphQLRateLimiter;
   }
 
   @POST
@@ -193,13 +157,6 @@ public class GraphQLResource {
       return getExecutionResultWithError(GraphQLConstants.INVALID_API_KEY).toSpecification();
     }
 
-    if (!featureFlagService.isEnabled(FeatureName.GRAPHQL_STRESS_TESTING, accountId)) {
-      if (isOverRateLimit(accountId)) {
-        return getExecutionResultWithError(String.format(GraphQLConstants.RATE_LIMIT_REACHED, accountId))
-            .toSpecification();
-      }
-    }
-
     if (!featureFlagService.isEnabled(FeatureName.GRAPHQL, accountId)
         || !restApiFeature.isAvailableForAccount(accountId)) {
       logger.info(GraphQLConstants.FEATURE_NOT_ENABLED);
@@ -243,12 +200,6 @@ public class GraphQLResource {
     return getExecutionResultWithError(errorMsg);
   }
 
-  boolean isOverRateLimit(String accountId) {
-    // PL-3447: Need to check both global/across-account rate limit and account-level limit.
-    return globalRequestRateLimiter.overLimitWhenIncremented(Account.GLOBAL_ACCOUNT_ID)
-        || getRequestRateLimiterForAccount(accountId).overLimitWhenIncremented(accountId);
-  }
-
   private Map<String, Object> executeInternal(GraphQLQuery graphQLQuery) {
     String accountId;
     boolean hasUserContext;
@@ -260,11 +211,6 @@ public class GraphQLResource {
       hasUserContext = true;
     } else {
       throw new WingsException(INVALID_TOKEN, USER_ADMIN);
-    }
-
-    if (isOverRateLimit(accountId)) {
-      return getExecutionResultWithError(String.format(GraphQLConstants.RATE_LIMIT_REACHED, accountId))
-          .toSpecification();
     }
 
     ExecutionResult executionResult;
@@ -299,39 +245,5 @@ public class GraphQLResource {
         .context(GraphQLContext.newContext().of(
             "accountId", accountId, "permissions", permissionInfo, "restrictions", restrictionInfo))
         .build();
-  }
-
-  RequestRateLimiter getRequestRateLimiterForAccount(String accountId) {
-    return rateLimiterCache.asMap().computeIfAbsent(
-        accountId, key -> getRequestRateLimiterForAccountInternal(accountId));
-  }
-
-  RequestRateLimiter getRequestRateLimiterForAccountInternal(String accountId) {
-    logger.info("Rate limiter cache size: {}", rateLimiterCache.estimatedSize());
-    ConfiguredLimit<RateBasedLimit> configuredLimit =
-        limitConfigurationService.getOrDefault(accountId, ActionType.GRAPHQL_CALL);
-
-    if (configuredLimit == null) {
-      logger.info("Return the default account-level rate limiter for account {}", accountId);
-      return defaultAccountRequestRateLimiter;
-    } else {
-      RateBasedLimit rateBasedLimit = configuredLimit.getLimit();
-      logger.info("Return the configured rate limiter for account {} with call count {} in {} {}", accountId,
-          rateBasedLimit.getCount(), rateBasedLimit.getDuration(), rateBasedLimit.getDurationUnit());
-
-      if (useDefaultAccountRateLimiter(rateBasedLimit)) {
-        return defaultAccountRequestRateLimiter;
-      } else {
-        return new InMemorySlidingWindowRequestRateLimiter(Collections.singleton(RequestLimitRule.of(
-            Duration.ofSeconds(rateBasedLimit.getDurationUnit().toSeconds(rateBasedLimit.getDuration())),
-            rateBasedLimit.getCount())));
-      }
-    }
-  }
-
-  private boolean useDefaultAccountRateLimiter(RateBasedLimit rateBasedLimit) {
-    return rateBasedLimit.getCount() == RATE_LIMIT_ACCOUNT_DEFAULT
-        && rateBasedLimit.getDuration() == RATE_LIMIT_DURATION_IN_MINUTE
-        && rateBasedLimit.getDurationUnit() == TimeUnit.MINUTES;
   }
 }

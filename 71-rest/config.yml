@@ -197,7 +197,8 @@ portal:
   jwtMarketPlaceSecret: NqlqtztOXgJSQeVocN74TLnldqNjdyZM8DyNwaAioOt7M3piQsDILSqUQEh2qhdTadh21HKVxnXuuGfh
   jwtIdentityServiceSecret: HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU=
   delegateDockerImage: harness/delegate:latest
-  graphQLRateLimitPerMinute: 500
+  externalGraphQLRateLimitPerMinute: 500
+  customDashGraphQLRateLimitPerMinute: 1000
 
 disabledCache: []
 

@@ -17,8 +17,12 @@ if [[ "" != "$UI_SERVER_URL" ]]; then
   yq write -i /opt/harness/config.yml portal.url "$UI_SERVER_URL"
 fi
 
-if [[ "" != "$GRAPHQL_RATE_LIMIT" ]]; then
-  yq write -i /opt/harness/config.yml portal.graphQLRateLimitPerMinute "$GRAPHQL_RATE_LIMIT"
+if [[ "" != "$EXTERNAL_GRAPHQL_RATE_LIMIT" ]]; then
+  yq write -i /opt/harness/config.yml portal.externalGraphQLRateLimitPerMinute "$EXTERNAL_GRAPHQL_RATE_LIMIT"
+fi
+
+if [[ "" != "$CUSTOM_DASH_GRAPHQL_RATE_LIMIT" ]]; then
+  yq write -i /opt/harness/config.yml portal.customDashGraphQLRateLimitPerMinute "$CUSTOM_DASH_GRAPHQL_RATE_LIMIT"
 fi
 
 if [[ "" != "$ALLOWED_ORIGINS" ]]; then

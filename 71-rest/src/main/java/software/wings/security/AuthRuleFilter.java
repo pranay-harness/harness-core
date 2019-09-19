@@ -27,6 +27,7 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.User;
+import software.wings.resources.graphql.GraphQLRateLimiter;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -59,12 +60,14 @@ import java.util.Set;
 import java.util.stream.Stream;
 import javax.annotation.Priority;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 
 /**
  * Created by anubhaw on 3/11/16.
@@ -91,19 +94,20 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private AppService appService;
   private WhitelistService whitelistService;
   private HarnessUserGroupService harnessUserGroupService;
+  private GraphQLRateLimiter graphQLRateLimiter;
 
   /**
    * Instantiates a new Auth rule filter.
    *
-   * @param authService  the auth service
-   * @param appService   the appService
-   * @param userService  the userService
+   * @param authService      the auth service
+   * @param appService       the appService
+   * @param userService      the userService
    * @param whitelistService
    */
   @Inject
   public AuthRuleFilter(AuthService authService, AuthHandler authHandler, AppService appService,
       UserService userService, AccountService accountService, WhitelistService whitelistService,
-      HarnessUserGroupService harnessUserGroupService) {
+      HarnessUserGroupService harnessUserGroupService, GraphQLRateLimiter graphQLRateLimiter) {
     this.authService = authService;
     this.authHandler = authHandler;
     this.appService = appService;
@@ -111,6 +115,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     this.accountService = accountService;
     this.whitelistService = whitelistService;
     this.harnessUserGroupService = harnessUserGroupService;
+    this.graphQLRateLimiter = graphQLRateLimiter;
   }
 
   private boolean isAuthFilteringExempted(String uri) {
@@ -125,6 +130,16 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       }
     }
     return false;
+  }
+
+  private boolean isExternalGraphQLRequest(String uri) {
+    // External GraphQL API calls
+    return uri.endsWith("graphql");
+  }
+
+  private boolean isInternalGraphQLRequest(String uri) {
+    // Internal GraphQL calls used by custom dashboards.
+    return uri.startsWith("graphql/int");
   }
 
   private boolean isHarnessUserExemptedRequest(String uri) {
@@ -176,6 +191,19 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
 
     String uriPath = requestContext.getUriInfo().getPath();
+
+    if (isInternalGraphQLRequest(uriPath)) {
+      if (graphQLRateLimiter.isOverApiRateLimit(accountId, true)) {
+        throw new WebApplicationException(
+            Response.status(429).entity(graphQLRateLimiter.getRateLimitReachedErrorMessage(accountId, true)).build());
+      }
+    } else if (isExternalGraphQLRequest(uriPath)) {
+      if (graphQLRateLimiter.isOverApiRateLimit(accountId, false)) {
+        throw new WebApplicationException(
+            Response.status(429).entity(graphQLRateLimiter.getRateLimitReachedErrorMessage(accountId, false)).build());
+      }
+    }
+
     boolean isHarnessUserExemptedRequest = isHarnessUserExemptedRequest(uriPath);
     if (isNotEmpty(accountId)) {
       validateAccountStatus(accountId, isHarnessUserExemptedRequest);
