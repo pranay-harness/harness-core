@@ -482,7 +482,8 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     if (isNotEmpty(artifacts)) {
       for (Artifact artifact : artifacts) {
         if (artifact.getUuid().equals(artifactId)) {
-          return artifact;
+          // This will fetch artifactFiles as well
+          return artifactService.get(artifactId);
         }
       }
     }
