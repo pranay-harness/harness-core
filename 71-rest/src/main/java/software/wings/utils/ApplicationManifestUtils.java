@@ -67,7 +67,8 @@ public class ApplicationManifestUtils {
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ServiceResourceService serviceResourceService;
 
-  public Map<K8sValuesLocation, ApplicationManifest> getValuesApplicationManifests(ExecutionContext context) {
+  public Map<K8sValuesLocation, ApplicationManifest> getOverrideApplicationManifests(
+      ExecutionContext context, AppManifestKind appManifestKind) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PHASE_PARAM);
     Application app = appService.get(context.getAppId());
     ServiceElement serviceElement = phaseElement.getServiceElement();
@@ -75,7 +76,7 @@ public class ApplicationManifestUtils {
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
 
     ApplicationManifest applicationManifest =
-        applicationManifestService.getByServiceId(context.getAppId(), serviceElement.getUuid(), AppManifestKind.VALUES);
+        applicationManifestService.getByServiceId(context.getAppId(), serviceElement.getUuid(), appManifestKind);
     if (applicationManifest != null) {
       appManifestMap.put(K8sValuesLocation.ServiceOverride, applicationManifest);
     }
@@ -87,13 +88,13 @@ public class ApplicationManifestUtils {
     }
 
     applicationManifest =
-        applicationManifestService.getByEnvId(app.getUuid(), infraMapping.getEnvId(), AppManifestKind.VALUES);
+        applicationManifestService.getByEnvId(app.getUuid(), infraMapping.getEnvId(), appManifestKind);
     if (applicationManifest != null) {
       appManifestMap.put(K8sValuesLocation.EnvironmentGlobal, applicationManifest);
     }
 
     applicationManifest = applicationManifestService.getByEnvAndServiceId(
-        app.getUuid(), infraMapping.getEnvId(), serviceElement.getUuid(), AppManifestKind.VALUES);
+        app.getUuid(), infraMapping.getEnvId(), serviceElement.getUuid(), appManifestKind);
     if (applicationManifest != null) {
       appManifestMap.put(K8sValuesLocation.Environment, applicationManifest);
     }
@@ -277,14 +278,15 @@ public class ApplicationManifestUtils {
     return getValuesExpressionKeysFromMap(map, "", 0);
   }
 
-  public Map<K8sValuesLocation, ApplicationManifest> getApplicationManifests(ExecutionContext context) {
+  public Map<K8sValuesLocation, ApplicationManifest> getApplicationManifests(
+      ExecutionContext context, AppManifestKind appManifestKind) {
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
 
     ApplicationManifest serviceAppManifest = getApplicationManifestForService(context);
     if (serviceAppManifest != null) {
       appManifestMap.put(K8sValuesLocation.Service, serviceAppManifest);
     }
-    appManifestMap.putAll(getValuesApplicationManifests(context));
+    appManifestMap.putAll(getOverrideApplicationManifests(context, appManifestKind));
     return appManifestMap;
   }
 
