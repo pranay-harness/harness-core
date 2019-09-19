@@ -15,6 +15,7 @@ public enum ActionType {
   CREATE_INFRA_PROVISIONER(Collections.singletonList(LimitType.STATIC)),
   INSTANCE_USAGE_LIMIT_EXCEEDED(Collections.emptyList()),
   GRAPHQL_CALL(Collections.singletonList(LimitType.RATE_LIMIT)),
+  GRAPHQL_CUSTOM_DASH_CALL(Collections.singletonList(LimitType.RATE_LIMIT)),
   DEPLOY(Collections.singletonList(LimitType.RATE_LIMIT));
 
   @Getter private List<LimitType> allowedLimitTypes;

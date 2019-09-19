@@ -71,6 +71,7 @@ import software.wings.beans.RoleType;
 import software.wings.beans.User;
 import software.wings.dl.GenericDbCache;
 import software.wings.dl.WingsPersistence;
+import software.wings.resources.graphql.GraphQLRateLimiter;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.SecretManager;
@@ -144,14 +145,15 @@ public class SecureResourceTest extends CategoryTest {
   private static UsageMetricsEventPublisher usageMetricsEventPublisher = mock(UsageMetricsEventPublisher.class);
   private static SSOSettingService ssoSettingService = mock(SSOSettingService.class);
   private static DashboardAuthHandler dashboardAuthHandler = mock(DashboardAuthHandler.class);
+  private static GraphQLRateLimiter graphQLRateLimiter = mock(GraphQLRateLimiter.class);
 
   private static AuthService authService = new AuthServiceImpl(genericDbCache, wingsPersistence, userService,
       userGroupService, usageRestrictionsService, workflowService, envService, cacheManager, configuration,
       learningEngineService, authHandler, featureFlagService, harnessUserGroupService, secretManager,
       usageMetricsEventPublisher, whitelistService, ssoSettingService, appService, dashboardAuthHandler);
 
-  private static AuthRuleFilter authRuleFilter = new AuthRuleFilter(
-      authService, authHandler, appService, userService, accountService, whitelistService, harnessUserGroupService);
+  private static AuthRuleFilter authRuleFilter = new AuthRuleFilter(authService, authHandler, appService, userService,
+      accountService, whitelistService, harnessUserGroupService, graphQLRateLimiter);
 
   Cache<String, User> cache = Mockito.mock(Cache.class);
   Cache<String, UserPermissionInfo> cachePermissionInfo = Mockito.mock(Cache.class);
