@@ -720,6 +720,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       throw new InvalidRequestException("Invalid Git Repo");
     }
     GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
+    gitConfig.setGitRepoType(GitRepositoryType.TERRAFORM);
 
     DelegateTask delegateTask =
         DelegateTask.builder()
