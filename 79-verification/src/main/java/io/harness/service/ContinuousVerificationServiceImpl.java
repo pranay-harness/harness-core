@@ -1000,7 +1000,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       }
     }
 
-    if (lastFeedbackAnalysisMinute <= 0) {
+    if (lastFeedbackAnalysisMinute <= 0
+        || !hasBaselineAnalysisStartedForFeedback(logsCVConfiguration, lastFeedbackAnalysisMinute)) {
       if (lastLogMLAnalysisMinute <= 0) {
         logger.info(
             "For account {} and CV config {} name {} type {} no LogML analysis has happened yet. Skipping feedback analysis",
@@ -1016,6 +1017,15 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
 
     return minuteForFeedbackAnalysis;
+  }
+
+  private boolean hasBaselineAnalysisStartedForFeedback(
+      LogsCVConfiguration cvConfiguration, long lastFeedbackAnalysisMinute) {
+    boolean hasBaselineAnalysisStarted = false;
+    if (lastFeedbackAnalysisMinute >= cvConfiguration.getBaselineStartMinute()) {
+      return true;
+    }
+    return false;
   }
 
   @Override

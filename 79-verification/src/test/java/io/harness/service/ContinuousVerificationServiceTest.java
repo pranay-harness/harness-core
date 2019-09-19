@@ -2,7 +2,7 @@ package io.harness.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.SOWMYA;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
@@ -452,7 +452,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = PRAVEEN, intermittent = true)
+  @Owner(emails = SOWMYA, intermittent = true)
   @Category(UnitTests.class)
   public void testLogsCollection() throws IOException {
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
@@ -518,7 +518,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @OwnerRule.Owner(emails = PRAVEEN, intermittent = true)
+  @OwnerRule.Owner(emails = SOWMYA, intermittent = true)
   @Category(UnitTests.class)
   public void testDatadogLogsCollection() throws IOException {
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
