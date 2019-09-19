@@ -9,6 +9,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
+import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
@@ -55,6 +56,7 @@ import software.wings.utils.RepositoryType;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -246,6 +248,38 @@ public class BuildSourceServiceImpl implements BuildSourceService {
       return getBuildService(settingAttribute, appId)
           .getBuilds(appId, artifactStreamAttributes, settingValue, encryptedDataDetails);
     }
+  }
+
+  @Override
+  public List<Map<String, String>> getLabels(ArtifactStream artifactStream, List<String> buildNos) {
+    String appId = artifactStream.fetchAppId();
+    String artifactStreamId = artifactStream.getUuid();
+    String settingId = artifactStream.getSettingId();
+    // Collect labels for only DOCKER.
+    if (!DOCKER.name().equals(artifactStream.getArtifactStreamType())) {
+      return null;
+    }
+
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    if (settingAttribute == null) {
+      logger.warn("Artifact xxxxxxxx [{}] was deleted for artifact stream: [{}]", settingId, artifactStreamId);
+      return null;
+    }
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+
+    ArtifactStreamAttributes artifactStreamAttributes;
+    if (!GLOBAL_APP_ID.equals(appId)) {
+      Service service = artifactStreamServiceBindingService.getService(appId, artifactStream.getUuid(), true);
+      artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
+    } else {
+      artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+    }
+
+    // Timeout of 45 secs for collecting labels.
+    long deadline = (new Date()).getTime() + 45 * 1000;
+    return getBuildService(settingAttribute, appId)
+        .getLabels(artifactStreamAttributes, buildNos, settingValue, encryptedDataDetails, deadline);
   }
 
   private ArtifactStreamAttributes getArtifactStreamAttributes(ArtifactStream artifactStream, Service service) {

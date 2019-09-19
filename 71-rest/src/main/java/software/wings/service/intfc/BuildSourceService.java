@@ -162,6 +162,10 @@ public interface BuildSourceService {
     throw new UnsupportedOperationException();
   }
 
+  default List<Map<String, String>> getLabels(ArtifactStream artifactStream, List<String> buildNos) {
+    throw new UnsupportedOperationException();
+  }
+
   /**
    * Gets last successful build.
    *

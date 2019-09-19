@@ -1,13 +1,13 @@
 package software.wings.helpers.ext.docker;
 
 import static io.harness.exception.WingsException.USER;
+import static java.lang.String.format;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ArtifactServerException;
-import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidCredentialsException;
 import lombok.extern.slf4j.Slf4j;
@@ -71,6 +71,7 @@ public class DockerRegistryUtils {
               labelsMap.put(index, newLabels);
               return true;
             } catch (Exception e) {
+              logger.error(format("Could not fetch docker labels for %s:%s", imageName, tagInternal), e);
               return false;
             }
           });
@@ -90,7 +91,7 @@ public class DockerRegistryUtils {
         }
 
         if (gotException) {
-          throw new Exception("Failed to fetch image labelsMap");
+          throw new Exception("Failed to fetch image labels");
         } else if (timeoutExceeded) {
           // Deadline exceeded, return with the labels for the processed tags.
           break;
@@ -98,7 +99,7 @@ public class DockerRegistryUtils {
         start += MAX_GET_LABELS_CONCURRENCY;
       }
     } catch (Exception e) {
-      throw new ArtifactServerException(ExceptionUtils.getMessage(e), e, USER);
+      throw new ArtifactServerException("Failed to fetch image labels", e, USER);
     }
 
     // The total number of tags that we have processed (collected labels for) might be less than tags.size() as we might
@@ -148,14 +149,14 @@ public class DockerRegistryUtils {
     return ImmutablePair.of(dockerImageManifestResponse.fetchLabels(), authHeader);
   }
 
-  public static void checkValidImage(String imageName, Response response) {
+  static void checkValidImage(String imageName, Response response) {
     if (response.code() == 404) { // page not found
       throw new InvalidArgumentsException(
           ImmutablePair.of("code", "Image name [" + imageName + "] does not exist in Docker Registry."), null, USER);
     }
   }
 
-  public static Map<String, String> extractAuthChallengeTokens(String authHeaderValue) {
+  static Map<String, String> extractAuthChallengeTokens(String authHeaderValue) {
     // Bearer realm="xxx",service="yyy",scope="zzz"
     if (authHeaderValue != null) {
       String[] headerParts = authHeaderValue.split(" ");
