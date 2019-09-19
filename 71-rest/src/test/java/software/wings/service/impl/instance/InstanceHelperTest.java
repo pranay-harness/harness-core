@@ -18,7 +18,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
+import io.harness.exception.WingsException;
 import io.harness.queue.Queue;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -763,17 +763,17 @@ public class InstanceHelperTest extends WingsBaseTest {
 
     doReturn(new InstanceHandler() {
       @Override
-      public void syncInstances(String appId, String infraMappingId) throws HarnessException {}
+      public void syncInstances(String appId, String infraMappingId) throws WingsException {}
 
       @Override
       public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback)
-          throws HarnessException {}
+          throws WingsException {}
 
       @Override
       public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
           PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
           InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact)
-          throws HarnessException {
+          throws WingsException {
         return null;
       }
 
@@ -819,19 +819,19 @@ public class InstanceHelperTest extends WingsBaseTest {
 
     doReturn(new InstanceHandler() {
       @Override
-      public void syncInstances(String appId, String infraMappingId) throws HarnessException {
-        throw new HarnessException("cannot connect");
+      public void syncInstances(String appId, String infraMappingId) throws WingsException {
+        throw WingsException.builder().message("cannot connect").build();
       }
 
       @Override
       public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback)
-          throws HarnessException {}
+          throws WingsException {}
 
       @Override
       public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
           PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
           InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact)
-          throws HarnessException {
+          throws WingsException {
         return null;
       }
 

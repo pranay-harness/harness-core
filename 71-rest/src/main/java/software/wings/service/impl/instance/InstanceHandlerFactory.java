@@ -49,6 +49,7 @@ public class InstanceHandlerFactory {
       case PCF_PCF:
         return pcfInstanceHandler;
       case AWS_AWS_LAMBDA:
+        // todo @rk: add aws lambda instance handler
       case PHYSICAL_DATA_CENTER_SSH:
       case PHYSICAL_DATA_CENTER_WINRM:
         return null;

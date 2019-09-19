@@ -214,7 +214,7 @@ public class InstanceHelper {
             return;
           }
         }
-
+        // todo @rk : define instance handler for lambda, define deployment summary for that as well.
         InstanceHandler instanceHandler = instanceHandlerOptional.get();
         List<DeploymentSummary> deploymentSummaries = instanceHandler.getDeploymentSummariesForEvent(phaseExecutionData,
             phaseStepExecutionData, workflowExecution, infrastructureMapping, stateExecutionInstanceId, artifact);
@@ -234,6 +234,7 @@ public class InstanceHelper {
   }
 
   private boolean hasNoInstanceHandler(String infraMappingType) {
+    // todo @rk
     if (AWS_AWS_LAMBDA.getName().equals(infraMappingType)) {
       return true;
     }
@@ -448,6 +449,7 @@ public class InstanceHelper {
   }
 
   private boolean hasDeploymentKey(DeploymentSummary deploymentSummary) {
+    // todo @rk: add the deployment key
     return deploymentSummary.getPcfDeploymentKey() != null || deploymentSummary.getK8sDeploymentKey() != null
         || deploymentSummary.getContainerDeploymentKey() != null || deploymentSummary.getAwsAmiDeploymentKey() != null
         || deploymentSummary.getAwsCodeDeployDeploymentKey() != null;
@@ -499,10 +501,12 @@ public class InstanceHelper {
 
   @VisibleForTesting
   boolean isSupported(InfrastructureMappingType infrastructureMappingType) {
+    // todo @rk
     if (AWS_AWS_LAMBDA.equals(infrastructureMappingType) || PHYSICAL_DATA_CENTER_SSH.equals(infrastructureMappingType)
         || PHYSICAL_DATA_CENTER_WINRM.equals(infrastructureMappingType)) {
       return false;
     }
+
     return true;
   }
 

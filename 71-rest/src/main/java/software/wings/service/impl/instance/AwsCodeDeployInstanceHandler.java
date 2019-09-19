@@ -1,13 +1,13 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Collections.singletonList;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 
-import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +37,6 @@ import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StepExecutionSummary;
 import software.wings.utils.Validator;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -55,7 +54,7 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
   public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
       PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
       InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact)
-      throws HarnessException {
+      throws WingsException {
     PhaseStepExecutionSummary phaseStepExecutionSummary = phaseStepExecutionData.getPhaseStepExecutionSummary();
 
     if (phaseStepExecutionSummary != null) {
@@ -76,7 +75,7 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
           return Optional.empty();
         }
 
-        return Optional.of(Arrays.asList(AwsCodeDeployDeploymentInfo.builder()
+        return Optional.of(singletonList(AwsCodeDeployDeploymentInfo.builder()
                                              .deploymentGroupName(codeDeployParams.getDeploymentGroupName())
                                              .key(codeDeployParams.getKey())
                                              .applicationName(codeDeployParams.getApplicationName())
@@ -84,29 +83,29 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
                                              .build()));
 
       } else {
-        throw new HarnessException(
-            "Command step execution summary null for workflow: " + workflowExecution.normalizedName());
+        throw WingsException.builder()
+            .message("Command step execution summary null for workflow: " + workflowExecution.normalizedName())
+            .build();
       }
-
     } else {
       return Optional.empty();
     }
   }
 
   @Override
-  public void syncInstances(String appId, String infraMappingId) throws HarnessException {
+  public void syncInstances(String appId, String infraMappingId) throws WingsException {
     syncInstancesInternal(appId, infraMappingId, null, false);
   }
 
   private void syncInstancesInternal(String appId, String infraMappingId,
-      List<DeploymentSummary> newDeploymentSummaries, boolean rollback) throws HarnessException {
+      List<DeploymentSummary> newDeploymentSummaries, boolean rollback) throws WingsException {
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
     Validator.notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
     if (!(infrastructureMapping instanceof CodeDeployInfrastructureMapping)) {
       String msg = "Incompatible infra mapping type. Expecting code deploy type. Found:"
           + infrastructureMapping.getInfraMappingType();
       logger.error(msg);
-      throw new HarnessException(msg);
+      throw WingsException.builder().message(msg).build();
     }
 
     // key - ec2 instance id, value - instance
@@ -211,8 +210,7 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
   }
 
   @Override
-  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback)
-      throws HarnessException {
+  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback) throws WingsException {
     syncInstancesInternal(deploymentSummaries.iterator().next().getAppId(),
         deploymentSummaries.iterator().next().getInfraMappingId(), deploymentSummaries, rollback);
   }
@@ -227,7 +225,9 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
     if (deploymentKey instanceof AwsCodeDeployDeploymentKey) {
       deploymentSummary.setAwsCodeDeployDeploymentKey((AwsCodeDeployDeploymentKey) deploymentKey);
     } else {
-      throw new WingsException("Invalid deploymentKey passed for AwsCodeDeployDeploymentKey" + deploymentKey);
+      throw WingsException.builder()
+          .message("Invalid deploymentKey passed for AwsCodeDeployDeploymentKey" + deploymentKey)
+          .build();
     }
   }
 }
