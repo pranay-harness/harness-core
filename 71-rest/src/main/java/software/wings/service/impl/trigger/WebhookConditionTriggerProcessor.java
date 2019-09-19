@@ -80,7 +80,7 @@ public class WebhookConditionTriggerProcessor implements TriggerProcessor {
       exception.addContext(Application.class, appId);
       exception.addContext(DeploymentTrigger.class, webhookTriggerExecutionParams.trigger.getUuid());
       ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
-      return null;
+      throw exception;
     }
   }
 
