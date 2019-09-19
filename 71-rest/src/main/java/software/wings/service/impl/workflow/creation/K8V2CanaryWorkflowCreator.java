@@ -37,8 +37,10 @@ public class K8V2CanaryWorkflowCreator extends WorkflowCreator {
     MapperUtils.mapObject(clientWorkflow, workflow);
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-    addLinkedPreOrPostDeploymentSteps(canaryOrchestrationWorkflow);
-    addWorkflowPhases(workflow);
+    if (k8CanaryWorkflowPhaseHelper.isCreationRequired(canaryOrchestrationWorkflow)) {
+      addLinkedPreOrPostDeploymentSteps(canaryOrchestrationWorkflow);
+      addWorkflowPhases(workflow);
+    }
     return workflow;
   }
 

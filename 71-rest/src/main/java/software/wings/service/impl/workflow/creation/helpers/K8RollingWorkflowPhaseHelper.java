@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class K8RollingWorkflowPhaseHelper extends PhaseHelper {
+public class K8RollingWorkflowPhaseHelper extends K8AbstractWorkflowHelper {
   // Get all Rolling Steps
   public List<PhaseStep> getWorkflowPhaseSteps() {
     List<PhaseStep> phaseSteps = new ArrayList<>();

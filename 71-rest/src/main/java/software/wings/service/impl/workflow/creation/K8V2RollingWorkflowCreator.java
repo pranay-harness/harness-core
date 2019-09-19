@@ -25,8 +25,10 @@ public class K8V2RollingWorkflowCreator extends WorkflowCreator {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
 
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-    addLinkedPreOrPostDeploymentSteps(canaryOrchestrationWorkflow);
-    addWorkflowPhases(workflow);
+    if (k8RollingWorkflowPhaseHelper.isCreationRequired(canaryOrchestrationWorkflow)) {
+      addLinkedPreOrPostDeploymentSteps(canaryOrchestrationWorkflow);
+      addWorkflowPhases(workflow);
+    }
     return workflow;
   }
 
