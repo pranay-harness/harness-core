@@ -1,0 +1,24 @@
+# Enter your Task Definition JSON spec below.
+#
+# Placeholders:
+#
+# Required: {APPLICATION_NAME}
+#   - Replaced with the application name being deployed
+#
+# Optional: {INSTANCE_COUNT}
+#   - Replaced with a instance count for application
+#
+# Required: {FILE_LOCATION}
+#   - Replaced with file location
+#
+# Required: {ROUTE_MAP}
+#   - Replaced with route maps
+#
+# ---
+applications:
+- name: ${APPLICATION_NAME}
+  memory: 350M
+  INSTANCES : ${INSTANCE_COUNT}
+  path: ${FILE_LOCATION}
+  ROUTES:
+  - route: ${ROUTE_MAP}

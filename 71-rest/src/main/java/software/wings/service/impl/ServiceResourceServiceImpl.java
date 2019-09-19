@@ -214,6 +214,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   private static String default_k8s_namespace_yaml;
   private static String default_k8s_service_yaml;
   private static String default_k8s_values_yaml;
+  private static String default_pcf_manifest_yaml;
 
   static {
     try {
@@ -228,8 +229,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
       url = ServiceResourceServiceImpl.class.getClassLoader().getResource("default-k8s-manifests/values.yaml");
       default_k8s_values_yaml = Resources.toString(url, Charsets.UTF_8);
+
+      url = ServiceResourceServiceImpl.class.getClassLoader().getResource("default-pcf-manifests/manifest.yaml");
+      default_pcf_manifest_yaml = Resources.toString(url, Charsets.UTF_8);
     } catch (IOException e) {
-      throw new RuntimeException("Failed to read default k8s manifests", e);
+      throw new RuntimeException("Failed to read default manifests", e);
     }
   }
 
@@ -336,7 +340,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       savedService = createDefaultHelmValueYaml(savedService, createdFromYaml);
       serviceTemplateService.createDefaultTemplatesByService(savedService);
       createDefaultK8sManifests(savedService, service.isSyncFromGit());
-      createDefaultPCFManifestsIfApplicable(savedService);
+      createDefaultPCFManifestsIfApplicable(savedService, service.isSyncFromGit());
 
       sendNotificationAsync(savedService, NotificationMessageType.ENTITY_CREATE_NOTIFICATION);
 
@@ -2221,17 +2225,45 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     applicationManifestService.createManifestFileByServiceId(defaultValues, service.getUuid());
   }
 
-  private void createDefaultPCFManifestsIfApplicable(Service service) {
-    if (!PCF.equals(service.getDeploymentType())) {
+  private void createDefaultPCFManifestsIfApplicable(Service service, boolean createdFromGit) {
+    if (!PCF.equals(service.getDeploymentType()) || createdFromGit) {
       return;
     }
 
+    if (featureFlagService.isEnabled(FeatureName.PCF_MANIFEST_REDESIGN, service.getAccountId())) {
+      createDefaultPcfV2Manifests(service);
+    } else {
+      createDefaultPcfSpec(service);
+    }
+  }
+
+  private void createDefaultPcfSpec(Service service) {
     PcfServiceSpecification pcfServiceSpecification =
         PcfServiceSpecification.builder().serviceId(service.getUuid()).build();
     pcfServiceSpecification.setAppId(service.getAppId());
     pcfServiceSpecification.resetToDefaultManifestSpecification();
 
     createPcfServiceSpecification(pcfServiceSpecification);
+  }
+
+  private void createDefaultPcfV2Manifests(Service service) {
+    if (applicationManifestService.getK8sManifestByServiceId(service.getAppId(), service.getUuid()) != null) {
+      return;
+    }
+
+    ApplicationManifest applicationManifest = ApplicationManifest.builder()
+                                                  .serviceId(service.getUuid())
+                                                  .storeType(StoreType.Local)
+                                                  .kind(AppManifestKind.K8S_MANIFEST)
+                                                  .build();
+    applicationManifest.setAppId(service.getAppId());
+
+    applicationManifestService.create(applicationManifest);
+
+    ManifestFile defaultManifestSpec =
+        ManifestFile.builder().fileName("manifest.yaml").fileContent(default_pcf_manifest_yaml).build();
+    defaultManifestSpec.setAppId(service.getAppId());
+    applicationManifestService.createManifestFileByServiceId(defaultManifestSpec, service.getUuid());
   }
 
   private void cloneAppManifests(String appId, String clonedServiceId, String originalServiceId) {
