@@ -15,17 +15,19 @@ import java.util.Map;
  * Created by rsingh on 11/3/17.
  */
 public interface VaultRestClientV1 {
-  String BASE_VAULT_URL = "v1/secret/";
+  String BASE_VAULT_URL = "v1/";
 
-  @POST(BASE_VAULT_URL + "{path}")
-  Call<Void> writeSecret(
-      @Header("X-Vault-Token") String header, @Path("path") String fullPath, @Body Map<String, String> value);
+  @POST(BASE_VAULT_URL + "{secretEngine}/{path}")
+  Call<Void> writeSecret(@Header("X-Vault-Token") String header, @Path("secretEngine") String secretEngine,
+      @Path("path") String fullPath, @Body Map<String, String> value);
 
-  @DELETE(BASE_VAULT_URL + "{path}")
-  Call<Void> deleteSecret(@Header("X-Vault-Token") String header, @Path("path") String fullPath);
+  @DELETE(BASE_VAULT_URL + "{secretEngine}/{path}")
+  Call<Void> deleteSecret(
+      @Header("X-Vault-Token") String header, @Path("secretEngine") String secretEngine, @Path("path") String fullPath);
 
-  @GET(BASE_VAULT_URL + "{path}")
-  Call<VaultReadResponse> readSecret(@Header("X-Vault-Token") String header, @Path("path") String fullPath);
+  @GET(BASE_VAULT_URL + "{secretEngine}/{path}")
+  Call<VaultReadResponse> readSecret(
+      @Header("X-Vault-Token") String header, @Path("secretEngine") String secretEngine, @Path("path") String fullPath);
 
   @POST("v1/auth/token/renew-self") Call<Object> renewToken(@Header("X-Vault-Token") String header);
 }

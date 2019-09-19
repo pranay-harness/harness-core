@@ -32,10 +32,12 @@ import software.wings.beans.VaultConfig;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.service.impl.security.SecretText;
+import software.wings.service.impl.security.vault.SecretEngineSummary;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.SecretManagerConfigService;
+import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -175,6 +177,23 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
       wingsPersistence.updateField(Account.class, accountId, "localEncryptionEnabled", false);
 
       // 7. Delete the vault config
+      deleteVaultConfig(vaultConfigId);
+    }
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
+  public void testListVaultSecretEngines() {
+    String vaultConfigId = createVaultConfig(vaultConfig);
+    VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
+    assertThat(savedVaultConfig).isNotNull();
+
+    try {
+      List<SecretEngineSummary> secretEngineSummaries = listSecretEngines(vaultConfig);
+      boolean foundDefaultEngine = secretEngineSummaries.stream().anyMatch(
+          secretEngineSummary -> secretEngineSummary.getName().equals(VaultService.DEFAULT_SECRET_ENGINE_NAME));
+      assertThat(foundDefaultEngine).isTrue();
+    } finally {
       deleteVaultConfig(vaultConfigId);
     }
   }
@@ -916,6 +935,15 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     RestResponse<List<SettingAttribute>> response =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<SettingAttribute>>>() {});
     // Verify the vault config was deleted successfully
+    assertThat(response.getResponseMessages()).isEmpty();
+    assertThat(response.getResource().size() > 0).isTrue();
+    return response.getResource();
+  }
+
+  private List<SecretEngineSummary> listSecretEngines(VaultConfig vaultConfig) {
+    WebTarget target = client.target(API_BASE + "/vault/list-engines?accountId=" + accountId);
+    RestResponse<List<SecretEngineSummary>> response = getRequestBuilderWithAuthHeader(target).post(
+        entity(vaultConfig, APPLICATION_JSON), new GenericType<RestResponse<List<SecretEngineSummary>>>() {});
     assertThat(response.getResponseMessages()).isEmpty();
     assertThat(response.getResource().size() > 0).isTrue();
     return response.getResource();

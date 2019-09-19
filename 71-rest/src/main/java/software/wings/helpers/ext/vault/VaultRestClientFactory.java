@@ -44,15 +44,19 @@ public class VaultRestClientFactory {
     loggingInterceptor.setLevel(Level.NONE);
   }
 
-  public static VaultRestClient create(final VaultConfig vaultConfig) {
+  public static Retrofit getVaultRetrofit(String vaultUrl) {
     OkHttpClient httpClient =
-        Http.getUnsafeOkHttpClientBuilder(vaultConfig.getVaultUrl(), 10, 10).addInterceptor(loggingInterceptor).build();
+        Http.getUnsafeOkHttpClientBuilder(vaultUrl, 10, 10).addInterceptor(loggingInterceptor).build();
 
-    final Retrofit retrofit = new Retrofit.Builder()
-                                  .baseUrl(vaultConfig.getVaultUrl())
-                                  .addConverterFactory(JacksonConverterFactory.create(objectMapper))
-                                  .client(httpClient)
-                                  .build();
+    return new Retrofit.Builder()
+        .baseUrl(vaultUrl)
+        .addConverterFactory(JacksonConverterFactory.create(objectMapper))
+        .client(httpClient)
+        .build();
+  }
+
+  public static VaultRestClient create(final VaultConfig vaultConfig) {
+    final Retrofit retrofit = getVaultRetrofit(vaultConfig.getVaultUrl());
 
     int version = vaultConfig.getSecretEngineVersion();
     switch (version) {
@@ -112,30 +116,34 @@ public class VaultRestClientFactory {
     }
 
     @Override
-    public boolean writeSecret(String authToken, String fullPath, String value) throws IOException {
+    public boolean writeSecret(String authToken, String secretEngine, String fullPath, String value)
+        throws IOException {
       VaultPathAndKey pathAndKey = parseFullPath(fullPath);
       Map<String, String> valueMap = new HashMap<>();
       valueMap.put(pathAndKey.keyName, value);
-      Response<Void> response = vaultRestClient.writeSecret(authToken, pathAndKey.path, valueMap).execute();
+      Response<Void> response =
+          vaultRestClient.writeSecret(authToken, secretEngine, pathAndKey.path, valueMap).execute();
       return response.isSuccessful();
     }
 
     @Override
-    public boolean deleteSecret(String authToken, String fullPath) throws IOException {
+    public boolean deleteSecret(String authToken, String secretEngine, String fullPath) throws IOException {
       VaultPathAndKey pathAndKey = parseFullPath(fullPath);
-      return vaultRestClient.deleteSecret(authToken, pathAndKey.path).execute().isSuccessful();
+      return vaultRestClient.deleteSecret(authToken, secretEngine, pathAndKey.path).execute().isSuccessful();
     }
 
     @Override
-    public String readSecret(String authToken, String fullPath) throws IOException {
+    public String readSecret(String authToken, String secretEngine, String fullPath) throws IOException {
       VaultPathAndKey pathAndKey = parseFullPath(fullPath);
 
-      VaultReadResponse response = vaultRestClient.readSecret(authToken, pathAndKey.path).execute().body();
+      VaultReadResponse response =
+          vaultRestClient.readSecret(authToken, secretEngine, pathAndKey.path).execute().body();
       return response == null || response.getData() == null ? null : response.getData().get(pathAndKey.keyName);
     }
 
     @Override
-    public VaultSecretMetadata readSecretMetadata(String authToken, String fullPath) throws IOException {
+    public VaultSecretMetadata readSecretMetadata(String authToken, String secretEngine, String fullPath)
+        throws IOException {
       // Older Vault services doesn't have secret version metadata available!
       return null;
     }
@@ -154,35 +162,39 @@ public class VaultRestClientFactory {
     }
 
     @Override
-    public boolean writeSecret(String authToken, String fullPath, String value) throws IOException {
+    public boolean writeSecret(String authToken, String secretEngine, String fullPath, String value)
+        throws IOException {
       VaultPathAndKey pathAndKey = parseFullPath(fullPath);
       Map<String, String> dataMap = new HashMap<>();
       dataMap.put(pathAndKey.keyName, value);
       VaultSecretValue vaultSecretValue = new VaultSecretValue(dataMap);
-      Response<Void> response = vaultRestClient.writeSecret(authToken, pathAndKey.path, vaultSecretValue).execute();
+      Response<Void> response =
+          vaultRestClient.writeSecret(authToken, secretEngine, pathAndKey.path, vaultSecretValue).execute();
       return response.isSuccessful();
     }
 
     @Override
-    public boolean deleteSecret(String authToken, String fullPath) throws IOException {
+    public boolean deleteSecret(String authToken, String secretEngine, String fullPath) throws IOException {
       VaultPathAndKey pathAndKey = parseFullPath(fullPath);
-      return vaultRestClient.deleteSecret(authToken, pathAndKey.path).execute().isSuccessful();
+      return vaultRestClient.deleteSecret(authToken, secretEngine, pathAndKey.path).execute().isSuccessful();
     }
 
     @Override
-    public String readSecret(String authToken, String fullPath) throws IOException {
+    public String readSecret(String authToken, String secretEngine, String fullPath) throws IOException {
       VaultPathAndKey pathAndKey = parseFullPath(fullPath);
 
-      VaultReadResponseV2 response = vaultRestClient.readSecret(authToken, pathAndKey.path).execute().body();
+      VaultReadResponseV2 response =
+          vaultRestClient.readSecret(authToken, secretEngine, pathAndKey.path).execute().body();
       return response == null || response.getData() == null ? null
                                                             : response.getData().getData().get(pathAndKey.keyName);
     }
 
     @Override
-    public VaultSecretMetadata readSecretMetadata(String authToken, String fullPath) throws IOException {
+    public VaultSecretMetadata readSecretMetadata(String authToken, String secretEngine, String fullPath)
+        throws IOException {
       VaultPathAndKey pathAndKey = parseFullPath(fullPath);
       VaultMetadataReadResponse response =
-          vaultRestClient.readSecretMetadata(authToken, pathAndKey.path).execute().body();
+          vaultRestClient.readSecretMetadata(authToken, secretEngine, pathAndKey.path).execute().body();
       return response == null ? null : response.getData();
     }
 

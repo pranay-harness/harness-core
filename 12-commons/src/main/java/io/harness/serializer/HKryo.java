@@ -50,6 +50,7 @@ import io.harness.exception.HintException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KmsOperationException;
+import io.harness.exception.SecretManagementDelegateException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
@@ -200,6 +201,7 @@ public class HKryo extends Kryo {
 
     register(JSONArray.class, 5583);
     register(JSONObject.class, 5584);
+    register(SecretManagementDelegateException.class, 5585);
 
     register(FileData.class, 1201);
     register(GlobalContext.class, 1202);

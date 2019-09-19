@@ -24,32 +24,22 @@ import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import io.harness.network.Http;
+import io.harness.expression.SecretString;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.OkHttpClient;
-import okhttp3.logging.HttpLoggingInterceptor;
-import okhttp3.logging.HttpLoggingInterceptor.Level;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.KmsSetupAlert;
-import software.wings.helpers.ext.vault.VaultSysAuthRestClient;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.security.encryption.SecretChangeLog;
-import software.wings.service.impl.security.vault.SysMount;
-import software.wings.service.impl.security.vault.SysMountsResponse;
-import software.wings.service.impl.security.vault.VaultAppRoleLoginRequest;
-import software.wings.service.impl.security.vault.VaultAppRoleLoginResponse;
+import software.wings.service.impl.security.vault.SecretEngineSummary;
 import software.wings.service.impl.security.vault.VaultAppRoleLoginResult;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
@@ -64,7 +54,6 @@ import java.nio.CharBuffer;
 import java.time.Duration;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -274,6 +263,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       savedVaultConfig.setRenewIntervalHours(vaultConfig.getRenewIntervalHours());
       savedVaultConfig.setDefault(vaultConfig.isDefault());
       savedVaultConfig.setBasePath(vaultConfig.getBasePath());
+      savedVaultConfig.setSecretEngineName(vaultConfig.getSecretEngineName());
+      savedVaultConfig.setSecretEngineVersion(vaultConfig.getSecretEngineVersion());
       savedVaultConfig.setAppRoleId(vaultConfig.getAppRoleId());
 
       // PL-3237: Audit secret manager config changes.
@@ -373,6 +364,43 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   }
 
   @Override
+  public List<SecretEngineSummary> listSecretEngines(VaultConfig vaultConfig) {
+    if (isNotEmpty(vaultConfig.getUuid())) {
+      VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
+      decryptVaultConfigSecrets(vaultConfig.getAccountId(), savedVaultConfig, false);
+      if (SecretString.SECRET_MASK.equals(vaultConfig.getAuthToken())) {
+        vaultConfig.setAuthToken(savedVaultConfig.getAuthToken());
+      }
+      if (SecretString.SECRET_MASK.equals(vaultConfig.getSecretId())) {
+        vaultConfig.setSecretId(savedVaultConfig.getSecretId());
+      }
+    }
+
+    // HAR-7605: Shorter timeout for decryption tasks, and it should retry on timeout or failure.
+    int failedAttempts = 0;
+    while (true) {
+      try {
+        SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                              .accountId(vaultConfig.getAccountId())
+                                              .timeout(Duration.ofSeconds(5).toMillis())
+                                              .appId(GLOBAL_APP_ID)
+                                              .correlationId(vaultConfig.getUuid())
+                                              .build();
+        return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
+            .listSecretEngines(vaultConfig);
+      } catch (WingsException e) {
+        failedAttempts++;
+        logger.info("Vault Decryption failed for list secret engines for Vault serverer {}. trial num: {}",
+            vaultConfig.getName(), failedAttempts, e);
+        if (failedAttempts == NUM_OF_RETRIES) {
+          throw e;
+        }
+        sleep(ofMillis(1000));
+      }
+    }
+  }
+
+  @Override
   public void decryptVaultConfigSecrets(String accountId, VaultConfig vaultConfig, boolean maskSecret) {
     if (maskSecret) {
       vaultConfig.maskSecrets();
@@ -463,12 +491,19 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   private void validateVaultConfig(String accountId, VaultConfig vaultConfig) {
     try {
       if (vaultConfig.getSecretEngineVersion() == 0) {
-        // Value 0 means the vault secret engine version has not been determined. Will need to check with
-        // the Vault server to determine the actual secret engine version.
-        int secreteEngineVersion = getVaultSecretEngineVersion(vaultConfig);
-        vaultConfig.setSecretEngineVersion(secreteEngineVersion);
-        logger.info(
-            "Secret engine version for vault secret manager {} is {}", vaultConfig.getName(), secreteEngineVersion);
+        SecretEngineSummary secretEngine = getVaultSecretEngine(vaultConfig);
+        if (secretEngine == null) {
+          String message = "Was not able to find the default or matching backend Vault secret engine.";
+          throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, message, USER).addParam(REASON_KEY, message);
+        } else {
+          // Default to secret engine kv version 2
+          int secreteEngineVersion = secretEngine.getVersion() != null ? secretEngine.getVersion() : 2;
+
+          vaultConfig.setSecretEngineVersion(secreteEngineVersion);
+          vaultConfig.setSecretEngineName(secretEngine.getName());
+          logger.info("Backend secret engine name and version for Vault secret manager {} are: [{}, {}]",
+              vaultConfig.getName(), secretEngine.getName(), secreteEngineVersion);
+        }
       }
 
       // Need to try using Vault AppRole login to generate a client token if configured so
@@ -501,76 +536,47 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     }
   }
 
-  public VaultAppRoleLoginResult appRoleLogin(VaultConfig vaultConfig) throws IOException {
-    HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
-    loggingInterceptor.setLevel(Level.NONE);
-    OkHttpClient httpClient =
-        Http.getUnsafeOkHttpClientBuilder(vaultConfig.getVaultUrl(), 10, 10).addInterceptor(loggingInterceptor).build();
-
-    final Retrofit retrofit = new Retrofit.Builder()
-                                  .baseUrl(vaultConfig.getVaultUrl())
-                                  .addConverterFactory(JacksonConverterFactory.create())
-                                  .client(httpClient)
-                                  .build();
-    VaultSysAuthRestClient restClient = retrofit.create(VaultSysAuthRestClient.class);
-
-    VaultAppRoleLoginRequest loginRequest = VaultAppRoleLoginRequest.builder()
-                                                .roleId(vaultConfig.getAppRoleId())
-                                                .secretId(vaultConfig.getSecretId())
-                                                .build();
-    Response<VaultAppRoleLoginResponse> response = restClient.appRoleLogin(loginRequest).execute();
-
-    VaultAppRoleLoginResult result = null;
-    if (response.isSuccessful()) {
-      result = response.body().getAuth();
-    }
-    return result;
-  }
-
-  private int getVaultSecretEngineVersion(VaultConfig vaultConfig) throws IOException {
-    HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
-    loggingInterceptor.setLevel(Level.NONE);
-    OkHttpClient httpClient =
-        Http.getUnsafeOkHttpClientBuilder(vaultConfig.getVaultUrl(), 10, 10).addInterceptor(loggingInterceptor).build();
-
-    final Retrofit retrofit = new Retrofit.Builder()
-                                  .baseUrl(vaultConfig.getVaultUrl())
-                                  .addConverterFactory(JacksonConverterFactory.create())
-                                  .client(httpClient)
-                                  .build();
-    VaultSysAuthRestClient restClient = retrofit.create(VaultSysAuthRestClient.class);
-
-    Response<SysMountsResponse> response = restClient.getAllMounts(vaultConfig.getAuthToken()).execute();
-
-    int version = 2;
-    if (response.isSuccessful()) {
-      SysMount sysMount = getMountPointWithFallback(vaultConfig, response.body());
-      if (sysMount != null && sysMount.getOptions() != null) {
-        version = sysMount.getOptions().getVersion();
-      }
-    }
-
-    return version;
-  }
-
-  private SysMount getMountPointWithFallback(VaultConfig vaultConfig, SysMountsResponse sysMountsResponse) {
-    Map<String, SysMount> sysMounts = sysMountsResponse.getData();
-    SysMount sysMount = sysMounts.get(DEFAULT_SECRET_MOUNT_POINT);
-    logger.info("Found Vault sys mount points: {}", sysMounts.keySet());
-
-    if (sysMount == null || sysMount.getOptions() == null) {
-      sysMount = sysMounts.get(DEFAULT_HARNESS_MOUNT_POINT);
-      if (sysMount == null || sysMount.getOptions() == null) {
-        String basePath = vaultConfig.getBasePath();
-        if (isNotEmpty(basePath)) {
-          String[] parts = basePath.split(PATH_SEPARATOR);
-          String mountPoint = parts[0] + PATH_SEPARATOR;
-          sysMount = sysMounts.get(mountPoint);
+  public VaultAppRoleLoginResult appRoleLogin(VaultConfig vaultConfig) {
+    int failedAttempts = 0;
+    while (true) {
+      try {
+        SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                              .accountId(vaultConfig.getAccountId())
+                                              .timeout(Duration.ofSeconds(5).toMillis())
+                                              .appId(vaultConfig.getAccountId())
+                                              .correlationId(vaultConfig.getUuid())
+                                              .build();
+        return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
+            .appRoleLogin(vaultConfig);
+      } catch (WingsException e) {
+        failedAttempts++;
+        logger.info(
+            "Vault AppRole login failed Vault server {}. trial num: {}", vaultConfig.getName(), failedAttempts, e);
+        if (failedAttempts == NUM_OF_RETRIES) {
+          throw e;
         }
+        sleep(ofMillis(1000));
       }
     }
+  }
 
-    logger.info("Matched Vault sys mount point: {}", sysMount);
-    return sysMount;
+  private SecretEngineSummary getVaultSecretEngine(VaultConfig vaultConfig) {
+    List<SecretEngineSummary> secretEngineSummaries = listSecretEngines(vaultConfig);
+
+    return getSecretEngineWithFallback(vaultConfig, secretEngineSummaries);
+  }
+
+  private SecretEngineSummary getSecretEngineWithFallback(
+      VaultConfig vaultConfig, List<SecretEngineSummary> secretEngineSummaries) {
+    String mountPointName = isEmpty(vaultConfig.getSecretEngineName()) ? DEFAULT_SECRET_ENGINE_NAME
+                                                                       : vaultConfig.getSecretEngineName().trim();
+    SecretEngineSummary secretEngine =
+        secretEngineSummaries.stream()
+            .filter(secretEngineSummary -> secretEngineSummary.getName().equals(mountPointName))
+            .findAny()
+            .get();
+
+    logger.info("Matched Vault secret engine: {}", secretEngine);
+    return secretEngine;
   }
 }

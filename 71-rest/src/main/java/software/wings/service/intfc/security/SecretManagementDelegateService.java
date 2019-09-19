@@ -9,6 +9,8 @@ import software.wings.beans.TaskType;
 import software.wings.beans.VaultConfig;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.security.encryption.SecretChangeLog;
+import software.wings.service.impl.security.vault.SecretEngineSummary;
+import software.wings.service.impl.security.vault.VaultAppRoleLoginResult;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.List;
@@ -59,6 +61,16 @@ public interface SecretManagementDelegateService {
    * Renew the Hashicorp Vault authentication token.
    */
   @DelegateTaskType(TaskType.VAULT_RENEW_TOKEN) boolean renewVaultToken(VaultConfig vaultConfig);
+
+  /**
+   * List vault secret engines
+   */
+  @DelegateTaskType(TaskType.VAULT_LIST_ENGINES) List<SecretEngineSummary> listSecretEngines(VaultConfig vaultConfig);
+
+  /**
+   * Login Vault using AppRole auth.
+   */
+  @DelegateTaskType(TaskType.VAULT_APPROLE_LOGIN) VaultAppRoleLoginResult appRoleLogin(VaultConfig vaultConfig);
 
   /**
    * Encrypt the name-value setting in the specified account using AWS Secrets Manager. A {@link EncryptedRecord}

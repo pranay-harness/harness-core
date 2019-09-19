@@ -275,6 +275,8 @@ public enum TaskType {
   VAULT_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
   VAULT_GET_CHANGELOG(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
   VAULT_RENEW_TOKEN(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
+  VAULT_LIST_ENGINES(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
+  VAULT_APPROLE_LOGIN(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
   ASM_ENCRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
   ASM_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
   ASM_DELETE_SECRET(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),

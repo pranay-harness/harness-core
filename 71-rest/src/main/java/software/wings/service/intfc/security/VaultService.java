@@ -3,6 +3,7 @@ package software.wings.service.intfc.security;
 import software.wings.beans.VaultConfig;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
+import software.wings.service.impl.security.vault.SecretEngineSummary;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.File;
@@ -15,8 +16,8 @@ import java.util.List;
 public interface VaultService {
   String VAULT_VAILDATION_URL = "harness_vault_validation";
   String DEFAULT_BASE_PATH = "/harness";
-  String DEFAULT_SECRET_MOUNT_POINT = "secret/";
-  String DEFAULT_HARNESS_MOUNT_POINT = "harness/";
+  String DEFAULT_SECRET_ENGINE_NAME = "secret";
+  String KEY_VALUE_SECRET_ENGINE_TYPE = "kv";
   String DEFAULT_KEY_NAME = "value";
   String PATH_SEPARATOR = "/";
   String KEY_SPEARATOR = "#";
@@ -29,6 +30,8 @@ public interface VaultService {
   String saveVaultConfig(String accountId, VaultConfig vaultConfig);
 
   boolean deleteVaultConfig(String accountId, String vaultConfigId);
+
+  List<SecretEngineSummary> listSecretEngines(VaultConfig vaultConfig);
 
   void decryptVaultConfigSecrets(String accountId, VaultConfig vaultConfig, boolean maskSecret);
 

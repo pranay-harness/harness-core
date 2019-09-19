@@ -12,6 +12,7 @@ import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -55,6 +56,8 @@ public class VaultConfig extends SecretManagerConfig implements ExecutionCapabil
    * "1" automatically.
    */
   @SchemaIgnore private int secretEngineVersion;
+
+  @Default private String secretEngineName = "secret";
 
   private long renewedAt;
 
