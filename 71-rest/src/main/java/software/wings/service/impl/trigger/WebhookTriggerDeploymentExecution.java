@@ -59,6 +59,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.trigger.DeploymentTriggerService;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -235,7 +236,7 @@ public class WebhookTriggerDeploymentExecution {
           })
           .collect(Collectors.toMap(Variable::getName, Variable::getValue));
     } else {
-      return null;
+      return new HashMap<>();
     }
   }
 
