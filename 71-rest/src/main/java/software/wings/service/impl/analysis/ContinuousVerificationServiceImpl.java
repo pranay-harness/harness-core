@@ -1654,7 +1654,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         waitId);
     logger.info("Queuing 24x7 data collection task for {}, cvConfigurationId: {}", stateType, cvConfigId);
     cvActivityLogService.getLoggerByCVConfigId(cvConfiguration.getUuid(), TimeUnit.MILLISECONDS.toMinutes(endTime))
-        .info("Enqueuing 24 * 7 data collection task");
+        .info("Submitting service guard data collection task for time range %t to %t.", startTime, endTime);
     delegateService.queueTask(task);
     return true;
   }
@@ -2176,12 +2176,30 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       VerificationStateAnalysisExecutionData executionData, AnalysisContext context,
       boolean isDataCollectionPerMinuteTask) {
     String waitId = generateUuid();
+    long startTime;
+    long endTime;
+    // this is a deprecated way of collecting data so we will get rid of this once new data collection framework is
+    // implemented for these data collectors.
+    switch (context.getStateType()) {
+      case SUMO:
+      case ELK:
+      case DATA_DOG_LOG:
+      case STACK_DRIVER_LOG:
+        LogDataCollectionInfo logDataCollectionInfo = (LogDataCollectionInfo) dataCollectionInfo;
+        startTime = logDataCollectionInfo.getStartTime();
+        endTime = logDataCollectionInfo.getEndTime();
+        break;
+      default:
+        throw new IllegalStateException("Invalid state: " + context.getStateType());
+    }
     DelegateTask delegateTask = createDelegateTask(taskType, context.getAccountId(), context.getAppId(), waitId,
         new Object[] {dataCollectionInfo}, context.getEnvId());
     waitNotifyEngine.waitForAll(DataCollectionCallback.builder()
                                     .appId(context.getAppId())
                                     .executionData(executionData)
                                     .isDataCollectionPerMinuteTask(isDataCollectionPerMinuteTask)
+                                    .dataCollectionStartTime(TimeUnit.MINUTES.toMillis(startTime))
+                                    .dataCollectionEndTime(TimeUnit.MINUTES.toMillis(endTime))
                                     .stateExecutionId(context.getStateExecutionId())
                                     .stateType(context.getStateType())
                                     .build(),

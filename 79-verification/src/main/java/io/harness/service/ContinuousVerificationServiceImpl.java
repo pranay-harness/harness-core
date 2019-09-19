@@ -131,7 +131,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           long startTime = getDataCollectionStartMinForAPM(cvConfiguration, endMinute);
           long endTime = TimeUnit.MINUTES.toMillis(endMinute);
           if (endTime - startTime >= TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES / 3)) {
-            activityLogCVDataCollection(cvConfiguration.getUuid(), endMinute, startTime, endTime);
             logger.info("triggering data collection for state {} config {} startTime {} endTime {} collectionMinute {}",
                 cvConfiguration.getStateType(), cvConfiguration.getUuid(), startTime, endTime, endMinute);
             verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVDataCollection(
@@ -163,11 +162,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       startTime = TimeUnit.MINUTES.toMillis(maxCVCollectionMinute);
     }
     return startTime;
-  }
-
-  private void activityLogCVDataCollection(String cvConfigId, long endMinute, long startTime, long endTime) {
-    cvActivityLogService.getLoggerByCVConfigId(cvConfigId, TimeUnit.MINUTES.toMillis(endMinute))
-        .info("Submitting Data collection task to manager for time range %t to %t", startTime, endTime);
   }
 
   private long getAnalysisStartMinuteForAPM(CVConfiguration cvConfiguration, long lastCVDataCollectionMinute) {
@@ -605,7 +599,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 logger.info(
                     "triggering data collection for state {} config {} startTime {} endTime {} collectionMinute {}",
                     cvConfiguration.getStateType(), cvConfiguration.getUuid(), startTime, endTime, endMinute);
-                activityLogCVDataCollection(cvConfiguration.getUuid(), endMinute, startTime, endTime);
                 verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVDataCollection(
                     cvConfiguration.getUuid(), cvConfiguration.getStateType(), startTime, endTime));
               }
