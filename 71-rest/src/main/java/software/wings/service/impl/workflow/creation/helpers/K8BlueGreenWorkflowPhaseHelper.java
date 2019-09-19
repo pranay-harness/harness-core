@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class K8BlueGreenWorkflowPhaseHelper extends PhaseHelper {
+public class K8BlueGreenWorkflowPhaseHelper extends K8AbstractWorkflowHelper {
   public List<PhaseStep> getWorkflowPhaseSteps() {
     List<PhaseStep> phaseSteps = new ArrayList<>();
     phaseSteps.add(getDeployPhaseStep());

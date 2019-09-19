@@ -18,7 +18,7 @@ import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import java.util.ArrayList;
 import java.util.List;
 
-public class K8CanaryWorkflowPhaseHelper extends PhaseHelper {
+public class K8CanaryWorkflowPhaseHelper extends K8AbstractWorkflowHelper {
   public List<PhaseStep> getWorkflowPhaseSteps() {
     List<PhaseStep> phaseSteps = new ArrayList<>();
     phaseSteps.add(getCanaryDeployPhaseStep());

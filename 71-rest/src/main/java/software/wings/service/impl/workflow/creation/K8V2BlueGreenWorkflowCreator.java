@@ -24,8 +24,10 @@ public class K8V2BlueGreenWorkflowCreator extends WorkflowCreator {
     MapperUtils.mapObject(clientWorkflow, workflow);
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-    addLinkedPreOrPostDeploymentSteps(canaryOrchestrationWorkflow);
-    addWorkflowPhases(workflow);
+    if (k8BlueGreenWorkflowPhaseHelper.isCreationRequired(canaryOrchestrationWorkflow)) {
+      addLinkedPreOrPostDeploymentSteps(canaryOrchestrationWorkflow);
+      addWorkflowPhases(workflow);
+    }
     return workflow;
   }
 
