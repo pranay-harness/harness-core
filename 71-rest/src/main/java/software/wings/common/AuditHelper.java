@@ -1,10 +1,13 @@
 package software.wings.common;
 
+import static io.harness.manage.GlobalContextManager.initGlobalContextGuard;
+import static io.harness.manage.GlobalContextManager.upsertGlobalContextRecord;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.context.GlobalContext;
 import io.harness.globalcontex.AuditGlobalContextData;
-import io.harness.manage.GlobalContextManager;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
@@ -50,7 +53,9 @@ public class AuditHelper {
   }
 
   private void setGlobalContext(AuditHeader header) {
-    GlobalContextManager.upsertGlobalContextRecord(AuditGlobalContextData.builder().auditId(header.getUuid()).build());
+    // TODO: move this in a place where we can remove it after we are done
+    initGlobalContextGuard(new GlobalContext());
+    upsertGlobalContextRecord(AuditGlobalContextData.builder().auditId(header.getUuid()).build());
   }
 
   /**
