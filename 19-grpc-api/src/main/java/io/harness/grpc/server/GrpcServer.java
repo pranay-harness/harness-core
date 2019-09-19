@@ -22,12 +22,6 @@ public class GrpcServer extends AbstractIdleService {
 
   GrpcServer(Connector connector, Set<BindableService> services, Set<ServerInterceptor> interceptors,
       HealthStatusManager healthStatusManager) {
-    // TODO: Remove these logs (Added for debugging CCM-90)
-    logger.info("Initializing grpc server on connector: {} \n"
-            + "with services: {}, interceptors: {}",
-        connector, services, interceptors);
-    logger.info("Stack trace: ", new Exception("Stack trace"));
-
     ServerBuilder<?> builder = ServerBuilder.forPort(connector.getPort());
     if (connector.isSecure()) {
       File certChain = new File(connector.getCertFilePath());
@@ -45,6 +39,7 @@ public class GrpcServer extends AbstractIdleService {
     logger.info("Starting xxxxxxxx {}", server);
     server.start();
     healthStatusManager.setStatus(HealthStatusManager.SERVICE_NAME_ALL_SERVICES, ServingStatus.SERVING);
+    logger.info("Server started successfully");
   }
 
   @Override
@@ -53,5 +48,6 @@ public class GrpcServer extends AbstractIdleService {
     healthStatusManager.setStatus(HealthStatusManager.SERVICE_NAME_ALL_SERVICES, ServingStatus.NOT_SERVING);
     server.shutdown();
     server.awaitTermination();
+    logger.info("Server stopped");
   }
 }
