@@ -8,7 +8,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.exception.HarnessException;
+import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.DeploymentInfo;
 import software.wings.api.DeploymentSummary;
@@ -62,14 +62,14 @@ public abstract class InstanceHandler {
 
   public static final String AUTO_SCALE = "AUTO_SCALE";
 
-  public abstract void syncInstances(String appId, String infraMappingId) throws HarnessException;
+  public abstract void syncInstances(String appId, String infraMappingId) throws WingsException;
   public abstract void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback)
-      throws HarnessException;
+      throws WingsException;
 
   public abstract Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
       PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
       InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact)
-      throws HarnessException;
+      throws WingsException;
 
   protected List<Instance> getInstances(String appId, String infraMappingId) {
     PageRequest<Instance> pageRequest = new PageRequest<>();
@@ -84,7 +84,7 @@ public abstract class InstanceHandler {
   public List<DeploymentSummary> getDeploymentSummariesForEvent(PhaseExecutionData phaseExecutionData,
       PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
       InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact)
-      throws HarnessException {
+      throws WingsException {
     Optional<List<DeploymentInfo>> deploymentInfoOptional = getDeploymentInfo(phaseExecutionData,
         phaseStepExecutionData, workflowExecution, infrastructureMapping, stateExecutionInstanceId, artifact);
 

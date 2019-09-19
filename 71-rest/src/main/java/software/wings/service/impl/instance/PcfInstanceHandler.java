@@ -12,7 +12,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.DeploymentInfo;
@@ -58,7 +57,7 @@ public class PcfInstanceHandler extends InstanceHandler {
   @Inject private PcfHelperService pcfHelperService;
 
   @Override
-  public void syncInstances(String appId, String infraMappingId) throws HarnessException {
+  public void syncInstances(String appId, String infraMappingId) throws WingsException {
     Multimap<String, Instance> pcfAppNameInstanceMap = ArrayListMultimap.create();
     syncInstancesInternal(appId, infraMappingId, pcfAppNameInstanceMap, null, false);
   }
@@ -68,11 +67,11 @@ public class PcfInstanceHandler extends InstanceHandler {
    * @param appId
    * @param infraMappingId
    * @param pcfAppNameInstanceMap  key - pcfAppName     value - Instances
-   * @throws HarnessException
+   * @throws WingsException
    */
   private void syncInstancesInternal(String appId, String infraMappingId,
       Multimap<String, Instance> pcfAppNameInstanceMap, List<DeploymentSummary> newDeploymentSummaries,
-      boolean rollback) throws HarnessException {
+      boolean rollback) throws WingsException {
     logger.info("# Performing PCF Instance sync");
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
     Validator.notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
@@ -81,7 +80,7 @@ public class PcfInstanceHandler extends InstanceHandler {
       String msg =
           "Incompatible infra mapping type. Expecting PCF type. Found:" + infrastructureMapping.getInfraMappingType();
       logger.error(msg);
-      throw new HarnessException(msg);
+      throw WingsException.builder().message(msg).build();
     }
 
     Map<String, DeploymentSummary> pcfAppNamesNewDeploymentSummaryMap = getDeploymentSummaryMap(newDeploymentSummaries);
@@ -194,7 +193,7 @@ public class PcfInstanceHandler extends InstanceHandler {
 
   private Map<String, DeploymentSummary> getDeploymentSummaryMap(List<DeploymentSummary> newDeploymentSummaries) {
     if (EmptyPredicate.isEmpty(newDeploymentSummaries)) {
-      return Collections.EMPTY_MAP;
+      return Collections.emptyMap();
     }
 
     Map<String, DeploymentSummary> deploymentSummaryMap = new HashMap<>();
@@ -221,7 +220,7 @@ public class PcfInstanceHandler extends InstanceHandler {
   }
 
   private void loadPcfAppNameInstanceMap(String appId, String infraMappingId,
-      Multimap<String, Instance> pcfApplicationNameInstanceMap) throws HarnessException {
+      Multimap<String, Instance> pcfApplicationNameInstanceMap) throws WingsException {
     List<Instance> instanceListInDBForInfraMapping = getInstances(appId, infraMappingId);
     for (Instance instance : instanceListInDBForInfraMapping) {
       InstanceInfo instanceInfo = instance.getInstanceInfo();
@@ -230,14 +229,15 @@ public class PcfInstanceHandler extends InstanceHandler {
         String pcfAppName = pcfInstanceInfo.getPcfApplicationName();
         pcfApplicationNameInstanceMap.put(pcfAppName, instance);
       } else {
-        throw new HarnessException("UnSupported instance deploymentInfo type" + instance.getInstanceType().name());
+        throw WingsException.builder()
+            .message("UnSupported instance deploymentInfo type" + instance.getInstanceType().name())
+            .build();
       }
     }
   }
 
   @Override
-  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback)
-      throws HarnessException {
+  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback) throws WingsException {
     Multimap<String, Instance> pcfApplicationNameInstanceMap = ArrayListMultimap.create();
     deploymentSummaries.forEach(deploymentSummary -> {
       PcfDeploymentInfo pcfDeploymentInfo = (PcfDeploymentInfo) deploymentSummary.getDeploymentInfo();
@@ -253,7 +253,7 @@ public class PcfInstanceHandler extends InstanceHandler {
   public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
       PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
       InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact)
-      throws HarnessException {
+      throws WingsException {
     PhaseStepExecutionSummary phaseStepExecutionSummary = phaseStepExecutionData.getPhaseStepExecutionSummary();
     if (phaseStepExecutionSummary == null) {
       if (logger.isDebugEnabled()) {
@@ -309,7 +309,9 @@ public class PcfInstanceHandler extends InstanceHandler {
     if (deploymentKey instanceof PcfDeploymentKey) {
       deploymentSummary.setPcfDeploymentKey((PcfDeploymentKey) deploymentKey);
     } else {
-      throw new WingsException("Invalid deploymentKey passed for PcfDeploymentKey" + deploymentKey);
+      throw WingsException.builder()
+          .message("Invalid deploymentKey passed for PcfDeploymentKey" + deploymentKey)
+          .build();
     }
   }
 }

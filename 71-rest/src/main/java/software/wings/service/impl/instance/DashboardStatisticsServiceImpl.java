@@ -12,7 +12,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.NO_APPS_ASSIGNED;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
-import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
 import static org.mongodb.morphia.aggregation.Group.grouping;
@@ -38,8 +39,9 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
-import io.harness.exception.HarnessException;
+import io.harness.exception.NoResultFoundException;
 import io.harness.exception.WingsException;
+import io.harness.exception.WingsException.ReportTarget;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
@@ -106,7 +108,6 @@ import software.wings.sm.PipelineSummary;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -144,7 +145,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     Query<Instance> query;
     try {
       query = getInstanceQueryAtTime(accountId, appIds, timestamp);
-    } catch (HarnessException e) {
+    } catch (NoResultFoundException e) {
       return InstanceSummaryStats.Builder.anInstanceSummaryStats().countMap(null).totalCount(0).build();
     } catch (Exception e) {
       logger.error("Error while compiling query for getting app instance summary stats");
@@ -170,7 +171,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         entityNameColumn = "computeProviderName";
         entitySummaryStatsList = getEntitySummaryStats(entityIdColumn, entityNameColumn, groupByEntityType, query);
       } else {
-        throw new WingsException("Unsupported groupBy entity type:" + groupByEntityType);
+        throw WingsException.builder().message("Unsupported groupBy entity type:" + groupByEntityType).build();
       }
 
       instanceSummaryMap.put(groupByEntityType, entitySummaryStatsList);
@@ -266,7 +267,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     List<String> appIds = null;
     try {
       query = getInstanceQueryAtTime(accountId, appIds, timestamp);
-    } catch (HarnessException e) {
+    } catch (NoResultFoundException e) {
       return InstanceSummaryStats.Builder.anInstanceSummaryStats().countMap(null).totalCount(0).build();
     } catch (Exception e) {
       logger.error("Error while compiling query for getting app instance summary stats");
@@ -291,7 +292,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         entityIdColumn = "infraMappingId";
         entityNameColumn = "infraMappingType";
       } else {
-        throw new WingsException("Unsupported groupBy entity type:" + groupByEntityType);
+        throw WingsException.builder().message("Unsupported groupBy entity type:" + groupByEntityType).build();
       }
 
       entitySummaryStatsList = getEntitySummaryStats(entityIdColumn, entityNameColumn, groupByEntityType, query);
@@ -305,9 +306,12 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   }
 
   private void handleException(Exception exception) {
-    if (exception instanceof HarnessException) {
-      HarnessException harnessException = (HarnessException) exception;
-      List<ResponseMessage> responseMessageList = harnessException.getResponseMessageList();
+    if (exception instanceof NoResultFoundException) {
+      final NoResultFoundException noResultFoundException = (NoResultFoundException) exception;
+
+      final List<ResponseMessage> responseMessageList =
+          ExceptionLogger.getResponseMessageList(noResultFoundException, ReportTarget.LOG_SYSTEM);
+
       if (isNotEmpty(responseMessageList)) {
         ResponseMessage responseMessage = responseMessageList.get(0);
         if (!responseMessage.getCode().equals(ErrorCode.NO_APPS_ASSIGNED)) {
@@ -378,7 +382,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   }
 
   private PageResponse getEmptyPageResponse() {
-    return aPageResponse().withResponse(Collections.emptyList()).build();
+    return aPageResponse().withResponse(emptyList()).build();
   }
 
   @Override
@@ -387,11 +391,11 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     Query<Instance> query;
     try {
       query = getInstanceQueryAtTime(accountId, appIds, timestamp);
-    } catch (HarnessException e) {
-      return Collections.emptyList();
+    } catch (NoResultFoundException nre) {
+      return emptyList();
     } catch (Exception e) {
       logger.error("Error while compiling query for instance stats by service");
-      return Collections.emptyList();
+      return emptyList();
     }
 
     List<AggregationInfo> instanceInfoList = new ArrayList<>();
@@ -429,7 +433,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       query = getInstanceQueryAtTime(accountId, serviceId, timestamp);
     } catch (Exception e) {
       logger.error("Error while compiling query for instance stats by service");
-      return Collections.emptyList();
+      return emptyList();
     }
 
     List<ServiceAggregationInfo> serviceAggregationInfoList = new ArrayList<>();
@@ -449,7 +453,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
                 "instanceInfoList", grouping("$addToSet", projection("id", "_id"), projection("name", "hostName"))))
         .sort(ascending("_id.envId"), descending("count"))
         .aggregate(ServiceAggregationInfo.class)
-        .forEachRemaining(serviceAggregationInfo -> { serviceAggregationInfoList.add(serviceAggregationInfo); });
+        .forEachRemaining(serviceAggregationInfoList::add);
 
     return constructInstanceStatsForService(serviceId, serviceAggregationInfoList);
   }
@@ -460,7 +464,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     Query<Instance> query;
     try {
       query = getInstanceQueryAtTime(accountId, appIds, timestamp);
-    } catch (HarnessException e) {
+    } catch (NoResultFoundException nre) {
       return getEmptyPageResponse();
     } catch (Exception e) {
       logger.error("Error while compiling query for instance stats by service");
@@ -482,14 +486,14 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
     final Iterator<ServiceInstanceCount> aggregate =
         HPersistence.retry(() -> aggregationPipeline.aggregate(ServiceInstanceCount.class));
-    aggregate.forEachRemaining(serviceInstanceCount -> instanceInfoList.add(serviceInstanceCount));
+    aggregate.forEachRemaining(instanceInfoList::add);
     return constructInstanceSummaryStatsByService(instanceInfoList, offset, limit);
   }
 
   private PageResponse<InstanceSummaryStatsByService> constructInstanceSummaryStatsByService(
       List<ServiceInstanceCount> serviceInstanceCountList, int offset, int limit) {
     List<InstanceSummaryStatsByService> instanceSummaryStatsByServiceList =
-        serviceInstanceCountList.stream().map(s -> getInstanceSummaryStatsByService(s)).collect(toList());
+        serviceInstanceCountList.stream().map(this ::getInstanceSummaryStatsByService).collect(toList());
     return aPageResponse()
         .withResponse(instanceSummaryStatsByServiceList)
         .withOffset(Integer.toString(offset))
@@ -511,7 +515,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   }
 
   private Query<Instance> getInstanceQueryAtTime(String accountId, List<String> appIds, long timestamp)
-      throws HarnessException {
+      throws WingsException {
     Query<Instance> query;
     if (timestamp > 0) {
       query = getInstanceQuery(accountId, appIds, true, timestamp);
@@ -752,11 +756,11 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   private List<CurrentActiveInstances> getCurrentActiveInstances(String accountId, String appId, String serviceId) {
     Query<Instance> query;
     try {
-      query = getInstanceQuery(accountId, asList(appId), false, 0L);
+      query = getInstanceQuery(accountId, singletonList(appId), false, 0L);
       query.filter("serviceId", serviceId);
     } catch (Exception exception) {
       handleException(exception);
-      return Lists.newArrayList();
+      return emptyList();
     }
 
     List<AggregationInfo> instanceInfoList = new ArrayList<>();
@@ -777,7 +781,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
                     projection("deployedAt", "lastDeployedAt"), projection("sourceName", "lastArtifactSourceName"))))
         .sort(descending("count"))
         .aggregate(AggregationInfo.class)
-        .forEachRemaining(instanceInfo -> instanceInfoList.add(instanceInfo));
+        .forEachRemaining(instanceInfoList::add);
     return constructCurrentActiveInstances(instanceInfoList);
   }
 
@@ -1050,7 +1054,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   }
 
   private Query<Instance> getInstanceQuery(
-      String accountId, List<String> appIds, boolean includeDeleted, long timestamp) throws HarnessException {
+      String accountId, List<String> appIds, boolean includeDeleted, long timestamp) throws WingsException {
     Query query = wingsPersistence.createQuery(Instance.class);
     if (isNotEmpty(appIds)) {
       query.field("appId").in(appIds);
@@ -1078,11 +1082,11 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
               query.field("appId").in(allowedAppIds);
             }
           } else {
-            throw new HarnessException(NO_APPS_ASSIGNED);
+            throw NoResultFoundException.newBuilder().code(NO_APPS_ASSIGNED).build();
           }
         }
       } else {
-        throw new HarnessException(NO_APPS_ASSIGNED);
+        throw NoResultFoundException.newBuilder().code(NO_APPS_ASSIGNED).build();
       }
     }
 

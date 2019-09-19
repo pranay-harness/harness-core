@@ -6,7 +6,7 @@ import static java.util.stream.Collectors.toSet;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
-import io.harness.exception.HarnessException;
+import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
@@ -38,7 +38,7 @@ public class AzureInstanceHandler extends InstanceHandler {
   @Inject protected AzureHelperService azureHelperService;
 
   @Override
-  public void syncInstances(String appId, String infraMappingId) throws HarnessException {
+  public void syncInstances(String appId, String infraMappingId) throws WingsException {
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
     Validator.notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
 
@@ -46,7 +46,7 @@ public class AzureInstanceHandler extends InstanceHandler {
       String msg = "Incompatible infra mapping type. Expecting AZURE_INFRA type. Found:"
           + infrastructureMapping.getInfraMappingType();
       logger.error(msg);
-      throw new HarnessException(msg);
+      throw WingsException.builder().message(msg).build();
     }
 
     AzureInfrastructureMapping azureInfrastructureMapping = (AzureInfrastructureMapping) infrastructureMapping;

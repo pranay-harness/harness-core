@@ -11,7 +11,7 @@ import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.exception.HarnessException;
+import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -59,7 +59,7 @@ public class AwsInstanceHandler extends InstanceHandler {
   @Inject protected AwsInfrastructureProvider awsInfrastructureProvider;
 
   @Override
-  public void syncInstances(String appId, String infraMappingId) throws HarnessException {
+  public void syncInstances(String appId, String infraMappingId) throws WingsException {
     // Key - Auto scaling group with revision, Value - Instance
     Multimap<String, Instance> asgInstanceMap = ArrayListMultimap.create();
 
@@ -70,7 +70,7 @@ public class AwsInstanceHandler extends InstanceHandler {
       String msg =
           "Incompatible infra mapping type. Expecting aws type. Found:" + infrastructureMapping.getInfraMappingType();
       logger.error(msg);
-      throw new HarnessException(msg);
+      throw WingsException.builder().message(msg).build();
     }
 
     AwsInfrastructureMapping awsInfraMapping = (AwsInfrastructureMapping) infrastructureMapping;
@@ -103,21 +103,24 @@ public class AwsInstanceHandler extends InstanceHandler {
   }
 
   @Override
-  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback)
-      throws HarnessException {
+  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback) throws WingsException {
     // All the new deployments are either handled at ASGInstanceHandler(for Aws ssh with asg) or InstanceHelper (for Aws
     // ssh with or without filter)
-    throw new HarnessException("Deployments should be handled at InstanceHelper for aws ssh type except for with ASG.");
+    throw WingsException.builder()
+        .message("Deployments should be handled at InstanceHelper for aws ssh type except for with ASG.")
+        .build();
   }
 
   @Override
   public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
       PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
       InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact)
-      throws HarnessException {
+      throws WingsException {
     // All the new deployments are either handled at ASGInstanceHandler(for Aws ssh with asg) or InstanceHelper (for Aws
     // ssh with or without filter)
-    throw new HarnessException("Deployments should be handled at InstanceHelper for aws ssh type except for with ASG.");
+    throw WingsException.builder()
+        .message("Deployments should be handled at InstanceHelper for aws ssh type except for with ASG.")
+        .build();
   }
 
   @Override
@@ -315,7 +318,6 @@ public class AwsInstanceHandler extends InstanceHandler {
         "Total no of Ec2 instances found in DB for InfraMappingId: {} and AppId: {}: {}, No of Running instances found in aws:{}",
         ec2instance.getInfraMappingId(), ec2instance.getAppId(), ec2InstanceIdInstanceMap.size(),
         activeInstanceList.size());
-
     ec2InstanceIdInstanceMap.keySet().removeAll(
         activeInstanceList.stream().map(com.amazonaws.services.ec2.model.Instance::getInstanceId).collect(toSet()));
 

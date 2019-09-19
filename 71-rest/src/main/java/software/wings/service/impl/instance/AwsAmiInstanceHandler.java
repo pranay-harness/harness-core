@@ -10,7 +10,6 @@ import com.google.common.collect.Multimap;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
@@ -49,23 +48,23 @@ import java.util.Optional;
 @Slf4j
 public class AwsAmiInstanceHandler extends AwsInstanceHandler {
   @Override
-  public void syncInstances(String appId, String infraMappingId) throws HarnessException {
+  public void syncInstances(String appId, String infraMappingId) throws WingsException {
     // Key - Auto scaling group with revision, Value - Instance
     Multimap<String, Instance> asgInstanceMap = ArrayListMultimap.create();
     syncInstancesInternal(appId, infraMappingId, asgInstanceMap, null, false);
   }
 
   private void syncInstancesInternal(String appId, String infraMappingId, Multimap<String, Instance> asgInstanceMap,
-      List<DeploymentSummary> newDeploymentSummaries, boolean rollbak) throws HarnessException {
+      List<DeploymentSummary> newDeploymentSummaries, boolean rollbak) throws WingsException {
     Map<String, DeploymentSummary> asgNamesDeploymentSummaryMap = getDeploymentSummaryMap(newDeploymentSummaries);
 
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
     Validator.notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
     if (!(infrastructureMapping instanceof AwsAmiInfrastructureMapping)) {
-      String msg =
+      final String msg =
           "Incompatible infra mapping type. Expecting ami type. Found:" + infrastructureMapping.getInfraMappingType();
       logger.error(msg);
-      throw new HarnessException(msg);
+      throw WingsException.builder().message(msg).build();
     }
 
     // key - ec2 instance id, value - instance
@@ -89,7 +88,7 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler {
 
   private Map<String, DeploymentSummary> getDeploymentSummaryMap(List<DeploymentSummary> newDeploymentSummaries) {
     if (EmptyPredicate.isEmpty(newDeploymentSummaries)) {
-      return Collections.EMPTY_MAP;
+      return Collections.emptyMap();
     }
 
     Map<String, DeploymentSummary> deploymentSummaryMap = new HashMap<>();
@@ -102,10 +101,9 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler {
   }
 
   @Override
-  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback)
-      throws HarnessException {
+  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback) throws WingsException {
     if (!(deploymentSummaries.iterator().next().getDeploymentInfo() instanceof AwsAutoScalingGroupDeploymentInfo)) {
-      throw new HarnessException("Incompatible deployment type.");
+      throw WingsException.builder().message("Incompatible deployment type.").build();
     }
 
     Multimap<String, Instance> asgInstanceMap = ArrayListMultimap.create();
@@ -123,7 +121,7 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler {
    * Returns the auto scaling group names
    */
   private List<String> getASGFromAMIDeployment(PhaseExecutionData phaseExecutionData,
-      PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution) throws HarnessException {
+      PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution) throws WingsException {
     List<String> autoScalingGroupNames = Lists.newArrayList();
 
     PhaseStepExecutionSummary phaseStepExecutionSummary = phaseStepExecutionData.getPhaseStepExecutionSummary();
@@ -163,13 +161,16 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler {
           }
         }
       } else {
-        throw new HarnessException(
-            "Step execution summary null for AMI Deploy Step for workflow: " + workflowExecution.normalizedName());
+        throw WingsException.builder()
+            .message(
+                "Step execution summary null for AMI Deploy Step for workflow: " + workflowExecution.normalizedName())
+            .build();
       }
-
     } else {
-      throw new HarnessException(
-          "Phase step execution summary null for AMI Deploy for workflow: " + workflowExecution.normalizedName());
+      throw WingsException.builder()
+          .message(
+              "Phase step execution summary null for AMI Deploy for workflow: " + workflowExecution.normalizedName())
+          .build();
     }
 
     return autoScalingGroupNames;
@@ -179,7 +180,7 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler {
   public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
       PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
       InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact)
-      throws HarnessException {
+      throws WingsException {
     List<String> autoScalingGroupNames =
         getASGFromAMIDeployment(phaseExecutionData, phaseStepExecutionData, workflowExecution);
     List<DeploymentInfo> deploymentInfos = new ArrayList<>();
@@ -201,7 +202,9 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler {
     if (deploymentKey instanceof AwsAmiDeploymentKey) {
       deploymentSummary.setAwsAmiDeploymentKey((AwsAmiDeploymentKey) deploymentKey);
     } else {
-      throw new WingsException("Invalid deploymentKey passed for AwsAmiDeploymentKey" + deploymentKey);
+      throw WingsException.builder()
+          .message("Invalid deploymentKey passed for AwsAmiDeploymentKey" + deploymentKey)
+          .build();
     }
   }
 }

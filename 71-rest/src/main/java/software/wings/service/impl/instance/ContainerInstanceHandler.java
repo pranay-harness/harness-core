@@ -22,7 +22,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.exception.HarnessException;
 import io.harness.exception.K8sPodSyncException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
@@ -97,13 +96,13 @@ public class ContainerInstanceHandler extends InstanceHandler {
   @Inject private transient K8sStateHelper k8sStateHelper;
 
   @Override
-  public void syncInstances(String appId, String infraMappingId) throws HarnessException {
+  public void syncInstances(String appId, String infraMappingId) throws WingsException {
     // Key - containerSvcName, Value - Instances
     syncInstancesInternal(appId, infraMappingId, ArrayListMultimap.create(), null, false);
   }
 
   private ContainerInfrastructureMapping getContainerInfraMapping(String appId, String inframappingId)
-      throws HarnessException {
+      throws WingsException {
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, inframappingId);
     Validator.notNullCheck("Infra mapping is null for id:" + inframappingId, infrastructureMapping);
 
@@ -111,7 +110,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
       String msg = "Incompatible infra mapping type. Expecting container type. Found:"
           + infrastructureMapping.getInfraMappingType();
       logger.error(msg);
-      throw new HarnessException(msg);
+      throw WingsException.builder().message(msg).build();
     }
 
     return (ContainerInfrastructureMapping) infrastructureMapping;
@@ -119,7 +118,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
 
   private void syncInstancesInternal(String appId, String infraMappingId,
       Multimap<ContainerMetadata, Instance> containerMetadataInstanceMap,
-      List<DeploymentSummary> newDeploymentSummaries, boolean rollback) throws HarnessException {
+      List<DeploymentSummary> newDeploymentSummaries, boolean rollback) throws WingsException {
     ContainerInfrastructureMapping containerInfraMapping = getContainerInfraMapping(appId, infraMappingId);
 
     Map<ContainerMetadata, DeploymentSummary> deploymentSummaryMap =
@@ -371,7 +370,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
     return deploymentSummaryMap;
   }
   private void loadContainerSvcNameInstanceMap(
-      String appId, String infraMappingId, Multimap<ContainerMetadata, Instance> instanceMap) throws HarnessException {
+      String appId, String infraMappingId, Multimap<ContainerMetadata, Instance> instanceMap) throws WingsException {
     List<Instance> instanceListInDBForInfraMapping = getInstances(appId, infraMappingId);
     logger.info("Found {} instances for app {} and infraMapping {} ", instanceListInDBForInfraMapping.size(), appId,
         infraMappingId);
@@ -396,14 +395,15 @@ public class ContainerInstanceHandler extends InstanceHandler {
                             .build(),
             instance);
       } else {
-        throw new HarnessException("UnSupported instance deploymentInfo type" + instance.getInstanceType().name());
+        throw WingsException.builder()
+            .message("UnSupported instance deploymentInfo type" + instance.getInstanceType().name())
+            .build();
       }
     }
   }
 
   @Override
-  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback)
-      throws HarnessException {
+  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback) throws WingsException {
     Multimap<ContainerMetadata, Instance> containerSvcNameInstanceMap = ArrayListMultimap.create();
 
     if (isEmpty(deploymentSummaries)) {
@@ -455,13 +455,13 @@ public class ContainerInstanceHandler extends InstanceHandler {
     syncInstancesInternal(appId, infraMappingId, containerSvcNameInstanceMap, deploymentSummaries, rollback);
   }
 
-  private void validateDeploymentInfos(List<DeploymentSummary> deploymentSummaries) throws HarnessException {
+  private void validateDeploymentInfos(List<DeploymentSummary> deploymentSummaries) throws WingsException {
     for (DeploymentSummary deploymentSummary : deploymentSummaries) {
       DeploymentInfo deploymentInfo = deploymentSummary.getDeploymentInfo();
       if (!(deploymentInfo instanceof ContainerDeploymentInfoWithNames)
           && !(deploymentInfo instanceof ContainerDeploymentInfoWithLabels)
           && !(deploymentInfo instanceof K8sDeploymentInfo)) {
-        throw new HarnessException("Incompatible deployment info type: " + deploymentInfo);
+        throw WingsException.builder().message("Incompatible deployment info type: " + deploymentInfo).build();
       }
     }
   }
@@ -668,7 +668,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
     String image = pod.getContainerList().get(0).getImage();
     String artifactSource;
     String tag;
-    String splitArray[] = image.split(":");
+    String[] splitArray = image.split(":");
     if (splitArray.length == 2) {
       artifactSource = splitArray[0];
       tag = splitArray[1];
@@ -702,7 +702,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
     } else {
       String msg = "Unsupported container instance type:" + containerInfo;
       logger.error(msg);
-      throw new WingsException(msg);
+      throw WingsException.builder().message(msg).build();
     }
 
     return containerInstanceKey;
@@ -717,8 +717,9 @@ public class ContainerInstanceHandler extends InstanceHandler {
     if (containerInfo instanceof K8sPodInfo) {
       return "";
     } else {
-      throw new WingsException(
-          "Unsupported container deploymentInfo type:" + containerInfo.getClass().getCanonicalName());
+      throw WingsException.builder()
+          .message("Unsupported container deploymentInfo type:" + containerInfo.getClass().getCanonicalName())
+          .build();
     }
   }
 
@@ -736,7 +737,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
     } else {
       String msg = "Unsupported container instance type:" + instanceType;
       logger.error(msg);
-      throw new WingsException(msg);
+      throw WingsException.builder().message(msg).build();
     }
   }
 
@@ -848,7 +849,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
     } else {
       String msg = "Unsupported container instance type:" + instanceType;
       logger.error(msg);
-      throw new WingsException(msg);
+      throw WingsException.builder().message(msg).build();
     }
 
     if (containerSvcName == null) {
@@ -887,7 +888,9 @@ public class ContainerInstanceHandler extends InstanceHandler {
           .releaseNumber(k8sDeploymentInfo.getReleaseNumber())
           .build();
     } else {
-      throw new WingsException("Unsupported DeploymentInfo type for Container: " + deploymentInfo);
+      throw WingsException.builder()
+          .message("Unsupported DeploymentInfo type for Container: " + deploymentInfo)
+          .build();
     }
   }
 
@@ -898,7 +901,9 @@ public class ContainerInstanceHandler extends InstanceHandler {
     } else if (deploymentKey instanceof K8sDeploymentKey) {
       deploymentSummary.setK8sDeploymentKey((K8sDeploymentKey) deploymentKey);
     } else {
-      throw new WingsException("Invalid deploymentKey passed for ContainerDeploymentKey" + deploymentKey);
+      throw WingsException.builder()
+          .message("Invalid deploymentKey passed for ContainerDeploymentKey" + deploymentKey)
+          .build();
     }
   }
 }
