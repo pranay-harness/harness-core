@@ -627,6 +627,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     GitFetchFilesTaskParams fetchFilesTaskParams =
         applicationManifestUtils.createGitFetchFilesTaskParams(null, app, appManifestMap);
     fetchFilesTaskParams.setActivityId(generateUuid());
+    fetchFilesTaskParams.setAppManifestKind(AppManifestKind.K8S_MANIFEST);
 
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(app.getAccountId())

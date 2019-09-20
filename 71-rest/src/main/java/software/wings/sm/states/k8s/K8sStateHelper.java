@@ -214,6 +214,8 @@ public class K8sStateHelper {
     GitFetchFilesTaskParams fetchFilesTaskParams =
         applicationManifestUtils.createGitFetchFilesTaskParams(context, app, appManifestMap);
     fetchFilesTaskParams.setActivityId(activityId);
+    fetchFilesTaskParams.setAppManifestKind(AppManifestKind.VALUES);
+
     applicationManifestUtils.setValuesPathInGitFetchFilesTaskParams(fetchFilesTaskParams);
 
     String waitId = generateUuid();
