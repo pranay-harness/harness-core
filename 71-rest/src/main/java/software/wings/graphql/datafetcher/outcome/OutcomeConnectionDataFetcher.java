@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.Environment;
@@ -32,7 +31,6 @@ import software.wings.security.annotations.AuthRule;
 @Slf4j
 public class OutcomeConnectionDataFetcher
     extends AbstractConnectionDataFetcher<QLOutcomeConnection, QLOutcomesQueryParameters> {
-  @Inject private HPersistence persistence;
   @Inject private WorkflowExecutionController workflowExecutionController;
   @Inject private ExecutionController executionController;
 

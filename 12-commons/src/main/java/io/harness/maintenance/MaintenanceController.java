@@ -17,8 +17,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Singleton
 @Slf4j
 public class MaintenanceController implements Managed {
-  private static final String MAINTENANCE = "maintenance";
-  private static final String SHUTDOWN = "shutdown";
+  private static final String MAINTENANCE_FILENAME = "maintenance";
+  private static final String SHUTDOWN_FILENAME = "shutdown";
 
   private static Boolean forceMaintenance;
   private static final AtomicBoolean maintenance = new AtomicBoolean(true);
@@ -40,7 +40,7 @@ public class MaintenanceController implements Managed {
     }
   }
 
-  public static boolean isMaintenance() {
+  public static boolean getMaintenanceFilename() {
     return forceMaintenance != null ? forceMaintenance : maintenance.get();
   }
 
@@ -57,12 +57,12 @@ public class MaintenanceController implements Managed {
   public void start() {
     executorService.submit(() -> {
       while (running.get()) {
-        boolean isShutdown = new File(SHUTDOWN).exists();
+        boolean isShutdown = new File(SHUTDOWN_FILENAME).exists();
         if (shutdown.getAndSet(isShutdown) != isShutdown) {
           maintenanceListenerSubject.fireInform(MaintenanceListener::onShutdown);
         }
         boolean isMaintenance =
-            forceMaintenance != null ? forceMaintenance : new File(MAINTENANCE).exists() || isShutdown;
+            forceMaintenance != null ? forceMaintenance : new File(MAINTENANCE_FILENAME).exists() || isShutdown;
         if (maintenance.getAndSet(isMaintenance) != isMaintenance) {
           logger.info("{} maintenance mode", isMaintenance ? "Entering" : "Leaving");
           maintenanceListenerSubject.fireInform(

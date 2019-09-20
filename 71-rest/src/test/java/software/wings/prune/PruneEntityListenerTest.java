@@ -1,6 +1,7 @@
 package software.wings.prune;
 
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.matches;
@@ -99,8 +100,11 @@ public class PruneEntityListenerTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void differentAppIdAndObjectIdForApplication() throws Exception {
-    when(wingsPersistence.get(Application.class, ENTITY_ID)).thenReturn(null);
+    assertThatCode(() -> {
+      when(wingsPersistence.get(Application.class, ENTITY_ID)).thenReturn(null);
 
-    listener.onMessage(new PruneEvent(Application.class, APP_ID, ENTITY_ID));
+      listener.onMessage(new PruneEvent(Application.class, APP_ID, ENTITY_ID));
+    })
+        .doesNotThrowAnyException();
   }
 }

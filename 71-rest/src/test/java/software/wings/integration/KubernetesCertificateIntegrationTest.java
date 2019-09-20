@@ -9,7 +9,7 @@ import software.wings.rules.Integration;
 
 @Integration
 @Slf4j
-public class KubernetesCertificateIntegrationTest extends CategoryTest {
+public abstract class KubernetesCertificateIntegrationTest extends CategoryTest {
   public static void main(String[] args) {
     String caCertData = "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUMxekNDQWIrZ0F3SUJBZ0lRUmpMcStZa3hP\n"
         + "WHhmYVB5TlBWK0MwakFOQmdrcWhraUc5dzBCQVFzRkFEQVYKTVJNd0VRWURWUVFERXdwcmRXSmxj\n"

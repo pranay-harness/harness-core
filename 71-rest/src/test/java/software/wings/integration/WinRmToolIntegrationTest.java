@@ -18,7 +18,7 @@ This test class is making calls to WinRM. The purpose is to do directed testing 
 This is not to be run as an automated test[hence the @Ignore].
  */
 @Slf4j
-public class WinRmToolIntegrationTest extends CategoryTest {
+public abstract class WinRmToolIntegrationTest extends CategoryTest {
   private static void setUp() {}
 
   public static void main(String[] args) {

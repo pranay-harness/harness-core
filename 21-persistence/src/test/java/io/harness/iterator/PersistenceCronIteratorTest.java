@@ -6,6 +6,7 @@ import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.IRREGULAR
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.joor.Reflect.on;
 
 import com.google.inject.Inject;
@@ -136,17 +137,22 @@ public class PersistenceCronIteratorTest extends PersistenceTest {
   @Category(UnitTests.class)
   @Bypass
   public void testNextReturnsJustAdded() throws IOException {
-    try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
-      for (int i = 1; i <= 10; i++) {
-        final CronIterableEntity iterableEntity =
-            CronIterableEntity.builder().uuid(generateUuid()).expression(String.format("*/%d * * * * ? *", i)).build();
-        persistence.save(iterableEntity);
+    assertThatCode(() -> {
+      try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
+        for (int i = 1; i <= 10; i++) {
+          final CronIterableEntity iterableEntity = CronIterableEntity.builder()
+                                                        .uuid(generateUuid())
+                                                        .expression(String.format("*/%d * * * * ? *", i))
+                                                        .build();
+          persistence.save(iterableEntity);
+        }
+
+        final Future<?> future1 = executorService.submit(() -> iterator.process(LOOP));
+
+        Morpheus.sleep(ofSeconds(300));
+        future1.cancel(true);
       }
-
-      final Future<?> future1 = executorService.submit(() -> iterator.process(LOOP));
-
-      Morpheus.sleep(ofSeconds(300));
-      future1.cancel(true);
-    }
+    })
+        .doesNotThrowAnyException();
   }
 }

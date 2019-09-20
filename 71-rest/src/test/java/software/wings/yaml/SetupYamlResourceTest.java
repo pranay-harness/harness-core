@@ -24,7 +24,7 @@ import java.util.List;
  * @author bsollish
  */
 @Slf4j
-public class SetupYamlResourceTest extends CategoryTest {
+public abstract class SetupYamlResourceTest extends CategoryTest {
   // create mocks
   private static final AppService appService = mock(AppService.class);
   private static final SettingsService settingsService = mock(SettingsService.class);

@@ -2,6 +2,7 @@ package io.harness.queue;
 
 import static io.harness.queue.Queue.Filter.ALL;
 import static java.time.Duration.ofMillis;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.joor.Reflect.on;
 
 import com.google.inject.Inject;
@@ -43,29 +44,32 @@ public class StressTest extends PersistenceTest {
   @RealMongo
   @Bypass
   public void shouldGetWithNegativeWait() throws IOException {
-    persistence.ensureIndex(TestQueuableObject.class);
+    assertThatCode(() -> {
+      persistence.ensureIndex(TestQueuableObject.class);
 
-    try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
-      for (int i = 0; i < 10000; ++i) {
-        queue.send(new TestQueuableObject(i));
-        if (i % 100 == 0) {
-          logger.info("{} , {}", i, queue.count(ALL));
+      try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
+        for (int i = 0; i < 10000; ++i) {
+          queue.send(new TestQueuableObject(i));
+          if (i % 100 == 0) {
+            logger.info("{} , {}", i, queue.count(ALL));
+          }
         }
-      }
 
-      final long start = queue.count(ALL);
-      try {
-        Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> {
-          final long count = queue.count(ALL);
-          logger.info("Queue count: {}", count);
-          return count == 0;
-        });
-      } catch (Exception ignore) {
-        // do nothing
-      }
+        final long start = queue.count(ALL);
+        try {
+          Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> {
+            final long count = queue.count(ALL);
+            logger.info("Queue count: {}", count);
+            return count == 0;
+          });
+        } catch (Exception ignore) {
+          // do nothing
+        }
 
-      final long diff = start - queue.count(ALL);
-      logger.info("Items handled for 10s: {}", diff);
-    }
+        final long diff = start - queue.count(ALL);
+        logger.info("Items handled for 10s: {}", diff);
+      }
+    })
+        .doesNotThrowAnyException();
   }
 }

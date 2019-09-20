@@ -76,7 +76,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
                                             .jenkinsUrl(JENKINS_URL)
                                             .username(JENKINS_USERNAME)
                                             .password(scmSecret.decryptToCharArray(new SecretName("harness_jenkins")))
-                                            .authMechanism(JenkinsConfig.USERNAME_PASSWORD_FIELD)
+                                            .authMechanism(JenkinsConfig.USERNAME_DEFAULT_TEXT)
                                             .build())
                              .build(),
                       APPLICATION_JSON),
@@ -105,7 +105,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
                                             .jenkinsUrl("BAD_URL")
                                             .username(JENKINS_USERNAME)
                                             .password(scmSecret.decryptToCharArray(new SecretName("harness_jenkins")))
-                                            .authMechanism(JenkinsConfig.USERNAME_PASSWORD_FIELD)
+                                            .authMechanism(JenkinsConfig.USERNAME_DEFAULT_TEXT)
                                             .build())
                              .build(),
                 APPLICATION_JSON));

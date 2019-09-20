@@ -114,7 +114,7 @@ public class UsageRestrictionsYamlHandlerTest extends BaseSettingValueConfigYaml
                                                    .accountId(ACCOUNT_ID)
                                                    .password(password.toCharArray())
                                                    .token(token.toCharArray())
-                                                   .authMechanism(JenkinsConfig.USERNAME_PASSWORD_FIELD)
+                                                   .authMechanism(JenkinsConfig.USERNAME_DEFAULT_TEXT)
                                                    .build())
                                     .withUsageRestrictions(usageRestrictions)
                                     .build());

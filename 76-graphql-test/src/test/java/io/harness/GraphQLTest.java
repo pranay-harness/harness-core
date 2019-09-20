@@ -19,7 +19,7 @@ import software.wings.service.impl.security.auth.AuthHandler;
 
 import java.util.Arrays;
 
-public class GraphQLTest extends CategoryTest implements GraphQLTestMixin, MultilineStringMixin {
+public abstract class GraphQLTest extends CategoryTest implements GraphQLTestMixin, MultilineStringMixin {
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
   @Rule public GraphQLRule graphQLRule = new GraphQLRule(lifecycleRule.getClosingFactory());
   @Inject DataLoaderRegistryHelper dataLoaderRegistryHelper;

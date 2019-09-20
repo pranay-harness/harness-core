@@ -3,7 +3,7 @@ package io.harness.waiter;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
-import static io.harness.maintenance.MaintenanceController.isMaintenance;
+import static io.harness.maintenance.MaintenanceController.getMaintenanceFilename;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.waiter.NotifyEvent.Builder.aNotifyEvent;
 import static java.util.stream.Collectors.toList;
@@ -45,7 +45,7 @@ public class Notifier implements Runnable {
 
   @Override
   public void run() {
-    if (isMaintenance() || queueController.isNotPrimary()) {
+    if (getMaintenanceFilename() || queueController.isNotPrimary()) {
       return;
     }
 

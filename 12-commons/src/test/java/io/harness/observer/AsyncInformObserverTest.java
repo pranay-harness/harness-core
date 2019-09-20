@@ -3,6 +3,7 @@ package io.harness.observer;
 import static io.harness.observer.AsyncInformObserverTest.Sync.CALLBACK_IS_DONE;
 import static io.harness.observer.AsyncInformObserverTest.Sync.FIRE_IS_DONE;
 import static io.harness.observer.AsyncInformObserverTest.Sync.INITIAL;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -59,17 +60,20 @@ public class AsyncInformObserverTest extends CategoryTest {
   @Test(timeout = 1000)
   @Category(UnitTests.class)
   public void testResealingAsyncCall() throws InterruptedException {
-    subject.fireInform(ObserverProtocol::method);
+    assertThatCode(() -> {
+      subject.fireInform(ObserverProtocol::method);
 
-    synchronized (observer) {
-      observer.sync = FIRE_IS_DONE;
-      observer.notifyAll();
-    }
-
-    synchronized (observer) {
-      while (observer.sync != CALLBACK_IS_DONE) {
-        observer.wait();
+      synchronized (observer) {
+        observer.sync = FIRE_IS_DONE;
+        observer.notifyAll();
       }
-    }
+
+      synchronized (observer) {
+        while (observer.sync != CALLBACK_IS_DONE) {
+          observer.wait();
+        }
+      }
+    })
+        .doesNotThrowAnyException();
   }
 }

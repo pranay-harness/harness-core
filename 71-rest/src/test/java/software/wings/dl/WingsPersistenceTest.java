@@ -578,7 +578,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
                                         .jenkinsUrl("https://jenkins.wings.software")
                                         .accountId(WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID)
                                         .username("wingsbuild")
-                                        .authMechanism(JenkinsConfig.USERNAME_PASSWORD_FIELD)
+                                        .authMechanism(JenkinsConfig.USERNAME_DEFAULT_TEXT)
                                         .password(password.toCharArray())
                                         .build();
       SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
