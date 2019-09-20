@@ -1,16 +1,22 @@
 package software.wings.delegatetasks;
 
+import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.beans.Log.LogColor.Gray;
+import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.Log.LogLevel.WARN;
+import static software.wings.beans.Log.LogWeight.Bold;
+import static software.wings.beans.Log.color;
 import static software.wings.beans.command.K8sDummyCommandUnit.FetchFiles;
 
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
@@ -22,9 +28,9 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
-import software.wings.beans.Log;
 import software.wings.beans.Log.LogColor;
 import software.wings.beans.Log.LogWeight;
+import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
@@ -65,11 +71,13 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(
         delegateLogService, taskParams.getAccountId(), taskParams.getAppId(), taskParams.getActivityId(), FetchFiles);
 
+    AppManifestKind appManifestKind = taskParams.getAppManifestKind();
     Map<String, GitFetchFilesResult> filesFromMultipleRepo = new HashMap<>();
 
     for (Entry<String, GitFetchFilesConfig> entry : taskParams.getGitFetchFilesConfigMap().entrySet()) {
       executionLogCallback.saveExecutionLog(
-          Log.color("\nFetching values files from git for " + entry.getKey(), LogColor.White, LogWeight.Bold));
+          color(format("\nFetching %s files from git for %s", getFileTypeMessage(appManifestKind), entry.getKey()),
+              LogColor.White, LogWeight.Bold));
 
       GitFetchFilesConfig gitFetchFileConfig = entry.getValue();
       String k8ValuesLocation = entry.getKey();
@@ -82,7 +90,8 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
         String exceptionMsg = ExceptionUtils.getMessage(ex);
 
         // Values.yaml in service spec is optional.
-        if (K8sValuesLocation.Service.toString().equals(k8ValuesLocation)
+        if (AppManifestKind.VALUES.equals(appManifestKind)
+            && K8sValuesLocation.Service.toString().equals(k8ValuesLocation)
             && ex.getCause() instanceof NoSuchFileException) {
           logger.info(exceptionMsg, ex);
           executionLogCallback.saveExecutionLog(exceptionMsg, WARN);
@@ -116,7 +125,7 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
       List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
     encryptionService.decrypt(gitConfig, encryptedDataDetails);
 
-    executionLogCallback.saveExecutionLog("\nGit connector Url: " + gitConfig.getRepoUrl());
+    executionLogCallback.saveExecutionLog("Git connector Url: " + gitConfig.getRepoUrl());
     if (gitFileConfig.isUseBranch()) {
       executionLogCallback.saveExecutionLog("Branch: " + gitFileConfig.getBranch());
     } else {
@@ -127,7 +136,7 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
     String filePath = isBlank(gitFileConfig.getFilePath()) ? "" : gitFileConfig.getFilePath();
     GitFetchFilesResult gitFetchFilesResult = gitService.fetchFilesByPath(gitConfig, gitFileConfig.getConnectorId(),
         gitFileConfig.getCommitId(), gitFileConfig.getBranch(), asList(filePath), gitFileConfig.isUseBranch());
-    executionLogCallback.saveExecutionLog("Successfully fetched " + gitFileConfig.getFilePath());
+    printFileNamesInExecutionLogs(gitFetchFilesResult, executionLogCallback);
 
     return gitFetchFilesResult;
   }
@@ -135,5 +144,38 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
   @Override
   public GitCommandExecutionResponse run(Object[] parameters) {
     throw new NotImplementedException("not implemented");
+  }
+
+  private String getFileTypeMessage(AppManifestKind appManifestKind) {
+    if (appManifestKind == null) {
+      return "";
+    }
+
+    switch (appManifestKind) {
+      case VALUES:
+        return "Values";
+
+      case PCF_OVERRIDE:
+      case K8S_MANIFEST:
+        return "manifest";
+
+      default:
+        unhandled(appManifestKind);
+        return "";
+    }
+  }
+
+  private void printFileNamesInExecutionLogs(
+      GitFetchFilesResult gitFetchFilesResult, ExecutionLogCallback executionLogCallback) {
+    if (gitFetchFilesResult == null || EmptyPredicate.isEmpty(gitFetchFilesResult.getFiles())) {
+      return;
+    }
+
+    StringBuilder sb = new StringBuilder(1024);
+    gitFetchFilesResult.getFiles().forEach(
+        each -> sb.append(color(format("- %s", each.getFilePath()), Gray)).append(System.lineSeparator()));
+
+    executionLogCallback.saveExecutionLog(color("Successfully fetched following files:", White, Bold));
+    executionLogCallback.saveExecutionLog(sb.toString());
   }
 }

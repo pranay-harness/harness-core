@@ -202,6 +202,7 @@ import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.WinRmConnectionAttributes;
+import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.Artifact;
@@ -1354,5 +1355,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(VaultAppRoleLoginResult.class, 7240);
     kryo.register(SpotInstSetupStateExecutionData.class, 7241);
     kryo.register(SpotinstDeployExecutionSummary.class, 7242);
+    kryo.register(AppManifestKind.class, 7243);
   }
 }
