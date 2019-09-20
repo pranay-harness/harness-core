@@ -42,7 +42,9 @@ public class DelegateConnectionResult implements PersistentEntity, UuidAware, Up
   private boolean validated;
   private long duration;
 
-  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
-  @Default
-  private Date validUntil = Date.from(OffsetDateTime.now().plusDays(30).toInstant());
+  @Indexed(options = @IndexOptions(expireAfterSeconds = 0)) @Default private Date validUntil = getValidUntilTime();
+
+  public static Date getValidUntilTime() {
+    return Date.from(OffsetDateTime.now().plusDays(30).toInstant());
+  }
 }
