@@ -9,6 +9,7 @@ import static io.harness.delegate.message.MessageConstants.WATCHER_PROCESS;
 import static io.harness.delegate.message.MessengerType.DELEGATE;
 import static io.harness.delegate.message.MessengerType.WATCHER;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.base.Splitter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -65,6 +66,17 @@ public class DelegateApplication {
 
   public static void main(String... args) throws IOException {
     processId = Splitter.on("@").split(ManagementFactory.getRuntimeMXBean().getName()).iterator().next();
+
+    String proxyUser = System.getenv("PROXY_USER");
+    if (isNotBlank(proxyUser)) {
+      System.setProperty("http.proxyUser", proxyUser);
+      System.setProperty("https.proxyUser", proxyUser);
+    }
+    String proxyPassword = System.getenv("PROXY_PASSWORD");
+    if (isNotBlank(proxyPassword)) {
+      System.setProperty("http.proxyPassword", proxyPassword);
+      System.setProperty("https.proxyPassword", proxyPassword);
+    }
 
     // Optionally remove existing handlers attached to j.u.l root logger
     SLF4JBridgeHandler.removeHandlersForRootLogger(); // (since SLF4J 1.6.5)

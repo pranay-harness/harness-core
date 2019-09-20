@@ -44,17 +44,17 @@ if [[ -e proxy.config ]]; then
   if [[ $PROXY_HOST != "" ]]; then
     echo "Using proxy $PROXY_SCHEME://$PROXY_HOST:$PROXY_PORT"
     if [[ $PROXY_USER != "" ]]; then
+      export PROXY_USER
       if [[ "$PROXY_PASSWORD_ENC" != "" ]]; then
-        PROXY_PASSWORD=$(echo $PROXY_PASSWORD_ENC | openssl enc -d -a -des-ecb -K ${hexkey})
+        export PROXY_PASSWORD=$(echo $PROXY_PASSWORD_ENC | openssl enc -d -a -des-ecb -K ${hexkey})
       fi
       export PROXY_CURL="-x "$PROXY_SCHEME"://"$PROXY_USER:$PROXY_PASSWORD@$PROXY_HOST:$PROXY_PORT
-      PROXY_SYS_PROPS="-Dhttp.proxyUser=$PROXY_USER -Dhttp.proxyPassword=$PROXY_PASSWORD -Dhttps.proxyUser=$PROXY_USER -Dhttps.proxyPassword=$PROXY_PASSWORD "
     else
       export PROXY_CURL="-x "$PROXY_SCHEME"://"$PROXY_HOST:$PROXY_PORT
       export http_proxy=$PROXY_HOST:$PROXY_PORT
       export https_proxy=$PROXY_HOST:$PROXY_PORT
     fi
-    PROXY_SYS_PROPS=$PROXY_SYS_PROPS" -DproxyScheme=$PROXY_SCHEME -Dhttp.proxyHost=$PROXY_HOST -Dhttp.proxyPort=$PROXY_PORT -Dhttps.proxyHost=$PROXY_HOST -Dhttps.proxyPort=$PROXY_PORT"
+    PROXY_SYS_PROPS="-DproxyScheme=$PROXY_SCHEME -Dhttp.proxyHost=$PROXY_HOST -Dhttp.proxyPort=$PROXY_PORT -Dhttps.proxyHost=$PROXY_HOST -Dhttps.proxyPort=$PROXY_PORT"
   fi
 
   if [[ $PROXY_MANAGER == "true" || $PROXY_MANAGER == "" ]]; then
