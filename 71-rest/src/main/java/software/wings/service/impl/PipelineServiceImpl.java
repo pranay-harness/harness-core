@@ -913,7 +913,7 @@ public class PipelineServiceImpl implements PipelineService {
 
       if (!pipeline.isSample()) {
         eventPublishHelper.publishAccountEvent(
-            accountId, AccountEvent.builder().accountEventType(AccountEventType.PIPELINE_CREATED).build());
+            accountId, AccountEvent.builder().accountEventType(AccountEventType.PIPELINE_CREATED).build(), true, true);
       }
 
       return pipeline;

@@ -53,6 +53,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -334,8 +335,9 @@ public class AccountResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = LOGGED_IN)
-  public RestResponse<Boolean> postCustomEvent(
-      @QueryParam("accountId") @NotEmpty String accountId, @NotNull AccountEvent accountEvent) {
-    return new RestResponse<>(accountService.postCustomEvent(accountId, accountEvent));
+  public RestResponse<Boolean> postCustomEvent(@QueryParam("accountId") @NotEmpty String accountId,
+      @NotNull AccountEvent accountEvent, @QueryParam("oneTimeOnly") @DefaultValue("true") boolean oneTimeOnly,
+      @QueryParam("trialOnly") @DefaultValue("true") boolean trialOnly) {
+    return new RestResponse<>(accountService.postCustomEvent(accountId, accountEvent, oneTimeOnly, trialOnly));
   }
 }

@@ -181,7 +181,7 @@ public class AppServiceImpl implements AppService {
       yamlPushService.pushYamlChangeSet(app.getAccountId(), null, application, Type.CREATE, app.isSyncFromGit(), false);
       if (!app.isSample()) {
         eventPublishHelper.publishAccountEvent(
-            accountId, AccountEvent.builder().accountEventType(AccountEventType.APP_CREATED).build());
+            accountId, AccountEvent.builder().accountEventType(AccountEventType.APP_CREATED).build(), true, true);
       }
       return get(application.getUuid());
     });

@@ -269,7 +269,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         accountId, null, savedEnvironment, Type.CREATE, environment.isSyncFromGit(), false);
     if (!savedEnvironment.isSample()) {
       eventPublishHelper.publishAccountEvent(
-          accountId, AccountEvent.builder().accountEventType(AccountEventType.ENV_CREATED).build());
+          accountId, AccountEvent.builder().accountEventType(AccountEventType.ENV_CREATED).build(), true, true);
     }
     return savedEnvironment;
   }

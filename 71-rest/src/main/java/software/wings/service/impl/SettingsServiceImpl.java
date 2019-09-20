@@ -460,11 +460,11 @@ public class SettingsServiceImpl implements SettingsService {
     if (createdSettingAttribute != null && !createdSettingAttribute.isSample()) {
       if (SettingCategory.CLOUD_PROVIDER.equals(createdSettingAttribute.getCategory())) {
         eventPublishHelper.publishAccountEvent(settingAttribute.getAccountId(),
-            AccountEvent.builder().accountEventType(AccountEventType.CLOUD_PROVIDER_CREATED).build());
+            AccountEvent.builder().accountEventType(AccountEventType.CLOUD_PROVIDER_CREATED).build(), true, true);
       } else if (SettingCategory.CONNECTOR.equals(createdSettingAttribute.getCategory())
           && isArtifactServer(createdSettingAttribute.getValue().getSettingType())) {
         eventPublishHelper.publishAccountEvent(settingAttribute.getAccountId(),
-            AccountEvent.builder().accountEventType(AccountEventType.ARTIFACT_REPO_CREATED).build());
+            AccountEvent.builder().accountEventType(AccountEventType.ARTIFACT_REPO_CREATED).build(), true, true);
       }
     }
     return createdSettingAttribute;

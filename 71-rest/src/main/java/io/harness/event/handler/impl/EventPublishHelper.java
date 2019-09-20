@@ -458,7 +458,8 @@ public class EventPublishHelper {
       return;
     }
 
-    publishAccountEvent(accountId, AccountEvent.builder().accountEventType(AccountEventType.WORKFLOW_CREATED).build());
+    publishAccountEvent(
+        accountId, AccountEvent.builder().accountEventType(AccountEventType.WORKFLOW_CREATED).build(), true, true);
 
     executorService.submit(() -> {
       if (!shouldPublishEventForAccount(accountId)) {
@@ -655,13 +656,14 @@ public class EventPublishHelper {
     return true;
   }
 
-  private boolean shouldPublishAccountEventForAccount(String accountId, AccountEvent accountEvent) {
+  private boolean shouldPublishAccountEventForAccount(
+      String accountId, AccountEvent accountEvent, boolean oneTimeOnly, boolean trialOnly) {
     Account account = accountService.getFromCache(accountId);
-    if (!isTrialAccount(account)) {
+    if (trialOnly && !isTrialAccount(account)) {
       return false;
     }
 
-    if (isNotEmpty(account.getAccountEvents()) && account.getAccountEvents().contains(accountEvent)) {
+    if (oneTimeOnly && isNotEmpty(account.getAccountEvents()) && account.getAccountEvents().contains(accountEvent)) {
       return false;
     }
 
@@ -769,14 +771,14 @@ public class EventPublishHelper {
         Pipeline pipeline =
             pipelineService.readPipeline(appId, workflowExecution.getPipelineSummary().getPipelineId(), false);
         if (!pipeline.isSample()) {
-          publishAccountEvent(
-              accountId, AccountEvent.builder().accountEventType(AccountEventType.PIPELINE_DEPLOYED).build(), user);
+          publishAccountEvent(accountId,
+              AccountEvent.builder().accountEventType(AccountEventType.PIPELINE_DEPLOYED).build(), user, true, true);
         }
       } else {
         Workflow workflow = workflowService.readWorkflowWithoutServices(appId, workflowExecution.getWorkflowId());
         if (!workflow.isSample()) {
-          publishAccountEvent(
-              accountId, AccountEvent.builder().accountEventType(AccountEventType.WORKFLOW_DEPLOYED).build(), user);
+          publishAccountEvent(accountId,
+              AccountEvent.builder().accountEventType(AccountEventType.WORKFLOW_DEPLOYED).build(), user, true, true);
         }
       }
 
@@ -860,12 +862,13 @@ public class EventPublishHelper {
    * @param accountId
    * @param accountEvent
    */
-  public void publishAccountEvent(String accountId, AccountEvent accountEvent) {
+  public void publishAccountEvent(String accountId, AccountEvent accountEvent, boolean oneTimeOnly, boolean trialOnly) {
     User user = UserThreadLocal.get();
-    publishAccountEvent(accountId, accountEvent, user);
+    publishAccountEvent(accountId, accountEvent, user, oneTimeOnly, trialOnly);
   }
 
-  public void publishAccountEvent(String accountId, AccountEvent accountEvent, User user) {
+  public void publishAccountEvent(
+      String accountId, AccountEvent accountEvent, User user, boolean oneTimeOnly, boolean trialOnly) {
     if (!checkIfMarketoOrSegmentIsEnabled()) {
       return;
     }
@@ -877,11 +880,16 @@ public class EventPublishHelper {
     String userEmail = user.getEmail();
 
     executorService.submit(() -> {
-      if (!shouldPublishAccountEventForAccount(accountId, accountEvent)) {
+      if (!shouldPublishAccountEventForAccount(accountId, accountEvent, oneTimeOnly, trialOnly)) {
         return;
       }
-      accountService.updateAccountEvents(accountId, accountEvent);
-      Map<String, String> properties = new HashMap<>();
+
+      if (oneTimeOnly) {
+        accountService.updateAccountEvents(accountId, accountEvent);
+      }
+
+      Map<String, String> properties =
+          accountEvent.getProperties() == null ? new HashMap<>() : accountEvent.getProperties();
       properties.put(ACCOUNT_ID, accountId);
       properties.put(EMAIL_ID, userEmail);
       properties.put(ACCOUNT_EVENT, String.valueOf(true));
@@ -898,7 +906,7 @@ public class EventPublishHelper {
       return;
     }
     executorService.submit(() -> {
-      if (!shouldPublishAccountEventForAccount(accountId, accountEvent)) {
+      if (!shouldPublishAccountEventForAccount(accountId, accountEvent, true, true)) {
         return;
       }
       accountService.updateAccountEvents(accountId, accountEvent);
