@@ -40,6 +40,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.infra.InfrastructureDefinition;
+import software.wings.service.PhaseSubWorkflowHelperService;
 import software.wings.service.impl.SweepingOutputServiceImpl;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
@@ -60,7 +61,6 @@ import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -72,6 +72,10 @@ import java.util.Map;
  */
 @Slf4j
 public class PhaseSubWorkflow extends SubWorkflowState {
+  public static final String SERVICE_ID = "serviceId";
+  public static final String INFRA_MAPPING_ID = "infraMappingId";
+  public static final String INFRA_DEFINITION_ID = "infraDefinitionId";
+
   public PhaseSubWorkflow(String name) {
     super(name, StateType.PHASE.name());
   }
@@ -101,59 +105,47 @@ public class PhaseSubWorkflow extends SubWorkflowState {
   @Inject @Transient private transient SweepingOutputService sweepingOutputService;
 
   @Inject @Transient private transient FeatureFlagService featureFlagService;
+  @Inject @Transient private transient PhaseSubWorkflowHelperService phaseSubWorkflowHelperService;
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Application app = workflowStandardParams.getApp();
 
-    Service service = null;
-    InfrastructureMapping infrastructureMapping = null;
-    InfrastructureDefinition infrastructureDefinition = null;
-    String serviceIdExpression = null;
-    String infraMappingIdExpression = null;
-    String infraDefinitionIdExpression = null;
+    TemplateExpression serviceTemplateExpression = null, infraDefinitionTemplateExpression = null,
+                       infraMappingTemplateExpression = null;
     List<TemplateExpression> templateExpressions = this.getTemplateExpressions();
+
     if (templateExpressions != null) {
       for (TemplateExpression templateExpression : templateExpressions) {
         String fieldName = templateExpression.getFieldName();
-        if (fieldName != null && fieldName.equals("serviceId")) {
-          serviceIdExpression = templateExpression.getExpression();
-          service = templateExpressionProcessor.resolveService(context, app, templateExpression);
-        } else if (fieldName != null && fieldName.equals("infraMappingId")) {
-          infraMappingIdExpression = templateExpression.getExpression();
-          infrastructureMapping =
-              templateExpressionProcessor.resolveInfraMapping(context, app.getAppId(), templateExpression);
-        } else if (fieldName != null && fieldName.equals("infraDefinitionId")) {
-          infraDefinitionIdExpression = templateExpression.getExpression();
-          infrastructureDefinition =
-              templateExpressionProcessor.resolveInfraDefinition(context, app.getAppId(), templateExpression);
+        if (fieldName != null && fieldName.equals(SERVICE_ID)) {
+          serviceTemplateExpression = templateExpression;
+        } else if (fieldName != null && fieldName.equals(INFRA_MAPPING_ID)) {
+          infraMappingTemplateExpression = templateExpression;
+        } else if (fieldName != null && fieldName.equals(INFRA_DEFINITION_ID)) {
+          infraDefinitionTemplateExpression = templateExpression;
         }
       }
     }
+
+    Service service =
+        phaseSubWorkflowHelperService.getService(serviceId, serviceTemplateExpression, app.getAppId(), context);
+
+    InfrastructureDefinition infrastructureDefinition = phaseSubWorkflowHelperService.getInfraDefinition(
+        infraDefinitionId, infraDefinitionTemplateExpression, app.getAppId(), context);
+
+    Environment env = ((ExecutionContextImpl) context).getEnv();
+
+    InfrastructureMapping infrastructureMapping = phaseSubWorkflowHelperService.getInfraMapping(
+        infraMappingId, infraMappingTemplateExpression, app, context, service, infrastructureDefinition);
+
+    phaseSubWorkflowHelperService.validateEntitiesRelationship(service, infrastructureDefinition, infrastructureMapping,
+        env, serviceTemplateExpression, infraMappingTemplateExpression);
+
     boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, context.getAccountId());
 
     if (infraRefactor) {
-      if (serviceId != null) {
-        service = serviceResourceService.get(app.getAppId(), serviceId, false);
-        Validator.notNullCheck("Service might have been deleted", service, USER);
-      }
-
-      if (infraDefinitionIdExpression == null && infraDefinitionId != null) {
-        infrastructureDefinition = infrastructureDefinitionService.get(app.getAppId(), infraDefinitionId);
-        Validator.notNullCheck("Infra Definition not found, check if it is deleted", infrastructureDefinition, USER);
-      }
-
-      if (service != null) {
-        if (infraDefinitionIdExpression == null) {
-          infrastructureMapping = infrastructureDefinitionService.getInfraMapping(
-              app.getAppId(), service.getUuid(), infraDefinitionId, context);
-        } else {
-          infrastructureMapping = infrastructureDefinitionService.getInfraMapping(
-              app.getAppId(), service.getUuid(), infrastructureDefinition.getUuid(), context);
-        }
-      }
-
       if (infrastructureMapping != null) {
         workflowExecutionService.appendInfraMappingId(
             app.getAppId(), context.getWorkflowExecutionId(), infrastructureMapping.getUuid());
@@ -162,34 +154,6 @@ public class PhaseSubWorkflow extends SubWorkflowState {
         workflowExecutionService.updateWorkflowElementWithLastGoodReleaseInfo(
             context.getAppId(), workflowStandardParams.getWorkflowElement(), context.getWorkflowExecutionId());
       }
-
-    } else {
-      if (serviceIdExpression != null) {
-        if (infraMappingIdExpression == null) {
-          throw new WingsException("Service templatized so service infrastructure should be templatized", USER);
-        }
-      } else {
-        if (serviceId != null) {
-          service = serviceResourceService.get(app.getAppId(), serviceId, false);
-          Validator.notNullCheck("Service might have been deleted", service, USER);
-        }
-      }
-      if (infraMappingIdExpression == null && infraMappingId != null) {
-        infrastructureMapping = infrastructureMappingService.get(app.getAppId(), infraMappingId);
-        Validator.notNullCheck("Service Infrastructure might have been deleted", infrastructureMapping, USER);
-      }
-    }
-    Environment env = ((ExecutionContextImpl) context).getEnv();
-
-    if (service != null && infrastructureMapping != null
-        && !service.getUuid().equals(infrastructureMapping.getServiceId())) {
-      throw new InvalidRequestException("Service [" + service.getName()
-          + "] is not associated with the Service Infrastructure [" + infrastructureMapping.getName() + "]");
-    }
-
-    if (env != null && infrastructureMapping != null && !env.getUuid().equals(infrastructureMapping.getEnvId())) {
-      throw new InvalidRequestException("InfraStructure [" + infrastructureMapping.getName()
-          + "] is not associated with the Environment [" + env.getName() + "]. Please Check Your Setup");
     }
 
     ExecutionResponseBuilder executionResponseBuilder = getSpawningExecutionResponse(
