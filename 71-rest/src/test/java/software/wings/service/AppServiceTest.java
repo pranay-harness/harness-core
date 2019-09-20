@@ -8,6 +8,7 @@ import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -284,8 +285,11 @@ public class AppServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldNotThrowExceptionForNonExistentApplicationDelete() {
-    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
-    appService.delete("NON_EXISTENT_APP_ID");
+    assertThatCode(() -> {
+      when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+      appService.delete("NON_EXISTENT_APP_ID");
+    })
+        .doesNotThrowAnyException();
   }
 
   /**

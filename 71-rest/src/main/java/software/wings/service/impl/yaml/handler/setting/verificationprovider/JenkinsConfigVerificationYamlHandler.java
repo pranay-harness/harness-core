@@ -42,7 +42,7 @@ public class JenkinsConfigVerificationYamlHandler
     String accountId = changeContext.getChange().getAccountId();
 
     if (isEmpty(yaml.getAuthMechanism())) {
-      yaml.setAuthMechanism(JenkinsConfig.USERNAME_PASSWORD_FIELD);
+      yaml.setAuthMechanism(JenkinsConfig.USERNAME_DEFAULT_TEXT);
     }
     JenkinsConfig config = JenkinsConfig.builder()
                                .accountId(accountId)

@@ -41,7 +41,7 @@ public class JenkinsConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, Je
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
     if (isEmpty(yaml.getAuthMechanism())) {
-      yaml.setAuthMechanism(JenkinsConfig.USERNAME_PASSWORD_FIELD);
+      yaml.setAuthMechanism(JenkinsConfig.USERNAME_DEFAULT_TEXT);
     }
 
     JenkinsConfig config = JenkinsConfig.builder()

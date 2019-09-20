@@ -3,7 +3,7 @@ package io.harness.queue;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.govern.Switch.noop;
-import static io.harness.maintenance.MaintenanceController.isMaintenance;
+import static io.harness.maintenance.MaintenanceController.getMaintenanceFilename;
 import static io.harness.manage.GlobalContextManager.initGlobalContextGuard;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
@@ -49,7 +49,7 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
     Thread.currentThread().setName(threadName);
 
     do {
-      while (isMaintenance() || (primaryOnly && queueController.isNotPrimary())) {
+      while (getMaintenanceFilename() || (primaryOnly && queueController.isNotPrimary())) {
         sleep(ofSeconds(1));
       }
 

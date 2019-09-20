@@ -307,7 +307,7 @@ public class SettingGenerator {
                            .jenkinsUrl("https://jenkinsint.harness.io")
                            .username("wingsbuild")
                            .password(scmSecret.decryptToCharArray(new SecretName("harness_jenkins")))
-                           .authMechanism(JenkinsConfig.USERNAME_PASSWORD_FIELD)
+                           .authMechanism(JenkinsConfig.USERNAME_DEFAULT_TEXT)
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();

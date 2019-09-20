@@ -36,10 +36,10 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public class JenkinsConfig extends SettingValue
     implements EncryptableSetting, ArtifactSourceable, TaskParameters, ExecutionCapabilityDemander {
-  public static final String USERNAME_PASSWORD_FIELD = "UserName/Password";
+  public static final String USERNAME_DEFAULT_TEXT = "UserName/Password";
 
   @Attributes(title = "Jenkins URL", required = true) @NotEmpty private String jenkinsUrl;
-  @Attributes(title = "Authentication Mechanism", required = true, enums = {USERNAME_PASSWORD_FIELD, TOKEN_FIELD})
+  @Attributes(title = "Authentication Mechanism", required = true, enums = {USERNAME_DEFAULT_TEXT, TOKEN_FIELD})
   @NotEmpty
   private String authMechanism;
 
@@ -56,7 +56,7 @@ public class JenkinsConfig extends SettingValue
    */
   public JenkinsConfig() {
     super(SettingVariableTypes.JENKINS.name());
-    authMechanism = USERNAME_PASSWORD_FIELD;
+    authMechanism = USERNAME_DEFAULT_TEXT;
   }
 
   @Builder

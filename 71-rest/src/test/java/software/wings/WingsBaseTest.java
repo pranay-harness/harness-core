@@ -271,7 +271,7 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
         .jenkinsUrl(UUID.randomUUID().toString())
         .username(UUID.randomUUID().toString())
         .password(password.toCharArray())
-        .authMechanism(JenkinsConfig.USERNAME_PASSWORD_FIELD)
+        .authMechanism(JenkinsConfig.USERNAME_DEFAULT_TEXT)
         .build();
   }
 

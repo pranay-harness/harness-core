@@ -63,7 +63,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
   }
 
   private boolean shouldProcess() {
-    return !MaintenanceController.isMaintenance() && queueController.isPrimary();
+    return !MaintenanceController.getMaintenanceFilename() && queueController.isPrimary();
   }
 
   @Override

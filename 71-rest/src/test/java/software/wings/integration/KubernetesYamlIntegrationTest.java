@@ -41,7 +41,7 @@ import java.util.Optional;
 
 @Integration
 @Slf4j
-public class KubernetesYamlIntegrationTest extends CategoryTest {
+public abstract class KubernetesYamlIntegrationTest extends CategoryTest {
   private static final SettingAttribute COMPUTE_PROVIDER_SETTING =
       aSettingAttribute()
           .withUuid("GCP_ID")

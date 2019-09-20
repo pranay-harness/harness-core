@@ -25,7 +25,7 @@ import java.util.Optional;
 
 @Integration
 @Slf4j
-public class KubernetesIntegrationTest extends CategoryTest {
+public abstract class KubernetesIntegrationTest extends CategoryTest {
   private static final SettingAttribute COMPUTE_PROVIDER_SETTING =
       aSettingAttribute()
           .withUuid("GCP_ID")

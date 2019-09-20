@@ -3,7 +3,7 @@ package software.wings.yaml.gitSync;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
-import static io.harness.maintenance.MaintenanceController.isMaintenance;
+import static io.harness.maintenance.MaintenanceController.getMaintenanceFilename;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 
@@ -46,7 +46,7 @@ public class GitChangeSetRunnable implements Runnable {
   @Override
   public void run() {
     try {
-      if (isMaintenance() || configurationController.isNotPrimary()) {
+      if (getMaintenanceFilename() || configurationController.isNotPrimary()) {
         logger.info("Not continuing with GitChangeSetRunnable job");
         return;
       }

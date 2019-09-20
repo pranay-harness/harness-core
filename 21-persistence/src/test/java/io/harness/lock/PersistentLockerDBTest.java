@@ -5,6 +5,7 @@ import static io.harness.lock.PersistentLocker.LOCKS_STORE;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.threading.Morpheus.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import com.google.inject.Inject;
 
@@ -94,24 +95,30 @@ public class PersistentLockerDBTest extends PersistenceTest {
   @Test
   @Category(UnitTests.class)
   public void testAcquireLockAfterDestroy() {
-    String uuid = generateUuid();
-    try (AcquiredLock lock = persistentLocker.acquireLock(uuid, Duration.ofSeconds(1))) {
-      persistentLocker.destroy(lock);
-    } catch (WingsException exception) {
-      // Do nothing. This is just to suppress the exception
-    }
+    assertThatCode(() -> {
+      String uuid = generateUuid();
+      try (AcquiredLock lock = persistentLocker.acquireLock(uuid, Duration.ofSeconds(1))) {
+        persistentLocker.destroy(lock);
+      } catch (WingsException exception) {
+        // Do nothing. This is just to suppress the exception
+      }
 
-    try (AcquiredLock lock = persistentLocker.acquireLock(uuid, Duration.ofSeconds(1))) {
-    }
+      try (AcquiredLock lock = persistentLocker.acquireLock(uuid, Duration.ofSeconds(1))) {
+      }
+    })
+        .doesNotThrowAnyException();
   }
 
   @Test
   @Category(UnitTests.class)
   public void testTryToAcquireEphemeralLock() {
-    String uuid = generateUuid();
-    try (AcquiredLock outer =
-             persistentLocker.tryToAcquireEphemeralLock(AcquiredLock.class, "foo", Duration.ofSeconds(1))) {
-    }
+    assertThatCode(() -> {
+      String uuid = generateUuid();
+      try (AcquiredLock outer =
+               persistentLocker.tryToAcquireEphemeralLock(AcquiredLock.class, "foo", Duration.ofSeconds(1))) {
+      }
+    })
+        .doesNotThrowAnyException();
   }
 
   @Test
