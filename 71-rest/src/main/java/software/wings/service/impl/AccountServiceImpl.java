@@ -1330,8 +1330,8 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
-  public boolean postCustomEvent(String accountId, AccountEvent accountEvent) {
-    eventPublishHelper.publishAccountEvent(accountId, accountEvent);
+  public boolean postCustomEvent(String accountId, AccountEvent accountEvent, boolean oneTimeOnly, boolean trialOnly) {
+    eventPublishHelper.publishAccountEvent(accountId, accountEvent, oneTimeOnly, trialOnly);
     return true;
   }
 }

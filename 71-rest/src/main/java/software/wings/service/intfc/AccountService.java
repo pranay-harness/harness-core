@@ -133,5 +133,5 @@ public interface AccountService {
 
   Optional<Account> getOnPremAccount();
 
-  boolean postCustomEvent(String accountId, AccountEvent accountEvent);
+  boolean postCustomEvent(String accountId, AccountEvent accountEvent, boolean oneTimeOnly, boolean trialOnly);
 }

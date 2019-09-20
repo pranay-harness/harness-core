@@ -348,7 +348,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
       if (!savedService.isSample()) {
         eventPublishHelper.publishAccountEvent(
-            accountId, AccountEvent.builder().accountEventType(AccountEventType.SERVICE_CREATED).build());
+            accountId, AccountEvent.builder().accountEventType(AccountEventType.SERVICE_CREATED).build(), true, true);
       }
       return savedService;
     });

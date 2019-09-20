@@ -55,7 +55,8 @@ public class SegmentHelper {
     Map<String, String> traits = new HashMap<>();
     traits.put("email", email);
     traits.put(FIRST_NAME, utils.getFirstName(userName, email));
-    traits.put(LAST_NAME, utils.getLastName(userName, email));
+    String lastName = utils.getLastName(userName, email);
+    traits.put(LAST_NAME, isNotEmpty(lastName) ? lastName : "");
 
     if (account != null) {
       traits.put(COMPANY_NAME, account.getCompanyName());

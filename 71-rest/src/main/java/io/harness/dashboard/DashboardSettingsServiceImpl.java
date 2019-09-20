@@ -3,6 +3,7 @@ package io.harness.dashboard;
 import static io.harness.beans.PageRequest.DEFAULT_PAGE_SIZE;
 import static io.harness.beans.PageRequest.DEFAULT_UNLIMITED;
 import static io.harness.beans.PageRequest.PageRequestBuilder;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.util.Arrays.asList;
@@ -15,14 +16,19 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.dashboard.DashboardSettings.keys;
 import io.harness.eraro.ErrorCode;
+import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.beans.AccountEvent;
+import software.wings.beans.AccountEventType;
 import software.wings.beans.Event.Type;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.security.auth.DashboardAuthHandler;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
@@ -31,6 +37,7 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
   @Inject private WingsPersistence persistence;
   @Inject private DashboardAuthHandler dashboardAuthHandler;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private EventPublishHelper eventPublishHelper;
 
   @Override
   public DashboardSettings get(@NotNull String accountId, @NotNull String id) {
@@ -45,6 +52,17 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
     dashboardSettings.setAccountId(accountId);
     DashboardSettings savedDashboardSettings = get(accountId, persistence.save(dashboardSettings));
     auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, savedDashboardSettings, Type.CREATE);
+    Map<String, String> properties = new HashMap<>();
+    properties.put("module", "Dashboards");
+    properties.put("shared", isEmpty(savedDashboardSettings.getPermissions()) ? "false" : "true");
+    properties.put("name", savedDashboardSettings.getName());
+    properties.put("groupId", accountId);
+    AccountEvent accountEvent = AccountEvent.builder()
+                                    .accountEventType(AccountEventType.CUSTOM)
+                                    .customMsg(savedDashboardSettings.getName())
+                                    .properties(properties)
+                                    .build();
+    eventPublishHelper.publishAccountEvent(accountId, accountEvent, false, false);
     return savedDashboardSettings;
   }
 

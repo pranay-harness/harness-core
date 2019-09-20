@@ -187,7 +187,7 @@ public class SegmentHandler implements EventHandler {
           reportTrackEvent(account, eventType.name(), user);
           break;
         case CUSTOM:
-          reportTrackEvent(account, properties.get(CUSTOM_EVENT_NAME), user);
+          reportTrackEvent(account, properties.get(CUSTOM_EVENT_NAME), user, properties);
           break;
         case TECH_STACK:
           properties.put(ORIGINAL_TIMESTAMP_NAME, String.valueOf(System.currentTimeMillis()));

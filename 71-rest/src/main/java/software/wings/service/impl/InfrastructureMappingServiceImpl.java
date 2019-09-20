@@ -428,7 +428,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
     if (!savedInfraMapping.isSample()) {
       eventPublishHelper.publishAccountEvent(
-          accountId, AccountEvent.builder().accountEventType(AccountEventType.INFRA_MAPPING_ADDED).build());
+          accountId, AccountEvent.builder().accountEventType(AccountEventType.INFRA_MAPPING_ADDED).build(), true, true);
     }
     return savedInfraMapping;
   }

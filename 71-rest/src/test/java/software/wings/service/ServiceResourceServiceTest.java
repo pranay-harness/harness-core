@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -325,7 +326,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     assertThat(savedService.getUuid()).isEqualTo(SERVICE_ID);
     ArgumentCaptor<Service> calledService = ArgumentCaptor.forClass(Service.class);
     verify(mockWingsPersistence).saveAndGet(eq(Service.class), calledService.capture());
-    verify(eventPublishHelper).publishAccountEvent(anyString(), any(AccountEvent.class));
+    verify(eventPublishHelper).publishAccountEvent(anyString(), any(AccountEvent.class), anyBoolean(), anyBoolean());
     Service calledServiceValue = calledService.getValue();
     assertThat(calledServiceValue)
         .isNotNull()

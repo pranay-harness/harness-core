@@ -437,8 +437,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         accountId, null, artifactStream, Type.CREATE, artifactStream.isSyncFromGit(), false);
 
     if (!artifactStream.isSample()) {
-      eventPublishHelper.publishAccountEvent(
-          accountId, AccountEvent.builder().accountEventType(AccountEventType.ARTIFACT_STREAM_ADDED).build());
+      eventPublishHelper.publishAccountEvent(accountId,
+          AccountEvent.builder().accountEventType(AccountEventType.ARTIFACT_STREAM_ADDED).build(), true, true);
     }
 
     return get(id);
@@ -1120,7 +1120,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     if (!artifactStream.isSample()) {
       eventPublishHelper.publishAccountEvent(savedArtifactStream.getAccountId(),
-          AccountEvent.builder().accountEventType(AccountEventType.ARTIFACT_STREAM_ADDED).build());
+          AccountEvent.builder().accountEventType(AccountEventType.ARTIFACT_STREAM_ADDED).build(), true, true);
     }
 
     return savedArtifactStream;
