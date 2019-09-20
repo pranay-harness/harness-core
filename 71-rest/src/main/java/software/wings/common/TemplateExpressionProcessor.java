@@ -9,7 +9,6 @@ import com.google.inject.Singleton;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import software.wings.beans.Application;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -84,10 +83,10 @@ public class TemplateExpressionProcessor {
     return infrastructureDefinition;
   }
 
-  public Service resolveService(ExecutionContext context, Application app, TemplateExpression templateExpression) {
+  public Service resolveService(ExecutionContext context, String appId, TemplateExpression templateExpression) {
     String serviceId = resolveTemplateExpression(context, templateExpression);
     // Then variable contains serviceId
-    Service service = serviceResourceService.get(app.getAppId(), serviceId, false);
+    Service service = serviceResourceService.get(appId, serviceId, false);
     if (service == null) {
       if (matchesVariablePattern(serviceId)) {
         throw new WingsException(
