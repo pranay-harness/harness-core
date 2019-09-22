@@ -127,7 +127,6 @@ public class OwnerRule extends RepeatRule {
       }
     }
 
-    // If there is email, it should match
     final String prEmail = System.getenv("ghprbPullAuthorEmail");
     if (prEmail == null) {
       if (owner.intermittent()) {
@@ -138,6 +137,7 @@ public class OwnerRule extends RepeatRule {
 
     logger.info("ghprbPullAuthorEmail = {}", prEmail);
 
+    // If there is email, it should match
     final boolean match = Arrays.asList(owner.emails()).contains(prEmail);
     if (!match) {
       if (owner.intermittent()) {

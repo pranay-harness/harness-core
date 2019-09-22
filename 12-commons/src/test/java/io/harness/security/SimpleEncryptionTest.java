@@ -56,7 +56,6 @@ public class SimpleEncryptionTest extends CategoryTest {
     SimpleEncryption encryption = new SimpleEncryption("kmpySmUISimoRrJL6NL73w");
     char[] encryptedChars = encryption.encryptChars(testInput.toCharArray());
     String encryptedString = new String(encryptedChars);
-    logger.info("encryptedString: {}", encryptedString);
     assertThat(testInput).isNotEqualTo(encryptedString);
     char[] decryptedChars = encryption.decryptChars(encryptedString.toCharArray());
     String decryptedString = new String(decryptedChars);

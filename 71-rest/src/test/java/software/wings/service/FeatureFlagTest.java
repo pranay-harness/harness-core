@@ -173,7 +173,7 @@ public class FeatureFlagTest extends WingsBaseTest {
     featureFlagService.initializeFeatureFlags();
 
     for (FeatureName featureName : FeatureName.values()) {
-      assertThat(featureFlagService.isEnabled(featureName, null)).isFalse();
+      assertThat(featureFlagService.isEnabled(featureName, "dummy")).isFalse();
     }
   }
 
