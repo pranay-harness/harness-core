@@ -54,7 +54,8 @@
         <gitCommitId>default</gitCommitId>
         <grpc.version>1.21.0</grpc.version>
         <ibatis.core.version>3.0</ibatis.core.version>
-        <jacoco.skip>true</jacoco.skip>
+        <jacoco.agent.skip>true</jacoco.agent.skip>
+        <jacoco.merge.skip>true</jacoco.merge.skip>
         <jgit.version>5.3.0.201903130848-r</jgit.version>
         <maven.build.timestamp.format>yyMMdd-HHmm</maven.build.timestamp.format>
         <maven.deploy.skip>true</maven.deploy.skip>
@@ -1739,7 +1740,7 @@
                             <goal>merge</goal>
                         </goals>
                         <configuration>
-                            <skip>${jacoco.skip}</skip>
+                            <skip>${jacoco.merge.skip}</skip>
                         </configuration>
                     </execution>
                     <execution>
@@ -1748,7 +1749,7 @@
                             <goal>prepare-agent</goal>
                         </goals>
                         <configuration>
-                            <skip>${jacoco.skip}</skip>
+                            <skip>${jacoco.agent.skip}</skip>
                         </configuration>
                     </execution>
                 </executions>
