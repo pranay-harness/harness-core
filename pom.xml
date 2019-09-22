@@ -1726,8 +1726,22 @@
                 <version>0.8.4</version>
                 <configuration>
                     <append>true</append>
+                    <fileSets>
+                        <fileSet>
+                            <directory>..</directory>
+                            <include>**/target/*.exec</include>
+                        </fileSet>
+                    </fileSets>
                 </configuration>
                 <executions>
+                    <execution>
+                        <goals>
+                            <goal>merge</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${jacoco.skip}</skip>
+                        </configuration>
+                    </execution>
                     <execution>
                         <id>agent</id>
                         <goals>
