@@ -21,6 +21,7 @@ import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
@@ -37,6 +38,7 @@ import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.template.TemplateService;
@@ -61,6 +63,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
   @Inject ArtifactStreamService artifactStreamService;
   @Inject private TemplateService templateService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
 
   private GraphNode toBean(ChangeContext<StepYaml> changeContext, List<ChangeContext> changeContextList)
       throws HarnessException {
@@ -234,6 +237,12 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
           outputProperties.put("serviceName", serviceWithArtifactStream.getName());
         }
         return;
+      case "provisionerId":
+        String provisionerId = (String) objectValue;
+        InfrastructureProvisioner provisioner = infrastructureProvisionerService.get(appId, provisionerId);
+        notNullCheck("Provisioner is null for the given provisionerId:" + provisionerId, provisioner, USER);
+        outputProperties.put("provisionerName", provisioner.getName());
+        return;
       default:
         outputProperties.put(name, objectValue);
         return;
@@ -277,6 +286,12 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
             artifactStreamService.getArtifactStreamByName(appId, service.getUuid(), artifactStreamName);
         notNullCheck("Artifact stream is null for the given name:" + artifactStreamName, artifactStream, USER);
         properties.put("artifactStreamId", artifactStream.getUuid());
+        return;
+      case "provisionerName":
+        String provisionerName = (String) objectValue;
+        InfrastructureProvisioner provisioner = infrastructureProvisionerService.getByName(appId, provisionerName);
+        notNullCheck("Provisioner is null for the given name:" + provisionerName, provisioner, USER);
+        properties.put("provisionerId", provisioner.getUuid());
         return;
       default:
         properties.put(name, objectValue);
