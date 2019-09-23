@@ -2,6 +2,7 @@ package software.wings.service.impl.security;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
+import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.reflection.ReflectionUtils.getFieldByName;
 
@@ -11,7 +12,6 @@ import com.google.inject.Singleton;
 
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.exception.ExceptionUtils;
-import io.harness.exception.KmsOperationException;
 import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
@@ -59,12 +59,12 @@ public class EncryptionServiceImpl implements EncryptionService {
         Field encryptedRefField = getEncryptedRefField(f, object);
         encryptedRefField.setAccessible(true);
         encryptedRefField.set(object, null);
-      } catch (DelegateRetryableException e) {
+      } catch (DelegateRetryableException | SecretManagementDelegateException e) {
         throw e;
       } catch (Exception e) {
         // Log the root cause exception of failed decryption attempts.
         logger.error("Failed to decrypt encrypted settings.", e);
-        throw new KmsOperationException(ExceptionUtils.getMessage(e), USER);
+        throw new SecretManagementException(ENCRYPT_DECRYPT_ERROR, ExceptionUtils.getMessage(e), USER);
       }
     }
     object.setDecrypted(true);

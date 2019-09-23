@@ -7,6 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.AZURE_KEY_VAULT_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.CYBERARK_OPERATION_ERROR;
+import static io.harness.eraro.ErrorCode.KMS_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.VAULT_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
@@ -15,7 +16,6 @@ import static java.time.Duration.ofMillis;
 import static software.wings.helpers.ext.vault.VaultRestClientFactory.getFullPath;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
@@ -56,8 +56,6 @@ import com.microsoft.azure.keyvault.models.SecretBundle;
 import com.microsoft.azure.keyvault.requests.SetSecretRequest;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.exception.DelegateRetryableException;
-import io.harness.exception.KmsOperationException;
-import io.harness.exception.SecretManagementDelegateException;
 import io.harness.exception.WingsException;
 import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptedRecord;
@@ -153,7 +151,11 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
 
   @Override
   public EncryptedRecord encrypt(String accountId, char[] value, KmsConfig kmsConfig) {
-    Preconditions.checkNotNull(kmsConfig, "null secret manager for account " + accountId);
+    if (kmsConfig == null) {
+      throw new SecretManagementDelegateException(
+          KMS_OPERATION_ERROR, "null secret manager for account " + accountId, USER);
+    }
+
     int failedAttempts = 0;
     while (true) {
       try {
@@ -165,11 +167,12 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
             String reason = format("Encryption failed after %d retries", NUM_OF_RETRIES);
-            throw new DelegateRetryableException(new KmsOperationException(reason, e, USER));
+            throw new DelegateRetryableException(
+                new SecretManagementDelegateException(KMS_OPERATION_ERROR, reason, e, USER));
           }
           sleep(ofMillis(1000));
         } else {
-          throw new KmsOperationException(e.getMessage(), e, USER);
+          throw new SecretManagementDelegateException(KMS_OPERATION_ERROR, e.getMessage(), e, USER);
         }
       }
     }
@@ -180,8 +183,10 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     if (data.getEncryptedValue() == null) {
       return null;
     }
-
-    Preconditions.checkNotNull(kmsConfig, "null secret manager for encrypted record " + data.getUuid());
+    if (kmsConfig == null) {
+      throw new SecretManagementDelegateException(
+          KMS_OPERATION_ERROR, "null secret manager for encrypted record " + data.getUuid(), USER);
+    }
 
     int failedAttempts = 0;
     while (true) {
@@ -201,11 +206,12 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           if (failedAttempts == NUM_OF_RETRIES) {
             String reason =
                 format("Decryption failed for encryptedData %s after %d retries", data.getName(), NUM_OF_RETRIES);
-            throw new DelegateRetryableException(new KmsOperationException(reason, e, USER));
+            throw new DelegateRetryableException(
+                new SecretManagementDelegateException(KMS_OPERATION_ERROR, reason, e, USER));
           }
           sleep(ofMillis(1000));
         } else {
-          throw new KmsOperationException(e.getMessage(), e, USER);
+          throw new SecretManagementDelegateException(KMS_OPERATION_ERROR, e.getMessage(), e, USER);
         }
       }
     }
@@ -251,7 +257,9 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       } catch (Exception e) {
         failedAttempts++;
         logger.warn(format("decryption failed. trial num: %d", failedAttempts), e);
-        if (isRetryable(e)) {
+        if (e instanceof SecretManagementDelegateException) {
+          throw(SecretManagementDelegateException) e;
+        } else if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
             String message = "Decryption failed after " + NUM_OF_RETRIES + " retries";
             throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, e, USER);
@@ -949,7 +957,9 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       } catch (Exception e) {
         failedAttempts++;
         logger.warn(format("decryption failed. trial num: %d", failedAttempts), e);
-        if (isRetryable(e)) {
+        if (e instanceof SecretManagementDelegateException) {
+          throw(SecretManagementDelegateException) e;
+        } else if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
             String message = "Decryption failed after " + NUM_OF_RETRIES + " retries";
             throw new SecretManagementDelegateException(CYBERARK_OPERATION_ERROR, message, e, USER);

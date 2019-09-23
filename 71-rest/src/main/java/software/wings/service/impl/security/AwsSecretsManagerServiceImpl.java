@@ -6,7 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.eraro.ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR;
-import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.security.SimpleEncryption.CHARSET;
@@ -17,7 +16,6 @@ import static software.wings.service.intfc.security.SecretManagementDelegateServ
 import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
 import static software.wings.service.intfc.security.SecretManager.SECRET_NAME_KEY;
 
-import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -227,7 +225,8 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
       secretsManagerConfig.maskSecrets();
     } else {
       EncryptedData encryptedSecretKey = wingsPersistence.get(EncryptedData.class, secretsManagerConfig.getSecretKey());
-      Preconditions.checkNotNull(encryptedSecretKey, "encrypted secret key can't be null for " + secretsManagerConfig);
+      checkNotNull(
+          encryptedSecretKey, "Secret key can't be null for AWS Secrets Manager " + secretsManagerConfig.getUuid());
       secretsManagerConfig.setSecretKey(String.valueOf(decryptLocal(encryptedSecretKey)));
     }
   }
@@ -281,7 +280,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
     }
 
     AwsSecretsManagerConfig secretsManagerConfig = wingsPersistence.get(AwsSecretsManagerConfig.class, configId);
-    Preconditions.checkNotNull(secretsManagerConfig, "no Aws Secrets Manager config found with id " + configId);
+    checkNotNull(secretsManagerConfig, "No Aws Secrets Manager configuration found with id " + configId);
 
     if (isNotEmpty(secretsManagerConfig.getSecretKey())) {
       wingsPersistence.delete(EncryptedData.class, secretsManagerConfig.getSecretKey());
@@ -295,12 +294,11 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
   @Override
   public EncryptedData encryptFile(String accountId, AwsSecretsManagerConfig secretsManagerConfig, String name,
       byte[] inputBytes, EncryptedData savedEncryptedData) {
-    Preconditions.checkNotNull(secretsManagerConfig);
+    checkNotNull(secretsManagerConfig, "AWS Secrets Manager configuration can't be null");
     byte[] bytes = encodeBase64ToByteArray(inputBytes);
     if (bytes.length > AWS_SECRET_CONTENT_SIZE_LIMIT) {
-      throw new WingsException(AWS_SECRETS_MANAGER_OPERATION_ERROR, USER_SRE)
-          .addParam(
-              REASON_KEY, "AWS Secrets Manager limits secret value to " + AWS_SECRET_CONTENT_SIZE_LIMIT + " bytes.");
+      String message = "AWS Secrets Manager limits secret value to " + AWS_SECRET_CONTENT_SIZE_LIMIT + " bytes.";
+      throw new SecretManagementException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, USER_SRE);
     }
 
     EncryptedData fileData = encrypt(name, new String(CHARSET.decode(ByteBuffer.wrap(bytes)).array()), accountId,
@@ -317,15 +315,16 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
   public File decryptFile(File file, String accountId, EncryptedData encryptedData) {
     try {
       AwsSecretsManagerConfig secretsManagerConfig = getAwsSecretsManagerConfig(accountId, encryptedData.getKmsId());
-      Preconditions.checkNotNull(secretsManagerConfig);
-      Preconditions.checkNotNull(encryptedData);
+      checkNotNull(secretsManagerConfig, "AWS Secrets Manager configuration can't be null");
+      checkNotNull(encryptedData, "Encrypted data record can't be null");
       char[] decrypt = decrypt(encryptedData, accountId, secretsManagerConfig);
       byte[] fileData =
           encryptedData.isBase64Encoded() ? decodeBase64(decrypt) : CHARSET.encode(CharBuffer.wrap(decrypt)).array();
       Files.write(fileData, file);
       return file;
     } catch (IOException ioe) {
-      throw new WingsException(DEFAULT_ERROR_CODE, ioe);
+      throw new SecretManagementException(
+          AWS_SECRETS_MANAGER_OPERATION_ERROR, "Failed to decrypt data into an output file", ioe, USER);
     }
   }
 
@@ -333,15 +332,16 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
   public void decryptToStream(String accountId, EncryptedData encryptedData, OutputStream output) {
     try {
       AwsSecretsManagerConfig secretsManagerConfig = getAwsSecretsManagerConfig(accountId, encryptedData.getKmsId());
-      Preconditions.checkNotNull(secretsManagerConfig);
-      Preconditions.checkNotNull(encryptedData);
+      checkNotNull(secretsManagerConfig, "AWS Secrets Manager configuration can't be null");
+      checkNotNull(encryptedData, "Encrypted data record can't be null");
       char[] decrypt = decrypt(encryptedData, accountId, secretsManagerConfig);
       byte[] fileData =
           encryptedData.isBase64Encoded() ? decodeBase64(decrypt) : CHARSET.encode(CharBuffer.wrap(decrypt)).array();
       output.write(fileData, 0, fileData.length);
       output.flush();
     } catch (IOException ioe) {
-      throw new WingsException(DEFAULT_ERROR_CODE, ioe);
+      throw new SecretManagementException(
+          AWS_SECRETS_MANAGER_OPERATION_ERROR, "Failed to decrypt data into an output stream", ioe, USER);
     }
   }
 }

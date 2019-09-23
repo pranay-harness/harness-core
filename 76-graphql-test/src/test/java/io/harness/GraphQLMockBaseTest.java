@@ -2,7 +2,6 @@ package io.harness;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import io.harness.exception.KmsOperationException;
 import io.harness.rule.GraphQLWithWingsRule;
 import io.harness.security.encryption.EncryptionType;
 import org.junit.Rule;
@@ -15,6 +14,7 @@ import software.wings.beans.LicenseInfo;
 import software.wings.beans.VaultConfig;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
+import software.wings.service.impl.security.SecretManagementException;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.IOException;
@@ -32,7 +32,7 @@ public abstract class GraphQLMockBaseTest extends CategoryTest implements Mockab
 
   protected EncryptedData encrypt(String accountId, char[] value, KmsConfig kmsConfig) throws Exception {
     if (kmsConfig.getAccessKey().equals("invalidKey")) {
-      throw new KmsOperationException("Invalid credentials");
+      throw new SecretManagementException("Invalid credentials");
     }
     char[] encryptedValue = value == null ? null
                                           : SecretManagementDelegateServiceImpl.encrypt(
@@ -58,7 +58,7 @@ public abstract class GraphQLMockBaseTest extends CategoryTest implements Mockab
   protected EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
       VaultConfig vaultConfig, EncryptedData savedEncryptedData) throws IOException {
     if (vaultConfig.getAuthToken().equals("invalidKey")) {
-      throw new KmsOperationException("invalidKey");
+      throw new SecretManagementException("invalidKey");
     }
     String keyUrl = settingType + "/" + name;
     if (savedEncryptedData != null) {

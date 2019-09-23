@@ -590,6 +590,8 @@ import software.wings.service.impl.newrelic.NewRelicMetricData;
 import software.wings.service.impl.newrelic.NewRelicSetupTestNodeData;
 import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
 import software.wings.service.impl.prometheus.PrometheusMetricDataResponse;
+import software.wings.service.impl.security.SecretManagementDelegateException;
+import software.wings.service.impl.security.SecretManagementException;
 import software.wings.service.impl.security.vault.SecretEngineSummary;
 import software.wings.service.impl.security.vault.VaultAppRoleLoginResult;
 import software.wings.service.impl.servicenow.ServiceNowDelegateServiceImpl;
@@ -1217,9 +1219,11 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ArtifactType.class, 5117);
     kryo.register(ContainerFamily.class, 5118);
     kryo.register(FileType.class, 5119);
+    kryo.register(SecretManagementException.class, 5517);
     kryo.register(YamlGitConfig.SyncMode.class, 5548);
     kryo.register(YamlGitConfig.class, 5547);
     kryo.register(VerificationStateAnalysisExecutionData.class, 5552);
+    kryo.register(SecretManagementDelegateException.class, 5585);
 
     kryo.register(EcsBGRoute53ServiceSetupRequest.class, 7101);
     kryo.register(EcsBGRoute53ServiceSetupResponse.class, 7102);

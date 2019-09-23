@@ -4,7 +4,8 @@ import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
-import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
+import static io.harness.eraro.ErrorCode.KMS_OPERATION_ERROR;
+import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.security.SimpleEncryption.CHARSET;
@@ -17,14 +18,12 @@ import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
 import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.exception.KmsOperationException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoUtils;
@@ -161,7 +160,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     EncryptedData accessKeyData = encryptLocal(kmsConfig.getAccessKey().toCharArray());
     if (isNotBlank(kmsConfig.getUuid())) {
       EncryptedData savedAccessKey = wingsPersistence.get(EncryptedData.class, savedKmsConfig.getAccessKey());
-      Preconditions.checkNotNull(savedAccessKey, "reference is null for " + kmsConfig.getUuid());
+      checkNotNull(savedAccessKey, "Access key reference is null for KMS secret manager " + kmsConfig.getUuid());
       savedAccessKey.setEncryptionKey(accessKeyData.getEncryptionKey());
       savedAccessKey.setEncryptedValue(accessKeyData.getEncryptedValue());
       accessKeyData = savedAccessKey;
@@ -175,7 +174,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     EncryptedData secretKeyData = encryptLocal(kmsConfig.getSecretKey().toCharArray());
     if (isNotBlank(kmsConfig.getUuid())) {
       EncryptedData savedSecretKey = wingsPersistence.get(EncryptedData.class, savedKmsConfig.getSecretKey());
-      Preconditions.checkNotNull(savedSecretKey, "reference is null for " + kmsConfig.getUuid());
+      checkNotNull(savedSecretKey, "Secret Key reference is null for KMS secret manager " + kmsConfig.getUuid());
       savedSecretKey.setEncryptionKey(secretKeyData.getEncryptionKey());
       savedSecretKey.setEncryptedValue(secretKeyData.getEncryptedValue());
       secretKeyData = savedSecretKey;
@@ -189,7 +188,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     EncryptedData arnKeyData = encryptLocal(kmsConfig.getKmsArn().toCharArray());
     if (isNotBlank(kmsConfig.getUuid())) {
       EncryptedData savedArn = wingsPersistence.get(EncryptedData.class, savedKmsConfig.getKmsArn());
-      Preconditions.checkNotNull(savedArn, "reference is null for " + kmsConfig.getUuid());
+      checkNotNull(savedArn, "ARN reference is null for KMS secret manager " + kmsConfig.getUuid());
       savedArn.setEncryptionKey(arnKeyData.getEncryptionKey());
       savedArn.setEncryptedValue(arnKeyData.getEncryptedValue());
       arnKeyData = savedArn;
@@ -220,10 +219,10 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   @Override
   public boolean deleteKmsConfig(String accountId, String kmsConfigId) {
     KmsConfig kmsConfig = wingsPersistence.get(KmsConfig.class, kmsConfigId);
-    Preconditions.checkNotNull(kmsConfig, "no Kms config found with id " + kmsConfigId);
+    checkNotNull(kmsConfig, "No KMS secret manager found with id " + kmsConfigId);
 
     if (GLOBAL_ACCOUNT_ID.equals(kmsConfig.getAccountId())) {
-      throw new KmsOperationException("Can not delete global kms configuration");
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Can not delete global KMS secret manager", USER);
     }
 
     final long count = wingsPersistence.createQuery(EncryptedData.class)
@@ -235,7 +234,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     if (count > 0) {
       String message = "Can not delete the kms configuration since there are secrets encrypted with this. "
           + "Please transition your secrets to another secret manager and try again.";
-      throw new KmsOperationException(message, USER_SRE);
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, message, USER_SRE);
     }
 
     Query<EncryptedData> deleteQuery =
@@ -248,25 +247,25 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   @Override
   public void decryptKmsConfigSecrets(String accountId, KmsConfig kmsConfig, boolean maskSecret) {
     EncryptedData accessKeyData = wingsPersistence.get(EncryptedData.class, kmsConfig.getAccessKey());
-    Preconditions.checkNotNull(accessKeyData, "encrypted accessKey can't be null for " + kmsConfig);
+    checkNotNull(accessKeyData, "Access key reference is null for KMS secret manager " + kmsConfig.getUuid());
     kmsConfig.setAccessKey(new String(decryptLocal(accessKeyData)));
 
     if (maskSecret) {
       kmsConfig.maskSecrets();
     } else {
       EncryptedData secretData = wingsPersistence.get(EncryptedData.class, kmsConfig.getSecretKey());
-      Preconditions.checkNotNull(secretData, "encrypted secret key can't be null for " + kmsConfig);
+      checkNotNull(secretData, "Secret Key reference is null for KMS secret manager " + kmsConfig.getUuid());
       kmsConfig.setSecretKey(new String(decryptLocal(secretData)));
 
       EncryptedData arnData = wingsPersistence.get(EncryptedData.class, kmsConfig.getKmsArn());
-      Preconditions.checkNotNull(arnData, "encrypted arn can't be null for " + kmsConfig);
+      checkNotNull(arnData, "ARN reference is null for KMS secret manager " + kmsConfig.getUuid());
       kmsConfig.setKmsArn(new String(decryptLocal(arnData)));
     }
   }
 
   @Override
   public EncryptedData encryptFile(String accountId, KmsConfig kmsConfig, String name, byte[] inputBytes) {
-    Preconditions.checkNotNull(kmsConfig);
+    checkNotNull(kmsConfig, "KMS secret manager can't be null");
     byte[] bytes = encodeBase64ToByteArray(inputBytes);
     EncryptedData fileData = encrypt(CHARSET.decode(ByteBuffer.wrap(bytes)).array(), accountId, kmsConfig);
     fileData.setName(name);
@@ -289,8 +288,8 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   public File decryptFile(File file, String accountId, EncryptedData encryptedData) {
     try {
       KmsConfig kmsConfig = getKmsConfig(accountId, encryptedData.getKmsId());
-      Preconditions.checkNotNull(kmsConfig);
-      Preconditions.checkNotNull(encryptedData);
+      checkNotNull(kmsConfig, "KMS configuration can't be null");
+      checkNotNull(encryptedData, "Encrypted data record can't be null");
       byte[] bytes = Files.toByteArray(file);
       encryptedData.setEncryptedValue(CHARSET.decode(ByteBuffer.wrap(bytes)).array());
       char[] decrypt = decrypt(encryptedData, accountId, kmsConfig);
@@ -299,7 +298,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       Files.write(fileData, file);
       return file;
     } catch (IOException ioe) {
-      throw new WingsException(DEFAULT_ERROR_CODE, ioe);
+      throw new SecretManagementException(KMS_OPERATION_ERROR, "Failed to decrypt data into an output file", ioe, USER);
     }
   }
 
@@ -307,8 +306,8 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   public void decryptToStream(File file, String accountId, EncryptedData encryptedData, OutputStream output) {
     try {
       KmsConfig kmsConfig = getKmsConfig(accountId, encryptedData.getKmsId());
-      Preconditions.checkNotNull(kmsConfig);
-      Preconditions.checkNotNull(encryptedData);
+      checkNotNull(kmsConfig, "KMS configuration can't be null");
+      checkNotNull(encryptedData, "Encrypted data record can't be null");
       byte[] bytes = Files.toByteArray(file);
       encryptedData.setEncryptedValue(CHARSET.decode(ByteBuffer.wrap(bytes)).array());
       char[] decrypt = decrypt(encryptedData, accountId, kmsConfig);
@@ -317,7 +316,8 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       output.write(fileData, 0, fileData.length);
       output.flush();
     } catch (IOException ioe) {
-      throw new WingsException(DEFAULT_ERROR_CODE, ioe);
+      throw new SecretManagementException(
+          KMS_OPERATION_ERROR, "Failed to decrypt data into an output stream", ioe, USER);
     }
   }
 
@@ -326,7 +326,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       encrypt(UUID.randomUUID().toString().toCharArray(), accountId, kmsConfig);
     } catch (WingsException e) {
       String message = "Was not able to encrypt using given credentials. Please check your credentials and try again";
-      throw new KmsOperationException(message, USER);
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, message, USER);
     }
   }
 

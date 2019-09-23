@@ -12,7 +12,6 @@ import static software.wings.service.intfc.security.SecretManagementDelegateServ
 import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
 import static software.wings.service.intfc.security.SecretManager.SECRET_NAME_KEY;
 
-import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -137,8 +136,8 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
     try {
       secretsManagerConfigId = secretManagerConfigService.save(cyberArkConfig);
     } catch (DuplicateKeyException e) {
-      throw new WingsException(CYBERARK_OPERATION_ERROR, USER_SRE)
-          .addParam(REASON_KEY, "Another CyberArk secret manager with the same name or URL exists");
+      String message = "Another CyberArk secret manager with the same name or URL exists";
+      throw new SecretManagementException(CYBERARK_OPERATION_ERROR, message, USER_SRE);
     }
 
     // Create a LOCAL encrypted record for AWS secret key
@@ -201,11 +200,11 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
     if (count > 0) {
       String message = "Can not delete the CyberArk configuration since there are secrets encrypted with this. "
           + "Please transition your secrets to another secret manager and try again.";
-      throw new WingsException(CYBERARK_OPERATION_ERROR, USER).addParam(REASON_KEY, message);
+      throw new SecretManagementException(CYBERARK_OPERATION_ERROR, message, USER);
     }
 
     CyberArkConfig cyberArkConfig = wingsPersistence.get(CyberArkConfig.class, configId);
-    Preconditions.checkNotNull(cyberArkConfig, "no Aws Secrets Manager config found with id " + configId);
+    checkNotNull(cyberArkConfig, "No CyberArk secret manager configuration found with id " + configId);
 
     if (isNotEmpty(cyberArkConfig.getClientCertificate())) {
       wingsPersistence.delete(EncryptedData.class, cyberArkConfig.getClientCertificate());
@@ -221,11 +220,11 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
     String errorMessage;
     if (!Http.connectableHost(cyberArkConfig.getCyberArkUrl())) {
       errorMessage = "Was not able to reach CyberArk using given URL. Please check your configurations and try again";
-      throw new WingsException(CYBERARK_OPERATION_ERROR, errorMessage, USER).addParam(REASON_KEY, errorMessage);
+      throw new SecretManagementException(CYBERARK_OPERATION_ERROR, errorMessage, USER);
     } else if (isNotEmpty(cyberArkConfig.getClientCertificate())
         && !CyberArkRestClientFactory.validateClientCertificate(cyberArkConfig.getClientCertificate())) {
       errorMessage = "Client certificate provided is not valid. Please check your configurations and try again";
-      throw new WingsException(CYBERARK_OPERATION_ERROR, errorMessage, USER).addParam(REASON_KEY, errorMessage);
+      throw new SecretManagementException(CYBERARK_OPERATION_ERROR, errorMessage, USER);
     }
   }
 

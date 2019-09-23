@@ -14,7 +14,6 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
-import io.harness.exception.KmsOperationException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -34,6 +33,7 @@ import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.security.SecretManagementException;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
@@ -69,11 +69,12 @@ public class KmsAlertTest extends WingsBaseTest {
     when(mockDelegateServiceOK.renewVaultToken(any(VaultConfig.class))).thenReturn(true);
     when(mockDelegateServiceEx.encrypt(
              anyString(), anyString(), anyString(), anyObject(), any(VaultConfig.class), anyObject()))
-        .thenThrow(new KmsOperationException("reason"));
+        .thenThrow(new SecretManagementException("reason"));
     when(mockDelegateServiceEx.encrypt(anyString(), anyObject(), anyObject()))
-        .thenThrow(new KmsOperationException("reason"));
+        .thenThrow(new SecretManagementException("reason"));
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
-    when(mockDelegateServiceEx.renewVaultToken(any(VaultConfig.class))).thenThrow(new KmsOperationException("reason"));
+    when(mockDelegateServiceEx.renewVaultToken(any(VaultConfig.class)))
+        .thenThrow(new SecretManagementException("reason"));
     FieldUtils.writeField(vaultService, "delegateProxyFactory", delegateProxyFactory, true);
     FieldUtils.writeField(kmsService, "delegateProxyFactory", delegateProxyFactory, true);
     FieldUtils.writeField(secretManager, "kmsService", kmsService, true);
