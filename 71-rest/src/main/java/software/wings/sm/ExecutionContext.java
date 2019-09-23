@@ -9,6 +9,7 @@ import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutput.SweepingOutputBuilder;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
+import io.harness.logging.AutoLogContext;
 import software.wings.api.InfraMappingElement;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
@@ -89,4 +90,6 @@ public interface ExecutionContext {
   String fetchInfraMappingId();
 
   ServiceElement fetchServiceElement();
+
+  AutoLogContext autoLogContext();
 }

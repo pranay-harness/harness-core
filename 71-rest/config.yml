@@ -132,6 +132,7 @@ logging:
     # TODO: remove this suppression when the mentioned issue is resolved
     com.novemberain.quartz.mongodb.TriggerRunner: "OFF"
     org.glassfish.jersey.server.ServerRuntime.Responder: "OFF"
+    io.harness.mongo.MongoPersistence: "OFF"
   appenders:
   - type: console
     threshold: TRACE

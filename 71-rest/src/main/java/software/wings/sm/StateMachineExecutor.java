@@ -90,12 +90,7 @@ import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.StateMachineIssueException;
-import software.wings.service.impl.AccountLogContext;
-import software.wings.service.impl.AppLogContext;
 import software.wings.service.impl.DelayEventHelper;
-import software.wings.service.impl.StateExecutionInstanceLogContext;
-import software.wings.service.impl.WorkflowExecutionLogContext;
-import software.wings.service.impl.WorkflowLogContext;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
@@ -1601,7 +1596,7 @@ public class StateMachineExecutor implements StateInspectionListener {
      */
     @Override
     public void run() {
-      try (WorkflowExecutionLogContext ctx = new WorkflowExecutionLogContext(context.getWorkflowExecutionId())) {
+      try (AutoLogContext ignore = context.autoLogContext()) {
         stateMachineExecutor.startExecution(context);
       } catch (WingsException exception) {
         stateMachineExecutor.addContext(context, exception);
@@ -1635,11 +1630,7 @@ public class StateMachineExecutor implements StateInspectionListener {
      */
     @Override
     public void run() {
-      try (AutoLogContext ignore1 = new AccountLogContext(context.getAccountId());
-           AutoLogContext ignore2 = new AppLogContext(context.getAppId());
-           AutoLogContext ignore3 = new WorkflowLogContext(context.getWorkflowId());
-           AutoLogContext ignore4 = new WorkflowExecutionLogContext(context.getWorkflowExecutionId());
-           AutoLogContext ignore5 = new StateExecutionInstanceLogContext(context.getStateExecutionInstanceId());) {
+      try (AutoLogContext ignore = context.autoLogContext()) {
         stateMachineExecutor.handleExecuteResponse(
             context, ExecutionResponse.builder().executionStatus(status).build());
       } catch (WingsException ex) {
@@ -1679,7 +1670,7 @@ public class StateMachineExecutor implements StateInspectionListener {
      */
     @Override
     public void run() {
-      try (WorkflowExecutionLogContext ignore = new WorkflowExecutionLogContext(context.getWorkflowExecutionId())) {
+      try (AutoLogContext ignore = context.autoLogContext()) {
         populateDelegateMetaData();
         if (asyncError) {
           StateExecutionData stateExecutionData = context.getStateExecutionInstance().fetchStateExecutionData();

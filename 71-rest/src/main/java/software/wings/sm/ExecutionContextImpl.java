@@ -16,6 +16,7 @@ import static software.wings.sm.ContextElement.SERVICE_VARIABLE;
 import static software.wings.utils.KubernetesConvention.getNormalizedInfraMappingIdLabelValue;
 
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
@@ -30,6 +31,7 @@ import io.harness.expression.LateBindingMap;
 import io.harness.expression.LateBindingValue;
 import io.harness.expression.SecretString;
 import io.harness.expression.VariableResolverTracker;
+import io.harness.logging.AutoLogContext;
 import io.harness.serializer.KryoUtils;
 import lombok.Builder;
 import lombok.Getter;
@@ -70,7 +72,12 @@ import software.wings.expression.SecretFunctor;
 import software.wings.expression.ShellScriptFunctor;
 import software.wings.expression.SubstitutionFunctor;
 import software.wings.expression.SweepingOutputFunctor;
+import software.wings.service.impl.AccountLogContext;
+import software.wings.service.impl.AppLogContext;
+import software.wings.service.impl.StateExecutionInstanceLogContext;
 import software.wings.service.impl.SweepingOutputServiceImpl;
+import software.wings.service.impl.WorkflowExecutionLogContext;
+import software.wings.service.impl.WorkflowLogContext;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -1049,6 +1056,28 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       return phaseElement.getServiceElement();
     }
     return null;
+  }
+
+  @Override
+  public AutoLogContext autoLogContext() {
+    final ImmutableMap.Builder<String, String> context = ImmutableMap.builder();
+    if (getAccountId() != null) {
+      context.put(AccountLogContext.ID, getAccountId());
+    }
+    if (getAppId() != null) {
+      context.put(AppLogContext.ID, getAppId());
+    }
+    if (getWorkflowId() != null) {
+      context.put(WorkflowLogContext.ID, getWorkflowId());
+    }
+    if (getWorkflowExecutionId() != null) {
+      context.put(WorkflowExecutionLogContext.ID, getWorkflowExecutionId());
+    }
+    if (getStateExecutionInstanceId() != null) {
+      context.put(StateExecutionInstanceLogContext.ID, getStateExecutionInstanceId());
+    }
+
+    return new AutoLogContext(context.build());
   }
 
   @Override
