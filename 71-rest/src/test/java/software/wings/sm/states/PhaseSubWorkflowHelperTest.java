@@ -2,7 +2,6 @@ package software.wings.sm.states;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
@@ -62,7 +61,7 @@ public class PhaseSubWorkflowHelperTest extends WingsBaseTest {
     Service service = phaseSubWorkflowHelperService.getService(SERVICE_ID, null, APP_ID, context);
 
     assertThat(service).isNotNull();
-    assertEquals(SERVICE_NAME_FOR_NON_TEMPLATIZED, service.getName());
+    assertThat(SERVICE_NAME_FOR_NON_TEMPLATIZED).isEqualTo(service.getName());
   }
 
   @Test
@@ -77,7 +76,7 @@ public class PhaseSubWorkflowHelperTest extends WingsBaseTest {
     Service service = phaseSubWorkflowHelperService.getService(SERVICE_ID, serviceTemplateExpression, APP_ID, context);
 
     assertThat(service).isNotNull();
-    assertEquals(SERVICE_NAME_FOR_TEMPLATIZED, service.getName());
+    assertThat(SERVICE_NAME_FOR_TEMPLATIZED).isEqualTo(service.getName());
   }
 
   @Test
@@ -99,7 +98,7 @@ public class PhaseSubWorkflowHelperTest extends WingsBaseTest {
         phaseSubWorkflowHelperService.getInfraDefinition(INFRA_DEFINITION_ID, null, APP_ID, context);
 
     assertThat(infraDefinition).isNotNull();
-    assertEquals(INFRA_DEF_NAME_FOR_NON_TEMPLATIZED, infraDefinition.getName());
+    assertThat(INFRA_DEF_NAME_FOR_NON_TEMPLATIZED).isEqualTo(infraDefinition.getName());
   }
 
   @Test
@@ -118,7 +117,7 @@ public class PhaseSubWorkflowHelperTest extends WingsBaseTest {
         INFRA_DEFINITION_ID, infraDefTemplateExpression, APP_ID, context);
 
     assertThat(infraDefinition).isNotNull();
-    assertEquals(INFRA_DEF_NAME_FOR_TEMPLATIZED, infraDefinition.getName());
+    assertThat(INFRA_DEF_NAME_FOR_TEMPLATIZED).isEqualTo(infraDefinition.getName());
   }
 
   @Test
