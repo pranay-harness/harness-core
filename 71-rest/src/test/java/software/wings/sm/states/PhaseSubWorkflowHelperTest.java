@@ -16,6 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
@@ -23,6 +24,7 @@ import software.wings.beans.TemplateExpression;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.PhaseSubWorkflowHelperService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.ExecutionContext;
@@ -42,10 +44,12 @@ public class PhaseSubWorkflowHelperTest extends WingsBaseTest {
   public static final String ENV_ID = "ENV_ID";
   private static final String WRONG_ENV_ID = "WRONG_ENV_ID";
   private static final String WRONG_ID = "WRONG_ID";
+  public static final String ACCOUNT_ID = "ACCOUNT_ID";
 
   @Mock ServiceResourceService serviceResourceService;
   @Mock InfrastructureDefinitionService infrastructureDefinitionService;
   @Mock TemplateExpressionProcessor templateExpressionProcessor;
+  @Mock FeatureFlagService featureFlagService;
   @InjectMocks @Inject PhaseSubWorkflowHelperService phaseSubWorkflowHelperService;
   ExecutionContext context;
 
@@ -164,24 +168,26 @@ public class PhaseSubWorkflowHelperTest extends WingsBaseTest {
     InfrastructureMapping infrastructureMapping =
         GcpKubernetesInfrastructureMapping.builder().serviceId(SERVICE_ID).build();
     phaseSubWorkflowHelperService.validateServiceInfraMappingRelationShip(
-        service, infrastructureMapping, serviceTemplateExpresion, infraMappingTemplateExpression);
+        service, infrastructureMapping, serviceTemplateExpresion, infraMappingTemplateExpression, ACCOUNT_ID);
 
     assertThatThrownBy(()
                            -> phaseSubWorkflowHelperService.validateServiceInfraMappingRelationShip(
-                               service, infrastructureMapping, serviceTemplateExpresion, null));
+                               service, infrastructureMapping, serviceTemplateExpresion, null, ACCOUNT_ID));
 
-    phaseSubWorkflowHelperService.validateServiceInfraMappingRelationShip(service, infrastructureMapping, null, null);
+    phaseSubWorkflowHelperService.validateServiceInfraMappingRelationShip(
+        service, infrastructureMapping, null, null, ACCOUNT_ID);
 
     infrastructureMapping.setServiceId(WRONG_ID);
     assertThatThrownBy(()
                            -> phaseSubWorkflowHelperService.validateServiceInfraMappingRelationShip(
-                               service, infrastructureMapping, null, null));
+                               service, infrastructureMapping, null, null, ACCOUNT_ID));
     infrastructureMapping.setServiceId(SERVICE_ID);
-    phaseSubWorkflowHelperService.validateServiceInfraMappingRelationShip(service, infrastructureMapping, null, null);
+    phaseSubWorkflowHelperService.validateServiceInfraMappingRelationShip(
+        service, infrastructureMapping, null, null, ACCOUNT_ID);
 
     // Validate should not fail for null values
-    phaseSubWorkflowHelperService.validateServiceInfraMappingRelationShip(null, null, null, null);
-    phaseSubWorkflowHelperService.validateServiceInfraMappingRelationShip(service, null, null, null);
+    phaseSubWorkflowHelperService.validateServiceInfraMappingRelationShip(null, null, null, null, ACCOUNT_ID);
+    phaseSubWorkflowHelperService.validateServiceInfraMappingRelationShip(service, null, null, null, ACCOUNT_ID);
   }
 
   @Test
@@ -204,5 +210,25 @@ public class PhaseSubWorkflowHelperTest extends WingsBaseTest {
     // Should not fail for null  values
     phaseSubWorkflowHelperService.validateScopedServices(null, infrastructureDefinition);
     phaseSubWorkflowHelperService.validateScopedServices(service, null);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void serviceInfraTemplatizationValidationShouldNotFailForFeatureFlagOn() {
+    TemplateExpression serviceTemplateExpression = TemplateExpression.builder().build();
+    when(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(true);
+
+    phaseSubWorkflowHelperService.validateServiceInfraMappingTemplatizationRelationShip(
+        serviceTemplateExpression, null, ACCOUNT_ID);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
+  public void serviceInfraTemplatizationValidationShouldFailForFeatureFlagOff() {
+    TemplateExpression serviceTemplateExpression = TemplateExpression.builder().build();
+    when(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(false);
+
+    phaseSubWorkflowHelperService.validateServiceInfraMappingTemplatizationRelationShip(
+        serviceTemplateExpression, null, ACCOUNT_ID);
   }
 }

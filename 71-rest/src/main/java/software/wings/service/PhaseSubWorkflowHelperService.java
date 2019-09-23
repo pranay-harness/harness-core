@@ -89,10 +89,10 @@ public class PhaseSubWorkflowHelperService {
   }
 
   public void validateServiceInfraMappingRelationShip(Service service, InfrastructureMapping infrastructureMapping,
-      TemplateExpression serviceTemplateExpression, TemplateExpression infraMappingTemplateExpression) {
-    if (serviceTemplateExpression != null && infraMappingTemplateExpression == null) {
-      throw new InvalidRequestException("Service templatized so service infrastructure should be templatized", USER);
-    }
+      TemplateExpression serviceTemplateExpression, TemplateExpression infraMappingTemplateExpression,
+      String accountId) {
+    validateServiceInfraMappingTemplatizationRelationShip(
+        serviceTemplateExpression, infraMappingTemplateExpression, accountId);
 
     if (service != null && infrastructureMapping != null
         && !service.getUuid().equals(infrastructureMapping.getServiceId())) {
@@ -127,10 +127,18 @@ public class PhaseSubWorkflowHelperService {
 
   public void validateEntitiesRelationship(Service service, InfrastructureDefinition infrastructureDefinition,
       InfrastructureMapping infrastructureMapping, Environment env, TemplateExpression serviceTemplateExpression,
-      TemplateExpression infraMappingTemplateExpression) {
+      TemplateExpression infraMappingTemplateExpression, String accountId) {
     validateScopedServices(service, infrastructureDefinition);
     validateServiceInfraMappingRelationShip(
-        service, infrastructureMapping, serviceTemplateExpression, infraMappingTemplateExpression);
+        service, infrastructureMapping, serviceTemplateExpression, infraMappingTemplateExpression, accountId);
     validateEnvInfraRelationShip(env, infrastructureDefinition, infrastructureMapping);
+  }
+
+  public void validateServiceInfraMappingTemplatizationRelationShip(TemplateExpression serviceTemplateExpresion,
+      TemplateExpression infraMappingTemplateExpression, String accountId) {
+    if (!featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId) && serviceTemplateExpresion != null
+        && infraMappingTemplateExpression == null) {
+      throw new InvalidRequestException("Service templatized so service infrastructure should be templatized", USER);
+    }
   }
 }
