@@ -53,7 +53,7 @@ import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class WorkflowUtils {
-  private static final long TEST_TIMEOUT_IN_MINUTES = 3;
+  private static final long TEST_TIMEOUT_IN_MINUTES = 5;
 
   static final String SETUP_CONTAINER_CONSTANT = "Setup Container";
   static final String PRE_DEPLOYMENT_CONSTANT = "Pre-Deployment";
