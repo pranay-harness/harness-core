@@ -381,9 +381,13 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
       serviceVariableBuilder.type(Type.TEXT);
       serviceVariableBuilder.value(cv.getValue() != null ? cv.getValue().toCharArray() : null);
     } else if ("ENCRYPTED_TEXT".equals(cv.getValueType())) {
-      serviceVariableBuilder.value(cv.getValue() != null ? cv.getValue().toCharArray() : null);
       serviceVariableBuilder.type(Type.ENCRYPTED_TEXT);
-      serviceVariableBuilder.encryptedValue(cv.getValue());
+      // wingsPersistence will encrypt the record depending on type and value, so we need not
+      // setEncryptedValue. If the value is already a secret reference ( eg. safeHarness:xxxxx ),
+      // it will be persisted as such which we do not want, therefore we need to extract out the
+      // encrypted record id.
+      serviceVariableBuilder.value(
+          cv.getValue() != null ? extractEncryptedRecordId(cv.getValue()).toCharArray() : null);
     } else if ("ARTIFACT".equals(cv.getValueType())) {
       if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
         serviceVariableBuilder.type(Type.ARTIFACT);
