@@ -4,17 +4,25 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Delegate.Status.ENABLED;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
+import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
+import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.common.Constants.MAX_DELEGATE_LAST_HEARTBEAT;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.COMPUTE_PROVIDER_SETTING_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -32,12 +40,17 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateScope;
 import software.wings.beans.Environment;
+import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.instance.InstanceSyncTestConstants;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureMappingService;
 
 import java.time.Clock;
 import java.util.ArrayList;
@@ -49,11 +62,15 @@ import java.util.List;
 public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Mock private EnvironmentService environmentService;
   @Mock private DelegateService delegateService;
+  @Mock private InfrastructureMappingService infrastructureMappingService;
+  @Mock private FeatureFlagService featureFlagService;
 
   @Inject @InjectMocks private AssignDelegateService assignDelegateService;
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private Clock clock;
+
+  private static final String WRONG_INFRA_MAPPING_ID = "WRONG_INFRA_MAPPING_ID";
 
   @Before
   public void setUp() {
@@ -581,5 +598,60 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
     assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldAssignDelegateWithInfrastructureMappingScope() {
+    InfrastructureMapping infrastructureMapping =
+        aGcpKubernetesInfrastructureMapping()
+            .withAppId(APP_ID)
+            .withComputeProviderSettingId(COMPUTE_PROVIDER_SETTING_ID)
+            .withUuid(INFRA_MAPPING_ID)
+            .withClusterName("k")
+            .withNamespace("default")
+            .withEnvId(InstanceSyncTestConstants.ENV_ID)
+            .withInfraMappingType(InfrastructureMappingType.GCP_KUBERNETES.getName())
+            .withServiceId(SERVICE_ID)
+            .withUuid(INFRA_MAPPING_ID)
+            .withAccountId(InstanceSyncTestConstants.ACCOUNT_ID)
+            .build();
+    infrastructureMapping.setInfrastructureDefinitionId(INFRA_DEFINITION_ID);
+
+    List<DelegateScope> scopes = new ArrayList<>();
+    scopes.add(DelegateScope.builder()
+                   .infrastructureDefinitions(ImmutableList.of(INFRA_DEFINITION_ID))
+                   .services(ImmutableList.of(SERVICE_ID))
+                   .build());
+
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .async(true)
+                                    .accountId(ACCOUNT_ID)
+                                    .appId(APP_ID)
+                                    .envId(ENV_ID)
+                                    .infrastructureMappingId(infrastructureMapping.getUuid())
+                                    .data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                                    .build();
+
+    DelegateTask delegateTask2 = DelegateTask.builder()
+                                     .async(true)
+                                     .accountId(ACCOUNT_ID)
+                                     .appId(APP_ID)
+                                     .envId(ENV_ID)
+                                     .infrastructureMappingId(WRONG_INFRA_MAPPING_ID)
+                                     .data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                                     .build();
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .uuid(DELEGATE_ID)
+                            .includeScopes(scopes)
+                            .excludeScopes(emptyList())
+                            .build();
+    when(featureFlagService.isEnabled(eq(INFRA_MAPPING_REFACTOR), any())).thenReturn(true);
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
+
+    assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask2)).isFalse();
   }
 }

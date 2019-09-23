@@ -141,12 +141,17 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   }
 
   private String computeHostConnectString(AwsInfrastructureMapping awsInfrastructureMapping, Instance instance) {
-    String hostConnectString = "";
     HostConnectionType hostConnectionType = isNotBlank(awsInfrastructureMapping.getHostConnectionType())
         ? HostConnectionType.valueOf(awsInfrastructureMapping.getHostConnectionType())
         : null;
+    return getHostConnectionString(hostConnectionType, awsInfrastructureMapping.isUsePublicDns(), instance);
+  }
+
+  private String getHostConnectionString(
+      HostConnectionType hostConnectionType, boolean usePublicDns, Instance instance) {
+    String hostConnectString = "";
     if (hostConnectionType == null) {
-      hostConnectionType = awsInfrastructureMapping.isUsePublicDns() ? PUBLIC_DNS : PRIVATE_DNS;
+      hostConnectionType = usePublicDns ? PUBLIC_DNS : PRIVATE_DNS;
     }
     switch (hostConnectionType) {
       case PUBLIC_IP:
@@ -188,8 +193,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
               .map(instance
                   -> aHost()
                          .withHostName(awsUtils.getHostnameFromPrivateDnsName(instance.getPrivateDnsName()))
-                         .withPublicDns(awsInstanceInfrastructure.isUsePublicDns() ? instance.getPublicDnsName()
-                                                                                   : instance.getPrivateDnsName())
+                         .withPublicDns(computeHostConnectString(awsInstanceInfrastructure, instance))
                          .withEc2Instance(instance)
                          .withAppId(infrastructureDefinition.getAppId())
                          .withEnvId(infrastructureDefinition.getEnvId())
@@ -217,6 +221,13 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
       return aPageResponse().withResponse(awsHosts).build();
     }
     return aPageResponse().withResponse(emptyList()).build();
+  }
+
+  private String computeHostConnectString(AwsInstanceInfrastructure awsInstanceInfrastructure, Instance instance) {
+    HostConnectionType hostConnectionType = isNotBlank(awsInstanceInfrastructure.getHostConnectionType())
+        ? HostConnectionType.valueOf(awsInstanceInfrastructure.getHostConnectionType())
+        : null;
+    return getHostConnectionString(hostConnectionType, awsInstanceInfrastructure.isUsePublicDns(), instance);
   }
 
   private List<Instance> listAutoScaleHosts(AwsInfrastructureMapping awsInfrastructureMapping, AwsConfig awsConfig,
