@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.setting.cloudprovider;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.google.inject.Singleton;
 
 import io.harness.exception.HarnessException;
@@ -15,10 +17,12 @@ public class AwsConfigYamlHandler extends CloudProviderYamlHandler<Yaml, AwsConf
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
+    String secretValueYamlRef =
+        isNotEmpty(awsConfig.getEncryptedSecretKey()) ? getEncryptedValue(awsConfig, "secretKey", false) : null;
     Yaml yaml = Yaml.builder()
                     .harnessApiVersion(getHarnessApiVersion())
                     .accessKey(awsConfig.getAccessKey())
-                    .secretKey(getEncryptedValue(awsConfig, "secretKey", false))
+                    .secretKey(secretValueYamlRef)
                     .type(awsConfig.getType())
                     .useEc2IamCredentials(awsConfig.isUseEc2IamCredentials())
                     .assumeCrossAccountRole(awsConfig.isAssumeCrossAccountRole())
