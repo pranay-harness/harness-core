@@ -69,7 +69,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
 
   @Override
   public LdapTestResponse validateLdapGroupSettings(LdapSettings settings, EncryptedDataDetail encryptedDataDetail) {
-    logger.info("Initiating validateLdapGroupSettings with ldap settings : ", settings);
+    logger.info("Initiating validateLdapGroupSettings with ldap settings : {}", settings);
     settings.decryptFields(encryptedDataDetail, encryptionService);
     LdapHelper helper = new LdapHelper(settings.getConnectionSettings());
     LdapResponse response = helper.validateGroupConfig(settings.getGroupSettingsList().get(0));
