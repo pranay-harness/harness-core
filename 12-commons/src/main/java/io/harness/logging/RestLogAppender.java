@@ -133,9 +133,7 @@ public class RestLogAppender<E> extends AppenderBase<E> {
           logLevel = event.getLevel().toString();
         }
         LogLine logLine = new LogLine(message, logLevel, programName);
-        logQueue.add(logLine);
-      } catch (IllegalStateException ex) {
-        // Ignore as Queue is full
+        logQueue.offer(logLine);
       } catch (Exception ex) {
         logger.error("", ex);
       }
@@ -160,7 +158,7 @@ public class RestLogAppender<E> extends AppenderBase<E> {
       if (!started) {
         super.start();
         localhostName = getLocalHostName();
-        logQueue = Queues.newArrayBlockingQueue(500000);
+        logQueue = Queues.newLinkedBlockingQueue(500000);
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
             this ::submitLogs, 1000, 1000, TimeUnit.MILLISECONDS);
       }
