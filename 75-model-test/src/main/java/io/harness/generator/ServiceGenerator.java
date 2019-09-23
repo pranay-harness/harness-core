@@ -26,6 +26,8 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.ArtifactType;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 
 @Singleton
@@ -74,8 +76,11 @@ public class ServiceGenerator {
   public Service ensureWindowsTest(Randomizer.Seed seed, Owners owners, String name) {
     owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
     owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.IIS_APP).build()));
-    artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_IIS_APP);
-    return owners.obtainService();
+    ArtifactStream artifactStream =
+        artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_IIS_APP);
+    Service service = owners.obtainService();
+    service.setArtifactStreamIds(new ArrayList<>(Arrays.asList(artifactStream.getUuid())));
+    return service;
   }
 
   public Service ensureK8sTest(Randomizer.Seed seed, Owners owners, String name) {
@@ -90,7 +95,7 @@ public class ServiceGenerator {
     ArtifactStream artifactStream =
         artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_DOCKER);
     Service service = owners.obtainService();
-    service.setArtifactStreamIds(Collections.singletonList(artifactStream.getUuid()));
+    service.setArtifactStreamIds(new ArrayList<>(Arrays.asList(artifactStream.getUuid())));
     return service;
   }
 
@@ -109,16 +114,21 @@ public class ServiceGenerator {
   public Service ensureEcsTest(Randomizer.Seed seed, Owners owners, String name) {
     owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
     owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.DOCKER).build()));
-    owners.add(artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECR));
-    return owners.obtainService();
+    ArtifactStream artifactStream =
+        artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECR);
+    Service service = owners.obtainService();
+    service.setArtifactStreamIds(new ArrayList<>(Arrays.asList(artifactStream.getUuid())));
+    return service;
   }
 
   public Service ensureGenericTest(Randomizer.Seed seed, Owners owners, String name) {
     owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
     owners.add(ensureService(
         seed, owners, builder().name(name).artifactType(ArtifactType.WAR).deploymentType(DeploymentType.SSH).build()));
-    artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.AWS_AMI);
-    return owners.obtainService();
+    ArtifactStream artifactStream = artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.AWS_AMI);
+    Service service = owners.obtainService();
+    service.setArtifactStreamIds(new ArrayList<>(Arrays.asList(artifactStream.getUuid())));
+    return service;
   }
 
   public Service ensureFunctionalTest(Randomizer.Seed seed, Owners owners, String name) {

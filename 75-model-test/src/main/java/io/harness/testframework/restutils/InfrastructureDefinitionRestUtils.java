@@ -238,4 +238,44 @@ public class InfrastructureDefinitionRestUtils {
     }
     return restResponse.getResource();
   }
+
+  public static List<String> listAwsClassicLoadBalancers(
+      String bearerToken, String appId, String cloudProviderId, String region) {
+    GenericType<RestResponse<List<String>>> restResponseGenericType = new GenericType<RestResponse<List<String>>>() {};
+    RestResponse<List<String>> restResponse =
+        Setup.portal()
+            .auth()
+            .oauth2(bearerToken)
+            .contentType(ContentType.JSON)
+            .queryParam("appId", appId)
+            .queryParams("region", region)
+            .get("infrastructure-mappings/compute-providers/" + cloudProviderId + "/classic-load-balancers/")
+            .as(restResponseGenericType.getType());
+    if (restResponse.getResource() == null) {
+      throw new EmptyRestResponseException(
+          "infrastructure-mappings/compute-providers/" + cloudProviderId + "/classic-load-balancers",
+          String.valueOf(restResponse.getResponseMessages()));
+    }
+    return restResponse.getResource();
+  }
+
+  public static List<String> listAwsAlbTargetGroups(
+      String bearerToken, String appId, String cloudProviderId, String region) {
+    GenericType<RestResponse<List<String>>> restResponseGenericType = new GenericType<RestResponse<List<String>>>() {};
+    RestResponse<List<String>> restResponse =
+        Setup.portal()
+            .auth()
+            .oauth2(bearerToken)
+            .contentType(ContentType.JSON)
+            .queryParam("appId", appId)
+            .queryParams("region", region)
+            .get("infrastructure-mappings/compute-providers/" + cloudProviderId + "/classic-load-balancers/")
+            .as(restResponseGenericType.getType());
+    if (restResponse.getResource() == null) {
+      throw new EmptyRestResponseException(
+          "infrastructure-mappings/compute-providers/" + cloudProviderId + "/classic-load-balancers",
+          String.valueOf(restResponse.getResponseMessages()));
+    }
+    return restResponse.getResource();
+  }
 }

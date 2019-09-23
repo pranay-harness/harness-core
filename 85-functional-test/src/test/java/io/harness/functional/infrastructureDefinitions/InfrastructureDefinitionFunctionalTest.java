@@ -38,6 +38,8 @@ import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
+import software.wings.infra.AwsEcsInfrastructure;
+import software.wings.infra.AwsInstanceInfrastructure;
 import software.wings.infra.AzureInstanceInfrastructure;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -83,12 +85,20 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
   @Ignore("Enable once feature flag is enabled")
   public void shouldCreateAndRunAwsInstanceWorkflow() {
     service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);
+    resetCache(service.getAccountId());
+
+    final String appId = service.getAppId();
     infrastructureDefinition =
         infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureType.AWS_INSTANCE, bearerToken);
 
     checkScopedService(infrastructureDefinition.getDeploymentType(), service);
     checkListInfraDefinitionByService(service, infrastructureDefinition);
     checkListHosts(infrastructureDefinition);
+
+    AwsInstanceInfrastructure awsInfra = (AwsInstanceInfrastructure) infrastructureDefinition.getInfrastructure();
+    List<String> classicLbs = InfrastructureDefinitionRestUtils.listAwsClassicLoadBalancers(
+        bearerToken, appId, awsInfra.getCloudProviderId(), awsInfra.getRegion());
+    Assertions.assertThat(classicLbs).isNotEmpty();
 
     resetCache(service.getAccountId());
 
@@ -105,11 +115,19 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
   @Ignore("Enable once feature flag is enabled")
   public void shouldCreateAndRunAwsEcsEc2Workflow() {
     service = serviceGenerator.ensureEcsTest(seed, owners, "ecs-service");
+
+    final String appId = service.getAppId();
+
     infrastructureDefinition =
         infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureType.AWS_ECS, bearerToken);
 
     checkScopedService(infrastructureDefinition.getDeploymentType(), service);
     checkListInfraDefinitionByService(service, infrastructureDefinition);
+
+    AwsEcsInfrastructure awsEcsInfrastructure = (AwsEcsInfrastructure) infrastructureDefinition.getInfrastructure();
+    List<String> elbTargetGroups = InfrastructureDefinitionRestUtils.listAwsAlbTargetGroups(
+        bearerToken, appId, awsEcsInfrastructure.getCloudProviderId(), awsEcsInfrastructure.getRegion());
+    Assertions.assertThat(elbTargetGroups).isNotEmpty();
 
     Workflow workflow = workflowUtils.getEcsEc2TypeCanaryWorkflow("ecs-ec2-", service, infrastructureDefinition);
     workflow = workflowGenerator.ensureWorkflow(seed, owners, workflow);
