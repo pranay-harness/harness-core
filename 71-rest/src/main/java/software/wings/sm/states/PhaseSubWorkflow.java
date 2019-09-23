@@ -141,7 +141,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
         infraMappingId, infraMappingTemplateExpression, app, context, service, infrastructureDefinition);
 
     phaseSubWorkflowHelperService.validateEntitiesRelationship(service, infrastructureDefinition, infrastructureMapping,
-        env, serviceTemplateExpression, infraMappingTemplateExpression);
+        env, serviceTemplateExpression, infraMappingTemplateExpression, context.getAccountId());
 
     boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, context.getAccountId());
 
