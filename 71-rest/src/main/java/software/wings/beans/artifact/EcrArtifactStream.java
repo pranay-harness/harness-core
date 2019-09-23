@@ -62,6 +62,11 @@ public class EcrArtifactStream extends ArtifactStream {
     return imageName;
   }
 
+  @Override
+  public boolean shouldValidate() {
+    return true;
+  }
+
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)

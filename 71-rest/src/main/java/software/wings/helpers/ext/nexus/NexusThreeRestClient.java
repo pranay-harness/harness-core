@@ -110,6 +110,21 @@ public interface NexusThreeRestClient {
       @Query("continuationToken") String continuationToken);
 
   @Headers("Accept: application/json")
+  @GET("/service/rest/v1/search")
+  Call<Nexus3ComponentResponse> getArtifactVersionsWithExtensionAndClassifier(
+      @Header("Authorization") String authorization, @Query("repository") String repository,
+      @Query("maven.groupId") String groupId, @Query("maven.artifactId") String artifactId,
+      @Query("maven.extension") String extension, @Query("maven.classifier") String classifier,
+      @Query("continuationToken") String continuationToken);
+
+  @Headers("Accept: application/json")
+  @GET("/service/rest/v1/search")
+  Call<Nexus3ComponentResponse> getArtifactVersionsWithExtensionAndClassifier(@Query("repository") String repository,
+      @Query("maven.groupId") String groupId, @Query("maven.artifactId") String artifactId,
+      @Query("maven.extension") String extension, @Query("maven.classifier") String classifier,
+      @Query("continuationToken") String continuationToken);
+
+  @Headers("Accept: application/json")
   @GET("/service/rest/v1/search/assets")
   Call<Nexus3AssetResponse> getMavenAsset(@Header("Authorization") String authorization,
       @Query("repository") String repository, @Query("maven.groupId") String groupId,

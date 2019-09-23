@@ -140,6 +140,11 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
     }
   }
 
+  @Override
+  public boolean shouldValidate() {
+    return true;
+  }
+
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)

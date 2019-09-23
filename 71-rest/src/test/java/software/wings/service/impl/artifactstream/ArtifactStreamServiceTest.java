@@ -1,5 +1,6 @@
 package software.wings.service.impl.artifactstream;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -426,6 +427,41 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldAddNexusArtifactStreamWithExtensionAndClassifier() {
+    createAndValidateNexusArtifactStream();
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
+  public void shouldNotUpdateExtensionForNexusArtifactStream() {
+    ArtifactStream artifactStream = createAndValidateNexusArtifactStream();
+    NexusArtifactStream savedNexusArtifactStream = (NexusArtifactStream) artifactStream;
+    savedNexusArtifactStream.setExtension("war");
+    artifactStreamService.update(savedNexusArtifactStream);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
+  public void shouldNotUpdateClassifierForNexusArtifactStream() {
+    ArtifactStream artifactStream = createAndValidateNexusArtifactStream();
+    NexusArtifactStream savedNexusArtifactStream = (NexusArtifactStream) artifactStream;
+    savedNexusArtifactStream.setClassifier("binary");
+    artifactStreamService.update(savedNexusArtifactStream);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void canUpdateExtensionOnSourceChangedForNexus() {
+    ArtifactStream artifactStream = createAndValidateNexusArtifactStream();
+    NexusArtifactStream savedNexusArtifactStream = (NexusArtifactStream) artifactStream;
+    savedNexusArtifactStream.setJobname("new_releases");
+    savedNexusArtifactStream.setClassifier("binary");
+    ArtifactStream updatedArtifactStream = artifactStreamService.update(savedNexusArtifactStream);
+    NexusArtifactStream updatedNexusArtifactStream = (NexusArtifactStream) updatedArtifactStream;
+    assertThat(updatedNexusArtifactStream.getJobname()).isEqualTo("new_releases");
+    assertThat(updatedNexusArtifactStream.getClassifier()).isEqualTo("binary");
+  }
+
+  private ArtifactStream createAndValidateNexusArtifactStream() {
     ArtifactStream savedArtifactSteam = createNexusArtifactStreamWithExtensionAndClassifier();
     validateNexusArtifactStream(savedArtifactSteam, APP_ID);
     NexusArtifactStream savedNexusArtifactStream = (NexusArtifactStream) savedArtifactSteam;
@@ -435,6 +471,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedNexusArtifactStream.getRepositoryFormat()).isEqualTo(RepositoryFormat.maven.name());
     assertThat(savedNexusArtifactStream.getExtension()).contains("jar");
     assertThat(savedNexusArtifactStream.getClassifier()).contains("sources");
+    return savedArtifactSteam;
   }
 
   @Test
@@ -462,6 +499,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                   .build();
     ArtifactStream savedArtifactSteam = createArtifactStream(nexusArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
+    verify(buildSourceService, times(0))
+        .validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
     return savedArtifactSteam;
   }
 
@@ -478,6 +517,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                   .build();
     ArtifactStream savedArtifactSteam = artifactStreamService.create(nexusArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
+    verify(buildSourceService, times(0))
+        .validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
     return savedArtifactSteam;
   }
 
@@ -496,6 +537,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                   .build();
     ArtifactStream savedArtifactSteam = createArtifactStream(nexusArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
+    verify(buildSourceService, times(1))
+        .validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
     return savedArtifactSteam;
   }
 
@@ -523,7 +566,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     updateNexusArtifactStreamAndValidate((NexusArtifactStream) savedArtifactSteam, APP_ID, null, null);
   }
 
-  @Test(expected = InvalidRequestException.class)
+  @Test
   @Category(UnitTests.class)
   public void shouldUpdateNexusArtifactStreamWithExtensionAndClassifier() {
     ArtifactStream savedArtifactSteam = createNexusArtifactStreamWithExtensionAndClassifier();
@@ -623,6 +666,13 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
     if (isNotEmpty(classifier)) {
       assertThat(updatedNexusArtifactStream.getClassifier()).isEqualTo(classifier);
+    }
+    if (isEmpty(extension) && isEmpty(classifier)) {
+      verify(buildSourceService, times(0))
+          .validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
+    } else {
+      verify(buildSourceService, times(2))
+          .validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
     }
   }
 

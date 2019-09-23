@@ -187,6 +187,11 @@ public class NexusArtifactStream extends ArtifactStream {
     }
   }
 
+  @Override
+  public boolean shouldValidate() {
+    return isNotEmpty(extension) || isNotEmpty(classifier);
+  }
+
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)

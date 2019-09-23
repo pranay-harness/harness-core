@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.nexus;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static java.lang.String.format;
@@ -14,6 +15,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.artifact.ArtifactUtilities;
+import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -59,6 +61,7 @@ import javax.net.ssl.HttpsURLConnection;
 public class NexusThreeServiceImpl {
   @Inject EncryptionService encryptionService;
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
+  @Inject private NexusHelper nexusHelper;
 
   public Map<String, String> getRepositories(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       String repositoryFormat) throws IOException {
@@ -585,26 +588,44 @@ public class NexusThreeServiceImpl {
                 "Failed to fetch the versions for groupId [" + groupId + "] and artifactId [" + artifactName + "]");
       }
     }
-    logger.info("Versions come from nexus server {}", versions);
-    versions = versions.stream().sorted(new AlphanumComparator()).collect(toList());
-    logger.info("After sorting alphanumerically versions {}", versions);
+    return nexusHelper.constructBuildDetails(repoId, groupId, artifactName, versions, versionToArtifactUrls);
+  }
 
-    return versions.stream()
-        .map(version -> {
-          Map<String, String> metadata = new HashMap<>();
-          metadata.put(ArtifactMetadataKeys.repositoryName, repoId);
-          metadata.put(ArtifactMetadataKeys.nexusGroupId, groupId);
-          metadata.put(ArtifactMetadataKeys.nexusArtifactId, artifactName);
-          metadata.put(ArtifactMetadataKeys.version, version);
-          return aBuildDetails()
-              .withNumber(version)
-              .withRevision(version)
-              .withBuildUrl(versionToArtifactUrls.get(version))
-              .withMetadata(metadata)
-              .withUiDisplayName("Version# " + version)
-              .build();
-        })
-        .collect(toList());
+  public boolean existsVersion(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,
+      String groupId, String artifactName, String extension, String classifier) throws IOException {
+    logger.info("Retrieving versions for repoId {} groupId {} and artifactName {}", repoId, groupId, artifactName);
+    NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
+    Response<Nexus3ComponentResponse> response;
+    boolean hasMoreResults = true;
+    String continuationToken = null;
+    while (hasMoreResults) {
+      hasMoreResults = false;
+      if (nexusConfig.hasCredentials()) {
+        response = nexusThreeRestClient
+                       .getArtifactVersionsWithExtensionAndClassifier(
+                           Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), repoId,
+                           groupId, artifactName, extension, classifier, continuationToken)
+                       .execute();
+      } else {
+        response = nexusThreeRestClient
+                       .getArtifactVersionsWithExtensionAndClassifier(
+                           repoId, groupId, artifactName, extension, classifier, continuationToken)
+                       .execute();
+      }
+      if (isSuccessful(response)) {
+        if (response.body() != null) {
+          if (isEmpty(response.body().getItems())) {
+            throw new ArtifactServerException(
+                "No versions found matching the provided extension/ classifier", null, WingsException.USER);
+          }
+          if (response.body().getContinuationToken() != null) {
+            continuationToken = response.body().getContinuationToken();
+            hasMoreResults = true;
+          }
+        }
+      }
+    }
+    return true;
   }
 
   static class MyAuthenticator extends Authenticator {

@@ -7,13 +7,13 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidCredentialsException;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Headers;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import retrofit2.Response;
-import software.wings.exception.ArtifactServerException;
 
 import java.io.IOException;
 import java.util.ArrayList;

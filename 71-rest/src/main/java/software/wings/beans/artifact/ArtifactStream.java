@@ -130,6 +130,10 @@ public abstract class ArtifactStream
     return !this.sourceName.equals(artifactStream.getSourceName());
   }
 
+  public boolean shouldValidate() {
+    return false;
+  }
+
   @Override
   public Long obtainNextIteration(String fieldName) {
     return ArtifactStreamKeys.nextCleanupIteration.equals(fieldName) ? nextCleanupIteration : nextIteration;

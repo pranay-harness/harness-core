@@ -17,6 +17,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -28,6 +29,7 @@ import okhttp3.Credentials;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
+import org.sonatype.nexus.rest.model.ContentListResource;
 import org.sonatype.nexus.rest.model.ContentListResourceResponse;
 import org.sonatype.nexus.rest.model.RepositoryListResource;
 import org.sonatype.nexus.rest.model.RepositoryListResourceResponse;
@@ -78,6 +80,7 @@ public class NexusTwoServiceImpl {
   @Inject private EncryptionService encryptionService;
   @Inject private ExecutorService executorService;
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
+  @Inject private NexusHelper nexusHelper;
 
   public Map<String, String> getRepositories(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       String repositoryFormat) throws IOException {
@@ -252,26 +255,74 @@ public class NexusTwoServiceImpl {
         }
       }
     }
-    logger.info("Versions come from nexus server {}", versions);
-    versions = versions.stream().sorted(new AlphanumComparator()).collect(toList());
-    logger.info("After sorting alphanumerically versions {}", versions);
+    return nexusHelper.constructBuildDetails(repoId, groupId, artifactName, versions, versionToArtifactUrls);
+  }
 
-    return versions.stream()
-        .map(version -> {
-          Map<String, String> metadata = new HashMap<>();
-          metadata.put(ArtifactMetadataKeys.repositoryName, repoId);
-          metadata.put(ArtifactMetadataKeys.nexusGroupId, groupId);
-          metadata.put(ArtifactMetadataKeys.nexusArtifactId, artifactName);
-          metadata.put(ArtifactMetadataKeys.version, version);
-          return aBuildDetails()
-              .withNumber(version)
-              .withRevision(version)
-              .withBuildUrl(versionToArtifactUrls.get(version))
-              .withMetadata(metadata)
-              .withUiDisplayName("Version# " + version)
-              .build();
-        })
-        .collect(toList());
+  public boolean existsVersion(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,
+      String groupId, String artifactName, String extension, String classifier) throws IOException {
+    if (isEmpty(extension) && isEmpty(classifier)) {
+      return true;
+    }
+    logger.info(
+        "Checking if versions exist for repoId: {} groupId: {} and artifactName: {}", repoId, groupId, artifactName);
+    String url = getIndexContentPathUrl(nexusConfig, repoId, getGroupId(groupId)) + artifactName + "/";
+    final Response<IndexBrowserTreeViewResponse> response =
+        getIndexBrowserTreeViewResponseResponse(getRestClient(nexusConfig, encryptionDetails), nexusConfig, url);
+    if (isSuccessful(response)) {
+      final List<IndexBrowserTreeNode> treeNodes = response.body().getData().getChildren();
+      if (treeNodes != null) {
+        for (IndexBrowserTreeNode treeNode : treeNodes) {
+          if (treeNode.getType().equals("A")) {
+            List<IndexBrowserTreeNode> children = treeNode.getChildren();
+            for (IndexBrowserTreeNode child : children) {
+              if (child.getType().equals("V")) {
+                logger.info("Checking if required artifacts exist for version: " + child.getNodeName());
+                String relativePath = getGroupId(groupId) + artifactName + '/' + child.getNodeName() + '/';
+                relativePath = relativePath.charAt(0) == '/' ? relativePath.substring(1) : relativePath;
+                Call<ContentListResourceResponse> request;
+                if (nexusConfig.hasCredentials()) {
+                  request = getRestClient(nexusConfig, encryptionDetails)
+                                .getRepositoryContents(
+                                    Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())),
+                                    repoId, relativePath);
+                } else {
+                  request = getRestClient(nexusConfig, encryptionDetails).getRepositoryContents(repoId, relativePath);
+                }
+
+                final Response<ContentListResourceResponse> contentResponse = request.execute();
+                if (isSuccessful(contentResponse)) {
+                  if (isNotEmpty(contentResponse.body().getData())) {
+                    for (ContentListResource contentListResource : contentResponse.body().getData()) {
+                      if (contentListResource.isLeaf()) {
+                        if (isNotEmpty(extension) && isNotEmpty(classifier)) {
+                          if (contentListResource.getText().endsWith('-' + classifier + '.' + extension)) {
+                            return true;
+                          }
+                        } else if (isNotEmpty(extension)) {
+                          if (contentListResource.getText().endsWith(extension)) {
+                            return true;
+                          }
+                        } else if (isNotEmpty(classifier)) {
+                          int index = contentListResource.getText().lastIndexOf('.');
+                          if (index != -1) {
+                            if (contentListResource.getText().substring(0, index).endsWith(classifier)) {
+                              return true;
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            throw new ArtifactServerException(
+                "No versions found with specified extension/ classifier", null, WingsException.USER);
+          }
+        }
+      }
+    }
+    return true;
   }
 
   public List<BuildDetails> getVersions(String repositoryFormat, NexusConfig nexusConfig,
@@ -605,6 +656,10 @@ public class NexusTwoServiceImpl {
 
   private String getIndexContentPathUrl(NexusConfig nexusConfig, String repoId, String path) {
     return getBaseUrl(nexusConfig) + "service/local/repositories/" + repoId + "/index_content" + path;
+  }
+
+  private String getContentPathUrl(NexusConfig nexusConfig, String repoId, String path) {
+    return getBaseUrl(nexusConfig) + "service/local/repositories/" + repoId + "/content" + path;
   }
 
   private List<FolderPath> getFolderPaths(

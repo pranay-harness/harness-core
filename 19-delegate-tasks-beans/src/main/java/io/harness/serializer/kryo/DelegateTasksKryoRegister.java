@@ -22,6 +22,7 @@ import io.harness.delegate.beans.executioncapability.TcpBasedExecutionCapability
 import io.harness.delegate.command.CommandExecutionData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
@@ -95,5 +96,6 @@ public class DelegateTasksKryoRegister implements KryoRegistrar {
     kryo.register(SpotInstListElastigroupNamesResponse.class, 19030);
     kryo.register(LoadBalancerDetailsForBGDeployment.class, 19031);
     kryo.register(LoadBalancerType.class, 19032);
+    kryo.register(ArtifactServerException.class, 7244);
   }
 }

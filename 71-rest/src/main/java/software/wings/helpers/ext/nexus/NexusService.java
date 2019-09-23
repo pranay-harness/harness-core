@@ -126,4 +126,16 @@ public interface NexusService {
    * @return
    */
   boolean isRunning(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails);
+
+  /**
+   * @param nexusConfig
+   * @param repoId       Repository Type
+   * @param groupId      Group Id
+   * @param artifactName artifact name
+   * @param extension    extension
+   * @param classifier   classifier
+   * @return true if versions exist
+   */
+  boolean existsVersion(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,
+      String groupId, String artifactName, String extension, String classifier);
 }

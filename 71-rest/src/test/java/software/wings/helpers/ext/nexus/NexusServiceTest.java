@@ -3,6 +3,7 @@ package software.wings.helpers.ext.nexus;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -13,6 +14,7 @@ import com.google.inject.Inject;
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.exception.WingsException;
 import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.tuple.Pair;
@@ -140,6 +142,301 @@ public class NexusServiceTest extends WingsBaseTest {
       + "    <artifactTimestamp>0</artifactTimestamp>\n"
       + "  </data>\n"
       + "</indexBrowserTreeViewResponse>";
+
+  private static final String XML_RESPONSE_INDEX_TREE_BROWSER = "<indexBrowserTreeViewResponse>\n"
+      + "    <data>\n"
+      + "        <type>G</type>\n"
+      + "        <leaf>false</leaf>\n"
+      + "        <nodeName>demo</nodeName>\n"
+      + "        <path>/io/harness/test/demo/</path>\n"
+      + "        <children>\n"
+      + "            <indexBrowserTreeNode>\n"
+      + "                <type>A</type>\n"
+      + "                <leaf>false</leaf>\n"
+      + "                <nodeName>demo</nodeName>\n"
+      + "                <path>/io/harness/test/demo/</path>\n"
+      + "                <children>\n"
+      + "                    <indexBrowserTreeNode>\n"
+      + "                        <type>V</type>\n"
+      + "                        <leaf>false</leaf>\n"
+      + "                        <nodeName>2.0</nodeName>\n"
+      + "                        <path>/io/harness/test/demo/2.0/</path>\n"
+      + "                        <children>\n"
+      + "                            <indexBrowserTreeNode>\n"
+      + "                                <type>artifact</type>\n"
+      + "                                <leaf>true</leaf>\n"
+      + "                                <nodeName>demo-2.0.tar</nodeName>\n"
+      + "                                <path>/io/harness/test/demo/2.0/demo-2.0.tar</path>\n"
+      + "                                <groupId>io.harness.test</groupId>\n"
+      + "                                <artifactId>demo</artifactId>\n"
+      + "                                <version>2.0</version>\n"
+      + "                                <repositoryId>releases</repositoryId>\n"
+      + "                                <locallyAvailable>false</locallyAvailable>\n"
+      + "                                <artifactTimestamp>0</artifactTimestamp>\n"
+      + "                                <extension>tar</extension>\n"
+      + "                                <packaging>jar</packaging>\n"
+      + "                                <artifactUri>\n"
+      + "http://localhost:8081/nexus/service/local/artifact/maven/redirect?r=releases&amp;g=io.harness.test&amp;a=demo&amp;v=2.0&amp;p=jar\n"
+      + "</artifactUri>\n"
+      + "                                <pomUri>\n"
+      + "http://localhost:8081/nexus/service/local/artifact/maven/redirect?r=releases&amp;g=io.harness.test&amp;a=demo&amp;v=2.0&amp;p=pom\n"
+      + "</pomUri>\n"
+      + "                            </indexBrowserTreeNode>\n"
+      + "                        </children>\n"
+      + "                        <groupId>io.harness.test</groupId>\n"
+      + "                        <artifactId>demo</artifactId>\n"
+      + "                        <version>2.0</version>\n"
+      + "                        <repositoryId>releases</repositoryId>\n"
+      + "                        <locallyAvailable>false</locallyAvailable>\n"
+      + "                        <artifactTimestamp>0</artifactTimestamp>\n"
+      + "                    </indexBrowserTreeNode>\n"
+      + "                    <indexBrowserTreeNode>\n"
+      + "                        <type>V</type>\n"
+      + "                        <leaf>false</leaf>\n"
+      + "                        <nodeName>1.0</nodeName>\n"
+      + "                        <path>/io/harness/test/demo/1.0/</path>\n"
+      + "                        <children>\n"
+      + "                            <indexBrowserTreeNode>\n"
+      + "                                <type>artifact</type>\n"
+      + "                                <leaf>true</leaf>\n"
+      + "                                <nodeName>demo-1.0.tar</nodeName>\n"
+      + "                                <path>/io/harness/test/demo/1.0/demo-1.0.tar</path>\n"
+      + "                                <groupId>io.harness.test</groupId>\n"
+      + "                                <artifactId>demo</artifactId>\n"
+      + "                                <version>1.0</version>\n"
+      + "                                <repositoryId>releases</repositoryId>\n"
+      + "                                <locallyAvailable>false</locallyAvailable>\n"
+      + "                                <artifactTimestamp>0</artifactTimestamp>\n"
+      + "                                <extension>tar</extension>\n"
+      + "                                <packaging>jar</packaging>\n"
+      + "                                <artifactUri>\n"
+      + "http://localhost:8081/nexus/service/local/artifact/maven/redirect?r=releases&amp;g=io.harness.test&amp;a=demo&amp;v=1.0&amp;p=jar\n"
+      + "</artifactUri>\n"
+      + "                                <pomUri>\n"
+      + "http://localhost:8081/nexus/service/local/artifact/maven/redirect?r=releases&amp;g=io.harness.test&amp;a=demo&amp;v=1.0&amp;p=pom\n"
+      + "</pomUri>\n"
+      + "                            </indexBrowserTreeNode>\n"
+      + "                        </children>\n"
+      + "                        <groupId>io.harness.test</groupId>\n"
+      + "                        <artifactId>demo</artifactId>\n"
+      + "                        <version>1.0</version>\n"
+      + "                        <repositoryId>releases</repositoryId>\n"
+      + "                        <locallyAvailable>false</locallyAvailable>\n"
+      + "                        <artifactTimestamp>0</artifactTimestamp>\n"
+      + "                    </indexBrowserTreeNode>\n"
+      + "                </children>\n"
+      + "                <groupId>io.harness.test</groupId>\n"
+      + "                <artifactId>demo</artifactId>\n"
+      + "                <repositoryId>releases</repositoryId>\n"
+      + "                <locallyAvailable>false</locallyAvailable>\n"
+      + "                <artifactTimestamp>0</artifactTimestamp>\n"
+      + "            </indexBrowserTreeNode>\n"
+      + "        </children>\n"
+      + "        <repositoryId>releases</repositoryId>\n"
+      + "        <locallyAvailable>false</locallyAvailable>\n"
+      + "        <artifactTimestamp>0</artifactTimestamp>\n"
+      + "    </data>\n"
+      + "</indexBrowserTreeViewResponse>";
+
+  private static final String XML_CONTENT_RESPONSE_2 = "<content>\n"
+      + "    <data>\n"
+      + "        <content-item>\n"
+      + "            <resourceURI>\n"
+      + "http://localhost:8081/nexus/service/local/repositories/releases/content/io/harness/test/demo/1.0/demo-1.0.pom.sha1\n"
+      + "</resourceURI>\n"
+      + "            <relativePath>/io/harness/test/demo/1.0/demo-1.0.pom.sha1</relativePath>\n"
+      + "            <text>demo-1.0.pom.sha1</text>\n"
+      + "            <leaf>true</leaf>\n"
+      + "            <lastModified>2019-09-09 06:18:02.0 UTC</lastModified>\n"
+      + "            <sizeOnDisk>40</sizeOnDisk>\n"
+      + "        </content-item>\n"
+      + "        <content-item>\n"
+      + "            <resourceURI>\n"
+      + "http://localhost:8081/nexus/service/local/repositories/releases/content/io/harness/test/demo/1.0/demo-1.0.jar\n"
+      + "</resourceURI>\n"
+      + "            <relativePath>/io/harness/test/demo/1.0/demo-1.0.jar</relativePath>\n"
+      + "            <text>demo-1.0.jar</text>\n"
+      + "            <leaf>true</leaf>\n"
+      + "            <lastModified>2019-09-09 06:18:03.0 UTC</lastModified>\n"
+      + "            <sizeOnDisk>1667</sizeOnDisk>\n"
+      + "        </content-item>\n"
+      + "        <content-item>\n"
+      + "            <resourceURI>\n"
+      + "http://localhost:8081/nexus/service/local/repositories/releases/content/io/harness/test/demo/1.0/demo-1.0-binary.jar\n"
+      + "</resourceURI>\n"
+      + "            <relativePath>/io/harness/test/demo/1.0/demo-1.0-binary.jar</relativePath>\n"
+      + "            <text>demo-1.0-binary.jar</text>\n"
+      + "            <leaf>true</leaf>\n"
+      + "            <lastModified>2019-09-09 06:18:03.0 UTC</lastModified>\n"
+      + "            <sizeOnDisk>1667</sizeOnDisk>\n"
+      + "        </content-item>\n"
+      + "        <content-item>\n"
+      + "            <resourceURI>\n"
+      + "http://localhost:8081/nexus/service/local/repositories/releases/content/io/harness/test/demo/1.0/demo-1.0.pom\n"
+      + "</resourceURI>\n"
+      + "            <relativePath>/io/harness/test/demo/1.0/demo-1.0.pom</relativePath>\n"
+      + "            <text>demo-1.0.pom</text>\n"
+      + "            <leaf>true</leaf>\n"
+      + "            <lastModified>2019-09-09 06:18:02.0 UTC</lastModified>\n"
+      + "            <sizeOnDisk>1402</sizeOnDisk>\n"
+      + "        </content-item>\n"
+      + "        <content-item>\n"
+      + "            <resourceURI>\n"
+      + "http://localhost:8081/nexus/service/local/repositories/releases/content/io/harness/test/demo/1.0/demo-1.0.tar.sha1\n"
+      + "</resourceURI>\n"
+      + "            <relativePath>/io/harness/test/demo/1.0/demo-1.0.tar.sha1</relativePath>\n"
+      + "            <text>demo-1.0.tar.sha1</text>\n"
+      + "            <leaf>true</leaf>\n"
+      + "            <lastModified>2019-09-09 06:18:51.0 UTC</lastModified>\n"
+      + "            <sizeOnDisk>40</sizeOnDisk>\n"
+      + "        </content-item>\n"
+      + "        <content-item>\n"
+      + "            <resourceURI>\n"
+      + "http://localhost:8081/nexus/service/local/repositories/releases/content/io/harness/test/demo/1.0/demo-1.0.pom.md5\n"
+      + "</resourceURI>\n"
+      + "            <relativePath>/io/harness/test/demo/1.0/demo-1.0.pom.md5</relativePath>\n"
+      + "            <text>demo-1.0.pom.md5</text>\n"
+      + "            <leaf>true</leaf>\n"
+      + "            <lastModified>2019-09-09 06:18:02.0 UTC</lastModified>\n"
+      + "            <sizeOnDisk>32</sizeOnDisk>\n"
+      + "        </content-item>\n"
+      + "        <content-item>\n"
+      + "            <resourceURI>\n"
+      + "http://localhost:8081/nexus/service/local/repositories/releases/content/io/harness/test/demo/1.0/demo-1.0.jar.md5\n"
+      + "</resourceURI>\n"
+      + "            <relativePath>/io/harness/test/demo/1.0/demo-1.0.jar.md5</relativePath>\n"
+      + "            <text>demo-1.0.jar.md5</text>\n"
+      + "            <leaf>true</leaf>\n"
+      + "            <lastModified>2019-09-09 06:18:03.0 UTC</lastModified>\n"
+      + "            <sizeOnDisk>32</sizeOnDisk>\n"
+      + "        </content-item>\n"
+      + "        <content-item>\n"
+      + "            <resourceURI>\n"
+      + "http://localhost:8081/nexus/service/local/repositories/releases/content/io/harness/test/demo/1.0/demo-1.0.tar.md5\n"
+      + "</resourceURI>\n"
+      + "            <relativePath>/io/harness/test/demo/1.0/demo-1.0.tar.md5</relativePath>\n"
+      + "            <text>demo-1.0.tar.md5</text>\n"
+      + "            <leaf>true</leaf>\n"
+      + "            <lastModified>2019-09-09 06:18:51.0 UTC</lastModified>\n"
+      + "            <sizeOnDisk>32</sizeOnDisk>\n"
+      + "        </content-item>\n"
+      + "        <content-item>\n"
+      + "            <resourceURI>\n"
+      + "http://localhost:8081/nexus/service/local/repositories/releases/content/io/harness/test/demo/1.0/demo-1.0.jar.sha1\n"
+      + "</resourceURI>\n"
+      + "            <relativePath>/io/harness/test/demo/1.0/demo-1.0.jar.sha1</relativePath>\n"
+      + "            <text>demo-1.0.jar.sha1</text>\n"
+      + "            <leaf>true</leaf>\n"
+      + "            <lastModified>2019-09-09 06:18:03.0 UTC</lastModified>\n"
+      + "            <sizeOnDisk>40</sizeOnDisk>\n"
+      + "        </content-item>\n"
+      + "        <content-item>\n"
+      + "            <resourceURI>\n"
+      + "http://localhost:8081/nexus/service/local/repositories/releases/content/io/harness/test/demo/1.0/demo-1.0.tar\n"
+      + "</resourceURI>\n"
+      + "            <relativePath>/io/harness/test/demo/1.0/demo-1.0.tar</relativePath>\n"
+      + "            <text>demo-1.0.tar</text>\n"
+      + "            <leaf>true</leaf>\n"
+      + "            <lastModified>2019-09-09 06:18:51.0 UTC</lastModified>\n"
+      + "            <sizeOnDisk>0</sizeOnDisk>\n"
+      + "        </content-item>\n"
+      + "    </data>\n"
+      + "</content>";
+
+  private static final String XML_CONTENT_RESPONSE_1 = "<content>\n"
+      + "    <data>\n"
+      + "        <content-item>\n"
+      + "            <resourceURI>\n"
+      + "http://localhost:8081/nexus/service/local/repositories/releases/content/io/harness/test/demo/2.0/demo-2.0.tar.md5\n"
+      + "</resourceURI>\n"
+      + "            <relativePath>/io/harness/test/demo/2.0/demo-2.0.tar.md5</relativePath>\n"
+      + "            <text>demo-2.0.tar.md5</text>\n"
+      + "            <leaf>true</leaf>\n"
+      + "            <lastModified>2019-09-06 21:16:35.0 UTC</lastModified>\n"
+      + "            <sizeOnDisk>32</sizeOnDisk>\n"
+      + "        </content-item>\n"
+      + "        <content-item>\n"
+      + "            <resourceURI>\n"
+      + "http://localhost:8081/nexus/service/local/repositories/releases/content/io/harness/test/demo/2.0/demo-2.0.jar\n"
+      + "</resourceURI>\n"
+      + "            <relativePath>/io/harness/test/demo/2.0/demo-2.0.jar</relativePath>\n"
+      + "            <text>demo-2.0.jar</text>\n"
+      + "            <leaf>true</leaf>\n"
+      + "            <lastModified>2019-09-06 21:15:54.0 UTC</lastModified>\n"
+      + "            <sizeOnDisk>1652</sizeOnDisk>\n"
+      + "        </content-item>\n"
+      + "        <content-item>\n"
+      + "            <resourceURI>\n"
+      + "http://localhost:8081/nexus/service/local/repositories/releases/content/io/harness/test/demo/2.0/demo-2.0.pom\n"
+      + "</resourceURI>\n"
+      + "            <relativePath>/io/harness/test/demo/2.0/demo-2.0.pom</relativePath>\n"
+      + "            <text>demo-2.0.pom</text>\n"
+      + "            <leaf>true</leaf>\n"
+      + "            <lastModified>2019-09-06 21:15:54.0 UTC</lastModified>\n"
+      + "            <sizeOnDisk>1402</sizeOnDisk>\n"
+      + "        </content-item>\n"
+      + "        <content-item>\n"
+      + "            <resourceURI>\n"
+      + "http://localhost:8081/nexus/service/local/repositories/releases/content/io/harness/test/demo/2.0/demo-2.0.tar.sha1\n"
+      + "</resourceURI>\n"
+      + "            <relativePath>/io/harness/test/demo/2.0/demo-2.0.tar.sha1</relativePath>\n"
+      + "            <text>demo-2.0.tar.sha1</text>\n"
+      + "            <leaf>true</leaf>\n"
+      + "            <lastModified>2019-09-06 21:16:34.0 UTC</lastModified>\n"
+      + "            <sizeOnDisk>40</sizeOnDisk>\n"
+      + "        </content-item>\n"
+      + "        <content-item>\n"
+      + "            <resourceURI>\n"
+      + "http://localhost:8081/nexus/service/local/repositories/releases/content/io/harness/test/demo/2.0/demo-2.0.jar.sha1\n"
+      + "</resourceURI>\n"
+      + "            <relativePath>/io/harness/test/demo/2.0/demo-2.0.jar.sha1</relativePath>\n"
+      + "            <text>demo-2.0.jar.sha1</text>\n"
+      + "            <leaf>true</leaf>\n"
+      + "            <lastModified>2019-09-06 21:15:54.0 UTC</lastModified>\n"
+      + "            <sizeOnDisk>40</sizeOnDisk>\n"
+      + "        </content-item>\n"
+      + "        <content-item>\n"
+      + "            <resourceURI>\n"
+      + "http://localhost:8081/nexus/service/local/repositories/releases/content/io/harness/test/demo/2.0/demo-2.0.pom.sha1\n"
+      + "</resourceURI>\n"
+      + "            <relativePath>/io/harness/test/demo/2.0/demo-2.0.pom.sha1</relativePath>\n"
+      + "            <text>demo-2.0.pom.sha1</text>\n"
+      + "            <leaf>true</leaf>\n"
+      + "            <lastModified>2019-09-06 21:15:54.0 UTC</lastModified>\n"
+      + "            <sizeOnDisk>40</sizeOnDisk>\n"
+      + "        </content-item>\n"
+      + "        <content-item>\n"
+      + "            <resourceURI>\n"
+      + "http://localhost:8081/nexus/service/local/repositories/releases/content/io/harness/test/demo/2.0/demo-2.0.pom.md5\n"
+      + "</resourceURI>\n"
+      + "            <relativePath>/io/harness/test/demo/2.0/demo-2.0.pom.md5</relativePath>\n"
+      + "            <text>demo-2.0.pom.md5</text>\n"
+      + "            <leaf>true</leaf>\n"
+      + "            <lastModified>2019-09-06 21:15:54.0 UTC</lastModified>\n"
+      + "            <sizeOnDisk>32</sizeOnDisk>\n"
+      + "        </content-item>\n"
+      + "        <content-item>\n"
+      + "            <resourceURI>\n"
+      + "http://localhost:8081/nexus/service/local/repositories/releases/content/io/harness/test/demo/2.0/demo-2.0.jar.md5\n"
+      + "</resourceURI>\n"
+      + "            <relativePath>/io/harness/test/demo/2.0/demo-2.0.jar.md5</relativePath>\n"
+      + "            <text>demo-2.0.jar.md5</text>\n"
+      + "            <leaf>true</leaf>\n"
+      + "            <lastModified>2019-09-06 21:15:54.0 UTC</lastModified>\n"
+      + "            <sizeOnDisk>32</sizeOnDisk>\n"
+      + "        </content-item>\n"
+      + "        <content-item>\n"
+      + "            <resourceURI>\n"
+      + "http://localhost:8081/nexus/service/local/repositories/releases/content/io/harness/test/demo/2.0/demo-2.0.tar\n"
+      + "</resourceURI>\n"
+      + "            <relativePath>/io/harness/test/demo/2.0/demo-2.0.tar</relativePath>\n"
+      + "            <text>demo-2.0.tar</text>\n"
+      + "            <leaf>true</leaf>\n"
+      + "            <lastModified>2019-09-06 21:16:34.0 UTC</lastModified>\n"
+      + "            <sizeOnDisk>0</sizeOnDisk>\n"
+      + "        </content-item>\n"
+      + "    </data>\n"
+      + "</content>";
   /**
    * The Wire mock rule.
    */
@@ -661,5 +958,60 @@ public class NexusServiceTest extends WingsBaseTest {
                                 + "  <description>POM was created by Sonatype Nexus</description>\n"
                                 + "</project>")
                             .withHeader("Content-Type", "application/xml")));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testExistsVersionWithExtensionNexus2x() {
+    mockResponsesNexus2xForExistVersions();
+    assertThat(nexusService.existsVersion(nexusConfig, null, "releases", "io.harness.test", "demo", "jar", null))
+        .isTrue();
+  }
+
+  @Test(expected = ArtifactServerException.class)
+  @Category(UnitTests.class)
+  public void testNoVersionsFoundWithInvalidClassifierNexus2x() {
+    mockResponsesNexus2xForExistVersions();
+    nexusService.existsVersion(nexusConfig, null, "releases", "io.harness.test", "demo", null, "sources");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testVersionExistsWithValidClassifierExtensionNexus2x() {
+    mockResponsesNexus2xForExistVersions();
+    assertThat(nexusService.existsVersion(nexusConfig, null, "releases", "io.harness.test", "demo", "jar", "binary"))
+        .isTrue();
+  }
+
+  private void mockResponsesNexus2xForExistVersions() {
+    wireMockRule.stubFor(
+        get(urlEqualTo("/nexus/service/local/repositories/releases/index_content/io/harness/test/demo/"))
+            .willReturn(aResponse().withStatus(200).withBody(XML_RESPONSE_INDEX_TREE_BROWSER)));
+
+    wireMockRule.stubFor(
+        get(urlMatching("/nexus/service/local/repositories/releases/content/io%2Fharness%2Ftest%2Fdemo%2F1.0%2F"))
+            .willReturn(aResponse()
+                            .withStatus(200)
+                            .withBody(XML_CONTENT_RESPONSE_2)
+                            .withHeader("Content-Type", "application/xml")));
+    wireMockRule.stubFor(
+        get(urlEqualTo("/nexus/service/local/repositories/releases/content/io%2Fharness%2Ftest%2Fdemo%2F2.0%2F"))
+            .willReturn(aResponse()
+                            .withStatus(200)
+                            .withBody(XML_CONTENT_RESPONSE_1)
+                            .withHeader("Content-Type", "application/xml")));
+  }
+  @Test
+  @Category(UnitTests.class)
+  public void testExistsVersionWithExtensionNexus3x() {
+    assertThat(
+        nexusService.existsVersion(nexusThreeConfig, null, "maven-releases", "mygroup", "myartifact", "jar", "binary"))
+        .isTrue();
+  }
+
+  @Test(expected = ArtifactServerException.class)
+  @Category(UnitTests.class)
+  public void testNoVersionsFoundWithInvalidClassifierNexus3x() {
+    nexusService.existsVersion(nexusThreeConfig, null, "maven-releases", "mygroup", "myartifact", null, "source");
   }
 }
