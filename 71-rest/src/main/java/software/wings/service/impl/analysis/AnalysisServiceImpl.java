@@ -339,37 +339,40 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Override
   public boolean addToBaseline(
       String accountId, String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord) {
+    CVFeedbackRecord feedbackRecordFromDataStore = feedbackRecord;
     if (isNotEmpty(feedbackRecord.getUuid())) {
-      CVFeedbackRecord feedbackRecordFromDataStore =
-          dataStoreService.getEntity(CVFeedbackRecord.class, feedbackRecord.getUuid());
+      feedbackRecordFromDataStore = dataStoreService.getEntity(CVFeedbackRecord.class, feedbackRecord.getUuid());
       checkIfActionIsAllowed(feedbackRecordFromDataStore, FeedbackAction.ADD_TO_BASELINE);
     }
-    feedbackRecord.setPriority(FeedbackPriority.BASELINE);
-    return saveLogFeedback(accountId, cvConfigId, stateExecutionId, feedbackRecord, FeedbackAction.ADD_TO_BASELINE);
+    feedbackRecordFromDataStore.setPriority(FeedbackPriority.BASELINE);
+    return saveLogFeedback(
+        accountId, cvConfigId, stateExecutionId, feedbackRecordFromDataStore, FeedbackAction.ADD_TO_BASELINE);
   }
 
   @Override
   public boolean removeFromBaseline(
       String accountId, String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord) {
+    CVFeedbackRecord feedbackRecordFromDataStore = feedbackRecord;
     if (isNotEmpty(feedbackRecord.getUuid())) {
-      CVFeedbackRecord feedbackRecordFromDataStore =
-          dataStoreService.getEntity(CVFeedbackRecord.class, feedbackRecord.getUuid());
+      feedbackRecordFromDataStore = dataStoreService.getEntity(CVFeedbackRecord.class, feedbackRecord.getUuid());
       checkIfActionIsAllowed(feedbackRecordFromDataStore, FeedbackAction.REMOVE_FROM_BASELINE);
     }
+    feedbackRecordFromDataStore.setPriority(feedbackRecord.getPriority());
     return saveLogFeedback(
-        accountId, cvConfigId, stateExecutionId, feedbackRecord, FeedbackAction.REMOVE_FROM_BASELINE);
+        accountId, cvConfigId, stateExecutionId, feedbackRecordFromDataStore, FeedbackAction.REMOVE_FROM_BASELINE);
   }
 
   @Override
   public boolean updateFeedbackPriority(
       String accountId, String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord) {
+    CVFeedbackRecord feedbackRecordFromDataStore = feedbackRecord;
     if (isNotEmpty(feedbackRecord.getUuid())) {
-      CVFeedbackRecord feedbackRecordFromDataStore =
-          dataStoreService.getEntity(CVFeedbackRecord.class, feedbackRecord.getUuid());
+      feedbackRecordFromDataStore = dataStoreService.getEntity(CVFeedbackRecord.class, feedbackRecord.getUuid());
       checkIfActionIsAllowed(feedbackRecordFromDataStore, FeedbackAction.UPDATE_PRIORITY);
     }
-
-    return saveLogFeedback(accountId, cvConfigId, stateExecutionId, feedbackRecord, FeedbackAction.UPDATE_PRIORITY);
+    feedbackRecordFromDataStore.setPriority(feedbackRecord.getPriority());
+    return saveLogFeedback(
+        accountId, cvConfigId, stateExecutionId, feedbackRecordFromDataStore, FeedbackAction.UPDATE_PRIORITY);
   }
 
   private boolean checkIfActionIsAllowed(CVFeedbackRecord feedbackRecordFromDataStore, FeedbackAction nextAction) {

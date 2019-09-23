@@ -149,4 +149,25 @@ public class AnalysisServiceTest extends WingsBaseTest {
     String jiraLink = analysisService.createCollaborationFeedbackTicket(
         accountId, appId, cvConfiguration.getUuid(), null, cvJiraParameters);
   }
+
+  @Test
+  @Category(UnitTests.class)
+  public void changePriorityAfterJira() {
+    testCreateJira();
+    CVFeedbackRecord record = wingsPersistence.createQuery(CVFeedbackRecord.class)
+                                  .filter(CVFeedbackRecordKeys.envId, envId)
+                                  .filter(CVFeedbackRecordKeys.serviceId, serviceId)
+                                  .get();
+    String jira = record.getJiraLink();
+    record.setJiraLink(null);
+    analysisService.addToBaseline(accountId, cvConfiguration.getUuid(), null, record);
+
+    CVFeedbackRecord updatedRecord = wingsPersistence.createQuery(CVFeedbackRecord.class)
+                                         .filter(CVFeedbackRecordKeys.envId, envId)
+                                         .filter(CVFeedbackRecordKeys.serviceId, serviceId)
+                                         .get();
+    assertThat(updatedRecord.getUuid()).isEqualTo(record.getUuid());
+    assertThat(updatedRecord.getActionTaken()).isEqualTo(FeedbackAction.ADD_TO_BASELINE);
+    assertThat(updatedRecord.getJiraLink()).isEqualTo(jira);
+  }
 }
