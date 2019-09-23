@@ -38,6 +38,7 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
   @Inject private DashboardAuthHandler dashboardAuthHandler;
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private EventPublishHelper eventPublishHelper;
+  private static final String eventName = "Custom Dashboard Created";
 
   @Override
   public DashboardSettings get(@NotNull String accountId, @NotNull String id) {
@@ -55,11 +56,11 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
     Map<String, String> properties = new HashMap<>();
     properties.put("module", "Dashboards");
     properties.put("shared", isEmpty(savedDashboardSettings.getPermissions()) ? "false" : "true");
-    properties.put("name", savedDashboardSettings.getName());
+    properties.put("dashboardName", savedDashboardSettings.getName());
     properties.put("groupId", accountId);
     AccountEvent accountEvent = AccountEvent.builder()
                                     .accountEventType(AccountEventType.CUSTOM)
-                                    .customMsg(savedDashboardSettings.getName())
+                                    .customMsg(eventName)
                                     .properties(properties)
                                     .build();
     eventPublishHelper.publishAccountEvent(accountId, accountEvent, false, false);
