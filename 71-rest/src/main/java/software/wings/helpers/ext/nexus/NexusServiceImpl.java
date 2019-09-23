@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.nexus;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.ARTIFACT_SERVER_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
@@ -293,6 +294,32 @@ public class NexusServiceImpl implements NexusService {
       handleException(e);
     }
     return new ArrayList<>();
+  }
+
+  @Override
+  public boolean existsVersion(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,
+      String groupId, String artifactName, String extension, String classifier) {
+    if (isEmpty(extension) && isEmpty(classifier)) {
+      return true;
+    }
+    try {
+      boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
+      if (isNexusTwo) {
+        return nexusTwoService.existsVersion(
+            nexusConfig, encryptionDetails, repoId, groupId, artifactName, extension, classifier);
+      } else {
+        return nexusThreeService.existsVersion(
+            nexusConfig, encryptionDetails, repoId, groupId, artifactName, extension, classifier);
+      }
+    } catch (final IOException e) {
+      logger.error(
+          format(
+              "Error occurred while retrieving versions from Nexus server %s for Repository %s under group id %s and artifact name %s",
+              nexusConfig.getNexusUrl(), repoId, groupId, artifactName),
+          e);
+      handleException(e);
+    }
+    return true;
   }
 
   @Override

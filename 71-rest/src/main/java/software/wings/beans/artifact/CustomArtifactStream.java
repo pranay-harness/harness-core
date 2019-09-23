@@ -72,6 +72,11 @@ public class CustomArtifactStream extends ArtifactStream {
     return format("%s_%s", getName(), buildNo);
   }
 
+  @Override
+  public boolean shouldValidate() {
+    return true;
+  }
+
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)

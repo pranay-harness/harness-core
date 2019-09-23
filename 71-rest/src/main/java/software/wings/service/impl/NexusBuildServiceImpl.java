@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.network.Http.connectableHttpUrl;
 import static java.lang.String.format;
@@ -158,6 +159,11 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   @Override
   public boolean validateArtifactSource(NexusConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactStreamAttributes artifactStreamAttributes) {
+    if (isNotEmpty(artifactStreamAttributes.getExtension()) || isNotEmpty(artifactStreamAttributes.getClassifier())) {
+      return nexusService.existsVersion(config, encryptionDetails, artifactStreamAttributes.getJobName(),
+          artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName(),
+          artifactStreamAttributes.getExtension(), artifactStreamAttributes.getClassifier());
+    }
     return true;
   }
 

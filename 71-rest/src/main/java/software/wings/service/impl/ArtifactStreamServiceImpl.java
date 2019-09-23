@@ -534,6 +534,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       throw new InvalidRequestException("Artifact Stream's metadata-only property cannot be changed", USER);
     }
 
+    artifactStream.setSourceName(artifactStream.generateSourceName());
+
     // for artifactory
     validateRepositoryType(artifactStream, existingArtifactStream);
     // for nexus
@@ -573,8 +575,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     if (validate) {
       validateArtifactSourceData(artifactStream);
     }
-
-    artifactStream.setSourceName(artifactStream.generateSourceName());
 
     addAcrHostNameIfNeeded(artifactStream);
 
@@ -646,7 +646,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   private void validateExtensionAndClassifier(ArtifactStream artifactStream, ArtifactStream existingArtifactStream) {
     if (artifactStream != null && existingArtifactStream != null) {
-      if (artifactStream instanceof NexusArtifactStream) {
+      if (artifactStream instanceof NexusArtifactStream
+          && ((NexusArtifactStream) artifactStream).getRepositoryFormat().equals(RepositoryFormat.maven.name())
+          && !existingArtifactStream.artifactSourceChanged(artifactStream)) {
         String extension = ((NexusArtifactStream) artifactStream).getExtension();
         String existingExtension = ((NexusArtifactStream) existingArtifactStream).getExtension();
         if ((extension == null && existingExtension != null) || (extension != null && existingExtension == null)
@@ -718,10 +720,12 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     String artifactStreamType = artifactStream.getArtifactStreamType();
     if (DOCKER.name().equals(artifactStreamType) || ECR.name().equals(artifactStreamType)
         || GCR.name().equals(artifactStreamType) || ACR.name().equals(artifactStreamType)
-        || ARTIFACTORY.name().equals(artifactStreamType)) {
-      buildSourceService.validateArtifactSource(
-          artifactStream.fetchAppId(), artifactStream.getSettingId(), artifactStream.fetchArtifactStreamAttributes());
-    } else if (CUSTOM.name().equals(artifactStreamType)) {
+        || ARTIFACTORY.name().equals(artifactStreamType) || NEXUS.name().equals(artifactStreamType)) {
+      if (artifactStream.shouldValidate()) {
+        buildSourceService.validateArtifactSource(
+            artifactStream.fetchAppId(), artifactStream.getSettingId(), artifactStream.fetchArtifactStreamAttributes());
+      }
+    } else if (CUSTOM.name().equals(artifactStreamType) && artifactStream.shouldValidate()) {
       buildSourceService.validateArtifactSource(artifactStream);
     }
   }

@@ -1,4 +1,4 @@
-package software.wings.exception;
+package io.harness.delegate.exception;
 
 import static io.harness.eraro.ErrorCode.ARTIFACT_SERVER_ERROR;
 
@@ -8,10 +8,10 @@ import io.harness.exception.WingsException;
 import java.util.EnumSet;
 
 public class ArtifactServerException extends WingsException {
-  private static final String MESSAGE_KEY = "message";
+  private static final String MESSAGE_ARG = "message";
 
-  public ArtifactServerException(String message, Throwable cause, EnumSet<ReportTarget> reportTargets) {
+  public ArtifactServerException(String message, Throwable cause, EnumSet<WingsException.ReportTarget> reportTargets) {
     super(message, cause, ARTIFACT_SERVER_ERROR, Level.ERROR, reportTargets, null);
-    super.param(MESSAGE_KEY, message);
+    super.param(MESSAGE_ARG, message);
   }
 }

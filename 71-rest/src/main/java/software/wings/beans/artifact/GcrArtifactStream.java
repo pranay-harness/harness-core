@@ -73,6 +73,11 @@ public class GcrArtifactStream extends ArtifactStream {
     return registryHostName;
   }
 
+  @Override
+  public boolean shouldValidate() {
+    return true;
+  }
+
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)

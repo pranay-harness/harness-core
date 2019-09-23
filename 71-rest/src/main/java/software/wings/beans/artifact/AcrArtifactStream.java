@@ -60,6 +60,11 @@ public class AcrArtifactStream extends ArtifactStream {
   }
 
   @Override
+  public boolean shouldValidate() {
+    return true;
+  }
+
+  @Override
   public String generateSourceName() {
     return getRegistryName() + '/' + getRepositoryName();
   }
