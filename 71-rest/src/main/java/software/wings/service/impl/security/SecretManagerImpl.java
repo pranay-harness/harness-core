@@ -9,9 +9,11 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedFields;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static io.harness.eraro.ErrorCode.CYBERARK_OPERATION_ERROR;
-import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
+import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
+import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.eraro.ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION;
+import static io.harness.eraro.ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -28,6 +30,8 @@ import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.ServiceVariable.ENCRYPTED_VALUE_KEY;
 import static software.wings.security.EnvFilter.FilterType.NON_PROD;
 import static software.wings.security.EnvFilter.FilterType.PROD;
+import static software.wings.service.impl.security.AbstractSecretServiceImpl.checkNotNull;
+import static software.wings.service.impl.security.AbstractSecretServiceImpl.checkState;
 import static software.wings.service.impl.security.VaultServiceImpl.VAULT_VAILDATION_URL;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 import static software.wings.service.intfc.security.VaultService.DEFAULT_BASE_PATH;
@@ -36,7 +40,6 @@ import static software.wings.service.intfc.security.VaultService.KEY_SPEARATOR;
 import static software.wings.service.intfc.security.VaultService.PATH_SEPARATOR;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -51,9 +54,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.eraro.ErrorCode;
 import io.harness.event.model.EventType;
-import io.harness.exception.KmsOperationException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.UuidAware;
@@ -365,8 +366,8 @@ public class SecretManagerImpl implements SecretManager {
         String encryptedRefFieldValue = (String) encryptedRefField.get(object);
         boolean isSetByYaml = WingsReflectionUtils.isSetByYaml(object, encryptedRefField);
         if (fieldValue != null && !isSetByYaml) {
-          Preconditions.checkState(
-              encryptedRefFieldValue == null, "both encrypted and non encrypted field set for " + object);
+          checkState(encryptedRefFieldValue == null, ENCRYPT_DECRYPT_ERROR,
+              "both encrypted and non encrypted field set for " + object);
           encryptedDataDetails.add(EncryptedDataDetail.builder()
                                        .encryptedData(EncryptedRecordData.builder()
                                                           .encryptionType(LOCAL)
@@ -415,7 +416,7 @@ public class SecretManagerImpl implements SecretManager {
         }
       }
     } catch (IllegalAccessException e) {
-      throw new WingsException(e);
+      throw new SecretManagementException(ENCRYPT_DECRYPT_ERROR, e, USER);
     }
 
     return encryptedDataDetails;
@@ -430,7 +431,7 @@ public class SecretManagerImpl implements SecretManager {
         f.set(object, ENCRYPTED_FIELD_MASK.toCharArray());
       }
     } catch (IllegalAccessException e) {
-      throw new WingsException(e);
+      throw new SecretManagementException(ENCRYPT_DECRYPT_ERROR, e, USER);
     }
   }
 
@@ -447,7 +448,7 @@ public class SecretManagerImpl implements SecretManager {
         }
       }
     } catch (IllegalAccessException e) {
-      throw new WingsException(e);
+      throw new SecretManagementException(ENCRYPT_DECRYPT_ERROR, e, USER);
     }
   }
 
@@ -645,14 +646,14 @@ public class SecretManagerImpl implements SecretManager {
     if (object.getSettingType() == SettingVariableTypes.CONFIG_FILE) {
       String encryptedFieldRefId = ((ConfigFile) object).getEncryptedFileId();
       EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, encryptedFieldRefId);
-      Preconditions.checkNotNull(encryptedData, "no encrypted record found for " + object);
+      checkNotNull(encryptedData, ENCRYPT_DECRYPT_ERROR, "No encrypted record found for " + object);
       if (encryptedData.getEncryptionType() == EncryptionType.VAULT) {
         return encryptedData.getEncryptionType().getYamlName() + ":" + getVaultSecretRefUrl(encryptedData);
       } else {
         return encryptedData.getEncryptionType().getYamlName() + ":" + encryptedFieldRefId;
       }
     }
-    Preconditions.checkState(fieldNames.length <= 1, "can't give more than one field in the call");
+    checkState(fieldNames.length <= 1, ENCRYPT_DECRYPT_ERROR, "Gan't give more than one field in the call");
     Field encryptedField = null;
     if (fieldNames.length == 0) {
       encryptedField = object.getEncryptedFields().get(0);
@@ -666,8 +667,8 @@ public class SecretManagerImpl implements SecretManager {
         }
       }
     }
-    Preconditions.checkNotNull(
-        encryptedField, "encrypted field not found " + object + ", args:" + Joiner.on(",").join(fieldNames));
+    checkNotNull(encryptedField, ENCRYPT_DECRYPT_ERROR,
+        "Encrypted field not found " + object + ", args:" + Joiner.on(",").join(fieldNames));
 
     encryptedField.setAccessible(true);
 
@@ -675,7 +676,7 @@ public class SecretManagerImpl implements SecretManager {
     encryptedFieldRef.setAccessible(true);
     String encryptedFieldRefId = (String) encryptedFieldRef.get(object);
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, encryptedFieldRefId);
-    Preconditions.checkNotNull(encryptedData, "no encrypted record found for " + object);
+    checkNotNull(encryptedData, ENCRYPT_DECRYPT_ERROR, "No encrypted record found for " + object);
 
     if (encryptedData.getEncryptionType() == EncryptionType.VAULT) {
       return encryptedData.getEncryptionType().getYamlName() + ":" + getVaultSecretRefUrl(encryptedData);
@@ -695,7 +696,7 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public EncryptedData getEncryptedDataFromYamlRef(String encryptedYamlRef, String accountId) {
-    Preconditions.checkState(isNotEmpty(encryptedYamlRef));
+    checkState(isNotEmpty(encryptedYamlRef), ENCRYPT_DECRYPT_ERROR, "Null encrypted YAML reference");
     String[] tags = encryptedYamlRef.split(":");
     String encryptionTypeYamlName = tags[0];
     String encryptedDataRef = tags[1];
@@ -704,7 +705,7 @@ public class SecretManagerImpl implements SecretManager {
     if (EncryptionType.VAULT.getYamlName().equals(encryptionTypeYamlName)
         && encryptedDataRef.startsWith(URL_ROOT_PREFIX)) {
       if (!encryptedDataRef.contains(KEY_SPEARATOR)) {
-        throw new WingsException(
+        throw new SecretManagementException(ENCRYPT_DECRYPT_ERROR,
             "No key name separator # found in the Vault secret reference " + encryptedDataRef, USER);
       }
 
@@ -777,7 +778,8 @@ public class SecretManagerImpl implements SecretManager {
       if (record != null) {
         deleteAndReportForAuditRecord(accountId, record);
       }
-      throw new WingsException("Vault path '" + vaultSecretRef.fullPath + "' is invalid", USER);
+      throw new SecretManagementException(
+          ENCRYPT_DECRYPT_ERROR, "Vault path '" + vaultSecretRef.fullPath + "' is invalid", USER);
     }
     return encryptedData;
   }
@@ -793,7 +795,8 @@ public class SecretManagerImpl implements SecretManager {
 
   private ParsedVaultSecretRef parse(String encryptedDataRef, String accountId) {
     if (!encryptedDataRef.startsWith(URL_ROOT_PREFIX) || !encryptedDataRef.contains(KEY_SPEARATOR)) {
-      throw new WingsException("Vault secret reference '" + encryptedDataRef + "' has illegal format", USER);
+      throw new SecretManagementException(
+          ENCRYPT_DECRYPT_ERROR, "Vault secret reference '" + encryptedDataRef + "' has illegal format", USER);
     } else {
       String secretMangerNameAndPath = encryptedDataRef.substring(2);
 
@@ -802,7 +805,8 @@ public class SecretManagerImpl implements SecretManager {
       String secretManagerName = secretMangerNameAndPath.substring(0, index);
       VaultConfig vaultConfig = vaultService.getVaultConfigByName(accountId, secretManagerName);
       if (vaultConfig == null) {
-        throw new WingsException("Vault secret manager '" + secretManagerName + "' doesn't exist", USER);
+        throw new SecretManagementException(
+            ENCRYPT_DECRYPT_ERROR, "Vault secret manager '" + secretManagerName + "' doesn't exist", USER);
       }
 
       String basePath = vaultConfig.getBasePath() == null ? DEFAULT_BASE_PATH : vaultConfig.getBasePath();
@@ -833,11 +837,11 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public boolean transitionSecrets(String accountId, EncryptionType fromEncryptionType, String fromSecretManagerId,
       EncryptionType toEncryptionType, String toSecretManagerId) {
-    Preconditions.checkState(isNotEmpty(accountId), "accountId can't be blank");
-    Preconditions.checkNotNull(fromEncryptionType, "fromEncryptionType can't be blank");
-    Preconditions.checkState(isNotEmpty(fromSecretManagerId), "fromSecretManagerId can't be blank");
-    Preconditions.checkNotNull(toEncryptionType, "toEncryptionType can't be blank");
-    Preconditions.checkState(isNotEmpty(toSecretManagerId), "toSecretManagerId can't be blank");
+    checkState(isNotEmpty(accountId), "accountId can't be blank");
+    checkNotNull(fromEncryptionType, "fromEncryptionType can't be blank");
+    checkState(isNotEmpty(fromSecretManagerId), "fromSecretManagerId can't be blank");
+    checkNotNull(toEncryptionType, "toEncryptionType can't be blank");
+    checkState(isNotEmpty(toSecretManagerId), "toSecretManagerId can't be blank");
 
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
                                      .filter(ACCOUNT_ID_KEY, accountId)
@@ -868,14 +872,14 @@ public class SecretManagerImpl implements SecretManager {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, entityId);
     // This is needed as encryptedData will be updated in the process of
     EncryptedData existingEncryptedData = wingsPersistence.get(EncryptedData.class, entityId);
-    Preconditions.checkNotNull(encryptedData, "No encrypted data with id " + entityId);
-    Preconditions.checkState(encryptedData.getEncryptionType() == fromEncryptionType,
+    checkNotNull(encryptedData, "No encrypted data with id " + entityId);
+    checkState(encryptedData.getEncryptionType() == fromEncryptionType,
         "mismatch between saved encrypted type and from encryption type");
     EncryptionConfig fromConfig = getSecretManager(accountId, fromKmsId);
-    Preconditions.checkNotNull(
+    checkNotNull(
         fromConfig, "No kms found for account " + accountId + " with id " + entityId + " type: " + fromEncryptionType);
     EncryptionConfig toConfig = getSecretManager(accountId, toKmsId);
-    Preconditions.checkNotNull(
+    checkNotNull(
         toConfig, "No kms found for account " + accountId + " with id " + entityId + " type: " + fromEncryptionType);
 
     // Can't not transition secrets with path reference to a different secret manager. Customer has to manually
@@ -942,8 +946,8 @@ public class SecretManagerImpl implements SecretManager {
             (AzureVaultConfig) toConfig, EncryptedData.builder().encryptionKey(encryptionKey).build());
         break;
       case CYBERARK:
-        throw new WingsException(
-            UNSUPPORTED_OPERATION_EXCEPTION, "Deprecate operation is not supported for CyberArk secret manager");
+        throw new SecretManagementException(
+            UNSUPPORTED_OPERATION_EXCEPTION, "Deprecate operation is not supported for CyberArk secret manager", USER);
       default:
         throw new IllegalStateException("Invalid type : " + toEncryptionType);
     }
@@ -1023,8 +1027,8 @@ public class SecretManagerImpl implements SecretManager {
         break;
 
       case CYBERARK:
-        throw new WingsException(
-            UNSUPPORTED_OPERATION_EXCEPTION, "Deprecate operation is not supported for CyberArk secret manager");
+        throw new SecretManagementException(
+            UNSUPPORTED_OPERATION_EXCEPTION, "Deprecate operation is not supported for CyberArk secret manager", USER);
 
       default:
         throw new IllegalArgumentException("Invalid target encryption type " + toEncryptionType);
@@ -1057,8 +1061,8 @@ public class SecretManagerImpl implements SecretManager {
         }
         break;
       case CYBERARK:
-        throw new WingsException(
-            UNSUPPORTED_OPERATION_EXCEPTION, "Deprecate operation is not supported for CyberArk secret manager");
+        throw new SecretManagementException(
+            UNSUPPORTED_OPERATION_EXCEPTION, "Deprecate operation is not supported for CyberArk secret manager", USER);
 
       default:
         break;
@@ -1114,7 +1118,7 @@ public class SecretManagerImpl implements SecretManager {
       List<EncryptedData> secrets = response.getResponse();
       return isNotEmpty(secrets) ? secrets.get(0) : null;
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.GENERAL_ERROR, e).addParam("message", "Failed to list secrets");
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Failed to list secrets", e, USER);
     }
   }
 
@@ -1250,7 +1254,8 @@ public class SecretManagerImpl implements SecretManager {
     String encryptedDataId;
 
     if (containsIllegalCharacters(name)) {
-      throw new WingsException("Secret name '" + name + "' contains illegal characters", USER);
+      throw new SecretManagementException(
+          SECRET_MANAGEMENT_ERROR, "Secret name '" + name + "' contains illegal characters", USER);
     }
 
     char[] secretValue = isEmpty(value) ? null : value.toCharArray();
@@ -1271,7 +1276,7 @@ public class SecretManagerImpl implements SecretManager {
         generateAuditForEncryptedRecord(accountId, null, encryptedDataId);
       } catch (DuplicateKeyException e) {
         String reason = "Variable " + name + " already exists";
-        throw new KmsOperationException(reason, e, USER);
+        throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, reason, e, USER);
       }
 
       auditMessage = "Created";
@@ -1406,8 +1411,9 @@ public class SecretManagerImpl implements SecretManager {
         case VAULT:
           // Path should always have a "#" in and a key name after the #.
           if (path.indexOf('#') < 0) {
-            throw new WingsException(
-                "Secret path need to include the # sign with the the key name after. E.g. /foo/bar/my-secret#my-key.");
+            throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
+                "Secret path need to include the # sign with the the key name after. E.g. /foo/bar/my-secret#my-key.",
+                USER);
           }
           break;
         case AWS_SECRETS_MANAGER:
@@ -1415,8 +1421,9 @@ public class SecretManagerImpl implements SecretManager {
         case CYBERARK:
           break;
         default:
-          throw new WingsException(
-              "Secret path can be specified only if the secret manager is of VAULT/AWS_SECRETS_MANAGER/CYBERARK type!");
+          throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
+              "Secret path can be specified only if the secret manager is of VAULT/AWS_SECRETS_MANAGER/CYBERARK type!",
+              USER);
       }
     }
   }
@@ -1443,7 +1450,7 @@ public class SecretManagerImpl implements SecretManager {
     try {
       wingsPersistence.save(savedData);
     } catch (DuplicateKeyException e) {
-      throw new KmsOperationException("Unable to save Restrictions");
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Unable to save Restrictions", USER);
     }
 
     if (UserThreadLocal.get() != null) {
@@ -1471,13 +1478,13 @@ public class SecretManagerImpl implements SecretManager {
       String reason = "Can't delete this secret because it is still being used in service variable(s): "
           + serviceVariables.stream().map(ServiceVariable::getName).collect(joining(", "))
           + ". Please remove the usages of this secret and try again.";
-      throw new KmsOperationException(reason, USER);
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, reason, USER);
     }
 
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuId);
-    Preconditions.checkNotNull(encryptedData, "No encrypted record found with id " + uuId);
+    checkNotNull(encryptedData, "No encrypted record found with id " + uuId);
     if (!usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, encryptedData.getUsageRestrictions())) {
-      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS, USER);
+      throw new SecretManagementException(USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS, USER);
     }
 
     EncryptionType encryptionType = encryptedData.getEncryptionType();
@@ -1515,7 +1522,7 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public boolean deleteSecretUsingUuid(String uuId) {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuId);
-    Preconditions.checkNotNull(encryptedData, "No encrypted record found with id " + uuId);
+    checkNotNull(encryptedData, "No encrypted record found with id " + uuId);
     return deleteAndReportForAuditRecord(encryptedData.getAccountId(), encryptedData);
   }
 
@@ -1528,7 +1535,7 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public File getFile(String accountId, String uuid, File readInto) {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuid);
-    Preconditions.checkNotNull(encryptedData, "could not find file with id " + uuid);
+    checkNotNull(encryptedData, "could not find file with id " + uuid);
     EncryptionType encryptionType = encryptedData.getEncryptionType();
     switch (encryptionType) {
       case LOCAL:
@@ -1548,8 +1555,8 @@ public class SecretManagerImpl implements SecretManager {
         return azureVaultService.decryptFile(readInto, accountId, encryptedData);
 
       case CYBERARK:
-        throw new WingsException(
-            CYBERARK_OPERATION_ERROR, "Encrypted file operations are not supported for CyberArk secret manager");
+        throw new SecretManagementException(
+            CYBERARK_OPERATION_ERROR, "Encrypted file operations are not supported for CyberArk secret manager", USER);
 
       default:
         throw new IllegalArgumentException("Invalid type " + encryptionType);
@@ -1559,7 +1566,7 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public byte[] getFileContents(String accountId, String uuid) {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuid);
-    Preconditions.checkNotNull(encryptedData, "could not find file with id " + uuid);
+    checkNotNull(encryptedData, "could not find file with id " + uuid);
     return getFileContents(accountId, encryptedData);
   }
 
@@ -1592,8 +1599,8 @@ public class SecretManagerImpl implements SecretManager {
           break;
 
         case CYBERARK:
-          throw new WingsException(
-              CYBERARK_OPERATION_ERROR, "Encrypted file operations are not supported for CyberArk secret manager");
+          throw new SecretManagementException(CYBERARK_OPERATION_ERROR,
+              "Encrypted file operations are not supported for CyberArk secret manager", USER);
 
         default:
           throw new IllegalArgumentException("Invalid type " + encryptionType);
@@ -1601,7 +1608,7 @@ public class SecretManagerImpl implements SecretManager {
       output.flush();
       return output.toByteArray();
     } catch (IOException e) {
-      throw new WingsException(INVALID_ARGUMENT, e).addParam("args", "Failed to get content");
+      throw new SecretManagementException(INVALID_ARGUMENT, e, USER).addParam("args", "Failed to get content");
     } finally {
       // Delete temporary file if it exists.
       if (file != null && file.exists()) {
@@ -1636,14 +1643,15 @@ public class SecretManagerImpl implements SecretManager {
     final EncryptionType encryptionType;
 
     if (containsIllegalCharacters(name)) {
-      throw new WingsException("Encrypted file name '" + name + "' contains illegal characters", USER);
+      throw new SecretManagementException(
+          SECRET_MANAGEMENT_ERROR, "Encrypted file name '" + name + "' contains illegal characters", USER);
     }
 
     if (isNotEmpty(uuid)) {
       encryptedData = wingsPersistence.get(EncryptedData.class, uuid);
       if (encryptedData == null) {
         // Pure UPDATE case, need to throw exception is the record doesn't exist.
-        throw new WingsException(DEFAULT_ERROR_CODE, "could not find file with id " + uuid);
+        throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "could not find file with id " + uuid, USER);
       }
 
       // This is needed for auditing as encryptedData will be changed in the process of update
@@ -1673,7 +1681,7 @@ public class SecretManagerImpl implements SecretManager {
     try {
       inputBytes = ByteStreams.toByteArray(inputStream);
     } catch (IOException e) {
-      throw new WingsException(DEFAULT_ERROR_CODE, e);
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, e, USER);
     }
 
     String kmsId = update ? encryptedData.getKmsId() : null;
@@ -1727,8 +1735,8 @@ public class SecretManagerImpl implements SecretManager {
           break;
 
         case CYBERARK:
-          throw new WingsException(
-              CYBERARK_OPERATION_ERROR, "Encrypted file operations are not supported for CyberArk secret manager");
+          throw new SecretManagementException(CYBERARK_OPERATION_ERROR,
+              "Encrypted file operations are not supported for CyberArk secret manager", USER);
 
         default:
           throw new IllegalArgumentException("Invalid type " + encryptionType);
@@ -1789,7 +1797,7 @@ public class SecretManagerImpl implements SecretManager {
       recordId = wingsPersistence.save(encryptedData);
       generateAuditForEncryptedRecord(accountId, oldEntityData, recordId);
     } catch (DuplicateKeyException e) {
-      throw new KmsOperationException("File " + name + " already exists");
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "File " + name + " already exists", USER);
     }
 
     if (update && newEncryptedFile != null) {
@@ -1848,9 +1856,9 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public boolean deleteFile(String accountId, String uuId) {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuId);
-    Preconditions.checkNotNull(encryptedData, "No encrypted record found with id " + uuId);
+    checkNotNull(encryptedData, "No encrypted record found with id " + uuId);
     if (!usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, encryptedData.getUsageRestrictions())) {
-      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS, USER);
+      throw new SecretManagementException(USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS, USER);
     }
 
     List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class)
@@ -1863,7 +1871,7 @@ public class SecretManagerImpl implements SecretManager {
         errorMessage.append(configFile.getFileName()).append(", ");
       }
 
-      throw new KmsOperationException(errorMessage.toString(), USER);
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, errorMessage.toString(), USER);
     }
 
     switch (encryptedData.getEncryptionType()) {
@@ -1884,8 +1892,8 @@ public class SecretManagerImpl implements SecretManager {
             azureSecretsManagerService.getEncryptionConfig(accountId, encryptedData.getKmsId()));
         break;
       case CYBERARK:
-        throw new WingsException(
-            CYBERARK_OPERATION_ERROR, "Delete file operation is not supported for CyberArk secret manager");
+        throw new SecretManagementException(
+            CYBERARK_OPERATION_ERROR, "Delete file operation is not supported for CyberArk secret manager", USER);
       default:
         throw new IllegalStateException("Invalid type " + encryptedData.getEncryptionType());
     }
@@ -2046,7 +2054,7 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public List<UuidAware> getSecretUsage(String accountId, String secretTextId) {
     EncryptedData secretText = wingsPersistence.get(EncryptedData.class, secretTextId);
-    Preconditions.checkNotNull(secretText, "could not find secret with id " + secretTextId);
+    checkNotNull(secretText, "could not find secret with id " + secretTextId);
     if (secretText.getParentIds() == null) {
       return Collections.emptyList();
     }
@@ -2149,7 +2157,7 @@ public class SecretManagerImpl implements SecretManager {
             if (serviceVariable.getEntityType() == EntityType.SERVICE_TEMPLATE) {
               ServiceTemplate serviceTemplate =
                   wingsPersistence.get(ServiceTemplate.class, serviceVariable.getEntityId());
-              Preconditions.checkNotNull(serviceTemplate, "can't find service template " + serviceVariable);
+              checkNotNull(serviceTemplate, "can't find service template " + serviceVariable);
               serviceVariable.setServiceId(serviceTemplate.getServiceId());
             }
             serviceVariable.setEncryptionType(cell.getColumnKey().getEncryptionType());
@@ -2169,7 +2177,7 @@ public class SecretManagerImpl implements SecretManager {
           configFiles.forEach(configFile -> {
             if (configFile.getEntityType() == EntityType.SERVICE_TEMPLATE) {
               ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, configFile.getEntityId());
-              Preconditions.checkNotNull(serviceTemplate, "can't find service template " + configFile);
+              checkNotNull(serviceTemplate, "can't find service template " + configFile);
               configFile.setServiceId(serviceTemplate.getServiceId());
             }
             configFile.setEncryptionType(cell.getColumnKey().getEncryptionType());

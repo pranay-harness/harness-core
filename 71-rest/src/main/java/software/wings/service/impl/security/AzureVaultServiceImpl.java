@@ -3,9 +3,8 @@ package software.wings.service.impl.security;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
-import static io.harness.eraro.ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.AZURE_KEY_VAULT_OPERATION_ERROR;
-import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.security.SimpleEncryption.CHARSET;
 import static io.harness.threading.Morpheus.sleep;
@@ -13,7 +12,6 @@ import static java.time.Duration.ofMillis;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
 
-import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 
@@ -45,8 +43,8 @@ public class AzureVaultServiceImpl extends AbstractSecretServiceImpl implements 
 
   private void validateSecretName(String name) {
     if (!AZURE_KEY_VAULT_NAME_PATTERN.matcher(name).find()) {
-      throw new WingsException(AWS_SECRETS_MANAGER_OPERATION_ERROR, USER_SRE)
-          .addParam(REASON_KEY, "Secret name can only contain alphanumeric characters, or -");
+      String message = "Secret name can only contain alphanumeric characters, or -";
+      throw new SecretManagementException(AZURE_KEY_VAULT_OPERATION_ERROR, message, USER_SRE);
     }
   }
 
@@ -99,13 +97,12 @@ public class AzureVaultServiceImpl extends AbstractSecretServiceImpl implements 
   public EncryptedData encryptFile(String accountId, AzureVaultConfig secretsManagerConfig, String name,
       byte[] inputBytes, EncryptedData savedEncryptedData) {
     // taking reference from software.wings.service.impl.security.AwsSecretsManagerServiceImpl.encryptFile
-    Preconditions.checkNotNull(secretsManagerConfig);
+    checkNotNull(secretsManagerConfig, "Azure Vault configuration can't be null");
     byte[] bytes = encodeBase64ToByteArray(inputBytes);
 
     if (bytes.length > AZURE_SECRET_CONTENT_SIZE_LIMIT) {
-      throw new WingsException(AZURE_KEY_VAULT_OPERATION_ERROR, USER_SRE)
-          .addParam(REASON_KEY,
-              "Azure Secrets Manager limits secret value to " + AZURE_SECRET_CONTENT_SIZE_LIMIT + " bytes.");
+      String message = "Azure Secrets Manager limits secret value to " + AZURE_SECRET_CONTENT_SIZE_LIMIT + " bytes.";
+      throw new SecretManagementException(AZURE_KEY_VAULT_OPERATION_ERROR, message, USER_SRE);
     }
     EncryptedData fileData = encrypt(name, new String(CHARSET.decode(ByteBuffer.wrap(bytes)).array()), accountId,
         SettingVariableTypes.CONFIG_FILE, secretsManagerConfig, savedEncryptedData);
@@ -120,34 +117,36 @@ public class AzureVaultServiceImpl extends AbstractSecretServiceImpl implements 
   @Override
   public File decryptFile(File file, String accountId, EncryptedData encryptedData) {
     try {
-      AzureVaultConfig secretManagerConfig =
+      AzureVaultConfig azureVaultConfig =
           azureSecretsManagerService.getEncryptionConfig(accountId, encryptedData.getKmsId());
-      Preconditions.checkNotNull(secretManagerConfig);
-      Preconditions.checkNotNull(encryptedData);
-      char[] decrypt = decrypt(encryptedData, accountId, secretManagerConfig);
+      checkNotNull(azureVaultConfig, "Azure Vault configuration can't be null");
+      checkNotNull(encryptedData, "Encrypted data record can't be null");
+      char[] decrypt = decrypt(encryptedData, accountId, azureVaultConfig);
       byte[] fileData =
           encryptedData.isBase64Encoded() ? decodeBase64(decrypt) : CHARSET.encode(CharBuffer.wrap(decrypt)).array();
       Files.write(fileData, file);
       return file;
     } catch (IOException ioe) {
-      throw new WingsException(DEFAULT_ERROR_CODE, ioe);
+      throw new SecretManagementException(
+          AZURE_KEY_VAULT_OPERATION_ERROR, "Failed to decrypt data into an output file", ioe, USER);
     }
   }
 
   @Override
   public void decryptToStream(String accountId, EncryptedData encryptedData, OutputStream output) {
     try {
-      AzureVaultConfig secretsManagerConfig =
+      AzureVaultConfig azureVaultConfig =
           azureSecretsManagerService.getEncryptionConfig(accountId, encryptedData.getKmsId());
-      Preconditions.checkNotNull(secretsManagerConfig);
-      Preconditions.checkNotNull(encryptedData);
-      char[] decrypt = decrypt(encryptedData, accountId, secretsManagerConfig);
+      checkNotNull(azureVaultConfig, "Azure Vault configuration can't be null");
+      checkNotNull(encryptedData, "Encrypted data record can't be null");
+      char[] decrypt = decrypt(encryptedData, accountId, azureVaultConfig);
       byte[] fileData =
           encryptedData.isBase64Encoded() ? decodeBase64(decrypt) : CHARSET.encode(CharBuffer.wrap(decrypt)).array();
       output.write(fileData, 0, fileData.length);
       output.flush();
     } catch (IOException ioe) {
-      throw new WingsException(DEFAULT_ERROR_CODE, ioe);
+      throw new SecretManagementException(
+          AZURE_KEY_VAULT_OPERATION_ERROR, "Failed to decrypt data into an output stream", ioe, USER);
     }
   }
 }

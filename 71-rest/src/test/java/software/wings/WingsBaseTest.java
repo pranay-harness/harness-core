@@ -7,7 +7,8 @@ import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
 import io.harness.MockableTestMixin;
-import io.harness.exception.KmsOperationException;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import io.harness.queue.Queue;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
@@ -34,6 +35,7 @@ import software.wings.resources.SecretManagementResource;
 import software.wings.rules.WingsRule;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
+import software.wings.service.impl.security.SecretManagementException;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -69,7 +71,8 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
 
   protected EncryptedData encrypt(String accountId, char[] value, KmsConfig kmsConfig) throws Exception {
     if (kmsConfig.getAccessKey().equals("invalidKey")) {
-      throw new KmsOperationException("Invalid credentials");
+      throw new SecretManagementException(
+          ErrorCode.SECRET_MANAGEMENT_ERROR, "Invalid credentials", WingsException.USER);
     }
     char[] encryptedValue = value == null ? null
                                           : SecretManagementDelegateServiceImpl.encrypt(
@@ -94,7 +97,8 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
 
   protected EncryptedData encrypt(String value, CyberArkConfig cyberArkConfig) throws Exception {
     if (cyberArkConfig.getClientCertificate().equals("invalidCertificate")) {
-      throw new KmsOperationException("Invalid credentials");
+      throw new SecretManagementException(
+          ErrorCode.SECRET_MANAGEMENT_ERROR, "Invalid credentials", WingsException.USER);
     }
     char[] encryptedValue = value == null
         ? null
@@ -118,7 +122,7 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
   protected EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
       VaultConfig vaultConfig, EncryptedData savedEncryptedData) throws IOException {
     if (vaultConfig.getAuthToken().equals("invalidKey")) {
-      throw new KmsOperationException("invalidKey");
+      throw new SecretManagementException("invalidKey");
     }
     String keyUrl = settingType + "/" + name;
     if (savedEncryptedData != null) {

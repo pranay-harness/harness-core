@@ -5,7 +5,8 @@ import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
-import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
+import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
+import static io.harness.eraro.ErrorCode.VAULT_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.security.SimpleEncryption.CHARSET;
@@ -16,13 +17,11 @@ import static software.wings.service.intfc.security.SecretManagementDelegateServ
 import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
 import static software.wings.service.intfc.security.SecretManager.SECRET_NAME_KEY;
 
-import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.expression.SecretString;
 import io.harness.persistence.HIterator;
@@ -124,7 +123,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       EncryptedData encryptedToken = wingsPersistence.get(EncryptedData.class, vaultConfig.getAuthToken());
       EncryptedData encryptedSecretId = wingsPersistence.get(EncryptedData.class, vaultConfig.getSecretId());
       if (encryptedToken == null && encryptedSecretId == null) {
-        throw new WingsException("Either auth token or secret Id field needs to be present for vault secret manager.");
+        throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
+            "Either auth token or secret Id field needs to be present for vault secret manager.", USER);
       }
 
       if (encryptedToken != null) {
@@ -282,8 +282,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       vaultConfig.setSecretId(null);
       vaultConfigId = secretManagerConfigService.save(vaultConfig);
     } catch (DuplicateKeyException e) {
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER_SRE)
-          .addParam(REASON_KEY, "Another vault configuration with the same name or URL exists");
+      throw new SecretManagementException(
+          SECRET_MANAGEMENT_ERROR, "Another vault configuration with the same name or URL exists", USER_SRE);
     }
 
     // Create a LOCAL encrypted record for Vault authToken
@@ -343,11 +343,11 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     if (count > 0) {
       String message = "Can not delete the vault configuration since there are secrets encrypted with this. "
           + "Please transition your secrets to another secret manager and try again.";
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER).addParam(REASON_KEY, message);
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, message, USER);
     }
 
     VaultConfig vaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
-    Preconditions.checkNotNull(vaultConfig, "no vault config found with id " + vaultConfigId);
+    checkNotNull(vaultConfig, "No vault config found with id " + vaultConfigId);
 
     if (isNotEmpty(vaultConfig.getAuthToken())) {
       wingsPersistence.delete(EncryptedData.class, vaultConfig.getAuthToken());
@@ -408,7 +408,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       EncryptedData tokenData = wingsPersistence.get(EncryptedData.class, vaultConfig.getAuthToken());
       EncryptedData secretIdData = wingsPersistence.get(EncryptedData.class, vaultConfig.getSecretId());
       if (tokenData == null && secretIdData == null) {
-        throw new WingsException("Either auth token or secret Id field needs to be present for vault secret manager.");
+        throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
+            "Either auth token or secret Id field needs to be present for vault secret manager.", USER);
       }
 
       if (tokenData != null) {
@@ -425,7 +426,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   @Override
   public EncryptedData encryptFile(
       String accountId, VaultConfig vaultConfig, String name, byte[] inputBytes, EncryptedData savedEncryptedData) {
-    Preconditions.checkNotNull(vaultConfig);
+    checkNotNull(vaultConfig, "Vault configuration can't be null");
     byte[] bytes = encodeBase64ToByteArray(inputBytes);
     EncryptedData fileData = encrypt(name, new String(CHARSET.decode(ByteBuffer.wrap(bytes)).array()), accountId,
         SettingVariableTypes.CONFIG_FILE, vaultConfig, savedEncryptedData);
@@ -441,15 +442,16 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   public File decryptFile(File file, String accountId, EncryptedData encryptedData) {
     try {
       VaultConfig vaultConfig = getVaultConfig(accountId, encryptedData.getKmsId());
-      Preconditions.checkNotNull(vaultConfig);
-      Preconditions.checkNotNull(encryptedData);
+      checkNotNull(vaultConfig, "Vault configuration can't be null");
+      checkNotNull(encryptedData, "Encrypted data record can't be null");
       char[] decrypt = decrypt(encryptedData, accountId, vaultConfig);
       byte[] fileData =
           encryptedData.isBase64Encoded() ? decodeBase64(decrypt) : CHARSET.encode(CharBuffer.wrap(decrypt)).array();
       Files.write(fileData, file);
       return file;
     } catch (IOException ioe) {
-      throw new WingsException(DEFAULT_ERROR_CODE, ioe);
+      throw new SecretManagementException(
+          VAULT_OPERATION_ERROR, "Failed to decrypt data into an output file", ioe, USER);
     }
   }
 
@@ -457,15 +459,16 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   public void decryptToStream(String accountId, EncryptedData encryptedData, OutputStream output) {
     try {
       VaultConfig vaultConfig = getVaultConfig(accountId, encryptedData.getKmsId());
-      Preconditions.checkNotNull(vaultConfig);
-      Preconditions.checkNotNull(encryptedData);
+      checkNotNull(vaultConfig, "Vault configuration can't be null");
+      checkNotNull(encryptedData, "Encrypted data record can't be null");
       char[] decrypt = decrypt(encryptedData, accountId, vaultConfig);
       byte[] fileData =
           encryptedData.isBase64Encoded() ? decodeBase64(decrypt) : CHARSET.encode(CharBuffer.wrap(decrypt)).array();
       output.write(fileData, 0, fileData.length);
       output.flush();
     } catch (IOException ioe) {
-      throw new WingsException(DEFAULT_ERROR_CODE, ioe);
+      throw new SecretManagementException(
+          VAULT_OPERATION_ERROR, "Failed to decrypt data into an output stream", ioe, USER);
     }
   }
 
@@ -494,7 +497,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
         SecretEngineSummary secretEngine = getVaultSecretEngine(vaultConfig);
         if (secretEngine == null) {
           String message = "Was not able to find the default or matching backend Vault secret engine.";
-          throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, message, USER).addParam(REASON_KEY, message);
+          throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, message, USER);
         } else {
           // Default to secret engine kv version 2
           int secreteEngineVersion = secretEngine.getVersion() != null ? secretEngine.getVersion() : 2;
@@ -512,7 +515,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
         if (loginResult == null) {
           String message =
               "Was not able to login Vault using the AppRole auth method. Please check your credentials and try again";
-          throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, message, USER).addParam(REASON_KEY, message);
+          throw new SecretManagementException(VAULT_OPERATION_ERROR, message, USER);
         } else {
           vaultConfig.setAuthToken(loginResult.getClientToken());
           logger.info("Got client token {} from vault AppRole {} and secret Id {}", loginResult.getClientToken(),
@@ -524,7 +527,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     } catch (Exception e) {
       String message =
           "Was not able to determine the vault server's secret engine version using given credentials. Please check your credentials and try again";
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, message, USER, e).addParam(REASON_KEY, message);
+      throw new SecretManagementException(VAULT_OPERATION_ERROR, message, e, USER);
     }
 
     try {
@@ -532,7 +535,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     } catch (WingsException e) {
       String message =
           "Was not able to reach vault using given credentials. Please check your credentials and try again";
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, message, USER, e).addParam(REASON_KEY, message);
+      throw new SecretManagementException(VAULT_OPERATION_ERROR, message, e, USER);
     }
   }
 

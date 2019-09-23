@@ -2,6 +2,7 @@ package software.wings.service.impl.security;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.reflection.ReflectionUtils.getFieldByName;
 import static java.lang.String.format;
@@ -11,7 +12,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.ExceptionUtils;
-import io.harness.exception.KmsOperationException;
+import io.harness.exception.WingsException;
 import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionType;
@@ -85,8 +86,10 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
         }
       }
       object.setDecrypted(true);
+    } catch (WingsException e) {
+      throw e;
     } catch (Exception e) {
-      throw new KmsOperationException(ExceptionUtils.getMessage(e), e, USER);
+      throw new SecretManagementException(ENCRYPT_DECRYPT_ERROR, ExceptionUtils.getMessage(e), e, USER);
     }
   }
 }

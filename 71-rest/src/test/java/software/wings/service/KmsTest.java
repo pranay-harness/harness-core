@@ -33,7 +33,6 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.KmsOperationException;
 import io.harness.exception.WingsException;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.rule.RealMongo;
@@ -102,6 +101,8 @@ import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.SettingValidationService;
 import software.wings.service.impl.UsageRestrictionsServiceImplTest;
 import software.wings.service.impl.security.KmsTransitionEventListener;
+import software.wings.service.impl.security.SecretManagementDelegateException;
+import software.wings.service.impl.security.SecretManagementException;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -297,7 +298,7 @@ public class KmsTest extends WingsBaseTest {
     try {
       kmsResource.saveKmsConfig(kmsConfig.getAccountId(), kmsConfig);
       fail("Saved invalid kms config");
-    } catch (KmsOperationException e) {
+    } catch (SecretManagementException e) {
       assertThat(true).isTrue();
     }
   }
@@ -1713,7 +1714,7 @@ public class KmsTest extends WingsBaseTest {
     try {
       kmsService.deleteKmsConfig(accountId, kmsId);
       fail("Exception expected when deleting global KMS secret manager");
-    } catch (KmsOperationException e) {
+    } catch (SecretManagementException e) {
       // Global kMS operation exception expected.
     }
   }
@@ -2577,7 +2578,7 @@ public class KmsTest extends WingsBaseTest {
     try {
       delegateService.encrypt(accountId, toEncrypt.toCharArray(), kmsConfig);
       fail("should have been failed");
-    } catch (KmsOperationException e) {
+    } catch (SecretManagementDelegateException e) {
       assertThat(true).isTrue();
     }
 
@@ -2589,7 +2590,7 @@ public class KmsTest extends WingsBaseTest {
                                   .build(),
           kmsConfig);
       fail("should have been failed");
-    } catch (KmsOperationException e) {
+    } catch (SecretManagementDelegateException e) {
       assertThat(true).isTrue();
     }
   }

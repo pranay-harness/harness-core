@@ -1,9 +1,10 @@
 package software.wings.helpers.ext.cyberark;
 
+import static io.harness.eraro.ErrorCode.CYBERARK_OPERATION_ERROR;
+
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,7 @@ import org.bouncycastle.util.io.pem.PemReader;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.CyberArkConfig;
+import software.wings.service.impl.security.SecretManagementDelegateException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -95,7 +97,8 @@ public class CyberArkRestClientFactory {
           .addInterceptor(loggingInterceptor)
           .build();
     } catch (GeneralSecurityException | IOException e) {
-      throw new WingsException(ErrorCode.CYBERARK_OPERATION_ERROR, e);
+      throw new SecretManagementDelegateException(CYBERARK_OPERATION_ERROR,
+          "Failed to create http client to communicate with CyberArk", e, WingsException.USER);
     }
   }
 
@@ -167,6 +170,7 @@ public class CyberArkRestClientFactory {
 
     // PKCS#1 format need special handling, see following SO article for more details if it really need to be supported.
     // https://stackoverflow.com/questions/7216969/getting-rsa-private-key-from-pem-base64-encoded-private-key-file
-    throw new WingsException(ErrorCode.CYBERARK_OPERATION_ERROR, "Private key format is not supported.");
+    throw new SecretManagementDelegateException(
+        CYBERARK_OPERATION_ERROR, "Private key format is not supported.", WingsException.USER);
   }
 }

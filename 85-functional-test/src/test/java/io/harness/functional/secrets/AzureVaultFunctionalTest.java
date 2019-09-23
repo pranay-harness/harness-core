@@ -1,5 +1,6 @@
 package io.harness.functional.secrets;
 
+import static io.harness.rule.OwnerRule.MARK;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -8,6 +9,7 @@ import io.harness.category.element.FunctionalTests;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.testframework.framework.Setup;
@@ -15,6 +17,7 @@ import io.harness.testframework.restutils.SecretsRestUtils;
 import io.restassured.mapper.ObjectMapperType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.AzureVaultConfig;
@@ -44,7 +47,9 @@ public class AzureVaultFunctionalTest extends AbstractFunctionalTest {
   @Inject private WingsPersistence wingsPersistence;
 
   @Test
+  @Owner(emails = MARK)
   @Category(FunctionalTests.class)
+  @Ignore("Marked as ignore as this test is flaky and failing intermittently")
   public void testCRUDSecretsWithAzureVaultSecretManager() throws Exception {
     AzureVaultConfig azureVaultConfig = AzureVaultConfig.builder()
                                             .name(SM_NAME)

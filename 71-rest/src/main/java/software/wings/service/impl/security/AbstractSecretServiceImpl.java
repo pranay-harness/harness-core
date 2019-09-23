@@ -6,6 +6,7 @@ import static io.harness.exception.WingsException.USER_SRE;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.SecretString;
@@ -130,5 +131,25 @@ public abstract class AbstractSecretServiceImpl {
       }
     }
     return deleted;
+  }
+
+  static void checkNotNull(Object object, String errorMessage) {
+    checkNotNull(object, ErrorCode.SECRET_MANAGEMENT_ERROR, errorMessage);
+  }
+
+  static void checkNotNull(Object object, ErrorCode errorCode, String errorMessage) {
+    if (object == null) {
+      throw new SecretManagementException(errorCode, errorMessage, USER);
+    }
+  }
+
+  static void checkState(boolean expression, String errorMessage) {
+    checkState(expression, ErrorCode.SECRET_MANAGEMENT_ERROR, errorMessage);
+  }
+
+  static void checkState(boolean expression, ErrorCode errorCode, String errorMessage) {
+    if (!expression) {
+      throw new SecretManagementException(errorCode, errorMessage, USER);
+    }
   }
 }
