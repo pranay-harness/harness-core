@@ -252,7 +252,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
 
   private void testCRUD(String yamlFileName, String cloudProviderInfrastructureType, DeploymentType deploymentType,
       CloudProviderType cloudProviderType) throws IOException {
-    doReturn(null).when(mockYamlHelper).getInfraDefinitionByAppIdYamlPath(anyString(), anyString(), anyString());
+    doReturn(null).when(mockYamlHelper).getInfraDefinitionIdByAppIdYamlPath(anyString(), anyString(), anyString());
     File yamlFile = null;
     try {
       yamlFile =
@@ -295,7 +295,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
 
     doReturn(savedDefinition)
         .when(mockYamlHelper)
-        .getInfraDefinitionByAppIdYamlPath(anyString(), anyString(), anyString());
+        .getInfraDefinitionIdByAppIdYamlPath(anyString(), anyString(), anyString());
 
     handler.delete(changeContext);
 
