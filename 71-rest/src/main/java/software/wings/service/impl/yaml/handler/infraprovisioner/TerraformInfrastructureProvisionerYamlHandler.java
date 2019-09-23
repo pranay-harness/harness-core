@@ -1,6 +1,8 @@
 package software.wings.service.impl.yaml.handler.infraprovisioner;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -9,12 +11,15 @@ import com.google.inject.Inject;
 import io.harness.exception.HarnessException;
 import software.wings.beans.Application;
 import software.wings.beans.InfrastructureProvisionerType;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.TerraformInfrastructureProvisioner.Yaml;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.service.impl.yaml.handler.NameValuePairYamlHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.utils.Utils;
 
 import java.util.List;
 
@@ -46,6 +51,16 @@ public class TerraformInfrastructureProvisionerYamlHandler
     yaml.setPath(bean.getPath());
     yaml.setSourceRepoSettingName(getSourceRepoSettingName(appId, bean.getSourceRepoSettingId()));
     yaml.setSourceRepoBranch(bean.getSourceRepoBranch());
+    if (isNotEmpty(bean.getBackendConfigs())) {
+      NameValuePairYamlHandler nameValuePairYamlHandler = getNameValuePairYamlHandler();
+      List<NameValuePair.Yaml> nvpYamlList =
+          bean.getBackendConfigs()
+              .stream()
+              .map(nameValuePair -> nameValuePairYamlHandler.toYaml(nameValuePair, bean.getAppId()))
+              .collect(toList());
+
+      yaml.setBackendConfigs(Utils.getSortedNameValuePairYamlList(nvpYamlList));
+    }
     return yaml;
   }
 
@@ -84,6 +99,19 @@ public class TerraformInfrastructureProvisionerYamlHandler
     bean.setPath(yaml.getPath());
     bean.setSourceRepoSettingId(getSourceRepoSettingId(appId, yaml.getSourceRepoSettingName()));
     bean.setSourceRepoBranch(yaml.getSourceRepoBranch());
+    if (isNotEmpty(yaml.getBackendConfigs())) {
+      List<NameValuePair> nameValuePairList = yaml.getBackendConfigs()
+                                                  .stream()
+                                                  .map(nvpYaml
+                                                      -> NameValuePair.builder()
+                                                             .name(nvpYaml.getName())
+                                                             .value(nvpYaml.getValue())
+                                                             .valueType(nvpYaml.getValueType())
+                                                             .build())
+                                                  .collect(toList());
+
+      bean.setBackendConfigs(nameValuePairList);
+    }
   }
 
   @Override

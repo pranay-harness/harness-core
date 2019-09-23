@@ -72,7 +72,7 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends Yaml, B ext
         .build();
   }
 
-  private NameValuePairYamlHandler getNameValuePairYamlHandler() {
+  protected NameValuePairYamlHandler getNameValuePairYamlHandler() {
     return yamlHandlerFactory.getYamlHandler(YamlType.NAME_VALUE_PAIR);
   }
 
