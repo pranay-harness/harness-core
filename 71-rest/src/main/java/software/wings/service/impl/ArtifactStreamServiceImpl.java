@@ -45,7 +45,6 @@ import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.persistence.CreatedAtAware;
 import io.harness.queue.Queue;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
@@ -86,6 +85,7 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
 import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
+import software.wings.service.impl.artifact.ArtifactComparator;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -234,9 +234,11 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                           .project(ArtifactKeys.artifactStreamId, true)
                                           .project(ArtifactKeys.uiDisplayName, true)
                                           .project(ArtifactKeys.metadata, true)
-                                          .order(Sort.descending(CreatedAtAware.CREATED_AT_KEY));
+                                          .order(Sort.descending(ArtifactKeys.metadata_buildNo));
       if (isNotEmpty(artifactSearchString)) {
-        artifactQuery.field(ArtifactKeys.metadata_buildNo).containsIgnoreCase(artifactSearchString);
+        // NOTE: Might be inefficient for artifact streams having large number of artifacts.
+        artifactQuery.or(artifactQuery.criteria(ArtifactKeys.uiDisplayName).containsIgnoreCase(artifactSearchString),
+            artifactQuery.criteria(ArtifactKeys.metadata_buildNo).containsIgnoreCase(artifactSearchString));
       }
 
       long totalArtifactCount = artifactQuery.count();
@@ -248,8 +250,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         continue;
       }
 
-      List<ArtifactSummary> artifactSummaries =
-          artifacts.stream().map(ArtifactSummary::prepareSummaryFromArtifact).collect(toList());
+      List<ArtifactSummary> artifactSummaries = artifacts.stream()
+                                                    .sorted(new ArtifactComparator())
+                                                    .map(ArtifactSummary::prepareSummaryFromArtifact)
+                                                    .collect(toList());
       artifactStream.setArtifactCount(totalArtifactCount);
       artifactStream.setArtifacts(artifactSummaries);
       newArtifactStreams.add(artifactStream);
