@@ -338,6 +338,7 @@ public class LdapHelper {
 
       AuthenticationRequest request = new AuthenticationRequest(identifier, new Credential(password));
       AuthenticationResponse response = authenticator.authenticate(request);
+      logger.info("LAT: Authentication response: [{}], ", response.toString());
       if (response.getResult()) {
         return LdapResponse.builder().status(Status.SUCCESS).message(LdapConstants.AUTHENTICATION_SUCCESS).build();
       } else {
