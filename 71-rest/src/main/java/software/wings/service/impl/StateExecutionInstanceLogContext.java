@@ -3,7 +3,9 @@ package software.wings.service.impl;
 import io.harness.logging.AutoLogContext;
 
 public class StateExecutionInstanceLogContext extends AutoLogContext {
-  public StateExecutionInstanceLogContext(String StateExecutionInstanceId) {
-    super("StateExecutionInstanceId", StateExecutionInstanceId);
+  public static final String ID = "StateExecutionInstanceId";
+
+  public StateExecutionInstanceLogContext(String stateExecutionInstanceId) {
+    super(ID, stateExecutionInstanceId);
   }
 }

@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.exception.WingsException;
+import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.scheduler.PersistentScheduler;
@@ -146,11 +147,13 @@ public class WorkflowExecutionMonitorJob implements Job {
               stateMachineExecutor.getExecutionContext(stateExecutionInstance.getAppId(),
                   stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid());
 
-          boolean expired =
-              workflowExecution.getCreatedAt() < System.currentTimeMillis() - WorkflowExecution.EXPIRY.toMillis();
-          // We lost the eventual exception, but its better than doing nothing
-          stateMachineExecutor.executeCallback(
-              executionContext, stateExecutionInstance, expired ? EXPIRED : ERROR, null);
+          try (AutoLogContext ignore = executionContext.autoLogContext()) {
+            boolean expired =
+                workflowExecution.getCreatedAt() < System.currentTimeMillis() - WorkflowExecution.EXPIRY.toMillis();
+            // We lost the eventual exception, but its better than doing nothing
+            stateMachineExecutor.executeCallback(
+                executionContext, stateExecutionInstance, expired ? EXPIRED : ERROR, null);
+          }
         }
       }
     } catch (WingsException exception) {

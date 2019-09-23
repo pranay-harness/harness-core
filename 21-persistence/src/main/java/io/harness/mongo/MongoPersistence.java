@@ -29,12 +29,14 @@ import io.harness.persistence.UuidAccess;
 import io.harness.persistence.UuidAware;
 import lombok.Builder;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.InsertOptions;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateOpsImpl;
 import org.mongodb.morphia.query.UpdateResults;
 
 import java.time.Duration;
@@ -48,6 +50,7 @@ import java.util.Objects;
 import java.util.Set;
 
 @Singleton
+@Slf4j
 public class MongoPersistence implements HPersistence {
   @Value
   @Builder
@@ -328,6 +331,11 @@ public class MongoPersistence implements HPersistence {
 
     if (UpdatedAtAware.class.isAssignableFrom(query.getEntityClass())) {
       updateOperations.set(SampleEntityKeys.lastUpdatedAt, currentTime);
+    }
+
+    if (logger.isInfoEnabled()) {
+      logger.info("Update {} with {}", query.getEntityClass().getName(),
+          ((UpdateOpsImpl) updateOperations).getOps().toString());
     }
   }
 

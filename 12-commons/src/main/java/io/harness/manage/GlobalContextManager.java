@@ -71,7 +71,7 @@ public class GlobalContextManager {
   public static <T extends GlobalContextData> T get(String key) {
     GlobalContext globalContext = contextThreadLocal.get();
     if (globalContext == null) {
-      logger.error("Global Context was null. Seems thread was not initialized. ALERT....", new Exception());
+      logger.error("Global Context was null. Seems thread was not initialized. ALERT....", new Exception(""));
       return null;
     }
 
@@ -89,7 +89,7 @@ public class GlobalContextManager {
   public static void upsertGlobalContextRecord(GlobalContextData data) {
     GlobalContext globalContext = contextThreadLocal.get();
     if (globalContext == null) {
-      logger.error("Global Context was null. Seems thread was not initialized. ALERT....", new Exception());
+      logger.error("Global Context was null. Seems thread was not initialized. ALERT....", new Exception(""));
       return;
     }
 
