@@ -184,7 +184,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
           match = scope.getInfrastructureDefinitions().contains(infrastructureMapping.getInfrastructureDefinitionId());
         }
         if (match && isNotEmpty(scope.getServices())) {
-          match = scope.getInfrastructureDefinitions().contains(infrastructureMapping.getInfrastructureDefinitionId());
+          match = scope.getServices().contains(infrastructureMapping.getServiceId());
         }
       } else {
         match = false;
