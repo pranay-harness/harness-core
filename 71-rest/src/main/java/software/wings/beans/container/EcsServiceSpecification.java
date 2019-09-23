@@ -29,7 +29,7 @@ public class EcsServiceSpecification extends DeploymentSpecification {
   public static final String manifestTemplate = "{\n\"placementConstraints\":[ ],\n"
       + "\"placementStrategy\":[ ],\n"
       + "\"healthCheckGracePeriodSeconds\":null,\n"
-      + "\"tags\":[],\n"
+      + "\"tags\":[ ],\n"
       + "\"schedulingStrategy\":\"REPLICA\"\n}";
 
   public void resetToDefaultSpecification() {

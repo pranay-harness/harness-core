@@ -161,12 +161,7 @@ public class YamlHelper {
 
   public static String cleanupYaml(String yaml) {
     // instead of removing the first line - we should remove any line that starts with two exclamation points
-    yaml = cleanUpDoubleExclamationLines(yaml);
-
-    // remove empty arrays/lists:
-    yaml = yaml.replace("[]", "");
-
-    return yaml;
+    return cleanUpDoubleExclamationLines(yaml);
   }
 
   private static String cleanUpDoubleExclamationLines(String content) {
