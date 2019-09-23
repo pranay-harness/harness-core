@@ -2,17 +2,17 @@
 
 set +e
 
-PR_MESSAGE=`echo "${ghprbPullTitle}" | grep -iE '\[(HAR|CD|PL|LE|CCM|CE|SWAT|ER|DOC)-[0-9]+]:'`
+PR_MESSAGE=`echo "${ghprbPullTitle}" | grep -iE '\[(CCM|CD|CE|DOC|ER|HAR|LE|PL|SEC|SWAT)-[0-9]+]:'`
 
 if [ -z "$PR_MESSAGE" ]
 then
     echo The PR title \"${ghprbPullTitle}\"
     echo "does not match the expectations"
-    echo 'Make sure that your message starts with [HAR|CD|PL|LE|CCM|CE|SWAT|ER|DOC-<number>]: <description>'
+    echo 'Make sure that your message starts with [CCM|CD|CE|DOC|ER|HAR|LE|PL|SEC|SWAT-<number>]: <description>'
     exit 1
 fi
 
-KEY=`echo "${ghprbPullTitle}" | grep -o -iqE '(HAR|CD|PL|LE|CCM|CE|SWAT|ER|DOC)-[0-9]+'`
+KEY=`echo "${ghprbPullTitle}" | grep -o -iqE '(CCM|CD|CE|DOC|ER|HAR|LE|PL|SEC|SWAT)-[0-9]+'`
 
 
 #TODO: enable priorities check
