@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.validator.EntityNameValidator.ALLOWED_CHARS_SERVICE_VARIABLE_MESSAGE;
 import static io.harness.data.validator.EntityNameValidator.ALLOWED_CHARS_SERVICE_VARIABLE_STRING;
 
@@ -28,6 +29,7 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -92,7 +94,7 @@ public class ServiceVariable extends Base implements EncryptableSetting {
 
   private Type type;
 
-  // TODO: ASR: IMP: this field is used for service variables of type artifact and are not yet handled in YAML
+  // NOTE: This field is used for service variables of type artifact.
   private List<String> allowedList;
 
   @SchemaIgnore private String encryptedValue;
@@ -200,6 +202,9 @@ public class ServiceVariable extends Base implements EncryptableSetting {
                                           .build();
 
     serviceVariable.setAppId(getAppId());
+    if (isNotEmpty(getAllowedList())) {
+      serviceVariable.setAllowedList(new ArrayList<>(getAllowedList()));
+    }
     return serviceVariable;
   }
 

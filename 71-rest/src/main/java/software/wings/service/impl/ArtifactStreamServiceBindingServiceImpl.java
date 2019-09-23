@@ -4,13 +4,17 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.expression.ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME;
 import static java.lang.String.format;
+import static software.wings.api.DeploymentType.KUBERNETES;
+import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.beans.SortOrder.OrderType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -59,11 +63,11 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
   @Override
   public ArtifactStreamBinding create(
       @NotEmpty String appId, @NotEmpty String serviceId, ArtifactStreamBinding artifactStreamBinding) {
-    // TODO: ASR: add validations for artifact streams - types, permissions, etc.
     Service service = serviceResourceService.getWithDetails(appId, serviceId);
     if (service == null) {
       throw new InvalidRequestException("Service does not exist", USER);
     }
+    ensureMultiArtifactSupport(service, artifactStreamBinding);
 
     ArtifactStreamBinding existingArtifactStreamBinding =
         getInternal(appId, serviceId, artifactStreamBinding.getName());
@@ -99,19 +103,19 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
   @Override
   public ArtifactStreamBinding update(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String name,
       ArtifactStreamBinding artifactStreamBinding) {
-    // TODO: ASR: add validations for artifact streams - types, permissions, etc.
     Service service = serviceResourceService.getWithDetails(appId, serviceId);
     if (service == null) {
       throw new InvalidRequestException("Service does not exist", USER);
     }
+    ensureMultiArtifactSupport(service, artifactStreamBinding);
 
-    // check if artifact variable being updated exists
+    // Check if artifact variable being updated exists.
     List<ServiceVariable> variables = fetchArtifactServiceVariableByName(appId, serviceId, name);
     if (isEmpty(variables)) {
       throw new InvalidRequestException("Artifact stream binding does not exist", USER);
     }
 
-    // check if new artifact variable name provided is unique within the service
+    // Check if new artifact variable name provided is unique within the service.
     if (!name.equals(artifactStreamBinding.getName())) {
       List<ServiceVariable> collidingVariables =
           fetchArtifactServiceVariableByName(appId, serviceId, artifactStreamBinding.getName());
@@ -152,6 +156,21 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
     }
 
     serviceVariableService.deleteWithChecks(appId, variables.get(0).getUuid());
+  }
+
+  private void ensureMultiArtifactSupport(Service service, ArtifactStreamBinding artifactStreamBinding) {
+    // Right now only supported for SSH and K8s V2.
+    // TODO: ASR: Add support for other deployment types, especially ECS and Helm.
+    if (SSH.equals(service.getDeploymentType())
+        || (KUBERNETES.equals(service.getDeploymentType()) && service.isK8sV2())) {
+      return;
+    }
+
+    if (!DEFAULT_ARTIFACT_VARIABLE_NAME.equals(artifactStreamBinding.getName())) {
+      throw new InvalidRequestException(
+          format("Artifact variable name other than '%s' is only supported for SSH and K8s V2 deployments",
+              DEFAULT_ARTIFACT_VARIABLE_NAME));
+    }
   }
 
   @Override
@@ -219,6 +238,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
                                            .addFilter(ServiceVariableKeys.entityType, Operator.EQ, EntityType.SERVICE)
                                            .addFilter(ServiceVariableKeys.entityId, Operator.EQ, serviceId)
                                            .addFilter(ServiceVariableKeys.type, Operator.EQ, Type.ARTIFACT)
+                                           .addOrder(ServiceVariableKeys.name, OrderType.ASC)
                                            .build());
   }
 
