@@ -75,7 +75,7 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
     String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
     notNullCheck("Couldn't retrieve environment from yaml:" + yamlFilePath, envId, USER);
 
-    InfrastructureDefinition previous = yamlHelper.getInfraDefinitionByAppIdYamlPath(appId, envId, yamlFilePath);
+    InfrastructureDefinition previous = yamlHelper.getInfraDefinitionIdByAppIdYamlPath(appId, envId, yamlFilePath);
 
     InfrastructureDefinition current = InfrastructureDefinition.builder().build();
     toBean(current, changeContext, changeSetContext, appId, envId);
@@ -84,6 +84,7 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
 
   private void toBean(InfrastructureDefinition bean, ChangeContext<Yaml> changeContext,
       List<ChangeContext> changeSetContext, String appId, String envId) {
+    String yamlFilePath = changeContext.getChange().getFilePath();
     Yaml yaml = changeContext.getYaml();
     CloudProviderInfrastructureYaml infraYaml = yaml.getInfrastructure().get(0);
     CloudProviderInfrastructureYamlHandler cloudProviderInfrastructureYamlHandler =
@@ -95,7 +96,11 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
     for (String serviceName : CollectionUtils.emptyIfNull(yaml.getScopedServices())) {
       scopedToServicesId.add(getServiceId(appId, serviceName));
     }
+    String infraDefinitionName = yamlHelper.getInfraDefinitionNameByAppIdYamlPath(appId, envId, yamlFilePath);
 
+    // name is set for the case when infra definition is created on the git side since yaml does
+    // not have a name field
+    bean.setName(infraDefinitionName);
     bean.setAppId(appId);
     bean.setEnvId(envId);
     bean.setCloudProviderType(yaml.getCloudProviderType());
@@ -115,7 +120,6 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
       InfrastructureDefinition current, InfrastructureDefinition previous, boolean syncFromGit) {
     if (previous != null) {
       current.setUuid(previous.getUuid());
-      current.setName(previous.getName());
       return infrastructureDefinitionService.update(current);
     } else {
       return infrastructureDefinitionService.save(current, false);
@@ -148,7 +152,7 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
       if (optionalEnvironment.isPresent()) {
         Environment environment = optionalEnvironment.get();
         InfrastructureDefinition infrastructureDefinition =
-            yamlHelper.getInfraDefinitionByAppIdYamlPath(application.getUuid(), environment.getUuid(), yamlFilePath);
+            yamlHelper.getInfraDefinitionIdByAppIdYamlPath(application.getUuid(), environment.getUuid(), yamlFilePath);
         if (infrastructureDefinition != null) {
           infrastructureDefinitionService.deleteByYamlGit(application.getUuid(), infrastructureDefinition.getUuid());
         }

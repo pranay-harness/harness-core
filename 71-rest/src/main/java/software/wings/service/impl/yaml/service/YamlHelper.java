@@ -552,12 +552,20 @@ public class YamlHelper {
     return infraMappingService.getInfraMappingByName(applicationId, envId, infraMappingName);
   }
 
-  public InfrastructureDefinition getInfraDefinitionByAppIdYamlPath(
+  public InfrastructureDefinition getInfraDefinitionIdByAppIdYamlPath(
       String applicationId, String envId, String yamlFilePath) {
     String infraDefinitionName =
         extractEntityNameFromYamlPath(YamlType.INFRA_DEFINITION.getPathExpression(), yamlFilePath, PATH_DELIMITER);
     notNullCheck("InfraDefinition with name: " + infraDefinitionName, infraDefinitionName);
     return infrastructureDefinitionService.getInfraDefByName(applicationId, envId, infraDefinitionName);
+  }
+
+  public String getInfraDefinitionNameByAppIdYamlPath(String applicationId, String envId, String yamlFilePath) {
+    String infraDefinitionName =
+        extractEntityNameFromYamlPath(YamlType.INFRA_DEFINITION.getPathExpression(), yamlFilePath, PATH_DELIMITER);
+    notNullCheck(
+        "Could not resolve Infrastucture Definition name from file path : " + yamlFilePath, infraDefinitionName);
+    return infraDefinitionName;
   }
 
   public InfrastructureProvisioner getInfrastructureProvisionerByAppIdYamlPath(
