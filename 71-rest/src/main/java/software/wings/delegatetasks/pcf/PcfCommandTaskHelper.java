@@ -295,20 +295,18 @@ public class PcfCommandTaskHelper {
       throws IOException, ExecutionException {
     List<Pair<String, String>> fileIds = Lists.newArrayList();
     artifactFiles.forEach(artifactFile -> fileIds.add(Pair.of(artifactFile.getFileUuid(), null)));
+    try (InputStream inputStream =
+             delegateFileManager.downloadArtifactByFileId(FileBucket.ARTIFACTS, fileIds.get(0).getKey(), accountId)) {
+      String fileName = System.currentTimeMillis() + artifactFiles.get(0).getName();
+      File artifactFile = new File(workingDirecotry.getAbsolutePath() + "/" + fileName);
 
-    InputStream inputStream =
-        delegateFileManager.downloadArtifactByFileId(FileBucket.ARTIFACTS, fileIds.get(0).getKey(), accountId);
-
-    String fileName = System.currentTimeMillis() + artifactFiles.get(0).getName();
-    File artifactFile = new File(workingDirecotry.getAbsolutePath() + "/" + fileName);
-
-    if (!artifactFile.createNewFile()) {
-      throw new WingsException(ErrorCode.GENERAL_ERROR)
-          .addParam("message", "Failed to create file " + artifactFile.getCanonicalPath());
+      if (!artifactFile.createNewFile()) {
+        throw new WingsException(ErrorCode.GENERAL_ERROR)
+            .addParam("message", "Failed to create file " + artifactFile.getCanonicalPath());
+      }
+      IOUtils.copy(inputStream, new FileOutputStream(artifactFile));
+      return artifactFile;
     }
-    IOUtils.copy(inputStream, new FileOutputStream(artifactFile));
-    inputStream.close();
-    return artifactFile;
   }
 
   private ApplicationDetail downSize(PcfServiceData pcfServiceData, ExecutionLogCallback executionLogCallback,
