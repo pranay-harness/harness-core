@@ -19,6 +19,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -846,5 +848,10 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     }
 
     deleteManifestFiles(applicationManifest.getAppId(), applicationManifest, false);
+  }
+
+  @Override
+  public PageResponse<ApplicationManifest> list(PageRequest<ApplicationManifest> pageRequest) {
+    return wingsPersistence.query(ApplicationManifest.class, pageRequest);
   }
 }

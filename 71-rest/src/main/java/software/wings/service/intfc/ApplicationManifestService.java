@@ -1,5 +1,7 @@
 package software.wings.service.intfc;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
@@ -72,4 +74,6 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
       String appId, ApplicationManifest applicationManifestOld, ApplicationManifest applicationManifestNew);
 
   void deleteAllManifestFilesByAppManifestId(String appId, String appManifestId);
+
+  PageResponse<ApplicationManifest> list(PageRequest<ApplicationManifest> pageRequest);
 }

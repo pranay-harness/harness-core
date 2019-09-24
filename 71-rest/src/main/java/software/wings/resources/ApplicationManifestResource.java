@@ -1,12 +1,16 @@
 package software.wings.resources;
 
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.security.PermissionAttribute.ResourceType.SERVICE;
 
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.beans.appmanifest.AppManifestKind;
@@ -21,6 +25,7 @@ import software.wings.yaml.directory.DirectoryNode;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -162,5 +167,17 @@ public class ApplicationManifestResource {
       @QueryParam("appId") String appId, @PathParam("appManifestId") String appManifestId) {
     applicationManifestService.deleteAllManifestFilesByAppManifestId(appId, appManifestId);
     return new RestResponse();
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  public RestResponse<PageResponse<ApplicationManifest>> list(
+      @QueryParam("appId") String appId, @BeanParam PageRequest<ApplicationManifest> pageRequest) {
+    if (isNotBlank(appId)) {
+      pageRequest.addFilter("appId", EQ, appId);
+    }
+
+    return new RestResponse<>(applicationManifestService.list(pageRequest));
   }
 }
