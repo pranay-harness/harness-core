@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -94,7 +95,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
     List<WorkflowExecution> executions =
         constructWorkflowExecutions(serviceExecutionSummaries, serviceFailureExecutionSummaries);
 
-    when(workflowExecutionService.obtainWorkflowExecutions(anyList(), anyLong())).thenReturn(executions);
+    when(workflowExecutionService.obtainWorkflowExecutions(anyString(), anyLong())).thenReturn(executions);
 
     ServiceInstanceStatistics statistics = statisticsService.getServiceInstanceStatistics(ACCOUNT_ID, null, 30);
     assertThat(statistics.getStatsMap()).isNotEmpty();
@@ -133,7 +134,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
     List<WorkflowExecution> executions =
         constructPipelineExecutions(serviceExecutionSummaries, serviceFailureExecutionSummaries);
 
-    when(workflowExecutionService.obtainWorkflowExecutions(anyList(), anyLong())).thenReturn(executions);
+    when(workflowExecutionService.obtainWorkflowExecutions(anyString(), anyLong())).thenReturn(executions);
 
     ServiceInstanceStatistics statistics = statisticsService.getServiceInstanceStatistics(ACCOUNT_ID, null, 30);
     assertThat(statistics.getStatsMap()).isNotEmpty();

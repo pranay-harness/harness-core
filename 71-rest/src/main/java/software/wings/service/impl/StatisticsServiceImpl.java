@@ -28,9 +28,6 @@ import software.wings.beans.stats.DeploymentStatistics.AggregatedDayStats;
 import software.wings.beans.stats.DeploymentStatistics.AggregatedDayStats.DayStat;
 import software.wings.beans.stats.ServiceInstanceStatistics;
 import software.wings.beans.stats.TopConsumer;
-import software.wings.service.intfc.ActivityService;
-import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 
@@ -46,23 +43,23 @@ import java.util.stream.IntStream;
  */
 @Singleton
 public class StatisticsServiceImpl implements StatisticsService {
-  @Inject private AppService appService;
-  @Inject private NotificationService notificationService;
-  @Inject private ActivityService activityService;
   @Inject private WorkflowExecutionService workflowExecutionService;
 
   @Override
   public DeploymentStatistics getDeploymentStatistics(String accountId, List<String> appIds, int numOfDays) {
     long fromDateEpochMilli = getEpochMilliPSTZone(numOfDays);
     DeploymentStatistics deploymentStats = new DeploymentStatistics();
+    List<WorkflowExecution> workflowExecutions;
     if (isEmpty(appIds)) {
-      appIds = appService.getAppIdsByAccountId(accountId);
+      workflowExecutions = workflowExecutionService.obtainWorkflowExecutions(accountId, fromDateEpochMilli);
+    } else {
+      workflowExecutions = workflowExecutionService.obtainWorkflowExecutions(appIds, fromDateEpochMilli);
     }
-    if (isEmpty(appIds)) {
+
+    if (isEmpty(workflowExecutions)) {
       return deploymentStats;
     }
-    List<WorkflowExecution> workflowExecutions =
-        workflowExecutionService.obtainWorkflowExecutions(appIds, fromDateEpochMilli);
+
     Map<EnvironmentType, List<WorkflowExecution>> wflExecutionByEnvType =
         workflowExecutions.parallelStream().collect(groupingBy(wex -> PROD.equals(wex.getEnvType()) ? PROD : NON_PROD));
 
@@ -80,14 +77,15 @@ public class StatisticsServiceImpl implements StatisticsService {
     long fromDateEpochMilli = getEpochMilliPSTZone(numOfDays);
 
     ServiceInstanceStatistics instanceStats = new ServiceInstanceStatistics();
+    List<WorkflowExecution> workflowExecutions;
     if (isEmpty(appIds)) {
-      appIds = appService.getAppIdsByAccountId(accountId);
-      if (isEmpty(appIds)) {
-        return instanceStats;
-      }
+      workflowExecutions = workflowExecutionService.obtainWorkflowExecutions(accountId, fromDateEpochMilli);
+    } else {
+      workflowExecutions = workflowExecutionService.obtainWorkflowExecutions(appIds, fromDateEpochMilli);
     }
-    List<WorkflowExecution> workflowExecutions =
-        workflowExecutionService.obtainWorkflowExecutions(appIds, fromDateEpochMilli);
+    if (isEmpty(workflowExecutions)) {
+      return instanceStats;
+    }
     Comparator<TopConsumer> byCount = comparing(TopConsumer::getTotalCount, reverseOrder());
 
     List<TopConsumer> allTopConsumers = new ArrayList<>();

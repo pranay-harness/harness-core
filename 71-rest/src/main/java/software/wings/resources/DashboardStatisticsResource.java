@@ -20,6 +20,7 @@ import software.wings.beans.instance.dashboard.service.ServiceInstanceDashboard;
 import software.wings.resources.stats.model.InstanceTimeline;
 import software.wings.resources.stats.model.TimeRange;
 import software.wings.resources.stats.service.TimeRangeProvider;
+import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
@@ -160,6 +161,7 @@ public class DashboardStatisticsResource {
   @Path("service-instance-dash")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.READ)
   public RestResponse<ServiceInstanceDashboard> getServiceInstanceDashboard(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, @QueryParam("serviceId") String serviceId) {
     return new RestResponse<>(dashboardStatsService.getServiceInstanceDashboard(accountId, appId, serviceId));
