@@ -1559,10 +1559,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Command command = serviceCommand.getCommand();
 
     newcommand.setCommandUnits(command.getCommandUnits());
-    newcommand.setName(command.getName());
     newcommand.setCommandType(command.getCommandType());
     if (isEmpty(serviceCommand.getName())) {
       serviceCommand.setName(command.getName());
+      newcommand.setName(command.getName());
+    } else {
+      newcommand.setName(serviceCommand.getName());
     }
     newcommand.setTemplateVariables(command.getTemplateVariables());
     newcommand.setOriginEntityId(serviceCommand.getUuid());
