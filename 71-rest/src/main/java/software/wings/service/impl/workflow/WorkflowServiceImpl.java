@@ -173,6 +173,7 @@ import software.wings.beans.deployment.DeploymentMetadata.DeploymentMetadataBuil
 import software.wings.beans.deployment.DeploymentMetadata.Include;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.peronalization.Personalization;
+import software.wings.beans.peronalization.Personalization.PersonalizationKeys;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.beans.trigger.Trigger;
@@ -3546,7 +3547,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     if (userId != null) {
       final Personalization personalization =
-          personalizationService.fetch(workflow.getAccountId(), userId, asList(Personalization.STEPS_KEY));
+          personalizationService.fetch(workflow.getAccountId(), userId, asList(PersonalizationKeys.steps));
 
       if (personalization != null && personalization.getSteps() != null) {
         favorites = personalization.getSteps().getFavorites();
