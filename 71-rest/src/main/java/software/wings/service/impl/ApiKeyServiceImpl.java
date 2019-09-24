@@ -307,7 +307,9 @@ public class ApiKeyServiceImpl implements ApiKeyService {
         // If there was any exception, remove that entry from cache
         apiKeyCache.remove(apiKey);
         apiKeyEntry = getByKeyFromDB(apiKey, accountId, details);
-        apiKeyCache.put(apiKeyEntry.getDecryptedKey(), apiKeyEntry);
+        if (apiKeyEntry != null) {
+          apiKeyCache.put(apiKeyEntry.getDecryptedKey(), apiKeyEntry);
+        }
       }
       return apiKeyEntry;
     }
@@ -424,7 +426,9 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
   private void rebuildPermissionsAndRestrictions(String apiKey, String accountId) {
     ApiKeyEntry apiKeyEntry = getByKey(apiKey, accountId, true);
-    rebuildPermissionsAndRestrictions(apiKeyEntry);
+    if (apiKeyEntry != null) {
+      rebuildPermissionsAndRestrictions(apiKeyEntry);
+    }
   }
 
   private void rebuildPermissionsAndRestrictions(ApiKeyEntry apiKeyEntry) {
