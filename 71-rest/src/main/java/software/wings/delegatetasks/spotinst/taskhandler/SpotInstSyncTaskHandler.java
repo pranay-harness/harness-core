@@ -1,6 +1,5 @@
 package software.wings.delegatetasks.spotinst.taskhandler;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static java.lang.String.format;
 import static java.lang.String.valueOf;
@@ -42,9 +41,6 @@ public class SpotInstSyncTaskHandler extends SpotInstTaskHandler {
     switch (spotInstTaskParameters.getCommandType()) {
       case SPOT_INST_LIST_ELASTI_GROUPS: {
         List<ElastiGroup> groups = spotInstHelperServiceDelegate.listAllElstiGroups(spotInstToken, spotInstAccountId);
-        if (isNotEmpty(groups)) {
-          groups.forEach(group -> group.setCapacity(null));
-        }
         syncTaskResponse = SpotInstListElastigroupNamesResponse.builder().elastigroups(groups).build();
         break;
       }

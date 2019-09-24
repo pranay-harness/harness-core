@@ -2,6 +2,9 @@ package software.wings.sm.states.spotinst;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_MAX_INSTANCES;
+import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_MIN_INSTANCES;
+import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_TARGET_INSTANCES;
 import static io.harness.spotinst.model.SpotInstConstants.DEPLOYMENT_ERROR;
 import static io.harness.spotinst.model.SpotInstConstants.GROUP_CONFIG_ELEMENT;
 import static io.harness.spotinst.model.SpotInstConstants.PHASE_PARAM;
@@ -103,9 +106,6 @@ public class SpotInstStateHelper {
     if (serviceSetup.getOlderActiveVersionCountToKeep() <= 0) {
       throw new WingsException("Value for Older Active Versions To Keep Must be > 0");
     }
-
-    // Remove when CurrentRunningCount is supported
-    serviceSetup.setUseCurrentRunningCount(false);
 
     AwsAmiInfrastructureMapping awsAmiInfrastructureMapping =
         (AwsAmiInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
@@ -235,9 +235,15 @@ public class SpotInstStateHelper {
       String elastiGroupOriginalJson, SpotInstServiceSetup serviceSetup) {
     ElastiGroup elastiGroup = generateConfigFromJson(elastiGroupOriginalJson);
     ElastiGroupCapacity groupCapacity = elastiGroup.getCapacity();
-    groupCapacity.setMaximum(serviceSetup.getMaxInstances());
-    groupCapacity.setMinimum(serviceSetup.getMinInstances());
-    groupCapacity.setTarget(serviceSetup.getTargetInstances());
+    if (serviceSetup.isUseCurrentRunningCount()) {
+      groupCapacity.setMinimum(DEFAULT_ELASTIGROUP_MIN_INSTANCES);
+      groupCapacity.setMaximum(DEFAULT_ELASTIGROUP_MAX_INSTANCES);
+      groupCapacity.setTarget(DEFAULT_ELASTIGROUP_TARGET_INSTANCES);
+    } else {
+      groupCapacity.setMinimum(serviceSetup.getMinInstances());
+      groupCapacity.setMaximum(serviceSetup.getMaxInstances());
+      groupCapacity.setTarget(serviceSetup.getTargetInstances());
+    }
     return elastiGroup;
   }
 

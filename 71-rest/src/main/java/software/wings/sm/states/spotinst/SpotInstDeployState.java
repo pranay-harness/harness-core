@@ -331,9 +331,7 @@ public class SpotInstDeployState extends State {
   }
 
   private Integer getTargetInstanceCountToBeUsed(SpotInstSetupContextElement setupContextElement) {
-    return setupContextElement.isUseCurrentRunningInstanceCount()
-        ? setupContextElement.getCurrentRunningInstanceCount()
-        : setupContextElement.getNewElastiGroupOriginalConfig().getCapacity().getTarget();
+    return setupContextElement.getNewElastiGroupOriginalConfig().getCapacity().getTarget();
   }
 
   @VisibleForTesting
@@ -387,7 +385,7 @@ public class SpotInstDeployState extends State {
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> invalidFields = newHashMap();
-    if (instanceCount == null || instanceCount < 0) {
+    if (!isRollback() && (instanceCount == null || instanceCount < 0)) {
       invalidFields.put("instanceCount", "Instance count needs to be populated");
     }
     return invalidFields;

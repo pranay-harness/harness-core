@@ -6,6 +6,10 @@ public interface SpotInstConstants {
   int elastiGroupsToKeep = 3;
   int defaultSteadyStateTimeout = 15;
   int defaultSyncSpotinstTimeoutMin = 2;
+  int DEFAULT_ELASTIGROUP_MIN_INSTANCES = 0;
+  int DEFAULT_ELASTIGROUP_MAX_INSTANCES = 4;
+  int DEFAULT_ELASTIGROUP_TARGET_INSTANCES = 2;
+  String DEFAULT_ELASTIGROUP_NAME = "Default Name";
   String ELASTI_GROUP_NAME_PLACEHOLDER = "${ELASTI_GROUP_NAME}";
   String NAME_CONFIG_ELEMENT = "name";
   String CAPACITY_UNIT_CONFIG_ELEMENT = "unit";
