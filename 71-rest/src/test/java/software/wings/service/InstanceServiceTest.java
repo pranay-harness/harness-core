@@ -73,7 +73,7 @@ public class InstanceServiceTest extends WingsBaseTest {
     Instance savedInstance = instanceService.save(instance);
     compare(instance, savedInstance);
 
-    Instance instanceFromGet = instanceService.get(instanceId);
+    Instance instanceFromGet = instanceService.get(instanceId, false);
     compare(savedInstance, instanceFromGet);
   }
 
@@ -134,7 +134,7 @@ public class InstanceServiceTest extends WingsBaseTest {
     Instance savedInstance = instanceService.save(instance);
     compare(instance, savedInstance);
 
-    Instance instanceFromGet = instanceService.get(instanceId);
+    Instance instanceFromGet = instanceService.get(instanceId, false);
     compare(instance, instanceFromGet);
 
     instanceFromGet.setInfraMappingId("inframappingId1");
@@ -142,7 +142,7 @@ public class InstanceServiceTest extends WingsBaseTest {
     Instance updatedInstance = instanceService.update(instanceFromGet, savedInstance.getUuid());
     compare(instanceFromGet, updatedInstance);
 
-    instanceFromGet = instanceService.get(instanceId);
+    instanceFromGet = instanceService.get(instanceId, false);
     compare(updatedInstance, instanceFromGet);
   }
 
@@ -154,8 +154,11 @@ public class InstanceServiceTest extends WingsBaseTest {
 
     instanceService.delete(Sets.newHashSet(instanceId));
 
-    Instance instanceAfterDelete = instanceService.get(instanceId);
+    Instance instanceAfterDelete = instanceService.get(instanceId, false);
     assertThat(instanceAfterDelete).isNull();
+
+    instanceAfterDelete = instanceService.get(instanceId, true);
+    assertThat(instanceAfterDelete).isNotNull();
   }
 
   private void compare(Instance lhs, Instance rhs) {

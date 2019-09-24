@@ -72,7 +72,7 @@ public class InstanceServiceImpl implements InstanceService {
           .addParam("args", "App does not exist: " + instance.getAppId());
     }
 
-    Instance currentInstance = get(instance.getUuid());
+    Instance currentInstance = get(instance.getUuid(), false);
     Validator.nullCheck("Instance", currentInstance);
 
     String key = wingsPersistence.save(instance);
@@ -101,12 +101,10 @@ public class InstanceServiceImpl implements InstanceService {
   }
 
   @Override
-  public Instance get(String instanceId) {
+  public Instance get(String instanceId, boolean includeDeleted) {
     Instance instance = wingsPersistence.get(Instance.class, instanceId);
-    if (instance != null) {
-      if (instance.isDeleted()) {
-        return null;
-      }
+    if (instance != null && !includeDeleted && instance.isDeleted()) {
+      return null;
     }
     return instance;
   }

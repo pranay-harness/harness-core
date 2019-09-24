@@ -47,9 +47,10 @@ public interface InstanceService
    * Gets instance information.
    *
    * @param instanceId the instance id
+   * @param includeDeleted include deleted instance
    * @return the infrastructure mapping
    */
-  Instance get(String instanceId);
+  Instance get(String instanceId, boolean includeDeleted);
 
   /**
    * Updates the entity. If entity doesn't exist, it creates one.
