@@ -72,6 +72,7 @@ import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.CyberArkConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
+import software.wings.helpers.ext.cyberark.CyberArkRestClient;
 import software.wings.helpers.ext.cyberark.CyberArkRestClientFactory;
 import software.wings.helpers.ext.vault.VaultRestClientFactory;
 import software.wings.helpers.ext.vault.VaultSysAuthRestClient;
@@ -971,6 +972,34 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         }
       }
     }
+  }
+
+  @Override
+  public boolean validateCyberArkConfig(CyberArkConfig cyberArkConfig) {
+    String errorMessage;
+    // Basic connectivity and certificate validity checks
+    if (isNotEmpty(cyberArkConfig.getClientCertificate())
+        && !CyberArkRestClientFactory.validateClientCertificate(cyberArkConfig.getClientCertificate())) {
+      errorMessage = "Client certificate provided is not valid. Please check your configurations and try again";
+      throw new SecretManagementDelegateException(CYBERARK_OPERATION_ERROR, errorMessage, USER);
+    }
+
+    try {
+      CyberArkRestClient restClient = CyberArkRestClientFactory.create(cyberArkConfig);
+      String testQuery = "Username=svc_account_harness_validate_config";
+      Response<CyberArkReadResponse> response = restClient.readSecret(cyberArkConfig.getAppId(), testQuery).execute();
+      // Expecting a 404 response (or 200 by accident) as the test query of a non-existent account in normal cases.
+      int status = response.code();
+      if (status != 404 && status != 200) {
+        errorMessage = "Failed to query the CyberArk REST endpoint. Please check your configurations and try again";
+        throw new SecretManagementDelegateException(CYBERARK_OPERATION_ERROR, errorMessage, USER);
+      }
+    } catch (IOException e) {
+      errorMessage = "Failed to test a sample CyberArk query. Please check your configurations and try again";
+      throw new SecretManagementDelegateException(CYBERARK_OPERATION_ERROR, errorMessage, e, USER);
+    }
+
+    return false;
   }
 
   private char[] decryptInternal(EncryptedRecord data, CyberArkConfig cyberArkConfig) {
