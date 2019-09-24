@@ -117,4 +117,9 @@ public interface SecretManagementDelegateService {
    * We only allow reference of existing secrets in CyberArk for now. Therefore only the decrypt task is present.
    */
   @DelegateTaskType(TaskType.CYBERARK_DECRYPT) char[] decrypt(EncryptedRecord data, CyberArkConfig cyberArkConfig);
+
+  /**
+   * Validate the CyberArk configuration, including the connectivity to CyberArk service, client certificate etc.
+   */
+  @DelegateTaskType(TaskType.CYBERARK_VALIDATE_CONFIG) boolean validateCyberArkConfig(CyberArkConfig cyberArkConfig);
 }

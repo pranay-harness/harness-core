@@ -122,6 +122,10 @@ public class CyberArkTest extends WingsBaseTest {
       Object[] args = invocation.getArguments();
       return encrypt((String) args[0], (char[]) args[1], (KmsConfig) args[2]);
     });
+    when(secretManagementDelegateService.validateCyberArkConfig(any(CyberArkConfig.class))).then(invocation -> {
+      Object[] args = invocation.getArguments();
+      return validateCyberArkConfig((CyberArkConfig) args[0]);
+    });
 
     FieldUtils.writeField(cyberArkService, "delegateProxyFactory", delegateProxyFactory, true);
     FieldUtils.writeField(kmsService, "delegateProxyFactory", delegateProxyFactory, true);

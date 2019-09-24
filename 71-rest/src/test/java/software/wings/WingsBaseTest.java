@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -93,6 +94,16 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
     return SecretManagementDelegateServiceImpl
         .decrypt(data.getEncryptedValue(), new SecretKeySpec(plainTextKey.getBytes(), "AES"))
         .toCharArray();
+  }
+
+  protected boolean validateCyberArkConfig(CyberArkConfig cyberArkConfig) {
+    if (Objects.equals(cyberArkConfig.getCyberArkUrl(), "invalidUrl")) {
+      throw new SecretManagementException("Invalid Url");
+    }
+    if (Objects.equals(cyberArkConfig.getClientCertificate(), "invalidCertificate")) {
+      throw new SecretManagementException("Invalid credentials");
+    }
+    return true;
   }
 
   protected EncryptedData encrypt(String value, CyberArkConfig cyberArkConfig) throws Exception {

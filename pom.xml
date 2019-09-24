@@ -1304,6 +1304,12 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>mockwebserver</artifactId>
+                <version>3.6.0</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>de.bwaldvogel</groupId>
                 <artifactId>mongo-java-server</artifactId>
                 <version>1.16.0</version>

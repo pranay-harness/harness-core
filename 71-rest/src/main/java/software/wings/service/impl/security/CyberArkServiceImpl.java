@@ -18,7 +18,6 @@ import com.google.inject.name.Named;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.exception.WingsException;
-import io.harness.network.Http;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +27,6 @@ import software.wings.beans.CyberArkConfig;
 import software.wings.beans.SyncTaskContext;
 import software.wings.features.SecretsManagementFeature;
 import software.wings.features.api.PremiumFeature;
-import software.wings.helpers.ext.cyberark.CyberArkRestClientFactory;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.service.intfc.AccountService;
@@ -217,15 +215,14 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
 
   @Override
   public void validateConfig(CyberArkConfig cyberArkConfig) {
-    String errorMessage;
-    if (!Http.connectableHost(cyberArkConfig.getCyberArkUrl())) {
-      errorMessage = "Was not able to reach CyberArk using given URL. Please check your configurations and try again";
-      throw new SecretManagementException(CYBERARK_OPERATION_ERROR, errorMessage, USER);
-    } else if (isNotEmpty(cyberArkConfig.getClientCertificate())
-        && !CyberArkRestClientFactory.validateClientCertificate(cyberArkConfig.getClientCertificate())) {
-      errorMessage = "Client certificate provided is not valid. Please check your configurations and try again";
-      throw new SecretManagementException(CYBERARK_OPERATION_ERROR, errorMessage, USER);
-    }
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(cyberArkConfig.getAccountId())
+                                          .timeout(Duration.ofSeconds(10).toMillis())
+                                          .appId(GLOBAL_APP_ID)
+                                          .correlationId(cyberArkConfig.getUuid())
+                                          .build();
+    delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
+        .validateCyberArkConfig(cyberArkConfig);
   }
 
   @Override
