@@ -822,7 +822,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
   @Override
   public Instance getInstanceDetails(String instanceId) {
-    return instanceService.get(instanceId);
+    return instanceService.get(instanceId, true);
   }
 
   @Override
