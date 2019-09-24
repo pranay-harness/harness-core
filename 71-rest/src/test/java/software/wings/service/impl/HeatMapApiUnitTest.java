@@ -39,6 +39,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.MetricType;
+import software.wings.metrics.TimeSeriesDataRecord;
 import software.wings.resources.CVConfigurationResource;
 import software.wings.resources.ContinuousVerificationDashboardResource;
 import software.wings.service.impl.analysis.AnalysisTolerance;
@@ -741,11 +742,15 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     try (BufferedReader br = new BufferedReader(new FileReader(file1))) {
       Type type = new TypeToken<List<NewRelicMetricDataRecord>>() {}.getType();
       List<NewRelicMetricDataRecord> metricDataRecords = gson1.fromJson(br, type);
-      metricDataRecords.forEach(timeSeriesMLAnalysisRecord -> {
-        timeSeriesMLAnalysisRecord.setAppId(appId);
-        timeSeriesMLAnalysisRecord.setCvConfigId(cvConfigId);
+      metricDataRecords.forEach(metricDataRecord -> {
+        metricDataRecord.setAppId(appId);
+        metricDataRecord.setCvConfigId(cvConfigId);
       });
-      wingsPersistence.save(metricDataRecords);
+      final List<TimeSeriesDataRecord> dataRecords =
+          TimeSeriesDataRecord.getTimeSeriesDataRecordsFromNewRelicDataRecords(metricDataRecords);
+      dataRecords.forEach(dataRecord -> dataRecord.compress());
+
+      wingsPersistence.save(dataRecords);
     }
 
     File file = new File(getClass().getClassLoader().getResource("./verification/24_7_ts_analysis.json").getFile());
@@ -818,12 +823,18 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     try (BufferedReader br = new BufferedReader(new FileReader(file1))) {
       Type type = new TypeToken<List<NewRelicMetricDataRecord>>() {}.getType();
       List<NewRelicMetricDataRecord> metricDataRecords = gson1.fromJson(br, type);
-      metricDataRecords.forEach(timeSeriesMLAnalysisRecord -> {
-        timeSeriesMLAnalysisRecord.setAppId(appId);
-        timeSeriesMLAnalysisRecord.setCvConfigId(cvConfigId);
-        timeSeriesMLAnalysisRecord.setStateType(StateType.APP_DYNAMICS);
+      metricDataRecords.forEach(metricDataRecord -> {
+        metricDataRecord.setAppId(appId);
+        metricDataRecord.setCvConfigId(cvConfigId);
+        metricDataRecord.setStateType(StateType.APP_DYNAMICS);
       });
       wingsPersistence.save(metricDataRecords);
+
+      final List<TimeSeriesDataRecord> dataRecords =
+          TimeSeriesDataRecord.getTimeSeriesDataRecordsFromNewRelicDataRecords(metricDataRecords);
+      dataRecords.forEach(dataRecord -> dataRecord.compress());
+
+      wingsPersistence.save(dataRecords);
     }
 
     File file = new File(getClass()
@@ -1000,17 +1011,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
     createAppDConnector();
 
-    File file1 = new File(getClass().getClassLoader().getResource("./verification/metricRecords.json").getFile());
-    final Gson gson1 = new Gson();
-    try (BufferedReader br = new BufferedReader(new FileReader(file1))) {
-      Type type = new TypeToken<List<NewRelicMetricDataRecord>>() {}.getType();
-      List<NewRelicMetricDataRecord> metricDataRecords = gson1.fromJson(br, type);
-      metricDataRecords.forEach(timeSeriesMLAnalysisRecord -> {
-        timeSeriesMLAnalysisRecord.setAppId(appId);
-        timeSeriesMLAnalysisRecord.setCvConfigId(cvConfigId);
-      });
-      wingsPersistence.save(metricDataRecords);
-    }
+    saveMetricRecords(cvConfigId);
 
     File file = new File(getClass().getClassLoader().getResource("./verification/multi-risk-sorting.json").getFile());
     final Gson gson = new Gson();
@@ -1086,18 +1087,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
     createAppDConnector();
 
-    File file1 = new File(getClass().getClassLoader().getResource("./verification/metricRecords.json").getFile());
-    final Gson gson1 = new Gson();
-    try (BufferedReader br = new BufferedReader(new FileReader(file1))) {
-      Type type = new TypeToken<List<NewRelicMetricDataRecord>>() {}.getType();
-      List<NewRelicMetricDataRecord> metricDataRecords = gson1.fromJson(br, type);
-      metricDataRecords.forEach(timeSeriesMLAnalysisRecord -> {
-        timeSeriesMLAnalysisRecord.setAppId(appId);
-        timeSeriesMLAnalysisRecord.setCvConfigId(cvConfigId);
-        timeSeriesMLAnalysisRecord.setStateType(StateType.APP_DYNAMICS);
-      });
-      wingsPersistence.save(metricDataRecords);
-    }
+    saveMetricRecords(cvConfigId);
 
     final SortedSet<TransactionTimeSeries> timeSeries =
         cvDashboardResource
@@ -1125,18 +1115,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
     createAppDConnector();
 
-    File file1 = new File(getClass().getClassLoader().getResource("./verification/metricRecords.json").getFile());
-    final Gson gson1 = new Gson();
-    try (BufferedReader br = new BufferedReader(new FileReader(file1))) {
-      Type type = new TypeToken<List<NewRelicMetricDataRecord>>() {}.getType();
-      List<NewRelicMetricDataRecord> metricDataRecords = gson1.fromJson(br, type);
-      metricDataRecords.forEach(timeSeriesMLAnalysisRecord -> {
-        timeSeriesMLAnalysisRecord.setAppId(appId);
-        timeSeriesMLAnalysisRecord.setCvConfigId(cvConfigId);
-        timeSeriesMLAnalysisRecord.setStateType(StateType.APP_DYNAMICS);
-      });
-      wingsPersistence.save(metricDataRecords);
-    }
+    saveMetricRecords(cvConfigId);
 
     final SortedSet<TransactionTimeSeries> timeSeries =
         cvDashboardResource
@@ -1182,18 +1161,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
     createAppDConnector();
 
-    File file1 = new File(getClass().getClassLoader().getResource("./verification/metricRecords.json").getFile());
-    final Gson gson1 = new Gson();
-    try (BufferedReader br = new BufferedReader(new FileReader(file1))) {
-      Type type = new TypeToken<List<NewRelicMetricDataRecord>>() {}.getType();
-      List<NewRelicMetricDataRecord> metricDataRecords = gson1.fromJson(br, type);
-      metricDataRecords.forEach(timeSeriesMLAnalysisRecord -> {
-        timeSeriesMLAnalysisRecord.setAppId(appId);
-        timeSeriesMLAnalysisRecord.setCvConfigId(cvConfigId);
-        timeSeriesMLAnalysisRecord.setStateType(StateType.APP_DYNAMICS);
-      });
-      wingsPersistence.save(metricDataRecords);
-    }
+    saveMetricRecords(cvConfigId);
 
     SortedSet<TransactionTimeSeries> timeSeries =
         cvDashboardResource
@@ -1208,7 +1176,6 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     });
 
     timeSeries = cvDashboardResource
-
                      .getFilteredTimeSeriesOfHeatMapUnit(accountId, cvConfigId, 1541678400000L, 1541685600000L, 0,
                          Lists.newArrayList(), Lists.newArrayList("Number of Slow Calls"), Lists.newArrayList())
                      .getResource();
@@ -1237,18 +1204,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
     createAppDConnector();
 
-    File file1 = new File(getClass().getClassLoader().getResource("./verification/metricRecords.json").getFile());
-    final Gson gson1 = new Gson();
-    try (BufferedReader br = new BufferedReader(new FileReader(file1))) {
-      Type type = new TypeToken<List<NewRelicMetricDataRecord>>() {}.getType();
-      List<NewRelicMetricDataRecord> metricDataRecords = gson1.fromJson(br, type);
-      metricDataRecords.forEach(timeSeriesMLAnalysisRecord -> {
-        timeSeriesMLAnalysisRecord.setAppId(appId);
-        timeSeriesMLAnalysisRecord.setCvConfigId(cvConfigId);
-        timeSeriesMLAnalysisRecord.setStateType(StateType.APP_DYNAMICS);
-      });
-      wingsPersistence.save(metricDataRecords);
-    }
+    saveMetricRecords(cvConfigId);
 
     SortedSet<TransactionTimeSeries> timeSeries =
         cvDashboardResource
@@ -1279,5 +1235,25 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
       assertThat(transactionTimeSeries.getMetricTimeSeries()).hasSize(1);
       assertThat(transactionTimeSeries.getMetricTimeSeries().first().getMetricName()).isEqualTo("Number of Slow Calls");
     });
+  }
+
+  private void saveMetricRecords(String cvConfigId) throws IOException {
+    File file1 = new File(getClass().getClassLoader().getResource("./verification/metricRecords.json").getFile());
+    final Gson gson1 = new Gson();
+    try (BufferedReader br = new BufferedReader(new FileReader(file1))) {
+      Type type = new TypeToken<List<NewRelicMetricDataRecord>>() {}.getType();
+      List<NewRelicMetricDataRecord> metricDataRecords = gson1.fromJson(br, type);
+      metricDataRecords.forEach(metricDataRecord -> {
+        metricDataRecord.setAppId(appId);
+        metricDataRecord.setCvConfigId(cvConfigId);
+        metricDataRecord.setStateType(StateType.APP_DYNAMICS);
+      });
+
+      final List<TimeSeriesDataRecord> dataRecords =
+          TimeSeriesDataRecord.getTimeSeriesDataRecordsFromNewRelicDataRecords(metricDataRecords);
+      dataRecords.forEach(dataRecord -> dataRecord.compress());
+
+      wingsPersistence.save(dataRecords);
+    }
   }
 }
