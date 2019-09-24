@@ -5,9 +5,9 @@ import static io.harness.eraro.ErrorCode.ARTIFACT_SERVER_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
+import static java.util.Collections.emptyMap;
 
 import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -108,10 +108,6 @@ public class NexusServiceImpl implements NexusService {
           return nexusThreeService.getRepositories(nexusConfig, encryptionDetails, repositoryFormat);
         }
       }, 20L, TimeUnit.SECONDS, true);
-    } catch (UncheckedTimeoutException e) {
-      logger.warn("Nexus server request did not succeed within 20 secs");
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message", "Nexus server took too long to respond");
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -119,7 +115,7 @@ public class NexusServiceImpl implements NexusService {
       if (e.getCause() != null && e.getCause() instanceof XMLStreamException) {
         throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Nexus may not be running");
       }
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
+      return emptyMap();
     }
   }
 
@@ -164,8 +160,6 @@ public class NexusServiceImpl implements NexusService {
               20L, TimeUnit.SECONDS, true);
         }
       }
-    } catch (UncheckedTimeoutException e) {
-      logger.warn("Nexus server request did not succeed within 20 secs. Returning the list so far", e);
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -174,7 +168,6 @@ public class NexusServiceImpl implements NexusService {
       if (e.getCause() != null && e.getCause() instanceof XMLStreamException) {
         throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Nexus may not be running");
       }
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
     }
     return groupIds;
   }
@@ -220,21 +213,6 @@ public class NexusServiceImpl implements NexusService {
       } else {
         return nexusThreeService.downloadArtifact(nexusConfig, encryptionDetails, artifactStreamAttributes,
             artifactMetadata, delegateId, taskId, accountId, notifyResponseData);
-        // for nexus3 nuget:
-        // repoType-> corresponds to repoName
-        // groupId-> corresponds to null
-        // artifactName-> corresponds to packageName
-        // version-> corresponds to buildNo
-        // case: nuget
-        //        if (groupId == null) {
-        //          return nexusThreeService.downloadArtifact(nexusConfig, encryptionDetails, repoType, artifactName,
-        //          version,
-        //              delegateId, taskId, accountId, notifyResponseData);
-        //        } else {
-        //          return nexusThreeService.downloadArtifact(nexusConfig, encryptionDetails, repoType, groupId,
-        //          artifactName,
-        //              version, delegateId, taskId, accountId, notifyResponseData);
-        //        }
       }
     } catch (IOException e) {
       logger.error("Error occurred while downloading the artifact", e);
