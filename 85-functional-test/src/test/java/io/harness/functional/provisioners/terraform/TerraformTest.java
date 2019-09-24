@@ -1,7 +1,7 @@
 package io.harness.functional.provisioners.terraform;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.VAIBHAV_SI;
+import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
@@ -11,6 +11,7 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -28,13 +29,13 @@ import io.harness.generator.ServiceGenerator;
 import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.SettingGenerator.Settings;
+import io.harness.generator.WorkflowGenerator;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.testframework.restutils.InfraProvisionerRestUtils;
-import io.harness.testframework.restutils.WorkflowRestUtils;
+import org.assertj.core.api.Assertions;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
@@ -49,11 +50,13 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
-import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.StateType;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class TerraformTest extends AbstractFunctionalTest {
   private static final String secretKeyName = "aws_playground_secret_key";
@@ -66,9 +69,9 @@ public class TerraformTest extends AbstractFunctionalTest {
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private SettingGenerator settingGenerator;
   @Inject private SecretGenerator secretGenerator;
-  @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ScmSecret scmSecret;
   @Inject private WorkflowUtils workflowUtils;
+  @Inject private WorkflowGenerator workflowGenerator;
 
   private Application application;
   private Service service;
@@ -85,13 +88,53 @@ public class TerraformTest extends AbstractFunctionalTest {
     owners = ownerManager.create();
     ensurePredefinedStuff();
 
+    resetCache(application.getAccountId());
     terraformInfrastructureProvisioner = buildProvisionerObject();
+
     terraformInfrastructureProvisioner = (TerraformInfrastructureProvisioner) InfraProvisionerRestUtils.saveProvisioner(
         application.getAppId(), bearerToken, terraformInfrastructureProvisioner);
 
     workflow = buildWorkflow(terraformInfrastructureProvisioner);
-    workflow =
-        WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), application.getUuid(), workflow);
+    workflow = workflowGenerator.ensureWorkflow(seed, owners, workflow);
+  }
+
+  @Test
+  @Owner(emails = YOGESH_CHAUHAN, intermittent = true)
+  @Category(FunctionalTests.class)
+  public void shouldRunTerraformWorkflow() {
+    ExecutionArgs executionArgs = prepareExecutionArgs(workflow);
+    WorkflowExecution workflowExecution =
+        runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
+    Assertions.assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(emails = YOGESH_CHAUHAN)
+  @Category(FunctionalTests.class)
+  public void shouldFetchTerraformTargets() throws Exception {
+    final String accountId = terraformInfrastructureProvisioner.getAccountId();
+    final String appId = terraformInfrastructureProvisioner.getAppId();
+    final String provisonerId = terraformInfrastructureProvisioner.getUuid();
+    final List<String> terraformVariables =
+        InfraProvisionerRestUtils.getTerraformTargets(accountId, appId, bearerToken, provisonerId);
+    Assertions.assertThat(terraformVariables).containsExactlyInAnyOrder("local_file.foo");
+  }
+
+  @Test
+  @Owner(emails = YOGESH_CHAUHAN)
+  @Category(FunctionalTests.class)
+  public void shouldFetchTerraformVariables() throws Exception {
+    final String accountId = terraformInfrastructureProvisioner.getAccountId();
+    final String appId = terraformInfrastructureProvisioner.getAppId();
+    final String scmSettingId = terraformInfrastructureProvisioner.getSourceRepoSettingId();
+    final String branch = terraformInfrastructureProvisioner.getSourceRepoBranch();
+    final String path = terraformInfrastructureProvisioner.getPath();
+
+    resetCache(accountId);
+
+    final List<NameValuePair> terraformVariables =
+        InfraProvisionerRestUtils.getTerraformVariables(accountId, appId, bearerToken, scmSettingId, branch, path);
+    Assertions.assertThat(terraformVariables).isNotEmpty();
   }
 
   private void ensurePredefinedStuff() {
@@ -100,17 +143,6 @@ public class TerraformTest extends AbstractFunctionalTest {
     environment = environmentGenerator.ensurePredefined(seed, owners, Environments.FUNCTIONAL_TEST);
     settingAttribute = settingGenerator.ensurePredefined(seed, owners, Settings.TERRAFORM_MAIN_GIT_REPO);
     secretKeyValue = secretGenerator.ensureStored(owners, SecretName.builder().value(secretKeyName).build());
-  }
-
-  @Test
-  @Owner(emails = VAIBHAV_SI)
-  @Category(FunctionalTests.class)
-  @Ignore("TODO: need more investigation")
-  public void shouldRunTerraformWorkflow() {
-    ExecutionArgs executionArgs = prepareExecutionArgs(workflow);
-    WorkflowExecution workflowExecution =
-        WorkflowRestUtils.startWorkflow(bearerToken, application.getAppId(), environment.getUuid(), executionArgs);
-    workflowUtils.checkForWorkflowSuccess(workflowExecution);
   }
 
   private ExecutionArgs prepareExecutionArgs(Workflow workflow) {
@@ -152,13 +184,21 @@ public class TerraformTest extends AbstractFunctionalTest {
     InfrastructureProvisioner provisioner =
         InfraProvisionerRestUtils.getProvisioner(application.getUuid(), bearerToken, provisionerId);
     provisioner = InfraProvisionerUtils.setValuesToProvisioner(provisioner, scmSecret, secretKeyValue);
+    List<Map<String, String>> variables = new ArrayList<>();
+    provisioner.getVariables().forEach(var -> variables.add(new HashMap<String, String>() {
+      {
+        put("name", var.getName());
+        put("value", var.getValue());
+        put("valueType", var.getValueType());
+      }
+    }));
     return GraphNode.builder()
         .id(generateUuid())
         .type(StateType.TERRAFORM_PROVISION.getType())
         .name("Terraform Provision")
         .properties(ImmutableMap.<String, Object>builder()
                         .put("provisionerId", provisionerId)
-                        .put("variables", provisioner.getVariables())
+                        .put("variables", variables)
                         .build())
         .build();
   }
