@@ -48,69 +48,69 @@ public interface NexusThreeRestClient {
       @Path(value = "imageName", encoded = true) String imageName);
 
   @Headers("Accept: application/json")
-  @GET("/service/rest/v1/repositories")
+  @GET("service/rest/v1/repositories")
   Call<List<Nexus3Repository>> listRepositories(@Header("Authorization") String authorization);
 
   @Headers("Accept: application/json")
-  @GET("/service/rest/v1/repositories")
+  @GET("service/rest/v1/repositories")
   Call<List<Nexus3Repository>> listRepositories();
 
   @Headers("Accept: application/json")
-  @GET("/service/rest/v1/search")
+  @GET("service/rest/v1/search")
   Call<Nexus3ComponentResponse> search(@Header("Authorization") String authorization,
       @Query("repository") String repository, @Query("continuationToken") String continuationToken);
 
   @Headers("Accept: application/json")
-  @GET("/service/rest/v1/search")
+  @GET("service/rest/v1/search")
   Call<Nexus3ComponentResponse> search(
       @Query("repository") String repository, @Query("continuationToken") String continuationToken);
 
   @Headers("Accept: application/json")
-  @GET("/service/rest/v1/search")
+  @GET("service/rest/v1/search")
   Call<Nexus3ComponentResponse> getPackageVersions(@Header("Authorization") String authorization,
       @Query("repository") String repository, @Query("name") String packageName,
       @Query("continuationToken") String continuationToken);
 
   @Headers("Accept: application/json")
-  @GET("/service/rest/v1/search")
+  @GET("service/rest/v1/search")
   Call<Nexus3ComponentResponse> getPackageVersions(@Query("repository") String repository,
       @Query("name") String packageName, @Query("continuationToken") String continuationToken);
 
   @Headers("Accept: application/json")
-  @GET("/service/rest/v1/search/assets")
+  @GET("service/rest/v1/search/assets")
   Call<Nexus3AssetResponse> getAsset(@Header("Authorization") String authorization,
       @Query("repository") String repository, @Query("name") String name, @Query("version") String version);
 
   @Headers("Accept: application/json")
-  @GET("/service/rest/v1/search/assets")
+  @GET("service/rest/v1/search/assets")
   Call<Nexus3AssetResponse> getAsset(
       @Query("repository") String repository, @Query("name") String name, @Query("version") String version);
 
   @Headers("Accept: application/json")
-  @GET("/service/rest/v1/search")
+  @GET("service/rest/v1/search")
   Call<Nexus3ComponentResponse> getArtifactNames(@Header("Authorization") String authorization,
       @Query("repository") String repository, @Query("maven.groupId") String groupId,
       @Query("continuationToken") String continuationToken);
 
   @Headers("Accept: application/json")
-  @GET("/service/rest/v1/search")
+  @GET("service/rest/v1/search")
   Call<Nexus3ComponentResponse> getArtifactNames(@Query("repository") String repository,
       @Query("maven.groupId") String groupId, @Query("continuationToken") String continuationToken);
 
   @Headers("Accept: application/json")
-  @GET("/service/rest/v1/search")
+  @GET("service/rest/v1/search")
   Call<Nexus3ComponentResponse> getArtifactVersions(@Header("Authorization") String authorization,
       @Query("repository") String repository, @Query("maven.groupId") String groupId,
       @Query("maven.artifactId") String artifactId, @Query("continuationToken") String continuationToken);
 
   @Headers("Accept: application/json")
-  @GET("/service/rest/v1/search")
+  @GET("service/rest/v1/search")
   Call<Nexus3ComponentResponse> getArtifactVersions(@Query("repository") String repository,
       @Query("maven.groupId") String groupId, @Query("maven.artifactId") String artifactId,
       @Query("continuationToken") String continuationToken);
 
   @Headers("Accept: application/json")
-  @GET("/service/rest/v1/search")
+  @GET("service/rest/v1/search")
   Call<Nexus3ComponentResponse> getArtifactVersionsWithExtensionAndClassifier(
       @Header("Authorization") String authorization, @Query("repository") String repository,
       @Query("maven.groupId") String groupId, @Query("maven.artifactId") String artifactId,
@@ -118,33 +118,33 @@ public interface NexusThreeRestClient {
       @Query("continuationToken") String continuationToken);
 
   @Headers("Accept: application/json")
-  @GET("/service/rest/v1/search")
+  @GET("service/rest/v1/search")
   Call<Nexus3ComponentResponse> getArtifactVersionsWithExtensionAndClassifier(@Query("repository") String repository,
       @Query("maven.groupId") String groupId, @Query("maven.artifactId") String artifactId,
       @Query("maven.extension") String extension, @Query("maven.classifier") String classifier,
       @Query("continuationToken") String continuationToken);
 
   @Headers("Accept: application/json")
-  @GET("/service/rest/v1/search/assets")
+  @GET("service/rest/v1/search/assets")
   Call<Nexus3AssetResponse> getMavenAsset(@Header("Authorization") String authorization,
       @Query("repository") String repository, @Query("maven.groupId") String groupId,
       @Query("maven.artifactId") String artifactId, @Query("version") String version);
 
   @Headers("Accept: application/json")
-  @GET("/service/rest/v1/search/assets")
+  @GET("service/rest/v1/search/assets")
   Call<Nexus3AssetResponse> getMavenAsset(@Query("repository") String repository,
       @Query("maven.groupId") String groupId, @Query("maven.artifactId") String artifactId,
       @Query("version") String version);
 
   @Headers("Accept: application/json")
-  @GET("/service/rest/v1/search/assets")
+  @GET("service/rest/v1/search/assets")
   Call<Nexus3AssetResponse> getMavenAssetWithExtensionAndClassifier(@Header("Authorization") String authorization,
       @Query("repository") String repository, @Query("maven.groupId") String groupId,
       @Query("maven.artifactId") String artifactId, @Query("version") String version,
       @Query("maven.extension") String extension, @Query("maven.classifier") String classifier);
 
   @Headers("Accept: application/json")
-  @GET("/service/rest/v1/search/assets")
+  @GET("service/rest/v1/search/assets")
   Call<Nexus3AssetResponse> getMavenAssetWithExtensionAndClassifier(@Query("repository") String repository,
       @Query("maven.groupId") String groupId, @Query("maven.artifactId") String artifactId,
       @Query("version") String version, @Query("maven.extension") String extension,
