@@ -3,12 +3,15 @@ package io.harness.testframework.restutils;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.EmptyRestResponseException;
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import software.wings.beans.InfrastructureProvisioner;
+import software.wings.beans.NameValuePair;
 
+import java.util.List;
 import javax.ws.rs.core.GenericType;
 
 @Singleton
@@ -27,7 +30,8 @@ public class InfraProvisionerRestUtils {
                                                            .post("/infrastructure-provisioners")
                                                            .as(provisioner.getType());
     if (response.getResource() == null) {
-      throw new Exception(String.valueOf(response.getResponseMessages()));
+      throw new EmptyRestResponseException(
+          "/infrastructure-provisioners/", String.valueOf(response.getResponseMessages()));
     }
     return response.getResource();
   }
@@ -41,7 +45,8 @@ public class InfraProvisionerRestUtils {
                                 .delete("/infrastructure-provisioners/" + provisionerId)
                                 .as(RestResponse.class);
     if (EmptyPredicate.isNotEmpty(response.getResponseMessages())) {
-      throw new Exception(String.valueOf(response.getResponseMessages()));
+      throw new EmptyRestResponseException(
+          "/infrastructure-provisioners/" + provisionerId, String.valueOf(response.getResponseMessages()));
     }
   }
 
@@ -58,13 +63,14 @@ public class InfraProvisionerRestUtils {
                                                            .get("/infrastructure-provisioners/" + provisionerId)
                                                            .as(provisioner.getType());
     if (response.getResource() == null) {
-      throw new Exception(String.valueOf(response.getResponseMessages()));
+      throw new EmptyRestResponseException(
+          "/infrastructure-provisioners/" + provisionerId, String.valueOf(response.getResponseMessages()));
     }
     return response.getResource();
   }
 
   public static InfrastructureProvisioner updateProvisioner(String appId, String bearerToken,
-      InfrastructureProvisioner infrastructureProvisioner, String provisionerid) throws Exception {
+      InfrastructureProvisioner infrastructureProvisioner, String provisionerId) throws Exception {
     GenericType<RestResponse<InfrastructureProvisioner>> provisioner =
         new GenericType<RestResponse<InfrastructureProvisioner>>() {};
     RestResponse<InfrastructureProvisioner> response = Setup.portal()
@@ -73,10 +79,53 @@ public class InfraProvisionerRestUtils {
                                                            .queryParam("appId", appId)
                                                            .body(infrastructureProvisioner, ObjectMapperType.GSON)
                                                            .contentType(ContentType.JSON)
-                                                           .put("/infrastructure-provisioners/" + provisionerid)
+                                                           .put("/infrastructure-provisioners/" + provisionerId)
                                                            .as(provisioner.getType());
     if (response.getResource() == null) {
-      throw new Exception(String.valueOf(response.getResponseMessages()));
+      throw new EmptyRestResponseException(
+          "/infrastructure-provisioners/" + provisionerId, String.valueOf(response.getResponseMessages()));
+    }
+    return response.getResource();
+  }
+
+  public static List<String> getTerraformTargets(
+      String accountId, String appId, String bearerToken, String provisionerid) throws Exception {
+    GenericType<RestResponse<List<String>>> provisioner = new GenericType<RestResponse<List<String>>>() {};
+    RestResponse<List<String>> response = Setup.portal()
+                                              .auth()
+                                              .oauth2(bearerToken)
+                                              .queryParam("appId", appId)
+                                              .queryParam("accountId", accountId)
+                                              .queryParam("provisionerId", provisionerid)
+                                              .contentType(ContentType.JSON)
+                                              .get("/infrastructure-provisioners/terraform-targets")
+                                              .as(provisioner.getType());
+    if (response.getResource() == null) {
+      throw new EmptyRestResponseException(
+          "infrastructure-provisioners/terraform-targets", String.valueOf(response.getResponseMessages()));
+    }
+    return response.getResource();
+  }
+
+  public static List<NameValuePair> getTerraformVariables(String accountId, String appId, String bearerToken,
+      String scmSettingId, String branch, String path) throws Exception {
+    GenericType<RestResponse<List<NameValuePair>>> provisioner =
+        new GenericType<RestResponse<List<NameValuePair>>>() {};
+    RestResponse<List<NameValuePair>> response = Setup.portal()
+                                                     .auth()
+                                                     .oauth2(bearerToken)
+                                                     .queryParam("appId", appId)
+                                                     .queryParam("accountId", accountId)
+                                                     .queryParam("sourceRepoSettingId", scmSettingId)
+                                                     .queryParam("branch", branch)
+                                                     .queryParam("path", path)
+                                                     .contentType(ContentType.JSON)
+                                                     .get("/infrastructure-provisioners/terraform"
+                                                         + "-variables")
+                                                     .as(provisioner.getType());
+    if (response.getResource() == null) {
+      throw new EmptyRestResponseException(
+          "infrastructure-provisioners/terraform-variable", String.valueOf(response.getResponseMessages()));
     }
     return response.getResource();
   }

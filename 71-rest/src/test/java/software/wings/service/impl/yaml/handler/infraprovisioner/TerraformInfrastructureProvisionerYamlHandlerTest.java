@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessException;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -25,7 +26,9 @@ import software.wings.beans.Application;
 import software.wings.beans.BlueprintProperty;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.TerraformInfrastructureProvisioner.Yaml;
@@ -41,7 +44,9 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlHandlerTest {
   @Mock private YamlHelper mockYamlHelper;
@@ -68,6 +73,16 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
       + "  serviceName: Archive\n"
       + "name: Harness Terraform Test\n"
       + "sourceRepoSettingName: TERRAFORM_TEST_GIT_REPO\n"
+      + "variables:\n"
+      + "  - name: access_key\n"
+      + "    valueType: TEXT\n"
+      + "  - name: secret_key\n"
+      + "    valueType: ENCRYPTED_TEXT\n"
+      + "backendConfigs:\n"
+      + "  - name: access_key\n"
+      + "    valueType: TEXT\n"
+      + "  - name: secret_key\n"
+      + "    valueType: ENCRYPTED_TEXT\n"
       + "sourceRepoBranch: master";
 
   @Test
@@ -97,6 +112,9 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
     assertThat(SETTING_ID).isEqualTo(provisionerSaved.getSourceRepoSettingId());
     assertThat(1).isEqualTo(provisionerSaved.getMappingBlueprints().size());
 
+    List<NameValuePair> variables =
+        Arrays.asList(NameValuePair.builder().name("access_key").valueType(Type.TEXT.toString()).build(),
+            NameValuePair.builder().name("secret_key").valueType(Type.ENCRYPTED_TEXT.toString()).build());
     TerraformInfrastructureProvisioner provisioner =
         TerraformInfrastructureProvisioner.builder()
             .appId(APP_ID)
@@ -105,6 +123,8 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
             .description("Desc1")
             .sourceRepoSettingId(SETTING_ID)
             .sourceRepoBranch("master")
+            .variables(variables)
+            .backendConfigs(variables)
             .mappingBlueprints(Collections.singletonList(
                 InfrastructureMappingBlueprint.builder()
                     .cloudProviderType(CloudProviderType.AWS)
@@ -127,6 +147,17 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
     assertThat(1).isEqualTo(yaml1.getMappingBlueprints().get(0).getProperties().size());
     assertThat("k2").isEqualTo(yaml1.getMappingBlueprints().get(0).getProperties().get(0).getName());
     assertThat("v2").isEqualTo(yaml1.getMappingBlueprints().get(0).getProperties().get(0).getValue());
+    assertThat("access_key").isEqualTo(yaml1.getVariables().get(0).getName());
+    assertThat("secret_key").isEqualTo(yaml1.getVariables().get(1).getName());
+    assertThat("access_key").isEqualTo(yaml1.getBackendConfigs().get(0).getName());
+    assertThat("secret_key").isEqualTo(yaml1.getBackendConfigs().get(1).getName());
+    assertThat(yaml1.getVariables().size()).isEqualTo(2);
+    assertThat(yaml1.getBackendConfigs().size()).isEqualTo(2);
+
+    handler.upsertFromYaml(changeContext, null);
+    TerraformInfrastructureProvisioner provisioner1 = captor.getValue();
+    Assertions.assertThat(provisioner)
+        .isEqualToIgnoringGivenFields(provisioner1, "uuid", "mappingBlueprints", "name", "description");
   }
 
   private ChangeContext<Yaml> getChangeContext() {
