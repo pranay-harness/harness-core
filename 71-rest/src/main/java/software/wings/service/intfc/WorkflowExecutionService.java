@@ -144,6 +144,8 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
 
   List<WorkflowExecution> obtainWorkflowExecutions(List<String> appIds, long fromDateEpochMilli);
 
+  List<WorkflowExecution> obtainWorkflowExecutions(String accountId, long fromDateEpochMilli);
+
   HIterator<WorkflowExecution> obtainWorkflowExecutionIterator(List<String> appIds, long epochMilli);
 
   List<Artifact> obtainLastGoodDeployedArtifacts(@NotEmpty String appId, @NotEmpty String workflowId);

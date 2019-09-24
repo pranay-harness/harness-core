@@ -2887,6 +2887,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
+  public List<WorkflowExecution> obtainWorkflowExecutions(String accountId, long fromDateEpochMilli) {
+    List<WorkflowExecution> workflowExecutions = new ArrayList<>();
+    try (HIterator<WorkflowExecution> iterator = obtainWorkflowExecutionIterator(accountId, fromDateEpochMilli)) {
+      while (iterator.hasNext()) {
+        workflowExecutions.add(iterator.next());
+      }
+    }
+    return workflowExecutions;
+  }
+
+  @Override
   public HIterator<WorkflowExecution> obtainWorkflowExecutionIterator(List<String> appIds, long epochMilli) {
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
                                          .field(WorkflowExecutionKeys.createdAt)
@@ -2895,6 +2906,18 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                          .doesNotExist()
                                          .field(WorkflowExecutionKeys.appId)
                                          .in(appIds)
+                                         .project(WorkflowExecutionKeys.stateMachine, false);
+    return new HIterator<>(query.fetch());
+  }
+
+  private HIterator<WorkflowExecution> obtainWorkflowExecutionIterator(String accountId, long epochMilli) {
+    Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
+                                         .field(WorkflowExecutionKeys.createdAt)
+                                         .greaterThanOrEq(epochMilli)
+                                         .field(WorkflowExecutionKeys.pipelineExecutionId)
+                                         .doesNotExist()
+                                         .field(WorkflowExecutionKeys.accountId)
+                                         .equal(accountId)
                                          .project(WorkflowExecutionKeys.stateMachine, false);
     return new HIterator<>(query.fetch());
   }
