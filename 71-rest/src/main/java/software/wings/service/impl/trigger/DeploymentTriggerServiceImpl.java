@@ -22,6 +22,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Event;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.trigger.Action.ActionType;
 import software.wings.beans.trigger.ArtifactCondition;
 import software.wings.beans.trigger.Condition;
 import software.wings.beans.trigger.DeploymentTrigger;
@@ -45,6 +46,7 @@ import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.utils.Validator;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -73,10 +75,12 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
   }
 
   @Override
-  public DeploymentTrigger save(DeploymentTrigger trigger) {
+  public DeploymentTrigger save(DeploymentTrigger trigger, boolean migration) {
     String accountId = appService.getAccountIdByAppId(trigger.getAppId());
     trigger.setAccountId(accountId);
-    validateTrigger(trigger, null);
+    if (!migration) {
+      validateTrigger(trigger, null);
+    }
     setConditionTypeInTrigger(trigger);
     String uuid = Validator.duplicateCheck(() -> wingsPersistence.save(trigger), "name", trigger.getName());
     actionsAfterTriggerSave(trigger);
@@ -276,26 +280,34 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
 
   @Override
   public List<String> getTriggersHasPipelineAction(String appId, String pipelineId) {
-    return wingsPersistence.createQuery(DeploymentTrigger.class)
-        .filter(DeploymentTriggerKeys.appId, appId)
-        .asList()
-        .stream()
-        .filter(
-            deploymentTrigger -> ((PipelineAction) deploymentTrigger.getAction()).getPipelineId().equals(pipelineId))
-        .map(DeploymentTrigger::getName)
-        .collect(Collectors.toList());
+    List<String> triggerNames = new ArrayList<>();
+    List<DeploymentTrigger> triggersForAppId =
+        wingsPersistence.createQuery(DeploymentTrigger.class).filter(DeploymentTriggerKeys.appId, appId).asList();
+    for (DeploymentTrigger deploymentTrigger : triggersForAppId) {
+      if (deploymentTrigger.getAction() != null
+          && deploymentTrigger.getAction().getActionType().equals(ActionType.PIPELINE)
+          && ((PipelineAction) deploymentTrigger.getAction()).getPipelineId().equals(pipelineId)) {
+        String name = deploymentTrigger.getName();
+        triggerNames.add(name);
+      }
+    }
+    return triggerNames;
   }
 
   @Override
   public List<String> getTriggersHasWorkflowAction(String appId, String workflowId) {
-    return wingsPersistence.createQuery(DeploymentTrigger.class)
-        .filter(DeploymentTriggerKeys.appId, appId)
-        .asList()
-        .stream()
-        .filter(
-            deploymentTrigger -> ((WorkflowAction) deploymentTrigger.getAction()).getWorkflowId().equals(workflowId))
-        .map(DeploymentTrigger::getName)
-        .collect(Collectors.toList());
+    List<String> triggerNames = new ArrayList<>();
+    List<DeploymentTrigger> triggersForAppId =
+        wingsPersistence.createQuery(DeploymentTrigger.class).filter(DeploymentTriggerKeys.appId, appId).asList();
+    for (DeploymentTrigger deploymentTrigger : triggersForAppId) {
+      if (deploymentTrigger.getAction() != null
+          && deploymentTrigger.getAction().getActionType().equals(ActionType.WORKFLOW)
+          && ((WorkflowAction) deploymentTrigger.getAction()).getWorkflowId().equals(workflowId)) {
+        String name = deploymentTrigger.getName();
+        triggerNames.add(name);
+      }
+    }
+    return triggerNames;
   }
 
   @Override

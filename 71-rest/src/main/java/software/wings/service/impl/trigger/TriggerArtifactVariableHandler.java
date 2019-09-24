@@ -478,7 +478,8 @@ public class TriggerArtifactVariableHandler {
       if (lastCollectedArtifact != null) {
         return lastCollectedArtifact.getUuid();
       } else {
-        throw new WingsException("No artifact exist for trigger with artifact source " + artifactStream.getName());
+        throw new WingsException("No artifact exist for trigger with artifact source " + artifactStream.getName()
+            + "Build filter: " + artifactFilter);
       }
     }
   }

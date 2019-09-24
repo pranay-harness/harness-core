@@ -127,7 +127,7 @@ public class DeploymentTriggerResource {
       return new RestResponse<>(deploymentTriggerService.update(trigger));
     }
     triggerAuthHandler.authorize(trigger, false);
-    return new RestResponse<>(deploymentTriggerService.save(trigger));
+    return new RestResponse<>(deploymentTriggerService.save(trigger, false));
   }
 
   /**

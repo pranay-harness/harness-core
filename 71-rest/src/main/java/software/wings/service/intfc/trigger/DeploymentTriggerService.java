@@ -23,7 +23,7 @@ import javax.validation.Valid;
 
 public interface DeploymentTriggerService
     extends OwnedByApplication, OwnedByPipeline, OwnedByArtifactStream, OwnedByWorkflow {
-  @ValidationGroups(Create.class) DeploymentTrigger save(@Valid DeploymentTrigger deploymentTrigger);
+  @ValidationGroups(Create.class) DeploymentTrigger save(@Valid DeploymentTrigger deploymentTrigger, boolean migration);
 
   @ValidationGroups(Update.class) DeploymentTrigger update(@Valid DeploymentTrigger trigger);
 

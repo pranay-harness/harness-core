@@ -98,7 +98,7 @@ public class DeploymentTriggerYamlHandler extends BaseYamlHandler<DeploymentTrig
 
     DeploymentTrigger trigger = toBean(appId, changeContext, changeSetContext);
     if (existingTrigger == null) {
-      trigger = deploymentTriggerService.save(trigger);
+      trigger = deploymentTriggerService.save(trigger, false);
     } else {
       trigger = deploymentTriggerService.update(trigger);
     }

@@ -2,6 +2,7 @@ package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static java.lang.String.format;
 
 import com.google.inject.Inject;
 
@@ -76,7 +77,13 @@ public class AddServiceIdToArtifactCollectionStates implements Migration {
                                                                      .fetch())) {
       for (Workflow initialWorkflow : workflowHIterator) {
         // Read the workflow.
-        Workflow workflow = workflowService.readWorkflow(initialWorkflow.getAppId(), initialWorkflow.getUuid());
+        Workflow workflow;
+        try {
+          workflow = workflowService.readWorkflow(initialWorkflow.getAppId(), initialWorkflow.getUuid());
+        } catch (Exception e) {
+          logger.error(format("Migration Error - could not read workflow: [%s]", initialWorkflow.getUuid()), e);
+          continue;
+        }
         // Skip if the workflow is not a BUILD workflow.
         if (workflow == null || workflow.getOrchestrationWorkflow() == null
             || !OrchestrationWorkflowType.BUILD.equals(
@@ -137,7 +144,11 @@ public class AddServiceIdToArtifactCollectionStates implements Migration {
           }
 
           if (updated) {
-            workflowService.updateWorkflowPhase(workflow.getAppId(), workflow.getUuid(), workflowPhase);
+            try {
+              workflowService.updateWorkflowPhase(workflow.getAppId(), workflow.getUuid(), workflowPhase);
+            } catch (Exception e) {
+              logger.error(format("Migration Error - could not migrate workflow: [%s]", workflow.getUuid()), e);
+            }
           }
         }
       }
