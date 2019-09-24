@@ -389,13 +389,12 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
   @Override
   public void pruneByService(String appId, String serviceId) {
-    ApplicationManifest applicationManifest = wingsPersistence.createQuery(ApplicationManifest.class)
-                                                  .filter(ApplicationKeys.appId, appId)
-                                                  .filter(ApplicationManifestKeys.serviceId, serviceId)
-                                                  .get();
-
-    if (applicationManifest != null) {
-      deleteAppManifest(appId, applicationManifest.getUuid());
+    List<ApplicationManifest> applicationManifests = wingsPersistence.createQuery(ApplicationManifest.class)
+                                                         .filter(ApplicationKeys.appId, appId)
+                                                         .filter(ApplicationManifestKeys.serviceId, serviceId)
+                                                         .asList();
+    for (ApplicationManifest appManifest : applicationManifests) {
+      deleteAppManifest(appId, appManifest.getUuid());
     }
   }
 
