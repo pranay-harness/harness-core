@@ -1366,10 +1366,11 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         accountId, SERVICES_FOLDER, ApplicationManifest.class, serviceValuesPath, env.getAppId(), yamlGitSyncService);
 
     for (ApplicationManifest appManifest : applicationManifests) {
-      if (isNotBlank(appManifest.getEnvId()) && isNotBlank(appManifest.getServiceId())) {
-        Service service = serviceResourceService.get(env.getAppId(), appManifest.getServiceId(), false);
+      Service service = isNotBlank(appManifest.getServiceId())
+          ? serviceResourceService.get(env.getAppId(), appManifest.getServiceId(), false)
+          : null;
+      if (isNotBlank(appManifest.getEnvId()) && service != null) {
         DirectoryPath serviceFolderPath = serviceValuesPath.clone().add(service.getName());
-
         FolderNode serviceFolder = new FolderNode(accountId, service.getName(), ApplicationManifest.class,
             serviceFolderPath, env.getAppId(), yamlGitSyncService);
         valuesServicesFolder.addChild(serviceFolder);
