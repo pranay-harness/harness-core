@@ -1034,8 +1034,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
   @Override
   public int getEndTimeForLogAnalysis(AnalysisContext context) {
-    if (PER_MINUTE_CV_STATES.contains(context.getStateType())
-        || GA_PER_MINUTE_CV_STATES.contains(context.getStateType())) {
+    if (isPerMinTaskWithAbsoluteTimestamp(context.getStateType(), context.getAccountId())) {
       return (int) context.getStartDataCollectionMinute() + context.getTimeDuration() - 1;
     } else {
       return context.getTimeDuration() - 1;
@@ -1054,13 +1053,18 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   @Override
   public boolean isProcessingComplete(String query, String appId, String stateExecutionId, StateType type,
       int timeDurationMins, long collectionMinute, String accountId) {
-    if (PER_MINUTE_CV_STATES.contains(type) || GA_PER_MINUTE_CV_STATES.contains(type)
-        || isCVTaskPerMinuteTaskEnabled(type, accountId)) {
+    if (isPerMinTaskWithAbsoluteTimestamp(type, accountId)) {
       return getLastProcessedMinute(stateExecutionId) - collectionMinute >= timeDurationMins - 1;
     } else {
       return getLastProcessedMinute(stateExecutionId) >= timeDurationMins - 1;
     }
   }
+
+  private boolean isPerMinTaskWithAbsoluteTimestamp(StateType type, String accountId) {
+    return PER_MINUTE_CV_STATES.contains(type) || GA_PER_MINUTE_CV_STATES.contains(type)
+        || isCVTaskPerMinuteTaskEnabled(type, accountId);
+  }
+
   // TODO: remove this once everything is moved to cvTask
   private boolean isCVTaskPerMinuteTaskEnabled(StateType stateType, String accountId) {
     if (StateType.SPLUNKV2.equals(stateType)) {

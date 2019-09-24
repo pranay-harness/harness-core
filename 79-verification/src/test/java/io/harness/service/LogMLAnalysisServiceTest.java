@@ -11,6 +11,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.sm.StateType.ELK;
+import static software.wings.sm.StateType.SPLUNKV2;
 
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
@@ -1584,6 +1585,39 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertThat("uuid1").isNotEqualTo(feedbackRecord.getUuid());
   }
 
+  @Test
+  @Category(UnitTests.class)
+  public void testGetEndTimeForLogAnalysisForCVTasksEnabled() throws IOException {
+    long minute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
+    AnalysisContext analysisContext = AnalysisContext.builder()
+                                          .timeDuration(10)
+                                          .startDataCollectionMinute(minute)
+                                          .stateType(SPLUNKV2)
+                                          .accountId(accountId)
+                                          .build();
+    Call<RestResponse<Boolean>> managerCall = mock(Call.class);
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.SPLUNK_CV_TASK, accountId)).thenReturn(managerCall);
+    when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    int endTime = analysisService.getEndTimeForLogAnalysis(analysisContext);
+    assertThat(minute + 10 - 1).isEqualTo(endTime);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetEndTimeForLogAnalysisForCVTasksDisabled() throws IOException {
+    long minute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
+    AnalysisContext analysisContext = AnalysisContext.builder()
+                                          .timeDuration(10)
+                                          .startDataCollectionMinute(minute)
+                                          .stateType(SPLUNKV2)
+                                          .accountId(accountId)
+                                          .build();
+    Call<RestResponse<Boolean>> managerCall = mock(Call.class);
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.SPLUNK_CV_TASK, accountId)).thenReturn(managerCall);
+    when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
+    int endTime = analysisService.getEndTimeForLogAnalysis(analysisContext);
+    assertThat(9).isEqualTo(endTime);
+  }
   @Test
   @Category(UnitTests.class)
   public void testCreateFeedbackAnalysisNoLEAnalysis() {
