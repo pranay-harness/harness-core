@@ -29,8 +29,10 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -83,9 +85,12 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
       txns.add("txn-" + i);
     }
 
+    List<NewRelicMetricDataRecord> metricDataRecords = new ArrayList<>();
+    Map<String, Double> values = new HashMap<>();
+    values.put("m1", 1.0);
     hosts.forEach(host -> txns.forEach(txn -> {
       for (int k = 0; k < numOfMinutes; k++) {
-        wingsPersistence.save(NewRelicMetricDataRecord.builder()
+        metricDataRecords.add(NewRelicMetricDataRecord.builder()
                                   .cvConfigId(cvConfigId)
                                   .serviceId(serviceId)
                                   .stateType(StateType.NEW_RELIC)
@@ -93,12 +98,17 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
                                   .timeStamp(k * 1000)
                                   .dataCollectionMinute(k)
                                   .host(host)
+                                  .values(values)
                                   .build());
       }
     }));
+    final List<TimeSeriesDataRecord> dataRecords =
+        TimeSeriesDataRecord.getTimeSeriesDataRecordsFromNewRelicDataRecords(metricDataRecords);
+    dataRecords.forEach(dataRecord -> dataRecord.compress());
+    wingsPersistence.save(dataRecords);
 
-    assertThat(wingsPersistence.createQuery(NewRelicMetricDataRecord.class, excludeAuthority).asList().size())
-        .isEqualTo(numOfHosts * numOfTxns * numOfMinutes);
+    assertThat(wingsPersistence.createQuery(TimeSeriesDataRecord.class, excludeAuthority).asList().size())
+        .isEqualTo(numOfHosts * numOfMinutes);
 
     int analysisStartMinute = randomizer.nextInt(100);
     int analysisEndMinute = analysisStartMinute + randomizer.nextInt(102);
@@ -120,6 +130,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
                                 .timeStamp(k * 1000)
                                 .dataCollectionMinute(k)
                                 .host(host)
+                                .values(values)
                                 .build());
       }
     }));

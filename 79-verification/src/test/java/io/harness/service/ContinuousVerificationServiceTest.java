@@ -71,6 +71,7 @@ import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.dl.WingsPersistence;
+import software.wings.metrics.TimeSeriesDataRecord;
 import software.wings.service.impl.AlertServiceImpl;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
@@ -1542,14 +1543,16 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
             .level(ClusterLevel.HF)
             .build();
 
-    wingsPersistence.save(dataRecord);
+    final List<TimeSeriesDataRecord> dataRecords =
+        TimeSeriesDataRecord.getTimeSeriesDataRecordsFromNewRelicDataRecords(Lists.newArrayList(dataRecord));
+    dataRecords.forEach(record -> record.compress());
+    wingsPersistence.save(dataRecords);
+
     long expectedEnd = currentTime - TimeUnit.MINUTES.toMillis(2);
     long expectedStart = expectedEnd - TimeUnit.MINUTES.toMillis(PREDECTIVE_HISTORY_MINUTES * 2);
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
     when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
     when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
-        .thenReturn(managerFeatureFlagCall);
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.GDS_TIME_SERIES_SAVE_PER_MINUTE, accountId))
         .thenReturn(managerFeatureFlagCall);
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     continuousVerificationService.triggerAPMDataCollection(accountId);
@@ -1574,14 +1577,16 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
             .level(ClusterLevel.HF)
             .build();
 
-    wingsPersistence.save(dataRecord);
+    final List<TimeSeriesDataRecord> dataRecords =
+        TimeSeriesDataRecord.getTimeSeriesDataRecordsFromNewRelicDataRecords(Lists.newArrayList(dataRecord));
+    dataRecords.forEach(record -> record.compress());
+    wingsPersistence.save(dataRecords);
+
     long expectedEnd = currentTime - TimeUnit.MINUTES.toMillis(2);
     long expectedStart = TimeUnit.MINUTES.toMillis(TimeUnit.MILLISECONDS.toMinutes(currentTime) - 60);
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
     when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
     when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
-        .thenReturn(managerFeatureFlagCall);
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.GDS_TIME_SERIES_SAVE_PER_MINUTE, accountId))
         .thenReturn(managerFeatureFlagCall);
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     continuousVerificationService.triggerAPMDataCollection(accountId);
@@ -1603,8 +1608,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
     when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
     when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
-        .thenReturn(managerFeatureFlagCall);
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.GDS_TIME_SERIES_SAVE_PER_MINUTE, accountId))
         .thenReturn(managerFeatureFlagCall);
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     continuousVerificationService.triggerAPMDataCollection(accountId);

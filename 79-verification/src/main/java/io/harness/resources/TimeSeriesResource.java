@@ -61,18 +61,6 @@ public class TimeSeriesResource {
     this.managerClient = managerClient;
   }
 
-  @POST
-  @Path("/save-metrics")
-  @Timed
-  @LearningEngineAuth
-  @ExceptionMetered
-  public RestResponse<Boolean> saveMetricData(@QueryParam("accountId") final String accountId,
-      @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
-      @QueryParam("delegateTaskId") String delegateTaskId, List<NewRelicMetricDataRecord> metricData) {
-    return new RestResponse<>(timeSeriesAnalysisService.saveMetricData(
-        accountId, applicationId, stateExecutionId, delegateTaskId, metricData));
-  }
-
   @Produces({"application/json", "application/v1+json"})
   @POST
   @Path("/get-metrics")

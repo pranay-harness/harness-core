@@ -48,6 +48,7 @@ import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.beans.ServiceSecretKey.ServiceSecretKeyKeys;
 import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.dl.WingsPersistence;
+import software.wings.metrics.TimeSeriesDataRecord;
 import software.wings.service.impl.LicenseUtils;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisTolerance;
@@ -471,11 +472,14 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
 
     // create data record
-    wingsPersistence.save(NewRelicMetricDataRecord.builder()
-                              .appId(appId)
-                              .cvConfigId(cvConfigId)
-                              .dataCollectionMinute((int) currentMinute)
-                              .build());
+    final List<TimeSeriesDataRecord> dataRecords = TimeSeriesDataRecord.getTimeSeriesDataRecordsFromNewRelicDataRecords(
+        Lists.newArrayList(NewRelicMetricDataRecord.builder()
+                               .appId(appId)
+                               .cvConfigId(cvConfigId)
+                               .dataCollectionMinute((int) currentMinute)
+                               .build()));
+    dataRecords.forEach(record -> record.compress());
+    wingsPersistence.save(dataRecords);
 
     // save analysis record
     int numOfUnitsToBeAnalyized = 23;

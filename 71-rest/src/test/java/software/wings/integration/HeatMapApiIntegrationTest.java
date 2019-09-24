@@ -20,6 +20,7 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.MetricType;
+import software.wings.metrics.TimeSeriesDataRecord;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.impl.analysis.TimeSeries;
@@ -262,6 +263,7 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
     int minutesIn2Hours = (int) TimeUnit.HOURS.toMinutes(2);
     logger.info("Creating {} units", minutesIn2Hours);
 
+    List<NewRelicMetricDataRecord> metricDataRecords = new ArrayList<>();
     Random random = new Random();
     for (int i = 0; i < minutesIn2Hours; i++) {
       TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord = TimeSeriesMLAnalysisRecord.builder().build();
@@ -318,11 +320,16 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
       }
 
       transactionMetricMap.forEach(
-          (txn, metric) -> saveNewRelicMetricRecord(txn, currentMinute + 1, configId, metric, stateType));
+          (txn, metric)
+              -> metricDataRecords.add(getNewRelicMetricRecord(txn, currentMinute + 1, configId, metric, stateType)));
     }
+    final List<TimeSeriesDataRecord> dataRecords =
+        TimeSeriesDataRecord.getTimeSeriesDataRecordsFromNewRelicDataRecords(metricDataRecords);
+    dataRecords.forEach(dataRecord -> dataRecord.compress());
+    wingsPersistence.save(dataRecords);
   }
 
-  private void saveNewRelicMetricRecord(
+  private NewRelicMetricDataRecord getNewRelicMetricRecord(
       String transactionName, int minute, String configId, List<String> metrics, StateType stateType) {
     Random random = new Random();
 
@@ -349,7 +356,7 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
     });
 
     newRelicMetricDataRecord.setValues(valueMap);
-    wingsPersistence.save(newRelicMetricDataRecord);
+    return newRelicMetricDataRecord;
   }
 
   @Test
