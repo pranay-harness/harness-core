@@ -509,6 +509,7 @@ public class TriggerDeploymentExecution {
             artifactVariable.setValue(value);
           });
         }
+        executionArgs.setArtifactVariables(artifactVariables);
       }
 
       // Todo harsh validate with trigger args
@@ -519,7 +520,6 @@ public class TriggerDeploymentExecution {
       List<String> artifactNeededServiceIds =
           deploymentMetadata == null ? new ArrayList<>() : deploymentMetadata.getArtifactRequiredServiceIds();
       validateRequiredArtifacts(deploymentTrigger, executionArgs, artifactNeededServiceIds);
-      executionArgs.setArtifactVariables(artifactVariables);
     }
 
     executionArgs.setWorkflowVariables(triggerWorkflowVariableValues);

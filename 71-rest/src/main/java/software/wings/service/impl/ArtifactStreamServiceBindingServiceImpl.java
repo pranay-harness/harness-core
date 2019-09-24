@@ -408,7 +408,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
       return new ArrayList<>();
     }
 
-    return serviceVariables.stream().map(ServiceVariable::getServiceId).distinct().collect(Collectors.toList());
+    return serviceVariables.stream().map(ServiceVariable::getEntityId).distinct().collect(Collectors.toList());
   }
 
   @Override
@@ -428,7 +428,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
       return new ArrayList<>();
     }
 
-    return serviceVariables.stream().map(ServiceVariable::getServiceId).distinct().collect(Collectors.toList());
+    return serviceVariables.stream().map(ServiceVariable::getEntityId).distinct().collect(Collectors.toList());
   }
 
   @Override
@@ -453,7 +453,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
     }
 
     List<String> serviceIds =
-        serviceVariables.stream().map(ServiceVariable::getServiceId).distinct().collect(Collectors.toList());
+        serviceVariables.stream().map(ServiceVariable::getEntityId).distinct().collect(Collectors.toList());
     if (isEmpty(serviceIds)) {
       return new ArrayList<>();
     }

@@ -1,5 +1,7 @@
 package migrations.all;
 
+import static java.lang.String.format;
+
 import com.google.inject.Inject;
 
 import io.harness.data.structure.EmptyPredicate;
@@ -31,7 +33,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class MigrateArtifactStreamBindingsToServiceVariable implements Migration {
   // NOTE: Pre-requisite: MigrateServiceLevelArtifactStreamsToConnectorLevel
-  private static final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w"; // TODO: change this to reflect correct account
+  private static final String ACCOUNT_ID = "zEaak-FLS425IEO7OLzMUg"; // TODO: change this to reflect correct account
   private static final String ARTIFACT_VARIABLE_NAME = ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME;
 
   @Inject private WingsPersistence wingsPersistence;
@@ -102,24 +104,28 @@ public class MigrateArtifactStreamBindingsToServiceVariable implements Migration
                 .build();
 
         String serviceId = service.getUuid();
-        if (serviceVariableMap.containsKey(serviceId)) {
-          ServiceVariable serviceVariable = serviceVariableMap.get(serviceId);
-          if (!Type.ARTIFACT.equals(serviceVariable.getType())) {
-            // A non-artifact service variable exists with the same name. Logging and skipping.
-            logger.info(
-                "Service variable with name " + ARTIFACT_VARIABLE_NAME + " already exists for service: " + serviceId);
-            continue;
-          }
+        try {
+          if (serviceVariableMap.containsKey(serviceId)) {
+            ServiceVariable serviceVariable = serviceVariableMap.get(serviceId);
+            if (!Type.ARTIFACT.equals(serviceVariable.getType())) {
+              // A non-artifact service variable exists with the same name. Logging and skipping.
+              logger.info(
+                  "Service variable with name " + ARTIFACT_VARIABLE_NAME + " already exists for service: " + serviceId);
+              continue;
+            }
 
-          // Artifact variable already exists for this service
-          if (areListEqual(serviceVariable.getAllowedList(), service.getArtifactStreamIds())) {
-            continue;
-          }
+            // Artifact variable already exists for this service
+            if (areListEqual(serviceVariable.getAllowedList(), service.getArtifactStreamIds())) {
+              continue;
+            }
 
-          artifactStreamServiceBindingService.update(
-              service.getAppId(), service.getUuid(), ARTIFACT_VARIABLE_NAME, artifactStreamBinding);
-        } else {
-          artifactStreamServiceBindingService.create(service.getAppId(), service.getUuid(), artifactStreamBinding);
+            artifactStreamServiceBindingService.update(
+                service.getAppId(), service.getUuid(), ARTIFACT_VARIABLE_NAME, artifactStreamBinding);
+          } else {
+            artifactStreamServiceBindingService.create(service.getAppId(), service.getUuid(), artifactStreamBinding);
+          }
+        } catch (Exception e) {
+          logger.error(format("Migration Error - could not migrate service: [%s]", serviceId), e);
         }
       }
     }

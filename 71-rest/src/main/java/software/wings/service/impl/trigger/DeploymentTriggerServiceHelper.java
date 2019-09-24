@@ -2,7 +2,10 @@ package software.wings.service.impl.trigger;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static io.harness.govern.Switch.unhandled;
 import static software.wings.beans.trigger.Condition.Type.PIPELINE_COMPLETION;
 import static software.wings.beans.trigger.WebhookCustomExpression.suggestExpressions;
@@ -24,6 +27,12 @@ import io.harness.exception.TriggerException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import net.redhogs.cronparser.I18nMessages;
+import org.apache.commons.lang3.StringUtils;
+import software.wings.beans.EntityType;
+import software.wings.beans.Environment;
+import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.Service;
+import software.wings.beans.Variable;
 import software.wings.beans.trigger.Action;
 import software.wings.beans.trigger.Action.ActionType;
 import software.wings.beans.trigger.Condition.Type;
@@ -39,7 +48,12 @@ import software.wings.beans.trigger.WebhookSource.GitLabEventType;
 import software.wings.beans.trigger.WebhookSource.WebhookSubEventInfo;
 import software.wings.beans.trigger.WorkflowAction;
 import software.wings.dl.WingsPersistence;
+import software.wings.infra.InfrastructureDefinition;
+import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
 
 import java.util.ArrayList;
@@ -55,6 +69,10 @@ public class DeploymentTriggerServiceHelper {
   @Inject private transient TriggerArtifactVariableHandler artifactVariableHandler;
   @Inject private transient PipelineService pipelineService;
   @Inject private transient WorkflowService workflowService;
+  @Inject private transient EnvironmentService environmentService;
+  @Inject private transient ServiceResourceService serviceResourceService;
+  @Inject private transient InfrastructureMappingService infrastructureMappingService;
+  @Inject private transient InfrastructureDefinitionService infrastructureDefinitionService;
 
   public List<DeploymentTrigger> getTriggersByApp(String appId, Type condition) {
     return wingsPersistence
@@ -102,6 +120,10 @@ public class DeploymentTriggerServiceHelper {
             artifactVariableHandler.transformTriggerArtifactVariables(
                 deploymentTrigger.getAppId(), triggerArgs.getTriggerArtifactVariables());
 
+        List<Variable> triggerVariables = triggerArgs.getVariables();
+        if (isNotEmpty(triggerVariables)) {
+          validateAndTransformTriggerVariables(deploymentTrigger.getAppId(), triggerVariables);
+        }
         deploymentTrigger.setAction(
             PipelineAction.builder()
                 .pipelineId(pipelineAction.getPipelineId())
@@ -109,7 +131,7 @@ public class DeploymentTriggerServiceHelper {
                     pipelineService.fetchPipelineName(deploymentTrigger.getAppId(), pipelineAction.getPipelineId()))
                 .triggerArgs(TriggerArgs.builder()
                                  .excludeHostsWithSameArtifact(triggerArgs.isExcludeHostsWithSameArtifact())
-                                 .variables(triggerArgs.getVariables())
+                                 .variables(triggerVariables)
                                  .triggerArtifactVariables(triggerArtifactVariables)
                                  .build())
                 .build());
@@ -117,6 +139,10 @@ public class DeploymentTriggerServiceHelper {
       case WORKFLOW:
         WorkflowAction workflowAction = (WorkflowAction) deploymentTrigger.getAction();
         TriggerArgs wfTriggerArgs = workflowAction.getTriggerArgs();
+        List<Variable> wfTriggerVariables = wfTriggerArgs.getVariables();
+        if (isNotEmpty(wfTriggerVariables)) {
+          validateAndTransformTriggerVariables(deploymentTrigger.getAppId(), wfTriggerVariables);
+        }
         List<TriggerArtifactVariable> wfTriggerArtifactVariables =
             artifactVariableHandler.transformTriggerArtifactVariables(
                 deploymentTrigger.getAppId(), wfTriggerArgs.getTriggerArtifactVariables());
@@ -127,7 +153,7 @@ public class DeploymentTriggerServiceHelper {
                     workflowService.fetchWorkflowName(deploymentTrigger.getAppId(), workflowAction.getWorkflowId()))
                 .triggerArgs(TriggerArgs.builder()
                                  .excludeHostsWithSameArtifact(wfTriggerArgs.isExcludeHostsWithSameArtifact())
-                                 .variables(wfTriggerArgs.getVariables())
+                                 .variables(wfTriggerVariables)
                                  .triggerArtifactVariables(wfTriggerArtifactVariables)
                                  .build())
                 .build());
@@ -259,6 +285,65 @@ public class DeploymentTriggerServiceHelper {
 
     if (triggerArtifactVariables != null) {
       artifactVariableHandler.validateTriggerArtifactVariables(appId, triggerArtifactVariables);
+    }
+
+    List<Variable> triggerVariables = triggerArgs.getVariables();
+
+    if (isNotEmpty(triggerVariables)) {
+      validateAndTransformTriggerVariables(appId, triggerVariables);
+    }
+  }
+
+  private void validateAndTransformTriggerVariables(String appId, List<Variable> triggerVariables) {
+    if (isEmpty(triggerVariables)) {
+      return;
+    }
+    for (Variable variable : triggerVariables) {
+      EntityType entityType = variable.obtainEntityType();
+      if (entityType != null) {
+        switch (variable.obtainEntityType()) {
+          case ENVIRONMENT:
+            String envId = variable.getValue();
+            if (!matchesVariablePattern(envId)) {
+              Environment environment = environmentService.get(appId, envId);
+              notNullCheck(
+                  "Environment not found for Id: " + envId + "in value for var" + variable.getName(), environment);
+              variable.getMetadata().put("variableDisplay", environment.getName());
+            }
+            break;
+          case INFRASTRUCTURE_MAPPING:
+            String infraMapId = variable.getValue();
+            if (!matchesVariablePattern(infraMapId)) {
+              InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMapId);
+              notNullCheck("Infra Structure not found for Id: " + infraMapId + "in value for var" + variable.getName(),
+                  infrastructureMapping);
+              variable.getMetadata().put("variableDisplay", infrastructureMapping.getName());
+            }
+            break;
+          case SERVICE:
+            String serviceId = variable.getValue();
+            if (!matchesVariablePattern(serviceId)) {
+              Service service = serviceResourceService.get(appId, serviceId);
+              notNullCheck("Service not found for Id: " + serviceId + "in value for var" + variable.getName(), service);
+              variable.getMetadata().put("variableDisplay", service.getName());
+            }
+            break;
+          case INFRASTRUCTURE_DEFINITION:
+            String infraDefId = variable.getValue();
+            if (!matchesVariablePattern(infraDefId)) {
+              InfrastructureDefinition infrastructureDefinition =
+                  infrastructureDefinitionService.get(appId, infraDefId);
+              notNullCheck(
+                  "Infrastructure Definition not found for Id: " + infraDefId + "in value for var" + variable.getName(),
+                  infrastructureDefinition);
+              variable.getMetadata().put("variableDisplay", infrastructureDefinition.getName());
+            }
+            break;
+          default:
+            throw new TriggerException(
+                StringUtils.join("Variable type ", entityType, "Not supported in trigger variables"), null);
+        }
+      }
     }
   }
 }

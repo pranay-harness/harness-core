@@ -42,7 +42,7 @@ import java.util.Set;
 @Slf4j
 @SuppressWarnings("deprecation")
 public class MigrateServiceLevelArtifactStreamsToConnectorLevel implements Migration {
-  private static final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w"; // TODO: change this to reflect correct account
+  private static final String ACCOUNT_ID = "zEaak-FLS425IEO7OLzMUg"; // TODO: change this to reflect correct account
   private static final String SEPARATOR = "_";
   private static final String CUSTOM_ARTIFACT_SERVER = "Custom Artifact Server";
 

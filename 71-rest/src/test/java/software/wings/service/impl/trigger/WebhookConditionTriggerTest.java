@@ -99,7 +99,8 @@ public class WebhookConditionTriggerTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldSaveWebhookConditionTrigger() {
-    DeploymentTrigger trigger = deploymentTriggerService.save(TriggerServiceTestHelper.buildWebhookConditionTrigger());
+    DeploymentTrigger trigger =
+        deploymentTriggerService.save(TriggerServiceTestHelper.buildWebhookConditionTrigger(), false);
     DeploymentTrigger savedWebhookTrigger = deploymentTriggerService.get(trigger.getAppId(), trigger.getUuid());
 
     assertThat(savedWebhookTrigger.getUuid()).isNotEmpty();
@@ -116,7 +117,8 @@ public class WebhookConditionTriggerTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldUpdateWebhookConditionTrigger() {
-    DeploymentTrigger trigger = deploymentTriggerService.save(TriggerServiceTestHelper.buildWebhookConditionTrigger());
+    DeploymentTrigger trigger =
+        deploymentTriggerService.save(TriggerServiceTestHelper.buildWebhookConditionTrigger(), false);
     trigger.setDescription("updated description");
 
     DeploymentTrigger updatedTrigger = deploymentTriggerService.update(trigger);
