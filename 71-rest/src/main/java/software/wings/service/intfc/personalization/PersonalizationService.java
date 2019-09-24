@@ -14,4 +14,7 @@ public interface PersonalizationService {
   Personalization removeFavoriteStep(StateType step, String accountId, String userId);
 
   Personalization addRecentStep(StateType step, String accountId, String userId);
+
+  Personalization addFavoriteTemplate(String templateId, String accountId, String userId);
+  Personalization removeFavoriteTemplate(String templateId, String accountId, String userId);
 }

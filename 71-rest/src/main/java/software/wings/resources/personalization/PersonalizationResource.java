@@ -65,4 +65,26 @@ public class PersonalizationResource {
     final User user = UserThreadLocal.get();
     personalizationService.addRecentStep(StateType.valueOf(stepId), accountId, user.getUuid());
   }
+
+  @PUT
+  @Path("templates/{templateId}/favorite")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  public void addTemplateToFavorite(
+      @PathParam("templateId") String templateId, @QueryParam("accountId") String accountId) {
+    final User user = UserThreadLocal.get();
+    personalizationService.addFavoriteTemplate(templateId, accountId, user.getUuid());
+  }
+
+  @DELETE
+  @Path("templates/{templateId}/favorite")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  public void removeTemplateFromFavorite(
+      @PathParam("templateId") String templateId, @QueryParam("accountId") String accountId) {
+    final User user = UserThreadLocal.get();
+    personalizationService.removeFavoriteTemplate(templateId, accountId, user.getUuid());
+  }
 }
