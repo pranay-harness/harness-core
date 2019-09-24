@@ -580,9 +580,8 @@ public class NexusServiceTest extends WingsBaseTest {
                                              .withStatus(200)
                                              .withFault(Fault.MALFORMED_RESPONSE_CHUNK)
                                              .withHeader("Content-Type", "application/xml")));
-    assertThatThrownBy(() -> nexusService.getRepositories(nexusConfig, null))
-        .isInstanceOf(WingsException.class)
-        .hasMessageContaining("INVALID_ARTIFACT_SERVER");
+    Map<String, String> repositories = nexusService.getRepositories(nexusConfig, null);
+    assertThat(repositories).isEmpty();
   }
 
   @Test
