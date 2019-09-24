@@ -19,7 +19,6 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.api.PhaseElement;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
 import software.wings.api.pcf.PcfSetupContextElement;
-import software.wings.api.pcf.PcfSwapRouteRollbackContextElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -115,15 +114,7 @@ public class PcfSwitchBlueGreenRoutes extends State {
     List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
         (EncryptableSetting) pcfConfig, context.getAppId(), context.getWorkflowExecutionId());
 
-    PcfRouteUpdateRequestConfigData requestConfigData = null;
-    if (isRollback()) {
-      PcfSwapRouteRollbackContextElement pcfSwapRouteRollbackContextElement =
-          context.getContextElement(ContextElementType.PCF_ROUTE_SWAP_ROLLBACK);
-      requestConfigData = pcfSwapRouteRollbackContextElement.getPcfRouteUpdateRequestConfigData();
-      requestConfigData.setRollback(true);
-    } else {
-      requestConfigData = getPcfRouteUpdateRequestConfigData(pcfSetupContextElement);
-    }
+    PcfRouteUpdateRequestConfigData requestConfigData = getPcfRouteUpdateRequestConfigData(pcfSetupContextElement);
 
     return pcfStateHelper.queueDelegateTaskForRouteUpdate(app, pcfConfig, delegateService, pcfInfrastructureMapping,
         activity.getUuid(), env.getUuid(), pcfSetupContextElement.getTimeoutIntervalInMinutes(),
