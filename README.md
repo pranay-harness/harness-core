@@ -138,6 +138,18 @@ NOTE: the data from it is used for every git operation github does on you behave
     In config.yml set `mongo.uri` to `mongodb://mongo1:30001,mongo2:30002,mongo3:30003/harness`.
     Do the same in `config-datagen.yml` and `verification-config.yml`.
 
+5. If TimeScaleDB has to be enabled (Optional for now) 
+   
+   a. Start TimeScaleDB using the following docker command: `docker run -d --name harness-timescaledb -v ~/timescaledb/data:/var/lib/postgresql/data -p 5432:5432 --rm -e POSTGRES_USER=admin -e POSTGRES_DB=harness -e POSTGRES_PASSWORD=password timescale/timescaledb`
+  
+   b. Set the TimeScaleDB config in the config.yml
+  ``` 
+  timescaledb:
+    timescaledbUrl: jdbc:postgresql://localhost:5432/harness
+    timescaledbUsername: admin
+    timescaledbPassword: password
+  ``` 
+   
 ### Run Harness without IDE (especially for the UI development)
 
 1. Start server : Replace the \<Your Home Directory> with the appropriate value(such as /home/rishi) and run following commands. Do
