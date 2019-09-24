@@ -156,7 +156,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       }
       try {
         startTime = System.currentTimeMillis();
-        populateServiceAndOverrideValuesAppManifest(serviceTemplate);
+        populateServiceAndOverrideAppManifest(serviceTemplate);
         logger.info("Total time taken to load ServiceAndOverrideValuesAppManifest for one ServiceTemplate Id {} is {},",
             serviceTemplate.getUuid(), System.currentTimeMillis() - startTime);
       } catch (Exception e) {
@@ -287,7 +287,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         populateServiceAndOverrideServiceVariables(serviceTemplate, encryptedFieldMode);
         populateServiceAndOverrideConfigMapYamls(serviceTemplate);
         populateServiceAndOverrideHelmValueYamls(serviceTemplate);
-        populateServiceAndOverrideValuesAppManifest(serviceTemplate);
+        populateServiceAndOverrideAppManifest(serviceTemplate);
         populateServiceAndOverrideValuesManifestFile(serviceTemplate);
       }
     }
@@ -308,7 +308,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         populateServiceAndOverrideServiceVariables(serviceTemplate, encryptedFieldMode);
         populateServiceAndOverrideConfigMapYamls(serviceTemplate);
         populateServiceAndOverrideHelmValueYamls(serviceTemplate);
-        populateServiceAndOverrideValuesAppManifest(serviceTemplate);
+        populateServiceAndOverrideAppManifest(serviceTemplate);
         populateServiceAndOverrideValuesManifestFile(serviceTemplate);
       }
     }
@@ -429,9 +429,19 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     template.setHelmValueYamlOverride(valuesYaml);
   }
 
-  private void populateServiceAndOverrideValuesAppManifest(ServiceTemplate template) {
-    template.setValuesOverrideAppManifest(applicationManifestService.getAppManifest(
-        template.getAppId(), template.getEnvId(), template.getServiceId(), AppManifestKind.VALUES));
+  private void populateServiceAndOverrideAppManifest(ServiceTemplate serviceTemplate) {
+    Service service = serviceResourceService.get(serviceTemplate.getAppId(), serviceTemplate.getServiceId());
+    if (service == null) {
+      return;
+    }
+
+    AppManifestKind appManifestKind = AppManifestKind.VALUES;
+    if (ArtifactType.PCF.equals(service.getArtifactType())) {
+      appManifestKind = AppManifestKind.PCF_OVERRIDE;
+    }
+
+    serviceTemplate.setValuesOverrideAppManifest(applicationManifestService.getAppManifest(
+        serviceTemplate.getAppId(), serviceTemplate.getEnvId(), serviceTemplate.getServiceId(), appManifestKind));
   }
 
   private void populateServiceAndOverrideValuesManifestFile(ServiceTemplate template) {
