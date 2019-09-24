@@ -284,12 +284,14 @@ public class GitClientImpl implements GitClient {
 
     try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitOperationContext)))) {
       try {
-        Ref ref = git.checkout()
-                      .setCreateBranch(true)
-                      .setName(gitConfig.getBranch())
-                      .setUpstreamMode(SetupUpstreamMode.TRACK)
-                      .setStartPoint("origin/" + gitConfig.getBranch())
-                      .call();
+        if (isNotEmpty(gitConfig.getBranch())) {
+          Ref ref = git.checkout()
+                        .setCreateBranch(true)
+                        .setName(gitConfig.getBranch())
+                        .setUpstreamMode(SetupUpstreamMode.TRACK)
+                        .setStartPoint("origin/" + gitConfig.getBranch())
+                        .call();
+        }
 
       } catch (RefAlreadyExistsException refExIgnored) {
         logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType())
