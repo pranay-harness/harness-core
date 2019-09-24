@@ -2,7 +2,7 @@
 
 ## On MacOS
 
-### Prerequisities 
+### Prerequisities
 
 1. Install Homebrew :
 
