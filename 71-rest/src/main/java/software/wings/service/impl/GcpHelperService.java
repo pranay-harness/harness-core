@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.INVALID_CLOUD_PROVIDER;
+import static io.harness.exception.WingsException.USER;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
@@ -15,7 +17,6 @@ import com.google.api.services.storage.Storage;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
@@ -64,11 +65,11 @@ public class GcpHelperService {
       return new Container.Builder(transport, jsonFactory, credential).setApplicationName("Harness").build();
     } catch (GeneralSecurityException e) {
       logger.error("Security exception getting Google container service", e);
-      throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER)
+      throw new WingsException(INVALID_CLOUD_PROVIDER, USER)
           .addParam("message", "Invalid Google Cloud Platform credentials.");
     } catch (IOException e) {
       logger.error("Error getting Google container service", e);
-      throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER)
+      throw new WingsException(INVALID_CLOUD_PROVIDER, USER)
           .addParam("message", "Invalid Google Cloud Platform credentials.");
     }
   }
@@ -86,11 +87,11 @@ public class GcpHelperService {
       return new Storage.Builder(transport, jsonFactory, credential).setApplicationName("Harness").build();
     } catch (GeneralSecurityException e) {
       logger.error("Security exception getting Google storage service", e);
-      throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER)
+      throw new WingsException(INVALID_CLOUD_PROVIDER, USER)
           .addParam("message", "Invalid Google Cloud Platform credentials.");
     } catch (IOException e) {
       logger.error("Error getting Google storage service", e);
-      throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER)
+      throw new WingsException(INVALID_CLOUD_PROVIDER, USER)
           .addParam("message", "Invalid Google Cloud Platform credentials.");
     }
   }
@@ -103,11 +104,11 @@ public class GcpHelperService {
       return new Compute.Builder(transport, jsonFactory, credential).setApplicationName(projectId).build();
     } catch (GeneralSecurityException e) {
       logger.error("Security exception getting Google storage service", e);
-      throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER)
+      throw new WingsException(INVALID_CLOUD_PROVIDER, USER)
           .addParam("message", "Invalid Google Cloud Platform credentials.");
     } catch (IOException e) {
       logger.error("Error getting Google storage service", e);
-      throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER)
+      throw new WingsException(INVALID_CLOUD_PROVIDER, USER)
           .addParam("message", "Invalid Google Cloud Platform credentials.");
     }
   }
@@ -121,11 +122,11 @@ public class GcpHelperService {
       return new Monitoring.Builder(transport, jsonFactory, credential).setApplicationName(projectId).build();
     } catch (GeneralSecurityException e) {
       logger.error("Security exception getting Google storage service", e);
-      throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER)
+      throw new WingsException(INVALID_CLOUD_PROVIDER, USER)
           .addParam("message", "Invalid Google Cloud Platform credentials.");
     } catch (IOException e) {
       logger.error("Error getting Google storage service", e);
-      throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER)
+      throw new WingsException(INVALID_CLOUD_PROVIDER, USER)
           .addParam("message", "Invalid Google Cloud Platform credentials.");
     }
   }
@@ -139,11 +140,11 @@ public class GcpHelperService {
       return new Logging.Builder(transport, jsonFactory, credential).setApplicationName(projectId).build();
     } catch (GeneralSecurityException e) {
       logger.error("Security exception getting Google storage service", e);
-      throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER)
+      throw new WingsException(INVALID_CLOUD_PROVIDER, USER)
           .addParam("message", "Invalid Google Cloud Platform credentials.");
     } catch (IOException e) {
       logger.error("Error getting Google storage service", e);
-      throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER)
+      throw new WingsException(INVALID_CLOUD_PROVIDER, USER)
           .addParam("message", "Invalid Google Cloud Platform credentials.");
     }
   }
