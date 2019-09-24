@@ -162,7 +162,6 @@ import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder;
 import software.wings.beans.WorkflowStepMeta;
-import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.beans.command.Command;
@@ -2268,9 +2267,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             artifactVariable.setArtifactStreamSummaries(
                 artifactStreams.stream()
                     .map(artifactStream -> {
-                      Artifact lastCollectedArtifact = artifactService.fetchLastCollectedArtifact(artifactStream);
-                      return ArtifactStreamSummary.prepareSummaryFromArtifactStream(
-                          artifactStream, lastCollectedArtifact);
+                      return ArtifactStreamSummary.prepareSummaryFromArtifactStream(artifactStream, null);
                     })
                     .collect(Collectors.toList()));
           }
