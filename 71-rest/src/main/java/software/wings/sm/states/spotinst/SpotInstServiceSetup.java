@@ -1,7 +1,11 @@
 package software.wings.sm.states.spotinst;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
+import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_MAX_INSTANCES;
+import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_MIN_INSTANCES;
+import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_TARGET_INSTANCES;
 import static software.wings.sm.StateType.SPOTINST_SETUP;
 
 import com.google.inject.Inject;
@@ -18,6 +22,7 @@ import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.spotinst.model.ElastiGroup;
+import io.harness.spotinst.model.ElastiGroupCapacity;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +36,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -143,6 +149,26 @@ public class SpotInstServiceSetup extends State {
         stateExecutionData.setElastiGroupId(spotInstSetupTaskResponse.getNewElastiGroup().getId());
         stateExecutionData.setElastiGroupName(spotInstSetupTaskResponse.getNewElastiGroup().getName());
       }
+      if (useCurrentRunningCount) {
+        int min = DEFAULT_ELASTIGROUP_MIN_INSTANCES;
+        int max = DEFAULT_ELASTIGROUP_MAX_INSTANCES;
+        int target = DEFAULT_ELASTIGROUP_TARGET_INSTANCES;
+        List<ElastiGroup> groupToBeDownsized = spotInstSetupTaskResponse.getGroupToBeDownsized();
+        if (isNotEmpty(groupToBeDownsized)) {
+          ElastiGroup elastiGroupToBeDownsized = groupToBeDownsized.get(0);
+          if (elastiGroupToBeDownsized != null) {
+            ElastiGroupCapacity capacity = elastiGroupToBeDownsized.getCapacity();
+            if (capacity != null) {
+              min = capacity.getMinimum();
+              max = capacity.getMaximum();
+              target = capacity.getTarget();
+            }
+          }
+        }
+        stateExecutionData.getElastiGroupOriginalConfig().getCapacity().setMinimum(min);
+        stateExecutionData.getElastiGroupOriginalConfig().getCapacity().setMaximum(max);
+        stateExecutionData.getElastiGroupOriginalConfig().getCapacity().setTarget(target);
+      }
     }
 
     stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
@@ -209,5 +235,28 @@ public class SpotInstServiceSetup extends State {
 
   public void setAwsLoadBalancerConfigs(List<LoadBalancerDetailsForBGDeployment> awsLoadBalancerConfigs) {
     this.awsLoadBalancerConfigs = awsLoadBalancerConfigs;
+  }
+
+  @Override
+  public Map<String, String> validateFields() {
+    Map<String, String> invalidFields = new HashMap<>();
+    if (!useCurrentRunningCount) {
+      if (maxInstances == null || maxInstances <= 0) {
+        invalidFields.put("maxInstances", "Max Instance count must be greater than 0");
+      }
+      if (targetInstances == null || targetInstances <= 0) {
+        invalidFields.put("desiredInstances", "Desired Instance count must be greater than 0");
+      }
+      if (minInstances == null || minInstances < 0) {
+        invalidFields.put("minInstances", "Min Instance count must be greater than 0");
+      }
+      if (targetInstances != null && maxInstances != null && targetInstances > maxInstances) {
+        invalidFields.put("desiredInstances", "Desired Instance count must be <= Max Instance count");
+      }
+      if (minInstances != null && targetInstances != null && minInstances > targetInstances) {
+        invalidFields.put("minInstances", "Min Instance count must be <= Desired Instance count");
+      }
+    }
+    return invalidFields;
   }
 }

@@ -13,6 +13,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
+import io.harness.delegate.task.spotinst.response.SpotinstElastigroupRunningCountData;
 import io.harness.rest.RestResponse;
 import io.harness.spotinst.model.ElastiGroup;
 import io.swagger.annotations.Api;
@@ -282,6 +283,18 @@ public class InfrastructureDefinitionResource {
       @PathParam("infraDefinitionId") String infraDefinitionId, @QueryParam("serviceId") String serviceId) {
     return new RestResponse<>(
         infrastructureDefinitionService.getAmiCurrentlyRunningInstanceCount(appId, infraDefinitionId, serviceId));
+  }
+
+  @GET
+  @Path("{infraDefinitionId}/elastigroup/runningcount")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<SpotinstElastigroupRunningCountData> getRunningCountForSpotinst(@QueryParam("appId") String appId,
+      @PathParam("infraDefinitionId") String infraDefinitionId, @QueryParam("serviceId") String serviceId,
+      @QueryParam("blueGreen") boolean blueGreen, @QueryParam("groupNameExpr") String groupNameExpr) {
+    return new RestResponse<>(infrastructureDefinitionService.getElastigroupRunningCountData(
+        appId, infraDefinitionId, groupNameExpr, serviceId, blueGreen));
   }
 
   @GET

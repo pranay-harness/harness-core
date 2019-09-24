@@ -4,6 +4,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
+import io.harness.delegate.task.spotinst.response.SpotinstElastigroupRunningCountData;
 import io.harness.spotinst.model.ElastiGroup;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.api.DeploymentType;
@@ -102,6 +103,8 @@ public interface InfrastructureDefinitionService extends OwnedByEnvironment {
 
   List<ElastiGroup> listElastiGroups(String appId, String computeProviderId);
   String getElastigroupJson(String appId, String computeProviderId, String elastigroupId);
+  SpotinstElastigroupRunningCountData getElastigroupRunningCountData(
+      String appId, String infraDefinitionId, String elastigroupNameExpression, String serviceId, boolean blueGreen);
 
   AwsAsgGetRunningCountData getAmiCurrentlyRunningInstanceCount(
       String appId, String infraDefinitionId, String serviceId);

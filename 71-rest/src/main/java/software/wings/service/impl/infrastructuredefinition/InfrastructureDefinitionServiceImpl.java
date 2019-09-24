@@ -6,6 +6,10 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_MAX_INSTANCES;
+import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_MIN_INSTANCES;
+import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_NAME;
+import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_TARGET_INSTANCES;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -56,6 +60,7 @@ import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
+import io.harness.delegate.task.spotinst.response.SpotinstElastigroupRunningCountData;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
@@ -64,6 +69,7 @@ import io.harness.exception.WingsException;
 import io.harness.queue.Queue;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.spotinst.model.ElastiGroup;
+import io.harness.spotinst.model.ElastiGroupCapacity;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.jexl3.JexlException;
 import org.apache.commons.lang3.StringUtils;
@@ -144,12 +150,14 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
 import software.wings.utils.EcsConvention;
 import software.wings.utils.Misc;
+import software.wings.utils.ServiceVersionConvention;
 import software.wings.utils.Validator;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1397,6 +1405,88 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     } catch (Exception e) {
       logger.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
+    }
+  }
+
+  @Override
+  public SpotinstElastigroupRunningCountData getElastigroupRunningCountData(
+      String appId, String infraDefinitionId, String elastigroupNameExpression, String serviceId, boolean blueGreen) {
+    InfrastructureDefinition infrastructureDefinition = get(appId, infraDefinitionId);
+    notNullCheck("Infrastructure Definition does not exist", infrastructureDefinition);
+
+    InfraMappingInfrastructureProvider infrastructure = infrastructureDefinition.getInfrastructure();
+    if (!(infrastructure instanceof AwsAmiInfrastructure)) {
+      throw new InvalidArgumentsException(
+          Pair.of("args", "InvalidConfiguration, Needs Instance of Aws Spotinst config"));
+    }
+
+    List<ElastiGroup> groups =
+        listElastiGroups(appId, ((AwsAmiInfrastructure) infrastructure).getSpotinstCloudProvider());
+    if (isEmpty(groups)) {
+      return SpotinstElastigroupRunningCountData.builder()
+          .elastigroupMin(DEFAULT_ELASTIGROUP_MIN_INSTANCES)
+          .elastigroupMax(DEFAULT_ELASTIGROUP_MAX_INSTANCES)
+          .elastigroupTarget(DEFAULT_ELASTIGROUP_TARGET_INSTANCES)
+          .elastigroupName(DEFAULT_ELASTIGROUP_NAME)
+          .build();
+    }
+
+    Application app = appService.get(infrastructureDefinition.getAppId());
+    Environment env =
+        environmentService.get(infrastructureDefinition.getAppId(), infrastructureDefinition.getEnvId(), false);
+    Service service = serviceResourceService.get(appId, serviceId);
+
+    String elastigroupName;
+    if (isEmpty(elastigroupNameExpression)) {
+      elastigroupName = ServiceVersionConvention.getPrefix(app.getName(), service.getName(), env.getName());
+    } else {
+      Map<String, Object> context = new HashMap<>();
+      context.put("app", app);
+      context.put("env", env);
+      context.put("service", service);
+      elastigroupName = evaluator.substitute(elastigroupNameExpression, context);
+    }
+    String finalElastigroupName = Misc.normalizeExpression(elastigroupName);
+
+    Optional<ElastiGroup> group;
+    if (blueGreen) {
+      group = groups.stream().filter(g -> finalElastigroupName.equals(g.getName())).findFirst();
+    } else {
+      String prefix = format("%s__", finalElastigroupName);
+      List<ElastiGroup> groupsWithNames =
+          groups.stream()
+              .filter(item -> {
+                String name = item.getName();
+                if (!name.startsWith(prefix)) {
+                  return false;
+                }
+                String temp = name.substring(prefix.length());
+                return temp.matches("[0-9]+");
+              })
+              .sorted(Comparator.comparingInt(g -> Integer.parseInt(g.getName().substring(prefix.length()))))
+              .collect(toList());
+      if (isEmpty(groupsWithNames)) {
+        group = Optional.empty();
+      } else {
+        group = Optional.of(groupsWithNames.get(groupsWithNames.size() - 1));
+      }
+    }
+
+    if (group.isPresent()) {
+      ElastiGroupCapacity capacity = group.get().getCapacity();
+      return SpotinstElastigroupRunningCountData.builder()
+          .elastigroupMin(capacity.getMinimum())
+          .elastigroupMax(capacity.getMaximum())
+          .elastigroupTarget(capacity.getTarget())
+          .elastigroupName(group.get().getName())
+          .build();
+    } else {
+      return SpotinstElastigroupRunningCountData.builder()
+          .elastigroupMin(DEFAULT_ELASTIGROUP_MIN_INSTANCES)
+          .elastigroupMax(DEFAULT_ELASTIGROUP_MAX_INSTANCES)
+          .elastigroupTarget(DEFAULT_ELASTIGROUP_TARGET_INSTANCES)
+          .elastigroupName(DEFAULT_ELASTIGROUP_NAME)
+          .build();
     }
   }
 

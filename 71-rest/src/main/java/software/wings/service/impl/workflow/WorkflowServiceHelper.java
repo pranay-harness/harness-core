@@ -522,11 +522,15 @@ public class WorkflowServiceHelper {
                            .build());
       }
     }
+    Map<String, Object> deployStateMap = newHashMap();
+    deployStateMap.put("instanceUnitType", "PERCENTAGE");
+    deployStateMap.put("instanceCount", 100);
     phaseSteps.add(aPhaseStep(PhaseStepType.SPOTINST_DEPLOY, SPOTINST_DEPLOY)
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .type(StateType.SPOTINST_DEPLOY.name())
                                     .name(SPOTINST_DEPLOY)
+                                    .properties(deployStateMap)
                                     .build())
                        .build());
     phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_STAGING)
