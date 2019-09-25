@@ -304,6 +304,11 @@ public interface BuildService<T> {
     List<String> buildNos = buildDetails.stream().map(BuildDetails::getNumber).collect(Collectors.toList());
     List<Map<String, String>> labelsList =
         getLabels(artifactStreamAttributes, buildNos, config, encryptionDetails, deadline);
+    if (labelsList == null) {
+      // Return if labels could not be collected properly.
+      return buildDetails;
+    }
+
     int minSize = min(buildNos.size(), labelsList.size());
     if (minSize > 0) {
       for (int i = 0; i < minSize; i++) {

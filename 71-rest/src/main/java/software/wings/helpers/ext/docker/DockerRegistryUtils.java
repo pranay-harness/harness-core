@@ -7,7 +7,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidCredentialsException;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +41,7 @@ public class DockerRegistryUtils {
       Function<Headers, String> getTokenFn, String authHeader, String imageName, List<String> tags, long deadline) {
     Map<Integer, Map<String, String>> labelsMap = new ConcurrentHashMap<>();
     if (EmptyPredicate.isEmpty(tags)) {
-      return new ArrayList<>();
+      return null;
     }
 
     final int size = tags.size();
@@ -91,7 +90,7 @@ public class DockerRegistryUtils {
         }
 
         if (gotException) {
-          throw new Exception("Failed to fetch image labels");
+          throw new Exception("Failed to fetch docker image labels");
         } else if (timeoutExceeded) {
           // Deadline exceeded, return with the labels for the processed tags.
           break;
@@ -99,7 +98,11 @@ public class DockerRegistryUtils {
         start += MAX_GET_LABELS_CONCURRENCY;
       }
     } catch (Exception e) {
-      throw new ArtifactServerException("Failed to fetch image labels", e, USER);
+      // throw new ArtifactServerException("Failed to fetch docker image labels", e, USER);
+
+      // Ignore error until we understand why fetching labels is failing sometimes.
+      logger.error("Failed to fetch docker image labels", e);
+      return null;
     }
 
     // The total number of tags that we have processed (collected labels for) might be less than tags.size() as we might
