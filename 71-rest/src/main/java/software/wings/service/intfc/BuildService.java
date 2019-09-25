@@ -272,7 +272,10 @@ public interface BuildService<T> {
     // Filter out new build details that are not saved already in our DB.
     buildDetails = ArtifactCollectionUtils.getNewBuildDetails(artifactStreamAttributes.getSavedBuildDetailsKeys(),
         buildDetails, artifactStreamAttributes.getArtifactStreamType(), artifactStreamAttributes);
-    return wrapBuildDetailsWithLabels(buildDetails, artifactStreamAttributes, config, encryptionDetails);
+
+    // Disable fetching labels for now as it has many issues.
+    //    return wrapBuildDetailsWithLabels(buildDetails, artifactStreamAttributes, config, encryptionDetails);
+    return buildDetails;
   }
 
   /**
