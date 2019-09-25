@@ -55,7 +55,6 @@ import software.wings.service.intfc.SettingsService;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -91,13 +90,14 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
     if (artifactStream == null) {
       throw new InvalidRequestException("Artifact stream was deleted", USER);
     }
-    if (DOCKER.name().equals(artifactStream.getArtifactStreamType())) {
-      List<Map<String, String>> labelsMap =
-          buildSourceService.getLabels(artifactStream, Collections.singletonList(buildDetails.getNumber()));
-      if (isNotEmpty(labelsMap) && isNotEmpty(labelsMap.get(0))) {
-        buildDetails.setLabels(labelsMap.get(0));
-      }
-    }
+    // Disable fetching labels for now as it has many issues.
+    //    if (DOCKER.name().equals(artifactStream.getArtifactStreamType())) {
+    //      List<Map<String, String>> labelsMap =
+    //          buildSourceService.getLabels(artifactStream, Collections.singletonList(buildDetails.getNumber()));
+    //      if (isNotEmpty(labelsMap) && isNotEmpty(labelsMap.get(0))) {
+    //        buildDetails.setLabels(labelsMap.get(0));
+    //      }
+    //    }
     return collectArtifactWithoutLabels(artifactStream, buildDetails);
   }
 
@@ -201,10 +201,11 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
 
       // Set timeout.
       long timeout = DEFAULT_TIMEOUT;
-      if (DOCKER.name().equals(artifactStreamType)) {
-        // Update timeout if collecting labels.
-        timeout = WITH_LABELS_TIMEOUT;
-      }
+      // Disable fetching labels for now as it has many issues.
+      //      if (DOCKER.name().equals(artifactStreamType)) {
+      //        // Update timeout if collecting labels.
+      //        timeout = WITH_LABELS_TIMEOUT;
+      //      }
       dataBuilder.parameters(new Object[] {buildSourceRequest}).timeout(timeout);
       delegateTaskBuilder.tags(awsCommandHelper.getAwsConfigTagsFromSettingAttribute(settingAttribute));
     }
