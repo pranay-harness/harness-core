@@ -228,6 +228,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           VerificationDataAnalysisResponse.builder().stateExecutionData(executionData).build();
       response.setExecutionStatus(ExecutionStatus.RUNNING);
       scheduleAnalysisCronJob(analysisContext, delegateTaskId);
+      activityLogger.info(responseMessage);
       return ExecutionResponse.builder()
           .async(true)
           .correlationIds(Collections.singletonList(executionData.getCorrelationId()))
@@ -398,7 +399,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
     wingsPersistence.saveIgnoringDuplicateKeys(Lists.newArrayList(metricAnalysisRecord));
     continuousVerificationService.setMetaDataExecutionStatus(context.getStateExecutionInstanceId(), status, true);
-
+    cvActivityLogService.getLoggerByStateExecutionId(context.getStateExecutionInstanceId()).info(message);
     return ExecutionResponse.builder()
         .async(false)
         .executionStatus(status)
