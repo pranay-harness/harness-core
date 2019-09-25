@@ -12,15 +12,17 @@ import software.wings.beans.trigger.TriggerArtifactSelectionValue.ArtifactSelect
 @JsonTypeName("LAST_DEPLOYED")
 @JsonPropertyOrder({"harnessApiVersion"})
 public class TriggerArtifactSelectionLastDeployedYaml extends TriggerArtifactSelectionValueYaml {
-  private String workflowName;
+  private String name;
+  private String type;
 
   public TriggerArtifactSelectionLastDeployedYaml() {
     super.setType(ArtifactSelectionType.LAST_DEPLOYED.name());
   }
 
   @Builder
-  public TriggerArtifactSelectionLastDeployedYaml(String workflowName) {
+  public TriggerArtifactSelectionLastDeployedYaml(String name, String type) {
     super.setType(ArtifactSelectionType.LAST_DEPLOYED.name());
-    this.workflowName = workflowName;
+    this.name = name;
+    this.type = type;
   }
 }

@@ -22,7 +22,7 @@ public enum WebhookSource {
     DELETE("Delete", "delete", WebhookEventType.DELETE),
     ANY("Any", "any", WebhookEventType.ANY),
     // OTHER("Other", "other", WebhookEventType.OTHER),
-    PULL_REQUEST_ANY("Any", "any", WebhookEventType.PULL_REQUEST),
+    PULL_REQUEST_ANY("Any", "pullrequest_any", WebhookEventType.PULL_REQUEST),
     PULL_REQUEST_CLOSED("Closed", "closed", WebhookEventType.PULL_REQUEST),
     PULL_REQUEST_EDITED("Edited", "edited", WebhookEventType.PULL_REQUEST),
     PULL_REQUEST_OPENED("Opened", "opened", WebhookEventType.PULL_REQUEST),

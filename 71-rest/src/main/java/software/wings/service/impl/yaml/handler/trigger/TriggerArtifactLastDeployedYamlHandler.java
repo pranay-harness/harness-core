@@ -1,10 +1,14 @@
 package software.wings.service.impl.yaml.handler.trigger;
 
 import static io.harness.exception.WingsException.USER;
+import static software.wings.beans.trigger.TriggerLastDeployedType.PIPELINE;
+import static software.wings.beans.trigger.TriggerLastDeployedType.WORKFLOW;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.TriggerException;
+import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
 import software.wings.beans.trigger.TriggerArtifactSelectionLastDeployed;
 import software.wings.beans.trigger.TriggerArtifactSelectionValue;
@@ -25,7 +29,8 @@ public class TriggerArtifactLastDeployedYamlHandler
         (TriggerArtifactSelectionLastDeployed) bean;
 
     return TriggerArtifactSelectionLastDeployedYaml.builder()
-        .workflowName(triggerArtifactSelectionLastDeployed.getWorkflowName())
+        .name(triggerArtifactSelectionLastDeployed.getName())
+        .type(triggerArtifactSelectionLastDeployed.getType().name())
         .build();
   }
 
@@ -37,13 +42,25 @@ public class TriggerArtifactLastDeployedYamlHandler
     String appId = yamlHelper.getAppId(accountId, change.getFilePath());
     TriggerArtifactSelectionLastDeployedYaml yaml = changeContext.getYaml();
 
-    Workflow workflow = yamlHelper.getWorkflowFromName(appId, yaml.getWorkflowName());
-    notNullCheck("Invalid workflow", workflow, USER);
-
-    return TriggerArtifactSelectionLastDeployed.builder()
-        .workflowId(workflow.getUuid())
-        .workflowName(workflow.getName())
-        .build();
+    if (yaml.getType().equals("WORKFLOW")) {
+      Workflow workflow = yamlHelper.getWorkflowFromName(appId, yaml.getName());
+      notNullCheck("Invalid workflow", workflow, USER);
+      return TriggerArtifactSelectionLastDeployed.builder()
+          .id(workflow.getUuid())
+          .type(WORKFLOW)
+          .name(workflow.getName())
+          .build();
+    } else if (yaml.getType().equals("PIPELINE")) {
+      Pipeline pipeline = yamlHelper.getPipeline(appId, yaml.getName());
+      notNullCheck("Invalid pipeline", pipeline, USER);
+      return TriggerArtifactSelectionLastDeployed.builder()
+          .id(pipeline.getUuid())
+          .type(PIPELINE)
+          .name(pipeline.getName())
+          .build();
+    } else {
+      throw new TriggerException("Invalid input type " + yaml.getType(), USER);
+    }
   }
 
   @Override

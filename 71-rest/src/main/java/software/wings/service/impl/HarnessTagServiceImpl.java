@@ -582,7 +582,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
 
   private void authorizeTriggers(String appId, String entityId, String accountId) {
     if (featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
-      DeploymentTrigger existingDTrigger = deploymentTriggerService.get(appId, entityId);
+      DeploymentTrigger existingDTrigger = deploymentTriggerService.get(appId, entityId, false);
       if (existingDTrigger == null) {
         throw new TriggerException("Trigger does not exist", USER);
       }
@@ -672,7 +672,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
         return triggerService.get(appId, entityId);
 
       case DEPLOYMENT_TRIGGER:
-        return deploymentTriggerService.get(appId, entityId);
+        return deploymentTriggerService.get(appId, entityId, false);
       case APPLICATION:
         return appService.get(entityId, false);
 

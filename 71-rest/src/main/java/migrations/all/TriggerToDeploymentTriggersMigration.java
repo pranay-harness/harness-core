@@ -6,6 +6,8 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
+import static software.wings.beans.trigger.TriggerLastDeployedType.PIPELINE;
+import static software.wings.beans.trigger.TriggerLastDeployedType.WORKFLOW;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
@@ -406,7 +408,8 @@ public class TriggerToDeploymentTriggersMigration implements Migration {
               notNullCheck(StringUtils.join(DEBUG_LINE, "Workflow not found for Id in artifact selection",
                                trigger.getWorkflowId(), "Trigger: ", trigger.getUuid()),
                   workflow);
-              artifactSelectionValue = TriggerArtifactSelectionLastDeployed.builder().workflowId(workflowId).build();
+              artifactSelectionValue =
+                  TriggerArtifactSelectionLastDeployed.builder().id(workflowId).type(WORKFLOW).build();
             } else {
               String pipelineId = artifactSelection.getWorkflowId();
               Pipeline pipeline =
@@ -416,7 +419,7 @@ public class TriggerToDeploymentTriggersMigration implements Migration {
                   pipeline);
               String serviceId = artifactSelection.getServiceId();
               // how to get WorkflowId from ServiceId and pipelineId: @Srinivas Todo
-              artifactSelectionValue = TriggerArtifactSelectionLastDeployed.builder().workflowId(null).build();
+              artifactSelectionValue = TriggerArtifactSelectionLastDeployed.builder().id(null).type(PIPELINE).build();
             }
 
             break;

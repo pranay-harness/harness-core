@@ -48,8 +48,8 @@ public class ScheduleTriggerProcessor implements TriggerProcessor {
   }
 
   @Override
-  public void transformTriggerActionRead(DeploymentTrigger deploymentTrigger) {
-    triggerServiceHelper.reBuildTriggerActionWithNames(deploymentTrigger);
+  public void transformTriggerActionRead(DeploymentTrigger deploymentTrigger, boolean readPrimaryVariablesValueNames) {
+    triggerServiceHelper.reBuildTriggerActionWithNames(deploymentTrigger, readPrimaryVariablesValueNames);
   }
 
   @Override

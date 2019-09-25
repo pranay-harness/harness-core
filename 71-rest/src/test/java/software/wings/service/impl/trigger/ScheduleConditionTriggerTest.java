@@ -137,8 +137,8 @@ public class ScheduleConditionTriggerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldSaveScheduledConditionTrigger() {
     DeploymentTrigger trigger = deploymentTriggerService.save(scheduledConditionTrigger, false);
-    DeploymentTrigger savedScheduledTrigger = deploymentTriggerService.get(trigger.getAppId(), trigger.getUuid());
-
+    DeploymentTrigger savedScheduledTrigger =
+        deploymentTriggerService.get(trigger.getAppId(), trigger.getUuid(), false);
     assertThat(savedScheduledTrigger.getUuid()).isNotEmpty();
     assertThat(savedScheduledTrigger.getCondition()).isInstanceOf(ScheduledCondition.class);
     assertThat(((ScheduledCondition) trigger.getCondition()).getCronDescription()).isNotNull();

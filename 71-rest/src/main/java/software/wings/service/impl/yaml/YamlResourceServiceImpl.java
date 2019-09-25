@@ -260,7 +260,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     Validator.notNullCheck("No account found for appId:" + appId, accountId);
 
     if (featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
-      DeploymentTrigger deploymentTrigger = deploymentTriggerService.get(appId, triggerId);
+      DeploymentTrigger deploymentTrigger = deploymentTriggerService.get(appId, triggerId, false);
 
       DeploymentTriggerYaml yaml =
           (DeploymentTriggerYaml) yamlHandlerFactory.getYamlHandler(YamlType.DEPLOYMENT_TRIGGER)
