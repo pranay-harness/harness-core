@@ -24,7 +24,7 @@ import software.wings.security.authentication.DomainWhitelistCheckerService;
 import software.wings.security.authentication.OauthAuthenticationResponse;
 import software.wings.security.authentication.OauthProviderType;
 import software.wings.service.impl.SSOSettingServiceImpl;
-import software.wings.service.impl.UserServiceImpl;
+import software.wings.service.intfc.SignupService;
 import software.wings.service.intfc.UserService;
 
 import java.io.IOException;
@@ -46,9 +46,9 @@ public class OauthBasedAuthHandler implements AuthHandler {
   @Inject UserService userService;
   @Inject MainConfiguration mainConfiguration;
   @Inject SSOSettingServiceImpl ssoSettingService;
-  @Inject UserServiceImpl userServiceImpl;
   @Inject OauthOptions oauthOptions;
   @Inject DomainWhitelistCheckerService domainWhitelistCheckerService;
+  @Inject SignupService signupService;
 
   @Override
   public AuthenticationMechanism getAuthenticationMechanism() {
@@ -123,8 +123,8 @@ public class OauthBasedAuthHandler implements AuthHandler {
 
   private void sendTrialSignupCompleteMailForFreeUsers(User user) {
     if (mainConfiguration.isTrialRegistrationAllowed()) {
-      UserInvite userInvite = userServiceImpl.getUserInviteByEmail(user.getEmail());
-      userServiceImpl.sendTrialSignupCompletedEmail(userInvite);
+      UserInvite userInvite = signupService.getUserInviteByEmail(user.getEmail());
+      signupService.sendTrialSignupCompletedEmail(userInvite);
     }
   }
 

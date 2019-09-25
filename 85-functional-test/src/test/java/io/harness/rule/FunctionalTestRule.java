@@ -47,6 +47,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.app.ManagerExecutorModule;
 import software.wings.app.ManagerQueueModule;
 import software.wings.app.SSOModule;
+import software.wings.app.SignupModule;
 import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
@@ -150,6 +151,7 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
     modules.add(new EventsModule((MainConfiguration) configuration));
     modules.add(new GraphQLModule());
     modules.add(new SSOModule());
+    modules.add(new SignupModule());
     modules.add(new GcpMarketplaceIntegrationModule());
     modules.add(new AuthModule());
     return modules;

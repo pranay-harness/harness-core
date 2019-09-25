@@ -60,6 +60,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.app.ManagerExecutorModule;
 import software.wings.app.ManagerQueueModule;
 import software.wings.app.SSOModule;
+import software.wings.app.SignupModule;
 import software.wings.app.TemplateModule;
 import software.wings.app.WingsApplication;
 import software.wings.app.WingsModule;
@@ -299,6 +300,7 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
     modules.add(new EventsModule((MainConfiguration) configuration));
     modules.add(new SSOModule());
     modules.add(new AuthModule());
+    modules.add(new SignupModule());
     modules.add(new GcpMarketplaceIntegrationModule());
 
     return modules;

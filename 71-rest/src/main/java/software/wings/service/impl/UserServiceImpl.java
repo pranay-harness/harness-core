@@ -12,7 +12,6 @@ import static io.harness.eraro.ErrorCode.EMAIL_VERIFICATION_TOKEN_NOT_FOUND;
 import static io.harness.eraro.ErrorCode.EXPIRED_TOKEN;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
-import static io.harness.eraro.ErrorCode.INVALID_EMAIL;
 import static io.harness.eraro.ErrorCode.INVALID_MARKETPLACE_TOKEN;
 import static io.harness.eraro.ErrorCode.MARKETPLACE_TOKEN_NOT_FOUND;
 import static io.harness.eraro.ErrorCode.ROLE_DOES_NOT_EXIST;
@@ -26,7 +25,6 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -91,7 +89,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.validator.routines.EmailValidator;
 import org.apache.http.client.utils.URIBuilder;
 import org.mindrot.jbcrypt.BCrypt;
 import org.mongodb.morphia.query.Query;
@@ -161,19 +158,16 @@ import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.SSOService;
 import software.wings.service.intfc.SSOSettingService;
+import software.wings.service.intfc.SignupService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.marketplace.gcp.GCPBillingPollingService;
+import software.wings.service.intfc.signup.SignupSpamChecker;
 import software.wings.utils.CacheManager;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -205,11 +199,8 @@ public class UserServiceImpl implements UserService {
   public static final String SIGNUP_EMAIL_TEMPLATE_NAME = "signup";
   public static final String INVITE_EMAIL_TEMPLATE_NAME = "invite";
   public static final String TRIAL_EMAIL_VERIFICATION_TEMPLATE_NAME = "invite_trial";
-  public static final String TRIAL_SIGNUP_COMPLETED_TEMPLATE_NAME = "trial_signup_completed";
   public static final String JOIN_EXISTING_TEAM_TEMPLATE_NAME = "join_existing_team";
   public static final int REGISTRATION_SPAM_THRESHOLD = 3;
-
-  private static final String BLACKLISTED_DOMAINS_FILE = "trial/blacklisted-email-domains.txt";
 
   /**
    * The Executor service.
@@ -242,8 +233,8 @@ public class UserServiceImpl implements UserService {
   @Inject private LimitConfigurationService limits;
   @Inject private GCPBillingPollingService gcpBillingPollingService;
   @Inject private GcpProcurementService gcpProcurementService;
-
-  private volatile Set<String> blacklistedDomains = new HashSet<>();
+  @Inject private SignupService signupService;
+  @Inject private SignupSpamChecker spamChecker;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#register(software.wings.beans.User)
@@ -298,9 +289,9 @@ public class UserServiceImpl implements UserService {
   public boolean trialSignup(UserInvite userInvite) {
     final String emailAddress = userInvite.getEmail().toLowerCase();
     validateTrialSignup(emailAddress);
-    validatePassword(userInvite.getPassword());
+    signupService.validatePassword(userInvite.getPassword());
 
-    UserInvite userInviteInDB = getUserInviteByEmail(emailAddress);
+    UserInvite userInviteInDB = signupService.getUserInviteByEmail(emailAddress);
 
     Map<String, String> params = new HashMap<>();
     params.put("email", userInvite.getEmail());
@@ -323,13 +314,13 @@ public class UserServiceImpl implements UserService {
       sendVerificationEmail(userInvite, url, params);
       eventPublishHelper.publishTrialUserSignupEvent(emailAddress, userInvite.getName(), inviteId);
     } else if (userInviteInDB.isCompleted()) {
-      if (isTrialRegistrationSpam(userInviteInDB)) {
+      if (spamChecker.isSpam(userInviteInDB)) {
         return false;
       }
       // HAR-7590: If user invite has completed. Send an email saying so and ask the user to login directly.
-      sendTrialSignupCompletedEmail(userInviteInDB);
+      signupService.sendTrialSignupCompletedEmail(userInviteInDB);
     } else {
-      if (isTrialRegistrationSpam(userInviteInDB)) {
+      if (spamChecker.isSpam(userInviteInDB)) {
         return false;
       }
 
@@ -343,7 +334,8 @@ public class UserServiceImpl implements UserService {
   @Override
   public boolean accountJoinRequest(AccountJoinRequest accountJoinRequest) {
     final String emailAddress = accountJoinRequest.getEmail().toLowerCase();
-    checkEmailAndDomain(emailAddress);
+    signupService.validateCluster();
+    signupService.validateEmail(emailAddress);
     Map<String, String> params = new HashMap<>();
     params.put("email", emailAddress);
     params.put("name", accountJoinRequest.getName());
@@ -400,7 +392,7 @@ public class UserServiceImpl implements UserService {
     final String emailAddress = email.trim().toLowerCase();
     validateTrialSignup(emailAddress);
 
-    UserInvite userInvite = getUserInviteByEmail(emailAddress);
+    UserInvite userInvite = signupService.getUserInviteByEmail(emailAddress);
     if (userInvite == null) {
       // Create a new user invite to track the invitation status
       userInvite = new UserInvite();
@@ -417,13 +409,13 @@ public class UserServiceImpl implements UserService {
       sendVerificationEmail(userInvite, url);
       eventPublishHelper.publishTrialUserSignupEvent(emailAddress, null, inviteId);
     } else if (userInvite.isCompleted()) {
-      if (isTrialRegistrationSpam(userInvite)) {
+      if (spamChecker.isSpam(userInvite)) {
         return false;
       }
       // HAR-7590: If user invite has completed. Send an email saying so and ask the user to login directly.
-      sendTrialSignupCompletedEmail(userInvite);
+      signupService.sendTrialSignupCompletedEmail(userInvite);
     } else {
-      if (isTrialRegistrationSpam(userInvite)) {
+      if (spamChecker.isSpam(userInvite)) {
         return false;
       }
 
@@ -436,99 +428,8 @@ public class UserServiceImpl implements UserService {
   }
 
   private void validateTrialSignup(String email) {
-    if (!configuration.isTrialRegistrationAllowed()) {
-      throw new WingsException(GENERAL_ERROR, USER)
-          .addParam("message", "Trial registration is not allowed in this cluster.");
-    }
-
-    checkEmailAndDomain(email);
-  }
-
-  private void checkEmailAndDomain(String email) {
-    // Only validate if the email address is valid. Won't check if the email has been registered already.
-    checkIfEmailIsValid(email);
-
-    if (containsIllegalCharacters(email)) {
-      throw new WingsException(GENERAL_ERROR, USER)
-          .addParam("message", "The email used for trial registration contains illegal characters.");
-    }
-
-    if (!configuration.isBlacklistedEmailDomainsAllowed()) {
-      // lazily populate blacklisted temporary email domains from file.
-      populateBlacklistedDomains();
-
-      if (blacklistedDomains.contains(getEmailDomain(email))) {
-        throw new WingsException(GENERAL_ERROR, USER)
-            .addParam("message", "The domain of the email used for trial registration is not allowed.");
-      }
-    }
-  }
-
-  private void validatePassword(char[] password) {
-    if (isEmpty(password)) {
-      throw new WingsException(GENERAL_ERROR, USER).addParam("message", "Empty password has been provided.");
-    }
-
-    if (password.length < 8) {
-      throw new WingsException(GENERAL_ERROR, USER).addParam("message", "Password should at least be 8 characters");
-    }
-  }
-
-  private String getEmailDomain(String email) {
-    return email.substring(email.indexOf('@') + 1);
-  }
-
-  private void populateBlacklistedDomains() {
-    if (blacklistedDomains.isEmpty()) {
-      synchronized (this) {
-        if (blacklistedDomains.isEmpty()) {
-          try (InputStream inputStream =
-                   Thread.currentThread().getContextClassLoader().getResourceAsStream(BLACKLISTED_DOMAINS_FILE);
-               BufferedReader bufferedReader =
-                   new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
-            String line = bufferedReader.readLine();
-            while (isNotEmpty(line)) {
-              blacklistedDomains.add(line.trim().toLowerCase());
-              line = bufferedReader.readLine();
-            }
-            logger.info("Loaded {} temporary email domains into the blacklist.", blacklistedDomains.size());
-          } catch (IOException e) {
-            logger.error("Failed to read blacklisted temporary email domains from file.", e);
-          }
-        }
-      }
-    }
-  }
-
-  private boolean containsIllegalCharacters(String email) {
-    for (Character illegalChar : ILLEGAL_CHARACTERS) {
-      if (email.indexOf(illegalChar) >= 0) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private boolean isTrialRegistrationSpam(UserInvite userInvite) {
-    // HAR-7639: If the same email is being used repeatedly for trial signup, it's likely a spam activity.
-    // Reject/throttle these registration request to avoid the verification or access-your-account email spamming
-    // the legitimate trial user's mailbox.
-    Cache<String, Integer> trialEmailCache = cacheManager.getTrialRegistrationEmailCache();
-    String emailAddress = userInvite.getEmail();
-    Integer registrationCount = trialEmailCache.get(emailAddress);
-    if (registrationCount == null) {
-      registrationCount = 1;
-    } else {
-      registrationCount += 1;
-    }
-    trialEmailCache.put(emailAddress, registrationCount);
-    if (registrationCount > REGISTRATION_SPAM_THRESHOLD) {
-      logger.info(
-          "Trial registration has been performed already using the email from user invite '{}' shortly before, rejecting this request.",
-          userInvite.getUuid());
-      return true;
-    }
-    return false;
+    signupService.validateCluster();
+    signupService.validateEmail(email);
   }
 
   @Override
@@ -656,15 +557,6 @@ public class UserServiceImpl implements UserService {
     return user;
   }
 
-  @Override
-  public UserInvite getUserInviteByEmail(String email) {
-    UserInvite userInvite = null;
-    if (isNotEmpty(email)) {
-      userInvite = wingsPersistence.createQuery(UserInvite.class).filter(UserInviteKeys.email, email).get();
-    }
-    return userInvite;
-  }
-
   private UserInvite getUserInviteByEmailAndAccount(String email, String accountId) {
     UserInvite userInvite = null;
     if (isNotEmpty(email)) {
@@ -729,23 +621,12 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public void verifyRegisteredOrAllowed(String email) {
-    checkIfEmailIsValid(email);
+    signupService.checkIfEmailIsValid(email);
 
     final String emailAddress = email.trim();
     User existingUser = getUserByEmail(emailAddress);
     if (existingUser != null && existingUser.isEmailVerified()) {
       throw new WingsException(USER_ALREADY_REGISTERED, USER);
-    }
-  }
-
-  private void checkIfEmailIsValid(String email) {
-    if (isBlank(email)) {
-      throw new WingsException(INVALID_EMAIL, USER).addParam("email", email);
-    }
-
-    final String emailAddress = email.trim();
-    if (!EmailValidator.getInstance().isValid(emailAddress)) {
-      throw new WingsException(INVALID_EMAIL, USER).addParam("email", emailAddress);
     }
   }
 
@@ -834,7 +715,7 @@ public class UserServiceImpl implements UserService {
   @Override
   public UserInvite inviteUser(UserInvite userInvite) {
     // HAR-6861: should validate against invalid email address on user invitation.
-    checkIfEmailIsValid(userInvite.getEmail());
+    signupService.checkIfEmailIsValid(userInvite.getEmail());
 
     String accountId = userInvite.getAccountId();
     Account account = accountService.get(accountId);
@@ -1021,7 +902,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public String getUserInviteUrl(String email) throws URISyntaxException {
-    UserInvite userInvite = getUserInviteByEmail(email);
+    UserInvite userInvite = signupService.getUserInviteByEmail(email);
     if (userInvite != null) {
       return buildAbsoluteUrl(format("/invite?email=%s&inviteId=%s", userInvite.getEmail(), userInvite.getUuid()));
     }
@@ -1043,19 +924,11 @@ public class UserServiceImpl implements UserService {
     return model;
   }
 
-  private Map<String, String> getTrialSignupCompletedTemplatedModel(UserInvite userInvite) throws URISyntaxException {
-    Map<String, String> model = new HashMap<>();
-    String loginUrl = buildAbsoluteUrl("/login");
-    model.put("name", userInvite.getEmail());
-    model.put("url", loginUrl);
-    return model;
-  }
-
   @Override
   public void sendNewInvitationMail(UserInvite userInvite, Account account) {
     try {
       Map<String, String> templateModel = getNewInvitationTemplateModel(userInvite, account);
-      sendEmail(userInvite, INVITE_EMAIL_TEMPLATE_NAME, templateModel);
+      signupService.sendEmail(userInvite, INVITE_EMAIL_TEMPLATE_NAME, templateModel);
     } catch (URISyntaxException e) {
       logger.error("Invitation email couldn't be sent ", e);
     }
@@ -1064,7 +937,7 @@ public class UserServiceImpl implements UserService {
   private void sendVerificationEmail(UserInvite userInvite, String url) {
     try {
       Map<String, String> templateModel = getEmailVerificationTemplateModel(userInvite.getEmail(), url);
-      sendEmail(userInvite, TRIAL_EMAIL_VERIFICATION_TEMPLATE_NAME, templateModel);
+      signupService.sendEmail(userInvite, TRIAL_EMAIL_VERIFICATION_TEMPLATE_NAME, templateModel);
     } catch (URISyntaxException e) {
       logger.error("Verification email couldn't be sent ", e);
     }
@@ -1072,29 +945,7 @@ public class UserServiceImpl implements UserService {
 
   private void sendVerificationEmail(UserInvite userInvite, String url, Map<String, String> params) {
     Map<String, String> templateModel = getEmailVerificationTemplateModel(userInvite.getEmail(), url, params);
-    sendEmail(userInvite, TRIAL_EMAIL_VERIFICATION_TEMPLATE_NAME, templateModel);
-  }
-
-  public void sendTrialSignupCompletedEmail(UserInvite userInvite) {
-    try {
-      Map<String, String> templateModel = getTrialSignupCompletedTemplatedModel(userInvite);
-      sendEmail(userInvite, TRIAL_SIGNUP_COMPLETED_TEMPLATE_NAME, templateModel);
-    } catch (URISyntaxException e) {
-      logger.error("Trial sign-up completed email couldn't be sent ", e);
-    }
-  }
-
-  private void sendEmail(UserInvite userInvite, String templateName, Map<String, String> templateModel) {
-    List<String> toList = new ArrayList<>();
-    toList.add(userInvite.getEmail());
-    EmailData emailData =
-        EmailData.builder().to(toList).templateName(templateName).templateModel(templateModel).build();
-
-    emailData.setCc(Collections.emptyList());
-    emailData.setRetries(2);
-    emailData.setAccountId(userInvite.getAccountId());
-
-    emailNotificationService.send(emailData);
+    signupService.sendEmail(userInvite, TRIAL_EMAIL_VERIFICATION_TEMPLATE_NAME, templateModel);
   }
 
   private boolean sendEmail(String toEmail, String templateName, Map<String, String> templateModel) {
@@ -1230,11 +1081,14 @@ public class UserServiceImpl implements UserService {
     if (userInvite == null) {
       throw new WingsException(USER_INVITATION_DOES_NOT_EXIST, USER);
     }
+    return completeTrialSignupAndSignIn(userInvite);
+  }
 
+  public User completeTrialSignupAndSignIn(UserInvite userInvite) {
     String accountName = accountService.suggestAccountName(userInvite.getAccountName());
     String companyName = userInvite.getCompanyName();
 
-    User user = User.Builder.anUser()
+    User user = Builder.anUser()
                     .withEmail(userInvite.getEmail())
                     .withName(userInvite.getName())
                     .withPasswordHash(userInvite.getPasswordHash())
@@ -2467,9 +2321,9 @@ public class UserServiceImpl implements UserService {
     String jwtPasswordSecret = getJwtSecret();
 
     try {
-      String token = createTokeFromSecret(jwtPasswordSecret, email);
+      String token = signupService.createSignupTokeFromSecret(jwtPasswordSecret, email, 1);
       sendPasswordExpirationWarningMail(user, token, passExpirationDays);
-    } catch (UnsupportedEncodingException | JWTCreationException exception) {
+    } catch (JWTCreationException | UnsupportedEncodingException exception) {
       throw new WingsException(GENERAL_ERROR).addParam("message", "reset password link could not be generated");
     }
   }
@@ -2511,9 +2365,9 @@ public class UserServiceImpl implements UserService {
     String jwtPasswordSecret = getJwtSecret();
 
     try {
-      String token = createTokeFromSecret(jwtPasswordSecret, email);
+      String token = signupService.createSignupTokeFromSecret(jwtPasswordSecret, email, 1);
       sendPasswordExpirationMail(user, token);
-    } catch (UnsupportedEncodingException | JWTCreationException exception) {
+    } catch (JWTCreationException | UnsupportedEncodingException exception) {
       throw new WingsException(GENERAL_ERROR).addParam("message", "reset password link could not be generated");
     }
   }
@@ -2541,16 +2395,6 @@ public class UserServiceImpl implements UserService {
     } catch (URISyntaxException e) {
       logger.error("Reset password email couldn't be sent", e);
     }
-  }
-
-  private String createTokeFromSecret(String jwtPasswordSecret, String email) throws UnsupportedEncodingException {
-    Algorithm algorithm = Algorithm.HMAC256(jwtPasswordSecret);
-    return JWT.create()
-        .withIssuer("Harness Inc")
-        .withIssuedAt(new Date())
-        .withExpiresAt(new Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000)) // 24 hrs
-        .withClaim("email", email)
-        .sign(algorithm);
   }
 
   private String getJwtSecret() {
@@ -2651,5 +2495,9 @@ public class UserServiceImpl implements UserService {
     boolean result = !(associatedWithMultipleAccounts || isHarnessUser);
     logger.info("User {} can be set to new disabled status: {}", email, result);
     return result;
+  }
+
+  public String saveUserInvite(UserInvite userInvite) {
+    return wingsPersistence.save(userInvite);
   }
 }
