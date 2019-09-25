@@ -152,6 +152,7 @@ import software.wings.licensing.DatabaseLicenseProviderImpl;
 import software.wings.licensing.LicenseProvider;
 import software.wings.licensing.LicenseService;
 import software.wings.licensing.LicenseServiceImpl;
+import software.wings.ratelimit.DelegateRequestRateLimiter;
 import software.wings.resources.graphql.GraphQLRateLimiter;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.scheduler.ServiceJobScheduler;
@@ -711,6 +712,7 @@ public class WingsModule extends DependencyModule {
     bind(K8sGlobalConfigService.class).to(K8sGlobalConfigServiceUnsupported.class);
 
     bind(GraphQLRateLimiter.class);
+    bind(DelegateRequestRateLimiter.class);
     bind(SamlUserGroupSync.class);
     bind(AzureVaultService.class).to(AzureVaultServiceImpl.class);
     bind(ScimUserService.class).to(ScimUserServiceImpl.class);

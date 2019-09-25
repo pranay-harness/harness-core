@@ -39,6 +39,7 @@ import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTaskEvent;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
+import software.wings.ratelimit.DelegateRequestRateLimiter;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.LearningEngineAuth;
@@ -86,17 +87,19 @@ public class DelegateResource {
   private MainConfiguration mainConfiguration;
   private AccountService accountService;
   private WingsPersistence wingsPersistence;
+  private DelegateRequestRateLimiter delegateRequestRateLimiter;
 
   @Inject
   public DelegateResource(DelegateService delegateService, DelegateScopeService delegateScopeService,
       DownloadTokenService downloadTokenService, MainConfiguration mainConfiguration, AccountService accountService,
-      WingsPersistence wingsPersistence) {
+      WingsPersistence wingsPersistence, DelegateRequestRateLimiter delegateRequestRateLimiter) {
     this.delegateService = delegateService;
     this.delegateScopeService = delegateScopeService;
     this.downloadTokenService = downloadTokenService;
     this.mainConfiguration = mainConfiguration;
     this.accountService = accountService;
     this.wingsPersistence = wingsPersistence;
+    this.delegateRequestRateLimiter = delegateRequestRateLimiter;
   }
 
   @GET
@@ -492,6 +495,10 @@ public class DelegateResource {
   @ExceptionMetered
   public DelegatePackage acquireDelegateTask(@PathParam("delegateId") String delegateId,
       @PathParam("taskId") String taskId, @QueryParam("accountId") @NotEmpty String accountId) {
+    if (delegateRequestRateLimiter.isOverRateLimit(accountId, delegateId)) {
+      return null;
+    }
+
     final DelegatePackage delegatePackage = delegateService.acquireDelegateTask(accountId, delegateId, taskId);
 
     if (delegatePackage != null && delegatePackage.getDelegateTask() != null
@@ -503,7 +510,6 @@ public class DelegateResource {
             "Task {} need task parameters refactoring", delegatePackage.getDelegateTask().getData().getTaskType());
       }
     }
-
     return delegatePackage;
   }
 

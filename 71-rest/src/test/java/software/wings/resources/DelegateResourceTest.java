@@ -42,6 +42,7 @@ import software.wings.beans.DelegateStatus;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
+import software.wings.ratelimit.DelegateRequestRateLimiter;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateService;
@@ -74,6 +75,7 @@ public class DelegateResourceTest extends CategoryTest {
   private static MainConfiguration mainConfiguration = mock(MainConfiguration.class);
   private static AccountService accountService = mock(AccountService.class);
   private static WingsPersistence wingsPersistence = mock(WingsPersistence.class);
+  private static DelegateRequestRateLimiter delegateRequestRateLimiter = mock(DelegateRequestRateLimiter.class);
 
   @Parameter public String apiUrl;
 
@@ -86,7 +88,7 @@ public class DelegateResourceTest extends CategoryTest {
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
           .addResource(new DelegateResource(DELEGATE_SERVICE, DELEGATE_SCOPE_SERVICE, DOWNLOAD_TOKEN_SERVICE,
-              mainConfiguration, accountService, wingsPersistence))
+              mainConfiguration, accountService, wingsPersistence, delegateRequestRateLimiter))
           .addResource(new AbstractBinder() {
             @Override
             protected void configure() {
