@@ -6,9 +6,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.contains;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
@@ -25,6 +27,7 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.beans.AccountType;
 import software.wings.beans.Application;
@@ -62,13 +65,14 @@ import java.util.UUID;
  */
 public class SplunkV2StateTest extends APMStateVerificationTestBase {
   private SplunkV2State splunkState;
+  @Mock private Logger activityLogger;
 
   @Before
   public void setup() throws IllegalAccessException {
     setupCommon();
     MockitoAnnotations.initMocks(this);
     setupCommonMocks();
-
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(activityLogger);
     AppService appService = mock(AppService.class);
     when(appService.getAccountIdByAppId(anyString())).thenReturn(generateUuid());
     when(appService.get(anyString()))
@@ -129,9 +133,10 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
 
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
-    assertThat(response.getErrorMessage())
-        .isEqualTo("Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.");
-
+    String analysisResponseMsg =
+        "Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.";
+    assertThat(response.getErrorMessage()).isEqualTo(analysisResponseMsg);
+    verify(activityLogger, times(1)).info(eq(analysisResponseMsg));
     LogMLAnalysisSummary analysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
     assertThat(analysisSummary.getRiskLevel()).isEqualTo(RiskLevel.NA);
@@ -155,12 +160,14 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
         .getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
-
+    Logger activityLogger = mock(Logger.class);
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(activityLogger);
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
-    assertThat(response.getErrorMessage())
-        .isEqualTo("Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.");
-
+    String analysisResponseMsg =
+        "Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.";
+    assertThat(response.getErrorMessage()).isEqualTo(analysisResponseMsg);
+    verify(activityLogger, times(1)).info(eq(analysisResponseMsg));
     LogMLAnalysisSummary analysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
     assertThat(analysisSummary.getRiskLevel()).isEqualTo(RiskLevel.NA);
@@ -310,6 +317,8 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   @Category(UnitTests.class)
   public void handleAsyncSummaryPassNoData() {
     doReturn("exception").when(executionContext).renderExpression(anyString());
+    Logger activityLogger = mock(Logger.class);
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(activityLogger);
     VerificationStateAnalysisExecutionData logAnalysisExecutionData =
         VerificationStateAnalysisExecutionData.builder()
             .correlationId(UUID.randomUUID().toString())
@@ -351,6 +360,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
 
     LogMLAnalysisSummary analysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
+    verify(activityLogger).info("No data found with given queries. Skipped Analysis");
     assertThat(analysisSummary.getRiskLevel()).isEqualTo(RiskLevel.NA);
     assertThat(analysisSummary.getQuery()).isEqualTo(splunkState.getQuery());
     assertThat(analysisSummary.getAnalysisSummaryMessage()).isEqualTo(executionResponse.getErrorMessage());

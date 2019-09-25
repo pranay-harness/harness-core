@@ -184,6 +184,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             "Baseline execution for {} is {}", analysisContext.getStateExecutionId(), baselineWorkflowExecutionId);
         analysisContext.setPrevWorkflowExecutionId(baselineWorkflowExecutionId);
       }
+      activityLogger.info(responseMessage);
 
       final VerificationStateAnalysisExecutionData executionData =
           VerificationStateAnalysisExecutionData.builder()
@@ -414,6 +415,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
                                                                .build();
     executionData.setStatus(status);
     continuousVerificationService.setMetaDataExecutionStatus(context.getStateExecutionId(), status, true);
+    cvActivityLogService.getLoggerByStateExecutionId(context.getStateExecutionId()).info(message);
     return ExecutionResponse.builder()
         .async(false)
         .executionStatus(status)

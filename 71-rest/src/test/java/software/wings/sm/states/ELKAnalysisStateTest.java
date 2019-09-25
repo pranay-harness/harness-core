@@ -6,9 +6,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.contains;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
@@ -66,6 +68,7 @@ import java.util.UUID;
 public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
   @Mock private ElkAnalysisService elkAnalysisService;
   private ElkAnalysisState elkAnalysisState;
+  @Mock private Logger activityLogger;
 
   @Before
   public void setup() throws IllegalAccessException {
@@ -87,7 +90,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
     setupCommonFields(elkAnalysisState);
     FieldUtils.writeField(elkAnalysisState, "elkAnalysisService", elkAnalysisService, true);
     FieldUtils.writeField(elkAnalysisState, "accountService", accountService, true);
-    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(mock(Logger.class));
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(activityLogger);
   }
 
   @Test
@@ -130,12 +133,12 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
     doReturn(Collections.emptyMap()).when(spyState).getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
-
+    String analysisResponseMsg =
+        "Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.";
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
-    assertThat(response.getErrorMessage())
-        .isEqualTo("Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.");
-
+    assertThat(response.getErrorMessage()).isEqualTo(analysisResponseMsg);
+    verify(activityLogger, times(1)).info(eq(analysisResponseMsg));
     LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.ELK);
     assertThat(analysisSummary.getRiskLevel()).isEqualTo(RiskLevel.NA);
     assertThat(analysisSummary.getQuery()).isEqualTo(elkAnalysisState.getQuery());
