@@ -82,7 +82,7 @@ public class SetInfraDefinitionTriggers {
 
     if (modified) {
       try {
-        triggerService.update(trigger);
+        triggerService.update(trigger, true);
         logger.info("--- Trigger updated: {}, {}", trigger.getUuid(), trigger.getName());
         Thread.sleep(100);
       } catch (Exception e) {

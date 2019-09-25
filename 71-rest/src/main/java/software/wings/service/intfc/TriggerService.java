@@ -60,9 +60,10 @@ public interface TriggerService extends OwnedByApplication, OwnedByPipeline, Own
    * Update artifact stream.
    *
    * @param trigger the artifact stream
+   * @param migration
    * @return the artifact stream
    */
-  @ValidationGroups(Update.class) Trigger update(@Valid Trigger trigger);
+  @ValidationGroups(Update.class) Trigger update(@Valid Trigger trigger, boolean migration);
 
   /**
    * Delete.

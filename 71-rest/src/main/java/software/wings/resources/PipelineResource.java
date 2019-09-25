@@ -145,7 +145,7 @@ public class PipelineResource {
     pipeline.setAppId(appId);
     pipeline.setUuid(pipelineId);
     try {
-      return new RestResponse<>(pipelineService.update(pipeline));
+      return new RestResponse<>(pipelineService.update(pipeline, false));
     } catch (WingsException exception) {
       // When the pipeline update is coming from the user there is no harness engineer wrong doing to alerted for
       exception.excludeReportTarget(DUPLICATE_STATE_NAMES, EnumSet.of(LOG_SYSTEM));

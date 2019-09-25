@@ -294,7 +294,7 @@ public class PipelineServiceTest extends WingsBaseTest {
 
     when(wingsPersistence.getWithAppId(Pipeline.class, pipeline.getAppId(), pipeline.getUuid())).thenReturn(pipeline);
 
-    Pipeline updatedPipeline = pipelineService.update(pipeline);
+    Pipeline updatedPipeline = pipelineService.update(pipeline, false);
 
     assertThat(updatedPipeline)
         .isNotNull()

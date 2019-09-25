@@ -112,7 +112,7 @@ public class SetInfraDefinitionPipelines {
 
     if (modified) {
       try {
-        pipelineService.update(pipeline);
+        pipelineService.update(pipeline, true);
         logger.info("--- Pipeline updated: {}, {}", pipeline.getUuid(), pipeline.getName());
         Thread.sleep(100);
       } catch (Exception e) {

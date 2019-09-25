@@ -1346,7 +1346,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Workflow finalWorkflow = readWorkflow(workflow.getAppId(), workflow.getUuid(), workflow.getDefaultVersion());
 
     String accountId = appService.getAccountIdByAppId(finalWorkflow.getAppId());
-    yamlPushService.pushYamlChangeSet(accountId, savedWorkflow, finalWorkflow, Type.UPDATE, isSyncFromGit, isRename);
+    if (!migration) {
+      yamlPushService.pushYamlChangeSet(accountId, savedWorkflow, finalWorkflow, Type.UPDATE, isSyncFromGit, isRename);
+    }
 
     if (workflowName != null) {
       if (!workflowName.equals(finalWorkflow.getName())) {

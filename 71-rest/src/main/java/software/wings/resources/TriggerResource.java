@@ -120,7 +120,7 @@ public class TriggerResource {
       }
       triggerService.authorize(existingTrigger, true);
       triggerService.authorize(trigger, false);
-      return new RestResponse(triggerService.update(trigger));
+      return new RestResponse(triggerService.update(trigger, false));
     }
     triggerService.authorize(trigger, false);
     return new RestResponse<>(triggerService.save(trigger));
@@ -148,7 +148,7 @@ public class TriggerResource {
     }
     triggerService.authorize(existingTrigger, true);
     triggerService.authorize(trigger, false);
-    return new RestResponse<>(triggerService.update(trigger));
+    return new RestResponse<>(triggerService.update(trigger, false));
   }
 
   /**
