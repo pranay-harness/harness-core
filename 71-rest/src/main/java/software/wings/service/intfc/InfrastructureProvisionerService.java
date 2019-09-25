@@ -52,7 +52,7 @@ public interface InfrastructureProvisionerService extends OwnedByApplication {
 
   Map<String, Object> resolveProperties(Map<String, Object> contextMap, List<BlueprintProperty> properties,
       Optional<ManagerExecutionLogCallback> executionLogCallbackOptional, Optional<String> region,
-      boolean infraRefactor);
+      boolean infraRefactor, String infraProvisionerTypeKey);
 
   void regenerateInfrastructureMappings(String provisionerId, ExecutionContext context, Map<String, Object> outputs);
 

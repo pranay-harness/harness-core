@@ -21,6 +21,7 @@ import javax.validation.constraints.NotNull;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("TERRAFORM")
 public class TerraformInfrastructureProvisioner extends InfrastructureProvisioner {
+  public static final String VARIABLE_KEY = "terraform";
   @NotEmpty private String sourceRepoSettingId;
 
   /**
@@ -36,7 +37,7 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
 
   @Override
   public String variableKey() {
-    return "terraform";
+    return VARIABLE_KEY;
   }
 
   TerraformInfrastructureProvisioner() {

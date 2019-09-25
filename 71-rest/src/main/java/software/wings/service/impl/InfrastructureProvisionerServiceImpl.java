@@ -42,7 +42,6 @@ import io.harness.validation.Create;
 import io.harness.validation.Update;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.jexl3.JexlException;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.Key;
@@ -110,7 +109,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
@@ -405,9 +403,9 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   // present for terraform
   private void applyProperties(Map<String, Object> contextMap, InfrastructureMapping infrastructureMapping,
       List<BlueprintProperty> properties, Optional<ManagerExecutionLogCallback> executionLogCallbackOptional,
-      Optional<String> region, NodeFilteringType nodeFilteringType) {
+      Optional<String> region, NodeFilteringType nodeFilteringType, String infraProvisionerTypeKey) {
     Map<String, Object> propertyNameEvaluatedMap =
-        resolveProperties(contextMap, properties, executionLogCallbackOptional, region, false);
+        resolveProperties(contextMap, properties, executionLogCallbackOptional, region, false, infraProvisionerTypeKey);
 
     try {
       infrastructureMapping.applyProvisionerVariables(propertyNameEvaluatedMap, nodeFilteringType, false);
@@ -421,12 +419,12 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Override
   public Map<String, Object> resolveProperties(Map<String, Object> contextMap, List<BlueprintProperty> properties,
       Optional<ManagerExecutionLogCallback> executionLogCallbackOptional, Optional<String> region,
-      boolean infraRefactor) {
+      boolean infraRefactor, String infraProvisionerTypeKey) {
     Map<String, Object> propertyNameEvaluatedMap = getPropertyNameEvaluatedMap(
         properties.stream()
             .map(property -> new NameValuePair(property.getName(), property.getValue(), property.getValueType()))
             .collect(toList()),
-        contextMap, executionLogCallbackOptional, infraRefactor);
+        contextMap, infraRefactor, infraProvisionerTypeKey);
 
     for (BlueprintProperty property : properties) {
       if (isNotEmpty(property.getFields())) {
@@ -440,13 +438,13 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
           List<Map<String, Object>> fieldsEvaluatedList = new ArrayList<>();
           for (Object evaluatedEntry : (List) evaluatedValue) {
             fieldsEvaluatedList.add(getPropertyNameEvaluatedMap(
-                fields, (Map<String, Object>) evaluatedEntry, executionLogCallbackOptional, infraRefactor));
+                fields, (Map<String, Object>) evaluatedEntry, infraRefactor, infraProvisionerTypeKey));
           }
           propertyNameEvaluatedMap.put(propertyName, fieldsEvaluatedList);
 
         } else {
           getPropertyNameEvaluatedMap(
-              fields, (Map<String, Object>) evaluatedValue, executionLogCallbackOptional, infraRefactor);
+              fields, (Map<String, Object>) evaluatedValue, infraRefactor, infraProvisionerTypeKey);
         }
       }
     }
@@ -456,9 +454,9 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   }
 
   @NotNull
-  private Map<String, Object> getPropertyNameEvaluatedMap(List<NameValuePair> properties,
-      Map<String, Object> contextMap, Optional<ManagerExecutionLogCallback> executionLogCallbackOptional,
-      boolean infraRefactor) {
+  @VisibleForTesting
+  Map<String, Object> getPropertyNameEvaluatedMap(List<NameValuePair> properties, Map<String, Object> contextMap,
+      boolean infraRefactor, String infrastructureProvisionerTypeKey) {
     Map<String, Object> propertyNameEvaluatedMap = new HashMap<>();
     for (NameValuePair property : properties) {
       if (isEmpty(property.getValue())) {
@@ -468,22 +466,17 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
         propertyNameEvaluatedMap.put(property.getName(), property.getValue());
         continue;
       }
-      Object evaluated;
+      Object evaluated = null;
       try {
         evaluated = evaluator.evaluate(property.getValue(), contextMap);
-      } catch (Exception exception) {
-        String errorMsg =
-            format("The infrastructure provisioner mapping %s was not resolved from the provisioner outputs",
-                property.getName());
-        addToExecutionLog(executionLogCallbackOptional, errorMsg);
-        throw new InvalidRequestException(errorMsg, exception, USER);
+      } catch (Exception ignored) {
       }
       if (evaluated == null) {
-        String errorMsg =
-            format("The infrastructure provisioner mapping %s was not resolved from the provisioner outputs",
-                property.getName());
-        addToExecutionLog(executionLogCallbackOptional, errorMsg);
-        throw new InvalidRequestException(errorMsg);
+        if (!infraRefactor || property.getValue().contains(format("${%s.", infrastructureProvisionerTypeKey))) {
+          throw new InvalidRequestException(format("Unable to resolve \"%s\" ", property.getValue()), USER);
+        }
+        logger.info(String.format("Unresolved expression \"%s\" ", property.getValue()));
+        evaluated = property.getValue();
       }
       propertyNameEvaluatedMap.put(property.getName(), evaluated);
     }
@@ -564,7 +557,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
                   addToExecutionLog(executionLogCallbackOptional,
                       "Updating service infra \"" + infrastructureMapping.getName() + "\"");
                   applyProperties(contextMap, infrastructureMapping, blueprint.getProperties(),
-                      executionLogCallbackOptional, region, blueprint.getNodeFilteringType());
+                      executionLogCallbackOptional, region, blueprint.getNodeFilteringType(),
+                      infrastructureProvisioner.variableKey());
                 });
           }
         }
@@ -585,45 +579,6 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
   private String getInfraMappingId(ExecutionContext context) {
     return context.fetchInfraMappingId();
-  }
-
-  @VisibleForTesting
-  public Map<String, Object> resolveBlueprints(
-      Map<String, Object> contextMap, Map<String, Object> blueprints, String infraMappingName) {
-    if (isEmpty(blueprints)) {
-      throw new InvalidRequestException(
-          "Invalid Configuration. Blueprints does not exists for service infra \"" + infraMappingName + "\"");
-    }
-    Map<String, Object> resolvedBlueprints = new HashMap<>(blueprints.size());
-
-    for (Entry<String, Object> blueprint : blueprints.entrySet()) {
-      Object evaluated;
-      try {
-        evaluated = resolveBlueprint(blueprint.getValue(), contextMap);
-      } catch (JexlException.Variable ex) {
-        throw new InvalidRequestException(
-            "Unable to resolve blueprint \"" + blueprint.getValue() + "\" from outputs", USER);
-      }
-      resolvedBlueprints.put(blueprint.getKey(), evaluated);
-    }
-    return resolvedBlueprints;
-  }
-
-  private Object resolveBlueprint(Object toBeResolved, Map<String, Object> contextMap) {
-    Object resolved;
-    if (toBeResolved instanceof String) {
-      resolved = evaluator.evaluate((String) toBeResolved, contextMap);
-    } else if (toBeResolved instanceof Map) {
-      Map<String, Object> toBeResolvedMap = (Map<String, Object>) toBeResolved;
-      resolved = new HashMap<String, Object>();
-      for (Map.Entry<String, Object> toBeResolvedMapEntry : toBeResolvedMap.entrySet()) {
-        Object resolvedEntry = resolveBlueprint(toBeResolvedMapEntry.getValue(), contextMap);
-        ((HashMap) resolved).put(toBeResolvedMapEntry.getKey(), resolvedEntry);
-      }
-    } else {
-      throw new InvalidRequestException("Unknown Blueprint value to be resolved : \"" + toBeResolved + "\"");
-    }
-    return resolved;
   }
 
   @Override
@@ -871,7 +826,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       Map<String, Object> contextMap, InfrastructureProvisioner infrastructureProvisioner) {
     List<BlueprintProperty> properties = getBlueprintProperties(infrastructureDefinition);
     addProvisionerKeys(properties, infrastructureProvisioner);
-    return resolveProperties(contextMap, properties, Optional.empty(), Optional.empty(), true);
+    return resolveProperties(
+        contextMap, properties, Optional.empty(), Optional.empty(), true, infrastructureProvisioner.variableKey());
   }
 
   void addProvisionerKeys(List<BlueprintProperty> properties, InfrastructureProvisioner infrastructureProvisioner) {

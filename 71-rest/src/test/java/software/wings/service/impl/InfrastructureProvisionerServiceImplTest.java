@@ -2,13 +2,13 @@ package software.wings.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_INSTANCE_FILTER;
@@ -22,15 +22,16 @@ import com.google.inject.Inject;
 import com.mongodb.DBCursor;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
-import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.Assertions;
+import org.joor.Reflect;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
@@ -49,6 +50,7 @@ import software.wings.beans.NameValuePair;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.dl.WingsPersistence;
+import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
 import software.wings.service.intfc.FeatureFlagService;
@@ -61,6 +63,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
@@ -149,47 +152,6 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     assertThat(awsInstanceFilter.getTags()).hasSize(1);
     assertThat(awsInstanceFilter.getTags().get(0).getKey()).isEqualTo("name");
     assertThat(awsInstanceFilter.getTags().get(0).getValue()).isEqualTo("mockName");
-  }
-
-  @Test
-  @Category(UnitTests.class)
-  public void testResolveBlueprints() {
-    Map<String, Object> contextMap = new HashMap<>();
-    Map<String, Object> blueprints = new HashMap<>();
-    InfrastructureProvisionerServiceImpl infrastructureProvisionerService =
-        (InfrastructureProvisionerServiceImpl) this.infrastructureProvisionerService;
-    assertThatThrownBy(() -> infrastructureProvisionerService.resolveBlueprints(contextMap, blueprints, ""))
-        .isInstanceOf(InvalidRequestException.class);
-    blueprints.put("abc", "out1");
-    assertThatThrownBy(() -> infrastructureProvisionerService.resolveBlueprints(contextMap, blueprints, ""))
-        .isInstanceOf(InvalidRequestException.class);
-    contextMap.put("out1", 1);
-    Map<String, Object> resolveBlueprints =
-        infrastructureProvisionerService.resolveBlueprints(contextMap, blueprints, "");
-    assertThat(resolveBlueprints.size() == 1).isTrue();
-    Object value = resolveBlueprints.get("abc");
-    assertThat(value instanceof Integer && (Integer) value == 1).isTrue();
-
-    Map<String, Object> someMap = new HashMap<String, Object>() {
-      {
-        put("innerpojo", new HashMap<String, Object>() {
-          { put("key1", "out2"); }
-        });
-      }
-    };
-    blueprints.put("awsInstance", someMap);
-    contextMap.put("out2", 2);
-    resolveBlueprints = infrastructureProvisionerService.resolveBlueprints(contextMap, blueprints, "");
-    value = ((Map) ((Map) resolveBlueprints.get("awsInstance")).get("innerpojo")).get("key1");
-    assertThat(value instanceof Integer && (Integer) value == 2).isTrue();
-
-    blueprints.put("key2", new ArrayList<>());
-    try {
-      infrastructureProvisionerService.resolveBlueprints(contextMap, blueprints, "");
-      fail("Should throw exception");
-    } catch (InvalidRequestException ex) {
-      assertThat(ExceptionUtils.getMessage(ex).contains("Unknown Blueprint value")).isTrue();
-    }
   }
 
   @Test
@@ -334,5 +296,36 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     Assertions.assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> provisionerService.validateProvisioner(terraformProvisioner));
     terraformProvisioner.setSourceRepoBranch("master");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void nonProvisionerExpressionsResolutionShouldNotFailOnNonResolution() {
+    String workflowVariable = "${workflowVariables.var1}";
+    Map<String, Object> contextMap = null;
+    List<NameValuePair> properties = new ArrayList<>();
+    properties.add(NameValuePair.builder().value(workflowVariable).build());
+    ManagerExpressionEvaluator evaluator = Mockito.mock(ManagerExpressionEvaluator.class);
+    Reflect.on(infrastructureProvisionerService).set("evaluator", evaluator);
+    when(evaluator.evaluate(workflowVariable, contextMap)).thenReturn(null);
+
+    ((InfrastructureProvisionerServiceImpl) infrastructureProvisionerService)
+        .getPropertyNameEvaluatedMap(
+            properties, contextMap, true, TerraformInfrastructureProvisioner.INFRASTRUCTURE_PROVISIONER_TYPE_KEY);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
+  public void provisionerExpressionsResolutionShouldFailOnNonResolution() {
+    String provisionerVariable = "${terraform.var1}";
+    Map<String, Object> contextMap = null;
+    List<NameValuePair> properties = new ArrayList<>();
+    properties.add(NameValuePair.builder().value(provisionerVariable).build());
+    ManagerExpressionEvaluator evaluator = Mockito.mock(ManagerExpressionEvaluator.class);
+    Reflect.on(infrastructureProvisionerService).set("evaluator", evaluator);
+    when(evaluator.evaluate(provisionerVariable, contextMap)).thenReturn(null);
+
+    ((InfrastructureProvisionerServiceImpl) infrastructureProvisionerService)
+        .getPropertyNameEvaluatedMap(properties, contextMap, true, TerraformInfrastructureProvisioner.VARIABLE_KEY);
   }
 }
