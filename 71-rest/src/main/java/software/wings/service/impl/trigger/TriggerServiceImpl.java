@@ -201,7 +201,7 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   @Override
-  public Trigger update(Trigger trigger) {
+  public Trigger update(Trigger trigger, boolean migration) {
     Trigger existingTrigger = wingsPersistence.getWithAppId(Trigger.class, trigger.getAppId(), trigger.getUuid());
     notNullCheck("Trigger was deleted ", existingTrigger, USER);
     equalCheck(trigger.getWorkflowType(), existingTrigger.getWorkflowType());
@@ -214,13 +214,15 @@ public class TriggerServiceImpl implements TriggerService {
 
     String accountId = appService.getAccountIdByAppId(existingTrigger.getAppId());
     boolean isRename = !existingTrigger.getName().equals(trigger.getName());
-    if (featureFlagService.isEnabled(FeatureName.TRIGGER_YAML, accountId)) {
-      yamlPushService.pushYamlChangeSet(
-          accountId, existingTrigger, updatedTrigger, Type.UPDATE, trigger.isSyncFromGit(), isRename);
-    } else {
-      // TODO: Once this flag is enabled for all accounts, this can be removed
-      auditServiceHelper.reportForAuditingUsingAppId(
-          updatedTrigger.getAppId(), existingTrigger, updatedTrigger, Type.UPDATE);
+    if (!migration) {
+      if (featureFlagService.isEnabled(FeatureName.TRIGGER_YAML, accountId)) {
+        yamlPushService.pushYamlChangeSet(
+            accountId, existingTrigger, updatedTrigger, Type.UPDATE, trigger.isSyncFromGit(), isRename);
+      } else {
+        // TODO: Once this flag is enabled for all accounts, this can be removed
+        auditServiceHelper.reportForAuditingUsingAppId(
+            updatedTrigger.getAppId(), existingTrigger, updatedTrigger, Type.UPDATE);
+      }
     }
 
     return updatedTrigger;
@@ -455,12 +457,12 @@ public class TriggerServiceImpl implements TriggerService {
 
   @Override
   public void updateByApp(String appId) {
-    triggerServiceHelper.getTriggersByApp(appId).forEach(this ::update);
+    triggerServiceHelper.getTriggersByApp(appId).forEach(trigger -> update(trigger, false));
   }
 
   @Override
   public void updateByArtifactStream(String artifactStreamId) {
-    triggerServiceHelper.getTriggersByArtifactStream(artifactStreamId).forEach(this ::update);
+    triggerServiceHelper.getTriggersByArtifactStream(artifactStreamId).forEach(trigger -> update(trigger, false));
   }
 
   @Override

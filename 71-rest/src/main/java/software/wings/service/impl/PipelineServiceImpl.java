@@ -184,7 +184,7 @@ public class PipelineServiceImpl implements PipelineService {
    * {@inheritDoc}
    */
   @Override
-  public Pipeline update(Pipeline pipeline) {
+  public Pipeline update(Pipeline pipeline, boolean migration) {
     Pipeline savedPipeline = wingsPersistence.getWithAppId(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
     notNullCheck("Pipeline not saved", savedPipeline, USER);
 
@@ -216,8 +216,10 @@ public class PipelineServiceImpl implements PipelineService {
       executorService.submit(() -> triggerService.updateByApp(pipeline.getAppId()));
     }
 
-    yamlPushService.pushYamlChangeSet(
-        accountId, savedPipeline, updatedPipeline, Type.UPDATE, pipeline.isSyncFromGit(), isRename);
+    if (!migration) {
+      yamlPushService.pushYamlChangeSet(
+          accountId, savedPipeline, updatedPipeline, Type.UPDATE, pipeline.isSyncFromGit(), isRename);
+    }
 
     return updatedPipeline;
   }
@@ -261,7 +263,7 @@ public class PipelineServiceImpl implements PipelineService {
     notNullCheck("pipeline", savedPipeline);
 
     savedPipeline.setFailureStrategies(failureStrategies);
-    Pipeline pipeline = update(savedPipeline);
+    Pipeline pipeline = update(savedPipeline, false);
     return pipeline.getFailureStrategies();
   }
 

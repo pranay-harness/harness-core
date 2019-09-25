@@ -303,7 +303,7 @@ public class TriggerServiceTest extends WingsBaseTest {
                 .artifactFilter(ARTIFACT_FILTER)
                 .build()));
 
-    Trigger updatedTrigger = triggerService.update(savedTrigger);
+    Trigger updatedTrigger = triggerService.update(savedTrigger, false);
 
     assertThat(updatedTrigger.getUuid()).isNotEmpty();
     assertThat(updatedTrigger.getCondition()).isInstanceOf(ArtifactTriggerCondition.class);
@@ -343,7 +343,7 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     when(workflowService.readWorkflow(trigger.getAppId(), WORKFLOW_ID)).thenReturn(buildWorkflow());
 
-    Trigger updatedTrigger = triggerService.update(savedWorkflowTrigger);
+    Trigger updatedTrigger = triggerService.update(savedWorkflowTrigger, false);
 
     assertThat(updatedTrigger.getUuid()).isNotEmpty();
     assertThat(updatedTrigger.getCondition()).isInstanceOf(ArtifactTriggerCondition.class);
@@ -380,7 +380,7 @@ public class TriggerServiceTest extends WingsBaseTest {
         asList(ArtifactSelection.builder().type(PIPELINE_SOURCE).serviceId(SERVICE_ID).build(),
             ArtifactSelection.builder().serviceId(SERVICE_ID).type(LAST_DEPLOYED).pipelineId(PIPELINE_ID).build()));
 
-    Trigger updatedTrigger = triggerService.update(savedPipelineCondTrigger);
+    Trigger updatedTrigger = triggerService.update(savedPipelineCondTrigger, false);
 
     assertThat(updatedTrigger.getUuid()).isEqualTo(TRIGGER_ID);
     assertThat(updatedTrigger.getCondition()).isInstanceOf(PipelineTriggerCondition.class);
@@ -419,7 +419,7 @@ public class TriggerServiceTest extends WingsBaseTest {
                                                                .build(),
         ArtifactSelection.builder().type(LAST_DEPLOYED).serviceId(SERVICE_ID).workflowId(PIPELINE_ID).build()));
 
-    Trigger updatedTrigger = triggerService.update(scheduledConditionTrigger);
+    Trigger updatedTrigger = triggerService.update(scheduledConditionTrigger, false);
     assertThat(updatedTrigger.getUuid()).isEqualTo(TRIGGER_ID);
 
     assertThat(updatedTrigger.getCondition()).isInstanceOf(ScheduledTriggerCondition.class);
@@ -560,7 +560,7 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     webhookConditionTrigger = triggerService.save(webhookConditionTrigger);
 
-    Trigger updatedTrigger = triggerService.update(webhookConditionTrigger);
+    Trigger updatedTrigger = triggerService.update(webhookConditionTrigger, false);
     assertThat(updatedTrigger.getUuid()).isEqualTo(TRIGGER_ID);
     assertThat(updatedTrigger.getCondition()).isInstanceOf(WebHookTriggerCondition.class);
     assertThat(((WebHookTriggerCondition) updatedTrigger.getCondition()).getWebHookToken().getPayload()).isNotNull();
@@ -596,7 +596,7 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     setWebhookArtifactSelections();
 
-    Trigger updatedTrigger = triggerService.update(webhookConditionTrigger);
+    Trigger updatedTrigger = triggerService.update(webhookConditionTrigger, false);
 
     assertThat(updatedTrigger.getCondition()).isInstanceOf(WebHookTriggerCondition.class);
     assertThat(((WebHookTriggerCondition) updatedTrigger.getCondition()).getWebHookToken().getPayload()).isNotNull();
@@ -621,7 +621,7 @@ public class TriggerServiceTest extends WingsBaseTest {
         .isNotNull()
         .isEqualTo(ARTIFACT_STREAM_ID);
 
-    Trigger updatedTrigger = triggerService.update(scheduledConditionTrigger);
+    Trigger updatedTrigger = triggerService.update(scheduledConditionTrigger, false);
     assertThat(updatedTrigger.getUuid()).isEqualTo(TRIGGER_ID);
     assertThat(updatedTrigger.getCondition()).isInstanceOf(ScheduledTriggerCondition.class);
     assertThat(((ScheduledTriggerCondition) updatedTrigger.getCondition()).getCronDescription()).isNotNull();
@@ -1638,7 +1638,7 @@ public class TriggerServiceTest extends WingsBaseTest {
         asList(ArtifactSelection.builder().type(LAST_COLLECTED).artifactFilter(ARTIFACT_FILTER).build(),
             ArtifactSelection.builder().type(LAST_DEPLOYED).workflowId(PIPELINE_ID).build()));
 
-    triggerService.update(webhookConditionTrigger);
+    triggerService.update(webhookConditionTrigger, false);
   }
 
   @Test

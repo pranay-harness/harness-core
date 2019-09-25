@@ -134,7 +134,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
     if (existingTrigger == null) {
       trigger = triggerService.save(trigger);
     } else {
-      trigger = triggerService.update(trigger);
+      trigger = triggerService.update(trigger, false);
     }
 
     changeContext.setEntity(trigger);
