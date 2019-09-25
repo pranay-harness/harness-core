@@ -117,6 +117,7 @@ public class ActivityServiceImpl implements ActivityService {
     if (activity.getCommandUnitType() != null) {
       switch (activity.getCommandUnitType()) {
         case KUBERNETES:
+        case PCF_SETUP:
         case COMMAND:
         case HELM:
         case SPOTINST_SETUP:
@@ -151,7 +152,7 @@ public class ActivityServiceImpl implements ActivityService {
                      .commandUnitType(activity.getCommandUnitType())
                      .build());
           break;
-        case PCF_SETUP:
+
         case PCF_RESIZE:
         case PCF_MAP_ROUTE:
         case PCF_BG_SWAP_ROUTE:

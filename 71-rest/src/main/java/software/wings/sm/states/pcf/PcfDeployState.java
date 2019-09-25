@@ -56,6 +56,7 @@ import software.wings.sm.WorkflowStandardParams;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -325,8 +326,9 @@ public class PcfDeployState extends State {
     Application app = ((ExecutionContextImpl) executionContext).getApp();
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
 
-    ActivityBuilder activityBuilder = pcfStateHelper.getActivityBuilder(app.getName(), app.getUuid(),
-        PCF_RESIZE_COMMAND, Type.Command, executionContext, getStateType(), CommandUnitType.PCF_RESIZE, env);
+    ActivityBuilder activityBuilder =
+        pcfStateHelper.getActivityBuilder(app.getName(), app.getUuid(), PCF_RESIZE_COMMAND, Type.Command,
+            executionContext, getStateType(), CommandUnitType.PCF_RESIZE, env, Collections.emptyList());
 
     return activityService.save(activityBuilder.build());
   }

@@ -1,10 +1,17 @@
 package software.wings.sm.states.pcf;
 
 import static com.google.common.collect.Maps.newHashMap;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
+import static software.wings.beans.TaskType.PCF_COMMAND_TASK;
+import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.PCF_SETUP;
+import static software.wings.beans.command.PcfDummyCommandUnit.FetchFiles;
+import static software.wings.beans.command.PcfDummyCommandUnit.PcfSetup;
+import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 
 import com.google.inject.Inject;
 
@@ -15,12 +22,15 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
@@ -36,16 +46,25 @@ import software.wings.beans.Application;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
+import software.wings.beans.GitFetchFilesTaskParams;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
+import software.wings.beans.appmanifest.AppManifestKind;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
+import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.PcfDummyCommandUnit;
 import software.wings.beans.container.PcfServiceSpecification;
+import software.wings.beans.yaml.GitCommandExecutionResponse;
+import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.common.Constants;
+import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
@@ -72,13 +91,18 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
+import software.wings.utils.ApplicationManifestUtils;
 import software.wings.utils.Misc;
 import software.wings.utils.ServiceVersionConvention;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -96,103 +120,46 @@ public class PcfSetupState extends State {
   @Inject private ServiceHelper serviceHelper;
   @Inject private transient ActivityHelperService activityHelperService;
   @Inject private transient FeatureFlagService featureFlagService;
+  @Inject private transient ApplicationManifestUtils applicationManifestUtils;
 
   @Inject @Transient protected transient LogService logService;
+
+  public static final String PCF_SETUP_COMMAND = "PCF Setup";
+
+  @Getter
+  @Setter
   @DefaultValue("${app.name}__${service.name}__${env.name}")
   @Attributes(title = "PCF App Name")
   private String pcfAppName;
 
-  private boolean useCurrentRunningCount;
-  private Integer currentRunningCount;
-  @Attributes(title = "Total Number of Instances", required = true) private Integer maxInstances;
+  @Getter @Setter private boolean useCurrentRunningCount;
+  @Getter @Setter private Integer currentRunningCount;
+  @Getter @Setter @Attributes(title = "Total Number of Instances", required = true) private Integer maxInstances;
 
-  @Attributes(title = "Resize Strategy", required = true) private ResizeStrategy resizeStrategy;
+  @Getter @Setter @Attributes(title = "Resize Strategy", required = true) private ResizeStrategy resizeStrategy;
 
-  @Attributes(title = "Map Route") private String route;
+  @Getter @Setter @Attributes(title = "Map Route") private String route;
 
-  @Attributes(title = "API Timeout Interval (Minutes)") @DefaultValue("5") private Integer timeoutIntervalInMinutes = 5;
+  @Getter
+  @Setter
+  @Attributes(title = "API Timeout Interval (Minutes)")
+  @DefaultValue("5")
+  private Integer timeoutIntervalInMinutes = 5;
 
-  @Attributes(title = "Active Versions to Keep") @DefaultValue("3") private Integer olderActiveVersionCountToKeep;
-
-  public static final String PCF_SETUP_COMMAND = "PCF Setup";
+  @Getter
+  @Setter
+  @Attributes(title = "Active Versions to Keep")
+  @DefaultValue("3")
+  private Integer olderActiveVersionCountToKeep;
 
   private boolean blueGreen;
 
-  /**
-   * Instantiates a new state.
-   *
-   * @param name      the name
-   */
   public PcfSetupState(String name) {
     super(name, StateType.PCF_SETUP.name());
   }
 
   public PcfSetupState(String name, String stateType) {
     super(name, stateType);
-  }
-
-  public Integer getMaxInstances() {
-    return maxInstances;
-  }
-
-  public void setMaxInstances(Integer maxInstances) {
-    this.maxInstances = maxInstances;
-  }
-
-  public ResizeStrategy getResizeStrategy() {
-    return resizeStrategy;
-  }
-
-  public void setResizeStrategy(ResizeStrategy resizeStrategy) {
-    this.resizeStrategy = resizeStrategy;
-  }
-
-  public String getPcfAppName() {
-    return pcfAppName;
-  }
-
-  public void setPcfAppName(String pcfAppName) {
-    this.pcfAppName = pcfAppName;
-  }
-
-  public Integer getTimeoutIntervalInMinutes() {
-    return timeoutIntervalInMinutes;
-  }
-
-  public void setTimeoutIntervalInMinutes(Integer timeoutIntervalInMinutes) {
-    this.timeoutIntervalInMinutes = timeoutIntervalInMinutes;
-  }
-
-  public String getRoute() {
-    return route;
-  }
-
-  public void setRoute(String route) {
-    this.route = route;
-  }
-
-  public Integer getOlderActiveVersionCountToKeep() {
-    return olderActiveVersionCountToKeep;
-  }
-
-  public void setOlderActiveVersionCountToKeep(Integer olderActiveVersionCountToKeep) {
-    this.olderActiveVersionCountToKeep = olderActiveVersionCountToKeep;
-  }
-
-  public boolean isUseCurrentRunningCount() {
-    return useCurrentRunningCount;
-  }
-
-  public void setUseCurrentRunningCount(boolean useCurrentRunningCount) {
-    this.useCurrentRunningCount = useCurrentRunningCount;
-  }
-
-  public Integer getCurrentRunningCount() {
-    return currentRunningCount;
-  }
-
-  public void setCurrentRunningCount(Integer currentRunningCount) {
-    this.currentRunningCount = currentRunningCount;
   }
 
   @Override
@@ -205,6 +172,25 @@ public class PcfSetupState extends State {
   }
 
   protected ExecutionResponse executeInternal(ExecutionContext context) {
+    boolean valuesInGit = false;
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
+    Application app = appService.get(context.getAppId());
+
+    if (featureFlagService.isEnabled(FeatureName.PCF_MANIFEST_REDESIGN, app.getAccountId())) {
+      appManifestMap = applicationManifestUtils.getApplicationManifests(context, AppManifestKind.PCF_OVERRIDE);
+      valuesInGit = isManifestInGit(appManifestMap);
+    }
+
+    Activity activity = createActivity(context, valuesInGit);
+
+    if (valuesInGit) {
+      return executeGitTask(context, appManifestMap, activity.getUuid());
+    } else {
+      return executePcfTask(context, activity.getUuid());
+    }
+  }
+
+  protected ExecutionResponse executePcfTask(ExecutionContext context, String activityId) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
 
@@ -235,7 +221,7 @@ public class PcfSetupState extends State {
     PcfInfrastructureMapping pcfInfrastructureMapping =
         (PcfInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
 
-    Activity activity = createActivity(context, artifact, artifactStream);
+    Activity activity = updateActivity(activityId, app.getUuid(), artifact, artifactStream);
 
     SettingAttribute settingAttribute = settingsService.get(pcfInfrastructureMapping.getComputeProviderSettingId());
     PcfConfig pcfConfig = (PcfConfig) settingAttribute.getValue();
@@ -331,16 +317,19 @@ public class PcfSetupState extends State {
             .tempRouteMaps(tempRouteMaps)
             .isStandardBlueGreen(blueGreen)
             .useTempRoutes(!isOriginalRoute)
+            .taskType(PCF_COMMAND_TASK)
             .build();
 
+    String waitId = generateUuid();
+
     DelegateTask delegateTask =
-        pcfStateHelper.getDelegateTask(app.getAccountId(), app.getUuid(), TaskType.PCF_COMMAND_TASK, activity.getUuid(),
-            env.getUuid(), pcfInfrastructureMapping.getUuid(), new Object[] {commandRequest, encryptedDataDetails}, 5);
+        pcfStateHelper.getDelegateTask(app.getAccountId(), app.getUuid(), PCF_COMMAND_TASK, waitId, env.getUuid(),
+            pcfInfrastructureMapping.getUuid(), new Object[] {commandRequest, encryptedDataDetails}, 5);
 
     delegateService.queueTask(delegateTask);
 
     return ExecutionResponse.builder()
-        .correlationIds(Arrays.asList(activity.getUuid()))
+        .correlationIds(Arrays.asList(waitId))
         .stateExecutionData(stateExecutionData)
         .async(true)
         .build();
@@ -387,7 +376,26 @@ public class PcfSetupState extends State {
   }
 
   protected ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
-    String activityId = response.keySet().iterator().next();
+    PcfSetupStateExecutionData stateExecutionData = (PcfSetupStateExecutionData) context.getStateExecutionData();
+
+    TaskType taskType = stateExecutionData.getTaskType();
+
+    switch (taskType) {
+      case GIT_FETCH_FILES_TASK:
+        return handleAsyncResponseForGitTask(context, response);
+
+      case PCF_COMMAND_TASK:
+        return handleAsyncResponseForPCFTask(context, response);
+
+      default:
+
+        throw new InvalidRequestException("Unhandled task type " + taskType);
+    }
+  }
+
+  protected ExecutionResponse handleAsyncResponseForPCFTask(
+      ExecutionContext context, Map<String, ResponseData> response) {
+    String activityId = getActivityId(context);
 
     PcfCommandExecutionResponse executionResponse = (PcfCommandExecutionResponse) response.values().iterator().next();
     ExecutionStatus executionStatus =
@@ -481,19 +489,26 @@ public class PcfSetupState extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
 
-  protected Activity createActivity(
-      ExecutionContext executionContext, Artifact artifact, ArtifactStream artifactStream) {
-    Application app = ((ExecutionContextImpl) executionContext).getApp();
+  private Activity createActivity(ExecutionContext executionContext, boolean remoteManifestType) {
+    Application app = executionContext.getApp();
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
-    ActivityBuilder activityBuilder = pcfStateHelper.getActivityBuilder(app.getName(), app.getUuid(), PCF_SETUP_COMMAND,
-        Type.Command, executionContext, getStateType(), CommandUnitType.PCF_SETUP, env);
 
-    activityBuilder.artifactStreamId(artifactStream.getUuid())
-        .artifactStreamName(artifactStream.getSourceName())
-        .artifactName(artifact.getDisplayName())
-        .artifactId(artifact.getUuid());
+    List<CommandUnit> commandUnitList = getCommandUnitList(remoteManifestType);
+
+    ActivityBuilder activityBuilder = pcfStateHelper.getActivityBuilder(app.getName(), app.getUuid(), PCF_SETUP_COMMAND,
+        Type.Command, executionContext, getStateType(), PCF_SETUP, env, commandUnitList);
 
     return activityService.save(activityBuilder.build());
+  }
+
+  private Activity updateActivity(String activityId, String appId, Artifact artifact, ArtifactStream artifactStream) {
+    Activity activity = activityService.get(activityId, appId);
+    activity.setArtifactStreamId(artifactStream.getUuid());
+    activity.setArtifactStreamName(artifactStream.getSourceName());
+    activity.setArtifactName(artifact.getDisplayName());
+    activity.setArtifactId(artifact.getUuid());
+
+    return activityService.save(activity);
   }
 
   @Override
@@ -504,5 +519,95 @@ public class PcfSetupState extends State {
     }
 
     return invalidFields;
+  }
+
+  private ExecutionResponse executeGitTask(
+      ExecutionContext context, Map<K8sValuesLocation, ApplicationManifest> appManifestMap, String activityId) {
+    Application app = context.getApp();
+    Environment env = ((ExecutionContextImpl) context).getEnv();
+
+    InfrastructureMapping infraMapping = infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
+
+    GitFetchFilesTaskParams fetchFilesTaskParams =
+        applicationManifestUtils.createGitFetchFilesTaskParams(context, app, appManifestMap);
+    fetchFilesTaskParams.setActivityId(activityId);
+    fetchFilesTaskParams.setFinalState(true);
+    fetchFilesTaskParams.setAppManifestKind(AppManifestKind.PCF_OVERRIDE);
+
+    String waitId = generateUuid();
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .accountId(app.getAccountId())
+                                    .appId(app.getUuid())
+                                    .envId(env.getUuid())
+                                    .infrastructureMappingId(infraMapping.getUuid())
+                                    .waitId(waitId)
+                                    .async(true)
+                                    .data(TaskData.builder()
+                                              .taskType(GIT_FETCH_FILES_TASK.name())
+                                              .parameters(new Object[] {fetchFilesTaskParams})
+                                              .timeout(TimeUnit.MINUTES.toMillis(GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT))
+                                              .build())
+                                    .build();
+
+    String delegateTaskId = delegateService.queueTask(delegateTask);
+
+    return ExecutionResponse.builder()
+        .async(true)
+        .correlationIds(Arrays.asList(waitId))
+        .stateExecutionData(PcfSetupStateExecutionData.builder()
+                                .activityId(activityId)
+                                .commandName(PCF_SETUP_COMMAND)
+                                .taskType(GIT_FETCH_FILES_TASK)
+                                .build())
+        .delegateTaskId(delegateTaskId)
+        .build();
+  }
+
+  private ExecutionResponse handleAsyncResponseForGitTask(
+      ExecutionContext context, Map<String, ResponseData> response) {
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    String appId = workflowStandardParams.getAppId();
+    String activityId = getActivityId(context);
+
+    GitCommandExecutionResponse executionResponse = (GitCommandExecutionResponse) response.values().iterator().next();
+    ExecutionStatus executionStatus = executionResponse.getGitCommandStatus().equals(GitCommandStatus.SUCCESS)
+        ? ExecutionStatus.SUCCESS
+        : ExecutionStatus.FAILED;
+
+    if (ExecutionStatus.FAILED.equals(executionStatus)) {
+      activityService.updateStatus(activityId, appId, executionStatus);
+      return ExecutionResponse.builder().executionStatus(executionStatus).build();
+    }
+
+    PcfSetupStateExecutionData pcfSetupStateExecutionData =
+        (PcfSetupStateExecutionData) context.getStateExecutionData();
+
+    return executePcfTask(context, activityId);
+  }
+
+  private String getActivityId(ExecutionContext context) {
+    return ((PcfSetupStateExecutionData) context.getStateExecutionData()).getActivityId();
+  }
+
+  private boolean isManifestInGit(Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
+    for (Entry<K8sValuesLocation, ApplicationManifest> entry : appManifestMap.entrySet()) {
+      ApplicationManifest applicationManifest = entry.getValue();
+      if (StoreType.Remote.equals(applicationManifest.getStoreType())) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private List<CommandUnit> getCommandUnitList(boolean remoteStoreType) {
+    List<CommandUnit> canaryCommandUnits = new ArrayList<>();
+
+    if (remoteStoreType) {
+      canaryCommandUnits.add(new PcfDummyCommandUnit(FetchFiles));
+    }
+
+    canaryCommandUnits.add(new PcfDummyCommandUnit(PcfSetup));
+    return canaryCommandUnits;
   }
 }
