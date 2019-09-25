@@ -37,6 +37,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.app.ManagerExecutorModule;
 import software.wings.app.ManagerQueueModule;
 import software.wings.app.SSOModule;
+import software.wings.app.SignupModule;
 import software.wings.app.StreamModule;
 import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
@@ -114,6 +115,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
     modules.add(new TemplateModule());
     modules.add(new EventsModule(configuration));
     modules.add(new SSOModule());
+    modules.add(new SignupModule());
     modules.add(new GcpMarketplaceIntegrationModule());
     modules.add(new AuthModule());
 

@@ -303,6 +303,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new EventsModule(configuration));
     modules.add(new GraphQLModule());
     modules.add(new SSOModule());
+    modules.add(new SignupModule());
     modules.add(new AuthModule());
     modules.add(new GcpMarketplaceIntegrationModule());
     modules.add(new SearchModule());

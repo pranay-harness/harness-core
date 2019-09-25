@@ -18,6 +18,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -91,6 +92,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
@@ -130,6 +132,9 @@ import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.signup.SignupException;
+import software.wings.signup.BlackListedDomainChecker;
+import software.wings.signup.SignupServiceImpl;
 import software.wings.utils.CacheManager;
 import software.wings.utils.WingsTestConstants;
 
@@ -190,6 +195,8 @@ public class UserServiceTest extends WingsBaseTest {
   @Mock private AuthenticationManager authenticationManager;
   @Mock private UserServiceLimitChecker userServiceLimitChecker;
   @Mock private LoginSettingsService loginSettingsService;
+  @Mock private BlackListedDomainChecker blackListedDomainChecker;
+  @Spy @InjectMocks private SignupServiceImpl signupService;
 
   /**
    * The Cache.
@@ -378,11 +385,11 @@ public class UserServiceTest extends WingsBaseTest {
   public void testBlockBlacklistedEmailRegistration() {
     when(configuration.isBlacklistedEmailDomainsAllowed()).thenReturn(false);
     when(configuration.isTrialRegistrationAllowed()).thenReturn(true);
-
+    doThrow(new SignupException("Invalid domain")).when(blackListedDomainChecker).check(Mockito.anyString());
     try {
       userService.trialSignup(TEMPORARY_EMAIL);
       fail("Temporary is not allowed for trial signup");
-    } catch (WingsException e) {
+    } catch (SignupException e) {
       // Exception is expected as temporary emails is not allowed.
     }
   }
@@ -925,14 +932,16 @@ public class UserServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldJoinAccount() throws EmailException, TemplateException, IOException {
+  public void shouldJoinAccount() {
     ArrayList<Account> accounts = new ArrayList<>();
     accounts.add(new Account());
     when(query.get())
         .thenReturn(userBuilder.withUuid(USER_ID).withEmail(NEW_USER_EMAIL).withAccounts(accounts).build());
     when(configuration.getPortal().getJwtPasswordSecret()).thenReturn("SECRET");
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
+    when(configuration.isTrialRegistrationAllowed()).thenReturn(true);
     when(configuration.getSupportEmail()).thenReturn(SUPPORT_EMAIL);
+    doNothing().when(blackListedDomainChecker).check(Mockito.anyString());
 
     AccountJoinRequest accountJoinRequest = AccountJoinRequest.builder()
                                                 .email(NEW_USER_EMAIL)

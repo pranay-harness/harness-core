@@ -208,8 +208,6 @@ public interface UserService extends OwnedByAccount {
 
   User getUserByEmail(String email, String accountId);
 
-  UserInvite getUserInviteByEmail(String email);
-
   /**
    * Verify registered or allowed.
    *
@@ -341,6 +339,8 @@ public interface UserService extends OwnedByAccount {
    * @return the completed user invite
    */
   User completeTrialSignupAndSignIn(String userInviteId);
+
+  User completeTrialSignupAndSignIn(UserInvite userInvite);
 
   /**
    * Delete invite user invite.
@@ -487,4 +487,6 @@ public interface UserService extends OwnedByAccount {
   boolean canEnableOrDisable(User user);
 
   User save(User user, String accountId);
+
+  String saveUserInvite(UserInvite userInvite);
 }

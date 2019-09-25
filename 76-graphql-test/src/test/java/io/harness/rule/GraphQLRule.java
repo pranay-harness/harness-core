@@ -43,6 +43,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.app.ManagerExecutorModule;
 import software.wings.app.ManagerQueueModule;
 import software.wings.app.SSOModule;
+import software.wings.app.SignupModule;
 import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
@@ -148,6 +149,7 @@ public class GraphQLRule
     modules.add(new GraphQLModule());
     modules.add(new AuthModule());
     modules.add(new SSOModule());
+    modules.add(new SignupModule());
     modules.add(new GcpMarketplaceIntegrationModule());
     return modules;
   }
