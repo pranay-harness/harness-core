@@ -7,6 +7,7 @@ import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.IRREGULAR
 import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.System.currentTimeMillis;
+import static java.time.Duration.ZERO;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 
@@ -68,11 +69,12 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
 
   @Override
   public synchronized void wakeup() {
-    notify();
+    notifyAll();
   }
 
   @Override
-  @SuppressWarnings("PMD")
+  // The theory is that ERROR type exception are unrecoverable, that is not exactly true.
+  @SuppressWarnings({"PMD", "squid:S1181"})
   public void process(ProcessMode mode) {
     long movingAverage = 0;
     long previous = 0;
@@ -143,22 +145,14 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
           filterExpander.filter(query);
         }
 
-        final T first = query.get();
+        final T next = query.get();
 
-        Duration sleepInterval = maximumDelayForCheck == null ? targetInterval : maximumDelayForCheck;
-
-        if (first != null) {
-          final Long nextIteration = first.obtainNextIteration(fieldName);
-          if (nextIteration == null) {
-            continue;
+        final long sleepMillis = calculateSleepDuration(next).toMillis();
+        // Do not sleep with 0, it is actually infinite sleep
+        if (sleepMillis > 0) {
+          synchronized (this) {
+            wait(sleepMillis);
           }
-          final Duration nextEntity = ofMillis(Math.max(0, nextIteration - currentTimeMillis()));
-          if (nextEntity.compareTo(maximumDelayForCheck) < 0) {
-            sleepInterval = nextEntity;
-          }
-        }
-        synchronized (this) {
-          wait(sleepInterval.toMillis());
         }
       } catch (InterruptedException exception) {
         Thread.currentThread().interrupt();
@@ -168,6 +162,24 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
         sleep(ofSeconds(1));
       }
     }
+  }
+
+  public Duration calculateSleepDuration(T next) {
+    if (next == null) {
+      return maximumDelayForCheck == null ? targetInterval : maximumDelayForCheck;
+    }
+
+    final Long nextIteration = next.obtainNextIteration(fieldName);
+    if (nextIteration == null) {
+      return ZERO;
+    }
+
+    final Duration nextEntity = ofMillis(nextIteration - currentTimeMillis());
+    if (maximumDelayForCheck == null || nextEntity.compareTo(maximumDelayForCheck) < 0) {
+      return nextEntity;
+    }
+
+    return maximumDelayForCheck;
   }
 
   public T next(long base, long throttled) {
@@ -197,7 +209,10 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
     return persistence.findAndModifySystemData(query, updateOperations, HPersistence.returnOldOptions);
   }
 
-  void processEntity(T entity) {
+  @SuppressWarnings({"squid:S2445"}) // We are aware that the entity will be different object every time the method is
+                                     // called. This is exactly what we want.
+
+  void processEntity(final T entity) {
     try {
       synchronized (entity) {
         semaphore.acquire();
