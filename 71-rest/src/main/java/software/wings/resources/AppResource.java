@@ -99,6 +99,7 @@ public class AppResource {
   @Path("{appId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.APPLICATION_CREATE_DELETE)
   public RestResponse<Application> update(@PathParam("appId") String appId, Application app) {
     app.setUuid(appId);
     return new RestResponse<>(appService.update(app));
