@@ -63,7 +63,7 @@ public class PipelineConditionTriggerTest extends WingsBaseTest {
 
     DeploymentTrigger trigger = deploymentTriggerService.save(pipelineTrigger, false);
 
-    DeploymentTrigger savedTrigger = deploymentTriggerService.get(APP_ID, trigger.getUuid());
+    DeploymentTrigger savedTrigger = deploymentTriggerService.get(APP_ID, trigger.getUuid(), false);
     assertThat(savedTrigger.getCondition()).isInstanceOf(PipelineCondition.class);
     PipelineCondition pipelineCondition = (PipelineCondition) savedTrigger.getCondition();
 

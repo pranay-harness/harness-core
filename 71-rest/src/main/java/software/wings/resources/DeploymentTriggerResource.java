@@ -24,6 +24,7 @@ import java.util.Map;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -67,15 +68,17 @@ public class DeploymentTriggerResource {
    *
    * @param appId    the app id
    * @param triggerId the stream id
+   * @param readPrimaryVariablesValueNames Primary variables are service, environment and infra
    * @return the rest response
    */
   @GET
   @Path("{triggerId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<DeploymentTrigger> get(
-      @QueryParam("appId") String appId, @PathParam("triggerId") String triggerId) {
-    return new RestResponse<>(deploymentTriggerService.get(appId, triggerId));
+  public RestResponse<DeploymentTrigger> get(@QueryParam("appId") String appId,
+      @PathParam("triggerId") String triggerId,
+      @QueryParam("readPrimaryVariablesValueNames") @DefaultValue("false") boolean readPrimaryVariablesValueNames) {
+    return new RestResponse<>(deploymentTriggerService.get(appId, triggerId, readPrimaryVariablesValueNames));
   }
 
   @GET

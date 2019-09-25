@@ -24,6 +24,7 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.EntityType;
+import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Variable;
@@ -45,6 +46,7 @@ import software.wings.beans.trigger.TriggerArtifactSelectionValue;
 import software.wings.beans.trigger.TriggerArtifactSelectionWebhook;
 import software.wings.beans.trigger.TriggerArtifactVariable;
 import software.wings.beans.trigger.TriggerExecution.WebhookEventDetails;
+import software.wings.beans.trigger.TriggerLastDeployedType;
 import software.wings.beans.trigger.WebhookCondition;
 import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
@@ -53,6 +55,7 @@ import software.wings.beans.trigger.WorkflowAction;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
@@ -79,6 +82,7 @@ public class WebhookTriggerDeploymentExecution {
   @Inject private ServiceResourceService serviceResourceService;
 
   @Inject WorkflowService workflowService;
+  @Inject PipelineService pipelineService;
 
   public WorkflowExecution validateExpressionsAndTriggerDeployment(String payload, HttpHeaders httpHeaders,
       DeploymentTrigger deploymentTrigger, WebhookEventDetails webhookEventDetails) {
@@ -346,21 +350,32 @@ public class WebhookTriggerDeploymentExecution {
       case LAST_DEPLOYED:
         TriggerArtifactSelectionLastDeployed lastDeployed =
             (TriggerArtifactSelectionLastDeployed) triggerArtifactVariableValue;
-        String workflowId = lastDeployed.getWorkflowId();
+        String executionId = lastDeployed.getId();
+        TriggerLastDeployedType type = lastDeployed.getType();
+        String name = lastDeployed.getName();
 
-        if (ExpressionEvaluator.matchesVariablePattern(workflowId)) {
-          String workflowName = getSubstitutedValue(lastDeployed.getWorkflowId(), payLoadMap);
+        if (ExpressionEvaluator.matchesVariablePattern(executionId)) {
+          name = getSubstitutedValue(lastDeployed.getId(), payLoadMap);
 
-          Workflow workflow = workflowService.readWorkflowByName(appId, workflowName);
-
-          if (workflow != null) {
-            workflowId = workflow.getUuid();
-          } else {
-            throw new TriggerException("Workflow with name  " + workflowName + " does not exist", USER);
+          if (lastDeployed.getType().equals(TriggerLastDeployedType.WORKFLOW)) {
+            Workflow workflow = workflowService.readWorkflowByName(appId, name);
+            if (workflow != null) {
+              executionId = workflow.getUuid();
+            } else {
+              throw new TriggerException("Workflow with name  " + name + " does not exist", USER);
+            }
+            name = workflow.getName();
+          } else if (lastDeployed.getType().equals(TriggerLastDeployedType.PIPELINE)) {
+            Pipeline pipeline = pipelineService.getPipelineByName(appId, name);
+            if (pipeline != null) {
+              executionId = pipeline.getUuid();
+            } else {
+              throw new TriggerException("Pipeline with name  " + name + " does not exist", USER);
+            }
+            name = pipeline.getName();
           }
         }
-        return TriggerArtifactSelectionLastDeployed.builder().workflowId(workflowId).build();
-
+        return TriggerArtifactSelectionLastDeployed.builder().id(executionId).type(type).name(name).build();
       case WEBHOOK_VARIABLE:
         try {
           TriggerArtifactSelectionWebhook triggerArtifactSelectionWebhook =

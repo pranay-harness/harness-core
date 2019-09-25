@@ -36,6 +36,7 @@ import software.wings.beans.trigger.TriggerArtifactSelectionLastDeployed;
 import software.wings.beans.trigger.TriggerArtifactSelectionValue;
 import software.wings.beans.trigger.TriggerArtifactSelectionWebhook;
 import software.wings.beans.trigger.TriggerArtifactVariable;
+import software.wings.beans.trigger.TriggerLastDeployedType;
 import software.wings.beans.trigger.WorkflowAction;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -238,15 +239,17 @@ public class TriggerArtifactVariableHandler {
       case LAST_DEPLOYED:
         TriggerArtifactSelectionLastDeployed workflowVar = (TriggerArtifactSelectionLastDeployed) inputValue;
 
-        if (!isExpression(workflowVar.getWorkflowId())) {
+        if (!isExpression(workflowVar.getId())) {
           return TriggerArtifactSelectionLastDeployed.builder()
-              .workflowId(workflowVar.getWorkflowId())
-              .workflowName(fetchWorkflowName(appId, workflowVar.getWorkflowId()))
+              .id(workflowVar.getId())
+              .name(fetchName(appId, workflowVar.getId(), workflowVar.getType()))
+              .type(workflowVar.getType())
               .build();
         } else {
           return TriggerArtifactSelectionLastDeployed.builder()
-              .workflowId(workflowVar.getWorkflowId())
-              .workflowName(workflowVar.getWorkflowId())
+              .id(workflowVar.getId())
+              .name(workflowVar.getId())
+              .type(workflowVar.getType())
               .build();
         }
 
@@ -296,8 +299,17 @@ public class TriggerArtifactVariableHandler {
     return null;
   }
 
-  private String fetchWorkflowName(String appId, String workflowId) {
-    return workflowService.fetchWorkflowName(appId, workflowId);
+  private String fetchName(String appId, String workflowId, TriggerLastDeployedType triggerLastDeployedType) {
+    switch (triggerLastDeployedType) {
+      case WORKFLOW:
+        return workflowService.fetchWorkflowName(appId, workflowId);
+      case PIPELINE:
+        return pipelineService.fetchPipelineName(appId, workflowId);
+      default:
+        unhandled(triggerLastDeployedType);
+    }
+
+    return null;
   }
 
   private String fetchEntityName(String appId, String entityId, EntityType entityType) {
@@ -328,16 +340,16 @@ public class TriggerArtifactVariableHandler {
       case LAST_DEPLOYED:
         TriggerArtifactSelectionLastDeployed workflowVar = (TriggerArtifactSelectionLastDeployed) variableValue;
 
-        if (workflowVar.getWorkflowId() == null) {
-          throw new TriggerException("workflow Id is null for artifact variable " + variableName, null);
+        if (workflowVar.getId() == null) {
+          throw new TriggerException("Workflow/Pipeline Id is null for artifact variable " + variableName, null);
         }
-        if (isExpression(workflowVar.getWorkflowId())) {
+        if (isExpression(workflowVar.getId())) {
           return;
         }
         try {
-          workflowService.fetchWorkflowName(appId, workflowVar.getWorkflowId());
+          fetchName(appId, workflowVar.getId(), workflowVar.getType());
         } catch (WingsException exception) {
-          throw new WingsException("workflow does not exist for variable " + variableName);
+          throw new TriggerException("Workflow/Pipeline does not exist for variable " + variableName, null);
         }
         break;
       case ARTIFACT_SOURCE:
@@ -446,8 +458,7 @@ public class TriggerArtifactVariableHandler {
       case LAST_DEPLOYED:
         TriggerArtifactSelectionLastDeployed triggerArtifactSelectionLastDeployed =
             (TriggerArtifactSelectionLastDeployed) triggerArtifactVariable.getVariableValue();
-        return fetchLastDeployedArtifacts(
-            appId, triggerArtifactSelectionLastDeployed.getWorkflowId(), triggerArtifactVariable);
+        return fetchLastDeployedArtifacts(appId, triggerArtifactSelectionLastDeployed.getId(), triggerArtifactVariable);
       case WEBHOOK_VARIABLE:
         TriggerArtifactSelectionWebhook artifactSelectionWebhook =
             (TriggerArtifactSelectionWebhook) triggerArtifactVariable.getVariableValue();

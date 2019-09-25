@@ -10,7 +10,7 @@ public interface TriggerProcessor {
 
   void transformTriggerConditionRead(DeploymentTrigger deploymentTrigger);
 
-  void transformTriggerActionRead(DeploymentTrigger deploymentTrigger);
+  void transformTriggerActionRead(DeploymentTrigger deploymentTrigger, boolean readPrimaryVariablesValueNames);
 
   WorkflowExecution executeTriggerOnEvent(String appId, TriggerExecutionParams triggerExecutionParams);
 }

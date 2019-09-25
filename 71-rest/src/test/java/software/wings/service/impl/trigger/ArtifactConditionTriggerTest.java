@@ -20,6 +20,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.ArtifactFile.Builder.anArtifactFile;
+import static software.wings.beans.trigger.TriggerLastDeployedType.WORKFLOW;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.artifact;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildJenkinsArtifactStream;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildPipeline;
@@ -235,7 +236,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
         .isNotNull()
         .isEqualTo(ARTIFACT_STREAM_ID);
 
-    savedTrigger = deploymentTriggerService.get(savedTrigger.getAppId(), savedTrigger.getUuid());
+    savedTrigger = deploymentTriggerService.get(savedTrigger.getAppId(), savedTrigger.getUuid(), false);
 
     assertThat(savedTrigger).isNotNull();
     assertThat(((ArtifactCondition) savedTrigger.getCondition()).getArtifactStreamId())
@@ -548,7 +549,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
     triggerArtifactVariables.add(
         TriggerArtifactVariable.builder()
             .variableName(VARIABLE_NAME)
-            .variableValue(TriggerArtifactSelectionLastDeployed.builder().workflowId(WORKFLOW_ID).build())
+            .variableValue(TriggerArtifactSelectionLastDeployed.builder().id(WORKFLOW_ID).type(WORKFLOW).build())
             .entityId(ENTITY_ID)
             .entityType(EntityType.SERVICE)
             .build());

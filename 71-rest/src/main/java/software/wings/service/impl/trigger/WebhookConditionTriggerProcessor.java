@@ -63,8 +63,8 @@ public class WebhookConditionTriggerProcessor implements TriggerProcessor {
   }
 
   @Override
-  public void transformTriggerActionRead(DeploymentTrigger deploymentTrigger) {
-    triggerServiceHelper.reBuildTriggerActionWithNames(deploymentTrigger);
+  public void transformTriggerActionRead(DeploymentTrigger deploymentTrigger, boolean readPrimaryVariablesValueNames) {
+    triggerServiceHelper.reBuildTriggerActionWithNames(deploymentTrigger, readPrimaryVariablesValueNames);
   }
 
   @Override
@@ -197,8 +197,8 @@ public class WebhookConditionTriggerProcessor implements TriggerProcessor {
         TriggerArtifactSelectionLastDeployed lastDeployed =
             (TriggerArtifactSelectionLastDeployed) triggerArtifactVariableValue;
 
-        if (ExpressionEvaluator.matchesVariablePattern(lastDeployed.getWorkflowId())) {
-          String name = getNameFromExpression(lastDeployed.getWorkflowId());
+        if (ExpressionEvaluator.matchesVariablePattern(lastDeployed.getId())) {
+          String name = getNameFromExpression(lastDeployed.getId());
           parameters.put(name, name + placeholder);
         }
         break;

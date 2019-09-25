@@ -31,7 +31,7 @@ public interface DeploymentTriggerService
 
   void delete(@NotEmpty String appId, @NotEmpty String triggerId);
 
-  DeploymentTrigger get(@NotEmpty String appId, @NotEmpty String triggerId);
+  DeploymentTrigger get(@NotEmpty String appId, @NotEmpty String triggerId, boolean readPrimaryVariablesValueNames);
 
   DeploymentTrigger getWithoutRead(@NotEmpty String appId, @NotEmpty String triggerId);
 

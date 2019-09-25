@@ -107,12 +107,12 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
     setConditionTypeInTrigger(trigger);
     String uuid = Validator.duplicateCheck(() -> wingsPersistence.save(trigger), "name", trigger.getName());
     actionsAfterTriggerUpdate(existingTrigger, trigger);
-    return get(trigger.getAppId(), uuid);
+    return get(trigger.getAppId(), uuid, false);
   }
 
   @Override
   public void delete(String appId, String triggerId) {
-    DeploymentTrigger deploymentTrigger = get(appId, triggerId);
+    DeploymentTrigger deploymentTrigger = get(appId, triggerId, false);
     notNullCheck("Trigger not exist ", triggerId, USER);
     actionsAfterTriggerDelete(deploymentTrigger);
     boolean answer = wingsPersistence.delete(DeploymentTrigger.class, triggerId);
@@ -123,12 +123,12 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
   }
 
   @Override
-  public DeploymentTrigger get(String appId, String triggerId) {
+  public DeploymentTrigger get(String appId, String triggerId, boolean readPrimaryVariablesValueNames) {
     DeploymentTrigger deploymentTrigger = wingsPersistence.getWithAppId(DeploymentTrigger.class, appId, triggerId);
     notNullCheck("Trigger not exist ", deploymentTrigger, USER);
     TriggerProcessor triggerProcessor = obtainTriggerProcessor(deploymentTrigger);
     triggerProcessor.transformTriggerConditionRead(deploymentTrigger);
-    triggerProcessor.transformTriggerActionRead(deploymentTrigger);
+    triggerProcessor.transformTriggerActionRead(deploymentTrigger, readPrimaryVariablesValueNames);
     return deploymentTrigger;
   }
 
@@ -157,7 +157,7 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
       try {
         TriggerProcessor triggerProcessor = obtainTriggerProcessor(deploymentTrigger);
         triggerProcessor.transformTriggerConditionRead(deploymentTrigger);
-        triggerProcessor.transformTriggerActionRead(deploymentTrigger);
+        triggerProcessor.transformTriggerActionRead(deploymentTrigger, false);
       } catch (Exception e) {
         deploymentTrigger.setTriggerInvalid(true);
         deploymentTrigger.setErrorMsg(ExceptionUtils.getMessage(e));

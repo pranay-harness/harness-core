@@ -101,7 +101,7 @@ public class WebhookConditionTriggerTest extends WingsBaseTest {
   public void shouldSaveWebhookConditionTrigger() {
     DeploymentTrigger trigger =
         deploymentTriggerService.save(TriggerServiceTestHelper.buildWebhookConditionTrigger(), false);
-    DeploymentTrigger savedWebhookTrigger = deploymentTriggerService.get(trigger.getAppId(), trigger.getUuid());
+    DeploymentTrigger savedWebhookTrigger = deploymentTriggerService.get(trigger.getAppId(), trigger.getUuid(), false);
 
     assertThat(savedWebhookTrigger.getUuid()).isNotEmpty();
     assertThat(savedWebhookTrigger.getCondition()).isInstanceOf(WebhookCondition.class);

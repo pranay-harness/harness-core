@@ -27,7 +27,6 @@ import io.harness.exception.TriggerException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import net.redhogs.cronparser.I18nMessages;
-import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
@@ -111,7 +110,8 @@ public class DeploymentTriggerServiceHelper {
     }
   }
 
-  public void reBuildTriggerActionWithNames(DeploymentTrigger deploymentTrigger) {
+  public void reBuildTriggerActionWithNames(
+      DeploymentTrigger deploymentTrigger, boolean readPrimaryVariablesValueNames) {
     switch (deploymentTrigger.getAction().getActionType()) {
       case PIPELINE:
         PipelineAction pipelineAction = (PipelineAction) deploymentTrigger.getAction();
@@ -121,9 +121,10 @@ public class DeploymentTriggerServiceHelper {
                 deploymentTrigger.getAppId(), triggerArgs.getTriggerArtifactVariables());
 
         List<Variable> triggerVariables = triggerArgs.getVariables();
-        if (isNotEmpty(triggerVariables)) {
+        if (isNotEmpty(triggerVariables) && readPrimaryVariablesValueNames) {
           validateAndTransformTriggerVariables(deploymentTrigger.getAppId(), triggerVariables);
         }
+
         deploymentTrigger.setAction(
             PipelineAction.builder()
                 .pipelineId(pipelineAction.getPipelineId())
@@ -140,7 +141,7 @@ public class DeploymentTriggerServiceHelper {
         WorkflowAction workflowAction = (WorkflowAction) deploymentTrigger.getAction();
         TriggerArgs wfTriggerArgs = workflowAction.getTriggerArgs();
         List<Variable> wfTriggerVariables = wfTriggerArgs.getVariables();
-        if (isNotEmpty(wfTriggerVariables)) {
+        if (isNotEmpty(wfTriggerVariables) && readPrimaryVariablesValueNames) {
           validateAndTransformTriggerVariables(deploymentTrigger.getAppId(), wfTriggerVariables);
         }
         List<TriggerArtifactVariable> wfTriggerArtifactVariables =
@@ -340,8 +341,7 @@ public class DeploymentTriggerServiceHelper {
             }
             break;
           default:
-            throw new TriggerException(
-                StringUtils.join("Variable type ", entityType, "Not supported in trigger variables"), null);
+            logger.info("No need to transform. Not a primary variable");
         }
       }
     }
