@@ -49,7 +49,7 @@
         <dropwizard.version>1.0.2</dropwizard.version>
         <excludedCategories />
         <extensions-version>2.4.3</extensions-version>
-        <fastxml.version>2.7.7</fastxml.version>
+        <fastxml.version>2.7.9</fastxml.version>
         <gitBranch>default</gitBranch>
         <gitCommitId>default</gitCommitId>
         <grpc.version>1.21.0</grpc.version>
