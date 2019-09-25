@@ -21,11 +21,19 @@ import org.mongodb.morphia.utils.IndexType;
 import java.util.Date;
 
 @Indexes({
-  @Index(options = @IndexOptions(name = "next"), fields = {
-    @Field(value = QueuableKeys.priority, type = IndexType.DESC)
-    , @Field(QueuableKeys.created), @Field(QueuableKeys.earliestGet), @Field(QueuableKeys.running),
-        @Field(QueuableKeys.resetTimestamp), @Field(QueuableKeys.version)
-  })
+  @Index(options = @IndexOptions(name = "versioned"),
+      fields =
+      {
+        @Field(QueuableKeys.version)
+        , @Field(QueuableKeys.earliestGet), @Field(QueuableKeys.running), @Field(QueuableKeys.resetTimestamp),
+            @Field(value = QueuableKeys.priority, type = IndexType.DESC), @Field(QueuableKeys.created)
+      })
+  ,
+      @Index(options = @IndexOptions(name = "unversioned"), fields = {
+        @Field(QueuableKeys.earliestGet)
+        , @Field(QueuableKeys.running), @Field(QueuableKeys.resetTimestamp),
+            @Field(value = QueuableKeys.priority, type = IndexType.DESC), @Field(QueuableKeys.created)
+      })
 })
 @FieldNameConstants(innerTypeName = "QueuableKeys")
 public abstract class Queuable implements PersistentEntity {
