@@ -333,8 +333,8 @@ public class MongoPersistence implements HPersistence {
       updateOperations.set(SampleEntityKeys.lastUpdatedAt, currentTime);
     }
 
-    if (logger.isInfoEnabled()) {
-      logger.info("Update {} with {}", query.getEntityClass().getName(),
+    if (logger.isDebugEnabled()) {
+      logger.debug("Update {} with {}", query.getEntityClass().getName(),
           ((UpdateOpsImpl) updateOperations).getOps().toString());
     }
   }
