@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.trigger.WebhookEventType.ANY;
 import static software.wings.beans.trigger.WebhookEventType.ISSUE;
 import static software.wings.beans.trigger.WebhookEventType.OTHER;
@@ -393,7 +392,7 @@ public class WebhookTriggerDeploymentExecution {
           }
 
           String buildNumber = triggerArtifactSelectionWebhook.getArtifactFilter();
-          if (ExpressionEvaluator.matchesVariablePattern(buildNumber)) {
+          if (ExpressionEvaluator.matchesVariablePattern(buildNumber) || isNotEmpty(serviceArtifactMapping)) {
             buildNumber = getSubstitutedValue(triggerArtifactSelectionWebhook.getArtifactFilter(), payLoadMap);
 
             logger.info("resolving build number for webhook trigger variable {}", variableName);
@@ -413,9 +412,9 @@ public class WebhookTriggerDeploymentExecution {
                     triggerArtifactVariable.getEntityId());
 
                 if (artifactStreamName != null) {
-                  // Artifact stream will have global app id
+                  // Artifact stream will have global app id after multi artifact
                   ArtifactStream artifactStream = artifactStreamService.getArtifactStreamByName(
-                      GLOBAL_APP_ID, triggerArtifactVariable.getEntityId(), artifactStreamName);
+                      appId, triggerArtifactVariable.getEntityId(), artifactStreamName);
 
                   if (artifactStream != null) {
                     webhookArtifactStreamId = artifactStream.getUuid();

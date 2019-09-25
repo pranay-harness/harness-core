@@ -197,7 +197,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     } else {
       if (status == SUCCESS) {
         String accountId = appService.getAccountIdByAppId(appId);
-        if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+        if (!featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
           triggerService.triggerExecutionPostPipelineCompletionAsync(appId, workflowId);
         } else {
           deploymentTriggerService.triggerExecutionPostPipelineCompletionAsync(appId, workflowId);

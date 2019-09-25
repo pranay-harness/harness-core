@@ -93,7 +93,7 @@ public class BuildSourceCallback implements NotifyCallback {
           if (isNotEmpty(artifacts)) {
             logger.info("[{}] new artifacts collected for artifactStreamId {}",
                 artifacts.stream().map(Artifact::getBuildNo).collect(Collectors.toList()), artifactStream.getUuid());
-            if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+            if (!featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
               triggerService.triggerExecutionPostArtifactCollectionAsync(
                   accountId, artifactStream.fetchAppId(), artifactStreamId, artifacts);
             } else {
