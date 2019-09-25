@@ -763,7 +763,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   private void validateTriggerUsages(String accountId, String appId, String artifactStreamId) {
     List<String> triggerNames;
-    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+    if (featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
       triggerNames = deploymentTriggerService.getTriggersHasArtifactStreamAction(accountId, appId, artifactStreamId);
     } else {
       List<Trigger> triggers = triggerService.getTriggersHasArtifactStreamAction(appId, artifactStreamId);

@@ -132,7 +132,7 @@ public class WebHookServiceImpl implements WebHookService {
       DeploymentTrigger deploymentTrigger = deploymentTriggerService.getTriggerByWebhookToken(token);
       String accountId = getAccountId(token, trigger, deploymentTrigger);
 
-      if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+      if (featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
         if (deploymentTrigger == null) {
           WebHookResponse webHookResponse =
               WebHookResponse.builder().error("No trigger associated with the given token").build();
@@ -241,7 +241,7 @@ public class WebHookServiceImpl implements WebHookService {
         return prepareResponse(webHookResponse, Response.Status.BAD_REQUEST);
       }
 
-      if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+      if (featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
         return executeDeploymentTrigger(webhookEventPayload, httpHeaders, triggerExecution, deploymentTrigger);
       } else {
         return executeTrigger(webhookEventPayload, httpHeaders, triggerExecution, trigger);
@@ -456,9 +456,9 @@ public class WebHookServiceImpl implements WebHookService {
         String artifactVariableName = ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME;
 
         String appName = appService.get(appId).getName();
-        // TODO harsh use common method to generate from
-        artifactStreamName = appName + "_" + serviceName + "_" + artifactStreamName;
-        payLoadMap.put(artifactStreamName, (Object) buildNumber);
+        if (artifactStreamName != null) {
+          payLoadMap.put(appName + "_" + serviceName + "_" + artifactStreamName, (Object) buildNumber);
+        }
 
         logger.info(
             "WebHook params Service name {}, Artifact Variable Name {}, Build Number {} and Artifact Source Name {}",

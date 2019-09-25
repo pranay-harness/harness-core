@@ -292,7 +292,7 @@ public class TriggerServiceImpl implements TriggerService {
   public void triggerExecutionPostArtifactCollectionAsync(
       String appId, String artifactStreamId, List<Artifact> artifacts) {
     String accountId = appService.getAccountIdByAppId(appId);
-    if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+    if (!featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
       executorService.execute(() -> triggerExecutionPostArtifactCollection(appId, artifactStreamId, artifacts));
     }
   }
@@ -300,7 +300,7 @@ public class TriggerServiceImpl implements TriggerService {
   @Override
   public void triggerExecutionPostArtifactCollectionAsync(
       String accountId, String appId, String artifactStreamId, List<Artifact> artifacts) {
-    if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+    if (!featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
       executorService.execute(() -> {
         if (featureFlagService.isEnabled(FeatureName.TRIGGER_FOR_ALL_ARTIFACTS, accountId)) {
           triggerExecutionPostArtifactCollectionForAllArtifacts(appId, artifactStreamId, artifacts);
@@ -314,7 +314,7 @@ public class TriggerServiceImpl implements TriggerService {
   private void triggerExecutionPostArtifactCollectionForAllArtifacts(
       String appId, String artifactStreamId, List<Artifact> collectedArtifacts) {
     String accountId = appService.getAccountIdByAppId(appId);
-    if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+    if (!featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
       if (isEmpty(collectedArtifacts)) {
         return;
       }
@@ -380,7 +380,7 @@ public class TriggerServiceImpl implements TriggerService {
   @Override
   public void triggerExecutionPostPipelineCompletionAsync(String appId, String sourcePipelineId) {
     String accountId = appService.getAccountIdByAppId(appId);
-    if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+    if (!featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
       executorService.submit(() -> triggerExecutionPostPipelineCompletion(appId, sourcePipelineId));
     }
   }
@@ -388,8 +388,8 @@ public class TriggerServiceImpl implements TriggerService {
   @Override
   public void triggerScheduledExecutionAsync(Trigger trigger, Date scheduledFireTime) {
     String accountId = appService.getAccountIdByAppId(trigger.getAppId());
-    if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-      if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+    if (!featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
+      if (!featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
         executorService.submit(() -> triggerScheduledExecution(trigger, scheduledFireTime));
       }
     }
@@ -400,7 +400,7 @@ public class TriggerServiceImpl implements TriggerService {
       Map<String, ArtifactSummary> serviceArtifactMapping, Map<String, String> parameters,
       TriggerExecution triggerExecution) {
     String accountId = appService.getAccountIdByAppId(appId);
-    if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+    if (!featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
       List<Artifact> artifacts = new ArrayList<>();
       Trigger trigger = triggerServiceHelper.getTrigger(appId, webHookToken);
       logger.info("Received WebHook request  for the Trigger {} with Service Build Numbers {}  and parameters {}",
@@ -424,7 +424,7 @@ public class TriggerServiceImpl implements TriggerService {
   public WorkflowExecution triggerExecutionByWebHook(
       Trigger trigger, Map<String, String> parameters, TriggerExecution triggerExecution) {
     String accountId = appService.getAccountIdByAppId(trigger.getAppId());
-    if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+    if (!featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
       return triggerDeployment(null, trigger, parameters, triggerExecution);
     } else {
       return null;

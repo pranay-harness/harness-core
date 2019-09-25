@@ -310,7 +310,7 @@ public class PipelineServiceImpl implements PipelineService {
         || pageResponse.getResponse().stream().allMatch(
                pipelineExecution -> ExecutionStatus.isFinalStatus(pipelineExecution.getStatus()))) {
       List<String> triggerNames;
-      if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, pipeline.getAccountId())) {
+      if (featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, pipeline.getAccountId())) {
         triggerNames = deploymentTriggerService.getTriggersHasPipelineAction(pipeline.getAppId(), pipeline.getUuid());
       } else {
         List<Trigger> triggers = triggerService.getTriggersHasPipelineAction(pipeline.getAppId(), pipeline.getUuid());

@@ -259,7 +259,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     String accountId = appService.getAccountIdByAppId(appId);
     Validator.notNullCheck("No account found for appId:" + appId, accountId);
 
-    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+    if (featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
       DeploymentTrigger deploymentTrigger = deploymentTriggerService.get(appId, triggerId);
 
       DeploymentTriggerYaml yaml =

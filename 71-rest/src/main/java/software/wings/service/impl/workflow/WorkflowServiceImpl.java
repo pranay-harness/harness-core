@@ -1403,7 +1403,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     List<String> triggerNames;
-    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, workflow.getAccountId())) {
+    if (featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, workflow.getAccountId())) {
       triggerNames = deploymentTriggerService.getTriggersHasWorkflowAction(workflow.getAppId(), workflow.getUuid());
     } else {
       List<Trigger> triggers = triggerService.getTriggersHasWorkflowAction(workflow.getAppId(), workflow.getUuid());

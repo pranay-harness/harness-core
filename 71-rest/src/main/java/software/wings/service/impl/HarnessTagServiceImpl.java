@@ -581,7 +581,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   }
 
   private void authorizeTriggers(String appId, String entityId, String accountId) {
-    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+    if (featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
       DeploymentTrigger existingDTrigger = deploymentTriggerService.get(appId, entityId);
       if (existingDTrigger == null) {
         throw new TriggerException("Trigger does not exist", USER);

@@ -766,7 +766,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   private boolean isTriggerRefactored(String accountId) {
-    return featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId);
+    return featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId);
   }
 
   private FolderNode doApplicationsYamlTree(String accountId, DirectoryPath directoryPath, boolean applyPermissions,

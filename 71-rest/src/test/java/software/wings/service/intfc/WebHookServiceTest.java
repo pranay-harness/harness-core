@@ -363,7 +363,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   public void shouldTestJsonBitBucketDeplpymentTrigger() throws IOException {
     webHookTriggerConditionWithBranch.setEventTypes(Arrays.asList(WebhookEventType.PULL_REQUEST));
     webHookTriggerConditionWithBranch.setBitBucketEvents(Arrays.asList(BitBucketEventType.PULL_REQUEST_CREATED));
-    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(true);
+    when(featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, ACCOUNT_ID)).thenReturn(true);
     when(deploymentTriggerService.getTriggerByWebhookToken(token)).thenReturn(deploymentTrigger);
 
     ClassLoader classLoader = getClass().getClassLoader();

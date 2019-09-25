@@ -709,7 +709,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   }
 
   private boolean isTriggerRefactor(String accountId) {
-    return featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId);
+    return featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId);
   }
 
   /**

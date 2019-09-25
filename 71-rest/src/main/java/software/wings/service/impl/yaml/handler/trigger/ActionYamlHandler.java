@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.TriggerException;
+import io.harness.expression.ExpressionEvaluator;
 import software.wings.beans.EntityType;
 import software.wings.beans.Variable;
 import software.wings.beans.trigger.Action;
@@ -54,7 +55,6 @@ public abstract class ActionYamlHandler<Y extends ActionYaml> extends BaseYamlHa
 
       TriggerArtifactVariableYaml triggerArtifactVariableYaml =
           TriggerArtifactVariableYaml.builder()
-              .variableName(triggerArtifactVariable.getVariableName())
               .entityName(triggerArtifactVariable.getEntityName())
               .entityType(triggerArtifactVariable.getEntityType().name())
               .variableValue(Collections.singletonList(valueYaml))
@@ -80,7 +80,7 @@ public abstract class ActionYamlHandler<Y extends ActionYaml> extends BaseYamlHa
 
       TriggerArtifactVariable triggerArtifactVariable =
           TriggerArtifactVariable.builder()
-              .variableName(triggerArtifactVariableYaml.getVariableName())
+              .variableName(ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME)
               .entityId(entityId)
               .entityType(EntityType.valueOf(triggerArtifactVariableYaml.getEntityType()))
               .variableValue(value)

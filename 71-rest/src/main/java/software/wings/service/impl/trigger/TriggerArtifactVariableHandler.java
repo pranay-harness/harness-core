@@ -12,6 +12,7 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.TriggerException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,7 @@ import software.wings.beans.trigger.TriggerArtifactVariable;
 import software.wings.beans.trigger.WorkflowAction;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -67,6 +69,7 @@ public class TriggerArtifactVariableHandler {
   @Inject private transient EnvironmentService environmentService;
   @Inject private transient ServiceResourceService serviceResourceService;
   @Inject private transient SettingsService settingService;
+  @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
   public void validateTriggerArtifactVariables(String appId, List<TriggerArtifactVariable> triggerArtifactVariables) {
     if (triggerArtifactVariables != null) {
@@ -83,7 +86,6 @@ public class TriggerArtifactVariableHandler {
               "entityType is null for artifact variable " + triggerArtifactVariable.getVariableName(), null);
         }
 
-        validateVariableName(appId, entityId, entityType, triggerArtifactVariable.getVariableName());
         notNullCheck("Artifact value cannot be null for variable: " + triggerArtifactVariable.getVariableName(),
             triggerArtifactVariable.getVariableValue());
         validateTriggerArtifactSelection(
@@ -486,26 +488,52 @@ public class TriggerArtifactVariableHandler {
 
   private String fetchLastDeployedArtifacts(
       String appId, String workflowId, TriggerArtifactVariable triggerArtifactVariable) {
-    List<ArtifactVariable> lastDeployedArtifacts =
+    List<ArtifactVariable> lastDeployedArtifactVariables =
         workflowExecutionService.obtainLastGoodDeployedArtifactsVariables(appId, workflowId);
 
-    if (isEmpty(lastDeployedArtifacts)) {
+    if (isEmpty(lastDeployedArtifactVariables)) {
       logger.warn(
           "Last deployed workflow/Pipeline {} does not have last deployed artifacts for app {}", workflowId, appId);
-    }
-    Optional<ArtifactVariable> artifactVariable =
-        lastDeployedArtifacts.stream()
-            .filter(lastDeployedArtifact -> {
-              return triggerArtifactVariable.getEntityId().equals(lastDeployedArtifact.getEntityId())
-                  && triggerArtifactVariable.getVariableName().equals(lastDeployedArtifact.getName());
-            })
-            .findFirst();
 
-    if (artifactVariable.isPresent()) {
-      return artifactVariable.get().getValue();
+      List<Artifact> artifacts = getLastDeployedArtifacts(appId, workflowId, triggerArtifactVariable.getEntityId());
+      logger.warn("More than one artifacts found for service {} for app {}, picking first one",
+          triggerArtifactVariable.getEntityId(), appId);
+      if (EmptyPredicate.isNotEmpty(artifacts)) {
+        return artifacts.get(0).getUuid();
+      }
     } else {
-      throw new WingsException("selected workflow/Pipeline " + workflowId + " does not have variable name "
-          + triggerArtifactVariable.getVariableName() + " for trigger ");
+      Optional<ArtifactVariable> artifactVariable =
+          lastDeployedArtifactVariables.stream()
+              .filter(lastDeployedArtifact -> {
+                return triggerArtifactVariable.getEntityId().equals(lastDeployedArtifact.getEntityId())
+                    && triggerArtifactVariable.getVariableName().equals(lastDeployedArtifact.getName());
+              })
+              .findFirst();
+
+      if (artifactVariable.isPresent()) {
+        return artifactVariable.get().getValue();
+      } else {
+        throw new WingsException("selected workflow/Pipeline " + workflowId + " does not have variable name "
+            + triggerArtifactVariable.getVariableName() + " for trigger ");
+      }
     }
+
+    return null;
+  }
+
+  private List<Artifact> getLastDeployedArtifacts(String appId, String workflowId, String serviceId) {
+    List<Artifact> lastDeployedArtifacts = workflowExecutionService.obtainLastGoodDeployedArtifacts(appId, workflowId);
+    if (lastDeployedArtifacts != null && serviceId != null) {
+      List<String> artifactStreamIds = artifactStreamServiceBindingService.listArtifactStreamIds(appId, serviceId);
+      if (isEmpty(artifactStreamIds)) {
+        logger.warn("serviceId does not have artifact streams for app {}", serviceId, appId);
+        lastDeployedArtifacts = new ArrayList<>();
+      } else {
+        lastDeployedArtifacts = lastDeployedArtifacts.stream()
+                                    .filter(artifact -> artifactStreamIds.contains(artifact.getArtifactStreamId()))
+                                    .collect(toList());
+      }
+    }
+    return lastDeployedArtifacts == null ? new ArrayList<>() : lastDeployedArtifacts;
   }
 }
