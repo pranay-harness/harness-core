@@ -1,5 +1,7 @@
 package software.wings.api.pcf;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,6 +9,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.api.ExecutionDataValue;
+import software.wings.api.pcf.PcfSetupExecutionSummary.PcfSetupExecutionSummaryBuilder;
+import software.wings.beans.TaskType;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.sm.StateExecutionData;
 
@@ -35,6 +39,7 @@ public class PcfSetupStateExecutionData extends StateExecutionData implements De
   private boolean rollback;
   private boolean isStandardBlueGreen;
   private boolean useTempRoutes;
+  private TaskType taskType;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
@@ -48,12 +53,19 @@ public class PcfSetupStateExecutionData extends StateExecutionData implements De
 
   private Map<String, ExecutionDataValue> getInternalExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
-    putNotNull(executionDetails, "organization",
-        ExecutionDataValue.builder().value(pcfCommandRequest.getOrganization()).displayName("Organization").build());
-    putNotNull(executionDetails, "space",
-        ExecutionDataValue.builder().value(pcfCommandRequest.getSpace()).displayName("Space").build());
-    putNotNull(executionDetails, "routeMaps",
-        ExecutionDataValue.builder().value(String.valueOf(routeMaps)).displayName("Route Maps").build());
+
+    if (pcfCommandRequest != null) {
+      putNotNull(executionDetails, "organization",
+          ExecutionDataValue.builder().value(pcfCommandRequest.getOrganization()).displayName("Organization").build());
+      putNotNull(executionDetails, "space",
+          ExecutionDataValue.builder().value(pcfCommandRequest.getSpace()).displayName("Space").build());
+    }
+
+    if (isNotEmpty(routeMaps)) {
+      putNotNull(executionDetails, "routeMaps",
+          ExecutionDataValue.builder().value(String.valueOf(routeMaps)).displayName("Route Maps").build());
+    }
+
     // putting activityId is very important, as without it UI wont make call to fetch commandLogs that are shown
     // in activity window
     putNotNull(executionDetails, "activityId",
@@ -64,10 +76,13 @@ public class PcfSetupStateExecutionData extends StateExecutionData implements De
 
   @Override
   public PcfSetupExecutionSummary getStepExecutionSummary() {
-    return PcfSetupExecutionSummary.builder()
-        .maxInstanceCount(useCurrentRunningInstanceCount ? currentRunningInstanceCount : maxInstanceCount)
-        .organization(pcfCommandRequest.getOrganization())
-        .space(pcfCommandRequest.getSpace())
-        .build();
+    PcfSetupExecutionSummaryBuilder builder = PcfSetupExecutionSummary.builder().maxInstanceCount(
+        useCurrentRunningInstanceCount ? currentRunningInstanceCount : maxInstanceCount);
+
+    if (pcfCommandRequest != null) {
+      builder.organization(pcfCommandRequest.getOrganization()).space(pcfCommandRequest.getSpace());
+    }
+
+    return builder.build();
   }
 }

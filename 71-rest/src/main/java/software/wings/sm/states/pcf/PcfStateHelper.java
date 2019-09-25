@@ -20,6 +20,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.TaskType;
+import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
@@ -88,7 +89,8 @@ public class PcfStateHelper {
   }
 
   public ActivityBuilder getActivityBuilder(String appName, String appId, String commandName, Type type,
-      ExecutionContext executionContext, String commandType, CommandUnitType commandUnitType, Environment environment) {
+      ExecutionContext executionContext, String commandType, CommandUnitType commandUnitType, Environment environment,
+      List<CommandUnit> commandUnits) {
     WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
     notNullCheck("workflowStandardParams", workflowStandardParams, USER);
     notNullCheck("currentUser", workflowStandardParams.getCurrentUser(), USER);
@@ -105,7 +107,7 @@ public class PcfStateHelper {
         .commandType(commandType)
         .workflowExecutionId(executionContext.getWorkflowExecutionId())
         .workflowId(executionContext.getWorkflowId())
-        .commandUnits(Collections.emptyList())
+        .commandUnits(commandUnits)
         .status(ExecutionStatus.RUNNING)
         .commandUnitType(commandUnitType)
         .environmentId(environment.getUuid())
@@ -146,8 +148,8 @@ public class PcfStateHelper {
     Application app = ((ExecutionContextImpl) executionContext).getApp();
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
 
-    ActivityBuilder activityBuilder = getActivityBuilder(
-        app.getName(), app.getUuid(), commandName, Type.Command, executionContext, stateType, commandUnitType, env);
+    ActivityBuilder activityBuilder = getActivityBuilder(app.getName(), app.getUuid(), commandName, Type.Command,
+        executionContext, stateType, commandUnitType, env, Collections.emptyList());
     return activityService.save(activityBuilder.build());
   }
 }

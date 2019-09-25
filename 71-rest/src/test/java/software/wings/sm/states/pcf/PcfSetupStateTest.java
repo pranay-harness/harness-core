@@ -70,6 +70,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
+import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
@@ -78,7 +79,11 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.TaskType;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.appmanifest.AppManifestKind;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStream;
@@ -89,6 +94,7 @@ import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.common.InfrastructureConstants;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
+import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
@@ -114,10 +120,13 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.utils.ApplicationManifestUtils;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class PcfSetupStateTest extends WingsBaseTest {
   private static final String BASE_URL = "https://env.harness.io/";
@@ -141,6 +150,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Mock private ServiceHelper serviceHelper;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private SweepingOutputService sweepingOutputService;
+  @Mock private ApplicationManifestUtils applicationManifestUtils;
 
   private PcfStateTestHelper pcfStateTestHelper = new PcfStateTestHelper();
 
@@ -249,6 +259,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
     Activity activity = Activity.builder().build();
     activity.setUuid(ACTIVITY_ID);
     when(activityService.save(any(Activity.class))).thenReturn(activity);
+    when(activityService.get(any(), any())).thenReturn(activity);
 
     when(settingsService.get(any())).thenReturn(pcfConfig);
 
@@ -327,5 +338,28 @@ public class PcfSetupStateTest extends WingsBaseTest {
     assertThat(pcfCommandSetupRequest.getPcfConfig().getUsername()).isEqualTo(USER_NAME);
     assertThat(pcfCommandSetupRequest.getOrganization()).isEqualTo(ORG);
     assertThat(pcfCommandSetupRequest.getSpace()).isEqualTo(SPACE);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testExecuteForFetchFiles() {
+    on(context).set("serviceTemplateService", serviceTemplateService);
+
+    Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap = new HashMap<>();
+    applicationManifestMap.put(
+        K8sValuesLocation.Service, ApplicationManifest.builder().storeType(StoreType.Remote).build());
+    when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.PCF_OVERRIDE))
+        .thenReturn(applicationManifestMap);
+    when(applicationManifestUtils.createGitFetchFilesTaskParams(any(), any(), any()))
+        .thenReturn(GitFetchFilesTaskParams.builder().build());
+    when(featureFlagService.isEnabled(FeatureName.PCF_MANIFEST_REDESIGN, app.getAccountId())).thenReturn(true);
+
+    ExecutionResponse executionResponse = pcfSetupState.execute(context);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+
+    PcfSetupStateExecutionData stateExecutionData =
+        (PcfSetupStateExecutionData) executionResponse.getStateExecutionData();
+    assertThat(stateExecutionData.getCommandName()).isEqualTo("PCF Setup");
+    assertThat(stateExecutionData.getTaskType()).isEqualTo(TaskType.GIT_FETCH_FILES_TASK);
   }
 }

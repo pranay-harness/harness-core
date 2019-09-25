@@ -7,6 +7,8 @@ import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX
 import static io.harness.pcf.model.PcfConstants.REPOSITORY_DIR_PATH;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.Log.LogLevel.ERROR;
+import static software.wings.beans.Log.LogLevel.INFO;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
@@ -163,7 +165,8 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
               .downsizeDetails(downsizeAppDetails)
               .build();
 
-      executionLogCallback.saveExecutionLog("\n ----------  PCF Setup process completed successfully");
+      executionLogCallback.saveExecutionLog(
+          "\n ----------  PCF Setup process completed successfully", INFO, CommandExecutionStatus.SUCCESS);
       return PcfCommandExecutionResponse.builder()
           .commandExecutionStatus(pcfSetupCommandResponse.getCommandExecutionStatus())
           .errorMessage(pcfSetupCommandResponse.getOutput())
@@ -173,7 +176,8 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
     } catch (RuntimeException | PivotalClientApiException | IOException | ExecutionException e) {
       logger.error(
           PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception in processing PCF Setup task [{}]", pcfCommandSetupRequest, e);
-      executionLogCallback.saveExecutionLog("\n\n ----------  PCF Setup process failed to complete successfully");
+      executionLogCallback.saveExecutionLog(
+          "\n\n ----------  PCF Setup process failed to complete successfully", ERROR, CommandExecutionStatus.FAILURE);
       Misc.logAllMessages(e, executionLogCallback);
       return PcfCommandExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)

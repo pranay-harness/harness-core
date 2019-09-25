@@ -309,6 +309,7 @@ import software.wings.beans.command.K8sDummyCommandUnit;
 import software.wings.beans.command.KubernetesResizeCommandUnit;
 import software.wings.beans.command.KubernetesSetupCommandUnit;
 import software.wings.beans.command.KubernetesSetupParams;
+import software.wings.beans.command.PcfDummyCommandUnit;
 import software.wings.beans.command.PortCheckClearedCommandUnit;
 import software.wings.beans.command.PortCheckListeningCommandUnit;
 import software.wings.beans.command.ProcessCheckRunningCommandUnit;
@@ -1059,6 +1060,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.command.InitSshCommandUnit", InitSshCommandUnit.class);
     w.put("beans.command.InitSshCommandUnitV2", InitSshCommandUnitV2.class);
     w.put("beans.command.K8sDummyCommandUnit", K8sDummyCommandUnit.class);
+    w.put("beans.command.PcfDummyCommandUnit", PcfDummyCommandUnit.class);
     w.put("beans.command.SpotinstDummyCommandUnit", SpotinstDummyCommandUnit.class);
     w.put("beans.command.KubernetesResizeCommandUnit", KubernetesResizeCommandUnit.class);
     w.put("beans.command.KubernetesSetupCommandUnit", KubernetesSetupCommandUnit.class);
