@@ -88,92 +88,94 @@ public class InfraMappingToDefinitionMigration implements Migration {
   @Inject private MigrateDelegateScopesToInfraDefinition migrateDelegateScopesToInfraDefinition;
 
   private final String DEBUG_LINE = " INFRA_MAPPING_MIGRATION: ";
-  private final String accountId = "zEaak-FLS425IEO7OLzMUg";
+  private final List<String> accountIds = Arrays.asList("zEaak-FLS425IEO7OLzMUg");
 
   public void migrate() {
-    logger.info(StringUtils.join(DEBUG_LINE, "Starting Infra Definition migration for accountId ", accountId));
-    Account account = null;
-    try {
-      account = accountService.get(accountId);
-    } catch (Exception e) {
-      logger.info(StringUtils.join(DEBUG_LINE, "Account does not exist, accountId ", accountId));
-      return;
-    }
-
-    List<String> appIds = appService.getAppIdsByAccountId(accountId);
-
-    Map<String, InfrastructureProvisioner> infrastructureProvisionerMap = new HashMap<>();
-
-    for (String appId : appIds) {
-      logger.info(StringUtils.join(DEBUG_LINE, "Starting migration for appId ", appId));
-
-      List<String> envIds = environmentService.getEnvIdsByApp(appId);
-
-      infrastructureProvisionerMap.clear();
-      try (HIterator<InfrastructureProvisioner> infrastructureProvisionerHIterator =
-               new HIterator<>(wingsPersistence.createQuery(InfrastructureProvisioner.class)
-                                   .field(InfrastructureProvisionerKeys.appId)
-                                   .equal(appId)
-                                   .fetch())) {
-        for (InfrastructureProvisioner provisioner : infrastructureProvisionerHIterator) {
-          infrastructureProvisionerMap.put(provisioner.getUuid(), provisioner);
-        }
+    for (String accountId : accountIds) {
+      logger.info(StringUtils.join(DEBUG_LINE, "Starting Infra Definition migration for accountId ", accountId));
+      Account account = null;
+      try {
+        account = accountService.get(accountId);
+      } catch (Exception e) {
+        logger.info(StringUtils.join(DEBUG_LINE, "Account does not exist, accountId ", accountId));
+        return;
       }
-      for (String envId : envIds) {
-        logger.info(StringUtils.join(DEBUG_LINE, "Starting migration for envId ", envId));
 
-        try (HIterator<InfrastructureMapping> infrastructureMappingHIterator =
-                 new HIterator<>(wingsPersistence.createQuery(InfrastructureMapping.class)
-                                     .field(InfrastructureMappingKeys.appId)
+      List<String> appIds = appService.getAppIdsByAccountId(accountId);
+
+      Map<String, InfrastructureProvisioner> infrastructureProvisionerMap = new HashMap<>();
+
+      for (String appId : appIds) {
+        logger.info(StringUtils.join(DEBUG_LINE, "Starting migration for appId ", appId));
+
+        List<String> envIds = environmentService.getEnvIdsByApp(appId);
+
+        infrastructureProvisionerMap.clear();
+        try (HIterator<InfrastructureProvisioner> infrastructureProvisionerHIterator =
+                 new HIterator<>(wingsPersistence.createQuery(InfrastructureProvisioner.class)
+                                     .field(InfrastructureProvisionerKeys.appId)
                                      .equal(appId)
-                                     .field(InfrastructureMappingKeys.envId)
-                                     .equal(envId)
                                      .fetch())) {
-          for (InfrastructureMapping infrastructureMapping : infrastructureMappingHIterator) {
-            logger.info(StringUtils.join(
-                DEBUG_LINE, "Starting migration for inframappingId ", infrastructureMapping.getUuid()));
-
-            // If infradefinitionId is already set, then no need to migrate
-            if (isEmpty(infrastructureMapping.getInfrastructureDefinitionId())) {
-              Optional<InfrastructureDefinition> newInfraDefinition = createInfraDefinition(
-                  infrastructureMapping, infrastructureProvisionerMap.get(infrastructureMapping.getProvisionerId()));
-
-              newInfraDefinition.ifPresent(def -> {
-                try {
-                  InfrastructureDefinition savedDefinition = infrastructureDefinitionService.save(def, true);
-                  setInfraDefinitionId(savedDefinition.getUuid(), infrastructureMapping);
-                  logger.info(StringUtils.join(DEBUG_LINE,
-                      format("Migrated infra mapping %s to infra definition %s", infrastructureMapping.getUuid(),
-                          savedDefinition.getUuid())));
-                } catch (Exception ex) {
-                  logger.error(StringUtils.join(
-                      DEBUG_LINE, ExceptionUtils.getMessage(ex), " inframapping ", infrastructureMapping.getUuid()));
-                }
-              });
-            } else {
-              logger.info(StringUtils.join(DEBUG_LINE, "skipping infra mapping ", infrastructureMapping.getUuid(),
-                  " since infra definition is set to ", infrastructureMapping.getInfrastructureDefinitionId()));
-            }
+          for (InfrastructureProvisioner provisioner : infrastructureProvisionerHIterator) {
+            infrastructureProvisionerMap.put(provisioner.getUuid(), provisioner);
           }
-        } catch (IllegalStateException ex) {
-          logger.error(StringUtils.join(DEBUG_LINE,
-              format(" Infra Mapping in env %s has more than 1 provisioners referenced ", envId), ex.getMessage()));
-        } catch (Exception ex) {
-          logger.error(
-              StringUtils.join(DEBUG_LINE, format("Error migrating env %s of app %s", envId, appId), ex.getMessage()));
+        }
+        for (String envId : envIds) {
+          logger.info(StringUtils.join(DEBUG_LINE, "Starting migration for envId ", envId));
+
+          try (HIterator<InfrastructureMapping> infrastructureMappingHIterator =
+                   new HIterator<>(wingsPersistence.createQuery(InfrastructureMapping.class)
+                                       .field(InfrastructureMappingKeys.appId)
+                                       .equal(appId)
+                                       .field(InfrastructureMappingKeys.envId)
+                                       .equal(envId)
+                                       .fetch())) {
+            for (InfrastructureMapping infrastructureMapping : infrastructureMappingHIterator) {
+              logger.info(StringUtils.join(
+                  DEBUG_LINE, "Starting migration for inframappingId ", infrastructureMapping.getUuid()));
+
+              // If infradefinitionId is already set, then no need to migrate
+              if (isEmpty(infrastructureMapping.getInfrastructureDefinitionId())) {
+                Optional<InfrastructureDefinition> newInfraDefinition = createInfraDefinition(
+                    infrastructureMapping, infrastructureProvisionerMap.get(infrastructureMapping.getProvisionerId()));
+
+                newInfraDefinition.ifPresent(def -> {
+                  try {
+                    InfrastructureDefinition savedDefinition = infrastructureDefinitionService.save(def, true);
+                    setInfraDefinitionId(savedDefinition.getUuid(), infrastructureMapping);
+                    logger.info(StringUtils.join(DEBUG_LINE,
+                        format("Migrated infra mapping %s to infra definition %s", infrastructureMapping.getUuid(),
+                            savedDefinition.getUuid())));
+                  } catch (Exception ex) {
+                    logger.error(StringUtils.join(
+                        DEBUG_LINE, ExceptionUtils.getMessage(ex), " inframapping ", infrastructureMapping.getUuid()));
+                  }
+                });
+              } else {
+                logger.info(StringUtils.join(DEBUG_LINE, "skipping infra mapping ", infrastructureMapping.getUuid(),
+                    " since infra definition is set to ", infrastructureMapping.getInfrastructureDefinitionId()));
+              }
+            }
+          } catch (IllegalStateException ex) {
+            logger.error(StringUtils.join(DEBUG_LINE,
+                format(" Infra Mapping in env %s has more than 1 provisioners referenced ", envId), ex.getMessage()));
+          } catch (Exception ex) {
+            logger.error(StringUtils.join(
+                DEBUG_LINE, format("Error migrating env %s of app %s", envId, appId), ex.getMessage()));
+          }
+
+          logger.info(StringUtils.join(DEBUG_LINE, "Finished migration for envId ", envId));
         }
 
-        logger.info(StringUtils.join(DEBUG_LINE, "Finished migration for envId ", envId));
+        logger.info(StringUtils.join(DEBUG_LINE, "Finished migration for appId ", appId));
       }
+      setInfraDefinitionTriggers.migrate(account);
+      setInfraDefinitionPipelines.migrate(account);
+      setInfraDefinitionWorkflows.migrate(account);
+      migrateDelegateScopesToInfraDefinition.migrate(account);
 
-      logger.info(StringUtils.join(DEBUG_LINE, "Finished migration for appId ", appId));
+      logger.info(StringUtils.join(DEBUG_LINE, "Finished Infra mapping migration for accountId ", accountId));
     }
-    setInfraDefinitionTriggers.migrate(account);
-    setInfraDefinitionPipelines.migrate(account);
-    setInfraDefinitionWorkflows.migrate(account);
-    migrateDelegateScopesToInfraDefinition.migrate(account);
-
-    logger.info(StringUtils.join(DEBUG_LINE, "Finished Infra mapping migration for accountId ", accountId));
   }
 
   private Optional<InfrastructureDefinition> createInfraDefinition(
