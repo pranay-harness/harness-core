@@ -6,7 +6,7 @@ public interface SpotInstConstants {
   int elastiGroupsToKeep = 3;
   int defaultSteadyStateTimeout = 15;
   int defaultSyncSpotinstTimeoutMin = 2;
-  int DEFAULT_ELASTIGROUP_MIN_INSTANCES = 0;
+  int DEFAULT_ELASTIGROUP_MIN_INSTANCES = 1;
   int DEFAULT_ELASTIGROUP_MAX_INSTANCES = 4;
   int DEFAULT_ELASTIGROUP_TARGET_INSTANCES = 2;
   String DEFAULT_ELASTIGROUP_NAME = "Default Name";
@@ -30,6 +30,7 @@ public interface SpotInstConstants {
   String ELASTI_GROUP_IMAGE_CONFIG = "imageId";
   String ELASTI_GROUP_USER_DATA_CONFIG = "userData";
   String GROUP_CONFIG_ELEMENT = "group";
+  String ELASTI_GROUP_ALL_PHASE_ROLLBACK = "Elastigroup all phase rollback";
 
   // Command unit Names
   String SETUP_COMMAND_UNIT = "Setup Elastigroup";
@@ -38,9 +39,9 @@ public interface SpotInstConstants {
   String DOWN_SCALE_COMMAND_UNIT = "Downscale Elastigroup";
   String DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT = "Downscale wait for steady state";
   String SWAP_ROUTES_COMMAND_UNIT = "Swap Routes";
-  String RENAME_COMMAND_UNIT = "Rename Elastigroup";
   String RENAME_OLD_COMMAND_UNIT = "Rename old Elastigroup";
   String RENAME_NEW_COMMAND_UNIT = "Rename new Elastigroup";
+  String DELETE_NEW_ELASTI_GROUP = "Delete new Elastigroup";
   String DEPLOYMENT_ERROR = "Final Deployment status";
 
   String ELASTI_GROUP_ID = "id";

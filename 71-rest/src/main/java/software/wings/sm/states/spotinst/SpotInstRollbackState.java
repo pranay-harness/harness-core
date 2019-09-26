@@ -1,31 +1,38 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_ALL_PHASE_ROLLBACK;
+
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.beans.SweepingOutput;
+import io.harness.beans.SweepingOutput.Scope;
 import io.harness.delegate.task.spotinst.request.SpotInstDeployTaskParameters;
+import io.harness.serializer.KryoUtils;
 import io.harness.spotinst.model.ElastiGroup;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
+import software.wings.beans.InstanceUnitType;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest.SpotInstCommandRequestBuilder;
+import software.wings.service.impl.spotinst.SpotinstAllPhaseRollbackData;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SpotInstRollbackState extends SpotInstDeployState {
   @Inject private transient SpotInstStateHelper spotInstStateHelper;
+  @Inject private transient SweepingOutputService sweepingOutputService;
 
-  /**
-   * Instantiates a new state.
-   *
-   * @param name      the name
-   */
   public SpotInstRollbackState(String name) {
     super(name, StateType.SPOTINST_ROLLBACK.name());
   }
 
+  @Override
+  @SchemaIgnore
   public boolean isRollback() {
     return true;
   }
@@ -63,5 +70,51 @@ public class SpotInstRollbackState extends SpotInstDeployState {
 
     return generateSpotInstDeployTaskParameters(
         app, activityId, awsAmiInfrastructureMapping, context, setupContextElement, oldElastiGroup, newElastiGroup);
+  }
+
+  @Override
+  protected boolean allPhaseRollbackDone(ExecutionContext context) {
+    SweepingOutput sweepingOutputInput =
+        context.prepareSweepingOutputBuilder(Scope.WORKFLOW).name(ELASTI_GROUP_ALL_PHASE_ROLLBACK).build();
+    SweepingOutput result = sweepingOutputService.find(sweepingOutputInput.getAppId(), sweepingOutputInput.getName(),
+        sweepingOutputInput.getPipelineExecutionId(), sweepingOutputInput.getWorkflowExecutionId(),
+        sweepingOutputInput.getPhaseExecutionId(), sweepingOutputInput.getStateExecutionId());
+    if (result == null) {
+      return false;
+    }
+    return ((SpotinstAllPhaseRollbackData) KryoUtils.asInflatedObject(result.getOutput())).isAllPhaseRollbackDone();
+  }
+
+  @Override
+  protected void markAllPhaseRollbackDone(ExecutionContext context) {
+    sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
+                                   .name(ELASTI_GROUP_ALL_PHASE_ROLLBACK)
+                                   .output(KryoUtils.asDeflatedBytes(
+                                       SpotinstAllPhaseRollbackData.builder().allPhaseRollbackDone(true).build()))
+                                   .build());
+  }
+
+  @Override
+  @SchemaIgnore
+  public Integer getInstanceCount() {
+    return super.getInstanceCount();
+  }
+
+  @Override
+  @SchemaIgnore
+  public InstanceUnitType getInstanceUnitType() {
+    return super.getInstanceUnitType();
+  }
+
+  @Override
+  @SchemaIgnore
+  public Integer getDownsizeInstanceCount() {
+    return super.getDownsizeInstanceCount();
+  }
+
+  @Override
+  @SchemaIgnore
+  public InstanceUnitType getDownsizeInstanceUnitType() {
+    return super.getDownsizeInstanceUnitType();
   }
 }

@@ -160,6 +160,7 @@ public class SpotInstSetupTaskHandlerTest extends WingsBaseTest {
   public void testGenerateFinalJson() {
     SpotInstSetupTaskParameters parameters =
         SpotInstSetupTaskParameters.builder()
+            .blueGreen(true)
             .image("img-123456")
             .elastiGroupJson(json)
             .awsLoadBalancerConfigs(Arrays.asList(LoadBalancerDetailsForBGDeployment.builder()

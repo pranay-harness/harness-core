@@ -599,6 +599,7 @@ import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTi
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfoV2;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
+import software.wings.service.impl.spotinst.SpotinstAllPhaseRollbackData;
 import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackDriverLogDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackDriverMetric;
@@ -1360,5 +1361,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SpotInstSetupStateExecutionData.class, 7241);
     kryo.register(SpotinstDeployExecutionSummary.class, 7242);
     kryo.register(AppManifestKind.class, 7243);
+    kryo.register(SpotinstAllPhaseRollbackData.class, 7245);
   }
 }

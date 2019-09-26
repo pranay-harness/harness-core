@@ -192,11 +192,4 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
     }
     logCallback.saveExecutionLog("Prod Elastigroup is UP with correct traffic", INFO, SUCCESS);
   }
-
-  private void createAndFinishEmptyExecutionLog(
-      SpotInstSwapRoutesTaskParameters swapRoutesParameters, String upScaleCommandUnit, String message) {
-    ExecutionLogCallback logCallback;
-    logCallback = getLogCallBack(swapRoutesParameters, upScaleCommandUnit);
-    logCallback.saveExecutionLog(message, INFO, SUCCESS);
-  }
 }
