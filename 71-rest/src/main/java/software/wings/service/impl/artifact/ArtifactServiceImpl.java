@@ -43,7 +43,6 @@ import com.google.inject.name.Named;
 import com.mongodb.BasicDBObject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.beans.SortOrder.OrderType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
@@ -131,9 +130,6 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   @Override
   public PageResponse<Artifact> listSortByBuildNo(PageRequest<Artifact> pageRequest) {
-    if (isEmpty(pageRequest.getOrders())) {
-      pageRequest.addOrder(ArtifactKeys.metadata_buildNo, OrderType.DESC);
-    }
     PageResponse<Artifact> pageResponse = wingsPersistence.query(Artifact.class, pageRequest);
     Map<String, List<Artifact>> groupByArtifactStream =
         pageResponse.getResponse().stream().collect(Collectors.groupingBy(Artifact::getArtifactStreamId));
