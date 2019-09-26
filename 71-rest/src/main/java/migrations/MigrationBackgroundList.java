@@ -110,8 +110,10 @@ public class MigrationBackgroundList {
         .add(Pair.of(56, BaseMigration.class))
         .add(Pair.of(57, BaseMigration.class))
         .add(Pair.of(58, MigrateTimeSeriesRawDataToGoogle.class))
-        .add(Pair.of(59, InfraMappingToDefinitionMigration.class))
+        .add(Pair.of(59, BaseMigration.class))
         .add(Pair.of(60, BaseMigration.class))
+        .add(Pair.of(61, InfraMappingToDefinitionMigration.class))
+        .add(Pair.of(62, BaseMigration.class))
         .build();
   }
 }
