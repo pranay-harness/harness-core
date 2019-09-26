@@ -8,8 +8,10 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.sm.StateType.APM_VERIFICATION;
 import static software.wings.sm.StateType.APP_DYNAMICS;
 import static software.wings.sm.StateType.BUG_SNAG;
 import static software.wings.sm.StateType.CLOUD_WATCH;
@@ -64,8 +66,13 @@ import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningE
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.sm.StateType;
+import software.wings.sm.states.APMVerificationState.Method;
+import software.wings.sm.states.APMVerificationState.MetricCollectionInfo;
+import software.wings.sm.states.APMVerificationState.ResponseMapping;
+import software.wings.sm.states.APMVerificationState.ResponseType;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfiguration.CVConfigurationKeys;
+import software.wings.verification.apm.APMCVServiceConfiguration;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
@@ -89,7 +96,6 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
-
 /**
  * @author Vaibhav Tulsyan
  * 05/Oct/2018
@@ -113,6 +119,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   private LogsCVConfiguration logsCVConfiguration;
   private BugsnagCVConfiguration bugsnagCVConfiguration;
   private StackdriverCVConfiguration stackdriverCVConfiguration;
+  private APMCVServiceConfiguration apmcvServiceConfiguration;
 
   private SettingAttribute settingAttribute;
   private String settingAttributeId;
@@ -152,6 +159,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     createBugSnagCVConfig(true);
     createStackdriverCVConfig(true);
     createSplunkCVConfig(true);
+    createAPMCVConfig(true);
   }
 
   private void createCloudWatchConfig() {
@@ -291,6 +299,28 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     elkCVConfiguration.setMessageField("message1");
     elkCVConfiguration.setTimestampField("timestamp1");
     elkCVConfiguration.setTimestampFormat("timestamp_format1");
+  }
+
+  private void createAPMCVConfig(boolean enabled24x7) {
+    apmcvServiceConfiguration = new APMCVServiceConfiguration();
+    apmcvServiceConfiguration.setName("APM config");
+    apmcvServiceConfiguration.setAppId(appId);
+    apmcvServiceConfiguration.setEnvId(envId);
+    apmcvServiceConfiguration.setServiceId(serviceId);
+    apmcvServiceConfiguration.setEnabled24x7(enabled24x7);
+    apmcvServiceConfiguration.setConnectorId(generateUuid());
+    apmcvServiceConfiguration.setStateType(APM_VERIFICATION);
+    apmcvServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
+
+    List<MetricCollectionInfo> metricCollectionInfos = new ArrayList<>();
+    ResponseMapping responseMapping = new ResponseMapping("queries[*].results.[0].name", "somejsonpath", "sometxnname",
+        "somemetricjsonpath", "hostpath", "hostregex", "timestamppath", "formattimestamp");
+
+    MetricCollectionInfo metricCollectionInfo = new MetricCollectionInfo("metricName", MetricType.INFRA, "randomtag",
+        "dummyuri", null, "bodycollection", ResponseType.JSON, responseMapping, Method.POST);
+
+    metricCollectionInfos.add(metricCollectionInfo);
+    apmcvServiceConfiguration.setMetricCollectionInfos(metricCollectionInfos);
   }
 
   private void createLogsCVConfig(boolean enabled24x7) {
@@ -472,6 +502,56 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertThat(fetchedObject.getStateType()).isEqualTo(APP_DYNAMICS);
     assertThat(fetchedObject.getAppDynamicsApplicationId()).isEqualTo(appDynamicsApplicationId);
     assertThat(fetchedObject.getAnalysisTolerance()).isEqualTo(AnalysisTolerance.HIGH);
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
+  public <T extends CVConfiguration> void testAPMCVConfiguration() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
+    String url =
+        API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + APM_VERIFICATION;
+    logger.info("POST " + url);
+    WebTarget target = client.target(url);
+    RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
+        entity(apmcvServiceConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+    String savedObjectUuid = restResponse.getResource();
+
+    url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId
+        + "&serviceConfigurationId=" + savedObjectUuid;
+
+    target = client.target(url);
+
+    RestResponse<APMCVServiceConfiguration> getRequestResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<APMCVServiceConfiguration>>() {});
+    APMCVServiceConfiguration fetchedObject = getRequestResponse.getResource();
+    assertEquals(savedObjectUuid, fetchedObject.getUuid());
+    assertEquals(accountId, fetchedObject.getAccountId());
+    assertEquals(appId, fetchedObject.getAppId());
+    assertEquals(envId, fetchedObject.getEnvId());
+    assertEquals(serviceId, fetchedObject.getServiceId());
+    assertEquals(APM_VERIFICATION, fetchedObject.getStateType());
+    assertEquals(AnalysisTolerance.MEDIUM, fetchedObject.getAnalysisTolerance());
+
+    List<MetricCollectionInfo> metricCollectionInfos = fetchedObject.getMetricCollectionInfos();
+    assertEquals(1, metricCollectionInfos.size());
+    MetricCollectionInfo metricCollectionInfo = metricCollectionInfos.get(0);
+    assertEquals("metricName", metricCollectionInfo.getMetricName());
+    assertEquals("dummyuri", metricCollectionInfo.getCollectionUrl());
+    assertEquals("bodycollection", metricCollectionInfo.getCollectionBody());
+    assertEquals(MetricType.INFRA, metricCollectionInfo.getMetricType());
+    assertEquals(Method.POST, metricCollectionInfo.getMethod());
+    assertEquals(ResponseType.JSON, metricCollectionInfo.getResponseType());
+
+    ResponseMapping responseMapping = metricCollectionInfo.getResponseMapping();
+    assertEquals("timestamppath", responseMapping.getTimestampJsonPath());
+    assertEquals("queries[*].results.[0].name", responseMapping.getTxnNameFieldValue());
+    assertEquals("hostpath", responseMapping.getHostJsonPath());
+    assertEquals("hostregex", responseMapping.getHostRegex());
+    assertEquals("sometxnname", responseMapping.getTxnNameRegex());
+    assertEquals("somemetricjsonpath", responseMapping.getMetricValueJsonPath());
+    assertEquals("formattimestamp", responseMapping.getTimestampFormat());
+    assertEquals("somejsonpath", responseMapping.getTxnNameJsonPath());
   }
 
   @Test

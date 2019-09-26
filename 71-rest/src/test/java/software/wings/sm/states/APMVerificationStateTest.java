@@ -2,6 +2,8 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -42,10 +44,11 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class APMVerificationStateTest extends WingsBaseTest {
   @Inject private Injector injector;
-  @Mock private WorkflowStandardParams workflowStandardParams;
+  @Mock private WorkflowStandardParams workflowStandardParameters;
 
   private ExecutionContextImpl context;
 
@@ -56,15 +59,15 @@ public class APMVerificationStateTest extends WingsBaseTest {
   public void setupContext() {
     StateExecutionInstance stateExecutionInstance =
         aStateExecutionInstance().displayName("healthCheck1").uuid(STATE_EXECUTION_ID).build();
-    when(workflowStandardParams.getApp()).thenReturn(anApplication().uuid(APP_ID).name(APP_NAME).build());
-    when(workflowStandardParams.getEnv())
+    when(workflowStandardParameters.getApp()).thenReturn(anApplication().uuid(APP_ID).name(APP_NAME).build());
+    when(workflowStandardParameters.getEnv())
         .thenReturn(anEnvironment().uuid(ENV_ID).name(ENV_NAME).environmentType(EnvironmentType.NON_PROD).build());
-    when(workflowStandardParams.getAppId()).thenReturn(APP_ID);
-    when(workflowStandardParams.getEnvId()).thenReturn(ENV_ID);
+    when(workflowStandardParameters.getAppId()).thenReturn(APP_ID);
+    when(workflowStandardParameters.getEnvId()).thenReturn(ENV_ID);
 
-    when(workflowStandardParams.getElementType()).thenReturn(ContextElementType.STANDARD);
+    when(workflowStandardParameters.getElementType()).thenReturn(ContextElementType.STANDARD);
     context = new ExecutionContextImpl(stateExecutionInstance, null, injector);
-    context.pushContextElement(workflowStandardParams);
+    context.pushContextElement(workflowStandardParameters);
     context.pushContextElement(aHostElement().hostName("localhost").build());
   }
 
@@ -78,11 +81,14 @@ public class APMVerificationStateTest extends WingsBaseTest {
     List<APMVerificationState.MetricCollectionInfo> mcInfo =
         yamlUtils.read(yamlStr, new TypeReference<List<APMVerificationState.MetricCollectionInfo>>() {});
     apmVerificationState.setMetricCollectionInfos(mcInfo);
-    Map<String, List<APMMetricInfo>> apmMetricInfos = apmVerificationState.apmMetricInfos(context);
-    assertThat(apmMetricInfos).hasSize(3);
-    assertThat(apmMetricInfos.get("query")).hasSize(2);
-    assertThat(apmMetricInfos.get("query").get(0).getResponseMappers().get("txnName").getFieldValue()).isNotNull();
-    assertThat(apmMetricInfos.get("query").get(1).getResponseMappers().get("txnName").getJsonPath()).isNotNull();
+
+    Map<String, List<APMMetricInfo>> apmMetricInfos =
+        APMVerificationState.buildMetricInfoMap(apmVerificationState.getMetricCollectionInfos(), Optional.of(context));
+    assertEquals(3, apmMetricInfos.size());
+    assertEquals(2, apmMetricInfos.get("query").size());
+    assertNotNull(apmMetricInfos.get("query").get(0).getResponseMappers().get("txnName").getFieldValue());
+    assertNotNull(apmMetricInfos.get("query").get(1).getResponseMappers().get("txnName").getJsonPath());
+
     String body = "this is a dummy collection body";
     assertThat(apmMetricInfos.get("queryWithHost" + URL_BODY_APPENDER + body)).hasSize(1);
     assertThat(apmMetricInfos.get("queryWithHost" + URL_BODY_APPENDER + body).get(0).getBody()).isEqualTo(body);

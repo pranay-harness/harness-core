@@ -10,6 +10,7 @@ import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 import static software.wings.common.VerificationConstants.CV_META_DATA;
 import static software.wings.sm.StateType.STACK_DRIVER_LOG;
+import static software.wings.sm.states.APMVerificationState.metricDefinitions;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -18,6 +19,8 @@ import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.VerificationOperationException;
 import io.harness.exception.WingsException;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.persistence.HIterator;
@@ -46,6 +49,8 @@ import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.StateType;
+import software.wings.sm.states.APMVerificationState;
+import software.wings.sm.states.APMVerificationState.MetricCollectionInfo;
 import software.wings.sm.states.CloudWatchState;
 import software.wings.sm.states.DatadogState;
 import software.wings.sm.states.PrometheusState;
@@ -188,8 +193,22 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), SplunkCVConfiguration.class);
         break;
 
+      case APM_VERIFICATION:
+        cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), APMCVServiceConfiguration.class);
+        APMCVServiceConfiguration apmCvConfiguration = (APMCVServiceConfiguration) cvConfiguration;
+        apmCvConfiguration.getMetricCollectionInfos().forEach(
+            collectionInfo -> collectionInfo.setTag(cvConfiguration.getName()));
+        if (!((APMCVServiceConfiguration) cvConfiguration).validate()) {
+          logger.info("The configuration for APM Custom Service Guard is invalid.");
+          String errMsg =
+              "The configuration should contain atleast one throughput if ERROR or Response Time is present. Throughput alone is not analyzed by itself";
+          throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, errMsg);
+        }
+        break;
+
       default:
-        throw new WingsException("No matching state type found " + stateType);
+        throw new VerificationOperationException(
+            ErrorCode.APM_CONFIGURATION_ERROR, "No matching state type found " + stateType);
     }
 
     cvConfiguration.setAccountId(accountId);
@@ -377,12 +396,12 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       case SPLUNKV2:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), SplunkCVConfiguration.class);
         break;
+      case APM_VERIFICATION:
+        updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), APMCVServiceConfiguration.class);
+        break;
       default:
-        throw new WingsException("No matching state type found - " + stateType)
-            .addParam(CVConfiguration.ACCOUNT_ID_KEY, accountId)
-            .addParam("appId", appId)
-            .addParam("serviceConfigurationId", serviceConfigurationId)
-            .addParam("stateType", String.valueOf(stateType));
+        throw new VerificationOperationException(
+            ErrorCode.APM_CONFIGURATION_ERROR, "No matching state type found - " + stateType, USER);
     }
     CVConfiguration savedConfiguration =
         wingsPersistence.getWithAppId(CVConfiguration.class, appId, serviceConfigurationId);
@@ -795,8 +814,15 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         metricTemplates = CloudWatchState.fetchMetricTemplates(
             CloudWatchServiceImpl.fetchMetrics((CloudWatchCVServiceConfiguration) cvConfiguration));
         break;
+      case APM_VERIFICATION:
+        APMCVServiceConfiguration apmcvServiceConfiguration = (APMCVServiceConfiguration) cvConfiguration;
+        List<MetricCollectionInfo> metricCollectionInfos = apmcvServiceConfiguration.getMetricCollectionInfos();
+        metricTemplates = metricDefinitions(
+            APMVerificationState.buildMetricInfoMap(metricCollectionInfos, Optional.empty()).values());
+        break;
       default:
-        throw new WingsException("No matching metric state type found " + stateType);
+        throw new VerificationOperationException(
+            ErrorCode.APM_CONFIGURATION_ERROR, "No matching metric state type found " + stateType);
     }
 
     return metricTemplates;

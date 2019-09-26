@@ -41,6 +41,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
+import software.wings.service.impl.apm.APMSetupTestNodeData;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.cloudwatch.CloudWatchDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
@@ -53,6 +54,8 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.service.intfc.verification.CVActivityLogService.Logger;
 import software.wings.sm.StateType;
+import software.wings.sm.states.APMVerificationState.MetricCollectionInfo;
+import software.wings.sm.states.APMVerificationState.ResponseMapping;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
@@ -99,9 +102,22 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     SettingAttribute attribute = new SettingAttribute();
     attribute.setValue(config);
 
-    String dummyResponseString = "{ 'key1':'value1'}";
+    String dummyResponseString = "{ \"key1\":1.45, \"time\":1234567}";
 
     APMFetchConfig fetchConfig = APMFetchConfig.builder().url("testFetchURL.com").build();
+
+    APMSetupTestNodeData nodeData = APMSetupTestNodeData.builder()
+                                        .fetchConfig(fetchConfig)
+                                        .apmMetricCollectionInfo(MetricCollectionInfo.builder()
+                                                                     .metricName("name")
+                                                                     .collectionUrl("testURL")
+                                                                     .responseMapping(ResponseMapping.builder()
+                                                                                          .metricValueJsonPath("key1")
+                                                                                          .timestampJsonPath("time")
+                                                                                          .txnNameFieldValue("txnName")
+                                                                                          .build())
+                                                                     .build())
+                                        .build();
 
     // setup
     when(mockSettingsService.get(anyString())).thenReturn(attribute);
@@ -111,7 +127,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
 
     // execute
     VerificationNodeDataSetupResponse response =
-        service.getDataForNode("accountId", "serverConfigId", fetchConfig, StateType.APM_VERIFICATION);
+        service.getDataForNode("accountId", "serverConfigId", nodeData, StateType.APM_VERIFICATION);
 
     // verify
     assertThat(response).isNotNull();
@@ -130,6 +146,8 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     String dummyResponseString = "{}";
 
     APMFetchConfig fetchConfig = APMFetchConfig.builder().url("testFetchURL.com").build();
+    APMSetupTestNodeData nodeData =
+        APMSetupTestNodeData.builder().fetchConfig(fetchConfig).apmMetricCollectionInfo(null).build();
 
     // setup
     when(mockSettingsService.get(anyString())).thenReturn(attribute);
@@ -139,11 +157,12 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
 
     // execute
     VerificationNodeDataSetupResponse response =
-        service.getDataForNode("accountId", "serverConfigId", fetchConfig, StateType.APM_VERIFICATION);
+        service.getDataForNode("accountId", "serverConfigId", nodeData, StateType.APM_VERIFICATION);
 
     // verify
     assertThat(response).isNotNull();
-    assertThat(response.getLoadResponse().isLoadPresent()).isFalse();
+    assertThat(response.isConfigurationCorrect()).isFalse();
+    assertThat(response.getLoadResponse()).isNull();
   }
 
   @Test(expected = WingsException.class)
