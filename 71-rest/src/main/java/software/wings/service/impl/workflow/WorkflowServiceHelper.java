@@ -493,6 +493,50 @@ public class WorkflowServiceHelper {
     }
   }
 
+  public void generateNewWorkflowPhaseStepsForSpotinst(
+      String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
+    List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
+    if (serviceSetupRequired) {
+      InfrastructureMapping infraMapping;
+      boolean spotInstInfra;
+      if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(appId))) {
+        InfrastructureDefinition infrastructureDefinition =
+            infrastructureDefinitionService.get(appId, workflowPhase.getInfraDefinitionId());
+        spotInstInfra = infrastructureDefinition.getInfrastructure() instanceof AwsAmiInfrastructure;
+      } else {
+        infraMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
+        spotInstInfra = infraMapping instanceof AwsAmiInfrastructureMapping;
+      }
+      if (spotInstInfra) {
+        Map<String, Object> defaultData = newHashMap();
+        defaultData.put("blueGreen", false);
+        phaseSteps.add(aPhaseStep(PhaseStepType.SPOTINST_SETUP, SPOTINST_SETUP)
+                           .addStep(GraphNode.builder()
+                                        .id(generateUuid())
+                                        .type(StateType.SPOTINST_SETUP.name())
+                                        .name(SPOTINST_SETUP)
+                                        .properties(defaultData)
+                                        .build())
+                           .build());
+      }
+    }
+    phaseSteps.add(aPhaseStep(PhaseStepType.SPOTINST_DEPLOY, SPOTINST_DEPLOY)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(StateType.SPOTINST_DEPLOY.name())
+                                    .name(SPOTINST_DEPLOY)
+                                    .build())
+                       .build());
+
+    Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
+    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_STAGING)
+                       .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                       .build());
+
+    phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
+  }
+
   public void generateNewWorkflowPhaseStepsForSpotInstBlueGreen(
       String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
     Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
@@ -1367,6 +1411,29 @@ public class WorkflowServiceHelper {
                                             .id(generateUuid())
                                             .type(AWS_AMI_SERVICE_ROLLBACK.name())
                                             .name(ROLLBACK_AWS_AMI_CLUSTER)
+                                            .rollback(true)
+                                            .build())
+                               .withPhaseStepNameForRollback(DEPLOY_SERVICE)
+                               .withStatusForRollback(SUCCESS)
+                               .withRollback(true)
+                               .build(),
+            aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
+                .withRollback(true)
+                .withPhaseStepNameForRollback(DEPLOY_SERVICE)
+                .withStatusForRollback(SUCCESS)
+                .withRollback(true)
+                .build(),
+            aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).withRollback(true).build()))
+        .build();
+  }
+
+  public WorkflowPhase generateRollbackWorkflowPhaseForSpotinst(WorkflowPhase workflowPhase) {
+    return rollbackWorkflow(workflowPhase)
+        .phaseSteps(asList(aPhaseStep(PhaseStepType.SPOTINST_ROLLBACK, SPOTINST_ROLLBACK)
+                               .addStep(GraphNode.builder()
+                                            .id(generateUuid())
+                                            .type(StateType.SPOTINST_ROLLBACK.name())
+                                            .name(SPOTINST_ROLLBACK)
                                             .rollback(true)
                                             .build())
                                .withPhaseStepNameForRollback(DEPLOY_SERVICE)
@@ -2276,7 +2343,7 @@ public class WorkflowServiceHelper {
         if (BLUE_GREEN.equals(orchestrationWorkflowType)) {
           generateNewWorkflowPhaseStepsForSpotInstBlueGreen(appId, workflowPhase, !serviceRepeat);
         } else {
-          throw new InvalidRequestException("Spotinst ONLY supported for Blue/Green deployments right now", USER);
+          generateNewWorkflowPhaseStepsForSpotinst(appId, workflowPhase, !serviceRepeat);
         }
       } else {
         if (BLUE_GREEN.equals(orchestrationWorkflowType)) {
@@ -2330,7 +2397,7 @@ public class WorkflowServiceHelper {
         if (BLUE_GREEN.equals(orchestrationWorkflowType)) {
           return generateRollbackWorkflowPhaseForSpotInstBlueGreen(workflowPhase);
         } else {
-          throw new InvalidRequestException("Spotinst ONLY supported for Blue/Green deployments right now", USER);
+          return generateRollbackWorkflowPhaseForSpotinst(workflowPhase);
         }
       } else {
         if (BLUE_GREEN.equals(orchestrationWorkflowType)) {

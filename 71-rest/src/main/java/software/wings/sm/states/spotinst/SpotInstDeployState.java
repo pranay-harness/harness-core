@@ -1,7 +1,9 @@
 package software.wings.sm.states.spotinst;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newHashMap;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.spotinst.model.SpotInstConstants.DELETE_NEW_ELASTI_GROUP;
 import static io.harness.spotinst.model.SpotInstConstants.DEPLOYMENT_ERROR;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
@@ -77,11 +79,6 @@ public class SpotInstDeployState extends State {
   @Getter @Setter private InstanceUnitType downsizeInstanceUnitType = InstanceUnitType.PERCENTAGE;
   public static final String SPOTINST_DEPLOY_COMMAND = "SpotInst Deploy";
 
-  /**
-   * Instantiates a new state.
-   *
-   * @param name      the name
-   */
   public SpotInstDeployState(String name) {
     super(name, StateType.SPOTINST_DEPLOY.name());
   }
@@ -104,7 +101,22 @@ public class SpotInstDeployState extends State {
     }
   }
 
+  protected boolean allPhaseRollbackDone(ExecutionContext context) {
+    return false;
+  }
+
+  protected void markAllPhaseRollbackDone(ExecutionContext context) {
+    /**
+     * No implementation needed for Spotinst Deploy step.
+     * Only needed in the rollback step
+     */
+  }
+
   protected ExecutionResponse executeInternal(ExecutionContext context) {
+    if (isRollback() && allPhaseRollbackDone(context)) {
+      return ExecutionResponse.builder().executionStatus(ExecutionStatus.SUCCESS).build();
+    }
+
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, SpotInstConstants.PHASE_PARAM);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
 
@@ -129,11 +141,22 @@ public class SpotInstDeployState extends State {
           new SpotinstDummyCommandUnit(UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
           new SpotinstDummyCommandUnit(DEPLOYMENT_ERROR));
     } else {
-      commandUnitList = ImmutableList.of(new SpotinstDummyCommandUnit(UP_SCALE_COMMAND_UNIT),
-          new SpotinstDummyCommandUnit(UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
-          new SpotinstDummyCommandUnit(DOWN_SCALE_COMMAND_UNIT),
-          new SpotinstDummyCommandUnit(DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
-          new SpotinstDummyCommandUnit(DEPLOYMENT_ERROR));
+      commandUnitList = newArrayList();
+      if (isRollback() || ResizeStrategy.RESIZE_NEW_FIRST.equals(spotInstSetupContextElement.getResizeStrategy())) {
+        commandUnitList.add(new SpotinstDummyCommandUnit(UP_SCALE_COMMAND_UNIT));
+        commandUnitList.add(new SpotinstDummyCommandUnit(UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT));
+        commandUnitList.add(new SpotinstDummyCommandUnit(DOWN_SCALE_COMMAND_UNIT));
+        commandUnitList.add(new SpotinstDummyCommandUnit(DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT));
+      } else {
+        commandUnitList.add(new SpotinstDummyCommandUnit(DOWN_SCALE_COMMAND_UNIT));
+        commandUnitList.add(new SpotinstDummyCommandUnit(DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT));
+        commandUnitList.add(new SpotinstDummyCommandUnit(UP_SCALE_COMMAND_UNIT));
+        commandUnitList.add(new SpotinstDummyCommandUnit(UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT));
+      }
+      if (isRollback()) {
+        commandUnitList.add(new SpotinstDummyCommandUnit(DELETE_NEW_ELASTI_GROUP));
+      }
+      commandUnitList.add(new SpotinstDummyCommandUnit(DEPLOYMENT_ERROR));
     }
 
     Activity activity = spotInstStateHelper.createActivity(
@@ -189,8 +212,10 @@ public class SpotInstDeployState extends State {
     ExecutionStatus executionStatus =
         executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
                                                                                              : ExecutionStatus.FAILED;
-
     activityService.updateStatus(activityId, context.getAppId(), executionStatus);
+    if (isRollback() && ExecutionStatus.SUCCESS.equals(executionStatus)) {
+      markAllPhaseRollbackDone(context);
+    }
 
     SpotInstDeployTaskResponse spotInstDeployTaskResponse =
         (SpotInstDeployTaskResponse) executionResponse.getSpotInstTaskResponse();
@@ -205,11 +230,13 @@ public class SpotInstDeployState extends State {
         (AwsAmiInfrastructureMapping) infrastructureMappingService.get(
             stateExecutionData.getAppId(), stateExecutionData.getInfraId());
 
-    List<InstanceElement> instanceElements = awsStateHelper.generateInstanceElements(
+    List<InstanceElement> instanceElements = newArrayList();
+    List<InstanceElement> newInstanceElements = awsStateHelper.generateInstanceElements(
         spotInstDeployTaskResponse.getEc2InstancesAdded(), awsAmiInfrastructureMapping, context);
-    if (isNotEmpty(instanceElements)) {
+    if (isNotEmpty(newInstanceElements)) {
       // These are newly launched instances, set NewInstance = true for verification service
-      instanceElements.forEach(instanceElement -> instanceElement.setNewInstance(true));
+      newInstanceElements.forEach(instanceElement -> instanceElement.setNewInstance(true));
+      instanceElements.addAll(newInstanceElements);
     }
 
     List<InstanceElement> existingInstanceElements = awsStateHelper.generateInstanceElements(
@@ -255,9 +282,15 @@ public class SpotInstDeployState extends State {
         : null;
     if (oldElastiGroup != null) {
       ElastiGroupCapacity oldElastiGroupCapacity = oldElastiGroup.getCapacity();
-      oldElastiGroupCapacity.setTarget(downsizeUpdateCount);
-      oldElastiGroupCapacity.setMaximum(downsizeUpdateCount);
-      oldElastiGroupCapacity.setMinimum(downsizeUpdateCount);
+      if (isFinalDeployState) {
+        oldElastiGroupCapacity.setTarget(0);
+        oldElastiGroupCapacity.setMaximum(0);
+        oldElastiGroupCapacity.setMinimum(0);
+      } else {
+        oldElastiGroupCapacity.setTarget(downsizeUpdateCount);
+        oldElastiGroupCapacity.setMaximum(downsizeUpdateCount);
+        oldElastiGroupCapacity.setMinimum(downsizeUpdateCount);
+      }
     }
 
     return generateSpotInstDeployTaskParameters(app, activityId, awsAmiInfrastructureMapping, context,
@@ -336,15 +369,21 @@ public class SpotInstDeployState extends State {
 
   @VisibleForTesting
   protected Integer getDownsizeUpdateCount(Integer updateCount, SpotInstSetupContextElement setupContextElement) {
-    // if downsizeInstanceCount is not set, use same updateCount as upsize
-    Integer downsizeUpdationCount = updateCount;
-
-    Integer instanceCount = getTargetInstanceCountToBeUsed(setupContextElement);
-    if (downsizeInstanceCount != null) {
-      downsizeUpdationCount =
-          getInstanceCountToUpdate(instanceCount, downsizeInstanceCount, downsizeInstanceUnitType, false);
+    ElastiGroup oldElastigroup = setupContextElement.getOldElastiGroupOriginalConfig();
+    if (oldElastigroup == null) {
+      return null;
     }
-    return downsizeUpdationCount;
+    int oldElastigroupTargetAtStart = oldElastigroup.getCapacity().getTarget();
+    if (downsizeInstanceCount == null) {
+      return Math.max(0, oldElastigroupTargetAtStart - updateCount);
+    } else {
+      if (InstanceUnitType.COUNT.equals(downsizeInstanceUnitType)) {
+        return downsizeInstanceCount;
+      } else {
+        int percent = Math.min(downsizeInstanceCount, 100);
+        return (int) ((percent * oldElastigroupTargetAtStart) / 100.0);
+      }
+    }
   }
 
   private Integer getInstanceCountToUpdate(

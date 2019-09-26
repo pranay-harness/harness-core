@@ -2,12 +2,14 @@ package software.wings.delegatetasks.spotinst.taskhandler;
 
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.spotinst.model.SpotInstConstants.DELETE_NEW_ELASTI_GROUP;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
+import static software.wings.beans.Log.LogLevel.INFO;
 
 import com.google.inject.Singleton;
 
@@ -21,6 +23,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SpotInstConfig;
+import software.wings.beans.command.ExecutionLogCallback;
 
 import java.util.List;
 
@@ -28,6 +31,18 @@ import java.util.List;
 @Singleton
 @NoArgsConstructor
 public class SpotInstDeployTaskHandler extends SpotInstTaskHandler {
+  private void scaleElastigroup(ElastiGroup elastiGroup, String spotInstToken, String spotInstAccountId,
+      String workflowExecutionId, int steadyStateTimeOut, SpotInstDeployTaskParameters deployTaskParameters,
+      String scaleCommandUnit, String waitCommandUnit) throws Exception {
+    if (elastiGroup != null) {
+      updateElastiGroupAndWait(spotInstToken, spotInstAccountId, elastiGroup, workflowExecutionId, steadyStateTimeOut,
+          deployTaskParameters, scaleCommandUnit, waitCommandUnit);
+    } else {
+      createAndFinishEmptyExecutionLog(deployTaskParameters, scaleCommandUnit, "No Elastigroup eligible for scaling");
+      createAndFinishEmptyExecutionLog(deployTaskParameters, waitCommandUnit, "No Elastigroup eligible for scaling");
+    }
+  }
+
   @Override
   protected SpotInstTaskExecutionResponse executeTaskInternal(SpotInstTaskParameters spotInstTaskParameters,
       SpotInstConfig spotInstConfig, AwsConfig awsConfig) throws Exception {
@@ -47,30 +62,50 @@ public class SpotInstDeployTaskHandler extends SpotInstTaskHandler {
     boolean resizeNewFirst = deployTaskParameters.isResizeNewFirst();
     int steadyStateTimeOut = getTimeOut(deployTaskParameters.getSteadyStateTimeOut());
 
-    // For Rollback, we always upsize oldElastiGroup
-    if (resizeNewFirst && !deployTaskParameters.isRollback()) {
-      if (newElastiGroup != null) {
-        updateElastiGroupAndWait(spotInstToken, spotInstAccountId, newElastiGroup,
-            deployTaskParameters.getWorkflowExecutionId(), steadyStateTimeOut, deployTaskParameters,
-            UP_SCALE_COMMAND_UNIT, UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
-      }
-      // If BG, do not update oldElastiGroup
-      if (oldElastiGroup != null && !deployTaskParameters.isBlueGreen()) {
-        updateElastiGroupAndWait(spotInstToken, spotInstAccountId, oldElastiGroup,
-            deployTaskParameters.getWorkflowExecutionId(), steadyStateTimeOut, deployTaskParameters,
-            DOWN_SCALE_COMMAND_UNIT, DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
-      }
+    if (deployTaskParameters.isBlueGreen()) {
+      // B/G
+      scaleElastigroup(newElastiGroup, spotInstToken, spotInstAccountId, deployTaskParameters.getWorkflowExecutionId(),
+          steadyStateTimeOut, deployTaskParameters, UP_SCALE_COMMAND_UNIT, UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
     } else {
-      if (oldElastiGroup != null) {
-        updateElastiGroupAndWait(spotInstToken, spotInstAccountId, oldElastiGroup,
-            deployTaskParameters.getWorkflowExecutionId(), steadyStateTimeOut, deployTaskParameters,
-            DOWN_SCALE_COMMAND_UNIT, DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
-      }
-      if (newElastiGroup != null) {
-        updateElastiGroupAndWait(spotInstToken, spotInstAccountId, newElastiGroup,
+      // Canary OR Basic
+      if (deployTaskParameters.isRollback()) {
+        // Roll back, always resize the old one first
+        scaleElastigroup(oldElastiGroup, spotInstToken, spotInstAccountId,
             deployTaskParameters.getWorkflowExecutionId(), steadyStateTimeOut, deployTaskParameters,
             UP_SCALE_COMMAND_UNIT, UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
+        scaleElastigroup(newElastiGroup, spotInstToken, spotInstAccountId,
+            deployTaskParameters.getWorkflowExecutionId(), steadyStateTimeOut, deployTaskParameters,
+            DOWN_SCALE_COMMAND_UNIT, DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
+      } else {
+        // Deploy
+        if (resizeNewFirst) {
+          scaleElastigroup(newElastiGroup, spotInstToken, spotInstAccountId,
+              deployTaskParameters.getWorkflowExecutionId(), steadyStateTimeOut, deployTaskParameters,
+              UP_SCALE_COMMAND_UNIT, UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
+          scaleElastigroup(oldElastiGroup, spotInstToken, spotInstAccountId,
+              deployTaskParameters.getWorkflowExecutionId(), steadyStateTimeOut, deployTaskParameters,
+              DOWN_SCALE_COMMAND_UNIT, DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
+        } else {
+          scaleElastigroup(oldElastiGroup, spotInstToken, spotInstAccountId,
+              deployTaskParameters.getWorkflowExecutionId(), steadyStateTimeOut, deployTaskParameters,
+              DOWN_SCALE_COMMAND_UNIT, DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
+          scaleElastigroup(newElastiGroup, spotInstToken, spotInstAccountId,
+              deployTaskParameters.getWorkflowExecutionId(), steadyStateTimeOut, deployTaskParameters,
+              UP_SCALE_COMMAND_UNIT, UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
+        }
       }
+    }
+
+    if (deployTaskParameters.isRollback() && newElastiGroup != null) {
+      ExecutionLogCallback logCallback = getLogCallBack(deployTaskParameters, DELETE_NEW_ELASTI_GROUP);
+      logCallback.saveExecutionLog(format(
+          "Sending request to Spotinst to delete newly created Elastigroup with id: [%s]", newElastiGroup.getId()));
+      spotInstHelperServiceDelegate.deleteElastiGroup(spotInstToken, spotInstAccountId, newElastiGroup.getId());
+      logCallback.saveExecutionLog(
+          format("Elastigroup: [%s] deleted successfully", newElastiGroup.getId()), INFO, SUCCESS);
+
+      // Set it to null to that we do not look for instances
+      newElastiGroup = null;
     }
 
     List<Instance> newElastiGroupInstances = newElastiGroup != null

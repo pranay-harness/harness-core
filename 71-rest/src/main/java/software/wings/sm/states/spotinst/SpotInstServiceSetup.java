@@ -34,6 +34,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
+import software.wings.utils.Misc;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -188,7 +189,7 @@ public class SpotInstServiceSetup extends State {
             .appId(stateExecutionData.getAppId())
             .envId(stateExecutionData.getEnvId())
             .newElastiGroupOriginalConfig(stateExecutionData.getElastiGroupOriginalConfig())
-            .elstiGroupNamePrefix(context.renderExpression(elastiGroupNamePrefix))
+            .elstiGroupNamePrefix(Misc.normalizeExpression(context.renderExpression(elastiGroupNamePrefix)))
             .lbDetailsForBGDeployment(spotInstSetupTaskResponse.getLbDetailsForBGDeployments())
             .build();
 

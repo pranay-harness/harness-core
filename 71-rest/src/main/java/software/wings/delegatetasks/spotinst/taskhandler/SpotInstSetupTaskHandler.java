@@ -47,6 +47,7 @@ import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ReportTarget;
 import io.harness.spotinst.model.ElastiGroup;
+import io.harness.spotinst.model.ElastiGroupCapacity;
 import io.harness.spotinst.model.ElastiGroupLoadBalancer;
 import io.harness.spotinst.model.ElastiGroupLoadBalancerConfig;
 import lombok.NoArgsConstructor;
@@ -88,7 +89,6 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
     }
 
     // Handle canary and basic
-    SpotInstSetupTaskResponseBuilder builder = SpotInstSetupTaskResponse.builder();
     String prefix = format("%s__", setupTaskParameters.getElastiGroupNamePrefix());
     int elastiGroupVersion = 1;
     logCallback.saveExecutionLog(format("Querying spot inst for existing elasti groups with prefix: [%s]", prefix));
@@ -106,18 +106,38 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
     ElastiGroup elastiGroup =
         spotInstHelperServiceDelegate.createElastiGroup(spotInstToken, spotInstAccountId, finalJson);
     String newElastiGroupId = elastiGroup.getId();
-    logCallback.saveExecutionLog(format("Created elasti group with id: [%s]", newElastiGroupId));
+    logCallback.saveExecutionLog(format("Created elastigroup with id: [%s]", newElastiGroupId));
 
-    List<ElastiGroup> groupsWithInstances = newArrayList();
+    /**
+     * Look at all the Elastigroups except the "LAST" elastigroup.
+     * If they have running instances, we will downscale them to 0.
+     */
     List<ElastiGroup> groupsWithoutInstances = newArrayList();
+    List<ElastiGroup> groupToDownsizeDuringDeploy = emptyList();
     if (isNotEmpty(elastiGroups)) {
-      elastiGroups.forEach(group -> {
-        if (group.getCapacity().getTarget() > 0) {
-          groupsWithInstances.add(group);
-        } else {
-          groupsWithoutInstances.add(group);
+      groupToDownsizeDuringDeploy = singletonList(elastiGroups.get(elastiGroups.size() - 1));
+      for (int i = 0; i < elastiGroups.size() - 1; i++) {
+        ElastiGroup elastigroupCurrent = elastiGroups.get(i);
+        ElastiGroupCapacity capacity = elastigroupCurrent.getCapacity();
+        if (capacity == null) {
+          groupsWithoutInstances.add(elastigroupCurrent);
+          continue;
         }
-      });
+        int target = capacity.getTarget();
+        if (target == 0) {
+          groupsWithoutInstances.add(elastigroupCurrent);
+        } else {
+          logCallback.saveExecutionLog(
+              format("Downscaling old Elastigroup with id: [%s] to 0 instances.", elastigroupCurrent.getId()));
+          ElastiGroup temp = ElastiGroup.builder()
+                                 .id(elastigroupCurrent.getId())
+                                 .name(elastigroupCurrent.getName())
+                                 .capacity(ElastiGroupCapacity.builder().minimum(0).maximum(0).target(0).build())
+                                 .build();
+          spotInstHelperServiceDelegate.updateElastiGroupCapacity(
+              spotInstToken, spotInstAccountId, elastigroupCurrent.getId(), temp);
+        }
+      }
     }
 
     int lastIdx = groupsWithoutInstances.size() - elastiGroupsToKeep;
@@ -129,11 +149,12 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
       spotInstHelperServiceDelegate.deleteElastiGroup(spotInstToken, spotInstAccountId, idToDelete);
     }
 
+    logCallback.saveExecutionLog("Completed setup for Spotinst", INFO, SUCCESS);
     return SpotInstTaskExecutionResponse.builder()
         .commandExecutionStatus(SUCCESS)
         .spotInstTaskResponse(SpotInstSetupTaskResponse.builder()
                                   .newElastiGroup(elastiGroup)
-                                  .groupToBeDownsized(groupsWithInstances)
+                                  .groupToBeDownsized(groupToDownsizeDuringDeploy)
                                   .build())
         .build();
   }
@@ -213,7 +234,7 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
     updateName(elastiGroupConfigMap, newElastiGroupName);
     updateInitialCapacity(elastiGroupConfigMap);
     updateWithLoadBalancerAndImageConfig(setupTaskParameters.getAwsLoadBalancerConfigs(), elastiGroupConfigMap,
-        setupTaskParameters.getImage(), setupTaskParameters.getUserData());
+        setupTaskParameters.getImage(), setupTaskParameters.getUserData(), setupTaskParameters.isBlueGreen());
     return gson.toJson(jsonConfigMap);
   }
 
@@ -248,13 +269,14 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
   }
 
   private void updateWithLoadBalancerAndImageConfig(List<LoadBalancerDetailsForBGDeployment> lbDetailList,
-      Map<String, Object> elastiGroupConfigMap, String image, String userData) {
+      Map<String, Object> elastiGroupConfigMap, String image, String userData, boolean blueGreen) {
     Map<String, Object> computeConfigMap = (Map<String, Object>) elastiGroupConfigMap.get(COMPUTE);
     Map<String, Object> launchSpecificationMap = (Map<String, Object>) computeConfigMap.get(LAUNCH_SPECIFICATION);
 
-    launchSpecificationMap.put(LOAD_BALANCERS_CONFIG,
-        ElastiGroupLoadBalancerConfig.builder().loadBalancers(generateLBConfigs(lbDetailList)).build());
-
+    if (blueGreen) {
+      launchSpecificationMap.put(LOAD_BALANCERS_CONFIG,
+          ElastiGroupLoadBalancerConfig.builder().loadBalancers(generateLBConfigs(lbDetailList)).build());
+    }
     launchSpecificationMap.put(ELASTI_GROUP_IMAGE_CONFIG, image);
     if (isNotEmpty(userData)) {
       launchSpecificationMap.put(ELASTI_GROUP_USER_DATA_CONFIG, userData);

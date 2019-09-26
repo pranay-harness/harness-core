@@ -172,6 +172,13 @@ public abstract class SpotInstTaskHandler {
     return awsEc2HelperServiceDelegate.listEc2Instances(awsConfig, emptyList(), instanceIds, awsRegion);
   }
 
+  protected void createAndFinishEmptyExecutionLog(
+      SpotInstTaskParameters taskParameters, String upScaleCommandUnit, String message) {
+    ExecutionLogCallback logCallback;
+    logCallback = getLogCallBack(taskParameters, upScaleCommandUnit);
+    logCallback.saveExecutionLog(message, INFO, SUCCESS);
+  }
+
   protected abstract SpotInstTaskExecutionResponse executeTaskInternal(SpotInstTaskParameters spotInstTaskParameters,
       SpotInstConfig spotInstConfig, AwsConfig awsConfig) throws Exception;
 }
