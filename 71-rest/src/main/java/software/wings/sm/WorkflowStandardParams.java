@@ -15,6 +15,7 @@ import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.jexl3.JexlException;
 import org.apache.http.client.utils.URIBuilder;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.InfraMappingElement;
@@ -480,7 +481,11 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
   public void setUuid(String uuid) {}
 
   public List<InstanceElement> getInstances() {
-    return (List<InstanceElement>) context.evaluateExpression(InstanceExpressionProcessor.DEFAULT_EXPRESSION);
+    try {
+      return (List<InstanceElement>) context.evaluateExpression(InstanceExpressionProcessor.DEFAULT_EXPRESSION);
+    } catch (JexlException ex) {
+      return new ArrayList<InstanceElement>();
+    }
   }
 
   protected ExecutionContext getContext() {
