@@ -189,6 +189,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -1426,6 +1427,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       if (isNotEmpty(serviceCommand.getName())) {
         command.setName(serviceCommand.getName());
       }
+    } else if (Objects.isNull(command)) {
+      throw new InvalidRequestException(format("Underlying command is null for service command "
+              + "%s[%s]",
+          serviceCommand.getName(), serviceCommand.getUuid()));
     } else if (serviceCommand.getCommand().getGraph() != null) {
       if (!isLinearCommandGraph(serviceCommand)) {
         WingsException wingsException =
@@ -1488,10 +1493,13 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         entityVersionService.lastEntityVersion(appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceId);
     if (updateLinkedTemplateServiceCommand(appId, serviceCommand, updateOperation, lastEntityVersion, fromTemplate)) {
       updateCommandInternal(appId, serviceId, serviceCommand, lastEntityVersion, false, true);
-
     } else if (serviceCommand.getCommand() != null) {
       validateCommandName(serviceCommand.getCommand());
       updateCommandInternal(appId, serviceId, serviceCommand, lastEntityVersion, false, fromTemplate);
+    } else {
+      throw new InvalidRequestException(format("Underlying command is null for service command "
+              + "%s[%s]",
+          serviceCommand.getName(), serviceCommand.getUuid()));
     }
 
     setUnset(updateOperation, "envIdVersionMap", serviceCommand.getEnvIdVersionMap());
@@ -1545,6 +1553,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
               serviceCommand.getCommand().setCommandUnits(oldCommand.getCommandUnits());
               return false;
             }
+          } else {
+            return false;
           }
         }
         return true;
