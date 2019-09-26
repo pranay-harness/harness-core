@@ -53,27 +53,15 @@ if [[ "" != "$MONGO_LOCK_URI" ]]; then
   yq write -i $CONFIG_FILE mongo.locksUri "${MONGO_LOCK_URI//\\&/&}"
 fi
 
+yq write -i $CONFIG_FILE server.requestLog.appenders[0].type "console"
+yq write -i $CONFIG_FILE server.requestLog.appenders[0].threshold "TRACE"
+yq write -i $CONFIG_FILE server.requestLog.appenders[0].target "STDOUT"
+
 if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
   yq delete -i $CONFIG_FILE logging.appenders[0]
   yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
-  yq write -i $CONFIG_FILE server.requestLog.appenders[1].type "console"
-  yq write -i $CONFIG_FILE server.requestLog.appenders[1].threshold "TRACE"
-  yq write -i $CONFIG_FILE server.requestLog.appenders[1].target "STDOUT"
 else
   yq delete -i $CONFIG_FILE logging.appenders[1]
-fi
-
-if [[ "" != "$COMPANYNAME" ]]; then
-  yq write -i $CONFIG_FILE server.requestLog.appenders[0].programName "manager-${COMPANYNAME}-${DEPLOY_MODE}-accesslogs"
-  yq write -i $CONFIG_FILE logging.appenders[1].programName "manager-${COMPANYNAME}-${DEPLOY_MODE}"
-fi
-
-if [[ "$SKIP_LOGS" == "true" ]]; then
-  yq delete -i $CONFIG_FILE server.requestLog.appenders[0]
-  yq delete -i $CONFIG_FILE logging.appenders[1]
-elif [[ "" != "$LOGDNA_KEY" ]]; then
-  yq write -i $CONFIG_FILE server.requestLog.appenders[0].key "$LOGDNA_KEY"
-  yq write -i $CONFIG_FILE logging.appenders[1].key "$LOGDNA_KEY"
 fi
 
 if [[ "" != "$WATCHER_METADATA_URL" ]]; then
