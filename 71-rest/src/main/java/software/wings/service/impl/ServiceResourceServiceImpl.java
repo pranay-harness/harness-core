@@ -1381,6 +1381,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Service service = wingsPersistence.getWithAppId(Service.class, appId, serviceId);
     notNullCheck("service", service);
 
+    verifyDuplicateServiceCommandName(appId, serviceId, serviceCommand);
     validateCommandName(serviceCommand.getCommand());
     addServiceCommand(appId, serviceId, serviceCommand, pushToYaml);
 
@@ -1486,6 +1487,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     notNullCheck("Service was deleted", service, USER);
 
     ServiceCommand savedServiceCommand = commandService.getServiceCommand(appId, serviceCommand.getUuid());
+    if (!StringUtils.equals(savedServiceCommand.getName(), serviceCommand.getName())) {
+      verifyDuplicateServiceCommandName(appId, serviceId, serviceCommand);
+    }
 
     UpdateOperations<ServiceCommand> updateOperation = wingsPersistence.createUpdateOperations(ServiceCommand.class);
 
@@ -2493,5 +2497,15 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         query.and(query.criteria(ServiceKeys.deploymentType).equal(null),
             query.criteria(ServiceKeys.artifactType).in(supportedArtifactTypes)));
     return query.asList();
+  }
+
+  private void verifyDuplicateServiceCommandName(String appId, String serviceId, ServiceCommand serviceCommand) {
+    ServiceCommand existingServiceCommand =
+        commandService.getServiceCommandByName(appId, serviceId, serviceCommand.getName());
+    if (Objects.nonNull(existingServiceCommand)
+        && !StringUtils.equals(serviceCommand.getUuid(), existingServiceCommand.getUuid())) {
+      throw new InvalidRequestException(
+          format("Service command with name \"%s\" already exists", serviceCommand.getName()), USER);
+    }
   }
 }
