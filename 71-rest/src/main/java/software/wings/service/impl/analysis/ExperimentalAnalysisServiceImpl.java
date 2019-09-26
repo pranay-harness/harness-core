@@ -472,6 +472,7 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
 
   @Override
   public List<ExperimentalMessageComparisonResult> getMessagePairsToVote(String serviceId) {
+    logger.info("Getting msg pairs to vote {}", serviceId);
     List<ExperimentalMessageComparisonResult> messagesToShow = new ArrayList<>();
     User currentUser = UserThreadLocal.get();
 
@@ -491,8 +492,11 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
               .addFilter(ExperimentalMessageComparisonResultKeys.cvConfigId, Operator.EQ, cvConfiguration.getUuid())
               .addFilter(ExperimentalMessageComparisonResultKeys.numVotes, Operator.LT, 3)
               .build();
+      logger.info("Querying GDS for serviceID {}, cvConfigId {}", serviceId, cvConfiguration.getUuid());
       List<ExperimentalMessageComparisonResult> comparisonResults =
           dataStoreService.list(ExperimentalMessageComparisonResult.class, comparisonResultPageRequest);
+      logger.info("Got {} comparison results from GDS for msg pairs to vote. serviceID {}, cvConfigId {}",
+          comparisonResults.size(), serviceId, cvConfiguration.getUuid());
       if (isNotEmpty(comparisonResults)) {
         for (ExperimentalMessageComparisonResult result : comparisonResults) {
           if (messagesToShow.size() >= 10) {
@@ -511,6 +515,7 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
         }
       }
     }
+    logger.info("Returning {} msg pairs to vote. serviceID {}", messagesToShow.size(), serviceId);
     return messagesToShow;
   }
 
