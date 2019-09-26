@@ -141,7 +141,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       logger.info("Got AWSSecretsManagerException {}: {}", t.getClass().getName(), t.getMessage());
       return !(t instanceof ResourceNotFoundException);
     } else if (t instanceof AWSKMSException) {
-      logger.info("Got AWSKMSEception {}: {}", t.getClass().getName(), t.getMessage());
+      logger.info("Got AWSKMSException {}: {}", t.getClass().getName(), t.getMessage());
       return t instanceof KMSInternalException || t instanceof DependencyTimeoutException
           || t instanceof KeyUnavailableException;
     } else {

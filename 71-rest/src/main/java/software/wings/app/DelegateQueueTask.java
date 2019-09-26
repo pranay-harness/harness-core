@@ -17,13 +17,14 @@ import com.google.inject.Inject;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
+import io.harness.delegate.task.TaskLogContext;
 import io.harness.exception.WingsException;
+import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
-import org.atmosphere.cpr.BroadcasterFactory;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.mapping.Mapper;
@@ -48,10 +49,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 public class DelegateQueueTask implements Runnable {
-  private static final long REBROADCAST_FACTOR = TimeUnit.SECONDS.toMillis(2);
-
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private BroadcasterFactory broadcasterFactory;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private Clock clock;
   @Inject private VersionInfoManager versionInfoManager;
@@ -227,11 +225,13 @@ public class DelegateQueueTask implements Runnable {
           continue;
         }
 
-        logger.info("Rebroadcast queued task [{}], broadcast count: {}, accountId: {}", delegateTask.getUuid(),
-            delegateTask.getBroadcastCount(), delegateTask.getAccountId());
-        delegateTask.setPreAssignedDelegateId(null);
-        broadcastHelper.rebroadcastDelegateTask(delegateTask);
-        count++;
+        try (AutoLogContext ignore = new TaskLogContext(delegateTask.getUuid(), delegateTask.getData().getTaskType())) {
+          logger.info("Rebroadcast queued task [{}], broadcast count: {}, accountId: {}", delegateTask.getUuid(),
+              delegateTask.getBroadcastCount(), delegateTask.getAccountId());
+          delegateTask.setPreAssignedDelegateId(null);
+          broadcastHelper.rebroadcastDelegateTask(delegateTask);
+          count++;
+        }
       }
 
       logger.info("{} tasks were rebroadcast", count);

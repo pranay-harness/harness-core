@@ -20,12 +20,7 @@ xxxxxxxx
     certAlias: localhost
     validateCerts: false
   requestLog:
-    appenders:
-    - type: rest-log
-      name: rest-accesslogs-appender
-      threshold: TRACE
-      key: 9a3e6eac4dcdbdc41a93ca99100537df
-      programName: manager-saas-accesslogs
+    appenders: []
 
 backgroundScheduler:
   enabled: true
@@ -141,11 +136,6 @@ logging:
     threshold: TRACE
     target: STDOUT
     stackdriverLogEnabled: false
-  - type: rest-log
-    threshold: TRACE
-    logFormat: "%replace(%blue([${VERSION}]) %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'})){'0;39m', ''} %n"
-    key: 9a3e6eac4dcdbdc41a93ca99100537df
-    programName: manager-saas
 
 timescaledb:
   timescaledbUrl: ""
