@@ -68,7 +68,7 @@ public class PhaseElement implements ContextElement {
     map.put(SERVICE, serviceElement);
 
     if (rollbackArtifactId != null) {
-      Artifact artifact = artifactService.get(rollbackArtifactId);
+      Artifact artifact = artifactService.getWithSource(rollbackArtifactId);
       map.put(ARTIFACT, artifact);
     }
     return map;

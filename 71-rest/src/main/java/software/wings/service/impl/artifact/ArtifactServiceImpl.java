@@ -386,6 +386,16 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   @Override
+  public Artifact getWithSource(String artifactId) {
+    Artifact artifact = wingsPersistence.get(Artifact.class, artifactId);
+    if (artifact != null) {
+      artifact.setSource(
+          artifactStreamService.fetchArtifactSourceProperties(artifact.getAccountId(), artifact.getArtifactStreamId()));
+    }
+    return artifact;
+  }
+
+  @Override
   public boolean delete(String accountId, String artifactId) {
     Artifact artifact = get(accountId, artifactId);
     if (artifact == null) {
