@@ -1694,8 +1694,17 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public Service getServiceWithServiceCommands(String appId, String serviceId) {
+    return getServiceWithServiceCommands(appId, serviceId, true);
+  }
+
+  @Override
+  public Service getServiceWithServiceCommands(String appId, String serviceId, boolean shouldThrow) {
     Service service = wingsPersistence.getWithAppId(Service.class, appId, serviceId);
-    notNullCheck("service", service);
+    if (shouldThrow) {
+      notNullCheck("service", service);
+    } else if (service == null) {
+      return null;
+    }
     service.setServiceCommands(getServiceCommands(appId, serviceId));
     service.getServiceCommands().forEach(serviceCommand
         -> serviceCommand.setCommand(
