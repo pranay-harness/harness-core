@@ -724,8 +724,10 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
             .expressionFunctorToken(
                 stateExecutionContext == null ? 0 : stateExecutionContext.getExpressionFunctorToken());
 
-    contextMap.put(SERVICE_VARIABLE, serviceVariablesBuilder.encryptedFieldMode(OBTAIN_VALUE).build());
-    contextMap.put(SAFE_DISPLAY_SERVICE_VARIABLE, serviceVariablesBuilder.encryptedFieldMode(MASKED).build());
+    if (phaseElement != null) {
+      contextMap.put(SERVICE_VARIABLE, serviceVariablesBuilder.encryptedFieldMode(OBTAIN_VALUE).build());
+      contextMap.put(SAFE_DISPLAY_SERVICE_VARIABLE, serviceVariablesBuilder.encryptedFieldMode(MASKED).build());
+    }
 
     final EnvironmentVariables environmentVariables =
         EnvironmentVariables.builder()
