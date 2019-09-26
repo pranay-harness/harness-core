@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.beans.User;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -16,7 +17,9 @@ import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.personalization.PersonalizationService;
 import software.wings.sm.StateType;
 
+import java.util.Set;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -86,5 +89,15 @@ public class PersonalizationResource {
       @PathParam("templateId") String templateId, @QueryParam("accountId") String accountId) {
     final User user = UserThreadLocal.get();
     personalizationService.removeFavoriteTemplate(templateId, accountId, user.getUuid());
+  }
+
+  @GET
+  @Path("templates/favorite")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  public RestResponse<Set<String>> fetchFavoriteTemplates(@QueryParam("accountId") String accountId) {
+    final User user = UserThreadLocal.get();
+    return new RestResponse<>(personalizationService.fetchFavoriteTemplates(accountId, user.getUuid()));
   }
 }

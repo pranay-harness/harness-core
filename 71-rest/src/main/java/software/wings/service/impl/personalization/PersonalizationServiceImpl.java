@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HPersistence.returnNewOptions;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -153,5 +154,15 @@ public class PersonalizationServiceImpl implements PersonalizationService {
             .removeAll(PersonalizationKeys.templates_favorites, templateId);
 
     return persistence.upsert(query, updateOperations, upsertReturnNewOptions);
+  }
+
+  @Override
+  public Set<String> fetchFavoriteTemplates(String accountId, String userId) {
+    Set<String> favorites = new HashSet<>();
+    final Personalization personalization = fetch(accountId, userId, asList(PersonalizationKeys.templates));
+    if (personalization != null && personalization.getTemplates() != null) {
+      favorites = personalization.getTemplates().getFavorites();
+    }
+    return favorites;
   }
 }
