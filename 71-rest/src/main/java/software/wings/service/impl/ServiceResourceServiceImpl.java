@@ -8,6 +8,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
+import static io.harness.pcf.model.PcfConstants.MANIFEST_YML;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -1083,6 +1084,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     return wingsPersistence.query(Service.class, pageRequest).getResponse();
   }
 
+  @Override
   public List<Service> findServicesByAppInternal(String appId) {
     return wingsPersistence.createQuery(Service.class).filter(ServiceKeys.appId, appId).asList();
   }
@@ -2286,7 +2288,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     applicationManifestService.create(applicationManifest);
 
     ManifestFile defaultManifestSpec =
-        ManifestFile.builder().fileName("manifest.yaml").fileContent(default_pcf_manifest_yaml).build();
+        ManifestFile.builder().fileName(MANIFEST_YML).fileContent(default_pcf_manifest_yaml).build();
     defaultManifestSpec.setAppId(service.getAppId());
     applicationManifestService.createManifestFileByServiceId(defaultManifestSpec, service.getUuid());
   }

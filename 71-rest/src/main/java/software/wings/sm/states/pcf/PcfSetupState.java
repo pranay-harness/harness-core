@@ -5,6 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
 import static software.wings.beans.TaskType.PCF_COMMAND_TASK;
@@ -26,12 +27,14 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.PhaseElement;
@@ -152,7 +155,7 @@ public class PcfSetupState extends State {
   @DefaultValue("3")
   private Integer olderActiveVersionCountToKeep;
 
-  private boolean blueGreen;
+  @Getter @Setter private boolean blueGreen;
 
   public PcfSetupState(String name) {
     super(name, StateType.PCF_SETUP.name());
@@ -228,16 +231,10 @@ public class PcfSetupState extends State {
     List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
         (EncryptableSetting) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
 
-    PcfServiceSpecification pcfServiceSpecification =
-        serviceResourceService.getPcfServiceSpecification(context.getAppId(), serviceElement.getUuid());
-
-    if (pcfServiceSpecification == null) {
-      String errorMsg = "PCF Manifest config Doesn't Exist for Service. Please create PCF Manifest";
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, errorMsg, USER).addParam("message", errorMsg);
+    String applicationManifestYmlContent = pcfStateHelper.fetchManifestYmlString(context, app, serviceElement);
+    if (isBlank(applicationManifestYmlContent)) {
+      throw new InvalidArgumentsException(Pair.of("Manifest.yml", "Can not have blank manifest config"));
     }
-
-    serviceHelper.addPlaceholderTexts(pcfServiceSpecification);
-    validateSpecification(pcfServiceSpecification);
 
     // @TODO as decided, will change to use expressions here
     // User has control to decide if for new application,
@@ -283,7 +280,7 @@ public class PcfSetupState extends State {
             .space(pcfInfrastructureMapping.getSpace())
             .pcfConfig(pcfConfig)
             .pcfCommandType(PcfCommandType.SETUP)
-            .manifestYaml(context.renderExpression(pcfServiceSpecification.getManifestYaml()))
+            .manifestYaml(context.renderExpression(applicationManifestYmlContent))
             .workflowExecutionId(context.getWorkflowExecutionId())
             .artifactFiles(artifact.getArtifactFiles())
             .routeMaps(isOriginalRoute ? routeMaps : tempRouteMaps)

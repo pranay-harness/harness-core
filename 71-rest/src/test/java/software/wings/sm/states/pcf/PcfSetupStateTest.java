@@ -13,6 +13,7 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -59,6 +60,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement;
@@ -130,6 +132,15 @@ import java.util.Map;
 
 public class PcfSetupStateTest extends WingsBaseTest {
   private static final String BASE_URL = "https://env.harness.io/";
+  public static final String MANIFEST_YAML_CONTENT = "  applications:\n"
+      + "  - name : ${APPLICATION_NAME}\n"
+      + "    memory: 850M\n"
+      + "    instances : ${INSTANCE_COUNT}\n"
+      + "    buildpack: https://github.com/cloudfoundry/java-buildpack.git\n"
+      + "    path: ${FILE_LOCATION}\n"
+      + "    routes:\n"
+      + "      - route: ${ROUTE_MAP}\n"
+      + "serviceName: SERV\n";
 
   @Mock private SettingsService settingsService;
   @Mock private DelegateService delegateService;
@@ -150,6 +161,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Mock private ServiceHelper serviceHelper;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private SweepingOutputService sweepingOutputService;
+  @Spy private PcfStateHelper pcfStateHelper;
   @Mock private ApplicationManifestUtils applicationManifestUtils;
 
   private PcfStateTestHelper pcfStateTestHelper = new PcfStateTestHelper();
@@ -274,7 +286,6 @@ public class PcfSetupStateTest extends WingsBaseTest {
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     FieldUtils.writeField(pcfSetupState, "secretManager", secretManager, true);
     FieldUtils.writeField(pcfSetupState, "olderActiveVersionCountToKeep", 3, true);
-    FieldUtils.writeField(pcfSetupState, "pcfStateHelper", new PcfStateHelper(), true);
     when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean(), anySet()))
         .thenReturn(WorkflowExecution.builder().build());
     context = new ExecutionContextImpl(stateExecutionInstance);
@@ -292,18 +303,8 @@ public class PcfSetupStateTest extends WingsBaseTest {
     portalConfig.setUrl(BASE_URL);
     when(configuration.getPortal()).thenReturn(portalConfig);
     when(serviceResourceService.getPcfServiceSpecification(anyString(), anyString()))
-        .thenReturn(PcfServiceSpecification.builder()
-                        .manifestYaml("  applications:\n"
-                            + "  - name : ${APPLICATION_NAME}\n"
-                            + "    memory: 850M\n"
-                            + "    instances : ${INSTANCE_COUNT}\n"
-                            + "    buildpack: https://github.com/cloudfoundry/java-buildpack.git\n"
-                            + "    path: ${FILE_LOCATION}\n"
-                            + "    routes:\n"
-                            + "      - route: ${ROUTE_MAP}\n"
-                            + "serviceName: SERV\n")
-                        .serviceId(service.getUuid())
-                        .build());
+        .thenReturn(
+            PcfServiceSpecification.builder().manifestYaml(MANIFEST_YAML_CONTENT).serviceId(service.getUuid()).build());
     doNothing().when(serviceHelper).addPlaceholderTexts(any());
     when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
   }
@@ -311,6 +312,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testExecute() {
+    doReturn(MANIFEST_YAML_CONTENT).when(pcfStateHelper).fetchManifestYmlString(any(), any(), any());
     on(context).set("serviceTemplateService", serviceTemplateService);
     ExecutionResponse executionResponse = pcfSetupState.execute(context);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
@@ -330,7 +332,9 @@ public class PcfSetupStateTest extends WingsBaseTest {
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
 
-    PcfCommandRequest PcfCommandRequest = (PcfCommandRequest) delegateTask.getData().getParameters()[0];
+    PcfCommandRequest pcfCommandRequest = (PcfCommandRequest) delegateTask.getData().getParameters()[0];
+    assertThat(pcfCommandRequest).isNotNull();
+    assertThat(pcfCommandRequest).isInstanceOf(PcfCommandSetupRequest.class);
     pcfCommandSetupRequest = (PcfCommandSetupRequest) stateExecutionData.getPcfCommandRequest();
     assertThat(pcfCommandSetupRequest.getReleaseNamePrefix()).isEqualTo("APP_NAME__SERVICE_NAME__ENV_NAME");
     assertThat(pcfCommandSetupRequest.getPcfCommandType()).isEqualTo(PcfCommandType.SETUP);
