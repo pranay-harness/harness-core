@@ -31,6 +31,7 @@ import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Stream.concat;
+import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
@@ -2393,19 +2394,25 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
       Set<EntityType> requiredEntityTypes = new HashSet<>();
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
+      boolean infraRefactor =
+          featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(appId));
 
-      updateRequiredEntityTypes(
-          appId, null, canaryOrchestrationWorkflow.getPreDeploymentSteps(), requiredEntityTypes, null, null);
+      // Service cache.
+      Map<String, Service> serviceCache = new HashMap<>();
+
+      updateRequiredEntityTypes(appId, null, canaryOrchestrationWorkflow.getPreDeploymentSteps(), requiredEntityTypes,
+          null, null, serviceCache, infraRefactor);
 
       boolean preDeploymentStepNeededArtifact = requiredEntityTypes.contains(EntityType.ARTIFACT);
 
-      Set<EntityType> phaseRequiredEntityTypes = canaryOrchestrationWorkflow.getWorkflowPhases()
-                                                     .stream()
-                                                     .flatMap(phase
-                                                         -> updateRequiredEntityTypes(appId, phase, workflowVariables,
-                                                             artifactNeededServiceIds, preDeploymentStepNeededArtifact)
-                                                                .stream())
-                                                     .collect(Collectors.toSet());
+      Set<EntityType> phaseRequiredEntityTypes =
+          canaryOrchestrationWorkflow.getWorkflowPhases()
+              .stream()
+              .flatMap(phase
+                  -> updateRequiredEntityTypes(appId, phase, workflowVariables, artifactNeededServiceIds, serviceCache,
+                      preDeploymentStepNeededArtifact, infraRefactor)
+                         .stream())
+              .collect(Collectors.toSet());
 
       requiredEntityTypes.addAll(phaseRequiredEntityTypes);
 
@@ -2415,14 +2422,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
               .values()
               .stream()
               .flatMap(phase
-                  -> updateRequiredEntityTypes(
-                      appId, phase, workflowVariables, artifactNeededServiceIds, preDeploymentStepNeededArtifact)
+                  -> updateRequiredEntityTypes(appId, phase, workflowVariables, artifactNeededServiceIds, serviceCache,
+                      preDeploymentStepNeededArtifact, infraRefactor)
                          .stream())
               .collect(Collectors.toSet());
 
       if (!requiredEntityTypes.contains(ARTIFACT) && rollbackRequiredEntityTypes.contains(ARTIFACT)) {
         logger.warn(
-            "Phase Step do not need artifact. However, Rollback steps needed artifact for the workflow {} of the app {}",
+            "Phase Step do not need artifact. However, Rollback steps needed artifact for the workflow: [{}] of the app: [{}]",
             workflow.getUuid(), appId);
       }
       requiredEntityTypes.addAll(rollbackRequiredEntityTypes);
@@ -2430,8 +2437,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   private Set<EntityType> updateRequiredEntityTypes(String appId, WorkflowPhase workflowPhase,
-      Map<String, String> workflowVaraibles, List<String> artifactNeededServiceIds,
-      boolean preDeploymentStepNeededArtifact) {
+      Map<String, String> workflowVaraibles, List<String> artifactNeededServiceIds, Map<String, Service> serviceCache,
+      boolean preDeploymentStepNeededArtifact, boolean infraRefactor) {
     Set<EntityType> requiredEntityTypes = new HashSet<>();
 
     if (workflowPhase == null || workflowPhase.getPhaseSteps() == null) {
@@ -2474,7 +2481,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           return requiredEntityTypes;
         }
       }
-      updateRequiredEntityTypes(appId, serviceId, phaseStep, requiredEntityTypes, workflowPhase, workflowVaraibles);
+      updateRequiredEntityTypes(appId, serviceId, phaseStep, requiredEntityTypes, workflowPhase, workflowVaraibles,
+          serviceCache, infraRefactor);
     }
 
     if (requiredEntityTypes.contains(EntityType.ARTIFACT)) {
@@ -2487,10 +2495,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   private void updateRequiredEntityTypes(String appId, String serviceId, PhaseStep phaseStep,
-      Set<EntityType> requiredEntityTypes, WorkflowPhase workflowPhase, Map<String, String> workflowVariables) {
+      Set<EntityType> requiredEntityTypes, WorkflowPhase workflowPhase, Map<String, String> workflowVariables,
+      Map<String, Service> serviceCache, boolean infraRefactor) {
     boolean artifactNeeded = false;
-    boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(appId));
-
     for (GraphNode step : phaseStep.getSteps()) {
       if (step.getTemplateUuid() != null) {
         if (isNotEmpty(step.getTemplateVariables())) {
@@ -2517,11 +2524,22 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             break;
           }
         }
-        if (serviceId != null) {
-          boolean serviceExists = serviceResourceService.exists(appId, serviceId);
-          if (serviceExists) {
-            ServiceCommand serviceCommand = serviceResourceService.getCommandByName(
-                appId, serviceId, (String) step.getProperties().get("commandName"));
+        if (serviceId != null && !matchesVariablePattern(serviceId)) {
+          Service service = serviceCache.getOrDefault(serviceId, null);
+          if (service == null) {
+            service = serviceResourceService.getServiceWithServiceCommands(appId, serviceId, false);
+            if (service != null) {
+              serviceCache.put(serviceId, service);
+            }
+          }
+          if (service != null) {
+            ServiceCommand serviceCommand =
+                service.getServiceCommands()
+                    .stream()
+                    .filter(command
+                        -> equalsIgnoreCase((String) step.getProperties().get("commandName"), command.getName()))
+                    .findFirst()
+                    .orElse(null);
             if (serviceCommand != null && serviceCommand.getCommand() != null
                 && serviceCommand.getCommand().isArtifactNeeded()) {
               artifactNeeded = true;
@@ -2630,33 +2648,39 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
     boolean isBuildWorkflow = BUILD.equals(canaryOrchestrationWorkflow.getOrchestrationWorkflowType());
+    boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(appId));
+
+    // Service cache.
+    Map<String, Service> serviceCache = new HashMap<>();
 
     // Map of serviceId to artifact variables used in the workflow.
     Map<String, Set<String>> serviceArtifactVariableNamesMap = new HashMap<>();
 
     // Process PreDeploymentSteps.
-    updateArtifactVariableNames(
-        appId, "", canaryOrchestrationWorkflow.getPreDeploymentSteps(), null, null, serviceArtifactVariableNamesMap);
+    updateArtifactVariableNames(appId, "", canaryOrchestrationWorkflow.getPreDeploymentSteps(), null, null,
+        serviceArtifactVariableNamesMap, serviceCache, infraRefactor);
 
     // Process WorkflowPhases.
     for (WorkflowPhase phase : canaryOrchestrationWorkflow.getWorkflowPhases()) {
-      updateArtifactVariableNames(appId, phase, workflowVariablesMap, serviceArtifactVariableNamesMap);
+      updateArtifactVariableNames(
+          appId, phase, workflowVariablesMap, serviceArtifactVariableNamesMap, serviceCache, infraRefactor);
     }
 
     // Process PostDeploymentSteps.
-    updateArtifactVariableNames(
-        appId, "", canaryOrchestrationWorkflow.getPostDeploymentSteps(), null, null, serviceArtifactVariableNamesMap);
+    updateArtifactVariableNames(appId, "", canaryOrchestrationWorkflow.getPostDeploymentSteps(), null, null,
+        serviceArtifactVariableNamesMap, serviceCache, infraRefactor);
 
     boolean requiresArtifact = serviceArtifactVariableNamesMap.size() > 0;
 
     // Process RollbackWorkflowPhases.
     for (WorkflowPhase phase : canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().values()) {
-      updateArtifactVariableNames(appId, phase, workflowVariablesMap, serviceArtifactVariableNamesMap);
+      updateArtifactVariableNames(
+          appId, phase, workflowVariablesMap, serviceArtifactVariableNamesMap, serviceCache, infraRefactor);
     }
 
     if (!requiresArtifact && serviceArtifactVariableNamesMap.size() > 0) {
       logger.warn(
-          "Phase Steps do not need artifact. However, Rollback steps needed artifact for the workflow {} of the app {}",
+          "Phase Steps do not need artifact. However, Rollback steps needed artifact for the workflow: [{}] of the app: [{}]",
           workflow.getUuid(), appId);
     }
 
@@ -2899,7 +2923,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   private void updateArtifactVariableNames(String appId, WorkflowPhase workflowPhase,
-      Map<String, String> workflowVariablesMap, Map<String, Set<String>> serviceArtifactVariableNamesMap) {
+      Map<String, String> workflowVariablesMap, Map<String, Set<String>> serviceArtifactVariableNamesMap,
+      Map<String, Service> serviceCache, boolean infraRefactor) {
     if (workflowPhase == null || workflowPhase.getPhaseSteps() == null) {
       return;
     }
@@ -2927,17 +2952,19 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (phaseStep.getSteps() == null) {
         continue;
       }
-      updateArtifactVariableNames(
-          appId, serviceId, phaseStep, workflowPhase, workflowVariablesMap, serviceArtifactVariableNamesMap);
+
+      // TODO: ASR: Add optimizations if multi-artifact not supported for the current serviceId.
+      updateArtifactVariableNames(appId, serviceId, phaseStep, workflowPhase, workflowVariablesMap,
+          serviceArtifactVariableNamesMap, serviceCache, infraRefactor);
     }
   }
 
   private void updateArtifactVariableNames(String appId, String serviceId, PhaseStep phaseStep,
       WorkflowPhase workflowPhase, Map<String, String> workflowVariables,
-      Map<String, Set<String>> serviceArtifactVariableNamesMap) {
+      Map<String, Set<String>> serviceArtifactVariableNamesMap, Map<String, Service> serviceCache,
+      boolean infraRefactor) {
     // NOTE: If serviceId is "", we assume those artifact variables to be workflow variables.
     // NOTE: Here, serviceId should not be an expression.
-    boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(appId));
     Set<String> serviceArtifactVariableNames;
     if (serviceArtifactVariableNamesMap.containsKey(serviceId)) {
       serviceArtifactVariableNames = serviceArtifactVariableNamesMap.get(serviceId);
@@ -2968,11 +2995,22 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             command.updateServiceArtifactVariableNames(serviceArtifactVariableNames);
           }
         }
-        if (serviceId != null) {
-          boolean serviceExists = serviceResourceService.exists(appId, serviceId);
-          if (serviceExists) {
-            ServiceCommand serviceCommand = serviceResourceService.getCommandByName(
-                appId, serviceId, (String) step.getProperties().get("commandName"));
+        if (serviceId != null && !matchesVariablePattern(serviceId)) {
+          Service service = serviceCache.getOrDefault(serviceId, null);
+          if (service == null) {
+            service = serviceResourceService.getServiceWithServiceCommands(appId, serviceId, false);
+            if (service != null) {
+              serviceCache.put(serviceId, service);
+            }
+          }
+          if (service != null) {
+            ServiceCommand serviceCommand =
+                service.getServiceCommands()
+                    .stream()
+                    .filter(command
+                        -> equalsIgnoreCase((String) step.getProperties().get("commandName"), command.getName()))
+                    .findFirst()
+                    .orElse(null);
             if (serviceCommand != null && serviceCommand.getCommand() != null) {
               serviceCommand.getCommand().updateServiceArtifactVariableNames(serviceArtifactVariableNames);
             }

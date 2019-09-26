@@ -406,6 +406,8 @@ public interface ServiceResourceService extends OwnedByApplication {
   // Gets service with service commands with command details
   Service getServiceWithServiceCommands(String appId, String serviceId);
 
+  Service getServiceWithServiceCommands(String appId, String serviceId, boolean shouldThrow);
+
   @ValidationGroups(Create.class)
   UserDataSpecification createUserDataSpecification(@Valid UserDataSpecification userDataSpecification);
 
