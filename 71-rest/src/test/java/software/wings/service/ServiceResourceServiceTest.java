@@ -2058,6 +2058,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
             () -> srs.addCommand(serviceCommand_1.getAppId(), serviceCommand_1.getServiceId(), serviceCommand_1, false))
         .withMessageContaining("command is null");
 
+    when(commandService.getServiceCommand(any(), any())).thenReturn(serviceCommand_1);
     Assertions.assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(
             () -> srs.updateCommand(serviceCommand_1.getAppId(), serviceCommand_1.getServiceId(), serviceCommand_1))
