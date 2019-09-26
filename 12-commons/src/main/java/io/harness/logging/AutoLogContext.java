@@ -1,6 +1,7 @@
 package io.harness.logging;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -27,8 +28,9 @@ public class AutoLogContext implements AutoCloseable {
     final String original = MDC.get(key);
     if (original != null) {
       if (!original.equals(value)) {
-        logger.error("Key: {} initialized in the same thread with a second value '{}'. The original is: '{}'", key,
-            value, original);
+        logger.error(format("Key: %s initialized in the same thread with a second value '%s'. The original is: '%s'",
+                         key, value, original),
+            new Exception(""));
       }
       // The context for this key is already set. Do not initialize the key so we keep the context until the first
       // initializer is hit.
