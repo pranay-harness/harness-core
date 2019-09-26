@@ -223,4 +223,33 @@ public class PersonalizationServiceTest extends WingsBaseTest {
         PersonalizationService.removeFavoriteTemplate(template2_id, accountId, userId);
     assertThat(isEmpty(removeLast.getTemplates().getFavorites())).isTrue();
   }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testFetchFavoriteTemplates() {
+    String accountId = generateUuid();
+    String userId = generateUuid();
+
+    String template1_id = generateUuid();
+    String template2_id = generateUuid();
+    String template3_id = generateUuid();
+    final Template httpTemplate =
+        Template.builder()
+            .templateObject(HttpTemplate.builder().url("MyUrl").method("MyMethod").assertion("Assertion").build())
+            .build();
+    when(templateService.get(template1_id)).thenReturn(httpTemplate);
+    when(templateService.get(template2_id)).thenReturn(httpTemplate);
+    when(templateService.get(template3_id)).thenReturn(httpTemplate);
+    Set<String> favorites = PersonalizationService.fetchFavoriteTemplates(accountId, userId);
+    assertThat(favorites).isEmpty();
+    PersonalizationService.addFavoriteTemplate(template1_id, accountId, userId);
+    PersonalizationService.addFavoriteTemplate(template2_id, accountId, userId);
+
+    Set<String> expectedFavoriteTemplates = new HashSet<>();
+    expectedFavoriteTemplates.add(template1_id);
+    expectedFavoriteTemplates.add(template2_id);
+    favorites = PersonalizationService.fetchFavoriteTemplates(accountId, userId);
+    assertThat(favorites.size()).isEqualTo(2);
+    assertThat(favorites).containsAll(expectedFavoriteTemplates);
+  }
 }
