@@ -45,6 +45,7 @@ import io.harness.beans.SortOrder.OrderType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
@@ -967,8 +968,14 @@ public class YamlGitServiceImpl implements YamlGitService {
     WebhookSource webhookSource = webhookEventUtils.obtainWebhookSource(headers);
     webhookEventUtils.validatePushEvent(webhookSource, headers);
 
-    Map<String, Object> payLoadMap =
-        JsonUtils.asObject(yamlWebHookPayload, new TypeReference<Map<String, Object>>() {});
+    Map<String, Object> payLoadMap;
+    try {
+      payLoadMap = JsonUtils.asObject(yamlWebHookPayload, new TypeReference<Map<String, Object>>() {});
+    } catch (Exception ex) {
+      logger.info("Webhook payload: " + yamlWebHookPayload, ex);
+      throw new InvalidRequestException(
+          "Failed to parse the webhook payload. Error " + ExceptionUtils.getMessage(ex), USER);
+    }
 
     return webhookEventUtils.obtainBranchName(webhookSource, headers, payLoadMap);
   }
