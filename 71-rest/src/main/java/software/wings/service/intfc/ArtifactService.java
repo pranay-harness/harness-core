@@ -160,6 +160,7 @@ public interface ArtifactService extends OwnedByArtifactStream {
    */
   Artifact getWithServices(String artifactId, String appId);
 
+  Artifact getWithSource(String artifactId);
   /**
    * Soft delete.
    *

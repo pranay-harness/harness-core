@@ -2066,7 +2066,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (activity == null) {
       return null;
     }
-    return artifactService.get(activity.getArtifactId());
+    return artifactService.getWithSource(activity.getArtifactId());
   }
 
   private boolean isCommandUnitsOrderChanged(List<CommandUnit> commandUnits, List<CommandUnit> oldCommandUnits) {
