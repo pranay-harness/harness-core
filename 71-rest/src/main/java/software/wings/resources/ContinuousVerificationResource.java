@@ -13,13 +13,13 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.APMFetchConfig;
 import software.wings.common.VerificationConstants;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
+import software.wings.service.impl.apm.APMSetupTestNodeData;
 import software.wings.sm.StateType;
 import software.wings.verification.VerificationDataAnalysisResponse;
 
@@ -52,7 +52,7 @@ public class ContinuousVerificationResource {
   @ExceptionMetered
   public RestResponse<VerificationNodeDataSetupResponse> getMetricsWithDataForNode(
       @QueryParam("accountId") final String accountId, @QueryParam("serverConfigId") String serverConfigId,
-      APMFetchConfig fetchConfig) {
+      APMSetupTestNodeData fetchConfig) {
     return new RestResponse<>(
         cvManagerService.getDataForNode(accountId, serverConfigId, fetchConfig, StateType.APM_VERIFICATION));
   }
@@ -85,6 +85,8 @@ public class ContinuousVerificationResource {
   public RestResponse<Boolean> collect247CVData(@QueryParam("cvConfigId") String cvConfigId,
       @QueryParam("stateType") StateType stateType, @QueryParam("startTime") long startTime,
       @QueryParam("endTime") long endTime) {
+    logger.info("Trigger Data Collection for 24x7 with cvConfigId {}, startTime {}, endTime {}", cvConfigId, startTime,
+        endTime);
     return new RestResponse<>(cvManagerService.collect247Data(cvConfigId, stateType, startTime, endTime));
   }
 

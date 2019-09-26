@@ -12,6 +12,7 @@ public class VerificationNodeDataSetupResponse {
   private boolean providerReachable;
   private VerificationLoadResponse loadResponse;
   private Object dataForNode;
+  private boolean isConfigurationCorrect;
 
   @Data
   @Builder

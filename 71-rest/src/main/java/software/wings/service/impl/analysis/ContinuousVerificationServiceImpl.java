@@ -31,6 +31,7 @@ import static software.wings.common.VerificationConstants.getLogAnalysisStates;
 import static software.wings.common.VerificationConstants.getMetricAnalysisStates;
 import static software.wings.resources.PrometheusResource.renderFetchQueries;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
+import static software.wings.sm.states.APMVerificationState.buildMetricInfoMap;
 import static software.wings.sm.states.AbstractLogAnalysisState.HOST_BATCH_SIZE;
 import static software.wings.sm.states.DatadogState.metricEndpointsInfo;
 import static software.wings.verification.TimeSeriesDataPoint.initializeTimeSeriesDataPointsList;
@@ -104,6 +105,8 @@ import software.wings.service.impl.analysis.TimeSeriesRiskSummary.TimeSeriesRisk
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.apm.APMMetricInfo;
+import software.wings.service.impl.apm.APMResponseParser;
+import software.wings.service.impl.apm.APMSetupTestNodeData;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.cloudwatch.CloudWatchDataCollectionInfo;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
@@ -179,6 +182,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -1326,6 +1330,9 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Override
   public VerificationNodeDataSetupResponse getDataForNode(
       String accountId, String serverConfigId, Object fetchConfig, StateType type) {
+    if (fetchConfig == null) {
+      throw new VerificationOperationException(ErrorCode.DEFAULT_ERROR_CODE, "Config is null in test");
+    }
     try {
       switch (type) {
         case DATA_DOG:
@@ -1333,24 +1340,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         case DATA_DOG_LOG:
           return getLogNodeDataForDatadog(accountId, (DataDogSetupTestNodeData) fetchConfig);
         case APM_VERIFICATION:
-          if (isEmpty(serverConfigId) || fetchConfig == null) {
-            throw new VerificationOperationException(
-                ErrorCode.APM_CONFIGURATION_ERROR, "Invalid Parameters passed while trying to get test data for APM");
-          }
-          SettingAttribute settingAttribute = settingsService.get(serverConfigId);
-          APMFetchConfig apmFetchConfig = (APMFetchConfig) fetchConfig;
-          APMVerificationConfig apmVerificationConfig = (APMVerificationConfig) settingAttribute.getValue();
-          APMValidateCollectorConfig apmValidateCollectorConfig =
-              APMValidateCollectorConfig.builder()
-                  .baseUrl(apmVerificationConfig.getUrl())
-                  .headers(apmVerificationConfig.collectionHeaders())
-                  .options(apmVerificationConfig.collectionParams())
-                  .url(apmFetchConfig.getUrl())
-                  .body(apmFetchConfig.getBody())
-                  .encryptedDataDetails(apmVerificationConfig.encryptedDataDetails(secretManager))
-                  .build();
-
-          return getVerificationNodeDataResponse(accountId, apmValidateCollectorConfig, apmFetchConfig.getGuid());
+          return getMetricsNodeDataForApmCustom(accountId, (APMSetupTestNodeData) fetchConfig);
         default:
           throw new VerificationOperationException(
               ErrorCode.APM_CONFIGURATION_ERROR, "Invalid StateType provided" + type);
@@ -1360,6 +1350,61 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
   }
 
+  private VerificationNodeDataSetupResponse getMetricsNodeDataForApmCustom(
+      String accountId, APMSetupTestNodeData config) {
+    SettingAttribute settingAttribute = settingsService.get(config.getSettingId());
+    APMVerificationConfig apmVerificationConfig = (APMVerificationConfig) settingAttribute.getValue();
+    APMFetchConfig apmFetchConfig = config.getFetchConfig();
+    APMValidateCollectorConfig apmValidateCollectorConfig =
+        APMValidateCollectorConfig.builder()
+            .baseUrl(apmVerificationConfig.getUrl())
+            .headers(apmVerificationConfig.collectionHeaders())
+            .options(apmVerificationConfig.collectionParams())
+            .url(apmFetchConfig.getUrl())
+            .body(apmFetchConfig.getBody())
+            .encryptedDataDetails(apmVerificationConfig.encryptedDataDetails(secretManager))
+            .build();
+    VerificationNodeDataSetupResponse response =
+        VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
+
+    try {
+      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                            .accountId(accountId)
+                                            .appId(GLOBAL_APP_ID)
+                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                            .build();
+      String apmResponse = delegateProxyFactory.get(APMDelegateService.class, syncTaskContext)
+                               .fetch(apmValidateCollectorConfig,
+                                   ThirdPartyApiCallLog.createApiCallLog(accountId, apmFetchConfig.getGuid()));
+      if (isNotEmpty(apmResponse)) {
+        response.setProviderReachable(true);
+      }
+
+      Map<String, List<APMMetricInfo>> metricInfoMap =
+          buildMetricInfoMap(Arrays.asList(config.getApmMetricCollectionInfo()), null);
+
+      Preconditions.checkState(metricInfoMap.size() == 1);
+      List<APMMetricInfo> metricInfoList = metricInfoMap.values().iterator().next();
+      Preconditions.checkState(metricInfoList.size() == 1);
+
+      APMResponseParser.APMResponseData responseData =
+          new APMResponseParser.APMResponseData(null, DEFAULT_GROUP_NAME, apmResponse, metricInfoList);
+
+      Collection<NewRelicMetricDataRecord> metricDataRecords = APMResponseParser.extract(Arrays.asList(responseData));
+      if (isNotEmpty(metricDataRecords)) {
+        response.setProviderReachable(true);
+        response.setLoadResponse(
+            VerificationLoadResponse.builder().isLoadPresent(true).loadResponse(apmResponse).build());
+        response.setConfigurationCorrect(true);
+        response.setDataForNode(apmFetchConfig);
+      }
+      return response;
+    } catch (Exception ex) {
+      logger.error("Exception while parsing the APM Response.");
+      response.setConfigurationCorrect(false);
+      return response;
+    }
+  }
   private VerificationNodeDataSetupResponse getMetricsNodeDataForDatadog(
       String accountId, DataDogSetupTestNodeData config) {
     SettingAttribute settingAttribute = settingsService.get(config.getSettingId());
@@ -1606,6 +1651,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         StackdriverCVConfiguration stackdriverCVConfiguration = (StackdriverCVConfiguration) cvConfiguration;
         task = createDataCollectionDelegateTask(stackdriverCVConfiguration, waitId, startTime, endTime);
         break;
+      case APM_VERIFICATION:
+        APMCVServiceConfiguration apmcvServiceConfiguration = (APMCVServiceConfiguration) cvConfiguration;
+        task = createAPMDelegateTask(apmcvServiceConfiguration, waitId, startTime, endTime);
+        break;
       default:
         logger.error("Calling collect 24x7 data for an unsupported state : {}", stateType);
         return false;
@@ -1836,6 +1885,43 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .dataCollectionFrequency(1)
             .dataCollectionTotalTime(timeDuration)
             .build();
+    return createDelegateTask(TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK, config.getAccountId(), config.getAppId(),
+        waitId, new Object[] {dataCollectionInfo}, config.getEnvId());
+  }
+
+  private DelegateTask createAPMDelegateTask(
+      APMCVServiceConfiguration config, String waitId, long startTime, long endTime) {
+    APMVerificationConfig apmVerificationConfig =
+        (APMVerificationConfig) settingsService.get(config.getConnectorId()).getValue();
+    int timeDuration = (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
+    Map<String, String> hostsMap = new HashMap<>();
+    hostsMap.put("DUMMY_24_7_HOST", DEFAULT_GROUP_NAME);
+
+    Map<String, List<APMMetricInfo>> metricEndPoints =
+        buildMetricInfoMap(config.getMetricCollectionInfos(), Optional.empty());
+
+    final APMDataCollectionInfo dataCollectionInfo =
+        APMDataCollectionInfo.builder()
+            .baseUrl(apmVerificationConfig.getUrl())
+            .headers(apmVerificationConfig.collectionHeaders())
+            .options(apmVerificationConfig.collectionParams())
+            .validationUrl(apmVerificationConfig.getValidationUrl())
+            .encryptedDataDetails(apmVerificationConfig.encryptedDataDetails(secretManager))
+            .hosts(hostsMap)
+            .stateType(StateType.APM_VERIFICATION)
+            .applicationId(config.getAppId())
+            .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getUuid())
+            .serviceId(config.getServiceId())
+            .startTime(startTime)
+            .cvConfigId(config.getUuid())
+            .dataCollectionMinute(0)
+            .metricEndpoints(metricEndPoints)
+            .accountId(config.getAccountId())
+            .strategy(AnalysisComparisonStrategy.PREDICTIVE)
+            .dataCollectionFrequency(1)
+            .dataCollectionTotalTime(timeDuration)
+            .build();
+
     return createDelegateTask(TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK, config.getAccountId(), config.getAppId(),
         waitId, new Object[] {dataCollectionInfo}, config.getEnvId());
   }

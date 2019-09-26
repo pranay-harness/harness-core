@@ -59,6 +59,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -77,6 +78,10 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
 
   public void setMetricCollectionInfos(List<MetricCollectionInfo> metricCollectionInfos) {
     this.metricCollectionInfos = metricCollectionInfos;
+  }
+
+  public List<MetricCollectionInfo> getMetricCollectionInfos() {
+    return this.metricCollectionInfos;
   }
 
   @Attributes(required = false, title = "APM DataCollection Rate (mins)") private int dataCollectionRate;
@@ -228,7 +233,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     return invalidFields;
   }
 
-  private Map<String, TimeSeriesMetricDefinition> metricDefinitions(Collection<List<APMMetricInfo>> metricInfos) {
+  public static Map<String, TimeSeriesMetricDefinition> metricDefinitions(Collection<List<APMMetricInfo>> metricInfos) {
     Map<String, TimeSeriesMetricDefinition> metricTypeMap = new HashMap<>();
     metricInfos.forEach(metricInfoList
         -> metricInfoList.forEach(metricInfo
@@ -288,9 +293,12 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     }
 
     final APMVerificationConfig apmConfig = (APMVerificationConfig) settingAttribute.getValue();
+
     List<APMMetricInfo> canaryMetricInfos = getCanaryMetricInfos(context);
-    Map<String, List<APMMetricInfo>> apmMetricInfos =
-        isNotEmpty(canaryMetricInfos) ? new HashMap<>() : apmMetricInfos(context);
+    Map<String, List<APMMetricInfo>> apmMetricInfos = isNotEmpty(canaryMetricInfos)
+        ? new HashMap<>()
+        : buildMetricInfoMap(metricCollectionInfos, Optional.of(context));
+
     metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.APM_VERIFICATION,
         context.getStateExecutionInstanceId(), null,
         metricDefinitions(
@@ -357,10 +365,13 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     return delegateService.queueTask(delegateTask);
   }
 
-  public Map<String, List<APMMetricInfo>> apmMetricInfos(final ExecutionContext context) {
+  public static Map<String, List<APMMetricInfo>> buildMetricInfoMap(
+      List<MetricCollectionInfo> metricCollectionInfos, Optional<ExecutionContext> context) {
     Map<String, List<APMMetricInfo>> metricInfoMap = new HashMap<>();
     for (MetricCollectionInfo metricCollectionInfo : metricCollectionInfos) {
-      String evaluatedUrl = context.renderExpression(metricCollectionInfo.getCollectionUrl());
+      String evaluatedUrl = context != null && context.isPresent()
+          ? context.get().renderExpression(metricCollectionInfo.getCollectionUrl())
+          : metricCollectionInfo.getCollectionUrl();
 
       if (metricCollectionInfo.getMethod() != null && metricCollectionInfo.getMethod().equals(Method.POST)) {
         evaluatedUrl += URL_BODY_APPENDER + metricCollectionInfo.getCollectionBody();
@@ -369,11 +380,14 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
       if (!metricInfoMap.containsKey(evaluatedUrl)) {
         metricInfoMap.put(evaluatedUrl, new ArrayList<>());
       }
+      String evaluatedBody = context != null && context.isPresent()
+          ? context.get().renderExpression(metricCollectionInfo.getCollectionBody())
+          : metricCollectionInfo.getCollectionBody();
       APMMetricInfo metricInfo = APMMetricInfo.builder()
                                      .metricName(metricCollectionInfo.getMetricName())
                                      .metricType(metricCollectionInfo.getMetricType())
                                      .method(metricCollectionInfo.getMethod())
-                                     .body(context.renderExpression(metricCollectionInfo.getCollectionBody()))
+                                     .body(evaluatedBody)
                                      .tag(metricCollectionInfo.getTag())
                                      .responseMappers(getResponseMappers(metricCollectionInfo))
                                      .build();
@@ -427,7 +441,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     return metricInfos;
   }
 
-  private Map<String, ResponseMapper> getResponseMappers(MetricCollectionInfo metricCollectionInfo) {
+  private static Map<String, ResponseMapper> getResponseMappers(MetricCollectionInfo metricCollectionInfo) {
     ResponseMapping responseMapping = metricCollectionInfo.getResponseMapping();
     Map<String, ResponseMapper> responseMappers = new HashMap<>();
     List<String> txnRegex =
