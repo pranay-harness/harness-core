@@ -44,8 +44,6 @@ public class ContinuousVerificationAlertData implements AlertData {
 
   @Override
   public String buildTitle() {
-    double alertThreshold =
-        BigDecimal.valueOf(cvConfiguration.getAlertThreshold()).setScale(2, RoundingMode.HALF_UP).doubleValue();
     riskScore = BigDecimal.valueOf(riskScore).setScale(2, RoundingMode.HALF_UP).doubleValue();
 
     StringBuilder sb = new StringBuilder()
@@ -62,7 +60,7 @@ public class ContinuousVerificationAlertData implements AlertData {
 
     switch (mlAnalysisType) {
       case TIME_SERIES:
-        sb.append("\nRisk Score: ").append(riskScore).append(", Alert Threshold: ").append(alertThreshold);
+        sb.append("\nRisk Score: ").append(riskScore);
         break;
       case LOG_ML:
         sb.append("\nHosts: ").append(hosts);
