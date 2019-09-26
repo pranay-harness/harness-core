@@ -476,41 +476,37 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
     List<ExperimentalMessageComparisonResult> messagesToShow = new ArrayList<>();
     User currentUser = UserThreadLocal.get();
 
-    List<CVConfiguration> cvConfigurationList = wingsPersistence.createQuery(CVConfiguration.class, excludeAuthority)
-                                                    .filter(CVConfigurationKeys.serviceId, serviceId)
-                                                    .asList();
     try (HIterator<CVConfiguration> cvConfigurationHIterator =
              new HIterator<>(wingsPersistence.createQuery(CVConfiguration.class, excludeAuthority)
                                  .filter(CVConfigurationKeys.serviceId, serviceId)
                                  .fetch())) {
-      if (!cvConfigurationHIterator.hasNext() || messagesToShow.size() >= 10) {
-        return messagesToShow;
-      }
-      CVConfiguration cvConfiguration = cvConfigurationHIterator.next();
-      PageRequest<ExperimentalMessageComparisonResult> comparisonResultPageRequest =
-          PageRequestBuilder.aPageRequest()
-              .addFilter(ExperimentalMessageComparisonResultKeys.cvConfigId, Operator.EQ, cvConfiguration.getUuid())
-              .addFilter(ExperimentalMessageComparisonResultKeys.numVotes, Operator.LT, 3)
-              .build();
-      logger.info("Querying GDS for serviceID {}, cvConfigId {}", serviceId, cvConfiguration.getUuid());
-      List<ExperimentalMessageComparisonResult> comparisonResults =
-          dataStoreService.list(ExperimentalMessageComparisonResult.class, comparisonResultPageRequest);
-      logger.info("Got {} comparison results from GDS for msg pairs to vote. serviceID {}, cvConfigId {}",
-          comparisonResults.size(), serviceId, cvConfiguration.getUuid());
-      if (isNotEmpty(comparisonResults)) {
-        for (ExperimentalMessageComparisonResult result : comparisonResults) {
-          if (messagesToShow.size() >= 10) {
-            break;
-          }
+      while (cvConfigurationHIterator.hasNext() && messagesToShow.size() <= 10) {
+        CVConfiguration cvConfiguration = cvConfigurationHIterator.next();
+        PageRequest<ExperimentalMessageComparisonResult> comparisonResultPageRequest =
+            PageRequestBuilder.aPageRequest()
+                .addFilter(ExperimentalMessageComparisonResultKeys.cvConfigId, Operator.EQ, cvConfiguration.getUuid())
+                .addFilter(ExperimentalMessageComparisonResultKeys.numVotes, Operator.LT, 3)
+                .build();
+        logger.info("Querying GDS for serviceID {}, cvConfigId {}", serviceId, cvConfiguration.getUuid());
+        List<ExperimentalMessageComparisonResult> comparisonResults =
+            dataStoreService.list(ExperimentalMessageComparisonResult.class, comparisonResultPageRequest);
+        logger.info("Got {} comparison results from GDS for msg pairs to vote. serviceID {}, cvConfigId {}",
+            comparisonResults.size(), serviceId, cvConfiguration.getUuid());
+        if (isNotEmpty(comparisonResults)) {
+          for (ExperimentalMessageComparisonResult result : comparisonResults) {
+            if (messagesToShow.size() >= 10) {
+              break;
+            }
 
-          if (isEmpty(result.getUserVotes())) {
-            messagesToShow.add(result);
-            continue;
-          }
+            if (isEmpty(result.getUserVotes())) {
+              messagesToShow.add(result);
+              continue;
+            }
 
-          if (!result.getUserVotes().containsKey(currentUser.getName())) {
-            messagesToShow.add(result);
-            continue;
+            if (!result.getUserVotes().containsKey(currentUser.getName())) {
+              messagesToShow.add(result);
+              continue;
+            }
           }
         }
       }
