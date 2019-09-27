@@ -132,6 +132,9 @@ public interface PipelineService extends OwnedByApplication {
    */
   List<String> obtainPipelineNamesReferencedByEnvironment(String appId, @NotEmpty String envId);
 
+  DeploymentMetadata fetchDeploymentMetadata(String appId, String pipelineId, Map<String, String> pipelineVariables,
+      List<String> artifactNeededServiceIds, List<String> envIds, DeploymentMetadata.Include... includeList);
+
   DeploymentMetadata fetchDeploymentMetadata(String appId, Pipeline pipeline, List<String> artifactNeededServiceIds,
       List<String> envIds, DeploymentMetadata.Include... includeList);
 }

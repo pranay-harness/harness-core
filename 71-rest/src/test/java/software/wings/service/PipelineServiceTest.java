@@ -333,7 +333,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   public void shouldGetPipelineWithServices() {
     mockPipeline();
 
-    when(workflowService.readWorkflowWithoutServices(APP_ID, WORKFLOW_ID))
+    when(workflowService.readWorkflowWithoutServices(eq(APP_ID), eq(WORKFLOW_ID), anyBoolean()))
         .thenReturn(aWorkflow()
                         .services(asList(Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build()))
                         .orchestrationWorkflow(aBasicOrchestrationWorkflow().build())
@@ -387,7 +387,7 @@ public class PipelineServiceTest extends WingsBaseTest {
 
     when(wingsPersistence.getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID)).thenReturn(pipeline2);
 
-    when(workflowService.readWorkflowWithoutServices(APP_ID, WORKFLOW_ID))
+    when(workflowService.readWorkflowWithoutServices(eq(APP_ID), eq(WORKFLOW_ID), anyBoolean()))
         .thenReturn(aWorkflow()
                         .name(WORKFLOW_NAME)
                         .services(asList(Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build()))
@@ -398,7 +398,7 @@ public class PipelineServiceTest extends WingsBaseTest {
                                 .build())
                         .build());
 
-    when(workflowService.readWorkflowWithoutServices(APP_ID, "BUILD_WORKFLOW_ID"))
+    when(workflowService.readWorkflowWithoutServices(eq(APP_ID), eq("BUILD_WORKFLOW_ID"), anyBoolean()))
         .thenReturn(aWorkflow()
                         .name(WORKFLOW_NAME)
                         .services(asList(Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build()))
@@ -476,7 +476,7 @@ public class PipelineServiceTest extends WingsBaseTest {
                         .build()))
                 .build());
 
-    when(workflowService.readWorkflowWithoutServices(APP_ID, WORKFLOW_ID))
+    when(workflowService.readWorkflowWithoutServices(eq(APP_ID), eq(WORKFLOW_ID), anyBoolean()))
         .thenReturn(aWorkflow()
                         .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
                                                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
@@ -485,7 +485,7 @@ public class PipelineServiceTest extends WingsBaseTest {
                         .services(asList(Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build()))
                         .build());
 
-    when(workflowService.readWorkflowWithoutServices(APP_ID, "DISABLE_WORKFLOW_ID"))
+    when(workflowService.readWorkflowWithoutServices(eq(APP_ID), eq("DISABLE_WORKFLOW_ID"), anyBoolean()))
         .thenReturn(aWorkflow()
                         .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
                                                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
@@ -526,7 +526,7 @@ public class PipelineServiceTest extends WingsBaseTest {
                                .build()))
                 .build());
 
-    when(workflowService.readWorkflowWithoutServices(APP_ID, WORKFLOW_ID))
+    when(workflowService.readWorkflowWithoutServices(eq(APP_ID), eq(WORKFLOW_ID), anyBoolean()))
         .thenReturn(aWorkflow()
                         .orchestrationWorkflow(
                             aCanaryOrchestrationWorkflow()
@@ -840,7 +840,7 @@ public class PipelineServiceTest extends WingsBaseTest {
         .thenReturn(aPageResponse().withResponse(asList(pipeline, pipeline2)).build());
 
     Workflow workflow = aWorkflow().orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build();
-    when(workflowService.readWorkflowWithoutServices(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
+    when(workflowService.readWorkflowWithoutServices(eq(APP_ID), eq(WORKFLOW_ID), anyBoolean())).thenReturn(workflow);
     PageRequest<WorkflowExecution> workflowExecutionPageRequest = aPageRequest()
                                                                       .withLimit("2")
                                                                       .addFilter("workflowId", EQ, pipeline.getUuid())
@@ -926,7 +926,7 @@ public class PipelineServiceTest extends WingsBaseTest {
 
     Workflow workflow =
         aWorkflow().orchestrationWorkflow(aCanaryOrchestrationWorkflow().withUserVariables(variables).build()).build();
-    when(workflowService.readWorkflowWithoutServices(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
+    when(workflowService.readWorkflowWithoutServices(eq(APP_ID), eq(WORKFLOW_ID), anyBoolean())).thenReturn(workflow);
 
     when(workflowExecutionService.listExecutions(Mockito.any(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean()))
         .thenReturn(aPageResponse().withResponse(new ArrayList()).build());
@@ -979,7 +979,7 @@ public class PipelineServiceTest extends WingsBaseTest {
                                        .addWorkflowPhase(aWorkflowPhase().deploymentType(DeploymentType.SSH).build())
                                        .build())
             .build();
-    when(workflowService.readWorkflowWithoutServices(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
+    when(workflowService.readWorkflowWithoutServices(eq(APP_ID), eq(WORKFLOW_ID), anyBoolean())).thenReturn(workflow);
 
     PageRequest<WorkflowExecution> workflowExecutionPageRequest = aPageRequest()
                                                                       .withLimit("2")
@@ -1015,13 +1015,13 @@ public class PipelineServiceTest extends WingsBaseTest {
             .services(asList(Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build()))
             .build();
 
-    when(workflowService.readWorkflowWithoutServices(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
+    when(workflowService.readWorkflowWithoutServices(eq(APP_ID), eq(WORKFLOW_ID), anyBoolean())).thenReturn(workflow);
     when(workflowService.fetchDeploymentMetadata(APP_ID, workflow, null, null, null, Include.ARTIFACT_SERVICE))
         .thenReturn(DeploymentMetadata.builder().artifactRequiredServiceIds(asList(SERVICE_ID)).build());
     List<EntityType> requiredEntities = pipelineService.getRequiredEntities(APP_ID, PIPELINE_ID);
     assertThat(requiredEntities).isNotEmpty().contains(ARTIFACT);
 
-    verify(workflowService).readWorkflowWithoutServices(APP_ID, WORKFLOW_ID);
+    verify(workflowService).readWorkflowWithoutServices(eq(APP_ID), eq(WORKFLOW_ID), anyBoolean());
     verify(wingsPersistence).getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID);
   }
 
@@ -1030,7 +1030,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   public void shouldGetRequiredEntitiesForBuildPipeline() {
     mockPipeline();
 
-    when(workflowService.readWorkflowWithoutServices(APP_ID, WORKFLOW_ID))
+    when(workflowService.readWorkflowWithoutServices(eq(APP_ID), eq(WORKFLOW_ID), anyBoolean()))
         .thenReturn(aWorkflow()
                         .orchestrationWorkflow(aBuildOrchestrationWorkflow()
                                                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
@@ -1040,7 +1040,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     List<EntityType> requiredEntities = pipelineService.getRequiredEntities(APP_ID, PIPELINE_ID);
     assertThat(requiredEntities).isEmpty();
 
-    verify(workflowService).readWorkflowWithoutServices(APP_ID, WORKFLOW_ID);
+    verify(workflowService).readWorkflowWithoutServices(eq(APP_ID), eq(WORKFLOW_ID), anyBoolean());
     verify(wingsPersistence).getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID);
   }
 
