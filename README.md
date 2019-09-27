@@ -200,12 +200,16 @@ helper shell scripts:
    assign whatever key combination you would like it to be triggered on.
 
 4. Install Lombok Plugin: https://projectlombok.org/setup/intellij
-5. Change settings to mark injected fields as assigned. (Settings > Editor > Inspections > Java > Declaration Redundancy > Unused Declarations>Entry Points >
+5. Install SonarLint plugin:
+   - Go to Preferences -> Plugins ->  type SonarLint -> Install plugin. (Will need to restart Intellij)
+   - This plugin is really helpful to analyze your code for issues as you code.
+   - Just right click on file in intellij and "Analyze with SonarLint" or enable autoscan.
+6. Change settings to mark injected fields as assigned. (Settings > Editor > Inspections > Java > Declaration Redundancy > Unused Declarations>Entry Points >
    Annotations > Mark field as implicitly written if annotated by) Click add, then search for "Inject". Add both google and javax annotations.
-6. Setup code style. Preferences > Code Style > Scheme > Gear icon > Import > IntelliJ XML.
+7. Setup code style. Preferences > Code Style > Scheme > Gear icon > Import > IntelliJ XML.
    Select portal/tools/config/src/main/resources/intellij-java-google-style.xml
-7. Setup your imports settings. From Preferences | Editor > Code Style > Java | Imports make sure that your limits are big enough to not take affect
-8. Increase Build Process Heap Size (Preferences > Build, Execution, Development > Compiler, search for "Build Process Heap Size" and set it to 2048 or higher if you still see an out of memory exception in future) 
+8. Setup your imports settings. From Preferences | Editor > Code Style > Java | Imports make sure that your limits are big enough to not take affect
+9. Increase Build Process Heap Size (Preferences > Build, Execution, Development > Compiler, search for "Build Process Heap Size" and set it to 2048 or higher if you still see an out of memory exception in future)
 
 ![config image](img/imports_limits.png)
 
