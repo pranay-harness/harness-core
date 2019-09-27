@@ -18,7 +18,6 @@ import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.EntityType;
-import software.wings.beans.Pipeline;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Variable;
@@ -111,11 +110,10 @@ public class TriggerArtifactVariableHandler {
                                     .collect(Collectors.toMap(Variable::getName, Variable::getValue));
           }
 
-          Pipeline pipeline = pipelineService.readPipelineWithResolvedVariables(
-              appId, pipelineAction.getPipelineId(), pipelineVariables);
-          artifactVariables =
-              pipelineService.fetchDeploymentMetadata(appId, pipeline, null, null, Include.ARTIFACT_SERVICE)
-                  .getArtifactVariables();
+          artifactVariables = pipelineService
+                                  .fetchDeploymentMetadata(appId, pipelineAction.getPipelineId(), pipelineVariables,
+                                      null, null, Include.ARTIFACT_SERVICE)
+                                  .getArtifactVariables();
 
           if (artifactVariables != null && pipelineAction.getTriggerArgs() != null) {
             artifactVariables.forEach(artifactVariable -> {

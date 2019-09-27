@@ -1926,7 +1926,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     String accountId = appService.getAccountIdByAppId(appId);
     Validator.notNullCheck("Workflow type is required", executionArgs.getWorkflowType());
     DeploymentMetadata finalDeploymentMetadata;
-    Pipeline pipeline = null;
     if (executionArgs.getWorkflowType() == ORCHESTRATION) {
       Workflow workflow = workflowService.readWorkflow(appId, executionArgs.getOrchestrationId());
       finalDeploymentMetadata =
@@ -1934,9 +1933,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     } else {
       if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)
           || featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-        pipeline = pipelineService.readPipelineWithResolvedVariables(
-            appId, executionArgs.getPipelineId(), executionArgs.getWorkflowVariables());
-        finalDeploymentMetadata = pipelineService.fetchDeploymentMetadata(appId, pipeline, null, null);
+        finalDeploymentMetadata = pipelineService.fetchDeploymentMetadata(
+            appId, executionArgs.getPipelineId(), executionArgs.getWorkflowVariables(), null, null);
       } else {
         return DeploymentMetadata.builder().build();
       }

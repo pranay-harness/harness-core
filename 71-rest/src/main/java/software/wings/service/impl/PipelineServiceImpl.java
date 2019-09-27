@@ -99,6 +99,7 @@ import software.wings.utils.Validator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -410,6 +411,7 @@ public class PipelineServiceImpl implements PipelineService {
   public List<EntityType> getRequiredEntities(String appId, String pipelineId) {
     Pipeline pipeline = wingsPersistence.getWithAppId(Pipeline.class, appId, pipelineId);
     notNullCheck("pipeline", pipeline, USER);
+    boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, pipeline.getAccountId());
     List<EntityType> entityTypes = new ArrayList<>();
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
       for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
@@ -418,7 +420,7 @@ public class PipelineServiceImpl implements PipelineService {
         }
         if (ENV_STATE.name().equals(pipelineStageElement.getType())) {
           Workflow workflow = workflowService.readWorkflowWithoutServices(
-              pipeline.getAppId(), (String) pipelineStageElement.getProperties().get("workflowId"));
+              pipeline.getAppId(), (String) pipelineStageElement.getProperties().get("workflowId"), infraRefactor);
           OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
           if (orchestrationWorkflow != null) {
             if (BUILD.equals(orchestrationWorkflow.getOrchestrationWorkflowType())) {
@@ -485,6 +487,11 @@ public class PipelineServiceImpl implements PipelineService {
   @Override
   public Pipeline readPipelineWithResolvedVariables(
       String appId, String pipelineId, Map<String, String> pipelineVariables) {
+    return readPipelineWithResolvedVariables(appId, pipelineId, pipelineVariables, null);
+  }
+
+  private Pipeline readPipelineWithResolvedVariables(
+      String appId, String pipelineId, Map<String, String> pipelineVariables, Map<String, Workflow> workflowCache) {
     Pipeline pipeline = wingsPersistence.getWithAppId(Pipeline.class, appId, pipelineId);
     notNullCheck("Pipeline does not exist", pipeline, USER);
     List<Service> services = new ArrayList<>();
@@ -493,12 +500,23 @@ public class PipelineServiceImpl implements PipelineService {
     List<String> workflowIds = new ArrayList<>();
     List<String> infraMappingIds = new ArrayList<>();
     List<String> infraDefinitionIds = new ArrayList<>();
+    if (workflowCache == null) {
+      workflowCache = new HashMap<>();
+    }
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
       for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
         if (ENV_STATE.name().equals(pipelineStageElement.getType())) {
           String workflowId = (String) pipelineStageElement.getProperties().get("workflowId");
-          Workflow workflow = workflowService.readWorkflow(pipeline.getAppId(), workflowId);
-          notNullCheck("Workflow does not exist", workflow);
+          Workflow workflow;
+          if (workflowCache.containsKey(workflowId)) {
+            workflow = workflowCache.get(workflowId);
+          } else {
+            workflow = workflowService.readWorkflow(pipeline.getAppId(), workflowId);
+            notNullCheck("Workflow does not exist", workflow);
+            notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow());
+            workflowCache.put(workflowId, workflow);
+          }
+
           Map<String, String> resolvedWorkflowStepVariables =
               WorkflowServiceHelper.overrideWorkflowVariables(workflow.getOrchestrationWorkflow().getUserVariables(),
                   pipelineStageElement.getWorkflowVariables(), pipelineVariables);
@@ -575,6 +593,7 @@ public class PipelineServiceImpl implements PipelineService {
       List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
       List<Variable> pipelineVariables = new ArrayList<>();
       List<DeploymentType> deploymentTypes = new ArrayList<>();
+      Map<String, Workflow> workflowCache = new HashMap<>();
       for (PipelineStage pipelineStage : pipelineStages) {
         List<String> invalidStageWorkflows = new ArrayList<>();
         for (PipelineStageElement pse : pipelineStage.getPipelineStageElements()) {
@@ -583,10 +602,17 @@ public class PipelineServiceImpl implements PipelineService {
           }
           if (ENV_STATE.name().equals(pse.getType())) {
             try {
-              Workflow workflow = workflowService.readWorkflowWithoutServices(
-                  pipeline.getAppId(), (String) pse.getProperties().get("workflowId"));
-              Validator.notNullCheck("Workflow does not exist", workflow, USER);
-              Validator.notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow());
+              String workflowId = (String) pse.getProperties().get("workflowId");
+              Workflow workflow;
+              if (workflowCache.containsKey(workflowId)) {
+                workflow = workflowCache.get(workflowId);
+              } else {
+                workflow = workflowService.readWorkflowWithoutServices(pipeline.getAppId(), workflowId, infraRefactor);
+                Validator.notNullCheck("Workflow does not exist", workflow, USER);
+                Validator.notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow());
+                workflowCache.put(workflowId, workflow);
+              }
+
               if (!hasSshInfraMapping) {
                 hasSshInfraMapping = workflowServiceHelper.workflowHasSshDeploymentPhase(
                     (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow());
@@ -669,6 +695,7 @@ public class PipelineServiceImpl implements PipelineService {
     boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, pipeline.getAccountId());
     List<DeploymentType> deploymentTypes = new ArrayList<>();
     List<String> invalidWorkflows = new ArrayList<>();
+    Map<String, Workflow> workflowCache = new HashMap<>();
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
       List<String> invalidStageWorkflows = new ArrayList<>();
       for (PipelineStageElement pse : pipelineStage.getPipelineStageElements()) {
@@ -676,10 +703,17 @@ public class PipelineServiceImpl implements PipelineService {
           if (pse.isDisable()) {
             continue;
           }
-          Workflow workflow = workflowService.readWorkflowWithoutServices(
-              pipeline.getAppId(), (String) pse.getProperties().get("workflowId"));
-          Validator.notNullCheck("Workflow does not exist", workflow, USER);
-          Validator.notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow(), USER);
+
+          String workflowId = (String) pse.getProperties().get("workflowId");
+          Workflow workflow;
+          if (workflowCache.containsKey(workflowId)) {
+            workflow = workflowCache.get(workflowId);
+          } else {
+            workflow = workflowService.readWorkflowWithoutServices(pipeline.getAppId(), workflowId, infraRefactor);
+            Validator.notNullCheck("Workflow does not exist", workflow, USER);
+            Validator.notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow());
+            workflowCache.put(workflowId, workflow);
+          }
 
           if (!hasBuildWorkflow) {
             hasBuildWorkflow = BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
@@ -954,10 +988,24 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   @Override
+  public DeploymentMetadata fetchDeploymentMetadata(String appId, String pipelineId,
+      Map<String, String> pipelineVariables, List<String> artifactNeededServiceIds, List<String> envIds,
+      DeploymentMetadata.Include... includeList) {
+    Map<String, Workflow> workflowCache = new HashMap<>();
+    Pipeline pipeline = readPipelineWithResolvedVariables(appId, pipelineId, pipelineVariables, workflowCache);
+    return fetchDeploymentMetadata(appId, pipeline, artifactNeededServiceIds, envIds, workflowCache, includeList);
+  }
+
+  @Override
   public DeploymentMetadata fetchDeploymentMetadata(String appId, Pipeline pipeline,
       List<String> artifactNeededServiceIds, List<String> envIds, DeploymentMetadata.Include... includeList) {
-    Validator.notNullCheck("Pipeline does not exist", pipeline, USER);
+    return fetchDeploymentMetadata(appId, pipeline, artifactNeededServiceIds, envIds, null, includeList);
+  }
 
+  private DeploymentMetadata fetchDeploymentMetadata(String appId, Pipeline pipeline,
+      List<String> artifactNeededServiceIds, List<String> envIds, Map<String, Workflow> workflowCache,
+      DeploymentMetadata.Include... includeList) {
+    Validator.notNullCheck("Pipeline does not exist", pipeline, USER);
     if (artifactNeededServiceIds == null) {
       artifactNeededServiceIds = new ArrayList<>();
     }
@@ -971,7 +1019,11 @@ public class PipelineServiceImpl implements PipelineService {
                                                      .artifactVariables(new ArrayList<>())
                                                      .build();
 
+    boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, pipeline.getAccountId());
     boolean isBuildPipeline = false;
+    if (workflowCache == null) {
+      workflowCache = new HashMap<>();
+    }
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
       for (PipelineStageElement pse : pipelineStage.getPipelineStageElements()) {
         if (ENV_STATE.name().equals(pse.getType())) {
@@ -979,10 +1031,16 @@ public class PipelineServiceImpl implements PipelineService {
             continue;
           }
 
-          Workflow workflow = workflowService.readWorkflowWithoutServices(
-              pipeline.getAppId(), (String) pse.getProperties().get("workflowId"));
-          Validator.notNullCheck("Workflow does not exist", workflow, USER);
-          Validator.notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow(), USER);
+          String workflowId = (String) pse.getProperties().get("workflowId");
+          Workflow workflow;
+          if (workflowCache.containsKey(workflowId)) {
+            workflow = workflowCache.get(workflowId);
+          } else {
+            workflow = workflowService.readWorkflowWithoutServices(pipeline.getAppId(), workflowId, infraRefactor);
+            Validator.notNullCheck("Workflow does not exist", workflow, USER);
+            Validator.notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow(), USER);
+            workflowCache.put(workflowId, workflow);
+          }
 
           OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
           if (orchestrationWorkflow == null) {

@@ -617,8 +617,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return new ArrayList<>();
     }
     List<Workflow> allWorkflows = new ArrayList<>();
+    boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId);
     for (Workflow workflow : workflows) {
-      allWorkflows.add(readWorkflowWithoutServices(workflow.getAppId(), workflow.getUuid()));
+      allWorkflows.add(readWorkflowWithoutServices(workflow.getAppId(), workflow.getUuid(), infraRefactor));
     }
     return allWorkflows;
   }
@@ -644,6 +645,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return null;
     }
     loadOrchestrationWorkflow(workflow, null, false);
+    return workflow;
+  }
+
+  @Override
+  public Workflow readWorkflowWithoutServices(String appId, String workflowId, boolean infraRefactor) {
+    Workflow workflow = wingsPersistence.getWithAppId(Workflow.class, appId, workflowId);
+    if (workflow == null) {
+      return null;
+    }
+    loadOrchestrationWorkflow(workflow, null, false, infraRefactor);
     return workflow;
   }
 
@@ -681,6 +692,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private void loadOrchestrationWorkflow(Workflow workflow, Integer version, boolean withServices) {
     boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, workflow.getAccountId());
+    loadOrchestrationWorkflow(workflow, version, withServices, infraRefactor);
+  }
+
+  private void loadOrchestrationWorkflow(
+      Workflow workflow, Integer version, boolean withServices, boolean infraRefactor) {
     StateMachine stateMachine = readStateMachine(
         workflow.getAppId(), workflow.getUuid(), version == null ? workflow.getDefaultVersion() : version);
     if (stateMachine != null) {

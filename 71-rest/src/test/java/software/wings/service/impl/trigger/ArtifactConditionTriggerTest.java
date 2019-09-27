@@ -271,6 +271,13 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
                            .artifactFilter(ARTIFACT_FILTER)
                            .build())
             .build();
+
+    when(pipelineService.fetchDeploymentMetadata(
+             APP_ID, PIPELINE_ID, new HashMap<>(), null, null, Include.ARTIFACT_SERVICE))
+        .thenReturn(DeploymentMetadata.builder()
+                        .artifactVariables(variables)
+                        .artifactRequiredServiceIds(asList(SERVICE_ID))
+                        .build());
     when(pipelineService.fetchDeploymentMetadata(APP_ID, pipeline, null, null, Include.ARTIFACT_SERVICE))
         .thenReturn(DeploymentMetadata.builder()
                         .artifactVariables(variables)
@@ -326,6 +333,12 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
                                 anArtifactFile().withAppId(APP_ID).withFileUuid(FILE_ID).withName(FILE_NAME).build()))
                             .build();
 
+    when(pipelineService.fetchDeploymentMetadata(
+             APP_ID, PIPELINE_ID, new HashMap<>(), null, null, Include.ARTIFACT_SERVICE))
+        .thenReturn(DeploymentMetadata.builder()
+                        .artifactVariables(variables)
+                        .artifactRequiredServiceIds(asList(SERVICE_ID))
+                        .build());
     when(pipelineService.fetchDeploymentMetadata(APP_ID, pipeline, null, null, Include.ARTIFACT_SERVICE))
         .thenReturn(DeploymentMetadata.builder()
                         .artifactVariables(variables)
@@ -384,6 +397,12 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
                              .build());
 
     deploymentTriggerService.save(trigger, false);
+    when(pipelineService.fetchDeploymentMetadata(
+             APP_ID, PIPELINE_ID, new HashMap<>(), null, null, Include.ARTIFACT_SERVICE))
+        .thenReturn(DeploymentMetadata.builder()
+                        .artifactVariables(variables)
+                        .artifactRequiredServiceIds(asList(SERVICE_ID))
+                        .build());
     when(pipelineService.fetchDeploymentMetadata(APP_ID, pipeline, null, null, Include.ARTIFACT_SERVICE))
         .thenReturn(DeploymentMetadata.builder()
                         .artifactVariables(variables)
@@ -420,6 +439,12 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
   public void shouldTriggerPostArtifactCollectionOneArtifactMatchesOtherDoesNotMatch() {
     when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
 
+    when(pipelineService.fetchDeploymentMetadata(
+             APP_ID, PIPELINE_ID, new HashMap<>(), null, null, Include.ARTIFACT_SERVICE))
+        .thenReturn(DeploymentMetadata.builder()
+                        .artifactVariables(variables)
+                        .artifactRequiredServiceIds(asList(SERVICE_ID))
+                        .build());
     when(pipelineService.fetchDeploymentMetadata(APP_ID, pipeline, null, null, Include.ARTIFACT_SERVICE))
         .thenReturn(DeploymentMetadata.builder()
                         .artifactVariables(variables)
