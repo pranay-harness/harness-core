@@ -23,6 +23,7 @@ import io.fabric8.utils.Lists;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -166,10 +167,11 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     queryData = formQuery(accountId, aggregateFunction, filters, groupByEntityList, groupByTime, sortCriteria);
 
     while (!successful && retryCount < MAX_RETRY) {
+      ResultSet resultSet = null;
       try (Connection connection = timeScaleDBService.getDBConnection();
            Statement statement = connection.createStatement()) {
         long startTime = System.currentTimeMillis();
-        ResultSet resultSet = statement.executeQuery(queryData.getQuery());
+        resultSet = statement.executeQuery(queryData.getQuery());
         successful = true;
         long endTime = System.currentTimeMillis();
         if (endTime - startTime > 2000L) {
@@ -197,6 +199,8 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
               retryCount);
         }
         retryCount++;
+      } finally {
+        DBUtils.close(resultSet);
       }
     }
     return null;

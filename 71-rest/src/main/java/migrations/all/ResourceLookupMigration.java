@@ -122,231 +122,242 @@ public class ResourceLookupMigration implements Migration {
   }
 
   private void addExistingSettingAttributesToResourceMap() {
-    HIterator<SettingAttribute> settingAttributeIterator =
-        new HIterator<>(wingsPersistence.createQuery(SettingAttribute.class, excludeAuthority)
-                            .project(SettingAttributeKeys.accountId, true)
-                            .project(SettingAttributeKeys.name, true)
-                            .project(SettingAttributeKeys.value, true)
-                            .fetch());
+    try (HIterator<SettingAttribute> settingAttributeIterator =
+             new HIterator<>(wingsPersistence.createQuery(SettingAttribute.class, excludeAuthority)
+                                 .project(SettingAttributeKeys.accountId, true)
+                                 .project(SettingAttributeKeys.name, true)
+                                 .project(SettingAttributeKeys.value, true)
+                                 .fetch())) {
+      while (settingAttributeIterator.hasNext()) {
+        SettingAttribute settingAttribute = settingAttributeIterator.next();
+        SettingValue settingValue = settingAttribute.getValue();
+        if (SETTING.name().equals(settingValue.fetchResourceCategory())) {
+          continue;
+        }
 
-    while (settingAttributeIterator.hasNext()) {
-      SettingAttribute settingAttribute = settingAttributeIterator.next();
-      SettingValue settingValue = settingAttribute.getValue();
-      if (SETTING.name().equals(settingValue.fetchResourceCategory())) {
-        continue;
+        addResourceLookupRecord(settingAttribute.getAccountId(), Application.GLOBAL_APP_ID, settingAttribute.getUuid(),
+            settingAttribute.getName(), settingValue.fetchResourceCategory());
       }
-
-      addResourceLookupRecord(settingAttribute.getAccountId(), Application.GLOBAL_APP_ID, settingAttribute.getUuid(),
-          settingAttribute.getName(), settingValue.fetchResourceCategory());
     }
   }
 
   private void addExistingUserGroupsToResourceMap() {
-    HIterator<UserGroup> userGroupIterator =
-        new HIterator<>(wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
-                            .project(UserGroupKeys.accountId, true)
-                            .project(UserGroupKeys.name, true)
-                            .project(UserGroupKeys.uuid, true)
-                            .fetch());
-
-    while (userGroupIterator.hasNext()) {
-      UserGroup userGroup = userGroupIterator.next();
-      addResourceLookupRecord(userGroup.getAccountId(), Application.GLOBAL_APP_ID, userGroup.getUuid(),
-          userGroup.getName(), USER_GROUP.name());
+    try (HIterator<UserGroup> userGroupIterator =
+             new HIterator<>(wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
+                                 .project(UserGroupKeys.accountId, true)
+                                 .project(UserGroupKeys.name, true)
+                                 .project(UserGroupKeys.uuid, true)
+                                 .fetch())) {
+      while (userGroupIterator.hasNext()) {
+        UserGroup userGroup = userGroupIterator.next();
+        addResourceLookupRecord(userGroup.getAccountId(), Application.GLOBAL_APP_ID, userGroup.getUuid(),
+            userGroup.getName(), USER_GROUP.name());
+      }
     }
   }
 
   private void addExistingencryptedRecordsToResourceMap() {
-    HIterator<EncryptedData> encryptedDataIterator =
-        new HIterator<>(wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
-                            .project(EncryptedDataKeys.accountId, true)
-                            .project(EncryptedDataKeys.uuid, true)
-                            .project(EncryptedDataKeys.name, true)
-                            .project(EncryptedDataKeys.type, true)
-                            .fetch());
-    EncryptedData encryptedData = null;
-    while (encryptedDataIterator.hasNext()) {
-      encryptedData = encryptedDataIterator.next();
-      addResourceLookupRecord(encryptedData.getAccountId(), Application.GLOBAL_APP_ID, encryptedData.getUuid(),
-          encryptedData.getName(), ENCRYPTED_RECORDS.name());
+    try (HIterator<EncryptedData> encryptedDataIterator =
+             new HIterator<>(wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
+                                 .project(EncryptedDataKeys.accountId, true)
+                                 .project(EncryptedDataKeys.uuid, true)
+                                 .project(EncryptedDataKeys.name, true)
+                                 .project(EncryptedDataKeys.type, true)
+                                 .fetch())) {
+      EncryptedData encryptedData = null;
+      while (encryptedDataIterator.hasNext()) {
+        encryptedData = encryptedDataIterator.next();
+        addResourceLookupRecord(encryptedData.getAccountId(), Application.GLOBAL_APP_ID, encryptedData.getUuid(),
+            encryptedData.getName(), ENCRYPTED_RECORDS.name());
+      }
     }
   }
 
   private void addExistingTemplateFoldersToResourceMap() {
-    HIterator<TemplateFolder> templateFolderIterator =
-        new HIterator<>(wingsPersistence.createQuery(TemplateFolder.class, excludeAuthority)
-                            .project(TemplateFolderKeys.accountId, true)
-                            .project(TemplateFolderKeys.appId, true)
-                            .project(TemplateFolderKeys.uuid, true)
-                            .project(TemplateFolderKeys.name, true)
-                            .fetch());
-    TemplateFolder templateFolder = null;
-    while (templateFolderIterator.hasNext()) {
-      templateFolder = templateFolderIterator.next();
-      String accountId = fetchAccountId(templateFolder.getAccountId(), templateFolder.getAppId());
-      if (isNotBlank(accountId)) {
-        addResourceLookupRecord(accountId, templateFolder.getAppId(), templateFolder.getUuid(),
-            templateFolder.getName(), TEMPLATE_FOLDER.name());
+    try (HIterator<TemplateFolder> templateFolderIterator =
+             new HIterator<>(wingsPersistence.createQuery(TemplateFolder.class, excludeAuthority)
+                                 .project(TemplateFolderKeys.accountId, true)
+                                 .project(TemplateFolderKeys.appId, true)
+                                 .project(TemplateFolderKeys.uuid, true)
+                                 .project(TemplateFolderKeys.name, true)
+                                 .fetch())) {
+      TemplateFolder templateFolder = null;
+      while (templateFolderIterator.hasNext()) {
+        templateFolder = templateFolderIterator.next();
+        String accountId = fetchAccountId(templateFolder.getAccountId(), templateFolder.getAppId());
+        if (isNotBlank(accountId)) {
+          addResourceLookupRecord(accountId, templateFolder.getAppId(), templateFolder.getUuid(),
+              templateFolder.getName(), TEMPLATE_FOLDER.name());
+        }
       }
     }
   }
 
   private void addExistingTemplatesToResourceMap() {
-    HIterator<Template> templateIterator =
-        new HIterator<>(wingsPersistence.createQuery(Template.class, excludeAuthority)
-                            .project(TemplateKeys.accountId, true)
-                            .project(TemplateKeys.appId, true)
-                            .project(TemplateKeys.uuid, true)
-                            .project(TemplateKeys.name, true)
-                            .fetch());
-    Template template = null;
-    while (templateIterator.hasNext()) {
-      template = templateIterator.next();
-      String accountId = fetchAccountId(template.getAccountId(), template.getAppId());
-      if (isNotBlank(accountId)) {
-        addResourceLookupRecord(
-            accountId, template.getAppId(), template.getUuid(), template.getName(), TEMPLATE.name());
+    try (HIterator<Template> templateIterator =
+             new HIterator<>(wingsPersistence.createQuery(Template.class, excludeAuthority)
+                                 .project(TemplateKeys.accountId, true)
+                                 .project(TemplateKeys.appId, true)
+                                 .project(TemplateKeys.uuid, true)
+                                 .project(TemplateKeys.name, true)
+                                 .fetch())) {
+      Template template = null;
+      while (templateIterator.hasNext()) {
+        template = templateIterator.next();
+        String accountId = fetchAccountId(template.getAccountId(), template.getAppId());
+        if (isNotBlank(accountId)) {
+          addResourceLookupRecord(
+              accountId, template.getAppId(), template.getUuid(), template.getName(), TEMPLATE.name());
+        }
       }
     }
   }
 
   private void addExistingProvisionersToResourceMap() {
-    HIterator<InfrastructureProvisioner> provisionerIterator =
-        new HIterator<>(wingsPersistence.createQuery(InfrastructureProvisioner.class, excludeAuthority)
-                            .project(InfrastructureProvisionerKeys.uuid, true)
-                            .project(InfrastructureProvisionerKeys.name, true)
-                            .project(InfrastructureProvisionerKeys.appId, true)
-                            .project(InfrastructureProvisionerKeys.accountId, true)
-                            .fetch());
-    InfrastructureProvisioner infrastructureProvisioner = null;
-    while (provisionerIterator.hasNext()) {
-      infrastructureProvisioner = provisionerIterator.next();
-      String accountId = fetchAccountId(infrastructureProvisioner.getAccountId(), infrastructureProvisioner.getAppId());
-      if (isNotBlank(accountId)) {
-        addResourceLookupRecord(accountId, infrastructureProvisioner.getAppId(), infrastructureProvisioner.getUuid(),
-            infrastructureProvisioner.getName(), PROVISIONER.name());
+    try (HIterator<InfrastructureProvisioner> provisionerIterator =
+             new HIterator<>(wingsPersistence.createQuery(InfrastructureProvisioner.class, excludeAuthority)
+                                 .project(InfrastructureProvisionerKeys.uuid, true)
+                                 .project(InfrastructureProvisionerKeys.name, true)
+                                 .project(InfrastructureProvisionerKeys.appId, true)
+                                 .project(InfrastructureProvisionerKeys.accountId, true)
+                                 .fetch())) {
+      InfrastructureProvisioner infrastructureProvisioner = null;
+      while (provisionerIterator.hasNext()) {
+        infrastructureProvisioner = provisionerIterator.next();
+        String accountId =
+            fetchAccountId(infrastructureProvisioner.getAccountId(), infrastructureProvisioner.getAppId());
+        if (isNotBlank(accountId)) {
+          addResourceLookupRecord(accountId, infrastructureProvisioner.getAppId(), infrastructureProvisioner.getUuid(),
+              infrastructureProvisioner.getName(), PROVISIONER.name());
+        }
       }
     }
   }
 
   private void addExistingTriggerToResourceMap() {
-    HIterator<Trigger> triggerIterator = new HIterator<>(wingsPersistence.createQuery(Trigger.class, excludeAuthority)
-                                                             .project(TriggerKeys.uuid, true)
-                                                             .project(TriggerKeys.name, true)
-                                                             .project(TriggerKeys.appId, true)
-                                                             .fetch());
-    Trigger trigger = null;
-    while (triggerIterator.hasNext()) {
-      trigger = triggerIterator.next();
-      String accountId = fetchAccountId(null, trigger.getAppId());
-      if (isNotBlank(accountId)) {
-        addResourceLookupRecord(accountId, trigger.getAppId(), trigger.getUuid(), trigger.getName(), TRIGGER.name());
+    try (HIterator<Trigger> triggerIterator =
+             new HIterator<>(wingsPersistence.createQuery(Trigger.class, excludeAuthority)
+                                 .project(TriggerKeys.uuid, true)
+                                 .project(TriggerKeys.name, true)
+                                 .project(TriggerKeys.appId, true)
+                                 .fetch())) {
+      Trigger trigger = null;
+      while (triggerIterator.hasNext()) {
+        trigger = triggerIterator.next();
+        String accountId = fetchAccountId(null, trigger.getAppId());
+        if (isNotBlank(accountId)) {
+          addResourceLookupRecord(accountId, trigger.getAppId(), trigger.getUuid(), trigger.getName(), TRIGGER.name());
+        }
       }
     }
   }
 
   private void addExistingPipelinesToResourceMap() {
-    HIterator<Pipeline> pipelineIterator =
-        new HIterator<>(wingsPersistence.createQuery(Pipeline.class, excludeAuthority)
-                            .project(PipelineKeys.uuid, true)
-                            .project(PipelineKeys.name, true)
-                            .project(PipelineKeys.appId, true)
-                            .project(PipelineKeys.accountId, true)
-                            .fetch());
-    Pipeline pipeline = null;
-    while (pipelineIterator.hasNext()) {
-      pipeline = pipelineIterator.next();
-      String accountId = fetchAccountId(pipeline.getAccountId(), pipeline.getAppId());
-      if (isNotBlank(accountId)) {
-        addResourceLookupRecord(
-            pipeline.getAccountId(), pipeline.getAppId(), pipeline.getUuid(), pipeline.getName(), PIPELINE.name());
+    try (HIterator<Pipeline> pipelineIterator =
+             new HIterator<>(wingsPersistence.createQuery(Pipeline.class, excludeAuthority)
+                                 .project(PipelineKeys.uuid, true)
+                                 .project(PipelineKeys.name, true)
+                                 .project(PipelineKeys.appId, true)
+                                 .project(PipelineKeys.accountId, true)
+                                 .fetch())) {
+      Pipeline pipeline = null;
+      while (pipelineIterator.hasNext()) {
+        pipeline = pipelineIterator.next();
+        String accountId = fetchAccountId(pipeline.getAccountId(), pipeline.getAppId());
+        if (isNotBlank(accountId)) {
+          addResourceLookupRecord(
+              pipeline.getAccountId(), pipeline.getAppId(), pipeline.getUuid(), pipeline.getName(), PIPELINE.name());
+        }
       }
     }
   }
 
   private void addExistingWorkflowsToResourceMap() {
-    HIterator<Workflow> workflowIterator =
-        new HIterator<>(wingsPersistence.createQuery(Workflow.class, excludeAuthority)
-                            .project(WorkflowKeys.uuid, true)
-                            .project(WorkflowKeys.name, true)
-                            .project(WorkflowKeys.appId, true)
-                            .project(WorkflowKeys.accountId, true)
-                            .fetch());
-    Workflow workflow = null;
-    while (workflowIterator.hasNext()) {
-      workflow = workflowIterator.next();
-      String accountId = fetchAccountId(workflow.getAccountId(), workflow.getAppId());
-      if (isNotBlank(accountId)) {
-        addResourceLookupRecord(
-            workflow.getAccountId(), workflow.getAppId(), workflow.getUuid(), workflow.getName(), WORKFLOW.name());
+    try (HIterator<Workflow> workflowIterator =
+             new HIterator<>(wingsPersistence.createQuery(Workflow.class, excludeAuthority)
+                                 .project(WorkflowKeys.uuid, true)
+                                 .project(WorkflowKeys.name, true)
+                                 .project(WorkflowKeys.appId, true)
+                                 .project(WorkflowKeys.accountId, true)
+                                 .fetch())) {
+      Workflow workflow = null;
+      while (workflowIterator.hasNext()) {
+        workflow = workflowIterator.next();
+        String accountId = fetchAccountId(workflow.getAccountId(), workflow.getAppId());
+        if (isNotBlank(accountId)) {
+          addResourceLookupRecord(
+              workflow.getAccountId(), workflow.getAppId(), workflow.getUuid(), workflow.getName(), WORKFLOW.name());
+        }
       }
     }
   }
 
   private void addExistingEnvironmentsToResourceMap() {
-    HIterator<Environment> envIterator =
-        new HIterator<>(wingsPersistence.createQuery(Environment.class, excludeAuthority)
-                            .project(EnvironmentKeys.uuid, true)
-                            .project(EnvironmentKeys.name, true)
-                            .project(EnvironmentKeys.appId, true)
-                            .project(EnvironmentKeys.accountId, true)
-                            .fetch());
-
-    Environment environment = null;
-    while (envIterator.hasNext()) {
-      environment = envIterator.next();
-      String accountId = fetchAccountId(environment.getAccountId(), environment.getAppId());
-      if (isNotBlank(accountId)) {
-        addResourceLookupRecord(environment.getAccountId(), environment.getAppId(), environment.getUuid(),
-            environment.getName(), ENVIRONMENT.name());
+    try (HIterator<Environment> envIterator =
+             new HIterator<>(wingsPersistence.createQuery(Environment.class, excludeAuthority)
+                                 .project(EnvironmentKeys.uuid, true)
+                                 .project(EnvironmentKeys.name, true)
+                                 .project(EnvironmentKeys.appId, true)
+                                 .project(EnvironmentKeys.accountId, true)
+                                 .fetch())) {
+      Environment environment = null;
+      while (envIterator.hasNext()) {
+        environment = envIterator.next();
+        String accountId = fetchAccountId(environment.getAccountId(), environment.getAppId());
+        if (isNotBlank(accountId)) {
+          addResourceLookupRecord(environment.getAccountId(), environment.getAppId(), environment.getUuid(),
+              environment.getName(), ENVIRONMENT.name());
+        }
       }
     }
   }
 
   private void addExistingServicesToResourceMap() {
-    HIterator<Service> serviceIterator = new HIterator<>(wingsPersistence.createQuery(Service.class, excludeAuthority)
-                                                             .project(ServiceKeys.uuid, true)
-                                                             .project(ServiceKeys.name, true)
-                                                             .project(ServiceKeys.appId, true)
-                                                             .project(ServiceKeys.accountId, true)
-                                                             .fetch());
-    Service service = null;
-    while (serviceIterator.hasNext()) {
-      service = serviceIterator.next();
-      String accountId = fetchAccountId(service.getAccountId(), service.getAppId());
-      if (isNotBlank(accountId)) {
-        addResourceLookupRecord(
-            service.getAccountId(), service.getAppId(), service.getUuid(), service.getName(), SERVICE.name());
+    try (HIterator<Service> serviceIterator =
+             new HIterator<>(wingsPersistence.createQuery(Service.class, excludeAuthority)
+                                 .project(ServiceKeys.uuid, true)
+                                 .project(ServiceKeys.name, true)
+                                 .project(ServiceKeys.appId, true)
+                                 .project(ServiceKeys.accountId, true)
+                                 .fetch())) {
+      Service service = null;
+      while (serviceIterator.hasNext()) {
+        service = serviceIterator.next();
+        String accountId = fetchAccountId(service.getAccountId(), service.getAppId());
+        if (isNotBlank(accountId)) {
+          addResourceLookupRecord(
+              service.getAccountId(), service.getAppId(), service.getUuid(), service.getName(), SERVICE.name());
+        }
       }
     }
   }
 
   private void addExistingApplicationsToResourceMap() {
-    HIterator<Application> appIterator =
-        new HIterator<>(wingsPersistence.createQuery(Application.class, excludeAuthority)
-                            .project(ApplicationKeys.uuid, true)
-                            .project(ApplicationKeys.name, true)
-                            .project(ApplicationKeys.accountId, true)
-                            .fetch());
-
-    Application application = null;
-    while (appIterator.hasNext()) {
-      application = appIterator.next();
-      addResourceLookupRecord(application.getAccountId(), application.getUuid(), application.getUuid(),
-          application.getName(), APPLICATION.name());
-      appIdToAccId.put(application.getUuid(), application.getAccountId());
+    try (HIterator<Application> appIterator =
+             new HIterator<>(wingsPersistence.createQuery(Application.class, excludeAuthority)
+                                 .project(ApplicationKeys.uuid, true)
+                                 .project(ApplicationKeys.name, true)
+                                 .project(ApplicationKeys.accountId, true)
+                                 .fetch())) {
+      Application application = null;
+      while (appIterator.hasNext()) {
+        application = appIterator.next();
+        addResourceLookupRecord(application.getAccountId(), application.getUuid(), application.getUuid(),
+            application.getName(), APPLICATION.name());
+        appIdToAccId.put(application.getUuid(), application.getAccountId());
+      }
     }
   }
 
   private void initializeExistingResourceLookupSet() {
-    HIterator<ResourceLookup> resourceLookupIterator =
-        new HIterator<>(wingsPersistence.createQuery(ResourceLookup.class, excludeAuthority)
-                            .project(ResourceLookupKeys.resourceId, true)
-                            .fetch());
-
-    while (resourceLookupIterator.hasNext()) {
-      ResourceLookup resourceLookup = resourceLookupIterator.next();
-      existingResourceLookupEntityIds.add(resourceLookup.getResourceId());
+    try (HIterator<ResourceLookup> resourceLookupIterator =
+             new HIterator<>(wingsPersistence.createQuery(ResourceLookup.class, excludeAuthority)
+                                 .project(ResourceLookupKeys.resourceId, true)
+                                 .fetch())) {
+      while (resourceLookupIterator.hasNext()) {
+        ResourceLookup resourceLookup = resourceLookupIterator.next();
+        existingResourceLookupEntityIds.add(resourceLookup.getResourceId());
+      }
     }
   }
 

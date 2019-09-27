@@ -26,10 +26,8 @@ public class AddLoginSettingsToAccountMigration implements Migration {
   @Override
   public void migrate() {
     logger.info("Starting AddLoginSettingsToAccountMigration migration for all accounts.");
-    try {
-      HIterator<Account> accountIterator =
-          new HIterator<>(wingsPersistence.createQuery(Account.class, excludeAuthority).fetch());
-
+    try (HIterator<Account> accountIterator =
+             new HIterator<>(wingsPersistence.createQuery(Account.class, excludeAuthority).fetch())) {
       while (accountIterator.hasNext()) {
         Account account = accountIterator.next();
         try {

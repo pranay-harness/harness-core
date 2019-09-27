@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
+import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.graphql.schema.type.aggregation.QLDataPoint;
@@ -210,9 +211,10 @@ public class InstanceTimeSeriesDataHelper {
   private void executeTimeSeriesQuery(String accountId, String query, List<QLTimeSeriesDataPoint> dataPoints) {
     int retryCount = 0;
     while (retryCount < MAX_RETRY) {
+      ResultSet resultSet = null;
       try (Connection connection = timeScaleDBService.getDBConnection();
            Statement statement = connection.createStatement()) {
-        ResultSet resultSet = statement.executeQuery(query);
+        resultSet = statement.executeQuery(query);
         while (resultSet != null && resultSet.next()) {
           QLTimeSeriesDataPointBuilder dataPointBuilder = QLTimeSeriesDataPoint.builder();
           dataPointBuilder.value(resultSet.getInt("CNT"));
@@ -227,6 +229,8 @@ public class InstanceTimeSeriesDataHelper {
           logger.warn("Failed to execute query=[{}],accountId=[{}],retryCount=[{}]", query, accountId, retryCount);
         }
         retryCount++;
+      } finally {
+        DBUtils.close(resultSet);
       }
     }
   }
@@ -237,9 +241,10 @@ public class InstanceTimeSeriesDataHelper {
     String entityType = groupBy.name();
     Multimap<String, QLReference> idRefMap = HashMultimap.create();
     while (retryCount < MAX_RETRY) {
+      ResultSet resultSet = null;
       try (Connection connection = timeScaleDBService.getDBConnection();
            Statement statement = connection.createStatement()) {
-        ResultSet resultSet = statement.executeQuery(query);
+        resultSet = statement.executeQuery(query);
         long previousTime = -1L;
         List<QLDataPoint> dataPointList = new ArrayList<>();
         while (resultSet != null && resultSet.next()) {
@@ -278,6 +283,8 @@ public class InstanceTimeSeriesDataHelper {
           logger.warn("Failed to execute query=[{}],accountId=[{}],retryCount=[{}]", query, accountId, retryCount);
         }
         retryCount++;
+      } finally {
+        DBUtils.close(resultSet);
       }
     }
   }

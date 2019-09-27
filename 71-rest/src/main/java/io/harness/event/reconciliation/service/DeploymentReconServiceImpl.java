@@ -19,6 +19,7 @@ import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
+import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.MorphiaIterator;
@@ -189,10 +190,11 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
     int totalTries = 0;
     boolean successfulInsert = false;
     while (totalTries <= 3 && !successfulInsert) {
+      ResultSet resultSet = null;
       try (Connection connection = timeScaleDBService.getDBConnection();
            PreparedStatement statement = connection.prepareStatement(FIND_DEPLOYMENT_IN_TSDB)) {
         statement.setString(1, workflowExecution.getUuid());
-        ResultSet resultSet = statement.executeQuery();
+        resultSet = statement.executeQuery();
         if (resultSet.next()) {
           return;
         } else {
@@ -209,6 +211,8 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
         totalTries++;
         logger.warn("Failed to query workflowExecution from TimescaleDB for workflowExecution:[{}], totalTries:[{}]",
             workflowExecution.getUuid(), totalTries, ex);
+      } finally {
+        DBUtils.close(resultSet);
       }
     }
   }
@@ -216,12 +220,13 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
   private long getWFExecutionCountFromTSDB(String accountId, long durationStartTs, long durationEndTs) {
     int totalTries = 0;
     while (totalTries <= 3) {
+      ResultSet resultSet = null;
       try (Connection connection = timeScaleDBService.getDBConnection();
            PreparedStatement statement = connection.prepareStatement(CHECK_MISSING_DATA_QUERY)) {
         statement.setString(1, accountId);
         statement.setTimestamp(2, new Timestamp(durationStartTs), utils.getDefaultCalendar());
         statement.setTimestamp(3, new Timestamp(durationEndTs), utils.getDefaultCalendar());
-        ResultSet resultSet = statement.executeQuery();
+        resultSet = statement.executeQuery();
         if (resultSet.next()) {
           return resultSet.getLong(1);
         } else {
@@ -232,6 +237,8 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
         logger.warn(
             "Failed to execute executionCount from TimeScaleDB for accountID:[{}] in duration:[{}-{}], totalTries:[{}]",
             accountId, new Date(durationStartTs), new Date(durationEndTs), totalTries, ex);
+      } finally {
+        DBUtils.close(resultSet);
       }
     }
     return 0;
@@ -239,7 +246,6 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
 
   private void deleteDuplicates(String accountId, long durationStartTs, long durationEndTs, List<String> executionIDs) {
     int totalTries = 0;
-    List<String> duplicates = new ArrayList<>();
     while (totalTries <= 3) {
       try (Connection connection = timeScaleDBService.getDBConnection();
            Statement statement = connection.createStatement()) {
@@ -268,12 +274,13 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
     int totalTries = 0;
     List<String> duplicates = new ArrayList<>();
     while (totalTries <= 3) {
+      ResultSet resultSet = null;
       try (Connection connection = timeScaleDBService.getDBConnection();
            PreparedStatement statement = connection.prepareStatement(CHECK_DUPLICATE_DATA_QUERY)) {
         statement.setString(1, accountId);
         statement.setTimestamp(2, new Timestamp(durationStartTs), utils.getDefaultCalendar());
         statement.setTimestamp(3, new Timestamp(durationEndTs), utils.getDefaultCalendar());
-        ResultSet resultSet = statement.executeQuery();
+        resultSet = statement.executeQuery();
         while (resultSet.next()) {
           duplicates.add(resultSet.getString(1));
         }
@@ -284,6 +291,8 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
         logger.warn(
             "Failed to execute executionCount from TimeScaleDB for accountID:[{}] in duration:[{}-{}], totalTries:[{}]",
             accountId, new Date(durationStartTs), new Date(durationEndTs), totalTries, ex);
+      } finally {
+        DBUtils.close(resultSet);
       }
     }
     return duplicates;
