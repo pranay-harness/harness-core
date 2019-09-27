@@ -617,7 +617,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                   infrastructureMapping.setUuid(null);
                   infrastructureMapping.setEnvId(savedClonedEnv.getUuid());
                   infrastructureMapping.setServiceTemplateId(clonedServiceTemplate.getUuid());
-                  infrastructureMappingService.save(infrastructureMapping);
+                  infrastructureMappingService.save(infrastructureMapping, true);
                 } catch (Exception e) {
                   logger.error("Failed to clone infrastructure mapping name {}, id {} of environment {}",
                       infrastructureMapping.getName(), infrastructureMapping.getUuid(),
