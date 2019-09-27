@@ -123,6 +123,7 @@ public class TriggerDeploymentExecution {
         PipelineAction pipelineAction = (PipelineAction) deploymentTrigger.getAction();
         executionArgs.setOrchestrationId(pipelineAction.getPipelineId());
         executionArgs.setWorkflowType(PIPELINE);
+        executionArgs.setPipelineId(pipelineAction.getPipelineId());
         executionArgs.setExcludeHostsWithSameArtifact(pipelineAction.getTriggerArgs().isExcludeHostsWithSameArtifact());
 
         return triggerPipelineDeployment(deploymentTrigger, triggerExecution, executionArgs);
@@ -208,18 +209,17 @@ public class TriggerDeploymentExecution {
         "Triggering  execution of appId {} with  pipeline id {}", trigger.getAppId(), pipelineAction.getPipelineId());
     resolveTriggerPipelineVariables(trigger, executionArgs);
     if (checkFileContentOptionSelected(trigger)) {
-      workflowExecution = webhookTriggerPipelineExecution(trigger, triggerExecution, executionArgs, pipelineAction);
+      workflowExecution = webhookTriggerPipelineExecution(trigger, triggerExecution, executionArgs);
     } else {
-      workflowExecution = workflowExecutionService.triggerPipelineExecution(
-          trigger.getAppId(), pipelineAction.getPipelineId(), executionArgs, null);
+      workflowExecution = workflowExecutionService.triggerEnvExecution(trigger.getAppId(), null, executionArgs, null);
     }
     logger.info("Pipeline execution of appId {} with  pipeline id {} triggered", trigger.getAppId(),
         pipelineAction.getPipelineId());
     return workflowExecution;
   }
 
-  private WorkflowExecution webhookTriggerPipelineExecution(DeploymentTrigger trigger,
-      TriggerExecution triggerExecution, ExecutionArgs executionArgs, PipelineAction pipelineAction) {
+  private WorkflowExecution webhookTriggerPipelineExecution(
+      DeploymentTrigger trigger, TriggerExecution triggerExecution, ExecutionArgs executionArgs) {
     logger.info("Check file content option selected. Invoking delegate task to verify the file content.");
     // Harsh TODO add webhook condition
     TriggerExecution lastTriggerExecution = webhookTriggerProcessor.fetchLastExecutionForContentChanged(null);
@@ -227,8 +227,7 @@ public class TriggerDeploymentExecution {
       triggerExecution.setExecutionArgs(executionArgs);
       triggerExecution.setStatus(Status.SUCCESS);
       triggerExecutionService.save(triggerExecution);
-      return workflowExecutionService.triggerPipelineExecution(
-          trigger.getAppId(), pipelineAction.getPipelineId(), executionArgs, null);
+      return workflowExecutionService.triggerEnvExecution(trigger.getAppId(), null, executionArgs, null);
     } else {
       triggerExecution.setExecutionArgs(executionArgs);
       webhookTriggerProcessor.initiateTriggerContentChangeDelegateTask(
