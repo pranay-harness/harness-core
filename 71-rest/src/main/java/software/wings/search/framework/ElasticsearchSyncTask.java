@@ -105,6 +105,7 @@ public abstract class ElasticsearchSyncTask {
     for (SearchEntity<?> searchEntity : searchEntityMap.values()) {
       ChangeHandler changeHandler = searchEntity.getChangeHandler();
       boolean isChangeHandled = changeHandler.handleChange(changeEvent);
+
       if (!isChangeHandled) {
         logger.error(String.format("ChangeEvent %s could not be processed for entity %s", changeEvent.toString(),
             searchEntity.getClass().getCanonicalName()));

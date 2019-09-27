@@ -12,8 +12,6 @@ import software.wings.search.framework.changestreams.ChangeEvent;
 
 @Slf4j
 public class ElasticsearchRealtimeSyncTask extends ElasticsearchSyncTask {
-  private static final Thread syncThread = Thread.currentThread();
-
   public boolean run() {
     logger.info("Initializing change listeners for search entities");
 
@@ -24,7 +22,7 @@ public class ElasticsearchRealtimeSyncTask extends ElasticsearchSyncTask {
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       logger.error("Realtime sync stopped. stopping change listeners", e);
-      stopChangeListeners();
+      super.stopChangeListeners();
       return false;
     }
     return true;
@@ -33,7 +31,8 @@ public class ElasticsearchRealtimeSyncTask extends ElasticsearchSyncTask {
   public void handleChangeEvent(ChangeEvent changeEvent) {
     boolean isRunningSuccessfully = processChange(changeEvent);
     if (!isRunningSuccessfully) {
-      syncThread.interrupt();
+      logger.error("Realtime sync failed. Stopping change listeners");
+      super.stopChangeListeners();
     }
   }
 }

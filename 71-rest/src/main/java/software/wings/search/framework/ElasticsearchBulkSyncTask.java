@@ -14,6 +14,7 @@ import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.CreateIndexResponse;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
+import software.wings.audit.AuditHeader;
 import software.wings.search.framework.changestreams.ChangeEvent;
 
 import java.io.IOException;
@@ -126,20 +127,31 @@ public class ElasticsearchBulkSyncTask extends ElasticsearchSyncTask {
     if (!isIndexRecreated) {
       return false;
     }
-
+    if (searchEntity.getSourceEntityClass().equals(AuditHeader.class)) {
+      return true;
+    }
     Class<T> sourceEntityClass = searchEntity.getSourceEntityClass();
     try (HIterator<T> iterator = new HIterator<>(wingsPersistence.createQuery(sourceEntityClass).fetch())) {
       while (iterator.hasNext()) {
         final T object = iterator.next();
         EntityBaseView entityBaseView = searchEntity.getView(object);
-        Optional<String> jsonString = SearchEntityUtils.convertToJson(entityBaseView);
-        if (!jsonString.isPresent()) {
+        if (!upsertEntityBaseView(searchEntity, entityBaseView)) {
           return false;
         }
-        boolean isUpserted = searchDao.upsertDocument(searchEntity.getType(), entityBaseView.getId(), jsonString.get());
-        if (!isUpserted) {
-          return false;
-        }
+      }
+    }
+    return true;
+  }
+
+  private boolean upsertEntityBaseView(SearchEntity searchEntity, EntityBaseView entityBaseView) {
+    if (entityBaseView != null) {
+      Optional<String> jsonString = SearchEntityUtils.convertToJson(entityBaseView);
+      if (!jsonString.isPresent()) {
+        return false;
+      }
+      boolean isUpserted = searchDao.upsertDocument(searchEntity.getType(), entityBaseView.getId(), jsonString.get());
+      if (!isUpserted) {
+        return false;
       }
     }
     return true;
@@ -202,7 +214,7 @@ public class ElasticsearchBulkSyncTask extends ElasticsearchSyncTask {
       hasMigrationSucceeded = areChangesProcessed && areVersionsUpdated;
     }
 
-    logger.info("Calling change tracker to close change listeners");
+    logger.info("Calling change tracker to close change listeners after bulk sync was completed.");
     super.stopChangeListeners();
 
     return hasMigrationSucceeded;

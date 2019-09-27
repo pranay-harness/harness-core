@@ -54,7 +54,6 @@ public final class SearchEntityUtils {
   public static Optional<String> convertToJson(Object object) {
     ObjectMapper mapper = new ObjectMapper();
     mapper.setSerializationInclusion(Include.NON_NULL);
-    mapper.setSerializationInclusion(Include.NON_EMPTY);
     try {
       String jsonString = mapper.writeValueAsString(object);
       return Optional.of(jsonString);
