@@ -24,6 +24,7 @@ import static software.wings.common.Constants.AMI_SETUP_COMMAND_NAME;
 import static software.wings.common.Constants.ASG_COMMAND_NAME;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.PCF_RESIZE;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.PCF_SETUP;
+import static software.wings.sm.states.AwsLambdaState.AWS_LAMBDA_COMMAND_NAME;
 import static software.wings.utils.PowerShellScriptsLoader.psScriptMap;
 
 import com.google.common.collect.ImmutableMap;
@@ -35,7 +36,6 @@ import software.wings.beans.command.CommandType;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
 import software.wings.beans.command.SetupEnvCommandUnit;
-import software.wings.common.Constants;
 import software.wings.utils.PowerShellScriptsLoader.PsScript;
 
 import java.util.List;
@@ -509,11 +509,11 @@ public enum ArtifactType {
       return aCommand()
           .withCommandType(CommandType.INSTALL)
           .withGraph(aGraph()
-                         .withGraphName(Constants.AWS_LAMBDA_COMMAND_NAME)
+                         .withGraphName(AWS_LAMBDA_COMMAND_NAME)
                          .addNodes(GraphNode.builder()
                                        .origin(true)
                                        .id(UUIDGenerator.graphIdGenerator("node"))
-                                       .name(Constants.AWS_LAMBDA_COMMAND_NAME)
+                                       .name(AWS_LAMBDA_COMMAND_NAME)
                                        .type(AWS_LAMBDA.name())
                                        .build())
                          .buildPipeline())

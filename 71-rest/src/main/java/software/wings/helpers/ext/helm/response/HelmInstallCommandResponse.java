@@ -15,11 +15,13 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public class HelmInstallCommandResponse extends HelmCommandResponse {
   private List<ContainerInfo> containerInfoList;
+  private HelmChartInfo helmChartInfo;
 
   @Builder
-  public HelmInstallCommandResponse(
-      CommandExecutionStatus commandExecutionStatus, String output, List<ContainerInfo> containerInfoList) {
+  public HelmInstallCommandResponse(CommandExecutionStatus commandExecutionStatus, String output,
+      List<ContainerInfo> containerInfoList, HelmChartInfo helmChartInfo) {
     super(commandExecutionStatus, output);
     this.containerInfoList = containerInfoList;
+    this.helmChartInfo = helmChartInfo;
   }
 }

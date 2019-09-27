@@ -48,19 +48,25 @@ import software.wings.helpers.ext.helm.request.HelmCommandRequest.HelmCommandTyp
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
+import software.wings.helpers.ext.helm.response.HelmChartInfo;
+import software.wings.helpers.ext.helm.response.HelmChartInfo.HelmChartInfoBuilder;
 import software.wings.helpers.ext.helm.response.HelmCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmListReleasesCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
 import software.wings.helpers.ext.helm.response.ReleaseInfo;
 import software.wings.helpers.ext.helm.response.RepoListInfo;
+import software.wings.helpers.ext.helm.response.SearchInfo;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -85,13 +91,18 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   @Inject private DelegateLogService delegateLogService;
   @Inject private GitClient gitClient;
   @Inject private HelmTaskHelper helmTaskHelper;
+  @Inject private HelmHelper helmHelper;
 
   private static final String ACTIVITY_ID = "ACTIVITY_ID";
   private static final String WORKING_DIR = "./repository/helm/source/${" + ACTIVITY_ID + "}";
+  private static final String CHARTS_YAML_KEY = "Chart.yaml";
+  private static final String VERSION_KEY = "version:";
+  private static final String NAME_KEY = "name:";
 
   @Override
   public HelmCommandResponse deploy(HelmInstallCommandRequest commandRequest) throws IOException {
     LogCallback executionLogCallback = commandRequest.getExecutionLogCallback();
+    HelmChartInfo helmChartInfo = null;
 
     try {
       HelmInstallCommandResponse commandResponse;
@@ -140,6 +151,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       executionLogCallback =
           markDoneAndStartNew(commandRequest, executionLogCallback, HelmDummyCommandUnit.InstallUpgrade);
 
+      helmChartInfo = getHelmChartDetails(commandRequest);
+
       if (checkNewHelmInstall(commandRequest)) {
         executionLogCallback.saveExecutionLog("No previous deployment found for release. Installing chart");
         commandResponse = helmClient.install(commandRequest);
@@ -148,6 +161,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
         commandResponse = helmClient.upgrade(commandRequest);
       }
       executionLogCallback.saveExecutionLog(commandResponse.getOutput());
+      commandResponse.setHelmChartInfo(helmChartInfo);
 
       if (commandResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
         return commandResponse;
@@ -172,7 +186,11 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       logger.error(msg, e);
       executionLogCallback.saveExecutionLog(
           "Timed out waiting for controller to reach in steady state", LogLevel.ERROR);
-      return new HelmCommandResponse(CommandExecutionStatus.FAILURE, ExceptionUtils.getMessage(e));
+      return HelmInstallCommandResponse.builder()
+          .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+          .output(ExceptionUtils.getMessage(e))
+          .helmChartInfo(helmChartInfo)
+          .build();
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -180,7 +198,11 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       String msg = format("Exception in deploying helm chart " + exceptionMessage);
       logger.error(msg, e);
       executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
-      return new HelmCommandResponse(CommandExecutionStatus.FAILURE, exceptionMessage);
+      return HelmInstallCommandResponse.builder()
+          .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+          .output(exceptionMessage)
+          .helmChartInfo(helmChartInfo)
+          .build();
     } finally {
       if (checkDeleteReleaseNeeded(commandRequest)) {
         executionLogCallback.saveExecutionLog("Deployment failed.");
@@ -618,5 +640,173 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
   public String getWorkingDirectory(HelmCommandRequest commandRequest) {
     return replace(WORKING_DIR, "${" + ACTIVITY_ID + "}", commandRequest.getActivityId());
+  }
+
+  private HelmChartInfo getHelmChartDetails(HelmInstallCommandRequest request) {
+    K8sDelegateManifestConfig repoConfig = request.getRepoConfig();
+    HelmChartInfo helmChartInfo = null;
+
+    try {
+      if (repoConfig == null) {
+        helmChartInfo = getHelmChartInfoFromChartSpec(request);
+      } else {
+        switch (repoConfig.getManifestStoreTypes()) {
+          case HelmSourceRepo:
+            helmChartInfo = getHelmChartInfoFromChartsYamlFile(request);
+            helmChartInfo.setRepoUrl(request.getRepoConfig().getGitConfig().getRepoUrl());
+            break;
+
+          case HelmChartRepo:
+            helmChartInfo = getHelmChartInfoFromChartsYamlFile(request);
+            helmChartInfo.setRepoUrl(
+                helmHelper.getRepoUrlForHelmRepoConfig(request.getRepoConfig().getHelmChartConfigParams()));
+            break;
+
+          default:
+            logger.warn("Unsupported store type: " + repoConfig.getManifestStoreTypes());
+        }
+      }
+    } catch (Exception ex) {
+      logger.info("Exception while getting helm chart info ", ex);
+    }
+
+    return helmChartInfo;
+  }
+
+  private HelmChartInfo getHelmChartInfoFromChartsYamlFile(HelmInstallCommandRequest request) throws IOException {
+    String chartYamlPath = Paths.get(request.getWorkingDir(), CHARTS_YAML_KEY).toString();
+
+    String chartVersion = null;
+    String chartName = null;
+    boolean versionFound = false;
+    boolean nameFound = false;
+
+    try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(chartYamlPath), "UTF-8"))) {
+      String line;
+
+      while ((line = br.readLine()) != null) {
+        if (!versionFound && line.startsWith(VERSION_KEY)) {
+          chartVersion = line.substring(VERSION_KEY.length() + 1);
+          versionFound = true;
+        }
+
+        if (!nameFound && line.startsWith(NAME_KEY)) {
+          chartName = line.substring(NAME_KEY.length() + 1);
+          nameFound = true;
+        }
+
+        if (versionFound && nameFound) {
+          break;
+        }
+      }
+    }
+
+    HelmChartInfoBuilder helmChartInfoBuilder = HelmChartInfo.builder().version(chartVersion).name(chartName);
+    return helmChartInfoBuilder.build();
+  }
+
+  private String getChartInfoForSpecWithRepoUrl(HelmInstallCommandRequest request) throws Exception {
+    if (isNotBlank(request.getChartSpecification().getChartVersion())) {
+      return request.getChartSpecification().getChartName();
+    }
+
+    HelmCliResponse cliResponse = helmClient.getHelmRepoList(request);
+    if (cliResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.FAILURE)) {
+      return null;
+    }
+
+    List<RepoListInfo> repoListInfos = parseHelmAddRepoOutput(cliResponse.getOutput());
+    Optional<RepoListInfo> repoListInfo =
+        repoListInfos.stream()
+            .filter(repoListInfoObject
+                -> repoListInfoObject.getRepoUrl().equals(request.getChartSpecification().getChartUrl()))
+            .findFirst();
+
+    if (!repoListInfo.isPresent()) {
+      return null;
+    }
+
+    return repoListInfo.get().getRepoName() + "/" + request.getChartSpecification().getChartName();
+  }
+
+  private String getChartVersion(HelmInstallCommandRequest request, String chartInfo) throws Exception {
+    HelmChartSpecification chartSpecification = request.getChartSpecification();
+
+    if (isNotBlank(chartSpecification.getChartVersion())) {
+      return chartSpecification.getChartVersion();
+    }
+
+    HelmCliResponse helmCliResponse = helmClient.searchChart(request, chartInfo);
+    List<SearchInfo> searchInfos = parseHelmSearchCommandOutput(helmCliResponse.getOutput());
+
+    if (isEmpty(searchInfos)) {
+      return null;
+    }
+    SearchInfo searchInfo = searchInfos.get(0);
+    return searchInfo.getChartVersion();
+  }
+
+  private String getChartName(String chartInfo) {
+    int index = chartInfo.indexOf('/');
+    if (index == -1) {
+      return chartInfo;
+    }
+
+    return chartInfo.substring(chartInfo.indexOf('/') + 1);
+  }
+
+  private String getChartUrl(String url, String chartInfo) {
+    if (isNotBlank(url)) {
+      return url;
+    }
+
+    int index = chartInfo.indexOf('/');
+    if (index == -1) {
+      return null;
+    }
+
+    return chartInfo.substring(0, chartInfo.indexOf('/'));
+  }
+
+  private HelmChartInfo getHelmChartInfoFromChartSpec(HelmInstallCommandRequest request) throws Exception {
+    String chartInfo;
+    HelmChartSpecification chartSpecification = request.getChartSpecification();
+
+    if (isBlank(chartSpecification.getChartUrl())) {
+      chartInfo = chartSpecification.getChartName();
+    } else {
+      chartInfo = getChartInfoForSpecWithRepoUrl(request);
+    }
+
+    if (isBlank(chartInfo)) {
+      return null;
+    }
+
+    return HelmChartInfo.builder()
+        .name(getChartName(chartInfo))
+        .version(getChartVersion(request, chartInfo))
+        .repoUrl(getChartUrl(chartSpecification.getChartUrl(), chartInfo))
+        .build();
+  }
+
+  private List<SearchInfo> parseHelmSearchCommandOutput(String searchOutput) throws IOException {
+    if (isEmpty(searchOutput)) {
+      return new ArrayList<>();
+    }
+
+    CSVFormat csvFormat = CSVFormat.RFC4180.withFirstRecordAsHeader().withDelimiter('\t').withTrim();
+    return CSVParser.parse(searchOutput, csvFormat)
+        .getRecords()
+        .stream()
+        .map(this ::convertSearchCsvRecordToSearchInfo)
+        .collect(Collectors.toList());
+  }
+
+  private SearchInfo convertSearchCsvRecordToSearchInfo(CSVRecord releaseRecord) {
+    return SearchInfo.builder()
+        .name(releaseRecord.get("NAME"))
+        .chartVersion(releaseRecord.get("CHART VERSION"))
+        .appVersion(releaseRecord.get("DESCRIPTION"))
+        .build();
   }
 }

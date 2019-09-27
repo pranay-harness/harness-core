@@ -187,7 +187,11 @@ public class AwsLambdaHelperServiceDelegateImpl
               ERROR);
           status = FAILED;
           functionResultList.add(
-              AwsLambdaFunctionResult.builder().success(false).errorMessage(ex.getMessage()).build());
+              AwsLambdaFunctionResult.builder()
+                  .success(false)
+                  .errorMessage(ex.getMessage())
+                  .functionMeta(FunctionMeta.builder().functionName(functionParams.getFunctionName()).build())
+                  .build());
         }
       }
       responseBuilder.executionStatus(status);

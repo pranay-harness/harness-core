@@ -11,11 +11,13 @@ import software.wings.api.WorkflowElement;
 import software.wings.beans.ApprovalAuthorization;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ArtifactVariable;
+import software.wings.beans.AwsLambdaExecutionSummary;
 import software.wings.beans.BuildExecutionSummary;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.GraphNode;
+import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.StateExecutionElement;
@@ -186,4 +188,9 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
 
   List<WorkflowExecution> getLatestExecutionsFor(
       String appId, String infraMappingId, int limit, List<String> fieldList, boolean forInclusion);
+
+  void refreshHelmExecutionSummary(String workflowExecutionId, HelmExecutionSummary helmExecutionSummary);
+
+  void refreshAwsLambdaExecutionSummary(
+      String workflowExecutionId, List<AwsLambdaExecutionSummary> awsLambdaExecutionSummaries);
 }

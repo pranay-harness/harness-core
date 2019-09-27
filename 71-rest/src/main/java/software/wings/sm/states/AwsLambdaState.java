@@ -13,6 +13,7 @@ import static software.wings.api.CommandStateExecutionData.Builder.aCommandState
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.TaskType.AWS_LAMBDA_TASK;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
+import static software.wings.sm.StateType.AWS_LAMBDA_STATE;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Maps;
@@ -33,6 +34,7 @@ import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.api.AwsLambdaContextElement;
 import software.wings.api.AwsLambdaContextElement.FunctionMeta;
 import software.wings.api.CommandStateExecutionData;
@@ -42,6 +44,7 @@ import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.AwsLambdaExecutionSummary;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
@@ -76,12 +79,12 @@ import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
-import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.LambdaConvention;
@@ -92,6 +95,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class AwsLambdaState extends State {
   @Inject protected transient SettingsService settingsService;
   @Inject protected transient ServiceResourceService serviceResourceService;
@@ -105,9 +109,13 @@ public class AwsLambdaState extends State {
   @Inject private transient ArtifactStreamService artifactStreamService;
   @Inject private transient EncryptionService encryptionService;
   @Inject private transient ServiceTemplateHelper serviceTemplateHelper;
+  @Inject private WorkflowExecutionService workflowExecutionService;
+
+  public static final String AWS_LAMBDA_COMMAND_NAME = "Deploy AWS Lambda Function";
+
   @Attributes(title = "Command")
-  @DefaultValue(Constants.AWS_LAMBDA_COMMAND_NAME)
-  private String commandName = Constants.AWS_LAMBDA_COMMAND_NAME;
+  @DefaultValue(AWS_LAMBDA_COMMAND_NAME)
+  private String commandName = AWS_LAMBDA_COMMAND_NAME;
 
   @Attributes(title = "Lambda Function Alias", required = true)
   @DefaultValue("${env.name}")
@@ -124,7 +132,7 @@ public class AwsLambdaState extends State {
    * @param name the name
    */
   public AwsLambdaState(String name) {
-    super(name, StateType.AWS_LAMBDA_STATE.name());
+    super(name, AWS_LAMBDA_STATE.name());
   }
 
   /**
@@ -168,8 +176,13 @@ public class AwsLambdaState extends State {
     CommandStateExecutionData stateExecutionData = (CommandStateExecutionData) context.getStateExecutionData();
     stateExecutionData.setDelegateMetaInfo(wfResponse.getDelegateMetaInfo());
 
-    List<FunctionMeta> functionMetas =
-        wfResponse.getFunctionResults().stream().map(AwsLambdaFunctionResult::getFunctionMeta).collect(toList());
+    updateAwsLambdaExecutionSummaries(context, wfResponse);
+
+    List<FunctionMeta> functionMetas = wfResponse.getFunctionResults()
+                                           .stream()
+                                           .filter(result -> result.isSuccess())
+                                           .map(AwsLambdaFunctionResult::getFunctionMeta)
+                                           .collect(toList());
     AwsConfig awsConfig = wfResponse.getAwsConfig();
     String region = wfResponse.getRegion();
     stateExecutionData.setAliases(aliases);
@@ -188,6 +201,33 @@ public class AwsLambdaState extends State {
         .contextElement(awsLambdaContextElement)
         .notifyElement(awsLambdaContextElement)
         .build();
+  }
+
+  private void updateAwsLambdaExecutionSummaries(ExecutionContext context, AwsLambdaExecuteWfResponse wfResponse) {
+    try {
+      if (!AWS_LAMBDA_STATE.name().equals(this.getStateType())) {
+        return;
+      }
+
+      List<AwsLambdaFunctionResult> functionResults = wfResponse.getFunctionResults();
+      if (isEmpty(functionResults)) {
+        return;
+      }
+
+      List<AwsLambdaExecutionSummary> awsLambdaExecutionSummaries = new ArrayList<>();
+
+      for (AwsLambdaFunctionResult functionResult : functionResults) {
+        AwsLambdaExecutionSummary summary = AwsLambdaExecutionSummary.builder()
+                                                .success(functionResult.isSuccess())
+                                                .functionMeta(functionResult.getFunctionMeta())
+                                                .build();
+        awsLambdaExecutionSummaries.add(summary);
+      }
+      workflowExecutionService.refreshAwsLambdaExecutionSummary(
+          context.getWorkflowExecutionId(), awsLambdaExecutionSummaries);
+    } catch (Exception ex) {
+      logger.info("Exception while updating awsLambda execution summaries", ex);
+    }
   }
 
   private ExecutionResponse executeInternal(ExecutionContext context) {

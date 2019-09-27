@@ -65,6 +65,8 @@ public class HelmConstants {
   public static final long DEFAULT_HELM_COMMAND_TIMEOUT = TimeUnit.MINUTES.toMillis(30);
   public static final String DEFAULT_TILLER_CONNECTION_TIMEOUT_SECONDS = "60"; // seconds
 
+  public static final String HELM_SEARCH_COMMAND_TEMPLATE = "KUBECONFIG=${KUBECONFIG_PATH} helm search ${CHART_INFO}";
+
   public static final String DEFAULT_HELM_VALUE_YAML = "# Enter your Helm value YAML\n"
       + "#\n"
       + "# Placeholders:\n"

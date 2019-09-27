@@ -54,12 +54,14 @@ import software.wings.beans.Environment;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
+import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.StoreType;
@@ -76,12 +78,15 @@ import software.wings.common.TemplateExpressionProcessor;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
+import software.wings.helpers.ext.helm.HelmHelper;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest.HelmInstallCommandRequestBuilder;
 import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmValuesFetchTaskParameters;
+import software.wings.helpers.ext.helm.response.HelmChartInfo;
+import software.wings.helpers.ext.helm.response.HelmCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
@@ -101,6 +106,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -149,6 +155,8 @@ public class HelmDeployState extends State {
   @Inject private transient HelmChartConfigHelperService helmChartConfigHelperService;
   @Inject private transient ServiceTemplateHelper serviceTemplateHelper;
   @Inject private transient K8sStateHelper k8sStateHelper;
+  @Inject private transient WorkflowExecutionService workflowExecutionService;
+  @Inject private transient HelmHelper helmHelper;
 
   @DefaultValue("10") private int steadyStateTimeout; // Minutes
 
@@ -693,6 +701,8 @@ public class HelmDeployState extends State {
                                                           .currentTaskType(HELM_COMMAND_TASK)
                                                           .build();
 
+    setHelmExecutionSummary(context, releaseName, helmChartSpecification, repoConfig);
+
     if (helmChartSpecification != null) {
       stateExecutionData.setChartName(helmChartSpecification.getChartName());
       stateExecutionData.setChartRepositoryUrl(helmChartSpecification.getChartUrl());
@@ -821,16 +831,18 @@ public class HelmDeployState extends State {
                                                             .errorMessage(executionResponse.getErrorMessage())
                                                             .stateExecutionData(stateExecutionData);
 
-    if (executionResponse.getHelmCommandResponse() == null) {
+    HelmCommandResponse helmCommandResponse = executionResponse.getHelmCommandResponse();
+    if (helmCommandResponse == null) {
       logger.info("Helm command task failed with status " + executionResponse.getCommandExecutionStatus().toString()
           + " with error message " + executionResponse.getErrorMessage());
 
       return executionResponseBuilder.build();
     }
 
-    if (CommandExecutionStatus.SUCCESS.equals(executionResponse.getHelmCommandResponse().getCommandExecutionStatus())) {
-      HelmInstallCommandResponse helmInstallCommandResponse =
-          (HelmInstallCommandResponse) executionResponse.getHelmCommandResponse();
+    updateHelmExecutionSummary(context, helmCommandResponse);
+
+    if (CommandExecutionStatus.SUCCESS.equals(helmCommandResponse.getCommandExecutionStatus())) {
+      HelmInstallCommandResponse helmInstallCommandResponse = (HelmInstallCommandResponse) helmCommandResponse;
 
       if (helmInstallCommandResponse != null) {
         List<InstanceStatusSummary> instanceStatusSummaries = containerDeploymentHelper.getInstanceStatusSummaries(
@@ -1015,5 +1027,58 @@ public class HelmDeployState extends State {
     helmValuesFetchTaskParameters.setHelmChartConfigTaskParams(
         helmChartConfigHelperService.getHelmChartConfigTaskParams(context, applicationManifest));
     return helmValuesFetchTaskParameters;
+  }
+
+  private void setHelmExecutionSummary(ExecutionContext context, String releaseName,
+      HelmChartSpecification helmChartSpec, K8sDelegateManifestConfig repoConfig) {
+    try {
+      if (!HELM_DEPLOY.name().equals(this.getStateType())) {
+        return;
+      }
+
+      HelmExecutionSummary summary = helmHelper.prepareHelmExecutionSummary(releaseName, helmChartSpec, repoConfig);
+      workflowExecutionService.refreshHelmExecutionSummary(context.getWorkflowExecutionId(), summary);
+    } catch (Exception ex) {
+      logger.info("Exception while setting helm execution summary", ex);
+    }
+  }
+
+  private void updateHelmExecutionSummary(ExecutionContext context, HelmCommandResponse helmCommandResponse) {
+    try {
+      if (HELM_DEPLOY.name().equals(this.getStateType()) && helmCommandResponse instanceof HelmInstallCommandResponse) {
+        HelmInstallCommandResponse helmInstallCommandResponse = (HelmInstallCommandResponse) helmCommandResponse;
+        HelmChartInfo helmChartInfo = helmInstallCommandResponse.getHelmChartInfo();
+        if (helmChartInfo == null) {
+          return;
+        }
+
+        WorkflowExecution workflowExecution =
+            workflowExecutionService.getWorkflowExecution(context.getAppId(), context.getWorkflowExecutionId());
+        if (workflowExecution == null) {
+          return;
+        }
+
+        HelmExecutionSummary summary = workflowExecution.getHelmExecutionSummary();
+        if (summary.getHelmChartInfo() == null) {
+          summary.setHelmChartInfo(HelmChartInfo.builder().build());
+        }
+
+        if (isNotBlank(helmChartInfo.getName())) {
+          summary.getHelmChartInfo().setName(helmChartInfo.getName());
+        }
+
+        if (isNotBlank(helmChartInfo.getVersion())) {
+          summary.getHelmChartInfo().setVersion(helmChartInfo.getVersion());
+        }
+
+        if (isNotBlank(helmChartInfo.getRepoUrl())) {
+          summary.getHelmChartInfo().setRepoUrl(helmChartInfo.getRepoUrl());
+        }
+
+        workflowExecutionService.refreshHelmExecutionSummary(context.getWorkflowExecutionId(), summary);
+      }
+    } catch (Exception ex) {
+      logger.info("Exception while updating helm execution summary", ex);
+    }
   }
 }
