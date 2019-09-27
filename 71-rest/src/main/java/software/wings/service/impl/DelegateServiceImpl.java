@@ -168,7 +168,6 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
-import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -221,7 +220,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     cfg.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
   }
 
-  public static final long VALIDATION_TIMEOUT = TimeUnit.SECONDS.toMillis(12);
+  private static final long VALIDATION_TIMEOUT = TimeUnit.SECONDS.toMillis(12);
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
@@ -238,7 +237,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private InfraDownloadService infraDownloadService;
   @Inject private DelegateProfileService delegateProfileService;
-  @Inject private LearningEngineService learningEngineService;
   @Inject private ManagerDecryptionService managerDecryptionService;
   @Inject private SecretManager secretManager;
   @Inject private ExpressionEvaluator evaluator;
@@ -1453,7 +1451,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       }
 
       if (completedTask == null) {
-        logger.info("Task {} was deleted while waiting for completion", delegateTask.getUuid());
+        logger.info("Task was deleted while waiting for completion");
         throw new WingsException(ErrorCode.INVALID_ARGUMENT)
             .addParam("args", "Task was deleted while waiting for completion");
       }
@@ -1464,7 +1462,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
             .addParam("name", "Harness delegate");
       }
 
-      logger.info("Returning response to calling function for delegate task [{}] ", delegateTask.getUuid());
+      logger.info("Returning response to calling function for delegate task");
     }
     return (T) responseData;
   }
@@ -1557,12 +1555,11 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                          .collect(toList());
 
     if (activeDelegates.isEmpty()) {
-      logger.info("No delegates are active for the account: {}", task.getAccountId());
+      logger.info("No delegates are active for the account");
       alertService.openAlert(task.getAccountId(), GLOBAL_APP_ID, AlertType.NoActiveDelegates,
           NoActiveDelegatesAlert.builder().accountId(task.getAccountId()).build());
     } else if (eligibleDelegates.isEmpty()) {
-      logger.warn("{} delegates active but no delegates are eligible to execute task [{}:{}] for the accountId: {}",
-          activeDelegates.size(), task.getUuid(), task.getData().getTaskType(), task.getAccountId());
+      logger.warn("{} delegates active but no delegates are eligible to execute task", activeDelegates.size());
       alertService.openAlert(task.getAccountId(), task.getAppId(), NoEligibleDelegates,
           NoEligibleDelegatesAlert.builder()
               .accountId(task.getAccountId())
@@ -1575,8 +1572,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
               .build());
     }
 
-    logger.info("{} delegates {} eligible to execute task {}", eligibleDelegates.size(), eligibleDelegates,
-        task.getData().getTaskType());
+    logger.info("{} delegates {} eligible to execute task", eligibleDelegates.size(), eligibleDelegates);
     return eligibleDelegates;
   }
 
@@ -1584,7 +1580,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   public DelegatePackage acquireDelegateTask(String accountId, String delegateId, String taskId) {
     try (AutoLogContext ignore1 = new TaskLogContext(taskId); AutoLogContext ignore2 = new AccountLogContext(accountId);
          AutoLogContext ignore3 = new DelegateLogContext(delegateId)) {
-      logger.info("Acquiring delegate task {} for delegate {}", taskId, delegateId);
+      logger.info("Acquiring delegate task");
       DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
       if (delegateTask == null) {
         return null;
@@ -1592,7 +1588,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
       try (AutoLogContext ignore4 = new TaskLogContext(taskId, delegateTask.getData().getTaskType())) {
         if (!assignDelegateService.canAssign(delegateId, delegateTask)) {
-          logger.info("Delegate {} is not scoped for task {}", delegateId, taskId);
+          logger.info("Delegate is not scoped for task");
           ensureDelegateAvailableToExecuteTask(delegateTask); // Raises an alert if there are no eligible delegates.
           return null;
         }
@@ -1603,12 +1599,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
           setValidationStarted(delegateId, delegateTask);
           return DelegatePackage.builder().delegateTask(delegateTask).build();
         } else {
-          logger.info("Delegate {} is blacklisted for task {}", delegateId, taskId);
+          logger.info("Delegate is blacklisted for task");
           return null;
         }
       }
     } finally {
-      logger.info("Done with acquire delegate task method for task {} for delegate {}", taskId, delegateId);
+      logger.info("Done with acquire delegate task method");
     }
   }
 
@@ -1624,8 +1620,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       }
 
       try (AutoLogContext ignore4 = new TaskLogContext(taskId, delegateTask.getData().getTaskType())) {
-        logger.info("Delegate {} completed validating task {} {}", delegateId, delegateTask.getUuid(),
-            delegateTask.isAsync() ? "(async)" : "(sync)");
+        logger.info("Delegate completed validating {} task", delegateTask.isAsync() ? "async" : "sync");
 
         UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
                                                               .addToSet("validationCompleteDelegateIds", delegateId);
@@ -1651,7 +1646,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
          AutoLogContext ignore3 = new DelegateLogContext(delegateId)) {
       DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
       if (delegateTask == null) {
-        logger.info("Task {} not found or was already assigned", taskId);
+        logger.info("Task not found or was already assigned");
         return null;
       }
       try (AutoLogContext ignore4 = new TaskLogContext(taskId, delegateTask.getData().getTaskType())) {
@@ -1659,13 +1654,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
           // Check whether a whitelisted delegate is connected
           List<String> whitelistedDelegates = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
           if (isNotEmpty(whitelistedDelegates)) {
-            logger.info(
-                "Waiting for task {} to be acquired by a whitelisted delegate: {}", taskId, whitelistedDelegates);
+            logger.info("Waiting for task to be acquired by a whitelisted delegate: {}", whitelistedDelegates);
             return null;
           } else {
-            logger.info("No whitelisted delegates found for task {}", taskId);
+            logger.info("No whitelisted delegates found for task");
             String errorMessage = generateValidationError(delegateTask);
-            logger.info("Task {}: {}", taskId, errorMessage);
+            logger.info(errorMessage);
             ResponseData response;
             if (delegateTask.isAsync()) {
               response = ErrorNotifyResponseData.builder()
@@ -1685,7 +1679,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
           }
         }
 
-        logger.info("Task {} is still being validated", taskId);
+        logger.info("Task is still being validated");
         return null;
       }
     }
@@ -1727,8 +1721,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   private void setValidationStarted(String delegateId, DelegateTask delegateTask) {
-    logger.info("Delegate {} to validate task {} {}", delegateId, delegateTask.getUuid(),
-        delegateTask.isAsync() ? "(async)" : "(sync)");
+    logger.info("Delegate to validate {} task", delegateTask.isAsync() ? "async" : "sync");
     UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
                                                           .addToSet(DelegateTaskKeys.validatingDelegateIds, delegateId);
     Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
@@ -1750,12 +1743,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     boolean allDelegatesFinished = isNotEmpty(validatingDelegates) && isNotEmpty(completeDelegates)
         && completeDelegates.containsAll(validatingDelegates);
     if (allDelegatesFinished) {
-      logger.info("Validation attempts are complete for task {}", delegateTask.getUuid());
+      logger.info("Validation attempts are complete for task", delegateTask.getUuid());
     }
     boolean validationTimedOut = delegateTask.getValidationStartedAt() != null
         && clock.millis() - delegateTask.getValidationStartedAt() > VALIDATION_TIMEOUT;
     if (validationTimedOut) {
-      logger.info("Validation timed out for task {}", delegateTask.getUuid());
+      logger.info("Validation timed out for task", delegateTask.getUuid());
     }
     return allDelegatesFinished || validationTimedOut;
   }
@@ -1783,25 +1776,24 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       if (delegateTask != null) {
         try (AutoLogContext ignore4 = new TaskLogContext(taskId, delegateTask.getData().getTaskType())) {
           if (delegateTask.getDelegateId() == null && delegateTask.getStatus() == QUEUED) {
-            logger.info("Found unassigned delegate task: {}", delegateTask.getUuid());
+            logger.info("Found unassigned delegate task");
             return delegateTask;
           } else if (delegateId.equals(delegateTask.getDelegateId())) {
-            logger.info("Returning already assigned task {} to delegate {} from getUnassigned", taskId, delegateId);
+            logger.info("Returning already assigned task to delegate from getUnassigned");
             return delegateTask;
           }
-          logger.info("Task {} not available for delegate {} - it was assigned to {} and has status {}", taskId,
-              delegateId, delegateTask.getDelegateId(), delegateTask.getStatus());
+          logger.info("Task not available for delegate - it was assigned to {} and has status {}",
+              delegateTask.getDelegateId(), delegateTask.getStatus());
         }
       } else {
-        logger.info("Task {} no longer exists", taskId);
+        logger.info("Task no longer exists", taskId);
       }
       return null;
     }
   }
 
   private DelegatePackage resolvePreAssignmentExpressions(DelegateTask delegateTask, String delegateId) {
-    logger.info(format("Entering resolvePreAssignmentExpressions: DelegateTaskId %s, DelegateId %s",
-        delegateTask.getUuid(), delegateId));
+    logger.info("Entering resolvePreAssignmentExpressions");
 
     try {
       final ManagerPreExecutionExpressionEvaluator managerPreExecutionExpressionEvaluator =
@@ -1812,7 +1804,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
       if (delegateTask.getData().getParameters().length == 1
           && delegateTask.getData().getParameters()[0] instanceof TaskParameters) {
-        logger.info("Applying ManagerPreExecutionExpressionEvaluator for delegateTask {}", delegateTask.getUuid());
+        logger.info("Applying ManagerPreExecutionExpressionEvaluator for delegate task");
         ExpressionReflectionUtils.applyExpression(delegateTask.getData().getParameters()[0],
             value -> managerPreExecutionExpressionEvaluator.substitute(value, new HashMap<>()));
 
@@ -1838,11 +1830,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
               .responseCode(ResponseCode.FAILED)
               .accountId(delegateTask.getAccountId())
               .build();
-      handleResponse(delegateTask.getUuid(), delegateId, delegateTask, taskQuery, response, ERROR);
+      handleResponse(delegateTask, taskQuery, response, ERROR);
       return null;
     } finally {
-      logger.info(format("Exiting resolvePreAssignmentExpressions: DelegateTaskId %s, DelegateId %s",
-          delegateTask.getUuid(), delegateId));
+      logger.info("Exiting resolvePreAssignmentExpressions");
     }
   }
 
@@ -1869,19 +1860,19 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
               .responseCode(ResponseCode.FAILED)
               .accountId(delegateTask.getAccountId())
               .build();
-      handleResponse(delegateTask.getUuid(), delegateId, delegateTask, taskQuery, response, ERROR);
+      handleResponse(delegateTask, taskQuery, response, ERROR);
       return null;
     }
   }
 
-  private void handleResponse(String taskId, String delegateId, DelegateTask delegateTask,
-      Query<DelegateTask> taskQuery, DelegateTaskResponse response, DelegateTask.Status error) {
+  private void handleResponse(DelegateTask delegateTask, Query<DelegateTask> taskQuery, DelegateTaskResponse response,
+      DelegateTask.Status error) {
     if (delegateTask.isAsync()) {
       String waitId = delegateTask.getWaitId();
       if (waitId != null) {
         waitNotifyEngine.notify(waitId, response.getResponse());
       } else {
-        logger.error("Async task {} has no wait ID", taskId);
+        logger.error("Async task has no wait ID");
       }
       wingsPersistence.delete(taskQuery);
     } else {
@@ -1896,8 +1887,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     // Clear pending validations. No longer need to track since we're assigning.
     clearFromValidationCache(delegateTask);
 
-    logger.info("Assigning {} task {} to delegate {} {}", delegateTask.getData().getTaskType(), taskId, delegateId,
-        delegateTask.isAsync() ? "(async)" : "(sync)");
+    logger.info("Assigning {} task to delegate", delegateTask.isAsync() ? "async" : "sync");
     Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
                                     .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
                                     .filter(DelegateTaskKeys.status, QUEUED)
@@ -1913,7 +1903,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     // If the task wasn't updated because delegateId already exists then query for the task with the delegateId in case
     // client is retrying the request
     if (task != null) {
-      logger.info("Task {} assigned to delegate {}", taskId, delegateId);
+      logger.info("Task assigned to delegate");
       task.getData().setParameters(delegateTask.getData().getParameters());
       return resolvePreAssignmentExpressions(task, delegateId);
     }
@@ -1925,12 +1915,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                .project(DelegateTaskKeys.data_parameters, false)
                .get();
     if (task == null) {
-      logger.info("Task {} no longer available for delegate {}", taskId, delegateId);
+      logger.info("Task no longer available for delegate");
       return null;
     }
 
     task.getData().setParameters(delegateTask.getData().getParameters());
-    logger.info("Returning previously assigned task {} to delegate {}", taskId, delegateId);
+    logger.info("Returning previously assigned task to delegate");
     return resolvePreAssignmentExpressions(task, delegateId);
   }
 
@@ -1948,8 +1938,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         throw new WingsException(ErrorCode.INVALID_ARGUMENT, NOBODY).addParam("args", "response cannot be null");
       }
 
-      logger.info("Delegate [{}], response received for taskId [{}], responseCode [{}]", delegateId, taskId,
-          response.getResponseCode());
+      logger.info("Response received for task with responseCode [{}]", delegateId, taskId, response.getResponseCode());
 
       Query<DelegateTask> taskQuery = wingsPersistence.createQuery(DelegateTask.class)
                                           .filter(DelegateTaskKeys.accountId, response.getAccountId())
@@ -1960,12 +1949,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       if (delegateTask != null) {
         try (AutoLogContext ignore4 = new TaskLogContext(taskId, delegateTask.getData().getTaskType())) {
           if (!StringUtils.equals(delegateTask.getVersion(), getVersion())) {
-            logger.warn("Version mismatch for task {} in account {}. [managerVersion {}, taskVersion {}]",
-                delegateTask.getUuid(), delegateTask.getAccountId(), getVersion(), delegateTask.getVersion());
+            logger.warn("Version mismatch for task. [managerVersion {}, taskVersion {}]", getVersion(),
+                delegateTask.getVersion());
           }
 
           if (response.getResponseCode() == ResponseCode.RETRY_ON_OTHER_DELEGATE) {
-            logger.info("Delegate {} returned retryable error for task {}.", delegateId, taskId);
+            logger.info("Delegate returned retryable error for task");
 
             Set<String> alreadyTriedDelegates = delegateTask.getAlreadyTriedDelegates();
             List<String> remainingConnectedDelegates =
@@ -1976,7 +1965,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                     .collect(toList());
 
             if (!remainingConnectedDelegates.isEmpty()) {
-              logger.info("Requeueing task {}.", taskId);
+              logger.info("Requeueing task");
 
               wingsPersistence.update(taskQuery,
                   wingsPersistence.createUpdateOperations(DelegateTask.class)
@@ -1990,14 +1979,14 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                       .addToSet(DelegateTaskKeys.alreadyTriedDelegates, delegateId));
               return;
             } else {
-              logger.info("Task {} has been tried on all the connected delegates. Proceeding with error.", taskId);
+              logger.info("Task has been tried on all the connected delegates. Proceeding with error.");
             }
           }
-          handleResponse(taskId, delegateId, delegateTask, taskQuery, response, FINISHED);
+          handleResponse(delegateTask, taskQuery, response, FINISHED);
           assignDelegateService.refreshWhitelist(delegateTask, delegateId);
         }
       } else {
-        logger.warn("No delegate task found: {}", taskId);
+        logger.warn("No delegate task found");
       }
     }
   }
@@ -2026,7 +2015,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         logger.warn("Delegate task id was null", new IllegalArgumentException());
         return;
       }
-      logger.info("Expiring delegate task {}", delegateTaskId);
+      logger.info("Expiring delegate task");
       Query<DelegateTask> delegateTaskQuery = getRunningTaskQuery(accountId, delegateTaskId);
 
       DelegateTask delegateTask = delegateTaskQuery.get();
@@ -2035,7 +2024,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         try (AutoLogContext ignore3 = new TaskLogContext(delegateTaskId, delegateTask.getData().getTaskType())) {
           String errorMessage =
               "Task expired. " + assignDelegateService.getActiveDelegateAssignmentErrorMessage(delegateTask);
-          logger.info("Marking task as expired - {}: {}", delegateTask.getUuid(), errorMessage);
+          logger.info("Marking task as expired: {}", errorMessage);
 
           if (isNotBlank(delegateTask.getWaitId())) {
             waitNotifyEngine.notify(
@@ -2056,7 +2045,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         logger.warn("Delegate task id was null", new IllegalArgumentException());
         return;
       }
-      logger.info("Aborting delegate task {}", delegateTaskId);
+      logger.info("Aborting delegate task");
       endTask(accountId, delegateTaskId, getRunningTaskQuery(accountId, delegateTaskId), ABORTED);
     }
   }
@@ -2090,9 +2079,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         delegateTaskEvents.addAll(getAbortedEvents(accountId, delegateId));
       }
 
-      logger.info("Dispatched delegateTaskIds:{} to delegate:[{}]",
-          Joiner.on(",").join(delegateTaskEvents.stream().map(DelegateTaskEvent::getDelegateTaskId).collect(toList())),
-          delegateId);
+      logger.info("Dispatched delegateTaskIds: {}",
+          Joiner.on(",").join(delegateTaskEvents.stream().map(DelegateTaskEvent::getDelegateTaskId).collect(toList())));
 
       return delegateTaskEvents;
     }
