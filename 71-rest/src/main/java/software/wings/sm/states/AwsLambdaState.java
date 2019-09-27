@@ -126,21 +126,10 @@ public class AwsLambdaState extends State {
 
   private static Pattern wildCharPattern = Pattern.compile("[_+*/\\\\ &$|\"']");
 
-  /**
-   * Instantiates a new Aws lambda state.
-   *
-   * @param name the name
-   */
   public AwsLambdaState(String name) {
     super(name, AWS_LAMBDA_STATE.name());
   }
 
-  /**
-   * Instantiates a new Aws lambda state.
-   *
-   * @param name the name
-   * @param type the type
-   */
   protected AwsLambdaState(String name, String type) {
     super(name, type);
   }
@@ -177,12 +166,15 @@ public class AwsLambdaState extends State {
     stateExecutionData.setDelegateMetaInfo(wfResponse.getDelegateMetaInfo());
 
     updateAwsLambdaExecutionSummaries(context, wfResponse);
+    List<FunctionMeta> functionMetas = emptyList();
+    List<AwsLambdaFunctionResult> functionResults = wfResponse.getFunctionResults();
+    if (isNotEmpty(functionResults)) {
+      functionMetas = functionResults.stream()
+                          .filter(AwsLambdaFunctionResult::isSuccess)
+                          .map(AwsLambdaFunctionResult::getFunctionMeta)
+                          .collect(toList());
+    }
 
-    List<FunctionMeta> functionMetas = wfResponse.getFunctionResults()
-                                           .stream()
-                                           .filter(result -> result.isSuccess())
-                                           .map(AwsLambdaFunctionResult::getFunctionMeta)
-                                           .collect(toList());
     AwsConfig awsConfig = wfResponse.getAwsConfig();
     String region = wfResponse.getRegion();
     stateExecutionData.setAliases(aliases);
@@ -248,6 +240,10 @@ public class AwsLambdaState extends State {
 
     AwsLambdaInfraStructureMapping infrastructureMapping =
         (AwsLambdaInfraStructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
+
+    if (infrastructureMapping == null) {
+      throw new InvalidRequestException(format("No infra-mapping found for id: [%s]", context.fetchInfraMappingId()));
+    }
 
     SettingAttribute cloudProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     String region = infrastructureMapping.getRegion();
@@ -456,39 +452,19 @@ public class AwsLambdaState extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
 
-  /**
-   * Gets command name.
-   *
-   * @return the command name
-   */
   public String getCommandName() {
     return commandName;
   }
 
-  /**
-   * Sets command name.
-   *
-   * @param commandName the command name
-   */
   public void setCommandName(String commandName) {
     this.commandName = commandName;
   }
 
-  /**
-   * Gets aliases.
-   *
-   * @return the aliases
-   */
   @SchemaIgnore
   public List<String> getAliases() {
     return aliases;
   }
 
-  /**
-   * Sets aliases.
-   *
-   * @param aliases the aliases
-   */
   public void setAliases(List<String> aliases) {
     this.aliases = aliases;
   }
