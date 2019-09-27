@@ -164,10 +164,14 @@ public class SetInfraDefinitionPipelines {
       // new variable name
       String infraDefVariableName =
           WorkflowServiceTemplateHelper.getInfraDefVariableNameFromInfraMappingVariableName(infraMappingVariableName);
+      boolean varNameIsSame = infraDefVariableName.equals(infraMappingVariableName);
       String infraMappingId = stageElement.getWorkflowVariables().get(infraMappingVariableName);
       if (pipeline.isEnvParameterized()) {
         stageElement.getWorkflowVariables().put(infraDefVariableName, infraMappingId);
-        stageElement.getWorkflowVariables().remove(infraMappingVariableName);
+        if (!varNameIsSame) {
+          stageElement.getWorkflowVariables().remove(infraMappingVariableName);
+        }
+
       } else {
         InfrastructureMapping infrastructureMapping =
             infrastructureMappingService.get(pipeline.getAppId(), infraMappingId);
@@ -189,7 +193,9 @@ public class SetInfraDefinitionPipelines {
           continue;
         }
         stageElement.getWorkflowVariables().put(infraDefVariableName, infraDefId);
-        stageElement.getWorkflowVariables().remove(infraMappingVariableName);
+        if (!varNameIsSame) {
+          stageElement.getWorkflowVariables().remove(infraMappingVariableName);
+        }
       }
     }
     return true;

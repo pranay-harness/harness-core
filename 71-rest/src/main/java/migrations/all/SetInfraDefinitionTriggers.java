@@ -142,6 +142,7 @@ public class SetInfraDefinitionTriggers {
       // infra definition variable name
       String infraDefVariableName =
           WorkflowServiceTemplateHelper.getInfraDefVariableNameFromInfraMappingVariableName(variableName);
+      boolean varNameIsSame = infraDefVariableName.equals(variableName);
 
       String infraMappingId = trigger.getWorkflowVariables().get(variableName);
 
@@ -149,7 +150,9 @@ public class SetInfraDefinitionTriggers {
 
       if (ExpressionEvaluator.containsVariablePattern(infraMappingId)) {
         trigger.getWorkflowVariables().put(infraDefVariableName, infraMappingId);
-        trigger.getWorkflowVariables().remove(variableName);
+        if (!varNameIsSame) {
+          trigger.getWorkflowVariables().remove(variableName);
+        }
       } else {
         InfrastructureMapping infrastructureMapping =
             infrastructureMappingService.get(trigger.getAppId(), infraMappingId);
@@ -172,7 +175,9 @@ public class SetInfraDefinitionTriggers {
           continue;
         }
         trigger.getWorkflowVariables().put(infraDefVariableName, infraDefId);
-        trigger.getWorkflowVariables().remove(variableName);
+        if (!varNameIsSame) {
+          trigger.getWorkflowVariables().remove(variableName);
+        }
       }
     }
     return true;
