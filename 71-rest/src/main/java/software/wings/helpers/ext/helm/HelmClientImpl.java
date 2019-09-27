@@ -15,6 +15,7 @@ import static software.wings.helpers.ext.helm.HelmConstants.HELM_RELEASE_HIST_CO
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_REPO_LIST_COMMAND_TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_REPO_UPDATE_COMMAND_TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_ROLLBACK_COMMAND_TEMPLATE;
+import static software.wings.helpers.ext.helm.HelmConstants.HELM_SEARCH_COMMAND_TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_TEMPLATE_COMMAND_FOR_KUBERNETES_TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_UPGRADE_COMMAND_TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_VERSION_COMMAND_TEMPLATE;
@@ -335,5 +336,18 @@ public class HelmClientImpl implements HelmClient {
   public static class HelmCliResponse {
     private CommandExecutionStatus commandExecutionStatus;
     private String output;
+  }
+
+  @Override
+  public HelmCliResponse searchChart(HelmInstallCommandRequest commandRequest, String chartInfo)
+      throws InterruptedException, TimeoutException, IOException {
+    String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
+    String searchChartCommand = HELM_SEARCH_COMMAND_TEMPLATE.replace("${CHART_INFO}", chartInfo);
+
+    searchChartCommand = applyCommandFlags(searchChartCommand, commandRequest);
+    logHelmCommandInExecutionLogs(commandRequest, searchChartCommand);
+    searchChartCommand = applyKubeConfigToCommand(searchChartCommand, kubeConfigLocation);
+
+    return executeHelmCLICommand(searchChartCommand);
   }
 }

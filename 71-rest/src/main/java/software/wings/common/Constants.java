@@ -26,11 +26,6 @@ public interface Constants {
   String ARTIFACT_COLLECTION = "Artifact Collection";
 
   /**
-   * The constant AWS_LAMBDA_COMMAND_NAME.
-   */
-  String AWS_LAMBDA_COMMAND_NAME = "Deploy AWS Lambda Function";
-
-  /**
    * The constant AMI setup commands
    */
   String AMI_SETUP_COMMAND_NAME = "AMI Service Setup";

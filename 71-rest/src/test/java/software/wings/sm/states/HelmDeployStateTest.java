@@ -85,6 +85,7 @@ import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
+import software.wings.helpers.ext.helm.HelmHelper;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest.HelmCommandType;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
@@ -148,6 +149,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private ServiceTemplateHelper serviceTemplateHelper;
   @Mock private SweepingOutputService sweepingOutputService;
+  @Mock private HelmHelper helmHelper;
 
   @InjectMocks HelmDeployState helmDeployState = new HelmDeployState("helmDeployState");
   @InjectMocks HelmRollbackState helmRollbackState = new HelmRollbackState("helmRollbackState");

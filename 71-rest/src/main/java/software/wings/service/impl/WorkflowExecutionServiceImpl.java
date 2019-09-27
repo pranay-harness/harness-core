@@ -126,6 +126,7 @@ import software.wings.beans.Application;
 import software.wings.beans.ApprovalAuthorization;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ArtifactVariable;
+import software.wings.beans.AwsLambdaExecutionSummary;
 import software.wings.beans.BuildExecutionSummary;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CanaryWorkflowExecutionAdvisor;
@@ -138,6 +139,7 @@ import software.wings.beans.EnvSummary;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GraphNode;
+import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.PipelineKeys;
@@ -2756,6 +2758,29 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         buildExecutionSummaries.stream().filter(distinctByKey(bs -> bs.getArtifactStreamId())).collect(toList());
     wingsPersistence.updateField(
         WorkflowExecution.class, workflowExecutionId, "buildExecutionSummaries", buildExecutionSummaries);
+  }
+
+  @Override
+  public void refreshHelmExecutionSummary(String workflowExecutionId, HelmExecutionSummary helmExecutionSummary) {
+    WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, workflowExecutionId);
+    if (workflowExecution == null) {
+      return;
+    }
+
+    wingsPersistence.updateField(
+        WorkflowExecution.class, workflowExecutionId, WorkflowExecutionKeys.helmExecutionSummary, helmExecutionSummary);
+  }
+
+  @Override
+  public void refreshAwsLambdaExecutionSummary(
+      String workflowExecutionId, List<AwsLambdaExecutionSummary> awsLambdaExecutionSummaries) {
+    WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, workflowExecutionId);
+    if (workflowExecution == null) {
+      return;
+    }
+
+    wingsPersistence.updateField(WorkflowExecution.class, workflowExecutionId,
+        WorkflowExecutionKeys.awsLambdaExecutionSummaries, awsLambdaExecutionSummaries);
   }
 
   @Override

@@ -158,6 +158,9 @@ public class WorkflowExecution
 
   private Set<String> keywords;
 
+  private HelmExecutionSummary helmExecutionSummary;
+  private List<AwsLambdaExecutionSummary> awsLambdaExecutionSummaries;
+
   @Default
   @JsonIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
