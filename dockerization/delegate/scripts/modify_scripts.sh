@@ -138,3 +138,26 @@ else
     sed -i "s|_queueFilePath_||" /opt/harness-delegate/delegate.sh
 fi
 
+if [[ -v "MANAGER_TARGET" ]]; then
+    sed -i "s|_managerTarget_|${MANAGER_TARGET}|" /opt/harness-delegate/start.sh
+    sed -i "s|_managerTarget_|${MANAGER_TARGET}|" /opt/harness-delegate/delegate.sh
+else
+    sed -i "s|_managerTarget_||" /opt/harness-delegate/start.sh
+    sed -i "s|_managerTarget_||" /opt/harness-delegate/delegate.sh
+fi
+
+if [[ -v "MANAGER_AUTHORITY" ]]; then
+    sed -i "s|_managerAuthority_|${MANAGER_AUTHORITY}|" /opt/harness-delegate/start.sh
+    sed -i "s|_managerAuthority_|${MANAGER_AUTHORITY}|" /opt/harness-delegate/delegate.sh
+else
+    sed -i "s|_managerAuthority_||" /opt/harness-delegate/start.sh
+    sed -i "s|_managerAuthority_||" /opt/harness-delegate/delegate.sh
+fi
+
+if [[ -v "ENABLE_PERPETUAL_TASKS" ]]; then
+    sed -i "s|_enablePerpetualTasks_|${ENABLE_PERPETUAL_TASKS}|" /opt/harness-delegate/start.sh
+    sed -i "s|_enablePerpetualTasks_|${ENABLE_PERPETUAL_TASKS}|" /opt/harness-delegate/delegate.sh
+else
+    sed -i "s|_enablePerpetualTasks_||" /opt/harness-delegate/start.sh
+    sed -i "s|_enablePerpetualTasks_||" /opt/harness-delegate/delegate.sh
+fi

@@ -1,11 +1,13 @@
 package io.harness.perpetualtask;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 
 import io.grpc.CallCredentials;
 import io.grpc.Channel;
@@ -23,10 +25,27 @@ import io.harness.perpetualtask.k8s.watch.K8sWatchTaskParams;
 import io.harness.perpetualtask.k8s.watch.NodeWatcher;
 import io.harness.perpetualtask.k8s.watch.PodWatcher;
 import io.harness.perpetualtask.k8s.watch.WatcherFactory;
+import lombok.Builder;
+import lombok.Value;
 
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import javax.net.ssl.SSLException;
 
 public class PerpetualTaskWorkerModule extends AbstractModule {
+  @Value
+  @Builder
+  public static class Config {
+    String target;
+    String authority;
+  }
+
+  private final Config config;
+
+  public PerpetualTaskWorkerModule(Config config) {
+    this.config = config;
+  }
+
   @Override
   protected void configure() {
     MapBinder<String, PerpetualTaskExecutor> mapBinder =
@@ -39,16 +58,25 @@ public class PerpetualTaskWorkerModule extends AbstractModule {
                 .implement(PodWatcher.class, PodWatcher.class)
                 .implement(NodeWatcher.class, NodeWatcher.class)
                 .build(WatcherFactory.class));
+
+    bind(ScheduledExecutorService.class)
+        .annotatedWith(Names.named("perpetualTaskExecutor"))
+        .toInstance(new ScheduledThreadPoolExecutor(1,
+            new ThreadFactoryBuilder()
+                .setNameFormat("perpetual-task-worker")
+                .setPriority(Thread.NORM_PRIORITY)
+                .build()));
   }
 
   @Named("manager-channel")
   @Singleton
   @Provides
   public Channel managerChannel() throws SSLException {
-    // TODO: move gRPC channel out of PerpetualTaskWorker
-    // TODO: remove hardcoded gRPC port number
     SslContext sslContext = GrpcSslContexts.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
-    return NettyChannelBuilder.forTarget("localhost:9880").sslContext(sslContext).build();
+    return NettyChannelBuilder.forTarget(config.target)
+        .overrideAuthority(config.authority)
+        .sslContext(sslContext)
+        .build();
   }
 
   @Provides

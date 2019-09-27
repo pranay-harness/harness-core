@@ -24,5 +24,8 @@ sudo docker run -d --restart unless-stopped --hostname=$(hostname -f) \
 -e PUBLISH_TARGET=${publishTarget} \
 -e PUBLISH_AUTHORITY=${publishAuthority} \
 -e QUEUE_FILE_PATH=${queueFilePath} \
+-e MANAGER_TARGET=${managerTarget} \
+-e MANAGER_AUTHORITY=${managerAuthority} \
+-e ENABLE_PERPETUAL_TASKS=${enablePerpetualTasks} \
 </#if>
 ${delegateDockerImage}

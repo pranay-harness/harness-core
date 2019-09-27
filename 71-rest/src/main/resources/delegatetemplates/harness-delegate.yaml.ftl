@@ -93,6 +93,12 @@ spec:
           value: "${publishAuthority}"
         - name: QUEUE_FILE_PATH
           value: "${queueFilePath}"
+        - name: MANAGER_TARGET
+          value: "${managerTarget}"
+        - name: MANAGER_AUTHORITY
+          value: "${managerAuthority}"
+        - name: ENABLE_PERPETUAL_TASKS
+          value: "${enablePerpetualTasks}"
 </#if>
         - name: PROXY_HOST
           value: ""

@@ -11,3 +11,5 @@ publishTarget: localhost:9890
 publishAuthority: localhost
 queueFilePath: /tmp/eventQueue
 enablePerpetualTasks: false
+managerTarget: localhost:9880
+managerAuthority: localhost

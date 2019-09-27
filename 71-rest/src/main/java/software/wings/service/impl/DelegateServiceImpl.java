@@ -46,8 +46,7 @@ import static software.wings.common.Constants.DOCKER_DELEGATE;
 import static software.wings.common.Constants.ECS_DELEGATE;
 import static software.wings.common.Constants.KUBERNETES_DELEGATE;
 import static software.wings.common.Constants.MAX_DELEGATE_LAST_HEARTBEAT;
-import static software.wings.service.impl.EventsCollectionConfigExtractor.extractPublishAuthority;
-import static software.wings.service.impl.EventsCollectionConfigExtractor.extractPublishTarget;
+import static software.wings.service.impl.DelegateGrpcConfigExtractor.extractTarget;
 import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -724,9 +723,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       }
       if (featureFlagService.isEnabled(CCM_EVENT_COLLECTION, accountId)) {
         params.put("CCM_EVENT_COLLECTION", "enabled");
-        params.put("publishTarget", extractPublishTarget(managerHost));
-        params.put("publishAuthority", extractPublishAuthority(managerHost));
+        params.put("publishTarget", extractTarget(managerHost));
+        params.put("publishAuthority", DelegateGrpcConfigExtractor.extractAuthority(managerHost, "events"));
         params.put("queueFilePath", mainConfiguration.getDelegateConfigParams().getQueueFilePath());
+        params.put("managerTarget", extractTarget(managerHost));
+        params.put("managerAuthority", DelegateGrpcConfigExtractor.extractAuthority(managerHost, "manager"));
+        params.put("enablePerpetualTasks", "true");
       }
       return params.build();
     }
