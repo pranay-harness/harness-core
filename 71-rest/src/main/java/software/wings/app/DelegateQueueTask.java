@@ -33,6 +33,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.AccountLogContext;
 import software.wings.service.impl.DelegateTaskBroadcastHelper;
 import software.wings.service.intfc.AssignDelegateService;
 
@@ -203,7 +204,7 @@ public class DelegateQueueTask implements Runnable {
             .field(DelegateTaskKeys.delegateId)
             .doesNotExist();
 
-    try (HIterator<DelegateTask> iterator = new HIterator(unassignedTasksQuery.fetch())) {
+    try (HIterator<DelegateTask> iterator = new HIterator<>(unassignedTasksQuery.fetch())) {
       int count = 0;
       while (iterator.hasNext()) {
         DelegateTask delegateTask = iterator.next();
@@ -220,14 +221,14 @@ public class DelegateQueueTask implements Runnable {
 
         delegateTask =
             wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions().returnNew(true));
-        // update failed, means this was broadcasted by some other manager
+        // update failed, means this was broadcast by some other manager
         if (delegateTask == null) {
           continue;
         }
 
-        try (AutoLogContext ignore = new TaskLogContext(delegateTask.getUuid(), delegateTask.getData().getTaskType())) {
-          logger.info("Rebroadcast queued task [{}], broadcast count: {}, accountId: {}", delegateTask.getUuid(),
-              delegateTask.getBroadcastCount(), delegateTask.getAccountId());
+        try (AutoLogContext ignore1 = new TaskLogContext(delegateTask.getUuid(), delegateTask.getData().getTaskType());
+             AutoLogContext ignore2 = new AccountLogContext(delegateTask.getAccountId())) {
+          logger.info("Rebroadcast queued task. broadcast count: {}", delegateTask.getBroadcastCount());
           delegateTask.setPreAssignedDelegateId(null);
           broadcastHelper.rebroadcastDelegateTask(delegateTask);
           count++;

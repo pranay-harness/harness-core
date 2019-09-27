@@ -59,7 +59,6 @@ import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.reflect.FieldUtils;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -87,7 +86,6 @@ import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FileMetadata;
 import software.wings.beans.LicenseInfo;
-import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.TaskType;
 import software.wings.beans.alert.AlertType;
@@ -107,7 +105,6 @@ import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
-import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionStatusData;
@@ -145,7 +142,6 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private AssignDelegateService assignDelegateService;
   @Mock private DelegateProfileService delegateProfileService;
   @Mock private InfraDownloadService infraDownloadService;
-  @Mock private LearningEngineService learningEngineService;
   @Mock private SecretManager secretManager;
   @Mock private ManagerDecryptionService managerDecryptionService;
   @Mock private FileService fileService;
@@ -178,8 +174,6 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(accountService.get(ACCOUNT_ID)).thenReturn(account);
     when(infraDownloadService.getDownloadUrlForDelegate(anyString()))
         .thenReturn("http://localhost:8888/builds/9/delegate.jar");
-    when(learningEngineService.getServiceSecretKey(ServiceType.LEARNING_ENGINE)).thenReturn(verificationServiceSecret);
-    FieldUtils.writeField(delegateService, "learningEngineService", learningEngineService, true);
     wireMockRule.stubFor(get(urlEqualTo("/delegateci.txt"))
                              .willReturn(aResponse()
                                              .withStatus(200)
