@@ -26,7 +26,7 @@ public class FileUtils {
     List<String> lines = new ArrayList<>();
 
     try (FileInputStream fis = new FileInputStream(file);
-         BufferedReader in = new BufferedReader(new InputStreamReader(fis, StandardCharsets.UTF_8));) {
+         BufferedReader in = new BufferedReader(new InputStreamReader(fis, StandardCharsets.UTF_8))) {
       String line = in.readLine();
       while (line != null) {
         if (line.contains("host_placeholder")) {

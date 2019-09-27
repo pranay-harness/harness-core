@@ -66,10 +66,8 @@ public class AccountPasswordExpirationJob implements Job {
   }
 
   public void checkAccountPasswordExpiration() {
-    try {
-      HIterator<User> userIterator =
-          new HIterator<>(wingsPersistence.createQuery(User.class, excludeAuthority).fetch());
-
+    try (HIterator<User> userIterator =
+             new HIterator<>(wingsPersistence.createQuery(User.class, excludeAuthority).fetch())) {
       Account account;
       for (User user : userIterator) {
         try {

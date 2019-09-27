@@ -88,10 +88,10 @@ public class TimeScaleDBServiceImpl implements TimeScaleDBService {
       ds.addConnectionProperty("password", timeScaleDBConfig.getTimescaledbPassword());
     }
 
-    Statement statement = ds.getConnection().createStatement();
-    statement.execute("CREATE EXTENSION IF NOT EXISTS TIMESCALEDB CASCADE;");
-    statement.close();
-    logger.info("Completed initializing TimeScaleDB extension");
+    try (Connection connection = ds.getConnection(); Statement statement = connection.createStatement()) {
+      statement.execute("CREATE EXTENSION IF NOT EXISTS TIMESCALEDB CASCADE;");
+      logger.info("Completed initializing TimeScaleDB extension");
+    }
   }
 
   @Override

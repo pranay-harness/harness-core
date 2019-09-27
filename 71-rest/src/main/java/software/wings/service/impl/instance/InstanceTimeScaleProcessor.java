@@ -6,6 +6,7 @@ import static software.wings.graphql.datafetcher.AbstractStatsDataFetcher.MAX_RE
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.InstanceEvent;
@@ -196,10 +197,11 @@ public class InstanceTimeScaleProcessor {
   public boolean checkIfInstanceExists(String instanceId) {
     int retryCount = 0;
     while (retryCount <= MAX_RETRY) {
+      ResultSet resultSet = null;
       try (Connection connection = timeScaleDBService.getDBConnection();
            PreparedStatement preparedStmt = connection.prepareStatement(getQuery);) {
         preparedStmt.setString(1, instanceId);
-        ResultSet resultSet = preparedStmt.executeQuery();
+        resultSet = preparedStmt.executeQuery();
         if (resultSet.wasNull()) {
           return false;
         }
@@ -214,6 +216,8 @@ public class InstanceTimeScaleProcessor {
               "Failed to execute query=[{}],instanceId=[{}],retryCount=[{}]", getQuery, instanceId, retryCount, e);
         }
         retryCount++;
+      } finally {
+        DBUtils.close(resultSet);
       }
     }
     return false;

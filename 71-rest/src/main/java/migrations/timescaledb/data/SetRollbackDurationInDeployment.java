@@ -8,6 +8,7 @@ import com.google.inject.Singleton;
 import com.mongodb.ReadPreference;
 import io.harness.beans.ExecutionStatus;
 import io.harness.persistence.HIterator;
+import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
 import migrations.TimeScaleDBDataMigration;
@@ -101,11 +102,12 @@ public class SetRollbackDurationInDeployment implements TimeScaleDBDataMigration
     }
 
     while (!successful && retryCount < MAX_RETRY) {
+      ResultSet queryResult = null;
       try (Connection connection = timeScaleDBService.getDBConnection();
            PreparedStatement queryStatement = connection.prepareStatement(query_statement);
            PreparedStatement updateStatement = connection.prepareStatement(update_statement)) {
         queryStatement.setString(1, workflowExecution.getUuid());
-        ResultSet queryResult = queryStatement.executeQuery();
+        queryResult = queryStatement.executeQuery();
         if (queryResult != null && queryResult.next()) {
           logger.info("WorkflowExecution found:[{}],updating it", workflowExecution.getUuid());
           updateDataInTimescaleDB(workflowExecution, updateStatement, rollbackDuration);
@@ -124,6 +126,7 @@ public class SetRollbackDurationInDeployment implements TimeScaleDBDataMigration
         logger.error("Failed to update workflowExecution,[{}]", workflowExecution.getUuid(), e);
         retryCount = MAX_RETRY + 1;
       } finally {
+        DBUtils.close(queryResult);
         logger.info("Total update time =[{}] for workflowExecution:[{}]", System.currentTimeMillis() - startTime,
             workflowExecution.getUuid());
       }

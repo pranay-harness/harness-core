@@ -665,7 +665,7 @@ public class K8sStateHelper {
           format("Failed to fetch PodList for release %s. Exception: %s", releaseName, notifyResponseData));
     } else if (!(notifyResponseData instanceof K8sTaskExecutionResponse)) {
       throw new UnexpectedException(format("Failed to fetch PodList for release %s. Unknown return type %s",
-          releaseName + notifyResponseData.getClass().getName()));
+          releaseName, notifyResponseData.getClass().getName()));
     }
 
     K8sTaskExecutionResponse k8sTaskExecutionResponse = (K8sTaskExecutionResponse) notifyResponseData;
