@@ -55,6 +55,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import software.wings.api.AwsLambdaContextElement.FunctionMeta;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionRequest;
 import software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionResponse;
@@ -196,8 +197,17 @@ public class AwsLambdaHelperServiceDelegateImpl
       }
       responseBuilder.executionStatus(status);
       responseBuilder.functionResults(functionResultList);
-      logCallback.saveExecutionLog(
-          "Successfully completed Aws Lambda Deploy step", INFO, CommandExecutionStatus.SUCCESS);
+
+      String message = "Successfully completed Aws Lambda Deploy step";
+      CommandExecutionStatus finalStatus = CommandExecutionStatus.SUCCESS;
+      LogLevel level = INFO;
+      if (FAILED.equals(status)) {
+        message = "Failed while deploying Lambda functions";
+        finalStatus = CommandExecutionStatus.FAILURE;
+        level = ERROR;
+      }
+      logCallback.saveExecutionLog(message, level, finalStatus);
+
     } catch (AmazonEC2Exception amazonEC2Exception) {
       handleAmazonServiceException(amazonEC2Exception);
     } catch (AmazonClientException amazonClientException) {
