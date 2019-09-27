@@ -289,13 +289,13 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
         ACCOUNT_ID, APP_ID, ARTIFACT_STREAM_ID, asList(artifact));
 
     Mockito.verify(workflowExecutionService)
-        .triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
+        .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
   }
 
   @Test
   @Category(UnitTests.class)
   public void shouldTriggerExecutionPostArtifactCollectionWithFileNotMatchesArtifactFilter() {
-    when(workflowExecutionService.triggerPipelineExecution(
+    when(workflowExecutionService.triggerEnvExecution(
              anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class)))
         .thenReturn(WorkflowExecution.builder().appId(APP_ID).status(SUCCESS).build());
 
@@ -312,7 +312,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
         ACCOUNT_ID, APP_ID, ARTIFACT_STREAM_ID, asList(artifact));
 
     Mockito.verify(workflowExecutionService, times(0))
-        .triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
+        .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
   }
 
   @Test
@@ -347,7 +347,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
 
     DeploymentTrigger savedTrigger = deploymentTriggerService.save(trigger, false);
 
-    when(workflowExecutionService.triggerPipelineExecution(
+    when(workflowExecutionService.triggerEnvExecution(
              anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class)))
         .thenReturn(WorkflowExecution.builder().appId(APP_ID).status(SUCCESS).build());
 
@@ -355,7 +355,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
         ACCOUNT_ID, APP_ID, ARTIFACT_STREAM_ID, asList(artifact));
 
     Mockito.verify(workflowExecutionService)
-        .triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
+        .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
   }
 
   @Test
@@ -376,7 +376,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
                             .withMetadata(ImmutableMap.of("buildNo", "@33release23"))
                             .build();
 
-    when(workflowExecutionService.triggerPipelineExecution(
+    when(workflowExecutionService.triggerEnvExecution(
              anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class)))
         .thenReturn(WorkflowExecution.builder().appId(APP_ID).status(SUCCESS).build());
 
@@ -384,7 +384,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
         ACCOUNT_ID, APP_ID, ARTIFACT_STREAM_ID, asList(artifact));
 
     Mockito.verify(workflowExecutionService, times(0))
-        .triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
+        .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
   }
 
   @Test
@@ -410,7 +410,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
                         .build());
 
     when(featureFlagService.isEnabled(FeatureName.TRIGGER_FOR_ALL_ARTIFACTS, ACCOUNT_ID)).thenReturn(true);
-    when(workflowExecutionService.triggerPipelineExecution(
+    when(workflowExecutionService.triggerEnvExecution(
              anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class)))
         .thenReturn(WorkflowExecution.builder().appId(APP_ID).status(SUCCESS).build());
 
@@ -431,7 +431,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
         ACCOUNT_ID, APP_ID, ARTIFACT_STREAM_ID, asList(artifact, artifact2));
 
     Mockito.verify(workflowExecutionService, times(2))
-        .triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
+        .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
   }
 
   @Test
@@ -451,7 +451,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
                         .artifactRequiredServiceIds(asList(SERVICE_ID))
                         .build());
 
-    when(workflowExecutionService.triggerPipelineExecution(
+    when(workflowExecutionService.triggerEnvExecution(
              anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class)))
         .thenReturn(WorkflowExecution.builder().appId(APP_ID).status(SUCCESS).build());
 
@@ -474,7 +474,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
         ACCOUNT_ID, APP_ID, ARTIFACT_STREAM_ID, asList(artifact, artifact2));
 
     Mockito.verify(workflowExecutionService)
-        .triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
+        .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
   }
 
   @Test

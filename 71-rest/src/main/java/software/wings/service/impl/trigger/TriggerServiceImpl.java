@@ -701,6 +701,7 @@ public class TriggerServiceImpl implements TriggerService {
     WorkflowExecution workflowExecution;
     logger.info("Triggering  execution of appId {} with  pipeline id {}", trigger.getAppId(), trigger.getWorkflowId());
     resolveTriggerPipelineVariables(trigger, executionArgs);
+    executionArgs.setPipelineId(trigger.getWorkflowId());
     if (webhookTriggerProcessor.checkFileContentOptionSelected(trigger)) {
       logger.info("Check file content option selected. Invoking delegate task to verify the file content.");
       TriggerExecution lastTriggerExecution = webhookTriggerProcessor.fetchLastExecutionForContentChanged(trigger);
@@ -708,8 +709,8 @@ public class TriggerServiceImpl implements TriggerService {
         triggerExecution.setExecutionArgs(executionArgs);
         triggerExecution.setStatus(Status.SUCCESS);
         triggerExecutionService.save(triggerExecution);
-        workflowExecution = workflowExecutionService.triggerPipelineExecution(
-            trigger.getAppId(), trigger.getWorkflowId(), executionArgs, trigger);
+        workflowExecution =
+            workflowExecutionService.triggerEnvExecution(trigger.getAppId(), null, executionArgs, trigger);
       } else {
         triggerExecution.setExecutionArgs(executionArgs);
         webhookTriggerProcessor.initiateTriggerContentChangeDelegateTask(
@@ -717,8 +718,8 @@ public class TriggerServiceImpl implements TriggerService {
         workflowExecution = WorkflowExecution.builder().status(ExecutionStatus.NEW).build();
       }
     } else {
-      workflowExecution = workflowExecutionService.triggerPipelineExecution(
-          trigger.getAppId(), trigger.getWorkflowId(), executionArgs, trigger);
+      workflowExecution =
+          workflowExecutionService.triggerEnvExecution(trigger.getAppId(), null, executionArgs, trigger);
     }
     logger.info(
         "Pipeline execution of appId {} with  pipeline id {} triggered", trigger.getAppId(), trigger.getWorkflowId());
@@ -1029,8 +1030,9 @@ public class TriggerServiceImpl implements TriggerService {
                 break;
               case PIPELINE:
                 logger.info("Starting deployment for the pipeline {}", trigger.getPipelineId());
-                workflowExecutionService.triggerPipelineExecution(
-                    trigger.getAppId(), triggerExecution.getWorkflowId(), triggerExecution.getExecutionArgs(), trigger);
+                triggerExecution.getExecutionArgs().setPipelineId(trigger.getWorkflowId());
+                workflowExecutionService.triggerEnvExecution(
+                    trigger.getAppId(), null, triggerExecution.getExecutionArgs(), trigger);
                 triggerExecutionService.updateStatus(appId, triggerExecutionId, Status.SUCCESS, "File content changed");
                 break;
               default:
