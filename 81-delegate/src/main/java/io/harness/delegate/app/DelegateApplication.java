@@ -27,7 +27,6 @@ import io.harness.delegate.message.MessageService;
 import io.harness.delegate.service.DelegateService;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.client.PublisherModule;
-import io.harness.event.client.PublisherModule.Config;
 import io.harness.managerclient.ManagerClientModule;
 import io.harness.perpetualtask.PerpetualTaskWorkerModule;
 import io.harness.serializer.KryoModule;
@@ -119,9 +118,14 @@ public class DelegateApplication {
     });
     modules.add(new ManagerClientModule(configuration.getManagerUrl(), configuration.getVerificationServiceUrl(),
         configuration.getAccountId(), configuration.getAccountSecret()));
-    modules.add(new PerpetualTaskWorkerModule());
+    if (configuration.isEnablePerpetualTasks()) {
+      modules.add(new PerpetualTaskWorkerModule(PerpetualTaskWorkerModule.Config.builder()
+                                                    .target(configuration.getManagerTarget())
+                                                    .authority(configuration.getManagerAuthority())
+                                                    .build()));
+    }
     modules.add(new KubernetesClientFactoryModule());
-    modules.add(new PublisherModule(Config.builder()
+    modules.add(new PublisherModule(PublisherModule.Config.builder()
                                         .accountId(configuration.getAccountId())
                                         .accountSecret(configuration.getAccountSecret())
                                         .publishTarget(configuration.getPublishTarget())

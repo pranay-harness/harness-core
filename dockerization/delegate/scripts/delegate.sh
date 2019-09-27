@@ -134,6 +134,15 @@ fi
 if ! `grep queueFilePath config-delegate.yml > /dev/null`; then
   echo "queueFilePath : _queueFilePath_" >> config-delegate.yml
 fi
+if ! `grep managerTarget config-delegate.yml > /dev/null`; then
+  echo "managerTarget : _managerTarget_" >> config-delegate.yml
+fi
+if ! `grep managerAuthority config-delegate.yml > /dev/null`; then
+  echo "managerAuthority  : _managerAuthority_" >> config-delegate.yml
+fi
+if ! `grep enablePerpetualTasks config-delegate.yml > /dev/null`; then
+  echo "enablePerpetualTasks : _enablePerpetualTasks_" >> config-delegate.yml
+fi
 
 export HOSTNAME
 export CAPSULE_CACHE_DIR="$DIR/.cache"

@@ -43,5 +43,9 @@ public class DelegateConfiguration {
 
   private String queueFilePath;
 
-  private String enablePerpetualTasks;
+  private boolean enablePerpetualTasks;
+
+  private String managerTarget;
+
+  private String managerAuthority;
 }

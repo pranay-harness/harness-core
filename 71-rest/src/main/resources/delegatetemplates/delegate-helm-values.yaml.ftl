@@ -34,4 +34,7 @@ delegateCheckLocation: ${delegateCheckLocation}
 publishTarget: ${publishTarget}
 publishAuthority: ${publishAuthority}
 queueFilePath: ${queueFilePath}
+managerTarget: ${managerTarget}
+managerAuthority: ${managerAuthority}
+enablePerpetualTasks: ${enablePerpetualTasks}
 </#if>

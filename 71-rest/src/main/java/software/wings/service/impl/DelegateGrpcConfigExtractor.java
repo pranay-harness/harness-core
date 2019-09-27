@@ -1,16 +1,21 @@
 package software.wings.service.impl;
 
+import com.google.common.base.Joiner;
+
 import lombok.experimental.UtilityClass;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 
 /**
- * Utility class for the methods to extract grpc target & authority from manager url.
+ * Utility class for the methods to extract grpc target & authority from manager url. Used to provide values while
+ * processing delegate config templates.
  */
 @UtilityClass
-class EventsCollectionConfigExtractor {
-  static String extractPublishTarget(String managerUrl) {
+class DelegateGrpcConfigExtractor {
+  private static final Joiner JOINER = Joiner.on("-").skipNulls();
+
+  static String extractTarget(String managerUrl) {
     try {
       return new URI(managerUrl).getAuthority();
     } catch (URISyntaxException e) {
@@ -18,16 +23,16 @@ class EventsCollectionConfigExtractor {
     }
   }
 
-  static String extractPublishAuthority(String managerUrl) {
+  static String extractAuthority(String managerUrl, String svc) {
     try {
       URI uri = new URI(managerUrl);
       String path = uri.getPath();
       String[] parts = path.split("/");
-      String prefix = "";
+      String namespace = null;
       if (parts.length > 1) {
-        prefix = parts[1] + "-";
+        namespace = parts[1];
       }
-      return prefix + "events-" + uri.getAuthority();
+      return JOINER.join(namespace, svc, "grpc", uri.getAuthority());
     } catch (URISyntaxException e) {
       throw new IllegalArgumentException("Invalid manager url " + managerUrl);
     }

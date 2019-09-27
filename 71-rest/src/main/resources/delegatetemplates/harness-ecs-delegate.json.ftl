@@ -59,6 +59,18 @@
           "name": "QUEUE_FILE_PATH",
           "value": "${queueFilePath}"
         },
+        {
+          "name": "MANAGER_TARGET",
+          "value": "${managerTarget}"
+        },
+        {
+          "name": "MANAGER_AUTHORITY",
+          "value": "${managerAuthority}"
+        },
+        {
+          "name": "ENABLE_PERPETUAL_TASKS",
+          "value": "${enablePerpetualTasks}"
+        },
 </#if>
         {
           "name": "POLL_FOR_TASKS",

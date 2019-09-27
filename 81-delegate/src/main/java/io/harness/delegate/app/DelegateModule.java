@@ -320,13 +320,6 @@ public class DelegateModule extends DependencyModule {
         .annotatedWith(Names.named("timeoutExecutor"))
         .toInstance(ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
             new ThreadFactoryBuilder().setNameFormat("timeout-enforcer-%d").setPriority(Thread.NORM_PRIORITY).build()));
-    bind(ScheduledExecutorService.class)
-        .annotatedWith(Names.named("perpetualTaskExecutor"))
-        .toInstance(new ScheduledThreadPoolExecutor(1,
-            new ThreadFactoryBuilder()
-                .setNameFormat("perpetual-task-worker")
-                .setPriority(Thread.NORM_PRIORITY)
-                .build()));
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
     bind(DelegateFileManager.class).to(DelegateFileManagerImpl.class).asEagerSingleton();
     bind(ServiceCommandExecutorService.class).to(ServiceCommandExecutorServiceImpl.class);

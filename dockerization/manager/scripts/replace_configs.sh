@@ -5,6 +5,7 @@ NEWRELIC_FILE=/opt/harness/newrelic.yml
 
 yq delete -i $CONFIG_FILE server.adminConnectors
 yq delete -i $CONFIG_FILE server.applicationConnectors[0]
+yq delete -i $CONFIG_FILE grpcServerConfig.connectors[0]
 
 if [[ "" != "$LOGGING_LEVEL" ]]; then
     yq write -i $CONFIG_FILE logging.level "$LOGGING_LEVEL"
@@ -23,6 +24,10 @@ if [[ "" != "$SERVER_PORT" ]]; then
   yq write -i $CONFIG_FILE server.applicationConnectors[0].port "$SERVER_PORT"
 else
   yq write -i $CONFIG_FILE server.applicationConnectors[0].port "9090"
+fi
+
+if [[ "" != "$GRPC_SERVER_PORT" ]]; then
+  yq write -i $CONFIG_FILE grpcServerConfig.connectors[0].port "$GRPC_SERVER_PORT"
 fi
 
 if [[ "" != "$UI_SERVER_URL" ]]; then
