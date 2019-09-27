@@ -41,8 +41,7 @@ public class ElasticsearchServiceImpl implements SearchService {
   @Inject protected Map<Class<? extends PersistentEntity>, SearchEntity<?>> searchEntityMap;
   private static final int MAX_RESULTS = 50;
 
-  public software.wings.search.framework.SearchResponse getSearchResults(
-      @NotBlank String searchString, @NotBlank String accountId) throws IOException {
+  public SearchResponse getSearchResults(@NotBlank String searchString, @NotBlank String accountId) throws IOException {
     SearchHits hits = search(searchString, accountId);
 
     List<ApplicationView> applicationViewList = new ArrayList<>();
@@ -105,16 +104,15 @@ public class ElasticsearchServiceImpl implements SearchService {
   private SearchHits search(@NotBlank String searchString, @NotBlank String accountId) throws IOException {
     String[] indexNames = getIndexesToSearch();
     SearchRequest searchRequest = new SearchRequest(indexNames);
-    BoolQueryBuilder boolQueryBuilder = ElasticsearchServiceImpl.createQuery(searchString, accountId);
+    BoolQueryBuilder boolQueryBuilder = createQuery(searchString, accountId);
     SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder().query(boolQueryBuilder).size(MAX_RESULTS);
-    searchRequest.source(searchSourceBuilder);
 
+    searchRequest.source(searchSourceBuilder);
     org.elasticsearch.action.search.SearchResponse searchResponse =
         client.search(searchRequest, RequestOptions.DEFAULT);
 
     logger.info("Search results, time taken : {}, number of hits: {}, accountID: {}", searchResponse.getTook(),
         searchResponse.getHits().getTotalHits(), accountId);
-
     return searchResponse.getHits();
   }
 

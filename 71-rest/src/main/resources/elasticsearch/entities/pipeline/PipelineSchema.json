@@ -2,7 +2,6 @@
   "mappings" : {
     "properties" : {"appId" : {"type" : "keyword"},
       "appName" : {"type" :  "text", "index" : false},
-
       "workflows" : {
         "type" : "nested",
         "properties" : {
@@ -15,7 +14,36 @@
           }
         }
       },
-
+      "audits" : {
+        "type" : "nested",
+        "properties" : {
+          "id" : {
+            "type" : "keyword"
+          },
+          "appId" : {
+            "type" : "keyword"
+          },
+          "createdAt" : {
+            "type" : "keyword",
+            "index" : false
+          },
+          "auditCreatedBy" : {
+            "type" : "keyword",
+            "index" : false
+          },
+          "affectedResourceId" : {
+            "type" : "keyword"
+          },
+          "affectedResourceType" : {
+            "type" : "keyword",
+            "index" : false
+          },
+          "affectedResourceName" : {
+            "type" : "keyword",
+            "index" : false
+          }
+        }
+      },
       "services" : {
         "type" : "nested",
         "properties" : {
@@ -27,6 +55,44 @@
             "index" : false
           }
         }
+      },
+      "deployments": {
+        "type": "nested",
+        "properties": {
+          "id": {
+            "type": "keyword"
+          },
+          "appId": {
+            "type": "keyword"
+          },
+          "envId": {
+            "type": "keyword"
+          },
+          "pipelineExecutionId": {
+            "type": "keyword"
+          },
+          "name": {
+            "type": "keyword",
+            "index": false
+          },
+          "status": {
+            "type": "keyword",
+            "index": false
+          },
+          "createdAt": {
+            "type": "long"
+          },
+          "workflowType": {
+            "type": "keyword",
+            "index": false
+          }
+        }
+      },
+      "auditTimestamps" : {
+        "type" : "long"
+      },
+      "deploymentTimestamps" : {
+        "type" : "long"
       }
     }
   }

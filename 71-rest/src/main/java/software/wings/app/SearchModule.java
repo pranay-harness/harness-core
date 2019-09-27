@@ -18,6 +18,7 @@ import software.wings.search.entities.application.ApplicationSearchEntity;
 import software.wings.search.entities.deployment.DeploymentSearchEntity;
 import software.wings.search.entities.environment.EnvironmentSearchEntity;
 import software.wings.search.entities.pipeline.PipelineSearchEntity;
+import software.wings.search.entities.related.audit.RelatedAuditSearchEntity;
 import software.wings.search.entities.service.ServiceSearchEntity;
 import software.wings.search.entities.workflow.WorkflowSearchEntity;
 import software.wings.search.framework.SearchDao;
@@ -56,7 +57,7 @@ public class SearchModule extends AbstractModule {
   protected void configure() {
     bind(SearchService.class).to(ElasticsearchServiceImpl.class);
     bind(ManagedExecutorService.class)
-        .toInstance(new ManagedExecutorService(ThreadPool.create(4, 20, 1, TimeUnit.SECONDS)));
+        .toInstance(new ManagedExecutorService(ThreadPool.create(7, 20, 0, TimeUnit.SECONDS)));
     bind(ScheduledExecutorService.class).toInstance(Executors.newScheduledThreadPool(1));
     bind(SearchDao.class).to(SynchronousElasticsearchDao.class);
     bindEntities();
@@ -78,5 +79,7 @@ public class SearchModule extends AbstractModule {
         .to(EnvironmentSearchEntity.class);
     sourceEntitiesToSearchEntitiesMap.addBinding(DeploymentSearchEntity.SOURCE_ENTITY_CLASS)
         .to(DeploymentSearchEntity.class);
+    sourceEntitiesToSearchEntitiesMap.addBinding(RelatedAuditSearchEntity.SOURCE_ENTITY_CLASS)
+        .to(RelatedAuditSearchEntity.class);
   }
 }

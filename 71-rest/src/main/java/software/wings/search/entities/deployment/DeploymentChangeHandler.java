@@ -59,7 +59,9 @@ public class DeploymentChangeHandler implements ChangeHandler {
         String entityType = DeploymentViewKeys.environments;
         String newNameValue = document.get(EnvironmentKeys.name).toString();
         String filterId = changeEvent.getUuid();
-        return searchDao.updateListInMultipleDocuments(DeploymentSearchEntity.TYPE, entityType, newNameValue, filterId);
+        String fieldToUpdate = EnvironmentKeys.name;
+        return searchDao.updateListInMultipleDocuments(
+            DeploymentSearchEntity.TYPE, entityType, newNameValue, filterId, fieldToUpdate);
       }
     }
     return true;
@@ -72,7 +74,9 @@ public class DeploymentChangeHandler implements ChangeHandler {
         String entityType = DeploymentViewKeys.services;
         String newNameValue = document.get(ServiceKeys.name).toString();
         String filterId = changeEvent.getUuid();
-        return searchDao.updateListInMultipleDocuments(DeploymentSearchEntity.TYPE, entityType, newNameValue, filterId);
+        String fieldToUpdate = ServiceKeys.name;
+        return searchDao.updateListInMultipleDocuments(
+            DeploymentSearchEntity.TYPE, entityType, newNameValue, filterId, fieldToUpdate);
       }
     }
     return true;
@@ -85,7 +89,9 @@ public class DeploymentChangeHandler implements ChangeHandler {
         String entityType = DeploymentViewKeys.workflows;
         String newNameValue = document.get(WorkflowKeys.name).toString();
         String filterId = changeEvent.getUuid();
-        return searchDao.updateListInMultipleDocuments(DeploymentSearchEntity.TYPE, entityType, newNameValue, filterId);
+        String fieldToUpdate = WorkflowKeys.name;
+        return searchDao.updateListInMultipleDocuments(
+            DeploymentSearchEntity.TYPE, entityType, newNameValue, filterId, fieldToUpdate);
       }
     }
     return true;

@@ -7,9 +7,14 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import software.wings.api.DeploymentType;
 import software.wings.beans.EntityType;
-import software.wings.beans.Service;
+import software.wings.search.entities.related.audit.RelatedAuditView;
+import software.wings.search.entities.related.deployment.RelatedDeploymentView;
 import software.wings.search.framework.EntityBaseView;
+import software.wings.search.framework.EntityInfo;
 import software.wings.utils.ArtifactType;
+
+import java.util.List;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -20,6 +25,12 @@ public class ServiceView extends EntityBaseView {
   private String appName;
   private ArtifactType artifactType;
   private DeploymentType deploymentType;
+  private Set<EntityInfo> workflows;
+  private Set<EntityInfo> pipelines;
+  private List<RelatedDeploymentView> deployments;
+  private List<RelatedAuditView> audits;
+  private List<Long> deploymentTimestamps;
+  private List<Long> auditTimestamps;
 
   public ServiceView(String uuid, String name, String description, String accountId, long createdAt, long lastUpdatedAt,
       EntityType entityType, EmbeddedUser createdBy, EmbeddedUser lastUpdatedBy, String appId,
@@ -28,11 +39,5 @@ public class ServiceView extends EntityBaseView {
     this.appId = appId;
     this.artifactType = artifactType;
     this.deploymentType = deploymentType;
-  }
-
-  public static ServiceView fromService(Service service) {
-    return new ServiceView(service.getUuid(), service.getName(), service.getDescription(), service.getAccountId(),
-        service.getCreatedAt(), service.getLastUpdatedAt(), EntityType.SERVICE, service.getCreatedBy(),
-        service.getLastUpdatedBy(), service.getAppId(), service.getArtifactType(), service.getDeploymentType());
   }
 }

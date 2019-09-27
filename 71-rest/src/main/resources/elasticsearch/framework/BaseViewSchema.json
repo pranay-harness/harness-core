@@ -34,7 +34,6 @@
           }
         }
       },
-
       "createdAt" : {"type" : "long","index" : false},
       "description"
       : {"type" : "text", "analyzer" : "standard"},

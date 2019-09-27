@@ -1,20 +1,19 @@
-package software.wings.search.entities.application;
+package software.wings.search.entities.related.audit;
 
 import com.google.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.Application;
+import software.wings.audit.AuditHeader;
 import software.wings.search.framework.ChangeHandler;
 import software.wings.search.framework.SearchEntity;
 
 @Slf4j
-public class ApplicationSearchEntity implements SearchEntity<Application> {
-  @Inject private ApplicationChangeHandler applicationChangeHandler;
-  @Inject private ApplicationViewBuilder applicationViewBuilder;
+public class RelatedAuditSearchEntity implements SearchEntity<AuditHeader> {
+  @Inject private RelatedAuditChangeHandler relatedAuditChangeHandler;
 
-  public static final String TYPE = "applications";
+  public static final String TYPE = "audits";
   public static final String VERSION = "0.1";
-  public static final Class<Application> SOURCE_ENTITY_CLASS = Application.class;
+  public static final Class<AuditHeader> SOURCE_ENTITY_CLASS = AuditHeader.class;
   private static final String CONFIGURATION_PATH = "application/ApplicationSchema.json";
 
   @Override
@@ -28,7 +27,7 @@ public class ApplicationSearchEntity implements SearchEntity<Application> {
   }
 
   @Override
-  public Class<Application> getSourceEntityClass() {
+  public Class<AuditHeader> getSourceEntityClass() {
     return SOURCE_ENTITY_CLASS;
   }
 
@@ -39,11 +38,11 @@ public class ApplicationSearchEntity implements SearchEntity<Application> {
 
   @Override
   public ChangeHandler getChangeHandler() {
-    return applicationChangeHandler;
+    return relatedAuditChangeHandler;
   }
 
   @Override
-  public ApplicationView getView(Application application) {
-    return applicationViewBuilder.createApplicationView(application);
+  public RelatedAuditView getView(AuditHeader auditHeader) {
+    return null;
   }
 }

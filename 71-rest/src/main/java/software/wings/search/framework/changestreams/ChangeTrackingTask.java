@@ -65,10 +65,10 @@ public class ChangeTrackingTask implements Runnable {
           Thread.currentThread().interrupt();
         }
       }
-      logger.warn(String.format("%s changeStream shutting down.", morphiaClass.getCanonicalName()));
     } catch (RuntimeException e) {
       logger.error(String.format("Unexpectedly %s changeStream shutting down", morphiaClass.getCanonicalName()), e);
     } finally {
+      logger.warn(String.format("%s changeStream shutting down.", morphiaClass.getCanonicalName()));
       closeChangeStream(cursor);
       latch.countDown();
     }
