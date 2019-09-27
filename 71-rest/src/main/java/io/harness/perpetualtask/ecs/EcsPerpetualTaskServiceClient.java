@@ -5,6 +5,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.util.Durations;
 
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
@@ -16,12 +17,16 @@ import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.TaskType;
+import software.wings.service.impl.aws.model.AwsEcsRequest;
+import software.wings.service.impl.aws.model.AwsEcsRequest.AwsEcsRequestType;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class EcsPerpetualTaskServiceClient implements PerpetualTaskServiceClient<EcsPerpetualTaskClientParams> {
@@ -62,14 +67,9 @@ public class EcsPerpetualTaskServiceClient implements PerpetualTaskServiceClient
     String settingId = clientParams.get(SETTING_ID);
     String clusterName = clientParams.get(CLUSTER_NAME);
 
-    SettingAttribute settingAttribute = settingsService.get(settingId);
-    if (settingAttribute == null || !(settingAttribute.getValue() instanceof AwsConfig)) {
-      throw new InvalidRequestException("AWS account setting not found " + settingId);
-    }
-    AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
+    AwsConfig awsConfig = getAwsConfig(settingId);
     ByteString awsConfigBytes = ByteString.copyFrom(KryoUtils.asBytes(awsConfig));
-    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(awsConfig, null, null);
-    ByteString encryptionDetailBytes = ByteString.copyFrom(KryoUtils.asBytes(encryptionDetails));
+    ByteString encryptionDetailBytes = ByteString.copyFrom(KryoUtils.asBytes(getEncryptionDetails(awsConfig)));
 
     EcsPerpetualTaskParams ecsPerpetualTaskParams = EcsPerpetualTaskParams.newBuilder()
                                                         .setClusterName(clusterName)
@@ -81,9 +81,36 @@ public class EcsPerpetualTaskServiceClient implements PerpetualTaskServiceClient
     return ecsPerpetualTaskParams;
   }
 
+  private AwsConfig getAwsConfig(String settingId) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    if (settingAttribute == null || !(settingAttribute.getValue() instanceof AwsConfig)) {
+      throw new InvalidRequestException("AWS account setting not found " + settingId);
+    }
+    return (AwsConfig) settingAttribute.getValue();
+  }
+
+  private List<EncryptedDataDetail> getEncryptionDetails(AwsConfig awsConfig) {
+    return secretManager.getEncryptionDetails(awsConfig, null, null);
+  }
+
   @Override
   public DelegateTask getValidationTask(PerpetualTaskClientContext context, String accountId) {
-    // TODO: implement this
-    return null;
+    Map<String, String> clientParams = context.getClientParams();
+    String settingId = clientParams.get(SETTING_ID);
+    AwsConfig awsConfig = getAwsConfig(settingId);
+    String region = clientParams.get(REGION);
+
+    AwsEcsRequest awsEcsRequest =
+        new AwsEcsRequest(awsConfig, getEncryptionDetails(awsConfig), AwsEcsRequestType.LIST_CLUSTERS, region);
+
+    return DelegateTask.builder()
+        .async(false)
+        .accountId(accountId)
+        .data(TaskData.builder()
+                  .taskType(TaskType.AWS_ECS_TASK.name())
+                  .parameters(new Object[] {awsEcsRequest})
+                  .timeout(TimeUnit.MINUTES.toMillis(1))
+                  .build())
+        .build();
   }
 }
