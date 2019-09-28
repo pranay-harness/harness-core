@@ -131,7 +131,7 @@ public class ServiceGuardAccountPoller {
       Trigger trigger = TriggerBuilder.newTrigger()
                             .withIdentity(accountId, SERVICE_GUARD_DATA_COLLECTION_CRON)
                             .withSchedule(SimpleScheduleBuilder.simpleSchedule()
-                                              .withIntervalInSeconds(30)
+                                              .withIntervalInSeconds(120)
                                               .withMisfireHandlingInstructionNowWithExistingCount()
                                               .repeatForever())
                             .startAt(startDate)

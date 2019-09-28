@@ -121,7 +121,7 @@ public class VerificationConstants {
   public static final int CRON_POLL_INTERVAL_IN_MINUTES = 15;
   public static final int PREDECTIVE_HISTORY_MINUTES = 120;
   public static final long CRON_POLL_INTERVAL = TimeUnit.MINUTES.toSeconds(CRON_POLL_INTERVAL_IN_MINUTES); // in seconds
-  public static final int CV_TASK_CRON_POLL_INTERVAL_SEC = 10;
+  public static final int CV_TASK_CRON_POLL_INTERVAL_SEC = 20;
   public static final int DEFAULT_DATA_COLLECTION_INTERVAL_IN_SECONDS = 60;
   public static final int DEFAULT_LE_AUTOSCALE_DATA_COLLECTION_INTERVAL_IN_SECONDS = 60;
   public static final int CV_CONFIGURATION_VALID_LIMIT_IN_DAYS = 7;

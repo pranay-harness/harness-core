@@ -8,6 +8,7 @@ import com.google.inject.name.Names;
 
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
+import io.harness.queue.QueueController;
 import io.harness.service.ContinuousVerificationServiceImpl;
 import io.harness.service.LearningEngineAnalysisServiceImpl;
 import io.harness.service.LogAnalysisServiceImpl;
@@ -113,6 +114,18 @@ public class VerificationServiceModule extends AbstractModule {
                 .setNameFormat("Verification-Data-Collector-%d")
                 .setPriority(Thread.MIN_PRIORITY)
                 .build()));
+
+    bind(QueueController.class).toInstance(new QueueController() {
+      @Override
+      public boolean isPrimary() {
+        return true;
+      }
+
+      @Override
+      public boolean isNotPrimary() {
+        return false;
+      }
+    });
 
     if (configuration.getDataStorageMode() == null) {
       configuration.setDataStorageMode(DataStorageMode.MONGO);

@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import lombok.experimental.FieldNameConstants;
 
 import java.io.Serializable;
 
@@ -17,6 +18,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
+@FieldNameConstants(innerTypeName = "LicenseInfoKeys")
 public class LicenseInfo implements Serializable {
   private static final long serialVersionUID = 2006711824734916828L;
 
