@@ -61,11 +61,6 @@ public class DelegateTaskBroadcastHelper {
 
     // Update fields for DelegateTask, preAssignedDelegateId and executionCapabilities if not empty
     task = updateDelegateTaskWithPreAssignedDelegateId(task, preAssignedDelegateId, task.getExecutionCapabilities());
-
-    logger.info("{} task: uuid: {}, accountId: {}, type: {}, correlationId: {}",
-        task.isAsync() ? "Queueing async" : "Executing sync", task.getUuid(), task.getAccountId(),
-        task.getData().getTaskType(), task.getCorrelationId());
-
     rebroadcastDelegateTask(task);
     return task;
   }

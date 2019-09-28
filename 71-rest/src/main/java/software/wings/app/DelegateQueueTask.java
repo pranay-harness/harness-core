@@ -31,6 +31,7 @@ import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.beans.TaskType;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.AccountLogContext;
@@ -226,7 +227,8 @@ public class DelegateQueueTask implements Runnable {
           continue;
         }
 
-        try (AutoLogContext ignore1 = new TaskLogContext(delegateTask.getUuid(), delegateTask.getData().getTaskType());
+        try (AutoLogContext ignore1 = new TaskLogContext(delegateTask.getUuid(), delegateTask.getData().getTaskType(),
+                 TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name());
              AutoLogContext ignore2 = new AccountLogContext(delegateTask.getAccountId())) {
           logger.info("Rebroadcast queued task. broadcast count: {}", delegateTask.getBroadcastCount());
           delegateTask.setPreAssignedDelegateId(null);
