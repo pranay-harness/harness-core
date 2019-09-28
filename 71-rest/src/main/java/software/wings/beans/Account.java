@@ -8,6 +8,7 @@ import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.encryption.Encrypted;
+import io.harness.iterator.PersistentRegularIterable;
 import io.harness.security.EncryptionInterface;
 import io.harness.security.SimpleEncryption;
 import io.harness.validation.Create;
@@ -37,7 +38,7 @@ import javax.validation.constraints.NotNull;
 @HarnessExportableEntity
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "accounts", noClassnameStored = true)
-public class Account extends Base {
+public class Account extends Base implements PersistentRegularIterable {
   public static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
 
   @NotNull private String companyName;
@@ -86,6 +87,8 @@ public class Account extends Base {
   private Set<TechStack> techStacks;
 
   private boolean oauthEnabled;
+
+  @Indexed private Long nextIteration;
 
   private transient Map<String, String> defaults = new HashMap<>();
   /**
@@ -319,6 +322,16 @@ public class Account extends Base {
   public String toString() {
     return "Account{"
         + "companyName='" + companyName + '\'' + ", accountName='" + accountName + '\'' + '}';
+  }
+
+  @Override
+  public void updateNextIteration(String fieldName, Long nextIteration) {
+    this.nextIteration = nextIteration;
+  }
+
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    return nextIteration;
   }
 
   public static final class Builder {

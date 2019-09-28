@@ -3,9 +3,12 @@ package io.harness.app;
 import static com.google.inject.matcher.Matchers.not;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
+import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.security.ServiceTokenGenerator.VERIFICATION_SERVICE_SECRET;
+import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static software.wings.beans.ServiceSecretKey.ServiceType.LEARNING_ENGINE;
+import static software.wings.common.VerificationConstants.CV_TASK_CRON_POLL_INTERVAL_SEC;
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_TASKS_PER_MINUTE;
 import static software.wings.common.VerificationConstants.IGNORED_ERRORS_METRIC_LABELS;
 import static software.wings.common.VerificationConstants.IGNORED_ERRORS_METRIC_NAME;
@@ -25,6 +28,8 @@ import static software.wings.common.VerificationConstants.LEARNING_ENGINE_WORKFL
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_WORKFLOW_TASK_QUEUED_TIME_IN_SECONDS;
 import static software.wings.common.VerificationConstants.getDataAnalysisMetricHelpDocument;
 
+import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -51,10 +56,15 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
+import io.harness.iterator.PersistenceIterator;
+import io.harness.iterator.PersistenceIterator.ProcessMode;
 import io.harness.jobs.VerificationJob;
 import io.harness.jobs.VerificationMetricJob;
 import io.harness.jobs.housekeeping.UsageMetricsJob;
 import io.harness.jobs.sg247.ServiceGuardMainJob;
+import io.harness.jobs.sg247.collection.ServiceGuardDataCollectionJob;
+import io.harness.jobs.sg247.logs.ServiceGuardLogAnalysisJob;
+import io.harness.jobs.workflow.collection.CVDataCollectionJob;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.ManageDistributedLockSvc;
 import io.harness.lock.PersistentLocker;
@@ -64,6 +74,8 @@ import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
+import io.harness.mongo.MongoPersistenceIterator;
+import io.harness.mongo.MongoPersistenceIterator.Handler;
 import io.harness.persistence.HPersistence;
 import io.harness.resources.LogVerificationResource;
 import io.harness.scheduler.PersistentScheduler;
@@ -80,6 +92,11 @@ import org.reflections.Reflections;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.CharsetResponseFilter;
 import software.wings.app.WingsApplication;
+import software.wings.beans.Account;
+import software.wings.beans.Account.AccountKeys;
+import software.wings.beans.AccountStatus;
+import software.wings.beans.AccountType;
+import software.wings.beans.LicenseInfo.LicenseInfoKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.ConstraintViolationExceptionMapper;
 import software.wings.exception.GenericExceptionMapper;
@@ -88,9 +105,13 @@ import software.wings.exception.WingsExceptionMapper;
 import software.wings.jersey.JsonViews;
 import software.wings.security.ThreadLocalUserProvider;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import javax.ws.rs.Path;
@@ -213,6 +234,8 @@ public class VerificationServiceApplication extends Application<VerificationServ
 
     registerCronJobs(injector);
 
+    registerIterators(injector);
+
     initializeServiceTaskPoll(injector);
 
     logger.info("Leaving startup maintenance mode");
@@ -312,6 +335,41 @@ public class VerificationServiceApplication extends Application<VerificationServ
         UsageMetricsJob.addJob(jobScheduler);
       }
     }
+  }
+
+  private void registerIterators(Injector injector) {
+    final ScheduledThreadPoolExecutor serviceGuardExecutor =
+        new ScheduledThreadPoolExecutor(15, new ThreadFactoryBuilder().setNameFormat("Iterator-ServiceGuard").build());
+    registerIterator(injector, serviceGuardExecutor, new ServiceGuardDataCollectionJob(), ofMinutes(2), 7);
+    registerIterator(injector, serviceGuardExecutor, new ServiceGuardLogAnalysisJob(), ofMinutes(1), 7);
+    registerIterator(
+        injector, serviceGuardExecutor, new CVDataCollectionJob(), ofSeconds(CV_TASK_CRON_POLL_INTERVAL_SEC), 7);
+  }
+
+  private void registerIterator(Injector injector, ScheduledThreadPoolExecutor serviceGuardExecutor,
+      Handler<Account> handler, Duration interval, int maxAllowedThreads) {
+    injector.injectMembers(handler);
+    PersistenceIterator dataCollectionIterator =
+        MongoPersistenceIterator.<Account>builder()
+            .clazz(Account.class)
+            .fieldName(AccountKeys.nextIteration)
+            .targetInterval(interval)
+            .acceptableNoAlertDelay(ofSeconds(30))
+            .executorService(serviceGuardExecutor)
+            .semaphore(new Semaphore(maxAllowedThreads))
+            .handler(handler)
+            .schedulingType(REGULAR)
+            .filterExpander(query
+                -> query.or(query.criteria(AccountKeys.licenseInfo).doesNotExist(),
+                    query.and(query.criteria(AccountKeys.licenseInfo + "." + LicenseInfoKeys.accountStatus)
+                                  .equal(AccountStatus.ACTIVE)),
+                    query.criteria(AccountKeys.licenseInfo + "." + LicenseInfoKeys.accountType)
+                        .in(Sets.newHashSet(AccountType.TRIAL, AccountType.PAID))))
+            .redistribute(true)
+            .build();
+    injector.injectMembers(dataCollectionIterator);
+    serviceGuardExecutor.scheduleAtFixedRate(
+        () -> dataCollectionIterator.process(ProcessMode.PUMP), 0, 10, TimeUnit.SECONDS);
   }
 
   private void initializeServiceSecretKeys(Injector injector) {
