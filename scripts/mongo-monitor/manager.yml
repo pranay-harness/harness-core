@@ -7,6 +7,54 @@ metrics:
       check_interval:   10      # seconds
       query:            "db.waitQueues.find({}).count()"
 
+  - collector_queues_count:
+      check_interval:   10      # seconds
+      query:            "db.collectorQueue.find({}).count()"
+
+  - delay_queues_count:
+      check_interval:   10      # seconds
+      query:            "db.delayQueue.find({}).count()"
+
+  - deployment_queues_count:
+      check_interval:   10      # seconds
+      query:            "db.deploymentEventQueue.find({}).count()"
+
+  - deployment_timeseries_queues_count:
+      check_interval:   10      # seconds
+      query:            "db.deploymentTimeSeriesEventQueue.find({}).count()"
+
+  - email_queues_count:
+      check_interval:   10      # seconds
+      query:            "db.emailQueue.find({}).count()"
+
+  - execution_queues_count:
+      check_interval:   10      # seconds
+      query:            "db.executionQueue.find({}).count()"
+
+  - instance_change_queues_count:
+      check_interval:   10      # seconds
+      query:            "db.instanceChangeQueue.find({}).count()"
+
+  - instance_queues_count:
+      check_interval:   10      # seconds
+      query:            "db.instanceEventQueue.find({}).count()"
+
+  - kms_transition_queues_count:
+      check_interval:   10      # seconds
+      query:            "db.kmsTransitionEvent.find({}).count()"
+
+  - notify_queues_count:
+      check_interval:   10      # seconds
+      query:            "db.notifyQueue.find({}).count()"
+
+  - prune_queues_count:
+      check_interval:   10      # seconds
+      query:            "db.pruneQueue.find({}).count()"
+
+  - generic_queues_count:
+      check_interval:   10      # seconds
+      query:            "db.genericEvent.find({}).count()"
+
   - state_execution_instances_document_size:
       check_interval:   10      # seconds
       query:            "db.stateExecutionInstances.stats().avgObjSize"
