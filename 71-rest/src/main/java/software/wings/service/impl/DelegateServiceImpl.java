@@ -1413,8 +1413,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Override
   public String queueTask(DelegateTask task) {
     DelegateTask savedTask = saveDelegateTask(task, true);
-    try (AutoLogContext ignore1 = new TaskLogContext(savedTask.getUuid(), savedTask.getData().getTaskType());
+    try (AutoLogContext ignore1 = new TaskLogContext(savedTask.getUuid(), savedTask.getData().getTaskType(),
+             TaskType.valueOf(savedTask.getData().getTaskType()).getTaskGroup().name());
          AutoLogContext ignore2 = new AccountLogContext(savedTask.getAccountId())) {
+      logger.info("Queueing async task");
       broadcastHelper.broadcastNewDelegateTaskAsync(savedTask);
     }
     return savedTask.getUuid();
@@ -1427,7 +1429,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     DelegateTask completedTask;
     ResponseData responseData;
     DelegateTask delegateTask = saveDelegateTask(task, false);
-    try (AutoLogContext ignore1 = new TaskLogContext(delegateTask.getUuid(), delegateTask.getData().getTaskType());
+    try (AutoLogContext ignore1 = new TaskLogContext(delegateTask.getUuid(), delegateTask.getData().getTaskType(),
+             TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name());
          AutoLogContext ignore2 = new AccountLogContext(delegateTask.getAccountId())) {
       List<String> eligibleDelegateIds = ensureDelegateAvailableToExecuteTask(task);
       if (isEmpty(eligibleDelegateIds)) {
@@ -1435,7 +1438,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       }
 
       try {
-        // Immediately broadcast sync task.
+        logger.info("Executing sync task");
         broadcastHelper.broadcastNewDelegateTask(delegateTask);
         syncTaskWaitMap.put(delegateTask.getUuid(), new Object());
         synchronized (syncTaskWaitMap.get(delegateTask.getUuid())) {
@@ -1580,15 +1583,15 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   @Override
   public DelegatePackage acquireDelegateTask(String accountId, String delegateId, String taskId) {
-    try (AutoLogContext ignore1 = new TaskLogContext(taskId); AutoLogContext ignore2 = new AccountLogContext(accountId);
-         AutoLogContext ignore3 = new DelegateLogContext(delegateId)) {
+    try {
       logger.info("Acquiring delegate task");
       DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
       if (delegateTask == null) {
         return null;
       }
 
-      try (AutoLogContext ignore4 = new TaskLogContext(taskId, delegateTask.getData().getTaskType())) {
+      try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
+               TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name())) {
         if (!assignDelegateService.canAssign(delegateId, delegateTask)) {
           logger.info("Delegate is not scoped for task");
           ensureDelegateAvailableToExecuteTask(delegateTask); // Raises an alert if there are no eligible delegates.
@@ -1613,77 +1616,74 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Override
   public DelegatePackage reportConnectionResults(
       String accountId, String delegateId, String taskId, List<DelegateConnectionResult> results) {
-    try (AutoLogContext ignore1 = new TaskLogContext(taskId); AutoLogContext ignore2 = new AccountLogContext(accountId);
-         AutoLogContext ignore3 = new DelegateLogContext(delegateId)) {
-      assignDelegateService.saveConnectionResults(results);
-      DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
-      if (delegateTask == null) {
-        return null;
-      }
+    assignDelegateService.saveConnectionResults(results);
+    DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
+    if (delegateTask == null) {
+      return null;
+    }
 
-      try (AutoLogContext ignore4 = new TaskLogContext(taskId, delegateTask.getData().getTaskType())) {
-        logger.info("Delegate completed validating {} task", delegateTask.isAsync() ? "async" : "sync");
+    try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
+             TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name())) {
+      logger.info("Delegate completed validating {} task", delegateTask.isAsync() ? "async" : "sync");
 
-        UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
-                                                              .addToSet("validationCompleteDelegateIds", delegateId);
-        Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
-                                              .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
-                                              .filter(DelegateTaskKeys.status, QUEUED)
-                                              .field(DelegateTaskKeys.delegateId)
-                                              .doesNotExist()
-                                              .filter(ID_KEY, delegateTask.getUuid());
-        wingsPersistence.update(updateQuery, updateOperations);
+      UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
+                                                            .addToSet("validationCompleteDelegateIds", delegateId);
+      Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
+                                            .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
+                                            .filter(DelegateTaskKeys.status, QUEUED)
+                                            .field(DelegateTaskKeys.delegateId)
+                                            .doesNotExist()
+                                            .filter(ID_KEY, delegateTask.getUuid());
+      wingsPersistence.update(updateQuery, updateOperations);
 
-        if (results.stream().anyMatch(DelegateConnectionResult::isValidated)) {
-          return assignTask(delegateId, taskId, delegateTask);
-        }
+      if (results.stream().anyMatch(DelegateConnectionResult::isValidated)) {
+        return assignTask(delegateId, taskId, delegateTask);
       }
     }
+
     return null;
   }
 
   @Override
   public DelegateTask failIfAllDelegatesFailed(String accountId, String delegateId, String taskId) {
-    try (AutoLogContext ignore1 = new TaskLogContext(taskId); AutoLogContext ignore2 = new AccountLogContext(accountId);
-         AutoLogContext ignore3 = new DelegateLogContext(delegateId)) {
-      DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
-      if (delegateTask == null) {
-        logger.info("Task not found or was already assigned");
-        return null;
-      }
-      try (AutoLogContext ignore4 = new TaskLogContext(taskId, delegateTask.getData().getTaskType())) {
-        if (isValidationComplete(delegateTask)) {
-          // Check whether a whitelisted delegate is connected
-          List<String> whitelistedDelegates = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
-          if (isNotEmpty(whitelistedDelegates)) {
-            logger.info("Waiting for task to be acquired by a whitelisted delegate: {}", whitelistedDelegates);
-            return null;
+    DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
+    if (delegateTask == null) {
+      logger.info("Task not found or was already assigned");
+      return null;
+    }
+    try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
+             TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name())) {
+      if (isValidationComplete(delegateTask)) {
+        // Check whether a whitelisted delegate is connected
+        List<String> whitelistedDelegates = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
+        if (isNotEmpty(whitelistedDelegates)) {
+          logger.info("Waiting for task to be acquired by a whitelisted delegate: {}", whitelistedDelegates);
+          return null;
+        } else {
+          logger.info("No whitelisted delegates found for task");
+          String errorMessage = generateValidationError(delegateTask);
+          logger.info(errorMessage);
+          ResponseData response;
+          if (delegateTask.isAsync()) {
+            response = ErrorNotifyResponseData.builder()
+                           .failureTypes(EnumSet.<FailureType>of(FailureType.DELEGATE_PROVISIONING))
+                           .errorMessage(errorMessage)
+                           .build();
           } else {
-            logger.info("No whitelisted delegates found for task");
-            String errorMessage = generateValidationError(delegateTask);
-            logger.info(errorMessage);
-            ResponseData response;
-            if (delegateTask.isAsync()) {
-              response = ErrorNotifyResponseData.builder()
-                             .failureTypes(EnumSet.<FailureType>of(FailureType.DELEGATE_PROVISIONING))
-                             .errorMessage(errorMessage)
-                             .build();
-            } else {
-              InvalidRequestException exception = new InvalidRequestException(errorMessage, USER);
-              response = RemoteMethodReturnValueData.builder().exception(exception).build();
-            }
-            processDelegateResponse(accountId, null, taskId,
-                DelegateTaskResponse.builder()
-                    .accountId(accountId)
-                    .response(response)
-                    .responseCode(ResponseCode.OK)
-                    .build());
+            InvalidRequestException exception = new InvalidRequestException(errorMessage, USER);
+            response = RemoteMethodReturnValueData.builder().exception(exception).build();
           }
+          processDelegateResponse(accountId, null, taskId,
+              DelegateTaskResponse.builder()
+                  .accountId(accountId)
+                  .response(response)
+                  .responseCode(ResponseCode.OK)
+                  .build());
         }
-
-        logger.info("Task is still being validated");
-        return null;
       }
+
+      logger.info("Task is still being validated");
+      return null;
     }
   }
 
@@ -1776,7 +1776,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                       .filter(ID_KEY, taskId)
                                       .get();
       if (delegateTask != null) {
-        try (AutoLogContext ignore4 = new TaskLogContext(taskId, delegateTask.getData().getTaskType())) {
+        try (AutoLogContext ignore4 = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
+                 TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name())) {
           if (delegateTask.getDelegateId() == null && delegateTask.getStatus() == QUEUED) {
             logger.info("Found unassigned delegate task");
             return delegateTask;
@@ -1934,62 +1935,60 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Override
   public void processDelegateResponse(
       String accountId, String delegateId, String taskId, DelegateTaskResponse response) {
-    try (AutoLogContext ignore1 = new TaskLogContext(taskId); AutoLogContext ignore2 = new AccountLogContext(accountId);
-         AutoLogContext ignore3 = new DelegateLogContext(delegateId)) {
-      if (response == null) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, NOBODY).addParam("args", "response cannot be null");
-      }
+    if (response == null) {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, NOBODY).addParam("args", "response cannot be null");
+    }
 
-      logger.info("Response received for task with responseCode [{}]", delegateId, taskId, response.getResponseCode());
+    logger.info("Response received for task with responseCode [{}]", response.getResponseCode());
 
-      Query<DelegateTask> taskQuery = wingsPersistence.createQuery(DelegateTask.class)
-                                          .filter(DelegateTaskKeys.accountId, response.getAccountId())
-                                          .filter(ID_KEY, taskId);
+    Query<DelegateTask> taskQuery = wingsPersistence.createQuery(DelegateTask.class)
+                                        .filter(DelegateTaskKeys.accountId, response.getAccountId())
+                                        .filter(ID_KEY, taskId);
 
-      DelegateTask delegateTask = taskQuery.get();
+    DelegateTask delegateTask = taskQuery.get();
 
-      if (delegateTask != null) {
-        try (AutoLogContext ignore4 = new TaskLogContext(taskId, delegateTask.getData().getTaskType())) {
-          if (!StringUtils.equals(delegateTask.getVersion(), getVersion())) {
-            logger.warn("Version mismatch for task. [managerVersion {}, taskVersion {}]", getVersion(),
-                delegateTask.getVersion());
-          }
-
-          if (response.getResponseCode() == ResponseCode.RETRY_ON_OTHER_DELEGATE) {
-            logger.info("Delegate returned retryable error for task");
-
-            Set<String> alreadyTriedDelegates = delegateTask.getAlreadyTriedDelegates();
-            List<String> remainingConnectedDelegates =
-                assignDelegateService.connectedWhitelistedDelegates(delegateTask)
-                    .stream()
-                    .filter(item -> !delegateId.equals(item))
-                    .filter(item -> isEmpty(alreadyTriedDelegates) || !alreadyTriedDelegates.contains(item))
-                    .collect(toList());
-
-            if (!remainingConnectedDelegates.isEmpty()) {
-              logger.info("Requeueing task");
-
-              wingsPersistence.update(taskQuery,
-                  wingsPersistence.createUpdateOperations(DelegateTask.class)
-                      .unset(DelegateTaskKeys.delegateId)
-                      .unset(DelegateTaskKeys.validationStartedAt)
-                      .unset(DelegateTaskKeys.lastBroadcastAt)
-                      .unset(DelegateTaskKeys.validatingDelegateIds)
-                      .unset(DelegateTaskKeys.validationCompleteDelegateIds)
-                      .set(DelegateTaskKeys.broadcastCount, 1)
-                      .set(DelegateTaskKeys.status, QUEUED)
-                      .addToSet(DelegateTaskKeys.alreadyTriedDelegates, delegateId));
-              return;
-            } else {
-              logger.info("Task has been tried on all the connected delegates. Proceeding with error.");
-            }
-          }
-          handleResponse(delegateTask, taskQuery, response, FINISHED);
-          assignDelegateService.refreshWhitelist(delegateTask, delegateId);
+    if (delegateTask != null) {
+      try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
+               TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name())) {
+        if (!StringUtils.equals(delegateTask.getVersion(), getVersion())) {
+          logger.warn("Version mismatch for task. [managerVersion {}, taskVersion {}]", getVersion(),
+              delegateTask.getVersion());
         }
-      } else {
-        logger.warn("No delegate task found");
+
+        if (response.getResponseCode() == ResponseCode.RETRY_ON_OTHER_DELEGATE) {
+          logger.info("Delegate returned retryable error for task");
+
+          Set<String> alreadyTriedDelegates = delegateTask.getAlreadyTriedDelegates();
+          List<String> remainingConnectedDelegates =
+              assignDelegateService.connectedWhitelistedDelegates(delegateTask)
+                  .stream()
+                  .filter(item -> !delegateId.equals(item))
+                  .filter(item -> isEmpty(alreadyTriedDelegates) || !alreadyTriedDelegates.contains(item))
+                  .collect(toList());
+
+          if (!remainingConnectedDelegates.isEmpty()) {
+            logger.info("Requeueing task");
+
+            wingsPersistence.update(taskQuery,
+                wingsPersistence.createUpdateOperations(DelegateTask.class)
+                    .unset(DelegateTaskKeys.delegateId)
+                    .unset(DelegateTaskKeys.validationStartedAt)
+                    .unset(DelegateTaskKeys.lastBroadcastAt)
+                    .unset(DelegateTaskKeys.validatingDelegateIds)
+                    .unset(DelegateTaskKeys.validationCompleteDelegateIds)
+                    .set(DelegateTaskKeys.broadcastCount, 1)
+                    .set(DelegateTaskKeys.status, QUEUED)
+                    .addToSet(DelegateTaskKeys.alreadyTriedDelegates, delegateId));
+            return;
+          } else {
+            logger.info("Task has been tried on all the connected delegates. Proceeding with error.");
+          }
+        }
+        handleResponse(delegateTask, taskQuery, response, FINISHED);
+        assignDelegateService.refreshWhitelist(delegateTask, delegateId);
       }
+    } else {
+      logger.warn("No delegate task found");
     }
   }
 
@@ -2023,7 +2022,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       DelegateTask delegateTask = delegateTaskQuery.get();
 
       if (delegateTask != null) {
-        try (AutoLogContext ignore3 = new TaskLogContext(delegateTaskId, delegateTask.getData().getTaskType())) {
+        try (AutoLogContext ignore3 = new TaskLogContext(delegateTaskId, delegateTask.getData().getTaskType(),
+                 TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name())) {
           String errorMessage =
               "Task expired. " + assignDelegateService.getActiveDelegateAssignmentErrorMessage(delegateTask);
           logger.info("Marking task as expired: {}", errorMessage);

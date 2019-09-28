@@ -22,7 +22,9 @@ import io.harness.data.validator.Trimmed;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.DelegateLogContext;
+import io.harness.delegate.task.TaskLogContext;
+import io.harness.logging.AutoLogContext;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -45,6 +47,7 @@ import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.PublicApi;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.AccountLogContext;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateScopeService;
@@ -119,7 +122,9 @@ public class DelegateResource {
   @ExceptionMetered
   public RestResponse<DelegateConfiguration> getDelegateConfiguration(
       @QueryParam("accountId") @NotEmpty String accountId) {
-    return new RestResponse<>(accountService.getDelegateConfiguration(accountId));
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId)) {
+      return new RestResponse<>(accountService.getDelegateConfiguration(accountId));
+    }
   }
 
   @GET
@@ -127,7 +132,9 @@ public class DelegateResource {
   @Timed
   @ExceptionMetered
   public RestResponse<DelegateStatus> listDelegateStatus(@QueryParam("accountId") @NotEmpty String accountId) {
-    return new RestResponse<>(delegateService.getDelegateStatus(accountId));
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId)) {
+      return new RestResponse<>(delegateService.getDelegateStatus(accountId));
+    }
   }
 
   @GET
@@ -136,7 +143,9 @@ public class DelegateResource {
   @ExceptionMetered
   @LearningEngineAuth
   public RestResponse<List<String>> getAvailableVersions(@QueryParam("accountId") @NotEmpty String accountId) {
-    return new RestResponse<>(delegateService.getAvailableVersions(accountId));
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId)) {
+      return new RestResponse<>(delegateService.getAvailableVersions(accountId));
+    }
   }
 
   @GET
@@ -145,7 +154,9 @@ public class DelegateResource {
   @ExceptionMetered
   public RestResponse<List<String>> kubernetesDelegateNames(
       @Context HttpServletRequest request, @QueryParam("accountId") @NotEmpty String accountId) {
-    return new RestResponse<>(delegateService.getKubernetesDelegateNames(accountId));
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId)) {
+      return new RestResponse<>(delegateService.getKubernetesDelegateNames(accountId));
+    }
   }
 
   @GET
@@ -154,7 +165,9 @@ public class DelegateResource {
   @ExceptionMetered
   public RestResponse<Set<String>> delegateTags(
       @Context HttpServletRequest request, @QueryParam("accountId") @NotEmpty String accountId) {
-    return new RestResponse<>(delegateService.getAllDelegateTags(accountId));
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId)) {
+      return new RestResponse<>(delegateService.getAllDelegateTags(accountId));
+    }
   }
 
   @GET
@@ -163,7 +176,10 @@ public class DelegateResource {
   @ExceptionMetered
   public RestResponse<Delegate> get(
       @PathParam("delegateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
-    return new RestResponse<>(delegateService.get(accountId, delegateId, true));
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId);
+         AutoLogContext ignore2 = new DelegateLogContext(delegateId)) {
+      return new RestResponse<>(delegateService.get(accountId, delegateId, true));
+    }
   }
 
   @GET
@@ -171,7 +187,9 @@ public class DelegateResource {
   @Timed
   @ExceptionMetered
   public RestResponse<String> get(@QueryParam("accountId") @NotEmpty String accountId) {
-    return new RestResponse<>(delegateService.getLatestDelegateVersion(accountId));
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId)) {
+      return new RestResponse<>(delegateService.getLatestDelegateVersion(accountId));
+    }
   }
 
   @DelegateAuth
@@ -181,16 +199,19 @@ public class DelegateResource {
   @ExceptionMetered
   public RestResponse<Delegate> update(@PathParam("delegateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId, Delegate delegate) {
-    delegate.setAccountId(accountId);
-    delegate.setUuid(delegateId);
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId);
+         AutoLogContext ignore2 = new DelegateLogContext(delegateId)) {
+      delegate.setAccountId(accountId);
+      delegate.setUuid(delegateId);
 
-    Delegate existingDelegate = delegateService.get(accountId, delegateId, true);
-    if (existingDelegate != null) {
-      delegate.setDelegateType(existingDelegate.getDelegateType());
-      delegate.setDelegateGroupName(existingDelegate.getDelegateGroupName());
+      Delegate existingDelegate = delegateService.get(accountId, delegateId, true);
+      if (existingDelegate != null) {
+        delegate.setDelegateType(existingDelegate.getDelegateType());
+        delegate.setDelegateGroupName(existingDelegate.getDelegateGroupName());
+      }
+
+      return new RestResponse<>(delegateService.update(delegate));
     }
-
-    return new RestResponse<>(delegateService.update(delegate));
   }
 
   @PUT
@@ -200,7 +221,10 @@ public class DelegateResource {
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<Delegate> updateDescription(@PathParam("delegateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId, @Trimmed String newDescription) {
-    return new RestResponse<>(delegateService.updateDescription(accountId, delegateId, newDescription));
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId);
+         AutoLogContext ignore2 = new DelegateLogContext(delegateId)) {
+      return new RestResponse<>(delegateService.updateDescription(accountId, delegateId, newDescription));
+    }
   }
 
   @DELETE
@@ -210,8 +234,11 @@ public class DelegateResource {
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<Void> delete(
       @PathParam("delegateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
-    delegateService.delete(accountId, delegateId);
-    return new RestResponse<>();
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId);
+         AutoLogContext ignore2 = new DelegateLogContext(delegateId)) {
+      delegateService.delete(accountId, delegateId);
+      return new RestResponse<>();
+    }
   }
 
   @DELETE
@@ -221,8 +248,10 @@ public class DelegateResource {
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<Void> deleteAllExcept(
       @QueryParam("accountId") @NotEmpty String accountId, List<String> delegatesToRetain) {
-    delegateService.retainOnlySelectedDelegatesAndDeleteRest(accountId, delegatesToRetain);
-    return new RestResponse<>();
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId)) {
+      delegateService.retainOnlySelectedDelegatesAndDeleteRest(accountId, delegatesToRetain);
+      return new RestResponse<>();
+    }
   }
 
   @PUT
@@ -232,31 +261,34 @@ public class DelegateResource {
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<Delegate> updateScopes(@PathParam("delegateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId, DelegateScopes delegateScopes) {
-    Delegate delegate = delegateService.get(accountId, delegateId, true);
-    if (delegateScopes == null) {
-      delegate.setIncludeScopes(null);
-      delegate.setExcludeScopes(null);
-    } else {
-      if (isNotEmpty(delegateScopes.getIncludeScopeIds())) {
-        delegate.setIncludeScopes(delegateScopes.getIncludeScopeIds()
-                                      .stream()
-                                      .map(s -> delegateScopeService.get(accountId, s))
-                                      .filter(Objects::nonNull)
-                                      .collect(toList()));
-      } else {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId);
+         AutoLogContext ignore2 = new DelegateLogContext(delegateId)) {
+      Delegate delegate = delegateService.get(accountId, delegateId, true);
+      if (delegateScopes == null) {
         delegate.setIncludeScopes(null);
-      }
-      if (isNotEmpty(delegateScopes.getExcludeScopeIds())) {
-        delegate.setExcludeScopes(delegateScopes.getExcludeScopeIds()
-                                      .stream()
-                                      .map(s -> delegateScopeService.get(accountId, s))
-                                      .filter(Objects::nonNull)
-                                      .collect(toList()));
-      } else {
         delegate.setExcludeScopes(null);
+      } else {
+        if (isNotEmpty(delegateScopes.getIncludeScopeIds())) {
+          delegate.setIncludeScopes(delegateScopes.getIncludeScopeIds()
+                                        .stream()
+                                        .map(s -> delegateScopeService.get(accountId, s))
+                                        .filter(Objects::nonNull)
+                                        .collect(toList()));
+        } else {
+          delegate.setIncludeScopes(null);
+        }
+        if (isNotEmpty(delegateScopes.getExcludeScopeIds())) {
+          delegate.setExcludeScopes(delegateScopes.getExcludeScopeIds()
+                                        .stream()
+                                        .map(s -> delegateScopeService.get(accountId, s))
+                                        .filter(Objects::nonNull)
+                                        .collect(toList()));
+        } else {
+          delegate.setExcludeScopes(null);
+        }
       }
+      return new RestResponse<>(delegateService.updateScopes(delegate));
     }
-    return new RestResponse<>(delegateService.updateScopes(delegate));
   }
 
   private static class DelegateScopes {
@@ -287,10 +319,14 @@ public class DelegateResource {
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<Delegate> updateTags(@PathParam("delegateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId, DelegateTags delegateTags) {
-    Delegate delegate = delegateService.get(accountId, delegateId, true);
-    delegate.setTags(delegateTags.getTags());
-    return new RestResponse<>(delegateService.updateTags(delegate));
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId);
+         AutoLogContext ignore2 = new DelegateLogContext(delegateId)) {
+      Delegate delegate = delegateService.get(accountId, delegateId, true);
+      delegate.setTags(delegateTags.getTags());
+      return new RestResponse<>(delegateService.updateTags(delegate));
+    }
   }
+
   private static class DelegateTags {
     private List<String> tags;
     public List<String> getTags() {
@@ -307,11 +343,13 @@ public class DelegateResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Delegate> register(@QueryParam("accountId") @NotEmpty String accountId, Delegate delegate) {
-    delegate.setAccountId(accountId);
-    long startTime = System.currentTimeMillis();
-    Delegate register = delegateService.register(delegate);
-    logger.info("Delegate registration took {} in ms", System.currentTimeMillis() - startTime);
-    return new RestResponse<>(register);
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId)) {
+      delegate.setAccountId(accountId);
+      long startTime = System.currentTimeMillis();
+      Delegate register = delegateService.register(delegate);
+      logger.info("Delegate registration took {} in ms", System.currentTimeMillis() - startTime);
+      return new RestResponse<>(register);
+    }
   }
 
   @DelegateAuth
@@ -322,9 +360,12 @@ public class DelegateResource {
   public RestResponse<DelegateProfileParams> checkForProfile(@QueryParam("accountId") @NotEmpty String accountId,
       @PathParam("delegateId") String delegateId, @QueryParam("profileId") String profileId,
       @QueryParam("lastUpdatedAt") Long lastUpdatedAt) {
-    DelegateProfileParams profileParams =
-        delegateService.checkForProfile(accountId, delegateId, profileId, lastUpdatedAt);
-    return new RestResponse<>(profileParams);
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId);
+         AutoLogContext ignore2 = new DelegateLogContext(delegateId)) {
+      DelegateProfileParams profileParams =
+          delegateService.checkForProfile(accountId, delegateId, profileId, lastUpdatedAt);
+      return new RestResponse<>(profileParams);
+    }
   }
 
   @GET
@@ -333,7 +374,10 @@ public class DelegateResource {
   @ExceptionMetered
   public RestResponse<String> getProfileResult(
       @PathParam("delegateId") String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
-    return new RestResponse<>(delegateService.getProfileResult(accountId, delegateId));
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId);
+         AutoLogContext ignore2 = new DelegateLogContext(delegateId)) {
+      return new RestResponse<>(delegateService.getProfileResult(accountId, delegateId));
+    }
   }
 
   @DelegateAuth
@@ -343,35 +387,41 @@ public class DelegateResource {
   @ExceptionMetered
   public void connectionHeartbeat(@QueryParam("accountId") @NotEmpty String accountId,
       @PathParam("delegateId") String delegateId, DelegateConnectionHeartbeat connectionHeartbeat) {
-    delegateService.doConnectionHeartbeat(accountId, delegateId, connectionHeartbeat);
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId);
+         AutoLogContext ignore2 = new DelegateLogContext(delegateId)) {
+      delegateService.doConnectionHeartbeat(accountId, delegateId, connectionHeartbeat);
+    }
   }
 
   @POST
   public RestResponse<Delegate> add(@QueryParam("accountId") @NotEmpty String accountId, Delegate delegate) {
-    delegate.setAccountId(accountId);
-    return new RestResponse<>(delegateService.add(delegate));
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId)) {
+      delegate.setAccountId(accountId);
+      return new RestResponse<>(delegateService.add(delegate));
+    }
   }
-
   @GET
   @Path("downloadUrl")
   @Timed
   @ExceptionMetered
   public RestResponse<Map<String, String>> downloadUrl(
       @Context HttpServletRequest request, @QueryParam("accountId") @NotEmpty String accountId) {
-    String url = getManagerUrl(request);
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId)) {
+      String url = getManagerUrl(request);
 
-    return new RestResponse<>(ImmutableMap.of("downloadUrl",
-        url + request.getRequestURI().replace("downloadUrl", "download") + "?accountId=" + accountId
-            + "&token=" + downloadTokenService.createDownloadToken("delegate." + accountId),
-        "dockerUrl",
-        url + request.getRequestURI().replace("downloadUrl", "docker") + "?accountId=" + accountId
-            + "&token=" + downloadTokenService.createDownloadToken("delegate." + accountId),
-        "kubernetesUrl",
-        url + request.getRequestURI().replace("downloadUrl", "kubernetes") + "?accountId=" + accountId
-            + "&token=" + downloadTokenService.createDownloadToken("delegate." + accountId),
-        "ecsUrl",
-        url + request.getRequestURI().replace("downloadUrl", "ecs") + "?accountId=" + accountId
-            + "&token=" + downloadTokenService.createDownloadToken("delegate." + accountId)));
+      return new RestResponse<>(ImmutableMap.of("downloadUrl",
+          url + request.getRequestURI().replace("downloadUrl", "download") + "?accountId=" + accountId
+              + "&token=" + downloadTokenService.createDownloadToken("delegate." + accountId),
+          "dockerUrl",
+          url + request.getRequestURI().replace("downloadUrl", "docker") + "?accountId=" + accountId
+              + "&token=" + downloadTokenService.createDownloadToken("delegate." + accountId),
+          "kubernetesUrl",
+          url + request.getRequestURI().replace("downloadUrl", "kubernetes") + "?accountId=" + accountId
+              + "&token=" + downloadTokenService.createDownloadToken("delegate." + accountId),
+          "ecsUrl",
+          url + request.getRequestURI().replace("downloadUrl", "ecs") + "?accountId=" + accountId
+              + "&token=" + downloadTokenService.createDownloadToken("delegate." + accountId)));
+    }
   }
 
   @PublicApi
@@ -382,13 +432,16 @@ public class DelegateResource {
   public Response downloadScripts(@Context HttpServletRequest request,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("token") @NotEmpty String token)
       throws IOException, TemplateException {
-    downloadTokenService.validateDownloadToken("delegate." + accountId, token);
-    File delegateFile = delegateService.downloadScripts(getManagerUrl(request), getVerificationUrl(request), accountId);
-    return Response.ok(delegateFile)
-        .header("Content-Transfer-Encoding", "binary")
-        .type("application/zip; charset=binary")
-        .header("Content-Disposition", "attachment; filename=" + DELEGATE_DIR + ".tar.gz")
-        .build();
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId)) {
+      downloadTokenService.validateDownloadToken("delegate." + accountId, token);
+      File delegateFile =
+          delegateService.downloadScripts(getManagerUrl(request), getVerificationUrl(request), accountId);
+      return Response.ok(delegateFile)
+          .header("Content-Transfer-Encoding", "binary")
+          .type("application/zip; charset=binary")
+          .header("Content-Disposition", "attachment; filename=" + DELEGATE_DIR + ".tar.gz")
+          .build();
+    }
   }
 
   @PublicApi
@@ -399,13 +452,16 @@ public class DelegateResource {
   public Response downloadDocker(@Context HttpServletRequest request,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("token") @NotEmpty String token)
       throws IOException, TemplateException {
-    downloadTokenService.validateDownloadToken("delegate." + accountId, token);
-    File delegateFile = delegateService.downloadDocker(getManagerUrl(request), getVerificationUrl(request), accountId);
-    return Response.ok(delegateFile)
-        .header("Content-Transfer-Encoding", "binary")
-        .type("application/zip; charset=binary")
-        .header("Content-Disposition", "attachment; filename=" + DOCKER_DELEGATE + ".tar.gz")
-        .build();
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId)) {
+      downloadTokenService.validateDownloadToken("delegate." + accountId, token);
+      File delegateFile =
+          delegateService.downloadDocker(getManagerUrl(request), getVerificationUrl(request), accountId);
+      return Response.ok(delegateFile)
+          .header("Content-Transfer-Encoding", "binary")
+          .type("application/zip; charset=binary")
+          .header("Content-Disposition", "attachment; filename=" + DOCKER_DELEGATE + ".tar.gz")
+          .build();
+    }
   }
 
   @PublicApi
@@ -417,14 +473,16 @@ public class DelegateResource {
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("delegateName") @NotEmpty String delegateName,
       @QueryParam("delegateProfileId") String delegateProfileId, @QueryParam("token") @NotEmpty String token)
       throws IOException, TemplateException {
-    downloadTokenService.validateDownloadToken("delegate." + accountId, token);
-    File delegateFile = delegateService.downloadKubernetes(
-        getManagerUrl(request), getVerificationUrl(request), accountId, delegateName, delegateProfileId);
-    return Response.ok(delegateFile)
-        .header("Content-Transfer-Encoding", "binary")
-        .type("application/zip; charset=binary")
-        .header("Content-Disposition", "attachment; filename=" + KUBERNETES_DELEGATE + ".tar.gz")
-        .build();
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId)) {
+      downloadTokenService.validateDownloadToken("delegate." + accountId, token);
+      File delegateFile = delegateService.downloadKubernetes(
+          getManagerUrl(request), getVerificationUrl(request), accountId, delegateName, delegateProfileId);
+      return Response.ok(delegateFile)
+          .header("Content-Transfer-Encoding", "binary")
+          .type("application/zip; charset=binary")
+          .header("Content-Disposition", "attachment; filename=" + KUBERNETES_DELEGATE + ".tar.gz")
+          .build();
+    }
   }
 
   @PublicApi
@@ -436,14 +494,16 @@ public class DelegateResource {
       @QueryParam("delegateGroupName") @NotEmpty String delegateGroupName, @QueryParam("awsVpcMode") Boolean awsVpcMode,
       @QueryParam("hostname") String hostname, @QueryParam("delegateProfileId") String delegateProfileId,
       @QueryParam("token") @NotEmpty String token) throws IOException, TemplateException {
-    downloadTokenService.validateDownloadToken("delegate." + accountId, token);
-    File delegateFile = delegateService.downloadECSDelegate(getManagerUrl(request), getVerificationUrl(request),
-        accountId, awsVpcMode, hostname, delegateGroupName, delegateProfileId);
-    return Response.ok(delegateFile)
-        .header("Content-Transfer-Encoding", "binary")
-        .type("application/zip; charset=binary")
-        .header("Content-Disposition", "attachment; filename=" + ECS_DELEGATE + ".tar.gz")
-        .build();
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId)) {
+      downloadTokenService.validateDownloadToken("delegate." + accountId, token);
+      File delegateFile = delegateService.downloadECSDelegate(getManagerUrl(request), getVerificationUrl(request),
+          accountId, awsVpcMode, hostname, delegateGroupName, delegateProfileId);
+      return Response.ok(delegateFile)
+          .header("Content-Transfer-Encoding", "binary")
+          .type("application/zip; charset=binary")
+          .header("Content-Disposition", "attachment; filename=" + ECS_DELEGATE + ".tar.gz")
+          .build();
+    }
   }
 
   @PublicApi
@@ -455,14 +515,16 @@ public class DelegateResource {
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("delegateName") @NotEmpty String delegateName,
       @QueryParam("delegateProfileId") String delegateProfileId, @QueryParam("token") @NotEmpty String token)
       throws IOException, TemplateException {
-    downloadTokenService.validateDownloadToken("delegate." + accountId, token);
-    File delegateFile = delegateService.downloadDelegateValuesYamlFile(
-        getManagerUrl(request), getVerificationUrl(request), accountId, delegateName, delegateProfileId);
-    return Response.ok(delegateFile)
-        .header("Content-Transfer-Encoding", "binary")
-        .type("text/plain; charset=UTF-8")
-        .header("Content-Disposition", "attachment; filename=" + HARNESS_DELEGATE_VALUES_YAML + ".yaml")
-        .build();
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId)) {
+      downloadTokenService.validateDownloadToken("delegate." + accountId, token);
+      File delegateFile = delegateService.downloadDelegateValuesYamlFile(
+          getManagerUrl(request), getVerificationUrl(request), accountId, delegateName, delegateProfileId);
+      return Response.ok(delegateFile)
+          .header("Content-Transfer-Encoding", "binary")
+          .type("text/plain; charset=UTF-8")
+          .header("Content-Disposition", "attachment; filename=" + HARNESS_DELEGATE_VALUES_YAML + ".yaml")
+          .build();
+    }
   }
 
   private String getManagerUrl(HttpServletRequest request) {
@@ -484,7 +546,10 @@ public class DelegateResource {
   @ExceptionMetered
   public void updateTaskResponse(@PathParam("delegateId") String delegateId, @PathParam("taskId") String taskId,
       @QueryParam("accountId") @NotEmpty String accountId, DelegateTaskResponse delegateTaskResponse) {
-    delegateService.processDelegateResponse(accountId, delegateId, taskId, delegateTaskResponse);
+    try (AutoLogContext ignore1 = new TaskLogContext(taskId); AutoLogContext ignore2 = new AccountLogContext(accountId);
+         AutoLogContext ignore3 = new DelegateLogContext(delegateId)) {
+      delegateService.processDelegateResponse(accountId, delegateId, taskId, delegateTaskResponse);
+    }
   }
 
   @DelegateAuth
@@ -495,22 +560,13 @@ public class DelegateResource {
   @ExceptionMetered
   public DelegatePackage acquireDelegateTask(@PathParam("delegateId") String delegateId,
       @PathParam("taskId") String taskId, @QueryParam("accountId") @NotEmpty String accountId) {
-    if (delegateRequestRateLimiter.isOverRateLimit(accountId, delegateId)) {
-      return null;
-    }
-
-    final DelegatePackage delegatePackage = delegateService.acquireDelegateTask(accountId, delegateId, taskId);
-
-    if (delegatePackage != null && delegatePackage.getDelegateTask() != null
-        && delegatePackage.getDelegateTask().getData() != null) {
-      final Object[] parameters = delegatePackage.getDelegateTask().getData().getParameters();
-
-      if (parameters != null && (parameters.length != 1 || !(parameters[0] instanceof TaskParameters))) {
-        logger.warn(
-            "Task {} need task parameters refactoring", delegatePackage.getDelegateTask().getData().getTaskType());
+    try (AutoLogContext ignore1 = new TaskLogContext(taskId); AutoLogContext ignore2 = new AccountLogContext(accountId);
+         AutoLogContext ignore3 = new DelegateLogContext(delegateId)) {
+      if (delegateRequestRateLimiter.isOverRateLimit(accountId, delegateId)) {
+        return null;
       }
+      return delegateService.acquireDelegateTask(accountId, delegateId, taskId);
     }
-    return delegatePackage;
   }
 
   @DelegateAuth
@@ -522,7 +578,10 @@ public class DelegateResource {
   public DelegatePackage reportConnectionResults(@PathParam("delegateId") String delegateId,
       @PathParam("taskId") String taskId, @QueryParam("accountId") @NotEmpty String accountId,
       List<DelegateConnectionResult> results) {
-    return delegateService.reportConnectionResults(accountId, delegateId, taskId, results);
+    try (AutoLogContext ignore1 = new TaskLogContext(taskId); AutoLogContext ignore2 = new AccountLogContext(accountId);
+         AutoLogContext ignore3 = new DelegateLogContext(delegateId)) {
+      return delegateService.reportConnectionResults(accountId, delegateId, taskId, results);
+    }
   }
 
   @DelegateAuth
@@ -533,7 +592,10 @@ public class DelegateResource {
   @ExceptionMetered
   public void failIfAllDelegatesFailed(@PathParam("delegateId") String delegateId, @PathParam("taskId") String taskId,
       @QueryParam("accountId") @NotEmpty String accountId) {
-    delegateService.failIfAllDelegatesFailed(accountId, delegateId, taskId);
+    try (AutoLogContext ignore1 = new TaskLogContext(taskId); AutoLogContext ignore2 = new AccountLogContext(accountId);
+         AutoLogContext ignore3 = new DelegateLogContext(delegateId)) {
+      delegateService.failIfAllDelegatesFailed(accountId, delegateId, taskId);
+    }
   }
 
   @DelegateAuth
@@ -543,7 +605,10 @@ public class DelegateResource {
   @ExceptionMetered
   public void clearCache(
       @PathParam("delegateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
-    delegateService.clearCache(accountId, delegateId);
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId);
+         AutoLogContext ignore2 = new DelegateLogContext(delegateId)) {
+      delegateService.clearCache(accountId, delegateId);
+    }
   }
 
   @DelegateAuth
@@ -554,8 +619,11 @@ public class DelegateResource {
   public RestResponse<DelegateScripts> checkForUpgrade(@Context HttpServletRequest request,
       @HeaderParam("Version") String version, @PathParam("delegateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId) throws IOException, TemplateException {
-    return new RestResponse<>(
-        delegateService.getDelegateScripts(accountId, version, getManagerUrl(request), getVerificationUrl(request)));
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId);
+         AutoLogContext ignore2 = new DelegateLogContext(delegateId)) {
+      return new RestResponse<>(
+          delegateService.getDelegateScripts(accountId, version, getManagerUrl(request), getVerificationUrl(request)));
+    }
   }
 
   @DelegateAuth
@@ -566,8 +634,10 @@ public class DelegateResource {
   public RestResponse<DelegateScripts> getDelegateScripts(@Context HttpServletRequest request,
       @QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("delegateVersion") @NotEmpty String delegateVersion) throws IOException, TemplateException {
-    return new RestResponse<>(delegateService.getDelegateScripts(
-        accountId, delegateVersion, getManagerUrl(request), getVerificationUrl(request)));
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId)) {
+      return new RestResponse<>(delegateService.getDelegateScripts(
+          accountId, delegateVersion, getManagerUrl(request), getVerificationUrl(request)));
+    }
   }
 
   @DelegateAuth
@@ -577,7 +647,10 @@ public class DelegateResource {
   @ExceptionMetered
   public List<DelegateTaskEvent> getDelegateTaskEvents(@PathParam("delegateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("syncOnly") boolean syncOnly) {
-    return delegateService.getDelegateTaskEvents(accountId, delegateId, syncOnly);
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId);
+         AutoLogContext ignore2 = new DelegateLogContext(delegateId)) {
+      return delegateService.getDelegateTaskEvents(accountId, delegateId, syncOnly);
+    }
   }
 
   @DelegateAuth
@@ -587,12 +660,15 @@ public class DelegateResource {
   @ExceptionMetered
   public RestResponse<Delegate> updateDelegateHB(
       @QueryParam("accountId") @NotEmpty String accountId, Delegate delegate) {
-    // delegate.isPolllingModeEnabled() will be true here.
-    if ("ECS".equals(delegate.getDelegateType())) {
-      Delegate registeredDelegate = delegateService.handleEcsDelegateRequest(delegate);
-      return new RestResponse<>(registeredDelegate);
-    } else {
-      return new RestResponse<>(delegateService.updateHeartbeatForDelegateWithPollingEnabled(delegate));
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId);
+         AutoLogContext ignore2 = new DelegateLogContext(delegate.getUuid())) {
+      // delegate.isPolllingModeEnabled() will be true here.
+      if ("ECS".equals(delegate.getDelegateType())) {
+        Delegate registeredDelegate = delegateService.handleEcsDelegateRequest(delegate);
+        return new RestResponse<>(registeredDelegate);
+      } else {
+        return new RestResponse<>(delegateService.updateHeartbeatForDelegateWithPollingEnabled(delegate));
+      }
     }
   }
 
@@ -603,6 +679,9 @@ public class DelegateResource {
   @ExceptionMetered
   public void saveApiCallLogs(@PathParam("delegateId") String delegateId, @QueryParam("accountId") String accountId,
       List<ThirdPartyApiCallLog> logs) {
-    wingsPersistence.save(logs);
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId);
+         AutoLogContext ignore2 = new DelegateLogContext(delegateId)) {
+      wingsPersistence.save(logs);
+    }
   }
 }

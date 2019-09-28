@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.logging.AutoLogContext;
 import io.harness.queue.QueueListener;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -127,7 +128,7 @@ public class ExecutionEventListener extends QueueListener<ExecutionEvent> {
         return;
       }
 
-      try (WorkflowExecutionLogContext ctx = new WorkflowExecutionLogContext(workflowExecution.getUuid())) {
+      try (AutoLogContext ignore = new WorkflowExecutionLogContext(workflowExecution.getUuid())) {
         logger.info("Starting Queued execution..");
 
         boolean started = stateMachineExecutor.startQueuedExecution(message.getAppId(), workflowExecution.getUuid());
