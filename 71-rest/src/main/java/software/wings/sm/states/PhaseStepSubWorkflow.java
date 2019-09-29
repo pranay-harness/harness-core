@@ -58,7 +58,6 @@ import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.beans.Activity;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.PhaseStepType;
-import software.wings.common.Constants;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -110,7 +109,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     }
 
     ExecutionResponse response;
-    PhaseElement phaseElement = contextIntf.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = contextIntf.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     if (!isRollback()) {
       validatePreRequisites(contextIntf, phaseElement);
       response = super.execute(contextIntf);
@@ -475,7 +474,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       return executionResponseBuilder.build();
     }
 
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     if (phaseElement != null) {
       handleElementNotifyResponseData(phaseElement, response, executionResponseBuilder);
     }

@@ -166,7 +166,6 @@ import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.trigger.Trigger;
-import software.wings.common.Constants;
 import software.wings.common.cache.MongoStore;
 import software.wings.dl.WingsPersistence;
 import software.wings.infra.InfrastructureDefinition;
@@ -2339,7 +2338,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         return ((InstanceElement) contextElement).getServiceTemplateElement().getServiceElement();
       }
       case PARAM: {
-        if (Constants.PHASE_PARAM.equals(contextElement.getName())) {
+        if (PhaseElement.PHASE_PARAM.equals(contextElement.getName())) {
           return ((PhaseElement) contextElement).getServiceElement();
         }
         break;
@@ -2878,7 +2877,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams.getEnv().getUuid();
-    PhaseElement phaseElement = executionContext.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = executionContext.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();
     PageRequest<WorkflowExecutionBaseline> pageRequest = aPageRequest()
                                                              .addFilter("workflowExecutionId", EQ, workflowExecutionId)

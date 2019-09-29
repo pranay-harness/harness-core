@@ -14,7 +14,6 @@ import lombok.Getter;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.artifact.Artifact;
-import software.wings.common.Constants;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
@@ -33,6 +32,8 @@ import java.util.Map;
 @Data
 @Builder
 public class PhaseElement implements ContextElement {
+  public static final String PHASE_PARAM = "PHASE_PARAM";
+
   @Inject @Transient private transient ArtifactService artifactService;
 
   private String uuid;
@@ -54,7 +55,7 @@ public class PhaseElement implements ContextElement {
 
   @Override
   public String getName() {
-    return Constants.PHASE_PARAM;
+    return PHASE_PARAM;
   }
 
   @Override

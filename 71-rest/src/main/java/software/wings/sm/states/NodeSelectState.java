@@ -39,7 +39,6 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceInstanceSelectionParams;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.Instance;
-import software.wings.common.Constants;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ArtifactService;
@@ -90,7 +89,7 @@ public abstract class NodeSelectState extends State {
     try {
       String appId = ((ExecutionContextImpl) context).getApp().getUuid();
 
-      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
       String serviceId = phaseElement.getServiceElement().getUuid();
       String infraMappingId = context.fetchInfraMappingId();
 

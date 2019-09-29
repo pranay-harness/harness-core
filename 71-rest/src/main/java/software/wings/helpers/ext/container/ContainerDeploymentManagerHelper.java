@@ -30,7 +30,6 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.ContainerInfo.Status;
-import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.helpers.ext.ecr.EcrClassicService;
@@ -101,7 +100,7 @@ public class ContainerDeploymentManagerHelper {
 
   public List<InstanceStatusSummary> getInstanceStatusSummaries(
       ExecutionContext context, List<ContainerInfo> containerInfos) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     ServiceElement serviceElement = phaseElement.getServiceElement();
     String serviceId = phaseElement.getServiceElement().getUuid();
     String appId = context.getAppId();

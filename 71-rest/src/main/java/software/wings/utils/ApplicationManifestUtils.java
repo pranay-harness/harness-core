@@ -35,7 +35,6 @@ import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.beans.yaml.GitFetchFilesResult;
-import software.wings.common.Constants;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.intfc.AppService;
@@ -291,7 +290,7 @@ public class ApplicationManifestUtils {
   }
 
   public ApplicationManifest getApplicationManifestForService(ExecutionContext context) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     Application app = appService.get(context.getAppId());
     ServiceElement serviceElement = phaseElement.getServiceElement();
     Service service = serviceResourceService.get(app.getUuid(), serviceElement.getUuid(), false);

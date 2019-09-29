@@ -50,7 +50,6 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
-import software.wings.common.Constants;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.StateExecutionService;
@@ -120,7 +119,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     stateExecutionInstance.setUuid(generateUuid());
     stateExecutionInstance.setDisplayName("DC_NODE_SELECT");
     when(context.getApp()).thenReturn(anApplication().uuid(APP_ID).build());
-    when(context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM))
+    when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM))
         .thenReturn(PhaseElement.builder()
                         .serviceElement(ServiceElement.builder().uuid(SERVICE_ID).build())
                         .infraMappingId(INFRA_MAPPING_ID)

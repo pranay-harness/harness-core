@@ -63,7 +63,6 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.infrastructure.Host;
-import software.wings.common.Constants;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.AwsUtils;
 import software.wings.service.impl.aws.model.AwsAmiPreDeploymentData;
@@ -148,7 +147,7 @@ public class AwsAmiServiceDeployState extends State {
   }
 
   protected Activity crateActivity(ExecutionContext context) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
@@ -472,7 +471,7 @@ public class AwsAmiServiceDeployState extends State {
   protected List<InstanceElement> handleAsyncInternal(AwsAmiServiceDeployResponse amiServiceDeployResponse,
       ExecutionContext context, AmiServiceSetupElement serviceSetupElement,
       ManagerExecutionLogCallback executionLogCallback) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
 
     AwsAmiDeployStateExecutionData awsAmiDeployStateExecutionData =

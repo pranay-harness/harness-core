@@ -52,7 +52,6 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.ContainerResizeParams;
 import software.wings.beans.command.ResizeCommandUnitExecutionData;
-import software.wings.common.Constants;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.service.intfc.ActivityService;
@@ -202,7 +201,7 @@ public abstract class ContainerServiceDeploy extends State {
         return buildEndStateExecution(executionData, commandExecutionResult, ExecutionStatus.FAILED);
       }
 
-      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
       ServiceElement serviceElement = phaseElement.getServiceElement();
       String serviceId = phaseElement.getServiceElement().getUuid();
       String appId = context.getAppId();
@@ -319,7 +318,7 @@ public abstract class ContainerServiceDeploy extends State {
     final Integer downsizeInstanceCount;
 
     ContextData(ExecutionContext context, ContainerServiceDeploy containerServiceDeploy) {
-      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
       serviceId = phaseElement.getServiceElement().getUuid();
       appId = context.getAppId();
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);

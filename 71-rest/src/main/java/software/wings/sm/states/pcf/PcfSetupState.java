@@ -194,7 +194,7 @@ public class PcfSetupState extends State {
   }
 
   protected ExecutionResponse executePcfTask(ExecutionContext context, String activityId) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
 
     Application app = appService.get(context.getAppId());

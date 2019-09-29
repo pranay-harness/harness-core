@@ -37,7 +37,6 @@ import software.wings.beans.ResourceConstraintNotification;
 import software.wings.beans.ResourceConstraintUsage;
 import software.wings.beans.ResourceConstraintUsage.ActiveScope;
 import software.wings.beans.WorkflowExecution;
-import software.wings.common.Constants;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
@@ -136,7 +135,7 @@ public class ResourceConstraintState extends State {
         releaseEntityId = ResourceConstraintService.releaseEntityId(context.getWorkflowExecutionId());
         break;
       case PHASE:
-        PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+        PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
         if (phaseElement == null) {
           throw new InvalidRequestException(
               "Resource constraint with holding scope 'Phase' cannot be used outside a phase");

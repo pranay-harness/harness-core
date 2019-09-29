@@ -42,7 +42,6 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowExecution;
-import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.AwsHelperService;
@@ -127,7 +126,7 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
     ExecutionContext context = spy(new ExecutionContextImpl(stateExecutionInstance));
     doReturn(PhaseElement.builder().serviceElement(ServiceElement.builder().uuid("serviceA").build()).build())
         .when(context)
-        .getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+        .getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     doReturn(appId).when(context).getAppId();
     doReturn(UUID.randomUUID().toString()).when(context).getWorkflowExecutionId();
     when(infraMappingService.get(anyString(), anyString()))

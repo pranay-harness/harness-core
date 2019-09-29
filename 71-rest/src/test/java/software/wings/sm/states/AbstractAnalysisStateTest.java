@@ -45,7 +45,6 @@ import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowExecution;
-import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.instance.ContainerInstanceHandler;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -285,7 +284,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     ExecutionContext context = Mockito.mock(ExecutionContext.class);
     CanaryWorkflowStandardParams params = Mockito.mock(CanaryWorkflowStandardParams.class);
     doReturn(instanceElements).when(params).getInstances();
-    when(context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM))
+    when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM))
         .thenReturn(PhaseElement.builder().infraMappingId(UUID.randomUUID().toString()).build());
     when(context.getAppId()).thenReturn(appId);
     when(context.fetchInfraMappingId()).thenReturn(infraMappingId);
@@ -327,7 +326,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     ExecutionContext context = Mockito.mock(ExecutionContext.class);
     CanaryWorkflowStandardParams params = Mockito.mock(CanaryWorkflowStandardParams.class);
     doReturn(instanceElements).when(params).getInstances();
-    when(context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM))
+    when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM))
         .thenReturn(PhaseElement.builder().infraMappingId(UUID.randomUUID().toString()).build());
     when(context.getAppId()).thenReturn(appId);
     when(context.fetchInfraMappingId()).thenReturn(infraMappingId);

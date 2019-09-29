@@ -31,7 +31,6 @@ import io.harness.exception.FailureType;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.PhaseElement;
-import software.wings.common.Constants;
 import software.wings.service.impl.instance.InstanceHelper;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
@@ -129,7 +128,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       }
 
       PhaseSubWorkflow phaseSubWorkflow = null;
-      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
 
       boolean rollbackProvisioners = false;
       if (state.getStateType().equals(StateType.PHASE.name()) && state instanceof PhaseSubWorkflow) {
