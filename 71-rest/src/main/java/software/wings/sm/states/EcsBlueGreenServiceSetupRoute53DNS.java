@@ -33,7 +33,6 @@ import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
 import software.wings.beans.command.EcsSetupParams;
 import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.beans.container.ImageDetails;
-import software.wings.common.Constants;
 import software.wings.helpers.ext.ecs.request.EcsBGRoute53ServiceSetupRequest;
 import software.wings.helpers.ext.ecs.response.EcsBGRoute53ServiceSetupResponse;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
@@ -182,7 +181,7 @@ public class EcsBlueGreenServiceSetupRoute53DNS extends State {
         (EcsBGRoute53ServiceSetupResponse) executionResponse.getEcsCommandResponse();
     ContainerSetupCommandUnitExecutionData setupExecutionData = ecsServiceSetupResponse.getSetupData();
 
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();
     Artifact artifact = ((DeploymentExecutionContext) context).getDefaultArtifactForService(serviceId);
     if (artifact == null) {

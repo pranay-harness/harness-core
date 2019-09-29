@@ -39,7 +39,6 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.container.KubernetesSwapServiceSelectorsParams;
-import software.wings.common.Constants;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.container.ContainerMasterUrlHelper;
 import software.wings.service.impl.ContainerServiceParams;
@@ -208,7 +207,7 @@ public class KubernetesSwapServiceSelectors extends State {
     // this is needed to have ${k8s) in context
     k8sStateHelper.getK8sElement(context);
 
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Application app = appService.get(context.getAppId());
     Environment env = workflowStandardParams.getEnv();

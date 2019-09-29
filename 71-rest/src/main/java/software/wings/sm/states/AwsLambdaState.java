@@ -60,7 +60,6 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
-import software.wings.common.Constants;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.aws.model.AwsLambdaExecuteWfRequest;
 import software.wings.service.impl.aws.model.AwsLambdaExecuteWfRequest.AwsLambdaExecuteWfRequestBuilder;
@@ -223,7 +222,7 @@ public class AwsLambdaState extends State {
   }
 
   private ExecutionResponse executeInternal(ExecutionContext context) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);

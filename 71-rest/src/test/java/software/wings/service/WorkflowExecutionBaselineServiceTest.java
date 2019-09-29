@@ -30,7 +30,6 @@ import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
-import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
@@ -675,7 +674,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       WorkflowStandardParams workflowStandardParams = Mockito.mock(WorkflowStandardParams.class);
       when(workflowStandardParams.getEnv()).thenReturn(anEnvironment().uuid(envId).build());
       when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
-      when(executionContext.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM))
+      when(executionContext.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM))
           .thenReturn(PhaseElement.builder().serviceElement(ServiceElement.builder().uuid(serviceId).build()).build());
       when(stateMachineExecutor.getExecutionContext(appId, workflowExecutionId, stateExecutionId))
           .thenReturn(executionContext);

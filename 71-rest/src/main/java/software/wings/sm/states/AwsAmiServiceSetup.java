@@ -52,7 +52,6 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.container.UserDataSpecification;
-import software.wings.common.Constants;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupRequest.AwsAmiServiceSetupRequestBuilder;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse;
@@ -174,7 +173,7 @@ public class AwsAmiServiceSetup extends State {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);

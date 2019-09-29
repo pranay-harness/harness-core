@@ -28,7 +28,6 @@ import software.wings.beans.command.ContainerSetupParams;
 import software.wings.beans.command.KubernetesSetupParams;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ImageDetails;
-import software.wings.common.Constants;
 import software.wings.sm.ExecutionContext;
 
 /**
@@ -65,7 +64,7 @@ public class KubernetesSetupRollback extends ContainerServiceSetup {
         getServiceSteadyStateTimeout() > 0 ? getServiceSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT;
     boolean useNewLabelMechanism = true;
 
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     ContainerServiceElement containerElement =
         context.<ContainerServiceElement>getContextElementList(ContextElementType.CONTAINER_SERVICE)
             .stream()

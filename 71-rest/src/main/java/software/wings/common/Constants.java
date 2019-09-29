@@ -11,11 +11,6 @@ import java.util.regex.Pattern;
 @Deprecated
 public interface Constants {
   /**
-   * The constant PHASE_PARAM.
-   */
-  String PHASE_PARAM = "PHASE_PARAM";
-
-  /**
    * The constant COLLECT_ARTIFACT.
    */
   String COLLECT_ARTIFACT = "Collect Artifact";

@@ -32,7 +32,6 @@ import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
 import software.wings.beans.command.EcsSetupParams;
 import software.wings.beans.container.ImageDetails;
-import software.wings.common.Constants;
 import software.wings.helpers.ext.ecs.request.EcsServiceSetupRequest;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceSetupResponse;
@@ -193,7 +192,7 @@ public class EcsDaemonServiceSetup extends State {
         (EcsServiceSetupResponse) executionResponse.getEcsCommandResponse();
     ContainerSetupCommandUnitExecutionData setupExecutionData = ecsServiceSetupResponse.getSetupData();
     CommandStateExecutionData executionData = (CommandStateExecutionData) context.getStateExecutionData();
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();
     Artifact artifact = ((DeploymentExecutionContext) context).getDefaultArtifactForService(serviceId);
     if (artifact == null) {

@@ -37,7 +37,6 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
-import software.wings.common.Constants;
 import software.wings.helpers.ext.ecs.request.EcsBGRoute53DNSWeightUpdateRequest;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.service.intfc.ActivityService;
@@ -119,7 +118,7 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
   }
 
   protected ExecutionResponse executeInternal(ExecutionContext context, boolean rollback) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     Optional<ContainerServiceElement> containerServiceElementOptional =
         context.<ContainerServiceElement>getContextElementList(ContextElementType.CONTAINER_SERVICE)
             .stream()

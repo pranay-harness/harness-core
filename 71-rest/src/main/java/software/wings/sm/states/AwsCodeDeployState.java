@@ -48,7 +48,6 @@ import software.wings.beans.command.CodeDeployCommandExecutionData;
 import software.wings.beans.command.CodeDeployParams;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
-import software.wings.common.Constants;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.aws.model.AwsCodeDeployS3LocationData;
@@ -127,7 +126,7 @@ public class AwsCodeDeployState extends State {
   public ExecutionResponse execute(ExecutionContext context) {
     CommandStateExecutionData.Builder executionDataBuilder = aCommandStateExecutionData();
 
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
@@ -286,7 +285,7 @@ public class AwsCodeDeployState extends State {
     activityService.updateStatus(
         commandStateExecutionData.getActivityId(), commandStateExecutionData.getAppId(), status);
 
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);

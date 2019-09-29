@@ -64,7 +64,6 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.artifact.Artifact;
-import software.wings.common.Constants;
 import software.wings.common.InfrastructureConstants;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
@@ -909,7 +908,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       });
     }
 
-    PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     if (phaseElement != null && isNotEmpty(phaseElement.getVariableOverrides())) {
       variables.putAll(phaseElement.getVariableOverrides().stream().collect(
           Collectors.toMap(NameValuePair::getName, NameValuePair::getValue)));
@@ -924,7 +923,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   }
 
   protected List<ServiceVariable> prepareServiceVariables(EncryptedFieldComputeMode encryptedFieldComputeMode) {
-    PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     if (phaseElement == null || phaseElement.getServiceElement() == null
         || phaseElement.getServiceElement().getUuid() == null) {
       return null;
@@ -959,7 +958,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
         : workflowStandardParams.getWorkflowElement().getPipelineDeploymentUuid();
     String workflowExecutionId = getWorkflowExecutionId();
 
-    PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     String phaseExecutionId =
         phaseElement == null ? null : workflowExecutionId + phaseElement.getUuid() + phaseElement.getPhaseName();
 
@@ -1023,7 +1022,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   @Override
   public InfraMappingElement fetchInfraMappingElement() {
-    PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     String infraMappingId = fetchInfraMappingId();
     if (infraMappingId == null) {
       return null;
@@ -1084,7 +1083,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   @Override
   public String fetchInfraMappingId() {
-    PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
 
     if (phaseElement == null) {
       return null;

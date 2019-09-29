@@ -55,7 +55,6 @@ import software.wings.beans.command.EcsSetupParams;
 import software.wings.beans.command.KubernetesSetupParams;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ImageDetails;
-import software.wings.common.Constants;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
@@ -115,7 +114,7 @@ public abstract class ContainerServiceSetup extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     try {
-      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
       String serviceId = phaseElement.getServiceElement().getUuid();
 
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
@@ -272,7 +271,7 @@ public abstract class ContainerServiceSetup extends State {
     CommandStateExecutionData executionData = (CommandStateExecutionData) context.getStateExecutionData();
     activityService.updateStatus(executionData.getActivityId(), executionData.getAppId(), status);
 
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();
     Artifact artifact = ((DeploymentExecutionContext) context).getDefaultArtifactForService(serviceId);
     if (artifact == null) {
@@ -428,7 +427,7 @@ public abstract class ContainerServiceSetup extends State {
   }
 
   protected String getClusterNameFromContextElement(ExecutionContext context) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
 
     Optional<ClusterElement> contextElement =
         context.<ClusterElement>getContextElementList(ContextElementType.CLUSTER)

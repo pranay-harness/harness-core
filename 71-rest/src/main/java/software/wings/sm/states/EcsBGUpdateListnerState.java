@@ -23,7 +23,6 @@ import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
-import software.wings.common.Constants;
 import software.wings.helpers.ext.ecs.request.EcsListenerUpdateRequestConfigData;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.service.intfc.ActivityService;
@@ -79,7 +78,7 @@ public class EcsBGUpdateListnerState extends State {
   }
 
   protected ExecutionResponse executeInternal(ExecutionContext context) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Application application = appService.get(context.getAppId());
     Environment environment = workflowStandardParams.getEnv();

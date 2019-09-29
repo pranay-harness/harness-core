@@ -71,7 +71,6 @@ import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.EcsContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.ImageDetails;
-import software.wings.common.Constants;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.ecs.request.EcsBGListenerUpdateRequest;
 import software.wings.helpers.ext.ecs.request.EcsCommandRequest;
@@ -396,7 +395,7 @@ public class EcsStateHelper {
       ArtifactCollectionUtils artifactCollectionUtils, ServiceResourceService serviceResourceService,
       InfrastructureMappingService infrastructureMappingService, SettingsService settingsService,
       SecretManager secretManager) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Artifact artifact = ((DeploymentExecutionContext) context).getDefaultArtifactForService(serviceId);
@@ -540,7 +539,7 @@ public class EcsStateHelper {
   }
 
   private void updateContainerElementAfterSuccessfulResize(ExecutionContext context) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     ContainerServiceElement containerElement =
         context.<ContainerServiceElement>getContextElementList(ContextElementType.CONTAINER_SERVICE)
             .stream()
@@ -619,7 +618,7 @@ public class EcsStateHelper {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Application app = workflowStandardParams.getApp();
     Environment env = workflowStandardParams.getEnv();
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();
     Service svc = serviceResourceService.getWithDetails(app.getUuid(), serviceId);
     InfrastructureMapping infrastructureMapping =
