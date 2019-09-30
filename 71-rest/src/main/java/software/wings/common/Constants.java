@@ -85,11 +85,6 @@ public interface Constants {
       "Some phases %s Service Infrastructure are found to be invalid/incomplete.";
 
   /**
-   * The constant PIPELINE_ENV_STATE_VALIDATION_MESSAGE.
-   */
-  String PIPELINE_ENV_STATE_VALIDATION_MESSAGE = "Some workflows %s are found to be invalid/incomplete.";
-
-  /**
    * The constant DEFAULT_STATE_TIMEOUT_MILLIS.
    */
   long DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS = 5 * 60 * 1000; // 5 minutes
@@ -127,11 +122,6 @@ public interface Constants {
    * The constant LAST_UPDATED_AT.
    */
   String LAST_UPDATED_AT = "lastUpdatedAt";
-
-  /**
-   * The constant S3.
-   */
-  String S3 = "S3";
 
   /**
    * The constant WINGS_RUNTIME_PATH.
@@ -217,14 +207,6 @@ public interface Constants {
    * The constant ABORTED_COLOR.
    */
   String ABORTED_COLOR = "#77787B";
-  /**
-   * The constant WHITE_COLOR.
-   */
-  String WHITE_COLOR = "#FFFFFF";
-  /**
-   * The constant LINK_COLOR.
-   */
-  String LINK_COLOR = "#1A89BF";
 
   /**
    * The constant HARNESS_NAME.

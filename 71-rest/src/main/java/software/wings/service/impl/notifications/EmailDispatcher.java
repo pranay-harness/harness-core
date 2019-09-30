@@ -5,7 +5,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.common.Constants.ABORTED_COLOR;
 import static software.wings.common.Constants.COMPLETED_COLOR;
 import static software.wings.common.Constants.FAILED_COLOR;
-import static software.wings.common.Constants.LINK_COLOR;
 import static software.wings.common.Constants.PAUSED_COLOR;
 import static software.wings.common.Constants.RESUMED_COLOR;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
@@ -31,6 +30,8 @@ import java.util.Optional;
 @Singleton
 public class EmailDispatcher {
   private static final Logger log = LoggerFactory.getLogger(EmailDispatcher.class);
+
+  private static final String LINK_COLOR = "#1A89BF";
 
   @Inject private NotificationMessageResolver notificationMessageResolver;
   @Inject private EmailNotificationService emailNotificationService;

@@ -8,7 +8,6 @@ import static software.wings.common.Constants.COMPLETED_COLOR;
 import static software.wings.common.Constants.FAILED_COLOR;
 import static software.wings.common.Constants.PAUSED_COLOR;
 import static software.wings.common.Constants.RESUMED_COLOR;
-import static software.wings.common.Constants.WHITE_COLOR;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Singleton;
@@ -50,6 +49,8 @@ import java.util.Objects;
 public class SlackNotificationServiceImpl implements SlackNotificationService {
   public static final String SLACK_WEBHOOK_URL_PREFIX = "https://hooks.slack.com/services/";
   public static final MediaType APPLICATION_JSON = MediaType.parse("application/json; charset=utf-8");
+
+  private static final String WHITE_COLOR = "#FFFFFF";
 
   @Override
   public void sendMessage(

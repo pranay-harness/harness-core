@@ -110,6 +110,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.stubbing.Answer;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
@@ -129,6 +130,9 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.Workflow.WorkflowBuilder;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ManifestFile;
+import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.AmiCommandUnit;
 import software.wings.beans.command.AwsLambdaCommandUnit;
 import software.wings.beans.command.CleanupSshCommandUnit;
@@ -2063,5 +2067,65 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
         .isThrownBy(
             () -> srs.updateCommand(serviceCommand_1.getAppId(), serviceCommand_1.getServiceId(), serviceCommand_1))
         .withMessageContaining("command is null");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCreatePCFSpecCreatesManifestFile() {
+    String fileContent = "pcf spec";
+
+    Query mockQuery = mock(Query.class);
+    when(mockWingsPersistence.createQuery(any())).thenReturn(mockQuery);
+    when(mockQuery.filter(anyString(), anyString())).thenReturn(mockQuery);
+    when(mockQuery.getKey()).thenReturn(new Key<>(Service.class, "services", SERVICE_ID));
+
+    PcfServiceSpecification pcfServiceSpecification =
+        PcfServiceSpecification.builder().serviceId(SERVICE_ID).manifestYaml(fileContent).build();
+    pcfServiceSpecification.setAppId(APP_ID);
+
+    when(mockWingsPersistence.saveAndGet(any(), any())).thenReturn(pcfServiceSpecification);
+    when(applicationManifestService.create(any()))
+        .thenReturn(ApplicationManifest.builder().storeType(StoreType.Local).build());
+    when(applicationManifestService.getManifestFileByFileName(any(), any())).thenReturn(ManifestFile.builder().build());
+
+    srs.createPcfServiceSpecification(pcfServiceSpecification);
+    // applicationManifestService.create(applicationManifest);
+    verify(applicationManifestService, times(1)).create(any(ApplicationManifest.class));
+    ArgumentCaptor<ManifestFile> manifestFileArgumentCaptor = ArgumentCaptor.forClass(ManifestFile.class);
+    verify(applicationManifestService, times(1))
+        .upsertApplicationManifestFile(
+            manifestFileArgumentCaptor.capture(), any(ApplicationManifest.class), any(Boolean.class));
+
+    ManifestFile manifestFile = manifestFileArgumentCaptor.getValue();
+    assertThat(manifestFile.getFileContent()).isEqualTo(fileContent + "\n");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testUpdatePCFSpecUpdatesManifestFile() {
+    String fileContent = "pcf spec";
+
+    Query mockQuery = mock(Query.class);
+    when(mockWingsPersistence.createQuery(any())).thenReturn(mockQuery);
+    when(mockQuery.filter(anyString(), anyString())).thenReturn(mockQuery);
+    when(mockQuery.getKey()).thenReturn(new Key<>(Service.class, "services", SERVICE_ID));
+    PcfServiceSpecification pcfServiceSpecification =
+        PcfServiceSpecification.builder().serviceId(SERVICE_ID).manifestYaml(fileContent).build();
+    pcfServiceSpecification.setAppId(APP_ID);
+
+    when(mockWingsPersistence.saveAndGet(any(), any())).thenReturn(pcfServiceSpecification);
+    when(applicationManifestService.getK8sManifestByServiceId(APP_ID, SERVICE_ID))
+        .thenReturn(ApplicationManifest.builder().storeType(StoreType.Local).build());
+    when(applicationManifestService.getManifestFileByFileName(any(), any())).thenReturn(ManifestFile.builder().build());
+
+    srs.updatePcfServiceSpecification(pcfServiceSpecification);
+    verify(applicationManifestService, times(0)).create(any(ApplicationManifest.class));
+    ArgumentCaptor<ManifestFile> manifestFileArgumentCaptor = ArgumentCaptor.forClass(ManifestFile.class);
+    verify(applicationManifestService, times(1))
+        .upsertApplicationManifestFile(
+            manifestFileArgumentCaptor.capture(), any(ApplicationManifest.class), any(Boolean.class));
+
+    ManifestFile manifestFile = manifestFileArgumentCaptor.getValue();
+    assertThat(manifestFile.getFileContent()).isEqualTo(fileContent + "\n");
   }
 }

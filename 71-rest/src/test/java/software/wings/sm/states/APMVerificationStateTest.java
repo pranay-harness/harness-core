@@ -2,8 +2,6 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -84,10 +82,10 @@ public class APMVerificationStateTest extends WingsBaseTest {
 
     Map<String, List<APMMetricInfo>> apmMetricInfos =
         APMVerificationState.buildMetricInfoMap(apmVerificationState.getMetricCollectionInfos(), Optional.of(context));
-    assertEquals(3, apmMetricInfos.size());
-    assertEquals(2, apmMetricInfos.get("query").size());
-    assertNotNull(apmMetricInfos.get("query").get(0).getResponseMappers().get("txnName").getFieldValue());
-    assertNotNull(apmMetricInfos.get("query").get(1).getResponseMappers().get("txnName").getJsonPath());
+    assertThat(3).isEqualTo(apmMetricInfos.size());
+    assertThat(2).isEqualTo(apmMetricInfos.get("query").size());
+    assertThat(apmMetricInfos.get("query").get(0).getResponseMappers().get("txnName").getFieldValue()).isNotNull();
+    assertThat(apmMetricInfos.get("query").get(1).getResponseMappers().get("txnName").getJsonPath()).isNotNull();
 
     String body = "this is a dummy collection body";
     assertThat(apmMetricInfos.get("queryWithHost" + URL_BODY_APPENDER + body)).hasSize(1);

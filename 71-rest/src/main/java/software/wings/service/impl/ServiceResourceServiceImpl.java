@@ -1330,6 +1330,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     serviceHelper.addPlaceholderTexts(pcfServiceSpecification);
     PcfServiceSpecification persistedPcfServiceSpecification =
         wingsPersistence.saveAndGet(PcfServiceSpecification.class, pcfServiceSpecification);
+    upsertPCFSpecInManifestFile(pcfServiceSpecification);
 
     String appId = persistedPcfServiceSpecification.getAppId();
     String accountId = appService.getAccountIdByAppId(appId);
@@ -2291,6 +2292,44 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         ManifestFile.builder().fileName(MANIFEST_YML).fileContent(default_pcf_manifest_yaml).build();
     defaultManifestSpec.setAppId(service.getAppId());
     applicationManifestService.createManifestFileByServiceId(defaultManifestSpec, service.getUuid());
+  }
+
+  /*
+    Remove this method once the PCFSpec migration to manifest files is done
+   */
+  private void upsertPCFSpecInManifestFile(PcfServiceSpecification pcfServiceSpecification) {
+    try {
+      String serviceId = pcfServiceSpecification.getServiceId();
+      String appId = pcfServiceSpecification.getAppId();
+
+      ApplicationManifest applicationManifest = applicationManifestService.getK8sManifestByServiceId(appId, serviceId);
+
+      if (applicationManifest == null) {
+        applicationManifest = ApplicationManifest.builder()
+                                  .serviceId(serviceId)
+                                  .storeType(StoreType.Local)
+                                  .kind(AppManifestKind.K8S_MANIFEST)
+                                  .build();
+        applicationManifest.setAppId(appId);
+        applicationManifest = applicationManifestService.create(applicationManifest);
+      }
+
+      ManifestFile manifestFile =
+          applicationManifestService.getManifestFileByFileName(applicationManifest.getUuid(), MANIFEST_YML);
+
+      if (manifestFile == null) {
+        manifestFile =
+            ManifestFile.builder().fileName(MANIFEST_YML).applicationManifestId(applicationManifest.getUuid()).build();
+        manifestFile.setAppId(appId);
+      }
+
+      manifestFile.setFileContent(pcfServiceSpecification.getManifestYaml());
+
+      boolean isCreate = isBlank(manifestFile.getUuid());
+      applicationManifestService.upsertApplicationManifestFile(manifestFile, applicationManifest, isCreate);
+    } catch (Exception ex) {
+      logger.warn("Failed to update the manifest file for PCF spec. ", ex);
+    }
   }
 
   private void cloneAppManifests(String appId, String clonedServiceId, String originalServiceId) {
