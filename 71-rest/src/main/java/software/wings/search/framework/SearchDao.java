@@ -25,6 +25,9 @@ public interface SearchDao {
   boolean appendToListInMultipleDocuments(
       String entityType, String listToUpdate, List<String> documentIds, Map<String, Object> newElement);
 
+  boolean appendToListInMultipleDocuments(String entityType, String listToUpdate, List<String> documentIds,
+      Map<String, Object> newElement, int maxElementsInList);
+
   // Append newElement in the all the documentId with listToUpdate field in entityType index
   boolean appendToListInSingleDocument(
       String entityType, String listToUpdate, String documentId, Map<String, Object> newElement);
@@ -50,6 +53,9 @@ public interface SearchDao {
 
   // Add timestamp in the document also removing stale data wrt daysToRetain
   boolean addTimestamp(String entityType, String fieldName, String documentId, int daysToRetain);
+
+  // Add timestamp to multiple documents and also removing stale data wrt daysToRetain
+  boolean addTimestamp(String entityType, String fieldName, List<String> documentIds, int daysToRetain);
 
   // Delete document with id documentId in index
   boolean deleteDocument(String entityType, String documentId);

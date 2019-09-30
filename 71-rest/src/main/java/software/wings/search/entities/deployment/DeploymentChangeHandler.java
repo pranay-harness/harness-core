@@ -51,10 +51,10 @@ public class DeploymentChangeHandler implements ChangeHandler {
       if (document.containsField(EnvironmentKeys.name)) {
         String entityType = DeploymentViewKeys.environments;
         String newNameValue = document.get(EnvironmentKeys.name).toString();
-        String filterId = changeEvent.getUuid();
+        String documentToUpdate = changeEvent.getUuid();
         String fieldToUpdate = EnvironmentKeys.name;
         return searchDao.updateListInMultipleDocuments(
-            DeploymentSearchEntity.TYPE, entityType, newNameValue, filterId, fieldToUpdate);
+            DeploymentSearchEntity.TYPE, entityType, newNameValue, documentToUpdate, fieldToUpdate);
       }
     }
     return true;
@@ -66,10 +66,10 @@ public class DeploymentChangeHandler implements ChangeHandler {
       if (document.containsField(ServiceKeys.name)) {
         String entityType = DeploymentViewKeys.services;
         String newNameValue = document.get(ServiceKeys.name).toString();
-        String filterId = changeEvent.getUuid();
+        String documentToUpdate = changeEvent.getUuid();
         String fieldToUpdate = ServiceKeys.name;
         return searchDao.updateListInMultipleDocuments(
-            DeploymentSearchEntity.TYPE, entityType, newNameValue, filterId, fieldToUpdate);
+            DeploymentSearchEntity.TYPE, entityType, newNameValue, documentToUpdate, fieldToUpdate);
       }
     }
     return true;
@@ -81,10 +81,10 @@ public class DeploymentChangeHandler implements ChangeHandler {
       if (document.containsField(WorkflowKeys.name)) {
         String entityType = DeploymentViewKeys.workflows;
         String newNameValue = document.get(WorkflowKeys.name).toString();
-        String filterId = changeEvent.getUuid();
+        String documentToUpdate = changeEvent.getUuid();
         String fieldToUpdate = WorkflowKeys.name;
         return searchDao.updateListInMultipleDocuments(
-            DeploymentSearchEntity.TYPE, entityType, newNameValue, filterId, fieldToUpdate);
+            DeploymentSearchEntity.TYPE, entityType, newNameValue, documentToUpdate, fieldToUpdate);
       }
     }
     return true;

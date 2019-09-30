@@ -49,7 +49,6 @@ class PipelineViewBuilder {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestration();
     workflow.setServices(
         serviceResourceService.fetchServicesByUuids(workflow.getAppId(), orchestrationWorkflow.getServiceIds()));
-    workflow.setTemplatizedServiceIds(orchestrationWorkflow.getTemplatizedServiceIds());
   }
 
   private void createBaseView(Pipeline pipeline) {
@@ -80,7 +79,6 @@ class PipelineViewBuilder {
               audits.add(relatedAuditViewBuilder.getAuditRelatedEntityView(auditHeader, entityAuditRecord));
             }
             auditTimestamps.add(TimeUnit.MILLISECONDS.toSeconds(auditHeader.getCreatedAt()));
-            break;
           }
         }
       }

@@ -41,6 +41,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * The handler which will maintain the workflow document
+ * in the search engine database.
+ *
+ * @author ujjawal
+ */
+
 @Slf4j
 @Singleton
 public class WorkflowChangeHandler implements ChangeHandler {
@@ -83,11 +90,11 @@ public class WorkflowChangeHandler implements ChangeHandler {
       DBObject document = changeEvent.getChanges();
       String entityType = WorkflowViewKeys.pipelines;
       String newValue = document.get(WorkflowKeys.name).toString();
-      String filterId = changeEvent.getUuid();
+      String documentToUpdate = changeEvent.getUuid();
       String fieldToUpdate = WorkflowKeys.name;
       result = result
           && searchDao.updateListInMultipleDocuments(
-                 WorkflowSearchEntity.TYPE, entityType, newValue, filterId, fieldToUpdate);
+                 WorkflowSearchEntity.TYPE, entityType, newValue, documentToUpdate, fieldToUpdate);
     }
     return result;
   }
@@ -119,14 +126,15 @@ public class WorkflowChangeHandler implements ChangeHandler {
         for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
           if (entityAuditRecord.getAffectedResourceType().equals(EntityType.WORKFLOW.name())) {
             String fieldToUpdate = WorkflowViewKeys.audits;
-            String filterId = entityAuditRecord.getAffectedResourceId();
+            String documentToUpdate = entityAuditRecord.getAffectedResourceId();
             String auditTimestampField = WorkflowViewKeys.auditTimestamps;
             Map<String, Object> auditRelatedEntityViewMap =
                 relatedAuditViewBuilder.getAuditRelatedEntityViewMap(auditHeader, entityAuditRecord);
             result = result
-                && searchDao.addTimestamp(WorkflowSearchEntity.TYPE, auditTimestampField, filterId, DAYS_TO_RETAIN);
+                && searchDao.addTimestamp(
+                       WorkflowSearchEntity.TYPE, auditTimestampField, documentToUpdate, DAYS_TO_RETAIN);
             result = result
-                && searchDao.appendToListInSingleDocument(WorkflowSearchEntity.TYPE, fieldToUpdate, filterId,
+                && searchDao.appendToListInSingleDocument(WorkflowSearchEntity.TYPE, fieldToUpdate, documentToUpdate,
                        auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
           }
         }
@@ -141,14 +149,15 @@ public class WorkflowChangeHandler implements ChangeHandler {
     WorkflowExecution workflowExecution = (WorkflowExecution) changeEvent.getFullDocument();
     if (workflowExecution.getWorkflowType().equals(WorkflowType.ORCHESTRATION)) {
       String fieldToUpdate = WorkflowViewKeys.deployments;
-      String filterId = workflowExecution.getWorkflowId();
+      List<String> documentsToUpdate = workflowExecution.getWorkflowIds();
       Map<String, Object> deploymentRelatedEntityViewMap =
           relatedDeploymentViewBuilder.getDeploymentRelatedEntityViewMap(workflowExecution);
       String deploymentTimestampsField = WorkflowViewKeys.deploymentTimestamps;
-      result = searchDao.addTimestamp(WorkflowSearchEntity.TYPE, deploymentTimestampsField, filterId, DAYS_TO_RETAIN);
-      result = result
-          && searchDao.appendToListInSingleDocument(WorkflowSearchEntity.TYPE, fieldToUpdate, filterId,
-                 deploymentRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
+      result &= searchDao.addTimestamp(
+          WorkflowSearchEntity.TYPE, deploymentTimestampsField, documentsToUpdate, DAYS_TO_RETAIN);
+
+      result &= searchDao.appendToListInMultipleDocuments(WorkflowSearchEntity.TYPE, fieldToUpdate, documentsToUpdate,
+          deploymentRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
     }
     return result;
   }
@@ -161,19 +170,19 @@ public class WorkflowChangeHandler implements ChangeHandler {
       if (changes.containsField(WorkflowExecutionKeys.status)) {
         String entityType = WorkflowViewKeys.deployments;
         String newNameValue = workflowExecution.getStatus().toString();
-        String filterId = changeEvent.getUuid();
+        String documentToUpdate = changeEvent.getUuid();
         String fieldToUpdate = DeploymentRelatedEntityViewKeys.status;
         result = searchDao.updateListInMultipleDocuments(
-            WorkflowSearchEntity.TYPE, entityType, newNameValue, filterId, fieldToUpdate);
+            WorkflowSearchEntity.TYPE, entityType, newNameValue, documentToUpdate, fieldToUpdate);
       }
       if (changes.containsField(WorkflowExecutionKeys.pipelineExecutionId)) {
         String entityType = WorkflowViewKeys.deployments;
         String newNameValue = workflowExecution.getPipelineExecutionId();
-        String filterId = changeEvent.getUuid();
+        String documentToUpdate = changeEvent.getUuid();
         String fieldToUpdate = DeploymentRelatedEntityViewKeys.pipelineExecutionId;
         result = result
             && searchDao.updateListInMultipleDocuments(
-                   PipelineSearchEntity.TYPE, entityType, newNameValue, filterId, fieldToUpdate);
+                   PipelineSearchEntity.TYPE, entityType, newNameValue, documentToUpdate, fieldToUpdate);
       }
     }
     return result;
@@ -196,10 +205,10 @@ public class WorkflowChangeHandler implements ChangeHandler {
       if (document.containsField(ServiceKeys.name)) {
         String entityType = WorkflowViewKeys.services;
         String newNameValue = document.get(ServiceKeys.name).toString();
-        String filterId = changeEvent.getUuid();
+        String documentToUpdate = changeEvent.getUuid();
         String fieldToUpdate = ServiceKeys.name;
         return searchDao.updateListInMultipleDocuments(
-            WorkflowSearchEntity.TYPE, entityType, newNameValue, filterId, fieldToUpdate);
+            WorkflowSearchEntity.TYPE, entityType, newNameValue, documentToUpdate, fieldToUpdate);
       }
     }
     return true;

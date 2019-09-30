@@ -51,10 +51,11 @@ public class EnvironmentChangeHandler implements ChangeHandler {
     Workflow workflow = (Workflow) changeEvent.getFullDocument();
     if (workflow.getEnvId() != null) {
       String fieldToUpdate = EnvironmentViewKeys.workflows;
-      String filterId = workflow.getEnvId();
+      String documentToUpdate = workflow.getEnvId();
       EntityInfo entityInfo = new EntityInfo(workflow.getUuid(), workflow.getName());
       Map<String, Object> newElement = SearchEntityUtils.convertToMap(entityInfo);
-      return searchDao.appendToListInSingleDocument(EnvironmentSearchEntity.TYPE, fieldToUpdate, filterId, newElement);
+      return searchDao.appendToListInSingleDocument(
+          EnvironmentSearchEntity.TYPE, fieldToUpdate, documentToUpdate, newElement);
     }
     return true;
   }
@@ -86,11 +87,11 @@ public class EnvironmentChangeHandler implements ChangeHandler {
       DBObject document = changeEvent.getChanges();
       String entityType = EnvironmentViewKeys.workflows;
       String newValue = document.get(WorkflowKeys.name).toString();
-      String filterId = changeEvent.getUuid();
+      String documentToUpdate = changeEvent.getUuid();
       String fieldToUpdate = WorkflowKeys.name;
       result = result
           && searchDao.updateListInMultipleDocuments(
-                 EnvironmentSearchEntity.TYPE, entityType, newValue, filterId, fieldToUpdate);
+                 EnvironmentSearchEntity.TYPE, entityType, newValue, documentToUpdate, fieldToUpdate);
     }
     return result;
   }
@@ -146,11 +147,11 @@ public class EnvironmentChangeHandler implements ChangeHandler {
       DBObject document = changeEvent.getChanges();
       String entityType = EnvironmentViewKeys.pipelines;
       String newValue = document.get(PipelineKeys.name).toString();
-      String filterId = changeEvent.getUuid();
+      String documentToUpdate = changeEvent.getUuid();
       String fieldToUpdate = PipelineKeys.name;
       result = result
           && searchDao.updateListInMultipleDocuments(
-                 EnvironmentSearchEntity.TYPE, entityType, newValue, filterId, fieldToUpdate);
+                 EnvironmentSearchEntity.TYPE, entityType, newValue, documentToUpdate, fieldToUpdate);
     }
     return result;
   }
@@ -179,15 +180,14 @@ public class EnvironmentChangeHandler implements ChangeHandler {
     WorkflowExecution workflowExecution = (WorkflowExecution) changeEvent.getFullDocument();
     if (workflowExecution.getEnvIds() != null) {
       String fieldToUpdate = EnvironmentViewKeys.deployments;
-      String filterId = workflowExecution.getEnvId();
+      List<String> documentsToUpdate = workflowExecution.getEnvIds();
       Map<String, Object> deploymentRelatedEntityViewMap =
           relatedDeploymentViewBuilder.getDeploymentRelatedEntityViewMap(workflowExecution);
       String deploymentTimestampsField = EnvironmentViewKeys.deploymentTimestamps;
-      result =
-          searchDao.addTimestamp(EnvironmentSearchEntity.TYPE, deploymentTimestampsField, filterId, DAYS_TO_RETAIN);
-      result = result
-          && searchDao.appendToListInSingleDocument(EnvironmentSearchEntity.TYPE, fieldToUpdate, filterId,
-                 deploymentRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
+      result &= searchDao.addTimestamp(
+          EnvironmentSearchEntity.TYPE, deploymentTimestampsField, documentsToUpdate, DAYS_TO_RETAIN);
+      result &= searchDao.appendToListInMultipleDocuments(EnvironmentSearchEntity.TYPE, fieldToUpdate,
+          documentsToUpdate, deploymentRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
     }
     return result;
   }
@@ -199,10 +199,10 @@ public class EnvironmentChangeHandler implements ChangeHandler {
       if (changes.containsField(WorkflowExecutionKeys.status)) {
         String entityType = EnvironmentViewKeys.deployments;
         String newNameValue = workflowExecution.getStatus().toString();
-        String filterId = workflowExecution.getUuid();
+        String documentToUpdate = workflowExecution.getUuid();
         String fieldToUpdate = DeploymentRelatedEntityViewKeys.status;
         return searchDao.updateListInMultipleDocuments(
-            EnvironmentSearchEntity.TYPE, entityType, newNameValue, filterId, fieldToUpdate);
+            EnvironmentSearchEntity.TYPE, entityType, newNameValue, documentToUpdate, fieldToUpdate);
       }
     }
     return true;
@@ -227,14 +227,15 @@ public class EnvironmentChangeHandler implements ChangeHandler {
         for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
           if (entityAuditRecord.getAffectedResourceType().equals(EntityType.ENVIRONMENT.name())) {
             String fieldToUpdate = EnvironmentViewKeys.audits;
-            String filterId = entityAuditRecord.getAffectedResourceId();
+            String documentToUpdate = entityAuditRecord.getAffectedResourceId();
             String auditTimestampField = EnvironmentViewKeys.auditTimestamps;
             Map<String, Object> auditRelatedEntityViewMap =
                 relatedAuditViewBuilder.getAuditRelatedEntityViewMap(auditHeader, entityAuditRecord);
             result = result
-                && searchDao.addTimestamp(EnvironmentSearchEntity.TYPE, auditTimestampField, filterId, DAYS_TO_RETAIN);
+                && searchDao.addTimestamp(
+                       EnvironmentSearchEntity.TYPE, auditTimestampField, documentToUpdate, DAYS_TO_RETAIN);
             result = result
-                && searchDao.appendToListInSingleDocument(EnvironmentSearchEntity.TYPE, fieldToUpdate, filterId,
+                && searchDao.appendToListInSingleDocument(EnvironmentSearchEntity.TYPE, fieldToUpdate, documentToUpdate,
                        auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
           }
         }

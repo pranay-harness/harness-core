@@ -35,6 +35,30 @@
           }
         }
       },
+      "workflows" : {
+        "type" : "nested",
+        "properties" : {
+          "id" : {
+            "type" : "keyword"
+          },
+          "name" : {
+            "type" : "keyword",
+            "index" : false
+          }
+        }
+      },
+      "pipelines" : {
+        "type" : "nested",
+        "properties" : {
+          "id" : {
+            "type" : "keyword"
+          },
+          "name" : {
+            "type" : "keyword",
+            "index" : false
+          }
+        }
+      },
       "auditTimestamps" : {
         "type" : "long"
       },
