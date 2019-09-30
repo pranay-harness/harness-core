@@ -11,8 +11,11 @@ import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
 import io.harness.VerificationBaseTest;
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.category.element.UnitTests;
+import io.harness.entities.TimeSeriesAnomaliesRecord;
+import io.harness.entities.TimeSeriesAnomaliesRecord.TimeSeriesAnomaliesRecordKeys;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import lombok.extern.slf4j.Slf4j;
@@ -24,9 +27,14 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.TimeSeriesDataRecord;
+import software.wings.service.impl.analysis.MetricAnalysisRecord;
+import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
+import software.wings.service.impl.analysis.TimeSeriesMLHostSummary;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
+import software.wings.verification.CVConfiguration;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -207,5 +215,47 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
     heartBeat = timeSeriesAnalysisService.getHeartBeat(StateType.NEW_RELIC, appId, stateExecutionId,
         workflowExecutionId, serviceId, NewRelicMetricDataRecord.DEFAULT_GROUP_NAME, OrderType.DESC);
     assertThat(heartBeat.getDataCollectionMinute()).isEqualTo(9);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testSetTagInAnomRecords() {
+    Map<String, Map<String, List<TimeSeriesMLHostSummary>>> anomMap = new HashMap<>();
+    anomMap.put("txn1", new HashMap<>());
+    MetricAnalysisRecord analysisRecord = TimeSeriesMLAnalysisRecord.builder().build();
+    analysisRecord.setTransactions(new HashMap<>());
+    analysisRecord.setAppId(appId);
+    analysisRecord.setStateExecutionId(stateExecutionId);
+    analysisRecord.setStateType(StateType.NEW_RELIC);
+    analysisRecord.setAnalysisMinute(12345);
+    analysisRecord.setAnomalies(anomMap);
+    analysisRecord.setTag("testTag");
+
+    LearningEngineAnalysisTask task =
+        LearningEngineAnalysisTask.builder().executionStatus(ExecutionStatus.RUNNING).cluster_level(2).build();
+    task.setUuid("taskID1");
+    wingsPersistence.save(task);
+
+    CVConfiguration cvConfiguration = new CVConfiguration();
+    cvConfiguration.setStateType(StateType.NEW_RELIC);
+    cvConfiguration.setServiceId(serviceId);
+    cvConfiguration.setEnvId(generateUuid());
+    cvConfiguration.setAccountId(accountId);
+
+    cvConfiguration.setUuid(cvConfigId);
+    wingsPersistence.save(cvConfiguration);
+
+    timeSeriesAnalysisService.saveAnalysisRecordsML(accountId, StateType.NEW_RELIC, appId, stateExecutionId,
+        workflowExecutionId, "default", 12345, "taskID1", null, cvConfigId, analysisRecord, "testTag");
+
+    TimeSeriesAnomaliesRecord anomaliesRecord = wingsPersistence.createQuery(TimeSeriesAnomaliesRecord.class)
+                                                    .filter(TimeSeriesAnomaliesRecordKeys.cvConfigId, cvConfigId)
+                                                    .get();
+
+    assertThat(anomaliesRecord).isNotNull();
+    assertThat(anomaliesRecord.getTag()).isEqualTo("testTag");
+
+    task = wingsPersistence.get(LearningEngineAnalysisTask.class, "taskID1");
+    assertThat(task.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 }
