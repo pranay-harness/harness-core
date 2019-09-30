@@ -2,10 +2,6 @@ package io.harness.event.usagemetrics;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.exception.WingsException.USER;
-import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
-import static org.mongodb.morphia.aggregation.Group.grouping;
-import static org.mongodb.morphia.aggregation.Group.id;
-import static org.mongodb.morphia.aggregation.Projection.projection;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
@@ -16,7 +12,6 @@ import io.harness.beans.SearchFilter.Operator;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.query.Query;
 import software.wings.beans.Account;
 import software.wings.beans.Account.AccountKeys;
 import software.wings.beans.Application;
@@ -26,15 +21,12 @@ import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.Workflow;
-import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.dl.WingsPersistence;
 import software.wings.utils.Validator;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfiguration.CVConfigurationKeys;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by Pranjal on 01/10/2019
@@ -79,21 +71,6 @@ public class UsageMetricsHelper {
                                            .addFilter(EnvironmentKeys.appId, Operator.EQ, GLOBAL_APP_ID)
                                            .build();
     return wingsPersistence.getAllEntities(pageRequest, () -> wingsPersistence.query(Account.class, pageRequest));
-  }
-
-  public Map<String, Integer> getAllValidInstanceCounts() {
-    Map<String, Integer> instanceCountMap = new HashMap<>();
-    Query<Instance> query = wingsPersistence.createQuery(Instance.class);
-    query.criteria("isDeleted").equal(false);
-    wingsPersistence.getDatastore(Instance.class)
-        .createAggregation(Instance.class)
-        .match(query)
-        .project(projection("accountId"))
-        .group(id(grouping("accountId")), grouping("count", accumulator("$sum", 1)))
-        .aggregate(InstanceCount.class)
-        .forEachRemaining(
-            instanceCount -> instanceCountMap.put(instanceCount.getId().getAccountId(), instanceCount.getCount()));
-    return instanceCountMap;
   }
 
   public CVConfiguration getCVConfig(String cvConfigId) {
