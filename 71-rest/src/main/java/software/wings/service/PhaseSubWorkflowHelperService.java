@@ -8,7 +8,6 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidRequestException;
 import org.apache.commons.collections.CollectionUtils;
-import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
@@ -109,20 +108,6 @@ public class PhaseSubWorkflowHelperService {
           format("Service [%s] is not in the list of Scoped Services for Infrastructure Definition [%s]",
               service.getName(), infrastructureDefinition.getName()));
     }
-  }
-
-  public InfrastructureMapping getInfraMapping(String infraMappingId, TemplateExpression infraMappingTemplateExpression,
-      Application app, ExecutionContext context, Service service, InfrastructureDefinition infrastructureDefinition) {
-    InfrastructureMapping infrastructureMapping = null;
-    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, app.getAccountId())) {
-      if (service != null) {
-        infrastructureMapping = infrastructureDefinitionService.getInfraMapping(
-            app.getAppId(), service.getUuid(), infrastructureDefinition.getUuid(), context);
-      }
-    } else {
-      infrastructureMapping = getInfraMapping(infraMappingId, infraMappingTemplateExpression, app.getAppId(), context);
-    }
-    return infrastructureMapping;
   }
 
   public void validateEntitiesRelationship(Service service, InfrastructureDefinition infrastructureDefinition,

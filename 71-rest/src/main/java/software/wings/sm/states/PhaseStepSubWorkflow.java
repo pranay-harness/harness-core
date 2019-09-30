@@ -57,8 +57,16 @@ import software.wings.api.pcf.PcfSetupContextElement;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.beans.Activity;
 import software.wings.beans.FailureStrategy;
+import software.wings.beans.FeatureName;
+import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.PhaseStepType;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
+import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElement;
@@ -72,7 +80,9 @@ import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.StepExecutionSummary;
+import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.spotinst.SpotInstSetupContextElement;
+import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -87,6 +97,10 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
   @Transient @Inject private transient WorkflowExecutionService workflowExecutionService;
   @Transient @Inject private transient StateExecutionService stateExecutionService;
+  @Transient @Inject private transient FeatureFlagService featureFlagService;
+  @Transient @Inject private transient InfrastructureDefinitionService infrastructureDefinitionService;
+  @Transient @Inject private transient InfrastructureProvisionerService infrastructureProvisionerService;
+  @Transient @Inject private transient InfrastructureMappingService infrastructureMappingService;
 
   private PhaseStepType phaseStepType;
   private boolean stepsInParallel;
@@ -106,6 +120,10 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   public ExecutionResponse execute(ExecutionContext contextIntf) {
     if (phaseStepType == null) {
       throw new InvalidRequestException("null phaseStepType");
+    }
+
+    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, contextIntf.getAccountId())) {
+      populateInfraMapping(contextIntf);
     }
 
     ExecutionResponse response;
@@ -137,6 +155,54 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
                                 .withPhaseStepType(phaseStepType)
                                 .build())
         .build();
+  }
+
+  void populateInfraMapping(ExecutionContext context) {
+    if (isNotEmpty(context.fetchInfraMappingId())) {
+      return;
+    }
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
+
+    if (phaseElement != null && isNotEmpty(phaseElement.getInfraDefinitionId())) {
+      String infraDefinitionId = phaseElement.getInfraDefinitionId();
+      String appId = context.getAppId();
+      InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefinitionId);
+      Validator.notNullCheck(String.format("Infrastructure Definition not found with id : [%s]", infraDefinitionId),
+          infrastructureDefinition);
+
+      if (isNotEmpty(infrastructureDefinition.getProvisionerId())) {
+        InfrastructureProvisioner infrastructureProvisioner =
+            infrastructureProvisionerService.get(appId, infrastructureDefinition.getProvisionerId());
+
+        Object evaluated = null;
+        try {
+          evaluated = context.evaluateExpression(String.format("${%s}", infrastructureProvisioner.variableKey()));
+        } catch (Exception ignored) {
+        }
+        if (evaluated == null) {
+          // Provisioner Outputs not available yet to resolve infra definition
+          return;
+        }
+      }
+
+      InfrastructureMapping infraMapping = infrastructureDefinitionService.getInfraMapping(
+          appId, phaseElement.getServiceElement().getUuid(), infraDefinitionId, context);
+
+      updateInfraMappingDependencies(context, phaseElement, appId, infraMapping);
+    }
+  }
+
+  void updateInfraMappingDependencies(
+      ExecutionContext context, PhaseElement phaseElement, String appId, InfrastructureMapping infraMapping) {
+    workflowExecutionService.appendInfraMappingId(appId, context.getWorkflowExecutionId(), infraMapping.getUuid());
+    infrastructureMappingService.saveInfrastructureMappingToSweepingOutput(
+        appId, context.getWorkflowExecutionId(), phaseElement, infraMapping.getUuid());
+
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    if (workflowStandardParams.getWorkflowElement() != null) {
+      workflowExecutionService.updateWorkflowElementWithLastGoodReleaseInfo(
+          context.getAppId(), workflowStandardParams.getWorkflowElement(), context.getWorkflowExecutionId());
+    }
   }
 
   private List<ContextElement> getRollbackRequiredParam(

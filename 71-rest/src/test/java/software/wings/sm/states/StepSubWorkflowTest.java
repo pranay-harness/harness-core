@@ -4,11 +4,15 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.spy;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.PHASE_STEP;
 
@@ -33,6 +37,7 @@ import software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.PhaseStepType;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionContextImpl;
@@ -52,6 +57,7 @@ import java.util.Map;
 public class StepSubWorkflowTest extends WingsBaseTest {
   private static final String STATE_NAME = "state";
   @Mock private WorkflowExecutionService workflowExecutionService;
+  @Mock private FeatureFlagService featureFlagService;
 
   private List<ElementExecutionSummary> elementExecutionSummaries = new ArrayList<>();
 
@@ -71,14 +77,19 @@ public class StepSubWorkflowTest extends WingsBaseTest {
                                                         .addContextElement(phaseElement)
                                                         .addStateExecutionData(new PhaseStepExecutionData())
                                                         .build();
-    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
+    ExecutionContextImpl context = spy(new ExecutionContextImpl(stateExecutionInstance));
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
     phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.PRE_DEPLOYMENT);
     List<FailureStrategy> failureStrategies = new ArrayList<>();
     phaseStepSubWorkflow.setFailureStrategies(failureStrategies);
     phaseStepSubWorkflow.setStepsInParallel(true);
     phaseStepSubWorkflow.setDefaultFailureStrategy(true);
+    Reflect.on(phaseStepSubWorkflow).set("featureFlagService", featureFlagService);
+    when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
+    doReturn(ACCOUNT_ID).when(context).getAccountId();
+
     ExecutionResponse response = phaseStepSubWorkflow.execute(context);
+
     assertThat(response).isNotNull().hasFieldOrProperty("stateExecutionData");
     assertThat(response.getStateExecutionData())
         .isNotNull()
@@ -102,10 +113,15 @@ public class StepSubWorkflowTest extends WingsBaseTest {
                                                                                .build())
                                                         .addStateExecutionData(new PhaseStepExecutionData())
                                                         .build();
-    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
+    ExecutionContextImpl context = spy(new ExecutionContextImpl(stateExecutionInstance));
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
     phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.CONTAINER_DEPLOY);
+    Reflect.on(phaseStepSubWorkflow).set("featureFlagService", featureFlagService);
+    when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
+    doReturn(ACCOUNT_ID).when(context).getAccountId();
+
     ExecutionResponse response = phaseStepSubWorkflow.execute(context);
+
     assertThat(response).isNotNull().hasFieldOrProperty("stateExecutionData");
   }
 
