@@ -868,19 +868,25 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @NotNull
   private List<TimeSeriesMLAnalysisRecord> getAnalysisRecordsInTimeRange(
       long startTime, long endTime, CVConfiguration cvConfiguration) {
-    final List<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords =
-        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
-            .filter(MetricAnalysisRecordKeys.cvConfigId, cvConfiguration.getUuid())
-            .field(MetricAnalysisRecordKeys.analysisMinute)
-            .greaterThanOrEq(TimeUnit.MILLISECONDS.toMinutes(startTime) + CRON_POLL_INTERVAL_IN_MINUTES)
-            .field(MetricAnalysisRecordKeys.analysisMinute)
-            .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(endTime))
-            .order(MetricAnalysisRecordKeys.analysisMinute)
-            .project(MetricAnalysisRecordKeys.transactions, false)
-            .project(MetricAnalysisRecordKeys.transactionsCompressedJson, false)
-            .asList();
+    List<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords = new ArrayList<>();
+    try (HIterator<TimeSeriesMLAnalysisRecord> analysisRecords = new HIterator<>(
+             wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
+                 .filter(MetricAnalysisRecordKeys.cvConfigId, cvConfiguration.getUuid())
+                 .field(MetricAnalysisRecordKeys.analysisMinute)
+                 .greaterThanOrEq(TimeUnit.MILLISECONDS.toMinutes(startTime) + CRON_POLL_INTERVAL_IN_MINUTES)
+                 .field(MetricAnalysisRecordKeys.analysisMinute)
+                 .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(endTime))
+                 .order(MetricAnalysisRecordKeys.analysisMinute)
+                 .project(MetricAnalysisRecordKeys.transactions, false)
+                 .project(MetricAnalysisRecordKeys.transactionsCompressedJson, false)
+                 .fetch())) {
+      while (analysisRecords.hasNext()) {
+        timeSeriesMLAnalysisRecords.add(analysisRecords.next());
+      }
+    }
     timeSeriesMLAnalysisRecords.forEach(
         timeSeriesMLAnalysisRecord -> timeSeriesMLAnalysisRecord.decompressTransactions());
+
     return timeSeriesMLAnalysisRecords;
   }
 
