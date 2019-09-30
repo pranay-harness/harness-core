@@ -1,9 +1,6 @@
 package io.harness.event.usagemetrics;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.event.model.EventConstants.ACCOUNT_ID;
-import static io.harness.event.model.EventConstants.IS_24X7_ENABLED;
-import static io.harness.event.model.EventConstants.VERIFICATION_STATE_TYPE;
 import static java.util.stream.Collectors.groupingBy;
 
 import com.google.inject.Inject;
@@ -21,13 +18,10 @@ import software.wings.api.DeploymentTimeSeriesEvent;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.Instance;
-import software.wings.common.VerificationConstants;
 import software.wings.service.impl.event.timeseries.TimeSeriesBatchEventInfo;
 import software.wings.service.impl.event.timeseries.TimeSeriesBatchEventInfo.DataPoint;
 import software.wings.service.impl.event.timeseries.TimeSeriesEventInfo;
 import software.wings.service.intfc.verification.CVConfigurationService;
-import software.wings.sm.StateType;
-import software.wings.verification.CVConfiguration;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -126,28 +120,6 @@ public class UsageMetricsEventPublisher {
       logger.info("TimeSeriesEventInfo has listData empty eventInfo=[{}]", eventInfo);
     }
     return DeploymentTimeSeriesEvent.builder().timeSeriesEventInfo(eventInfo).build();
-  }
-
-  public void publishCV247MetadataMetric(String accountId, boolean isEnabled) {
-    List<StateType> stateTypes = VerificationConstants.getAnalysisStates();
-    List<CVConfiguration> cvConfigurations = cvConfigurationService.listConfigurations(accountId);
-
-    for (StateType stateType : stateTypes) {
-      Map properties = new HashMap();
-      properties.put(ACCOUNT_ID, accountId);
-      properties.put(VERIFICATION_STATE_TYPE, stateType.name());
-      properties.put(IS_24X7_ENABLED, String.valueOf(isEnabled));
-
-      int count = cvConfigurations.stream()
-                      .filter(cvConfiguration
-                          -> isEnabled == (cvConfiguration.isEnabled24x7())
-                              && cvConfiguration.getStateType().name().equals(stateType.name()))
-                      .collect(Collectors.toList())
-                      .size();
-
-      EventData eventData = EventData.builder().properties(properties).value(count).build();
-      publishEvent(Event.builder().eventType(EventType.CV_META_DATA).eventData(eventData).build());
-    }
   }
 
   private void publishEvent(Event event) {
