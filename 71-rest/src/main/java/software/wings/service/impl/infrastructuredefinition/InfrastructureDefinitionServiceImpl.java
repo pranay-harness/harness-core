@@ -580,6 +580,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Override
   public InfrastructureMapping getInfrastructureMapping(
       String serviceId, InfrastructureDefinition infrastructureDefinition) {
+    Service service = serviceResourceService.get(infrastructureDefinition.getAppId(), serviceId);
     InfrastructureMapping newInfraMapping = infrastructureDefinition.getInfraMapping();
     InfrastructureMapping infraMapping =
         infrastructureDefinitionHelper.existingInfraMapping(infrastructureDefinition, serviceId);
@@ -587,6 +588,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     newInfraMapping.setAccountId(appService.getAccountIdByAppId(infrastructureDefinition.getAppId()));
     newInfraMapping.setInfrastructureDefinitionId(infrastructureDefinition.getUuid());
     newInfraMapping.setAutoPopulate(false);
+    newInfraMapping.setDisplayName(format("%s-%s", service.getName(), infrastructureDefinition.getName()));
     newInfraMapping.setName(
         infrastructureDefinitionHelper.getNameFromInfraDefinition(infrastructureDefinition, serviceId));
     if (infraMapping == null) {

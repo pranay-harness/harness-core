@@ -98,6 +98,7 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.HostConnectionType;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InfrastructureMapping.InfrastructureMappingKeys;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping;
@@ -426,6 +427,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     keyValuePairs.put("computeProviderName", COMPUTE_PROVIDER_ID_CHANGED);
     keyValuePairs.put("name", "Name4");
     keyValuePairs.put("infrastructureDefinitionId", INFRA_DEFINITION_ID);
+    keyValuePairs.put(InfrastructureMappingKeys.displayName, "Name4");
 
     Set<String> fieldsToRemove = Sets.newHashSet("provisionerId", "hosts", "loadBalancerId");
     verify(wingsPersistence)
@@ -518,6 +520,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     keyValuePairs.put("computeProviderName", COMPUTE_PROVIDER_ID);
     keyValuePairs.put("name", infraName);
     keyValuePairs.put("infrastructureDefinitionId", INFRA_DEFINITION_ID);
+    keyValuePairs.put(InfrastructureMappingKeys.displayName, infraName);
 
     Set<String> fieldsToRemove = new HashSet<>();
     fieldsToRemove.add("provisionerId");
