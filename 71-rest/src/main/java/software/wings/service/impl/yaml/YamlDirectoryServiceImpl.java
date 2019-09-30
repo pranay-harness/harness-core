@@ -1041,7 +1041,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     DirectoryPath manifestFilePath = applicationManifestPath.clone().add(MANIFEST_FILE_FOLDER);
 
     ApplicationManifest applicationManifest =
-        applicationManifestService.getK8sManifestByServiceId(service.getAppId(), service.getUuid());
+        applicationManifestService.getManifestByServiceId(service.getAppId(), service.getUuid());
     if (applicationManifest != null) {
       applicationManifestFolder.addChild(new ServiceLevelYamlNode(accountId, applicationManifest.getUuid(),
           service.getAppId(), service.getUuid(), INDEX_YAML, ApplicationManifest.class,
@@ -1100,7 +1100,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   private FolderNode generateManifestFileFoldeNodeForServiceView(String accountId, Service service) {
     ApplicationManifest applicationManifest =
-        applicationManifestService.getK8sManifestByServiceId(service.getAppId(), service.getUuid());
+        applicationManifestService.getManifestByServiceId(service.getAppId(), service.getUuid());
     DirectoryPath manifestFilePath = new DirectoryPath(MANIFEST_FILE_FOLDER);
     return generateManifestFileFolderNode(accountId, service, applicationManifest, manifestFilePath);
   }

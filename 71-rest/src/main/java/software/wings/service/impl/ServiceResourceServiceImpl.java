@@ -2218,7 +2218,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       return;
     }
 
-    if (applicationManifestService.getK8sManifestByServiceId(service.getAppId(), service.getUuid()) != null) {
+    if (applicationManifestService.getManifestByServiceId(service.getAppId(), service.getUuid()) != null) {
       return;
     }
 
@@ -2274,7 +2274,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private void createDefaultPcfV2Manifests(Service service) {
-    if (applicationManifestService.getK8sManifestByServiceId(service.getAppId(), service.getUuid()) != null) {
+    if (applicationManifestService.getManifestByServiceId(service.getAppId(), service.getUuid()) != null) {
       return;
     }
 
@@ -2408,7 +2408,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       throw new InvalidRequestException("Application Manifest already has an id", USER);
     }
     appManifest.setServiceId(serviceId);
-    appManifest.setKind(AppManifestKind.VALUES);
     appManifest.setAppId(appId);
     return applicationManifestService.create(appManifest);
   }
