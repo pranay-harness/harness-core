@@ -1769,6 +1769,7 @@ public class WorkflowServiceHelper {
                                     .type(KUBERNETES_SWAP_SERVICE_SELECTORS.name())
                                     .name(KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE)
                                     .properties(defaultRouteUpdateProperties)
+                                    .rollback(true)
                                     .build())
                        .withRollback(true)
                        .build());

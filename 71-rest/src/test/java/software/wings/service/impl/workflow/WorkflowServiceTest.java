@@ -274,6 +274,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import javax.validation.ConstraintViolationException;
 
@@ -971,6 +972,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowService.fetchDeploymentMetadata(APP_ID, savedWorkflow, null, null, null)
                    .getArtifactRequiredServiceIds()
                    .contains(SERVICE_ID));
+
+    Set<Entry<String, WorkflowPhase>> entries = orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().entrySet();
+    Entry<String, WorkflowPhase> entry = (Entry<String, WorkflowPhase>) entries.toArray()[0];
+    PhaseStep phaseStep = entry.getValue().getPhaseSteps().get(0);
+    boolean rollback = phaseStep.getSteps().get(0).isRollback();
+    assertThat(rollback).isTrue();
   }
 
   @Test
