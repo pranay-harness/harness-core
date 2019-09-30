@@ -622,14 +622,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       ProvisionerAware provisionerAwareInfrastructure = (ProvisionerAware) infrastructureDefinition.getInfrastructure();
       InfrastructureProvisioner infrastructureProvisioner = infrastructureProvisionerService.get(
           infrastructureDefinition.getAppId(), infrastructureDefinition.getProvisionerId());
-      try {
-        Object evaluated = context.evaluateExpression(String.format("${%s}", infrastructureProvisioner.variableKey()));
-        if (evaluated == null) {
-          return false;
-        }
-      } catch (Exception exception) {
-        return false;
-      }
+
       Map<String, Object> resolvedExpressions = infrastructureProvisionerService.resolveExpressions(
           infrastructureDefinition, context.asMap(), infrastructureProvisioner);
       provisionerAwareInfrastructure.applyExpressions(resolvedExpressions, infrastructureDefinition.getAppId(),

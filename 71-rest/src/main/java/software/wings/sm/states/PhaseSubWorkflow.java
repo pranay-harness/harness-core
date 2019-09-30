@@ -137,24 +137,16 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
     Environment env = ((ExecutionContextImpl) context).getEnv();
 
-    InfrastructureMapping infrastructureMapping = phaseSubWorkflowHelperService.getInfraMapping(
-        infraMappingId, infraMappingTemplateExpression, app, context, service, infrastructureDefinition);
+    boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, context.getAccountId());
+
+    InfrastructureMapping infrastructureMapping = null;
+    if (!infraRefactor) {
+      infrastructureMapping = phaseSubWorkflowHelperService.getInfraMapping(
+          infraMappingId, infraMappingTemplateExpression, app.getAppId(), context);
+    }
 
     phaseSubWorkflowHelperService.validateEntitiesRelationship(service, infrastructureDefinition, infrastructureMapping,
         env, serviceTemplateExpression, infraMappingTemplateExpression, context.getAccountId());
-
-    boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, context.getAccountId());
-
-    if (infraRefactor) {
-      if (infrastructureMapping != null) {
-        workflowExecutionService.appendInfraMappingId(
-            app.getAppId(), context.getWorkflowExecutionId(), infrastructureMapping.getUuid());
-      }
-      if (workflowStandardParams.getWorkflowElement() != null) {
-        workflowExecutionService.updateWorkflowElementWithLastGoodReleaseInfo(
-            context.getAppId(), workflowStandardParams.getWorkflowElement(), context.getWorkflowExecutionId());
-      }
-    }
 
     ExecutionResponseBuilder executionResponseBuilder = getSpawningExecutionResponse(
         context, workflowStandardParams, service, infrastructureMapping, infrastructureDefinition);
