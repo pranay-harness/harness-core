@@ -65,14 +65,15 @@ public final class ElasticsearchDao implements SearchDao {
   }
 
   public boolean appendToListInMultipleDocuments(
-      String entityType, String fieldToUpdate, List<String> documentIds, Map<String, Object> newElement) {
+      String entityType, String listToUpdate, List<String> documentIds, Map<String, Object> newElement) {
     String indexName = elasticsearchIndexManager.getIndexName(entityType);
     UpdateByQueryRequest request = new UpdateByQueryRequest(indexName);
     request.setRefresh(true);
 
     Map<String, Object> params = new HashMap<>();
-    params.put(FIELD_TO_UPDATE_PARAMS_KEY, fieldToUpdate);
+    params.put(FIELD_TO_UPDATE_PARAMS_KEY, listToUpdate);
     params.put(NEW_ELEMENT_PARAMS_KEY, newElement);
+
     request.setRefresh(true);
     request.setQuery(QueryBuilders.termsQuery(EntityBaseViewKeys.id, documentIds));
     request.setScript(new Script(ScriptType.INLINE, SCRIPT_LANGUAGE,
@@ -80,6 +81,24 @@ public final class ElasticsearchDao implements SearchDao {
             + "else{ctx._source[params.fieldToUpdate] = [params.newList];}",
         params));
     logger.info(request.toString());
+    return processUpdateByQuery(request, params, indexName);
+  }
+
+  public boolean appendToListInMultipleDocuments(String entityType, String listToUpdate, List<String> documentIds,
+      Map<String, Object> newElement, int maxElementsInList) {
+    String indexName = elasticsearchIndexManager.getIndexName(entityType);
+    UpdateByQueryRequest request = new UpdateByQueryRequest(indexName);
+    request.setRefresh(true);
+
+    Map<String, Object> params = new HashMap<>();
+    params.put(FIELD_TO_UPDATE_PARAMS_KEY, listToUpdate);
+    params.put(NEW_ELEMENT_PARAMS_KEY, newElement);
+    params.put("maxElementsInList", maxElementsInList);
+
+    request.setQuery(QueryBuilders.termsQuery(EntityBaseViewKeys.id, documentIds));
+    request.setScript(new Script(ScriptType.INLINE, "painless",
+        "if (ctx._source[params.fieldToUpdate] != null) {if (ctx._source[params.fieldToUpdate].length == params.maxElementsInList) { ctx._source[params.fieldToUpdate] = ctx._source[params.fieldToUpdate].stream().skip(1).collect(Collectors.toList());} ctx._source[params.fieldToUpdate].add(params.newList);} else {ctx._source[params.fieldToUpdate] = [params.newList];}",
+        params));
     return processUpdateByQuery(request, params, indexName);
   }
 
@@ -234,19 +253,38 @@ public final class ElasticsearchDao implements SearchDao {
     return false;
   }
 
-  public boolean addTimestamp(String entityType, String fieldToUpdate, String documentId, int daysToRetain) {
+  public boolean addTimestamp(String entityType, String fieldName, String documentId, int daysToRetain) {
     String indexName = elasticsearchIndexManager.getIndexName(entityType);
     UpdateByQueryRequest request = new UpdateByQueryRequest(indexName);
     request.setRefresh(true);
     Map<String, Object> params = new HashMap<>();
     long currentTimestampValue = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
     long newTimestampValue = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) - daysToRetain * 86400;
-    params.put(FIELD_TO_UPDATE_PARAMS_KEY, fieldToUpdate);
+
+    params.put(FIELD_TO_UPDATE_PARAMS_KEY, fieldName);
     params.put("newTimestampValue", newTimestampValue);
     params.put("currentTimestampValue", currentTimestampValue);
 
     request.setQuery(QueryBuilders.termQuery(EntityBaseViewKeys.id, documentId));
     request.setScript(new Script(ScriptType.INLINE, SCRIPT_LANGUAGE,
+        "if (ctx._source[params.fieldToUpdate] != null) { ctx._source[params.fieldToUpdate] = ctx._source[params.fieldToUpdate].stream().filter(item -> item >= params.newTimestampValue).collect(Collectors.toList()); ctx._source[params.fieldToUpdate].add(params.currentTimestampValue); } else { ctx._source[params.fieldToUpdate] = [params.currentTimestampValue]; }",
+        params));
+    return processUpdateByQuery(request, params, indexName);
+  }
+
+  public boolean addTimestamp(String entityType, String fieldName, List<String> documentIds, int daysToRetain) {
+    String indexName = elasticsearchIndexManager.getIndexName(entityType);
+    UpdateByQueryRequest request = new UpdateByQueryRequest(indexName);
+    request.setRefresh(true);
+    Map<String, Object> params = new HashMap<>();
+    long currentTimestampValue = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
+    long newTimestampValue = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) - daysToRetain * 86400;
+    params.put(FIELD_TO_UPDATE_PARAMS_KEY, fieldName);
+    params.put("newTimestampValue", newTimestampValue);
+    params.put("currentTimestampValue", currentTimestampValue);
+
+    request.setQuery(QueryBuilders.termsQuery(EntityBaseViewKeys.id, documentIds));
+    request.setScript(new Script(ScriptType.INLINE, "painless",
         "if (ctx._source[params.fieldToUpdate] != null) { ctx._source[params.fieldToUpdate] = ctx._source[params.fieldToUpdate].stream().filter(item -> item >= params.newTimestampValue).collect(Collectors.toList()); ctx._source[params.fieldToUpdate].add(params.currentTimestampValue); } else { ctx._source[params.fieldToUpdate] = [params.currentTimestampValue]; }",
         params));
     return processUpdateByQuery(request, params, indexName);

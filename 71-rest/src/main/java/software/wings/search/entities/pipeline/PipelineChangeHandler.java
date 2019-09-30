@@ -37,7 +37,7 @@ import java.util.Optional;
  * The handler which will maintain the pipeline
  * document in the search engine database.
  *
- * @author utkarsh
+ * @author ujjawal
  */
 
 @Slf4j
@@ -58,13 +58,14 @@ public class PipelineChangeHandler implements ChangeHandler {
         for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
           if (entityAuditRecord.getAffectedResourceType().equals(EntityType.PIPELINE.name())) {
             String fieldToUpdate = PipelineViewKeys.audits;
-            String filterId = entityAuditRecord.getAffectedResourceId();
+            String documentToUpdate = entityAuditRecord.getAffectedResourceId();
             String auditTimestampField = PipelineViewKeys.auditTimestamps;
             Map<String, Object> auditRelatedEntityViewMap =
                 relatedAuditViewBuilder.getAuditRelatedEntityViewMap(auditHeader, entityAuditRecord);
-            result &= searchDao.addTimestamp(PipelineSearchEntity.TYPE, auditTimestampField, filterId, DAYS_TO_RETAIN);
-            result &= searchDao.appendToListInSingleDocument(
-                PipelineSearchEntity.TYPE, fieldToUpdate, filterId, auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
+            result &= searchDao.addTimestamp(
+                PipelineSearchEntity.TYPE, auditTimestampField, documentToUpdate, DAYS_TO_RETAIN);
+            result &= searchDao.appendToListInSingleDocument(PipelineSearchEntity.TYPE, fieldToUpdate, documentToUpdate,
+                auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
           }
         }
       }
@@ -77,15 +78,16 @@ public class PipelineChangeHandler implements ChangeHandler {
     boolean result = true;
     WorkflowExecution workflowExecution = (WorkflowExecution) changeEvent.getFullDocument();
     if (workflowExecution.getWorkflowType().equals(WorkflowType.ORCHESTRATION)) {
-      String filterId = workflowExecution.getWorkflowId();
+      String documentToUpdate = workflowExecution.getWorkflowId();
       String fieldToUpdate = WorkflowViewKeys.deployments;
       Map<String, Object> deploymentRelatedEntityViewMap =
           relatedDeploymentViewBuilder.getDeploymentRelatedEntityViewMap(workflowExecution);
       String deploymentTimestampsField = PipelineViewKeys.deploymentTimestamps;
-      result = searchDao.addTimestamp(PipelineSearchEntity.TYPE, deploymentTimestampsField, filterId, DAYS_TO_RETAIN);
+      result = searchDao.addTimestamp(
+          PipelineSearchEntity.TYPE, deploymentTimestampsField, documentToUpdate, DAYS_TO_RETAIN);
 
       result = result
-          && searchDao.appendToListInSingleDocument(PipelineSearchEntity.TYPE, fieldToUpdate, filterId,
+          && searchDao.appendToListInSingleDocument(PipelineSearchEntity.TYPE, fieldToUpdate, documentToUpdate,
                  deploymentRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
     }
     return result;
@@ -98,10 +100,10 @@ public class PipelineChangeHandler implements ChangeHandler {
       if (changes.containsField(WorkflowExecutionKeys.status)) {
         String entityType = WorkflowViewKeys.deployments;
         String newNameValue = workflowExecution.getStatus().toString();
-        String filterId = changeEvent.getUuid();
+        String documentToUpdate = changeEvent.getUuid();
         String fieldToUpdate = DeploymentRelatedEntityViewKeys.status;
         return searchDao.updateListInMultipleDocuments(
-            PipelineSearchEntity.TYPE, entityType, newNameValue, filterId, fieldToUpdate);
+            PipelineSearchEntity.TYPE, entityType, newNameValue, documentToUpdate, fieldToUpdate);
       }
     }
     return true;
@@ -139,10 +141,10 @@ public class PipelineChangeHandler implements ChangeHandler {
       if (document.containsField(ServiceKeys.name)) {
         String entityType = PipelineViewKeys.services;
         String newNameValue = document.get(ServiceKeys.name).toString();
-        String filterId = changeEvent.getUuid();
+        String documentToUpdate = changeEvent.getUuid();
         String fieldToUpdate = ServiceKeys.name;
         return searchDao.updateListInMultipleDocuments(
-            PipelineSearchEntity.TYPE, entityType, newNameValue, filterId, fieldToUpdate);
+            PipelineSearchEntity.TYPE, entityType, newNameValue, documentToUpdate, fieldToUpdate);
       }
     }
     return true;
@@ -154,10 +156,10 @@ public class PipelineChangeHandler implements ChangeHandler {
       if (document.containsField(WorkflowKeys.name)) {
         String entityType = PipelineViewKeys.workflows;
         String newNameValue = document.get(WorkflowKeys.name).toString();
-        String filterId = changeEvent.getUuid();
+        String documentToUpdate = changeEvent.getUuid();
         String fieldToUpdate = WorkflowKeys.name;
         return searchDao.updateListInMultipleDocuments(
-            PipelineSearchEntity.TYPE, entityType, newNameValue, filterId, fieldToUpdate);
+            PipelineSearchEntity.TYPE, entityType, newNameValue, documentToUpdate, fieldToUpdate);
       }
     }
     return true;

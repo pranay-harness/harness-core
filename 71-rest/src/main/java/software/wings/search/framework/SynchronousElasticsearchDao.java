@@ -65,14 +65,21 @@ public class SynchronousElasticsearchDao implements SearchDao {
   }
 
   @Override
-  public boolean appendToListInSingleDocument(
-      String entityType, String listKey, String documentId, Map<String, Object> newElement, int maxElementsInList) {
+  public boolean addTimestamp(String entityType, String listToUpdate, List<String> documentIds, int daysToRetain) {
+    Callable<Boolean> addTimestampCallable =
+        () -> elasticsearchDao.addTimestamp(entityType, listToUpdate, documentIds, daysToRetain);
+    return processElasticsearchTask(addTimestampCallable);
+  }
+
+  @Override
+  public boolean appendToListInSingleDocument(String entityType, String listToUpdate, String documentId,
+      Map<String, Object> newElement, int maxElementsInList) {
     logger.info(
         "Add to or create list with elements {} referenced by key {} in a document having id {} of index type {} with max documents set to {}",
-        newElement, listKey, documentId, entityType, maxElementsInList);
+        newElement, listToUpdate, documentId, entityType, maxElementsInList);
     Callable<Boolean> appendToListInSingleDocumentCallable = ()
         -> elasticsearchDao.appendToListInSingleDocument(
-            entityType, listKey, documentId, newElement, maxElementsInList);
+            entityType, listToUpdate, documentId, newElement, maxElementsInList);
     return processElasticsearchTask(appendToListInSingleDocumentCallable);
   }
 
@@ -90,6 +97,18 @@ public class SynchronousElasticsearchDao implements SearchDao {
         newElement, listToUpdate, documentIds, entityType);
     Callable<Boolean> appendToListInMultipleDocumentsCallable =
         () -> elasticsearchDao.appendToListInMultipleDocuments(entityType, listToUpdate, documentIds, newElement);
+    return processElasticsearchTask(appendToListInMultipleDocumentsCallable);
+  }
+
+  @Override
+  public boolean appendToListInMultipleDocuments(String entityType, String listToUpdate, List<String> documentIds,
+      Map<String, Object> newElement, int maxElementsInList) {
+    logger.info(
+        "Add to or create a list with elements {} referenced by key {} in a document having id {} of index type {} with max size of {}",
+        newElement, listToUpdate, documentIds, entityType, maxElementsInList);
+    Callable<Boolean> appendToListInMultipleDocumentsCallable = ()
+        -> elasticsearchDao.appendToListInMultipleDocuments(
+            entityType, listToUpdate, documentIds, newElement, maxElementsInList);
     return processElasticsearchTask(appendToListInMultipleDocumentsCallable);
   }
 
