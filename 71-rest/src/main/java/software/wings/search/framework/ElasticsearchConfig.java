@@ -5,6 +5,11 @@ import lombok.Builder;
 import lombok.Value;
 import org.hibernate.validator.constraints.NotEmpty;
 
+/**
+ * Elasticsearch Configuration for search
+ *
+ * @author utkarsh
+ */
 @Value
 @Builder
 public class ElasticsearchConfig {

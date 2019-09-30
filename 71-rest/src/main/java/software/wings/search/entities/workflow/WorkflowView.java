@@ -31,9 +31,8 @@ public class WorkflowView extends EntityBaseView {
   private List<Long> deploymentTimestamps;
   private List<Long> auditTimestamps;
 
-  public WorkflowView(String uuid, String name, String description, String accountId, long createdAt,
-      long lastUpdatedAt, EntityType entityType, EmbeddedUser createdBy, EmbeddedUser lastUpdatedBy, String appId,
-      String workflowType) {
+  WorkflowView(String uuid, String name, String description, String accountId, long createdAt, long lastUpdatedAt,
+      EntityType entityType, EmbeddedUser createdBy, EmbeddedUser lastUpdatedBy, String appId, String workflowType) {
     super(uuid, name, description, accountId, createdAt, lastUpdatedAt, entityType, createdBy, lastUpdatedBy);
     this.appId = appId;
     this.workflowType = workflowType;

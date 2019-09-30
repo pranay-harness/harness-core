@@ -8,16 +8,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.dl.WingsPersistence;
-import software.wings.search.framework.SearchEntitySyncState.SearchEntitySyncStateKeys;
+import software.wings.search.framework.SearchEntityVersion.SearchEntityVersionKeys;
+import software.wings.search.framework.SearchSourceEntitySyncState.SearchSourceEntitySyncStateKeys;
 import software.wings.search.framework.changestreams.ChangeEvent;
+import software.wings.search.framework.changestreams.ChangeSubscriber;
 import software.wings.search.framework.changestreams.ChangeTracker;
 import software.wings.search.framework.changestreams.ChangeTrackingInfo;
 
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CountDownLatch;
-import java.util.function.Consumer;
+import java.util.concurrent.Future;
 
 /**
  * Abstract template class for both
@@ -31,24 +32,23 @@ public abstract class ElasticsearchSyncTask {
   @Inject protected Map<Class<? extends PersistentEntity>, SearchEntity<?>> searchEntityMap;
   @Inject protected WingsPersistence wingsPersistence;
   @Inject private ChangeTracker changeTracker;
-  protected CountDownLatch latch;
 
-  protected boolean saveSearchEntitySyncStateToken(SearchEntity<?> searchEntity, String token) {
-    String searchEntityClassName = searchEntity.getClass().getCanonicalName();
+  private boolean saveSearchSourceEntitySyncStateToken(Class<? extends PersistentEntity> sourceClass, String token) {
+    String sourceClassName = sourceClass.getCanonicalName();
 
-    Query<SearchEntitySyncState> query = wingsPersistence.createQuery(SearchEntitySyncState.class)
-                                             .field(SearchEntitySyncStateKeys.searchEntityClass)
-                                             .equal(searchEntityClassName);
+    Query<SearchSourceEntitySyncState> query = wingsPersistence.createQuery(SearchSourceEntitySyncState.class)
+                                                   .field(SearchSourceEntitySyncStateKeys.sourceEntityClass)
+                                                   .equal(sourceClassName);
 
-    UpdateOperations<SearchEntitySyncState> updateOperations =
-        wingsPersistence.createUpdateOperations(SearchEntitySyncState.class)
-            .set(SearchEntitySyncStateKeys.lastSyncedToken, token);
+    UpdateOperations<SearchSourceEntitySyncState> updateOperations =
+        wingsPersistence.createUpdateOperations(SearchSourceEntitySyncState.class)
+            .set(SearchSourceEntitySyncStateKeys.lastSyncedToken, token);
 
-    SearchEntitySyncState searchEntitySyncState =
+    SearchSourceEntitySyncState searchSourceEntitySyncState =
         wingsPersistence.upsert(query, updateOperations, HPersistence.upsertReturnNewOptions);
-    if (searchEntitySyncState == null || !searchEntitySyncState.getLastSyncedToken().equals(token)) {
-      logger.error(String.format(
-          "Search Entity %s token %s could not be updated", searchEntity.getClass().getCanonicalName(), token));
+    if (searchSourceEntitySyncState == null || !searchSourceEntitySyncState.getLastSyncedToken().equals(token)) {
+      logger.error(
+          String.format("Search Entity %s token %s could not be updated", sourceClass.getCanonicalName(), token));
       return false;
     }
     return true;
@@ -57,17 +57,17 @@ public abstract class ElasticsearchSyncTask {
   protected boolean updateSearchEntitySyncStateVersion(SearchEntity<?> searchEntity) {
     String searchEntityClassName = searchEntity.getClass().getCanonicalName();
 
-    Query<SearchEntitySyncState> query = wingsPersistence.createQuery(SearchEntitySyncState.class)
-                                             .field(SearchEntitySyncStateKeys.searchEntityClass)
-                                             .equal(searchEntityClassName);
+    Query<SearchEntityVersion> query = wingsPersistence.createQuery(SearchEntityVersion.class)
+                                           .field(SearchEntityVersionKeys.entityClass)
+                                           .equal(searchEntityClassName);
 
-    UpdateOperations<SearchEntitySyncState> updateOperations =
-        wingsPersistence.createUpdateOperations(SearchEntitySyncState.class)
-            .set(SearchEntitySyncStateKeys.syncVersion, searchEntity.getVersion());
+    UpdateOperations<SearchEntityVersion> updateOperations =
+        wingsPersistence.createUpdateOperations(SearchEntityVersion.class)
+            .set(SearchEntityVersionKeys.syncVersion, searchEntity.getVersion());
 
-    SearchEntitySyncState searchEntitySyncState =
+    SearchEntityVersion searchEntityVersion =
         wingsPersistence.upsert(query, updateOperations, HPersistence.upsertReturnNewOptions);
-    if (searchEntitySyncState == null || !searchEntitySyncState.getSyncVersion().equals(searchEntity.getVersion())) {
+    if (searchEntityVersion == null || !searchEntityVersion.getSyncVersion().equals(searchEntity.getVersion())) {
       logger.error(
           String.format("Search Entity %s version could not be updated", searchEntity.getClass().getCanonicalName()));
       return false;
@@ -75,25 +75,31 @@ public abstract class ElasticsearchSyncTask {
     return true;
   }
 
-  protected void initializeChangeListeners() {
-    latch = new CountDownLatch(searchEntityMap.size());
+  protected Future<?> initializeChangeListeners() {
+    Set<Class<? extends PersistentEntity>> subscribedClasses = new HashSet<>();
 
-    Set<ChangeTrackingInfo> changeTrackingInfos = new HashSet<>();
-    for (SearchEntity<?> searchEntity : searchEntityMap.values()) {
-      String searchEntityClassName = searchEntity.getClass().getCanonicalName();
-      Class<? extends PersistentEntity> sourceEntity = searchEntity.getSourceEntityClass();
-      SearchEntitySyncState searchEntitySyncState =
-          wingsPersistence.get(SearchEntitySyncState.class, searchEntityClassName);
-      String token = null;
-      if (searchEntitySyncState != null) {
-        token = searchEntitySyncState.getLastSyncedToken();
-      }
-      ChangeTrackingInfo changeTrackingInfo = new ChangeTrackingInfo(sourceEntity, changeEventConsumer, token);
+    searchEntityMap.values().forEach(searchEntity -> subscribedClasses.addAll(searchEntity.getSubscriptionEntities()));
+
+    Set<ChangeTrackingInfo<?>> changeTrackingInfos = new HashSet<>();
+
+    for (Class<? extends PersistentEntity> subscribedClass : subscribedClasses) {
+      ChangeTrackingInfo<?> changeTrackingInfo = getChangeTrackingInfo(subscribedClass);
       changeTrackingInfos.add(changeTrackingInfo);
     }
 
     logger.info("Calling change tracker to start change listeners");
-    changeTracker.start(changeTrackingInfos, latch);
+    return changeTracker.start(changeTrackingInfos);
+  }
+
+  private <T extends PersistentEntity> ChangeTrackingInfo<T> getChangeTrackingInfo(Class<T> subscribedClass) {
+    SearchSourceEntitySyncState searchSourceEntitySyncState =
+        wingsPersistence.get(SearchSourceEntitySyncState.class, subscribedClass.getCanonicalName());
+    String token = null;
+    if (searchSourceEntitySyncState != null) {
+      token = searchSourceEntitySyncState.getLastSyncedToken();
+    }
+    ChangeSubscriber<T> changeSubscriber = getChangeSubscriber();
+    return new ChangeTrackingInfo<>(subscribedClass, changeSubscriber, token);
   }
 
   protected void stopChangeListeners() {
@@ -101,34 +107,32 @@ public abstract class ElasticsearchSyncTask {
     changeTracker.stop();
   }
 
-  protected boolean processChange(ChangeEvent changeEvent) {
+  protected boolean processChange(ChangeEvent<?> changeEvent) {
+    Class<? extends PersistentEntity> sourceClass = changeEvent.getEntityType();
     for (SearchEntity<?> searchEntity : searchEntityMap.values()) {
-      ChangeHandler changeHandler = searchEntity.getChangeHandler();
-      boolean isChangeHandled = changeHandler.handleChange(changeEvent);
-
-      if (!isChangeHandled) {
-        logger.error(String.format("ChangeEvent %s could not be processed for entity %s", changeEvent.toString(),
-            searchEntity.getClass().getCanonicalName()));
-        return false;
+      if (searchEntity.getSubscriptionEntities().contains(sourceClass)) {
+        ChangeHandler changeHandler = searchEntity.getChangeHandler();
+        boolean isChangeHandled = changeHandler.handleChange(changeEvent);
+        if (!isChangeHandled) {
+          logger.error(String.format("ChangeEvent %s could not be processed for entity %s", changeEvent.toString(),
+              searchEntity.getClass().getCanonicalName()));
+          return false;
+        }
       }
     }
-    SearchEntity<?> searchEntity = searchEntityMap.get(changeEvent.getEntityType());
-    boolean isSaved = saveSearchEntitySyncStateToken(searchEntity, changeEvent.getToken());
+    boolean isSaved = saveSearchSourceEntitySyncStateToken(sourceClass, changeEvent.getToken());
     if (!isSaved) {
       logger.error(String.format("ChangeEvent %s could not be processed for entity %s", changeEvent.toString(),
-          searchEntity.getClass().getCanonicalName()));
+          sourceClass.getCanonicalName()));
     }
     return isSaved;
   }
 
-  protected Consumer<ChangeEvent> changeEventConsumer = new Consumer<ChangeEvent>() {
-    @Override
-    public synchronized void accept(ChangeEvent changeEvent) {
-      handleChangeEvent(changeEvent);
-    }
-  };
+  private <T extends PersistentEntity> ChangeSubscriber<T> getChangeSubscriber() {
+    return this ::onChange;
+  }
 
   public abstract boolean run();
 
-  protected abstract void handleChangeEvent(ChangeEvent changeEvent);
+  protected abstract void onChange(ChangeEvent<?> changeEvent);
 }

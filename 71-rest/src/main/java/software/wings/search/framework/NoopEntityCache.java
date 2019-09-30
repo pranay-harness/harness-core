@@ -4,6 +4,12 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.mapping.cache.EntityCache;
 import org.mongodb.morphia.mapping.cache.EntityCacheStatistics;
 
+/**
+ * Implementation of entity cache required by
+ * morphia mapper for conversion of DBObject to POJO.
+ *
+ * @author utkarsh
+ */
 public class NoopEntityCache implements EntityCache {
   @Override
   public Boolean exists(Key<?> key) {
@@ -11,7 +17,9 @@ public class NoopEntityCache implements EntityCache {
   }
 
   @Override
-  public void flush() {}
+  public void flush() {
+    // Do nothing because it is a noop cache.
+  }
 
   @Override
   public <T> T getEntity(Key<T> key) {
@@ -24,13 +32,19 @@ public class NoopEntityCache implements EntityCache {
   }
 
   @Override
-  public void notifyExists(Key<?> key, boolean b) {}
+  public void notifyExists(Key<?> key, boolean b) {
+    // Do nothing because it is a noop cache.
+  }
 
   @Override
-  public <T> void putEntity(Key<T> key, T t) {}
+  public <T> void putEntity(Key<T> key, T t) {
+    // Do nothing because it is a noop cache.
+  }
 
   @Override
-  public <T> void putProxy(Key<T> key, T t) {}
+  public <T> void putProxy(Key<T> key, T t) {
+    // Do nothing because it is a noop cache.
+  }
 
   @Override
   public EntityCacheStatistics stats() {

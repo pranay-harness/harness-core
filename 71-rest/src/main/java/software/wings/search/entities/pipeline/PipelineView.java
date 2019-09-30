@@ -28,8 +28,8 @@ public class PipelineView extends EntityBaseView {
   private List<Long> deploymentTimestamps;
   private List<Long> auditTimestamps;
 
-  public PipelineView(String uuid, String name, String description, String accountId, long createdAt,
-      long lastUpdatedAt, EntityType entityType, EmbeddedUser createdBy, EmbeddedUser lastUpdatedBy, String appId) {
+  PipelineView(String uuid, String name, String description, String accountId, long createdAt, long lastUpdatedAt,
+      EntityType entityType, EmbeddedUser createdBy, EmbeddedUser lastUpdatedBy, String appId) {
     super(uuid, name, description, accountId, createdAt, lastUpdatedAt, entityType, createdBy, lastUpdatedBy);
     this.appId = appId;
   }

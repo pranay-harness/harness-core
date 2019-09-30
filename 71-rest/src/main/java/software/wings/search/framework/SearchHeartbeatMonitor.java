@@ -7,9 +7,14 @@ import software.wings.dl.WingsPersistence;
 import software.wings.search.framework.PerpetualSearchLocker.LockTimeoutCallback;
 import software.wings.search.framework.SearchDistributedLock.SearchDistributedLockKeys;
 
-import java.sql.Date;
 import java.time.Instant;
+import java.util.Date;
 
+/**
+ * Update search lock heartbeat task
+ *
+ * @author utkarsh
+ */
 @Slf4j
 @AllArgsConstructor
 public class SearchHeartbeatMonitor implements Runnable {

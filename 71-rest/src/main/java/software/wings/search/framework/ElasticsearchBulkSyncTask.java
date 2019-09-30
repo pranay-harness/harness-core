@@ -39,7 +39,7 @@ public class ElasticsearchBulkSyncTask extends ElasticsearchSyncTask {
   @Inject RestHighLevelClient client;
   @Inject SearchDao searchDao;
   @Inject ElasticsearchIndexManager elasticsearchIndexManager;
-  private Queue<ChangeEvent> changeEventsDuringBulkSync = new LinkedList<>();
+  private Queue<ChangeEvent<?>> changeEventsDuringBulkSync = new LinkedList<>();
   private Map<Class, Boolean> isFirstChangeReceived = new HashMap<>();
   private Set<SearchEntity<?>> entitiesToBulkSync = new HashSet<>();
   private static final String BASE_CONFIGURATION_PATH = "/elasticsearch/framework/BaseViewSchema.json";
@@ -47,13 +47,12 @@ public class ElasticsearchBulkSyncTask extends ElasticsearchSyncTask {
 
   private void setEntitiesToBulkSync() {
     for (SearchEntity<?> searchEntity : searchEntityMap.values()) {
-      String searchEntityClassName = searchEntity.getClass().getCanonicalName();
-      SearchEntitySyncState searchEntitySyncState =
-          wingsPersistence.get(SearchEntitySyncState.class, searchEntityClassName);
-      if (searchEntitySyncState != null && !searchEntitySyncState.shouldBulkSync()) {
-        logger.info(String.format("Entity %s is already migrated to elasticsearch", searchEntityClassName));
+      SearchEntityVersion searchEntityVersion =
+          wingsPersistence.get(SearchEntityVersion.class, searchEntity.getClass().getCanonicalName());
+      if (searchEntityVersion != null && !searchEntityVersion.shouldBulkSync()) {
+        logger.info(String.format("Entity %s is already migrated to elasticsearch", searchEntity.getClass()));
       } else {
-        logger.info(String.format("Entity %s is to be migrated to elasticsearch", searchEntityClassName));
+        logger.info(String.format("Entity %s is to be migrated to elasticsearch", searchEntity.getClass()));
         entitiesToBulkSync.add(searchEntity);
       }
     }
@@ -82,11 +81,11 @@ public class ElasticsearchBulkSyncTask extends ElasticsearchSyncTask {
     return true;
   }
 
-  public String getSearchConfiguration(SearchEntity<?> searchEntity) throws IOException {
-    String CONFIGURATION_PATH =
+  private String getSearchConfiguration(SearchEntity<?> searchEntity) throws IOException {
+    String configurationPath =
         String.format("%s%s", ENTITY_CONFIGURATION_PATH_BASE, searchEntity.getConfigurationPath());
     String entitySettingsString =
-        IOUtils.toString(getClass().getResourceAsStream(CONFIGURATION_PATH), StandardCharsets.UTF_8);
+        IOUtils.toString(getClass().getResourceAsStream(configurationPath), StandardCharsets.UTF_8);
     String baseSettingsString =
         IOUtils.toString(getClass().getResourceAsStream(BASE_CONFIGURATION_PATH), StandardCharsets.UTF_8);
     return SearchEntityUtils.mergeSettings(baseSettingsString, entitySettingsString);
@@ -149,17 +148,14 @@ public class ElasticsearchBulkSyncTask extends ElasticsearchSyncTask {
       if (!jsonString.isPresent()) {
         return false;
       }
-      boolean isUpserted = searchDao.upsertDocument(searchEntity.getType(), entityBaseView.getId(), jsonString.get());
-      if (!isUpserted) {
-        return false;
-      }
+      return searchDao.upsertDocument(searchEntity.getType(), entityBaseView.getId(), jsonString.get());
     }
     return true;
   }
 
-  private boolean processChanges(Queue<ChangeEvent> changeEvents) {
+  private boolean processChanges(Queue<ChangeEvent<?>> changeEvents) {
     while (!changeEvents.isEmpty()) {
-      ChangeEvent changeEvent = changeEvents.poll();
+      ChangeEvent<?> changeEvent = changeEvents.poll();
       boolean isChangeProcessed = super.processChange(changeEvent);
       if (!isChangeProcessed) {
         return false;
@@ -179,7 +175,7 @@ public class ElasticsearchBulkSyncTask extends ElasticsearchSyncTask {
   }
 
   public boolean run() {
-    logger.info("Initializing change listeners for search entities");
+    logger.info("Initializing change listeners for search entities for bulk sync.");
     super.initializeChangeListeners();
 
     logger.info("Getting the entities that have to bulk synced");
@@ -220,7 +216,7 @@ public class ElasticsearchBulkSyncTask extends ElasticsearchSyncTask {
     return hasMigrationSucceeded;
   }
 
-  public void handleChangeEvent(ChangeEvent changeEvent) {
+  public void onChange(ChangeEvent<?> changeEvent) {
     if (isFirstChangeReceived.get(changeEvent.getEntityType()) == null) {
       changeEventsDuringBulkSync.add(changeEvent);
       isFirstChangeReceived.put(changeEvent.getEntityType(), true);

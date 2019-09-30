@@ -4,8 +4,6 @@ import io.harness.persistence.PersistentEntity;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 
-import java.util.function.Consumer;
-
 /**
  * The change tracking info that has to
  * be provided to open a changestream.
@@ -15,8 +13,8 @@ import java.util.function.Consumer;
 
 @Value
 @AllArgsConstructor
-public class ChangeTrackingInfo {
-  private Class<? extends PersistentEntity> morphiaClass;
-  private Consumer<ChangeEvent> changeEventConsumer;
+public class ChangeTrackingInfo<T extends PersistentEntity> {
+  private Class<T> morphiaClass;
+  private ChangeSubscriber<T> changeSubscriber;
   private String resumeToken;
 }

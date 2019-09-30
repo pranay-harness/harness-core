@@ -14,6 +14,12 @@ import org.mongodb.morphia.annotations.Indexed;
 import java.util.Date;
 import javax.validation.constraints.NotNull;
 
+/**
+ * The search lock bean based on
+ * Mongo TTL indexes
+ *
+ * @author utkarsh
+ */
 @Value
 @Builder
 @Entity(value = "searchDistributedLocks", noClassnameStored = true)

@@ -26,8 +26,8 @@ public class ApplicationView extends EntityBaseView {
   private List<Long> deploymentTimestamps;
   private List<Long> auditTimestamps;
 
-  public ApplicationView(String uuid, String name, String description, String accountId, long createdAt,
-      long lastUpdatedAt, EntityType entityType, EmbeddedUser createdBy, EmbeddedUser lastUpdatedBy) {
+  ApplicationView(String uuid, String name, String description, String accountId, long createdAt, long lastUpdatedAt,
+      EntityType entityType, EmbeddedUser createdBy, EmbeddedUser lastUpdatedBy) {
     super(uuid, name, description, accountId, createdAt, lastUpdatedAt, entityType, createdBy, lastUpdatedBy);
   }
 }

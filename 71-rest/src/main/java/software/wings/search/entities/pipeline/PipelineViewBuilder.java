@@ -18,7 +18,6 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.PipelineKeys;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
-import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
@@ -38,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 
 @Singleton
 @FieldNameConstants(innerTypeName = "PipelineViewBuilderKeys")
-public class PipelineViewBuilder {
+class PipelineViewBuilder {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private RelatedAuditViewBuilder relatedAuditViewBuilder;
@@ -63,17 +62,17 @@ public class PipelineViewBuilder {
     long startTimestamp = System.currentTimeMillis() - DAYS_TO_RETAIN * 86400 * 1000;
     List<RelatedAuditView> audits = new ArrayList<>();
     List<Long> auditTimestamps = new ArrayList<>();
-    HIterator<AuditHeader> iterator = new HIterator<>(wingsPersistence.createQuery(AuditHeader.class)
-                                                          .field("entityAuditRecords.entityId")
-                                                          .equal(pipeline.getUuid())
-                                                          .field(PipelineKeys.createdAt)
-                                                          .greaterThanOrEq(startTimestamp)
-                                                          .order(Sort.descending(AuditHeaderKeys.createdAt))
-                                                          .fetch());
-
-    while (iterator.hasNext()) {
-      final AuditHeader auditHeader = iterator.next();
-      if (auditHeader.getEntityAuditRecords() != null) {
+    try (HIterator<AuditHeader> iterator = new HIterator<>(wingsPersistence.createQuery(AuditHeader.class)
+                                                               .field(AuditHeaderKeys.accountId)
+                                                               .equal(pipeline.getAccountId())
+                                                               .field("entityAuditRecords.entityId")
+                                                               .equal(pipeline.getUuid())
+                                                               .field(PipelineKeys.createdAt)
+                                                               .greaterThanOrEq(startTimestamp)
+                                                               .order(Sort.descending(AuditHeaderKeys.createdAt))
+                                                               .fetch())) {
+      while (iterator.hasNext()) {
+        final AuditHeader auditHeader = iterator.next();
         for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
           if (entityAuditRecord.getAffectedResourceType().equals(EntityType.PIPELINE.name())
               && entityAuditRecord.getAffectedResourceId().equals(pipeline.getUuid())) {
@@ -81,6 +80,7 @@ public class PipelineViewBuilder {
               audits.add(relatedAuditViewBuilder.getAuditRelatedEntityView(auditHeader, entityAuditRecord));
             }
             auditTimestamps.add(TimeUnit.MILLISECONDS.toSeconds(auditHeader.getCreatedAt()));
+            break;
           }
         }
       }
@@ -95,21 +95,23 @@ public class PipelineViewBuilder {
     long startTimestamp = System.currentTimeMillis() - DAYS_TO_RETAIN * 86400 * 1000;
     List<Long> deploymentTimestamps = new ArrayList<>();
     List<RelatedDeploymentView> deployments = new ArrayList<>();
-    HIterator<WorkflowExecution> iterator =
-        new HIterator<>(wingsPersistence.createQuery(WorkflowExecution.class)
-                            .filter(WorkflowExecutionKeys.workflowId, pipeline.getUuid())
-                            .field(PipelineKeys.createdAt)
-                            .greaterThanOrEq(startTimestamp)
-                            .order(Sort.descending(WorkflowExecutionKeys.createdAt))
-                            .fetch());
-
-    while (iterator.hasNext()) {
-      final WorkflowExecution workflowExecution = iterator.next();
-      if (workflowExecution.getWorkflowType().equals(WorkflowType.PIPELINE)) {
-        if (deployments.size() < MAX_RELATED_ENTITIES_COUNT) {
-          deployments.add(new RelatedDeploymentView(workflowExecution));
+    try (HIterator<WorkflowExecution> iterator =
+             new HIterator<>(wingsPersistence.createQuery(WorkflowExecution.class)
+                                 .field(WorkflowExecutionKeys.appId)
+                                 .equal(pipeline.getAppId())
+                                 .filter(WorkflowExecutionKeys.workflowId, pipeline.getUuid())
+                                 .field(PipelineKeys.createdAt)
+                                 .greaterThanOrEq(startTimestamp)
+                                 .order(Sort.descending(WorkflowExecutionKeys.createdAt))
+                                 .fetch())) {
+      while (iterator.hasNext()) {
+        final WorkflowExecution workflowExecution = iterator.next();
+        if (workflowExecution.getWorkflowType().equals(WorkflowType.PIPELINE)) {
+          if (deployments.size() < MAX_RELATED_ENTITIES_COUNT) {
+            deployments.add(new RelatedDeploymentView(workflowExecution));
+          }
+          deploymentTimestamps.add(TimeUnit.MILLISECONDS.toSeconds(workflowExecution.getCreatedAt()));
         }
-        deploymentTimestamps.add(TimeUnit.MILLISECONDS.toSeconds(workflowExecution.getCreatedAt()));
       }
     }
     Collections.reverse(deployments);
@@ -127,31 +129,29 @@ public class PipelineViewBuilder {
 
   private void setApplicationName(Pipeline pipeline) {
     Application application = getApplication(pipeline);
-    pipelineView.setAppName(application.getName());
+    if (application != null) {
+      pipelineView.setAppName(application.getName());
+    }
   }
 
   private void setServicesAndWorkflows(Pipeline pipeline) {
+    String worklowIdKey = "workflowId";
     if (pipeline.getPipelineStages() != null) {
       Set<EntityInfo> workflows = new HashSet<>();
       Set<EntityInfo> services = new HashSet<>();
-
       for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
         for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
           if (pipelineStageElement != null && pipelineStageElement.getProperties() != null
-              && pipelineStageElement.getProperties().get("workflowId") != null) {
+              && pipelineStageElement.getProperties().get(worklowIdKey) != null) {
             Workflow workflow =
-                wingsPersistence.get(Workflow.class, pipelineStageElement.getProperties().get("workflowId").toString());
-            if (workflow != null) {
-              EntityInfo workflowInfo =
-                  new EntityInfo(pipelineStageElement.getProperties().get("workflowId").toString(), workflow.getName());
-              workflows.add(workflowInfo);
-              if (workflow.getOrchestration() != null) {
-                populateServices(workflow);
-                for (Service service : workflow.getServices()) {
-                  EntityInfo serviceInfo = new EntityInfo(service.getUuid(), service.getName());
-                  services.add(serviceInfo);
-                }
-              }
+                wingsPersistence.get(Workflow.class, pipelineStageElement.getProperties().get(worklowIdKey).toString());
+            EntityInfo workflowInfo =
+                new EntityInfo(pipelineStageElement.getProperties().get(worklowIdKey).toString(), workflow.getName());
+            workflows.add(workflowInfo);
+            if (workflow.getOrchestration() != null) {
+              populateServices(workflow);
+              workflow.getServices().forEach(
+                  service -> services.add(new EntityInfo(service.getUuid(), service.getName())));
             }
           }
         }
@@ -161,8 +161,8 @@ public class PipelineViewBuilder {
     }
   }
 
-  public PipelineView createPipelineView(Pipeline pipeline) {
-    if (wingsPersistence.get(Application.class, pipeline.getAppId()) != null) {
+  PipelineView createPipelineView(Pipeline pipeline) {
+    if (getApplication(pipeline) != null) {
       createBaseView(pipeline);
       setApplicationName(pipeline);
       setServicesAndWorkflows(pipeline);
@@ -173,8 +173,8 @@ public class PipelineViewBuilder {
     return null;
   }
 
-  public PipelineView createPipelineView(Pipeline pipeline, DBObject changeDocument) {
-    if (wingsPersistence.get(Application.class, pipeline.getAppId()) != null) {
+  PipelineView createPipelineView(Pipeline pipeline, DBObject changeDocument) {
+    if (getApplication(pipeline) != null) {
       createBaseView(pipeline);
       if (changeDocument.containsField(PipelineKeys.appId)) {
         setApplicationName(pipeline);
