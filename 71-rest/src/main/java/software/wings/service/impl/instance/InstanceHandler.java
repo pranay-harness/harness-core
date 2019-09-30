@@ -270,7 +270,7 @@ public abstract class InstanceHandler {
                                   .computeProviderId(infraMapping.getComputeProviderSettingId())
                                   .computeProviderName(infraMapping.getComputeProviderName())
                                   .infraMappingId(infraMapping.getUuid())
-                                  .infraMappingName(infraMapping.getName())
+                                  .infraMappingName(infraMapping.getDisplayName())
                                   .infraMappingType(infraMappingType)
                                   .serviceId(infraMapping.getServiceId())
                                   .serviceName(service.getName());

@@ -205,7 +205,8 @@ public class InstanceHelper {
         Optional<InstanceHandler> instanceHandlerOptional = getInstanceHandler(infrastructureMapping);
         if (!instanceHandlerOptional.isPresent()) {
           if (!hasNoInstanceHandler(infrastructureMapping.getInfraMappingType())) {
-            String msg = "Instance handler not found for infraMappingType: " + infrastructureMapping.getName();
+            String msg =
+                "Instance handler not found for infraMappingType: " + infrastructureMapping.getInfraMappingType();
             logger.error(msg);
             throw new WingsException(msg);
           } else {
@@ -604,7 +605,7 @@ public class InstanceHelper {
         logger.info("Instance sync started for infraMapping [{}]", infraMappingId);
         instanceHandler.syncInstances(appId, infraMappingId);
         instanceService.updateSyncSuccess(appId, infraMapping.getServiceId(), infraMapping.getEnvId(), infraMappingId,
-            infraMapping.getName(), System.currentTimeMillis());
+            infraMapping.getDisplayName(), System.currentTimeMillis());
         logger.info("Instance sync completed for infraMapping [{}]", infraMappingId);
       } catch (Exception ex) {
         logger.warn(format("Instance sync failed for infraMappingId [%s]", infraMappingId), ex);
@@ -616,7 +617,7 @@ public class InstanceHelper {
         }
 
         instanceService.handleSyncFailure(appId, infraMapping.getServiceId(), infraMapping.getEnvId(), infraMappingId,
-            infraMapping.getName(), System.currentTimeMillis(), errorMsg);
+            infraMapping.getDisplayName(), System.currentTimeMillis(), errorMsg);
       }
     }
   }

@@ -455,6 +455,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       fieldsToRemove.add("name");
     }
 
+    if (isNotEmpty(infrastructureMapping.getDisplayName())) {
+      keyValuePairs.put(InfrastructureMappingKeys.displayName, infrastructureMapping.getDisplayName());
+    } else {
+      fieldsToRemove.add(InfrastructureMappingKeys.displayName);
+    }
+
     if (isNotEmpty(infrastructureMapping.getInfrastructureDefinitionId())) {
       keyValuePairs.put(
           InfrastructureMappingKeys.infrastructureDefinitionId, infrastructureMapping.getInfrastructureDefinitionId());

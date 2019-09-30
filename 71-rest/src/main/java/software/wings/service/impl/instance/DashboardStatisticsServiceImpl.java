@@ -1019,7 +1019,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
                                    .map(infraMapping
                                        -> EntitySummary.builder()
                                               .id(infraMapping.getUuid())
-                                              .name(infraMapping.getName())
+                                              .name(infraMapping.getDisplayName())
                                               .type(EntityType.INFRASTRUCTURE_MAPPING.name())
                                               .build())
                                    .collect(toList());

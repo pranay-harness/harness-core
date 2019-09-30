@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+
 import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -69,6 +71,7 @@ public abstract class InfrastructureMapping
   @SchemaIgnore private String computeProviderName;
 
   @EntityName private String name;
+  private String displayName;
 
   // auto populate name
   @SchemaIgnore private boolean autoPopulate = true;
@@ -382,6 +385,14 @@ public abstract class InfrastructureMapping
         && Objects.equals(this.infraMappingType, other.infraMappingType)
         && Objects.equals(this.deploymentType, other.deploymentType)
         && Objects.equals(this.provisionerId, other.provisionerId);
+  }
+
+  public void setDisplayName(String displayName) {
+    this.displayName = displayName;
+  }
+
+  public String getDisplayName() {
+    return isNotEmpty(displayName) ? displayName : name;
   }
 
   @Data
