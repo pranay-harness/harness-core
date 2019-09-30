@@ -78,6 +78,7 @@ import static software.wings.sm.StateType.TERRAFORM_ROLLBACK;
 import static software.wings.sm.StateType.values;
 import static software.wings.sm.states.provision.TerraformProvisionState.INHERIT_APPROVED_PLAN;
 import static software.wings.sm.states.provision.TerraformProvisionState.RUN_PLAN_ONLY_KEY;
+import static software.wings.utils.Validator.notEmptyCheck;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Joiner;
@@ -244,6 +245,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
@@ -1048,7 +1050,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     final boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, workflow.getAccountId());
 
     validateWorkflowNameForDuplicates(workflow);
-
     validateOrchestrationWorkflow(workflow);
     final OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     workflow.setDefaultVersion(1);
@@ -1120,11 +1121,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   private void validateWorkflowNameForDuplicates(Workflow workflow) {
-    if (wingsPersistence.createQuery(Workflow.class)
-            .filter(WorkflowKeys.appId, workflow.getAppId())
-            .filter(WorkflowKeys.name, workflow.getName())
-            .getKey()
-        != null) {
+    workflow.setName(workflow.getName().trim());
+    notEmptyCheck("workflow name cannot be empty", workflow.getName());
+    Workflow workflowWithSameName = wingsPersistence.createQuery(Workflow.class)
+                                        .filter(WorkflowKeys.appId, workflow.getAppId())
+                                        .filter(WorkflowKeys.name, workflow.getName())
+                                        .get();
+    if (Objects.nonNull(workflowWithSameName)
+        && !StringUtils.equals(workflowWithSameName.getUuid(), workflow.getUuid())) {
       throw new InvalidRequestException("Duplicate name " + workflow.getName(), USER);
     }
   }
@@ -1274,6 +1278,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           workflow.getAppId(), workflow.getServiceId(), workflow.getInfraMappingId());
     }
 
+    validateWorkflowNameForDuplicates(workflow);
     validateWorkflowVariables(orchestrationWorkflow);
     return updateWorkflow(workflow, orchestrationWorkflow, true, false, false, false, migration);
   }
