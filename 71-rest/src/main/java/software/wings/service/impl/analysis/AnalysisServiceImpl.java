@@ -17,6 +17,7 @@ import static software.wings.common.VerificationConstants.IGNORED_ERRORS_METRIC_
 import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -402,6 +403,8 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   private boolean saveLogFeedback(String accountId, String cvConfigId, String stateExecutionId,
       CVFeedbackRecord feedbackRecord, FeedbackAction feedbackAction) {
+    Preconditions.checkState(
+        isNotEmpty(feedbackRecord.getLogMessage()), "Log Message cannot be empty while saving a feedback");
     if (isNotEmpty(cvConfigId)) {
       CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
       feedbackRecord.setServiceId(cvConfiguration.getServiceId());

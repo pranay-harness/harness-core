@@ -301,15 +301,19 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     }
 
     if (isNotEmpty(mlAnalysisResponse.getAnomalies())) {
-      TimeSeriesAnomaliesRecord anomaliesRecord = wingsPersistence.createQuery(TimeSeriesAnomaliesRecord.class)
-                                                      .filter("appId", appId)
-                                                      .filter(TimeSeriesAnomaliesRecordKeys.cvConfigId, cvConfigId)
-                                                      .get();
+      TimeSeriesAnomaliesRecord anomaliesRecord =
+          wingsPersistence.createQuery(TimeSeriesAnomaliesRecord.class, excludeAuthority)
+              .filter(TimeSeriesAnomaliesRecordKeys.cvConfigId, cvConfigId)
+              .filter(TimeSeriesMetricRecordKeys.tag, mlAnalysisResponse.getTag())
+              .get();
 
       if (anomaliesRecord == null) {
-        anomaliesRecord = TimeSeriesAnomaliesRecord.builder().cvConfigId(cvConfigId).build();
+        anomaliesRecord = TimeSeriesAnomaliesRecord.builder()
+                              .cvConfigId(cvConfigId)
+                              .tag(mlAnalysisResponse.getTag())
+                              .anomalies(mlAnalysisResponse.getAnomalies())
+                              .build();
         anomaliesRecord.setAppId(appId);
-        anomaliesRecord.setAnomalies(mlAnalysisResponse.getAnomalies());
       }
 
       anomaliesRecord.decompressAnomalies();

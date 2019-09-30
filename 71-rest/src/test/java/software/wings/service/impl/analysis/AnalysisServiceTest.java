@@ -170,4 +170,17 @@ public class AnalysisServiceTest extends WingsBaseTest {
     assertThat(updatedRecord.getActionTaken()).isEqualTo(FeedbackAction.ADD_TO_BASELINE);
     assertThat(updatedRecord.getJiraLink()).isEqualTo(jira);
   }
+
+  @Test(expected = IllegalStateException.class)
+  @Category(UnitTests.class)
+  public void testFeedbackWithEmptyLogMessage() {
+    CVFeedbackRecord feedbackRecord = CVFeedbackRecord.builder()
+                                          .envId(envId)
+                                          .cvConfigId(cvConfiguration.getUuid())
+                                          .clusterType(CLUSTER_TYPE.UNKNOWN)
+                                          .clusterLabel(2)
+                                          .build();
+
+    analysisService.addToBaseline(accountId, cvConfiguration.getUuid(), null, feedbackRecord);
+  }
 }

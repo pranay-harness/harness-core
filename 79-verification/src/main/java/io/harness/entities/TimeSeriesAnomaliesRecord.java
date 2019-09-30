@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,11 +17,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.service.impl.analysis.TimeSeriesMLHostSummary;
@@ -34,11 +31,10 @@ import java.util.Map;
  * Created by sriram_parthasarathy on 9/22/17.
  */
 @Entity(value = "timeSeriesAnomaliesRecords", noClassnameStored = true)
-@Indexes(@Index(
-    fields = { @Field("appId")
-               , @Field("cvConfigId") }, options = @IndexOptions(unique = true, name = "uniqueIdx")))
 @Data
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "TimeSeriesAnomaliesRecordKeys")
@@ -47,13 +43,6 @@ public class TimeSeriesAnomaliesRecord extends Base {
   @Transient private Map<String, Map<String, List<TimeSeriesMLHostSummary>>> anomalies;
   @JsonIgnore private byte[] compressedAnomalies;
   private String tag;
-
-  @Builder
-  public TimeSeriesAnomaliesRecord(
-      String cvConfigId, Map<String, Map<String, List<TimeSeriesMLHostSummary>>> anomalies) {
-    this.cvConfigId = cvConfigId;
-    this.anomalies = anomalies;
-  }
 
   public void compressAnomalies() {
     if (isEmpty(anomalies)) {
