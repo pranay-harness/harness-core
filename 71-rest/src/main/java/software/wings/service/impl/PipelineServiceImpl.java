@@ -16,10 +16,16 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.EntityType.APPDYNAMICS_APPID;
+import static software.wings.beans.EntityType.APPDYNAMICS_CONFIGID;
 import static software.wings.beans.EntityType.ARTIFACT;
+import static software.wings.beans.EntityType.ELK_CONFIGID;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
+import static software.wings.beans.EntityType.NEWRELIC_CONFIGID;
+import static software.wings.beans.EntityType.NEWRELIC_MARKER_CONFIGID;
+import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.PipelineExecution.PIPELINE_ID_KEY;
 import static software.wings.common.Constants.PIPELINE_ENV_STATE_VALIDATION_MESSAGE;
 import static software.wings.expression.ManagerExpressionEvaluator.getName;
@@ -103,6 +109,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Stream;
@@ -802,6 +809,7 @@ public class PipelineServiceImpl implements PipelineService {
               } else {
                 cloneRelatedFieldName(pseWorkflowVariables, pipelineVariable);
               }
+              populateParentFields(pipelineVariable, entityType, workflowVariables, variable, pseWorkflowVariables);
 
               if (withFinalValuesOnly) {
                 // If only final concrete values are needed, set value as null as the used has not entered them yet.
@@ -815,6 +823,100 @@ public class PipelineServiceImpl implements PipelineService {
           }
         }
       }
+    }
+  }
+
+  private void populateParentFields(Variable pipelineVariable, EntityType entityType, List<Variable> workflowVariables,
+      Variable originalVar, Map<String, String> pseWorkflowVariables) {
+    Map<String, String> parentFields;
+    switch (entityType) {
+      case INFRASTRUCTURE_MAPPING:
+      case INFRASTRUCTURE_DEFINITION:
+        for (Variable var : workflowVariables) {
+          if (var.obtainEntityType().equals(ENVIRONMENT)) {
+            String relatedFields = String.valueOf(var.getMetadata().get(Variable.RELATED_FIELD));
+            Optional<String> relatedField =
+                Arrays.stream(relatedFields.split(",")).filter(t -> t.equals(originalVar.getName())).findFirst();
+            if (relatedField.isPresent()) {
+              String relatedVarValue = pseWorkflowVariables.get(var.getName());
+              pipelineVariable.getMetadata().put(Variable.ENV_ID, relatedVarValue);
+            }
+          } else if (var.obtainEntityType().equals(SERVICE)) {
+            if (var.getMetadata().get(Variable.RELATED_FIELD).equals(originalVar.getName())) {
+              String relatedVarValue = pseWorkflowVariables.get(var.getName());
+              pipelineVariable.getMetadata().put(Variable.SERVICE_ID, relatedVarValue);
+            }
+          }
+        }
+        break;
+      case APPDYNAMICS_TIERID:
+        parentFields = new HashMap<>();
+        for (Variable var : workflowVariables) {
+          if (var.obtainEntityType().equals(APPDYNAMICS_APPID)) {
+            if (var.getMetadata().get(Variable.RELATED_FIELD).equals(originalVar.getName())) {
+              String relatedVarValue = pseWorkflowVariables.get(var.getName());
+              parentFields.put("applicationId", relatedVarValue);
+            }
+          } else if (var.obtainEntityType().equals(APPDYNAMICS_CONFIGID)) {
+            if (var.getMetadata().get(Variable.RELATED_FIELD).equals(originalVar.getName())) {
+              String relatedVarValue = pseWorkflowVariables.get(var.getName());
+              parentFields.put("analysisServerConfigId", relatedVarValue);
+            }
+          }
+        }
+        pipelineVariable.getMetadata().put(Variable.PARENT_FIELDS, parentFields);
+        break;
+      case APPDYNAMICS_APPID:
+        parentFields = new HashMap<>();
+        for (Variable var : workflowVariables) {
+          if (var.obtainEntityType().equals(APPDYNAMICS_CONFIGID)) {
+            if (var.getMetadata().get(Variable.RELATED_FIELD).equals(originalVar.getName())) {
+              String relatedVarValue = pseWorkflowVariables.get(var.getName());
+              parentFields.put("analysisServerConfigId", relatedVarValue);
+            }
+          }
+        }
+        pipelineVariable.getMetadata().put(Variable.PARENT_FIELDS, parentFields);
+        break;
+      case ELK_INDICES:
+        parentFields = new HashMap<>();
+        for (Variable var : workflowVariables) {
+          if (var.obtainEntityType().equals(ELK_CONFIGID)) {
+            if (var.getMetadata().get(Variable.RELATED_FIELD).equals(originalVar.getName())) {
+              String relatedVarValue = pseWorkflowVariables.get(var.getName());
+              parentFields.put("analysisServerConfigId", relatedVarValue);
+            }
+          }
+        }
+        pipelineVariable.getMetadata().put(Variable.PARENT_FIELDS, parentFields);
+        break;
+      case NEWRELIC_APPID:
+        parentFields = new HashMap<>();
+        for (Variable var : workflowVariables) {
+          if (var.obtainEntityType().equals(NEWRELIC_CONFIGID)) {
+            if (var.getMetadata().get(Variable.RELATED_FIELD).equals(originalVar.getName())) {
+              String relatedVarValue = pseWorkflowVariables.get(var.getName());
+              parentFields.put("analysisServerConfigId", relatedVarValue);
+            }
+          }
+        }
+        pipelineVariable.getMetadata().put(Variable.PARENT_FIELDS, parentFields);
+        break;
+      case NEWRELIC_MARKER_APPID:
+        parentFields = new HashMap<>();
+        for (Variable var : workflowVariables) {
+          if (var.obtainEntityType().equals(NEWRELIC_MARKER_CONFIGID)) {
+            if (var.getMetadata().get(Variable.RELATED_FIELD).equals(originalVar.getName())) {
+              String relatedVarValue = pseWorkflowVariables.get(var.getName());
+              parentFields.put("analysisServerConfigId", relatedVarValue);
+            }
+          }
+        }
+        pipelineVariable.getMetadata().put(Variable.PARENT_FIELDS, parentFields);
+        break;
+      default:
+        // no parent fields required
+        return;
     }
   }
 

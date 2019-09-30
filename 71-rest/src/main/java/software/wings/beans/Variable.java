@@ -34,6 +34,8 @@ public class Variable {
   public static final String RELATED_FIELD = "relatedField";
   public static final String STATE_TYPE = "stateType";
   public static final String PARENT_FIELDS = "parentFields";
+  public static final String ENV_ID = "envId";
+  public static final String SERVICE_ID = "serviceId";
 
   private Map<String, Object> metadata = Maps.newHashMap();
 
