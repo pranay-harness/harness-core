@@ -1,13 +1,10 @@
 package software.wings.service.impl.security;
 
-import static io.harness.data.encoding.EncodingUtils.decodeBase64;
-import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.AZURE_KEY_VAULT_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.CYBERARK_OPERATION_ERROR;
-import static io.harness.eraro.ErrorCode.KMS_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.VAULT_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
@@ -15,7 +12,6 @@ import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 import static software.wings.helpers.ext.vault.VaultRestClientFactory.getFullPath;
 
-import com.google.common.base.Charsets;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
@@ -26,13 +22,8 @@ import com.google.inject.Singleton;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
-import com.amazonaws.services.kms.AWSKMS;
-import com.amazonaws.services.kms.AWSKMSClientBuilder;
 import com.amazonaws.services.kms.model.AWSKMSException;
-import com.amazonaws.services.kms.model.DecryptRequest;
 import com.amazonaws.services.kms.model.DependencyTimeoutException;
-import com.amazonaws.services.kms.model.GenerateDataKeyRequest;
-import com.amazonaws.services.kms.model.GenerateDataKeyResult;
 import com.amazonaws.services.kms.model.KMSInternalException;
 import com.amazonaws.services.kms.model.KeyUnavailableException;
 import com.amazonaws.services.secretsmanager.AWSSecretsManager;
@@ -48,21 +39,14 @@ import com.amazonaws.services.secretsmanager.model.ResourceNotFoundException;
 import com.amazonaws.services.secretsmanager.model.Tag;
 import com.amazonaws.services.secretsmanager.model.UpdateSecretRequest;
 import com.amazonaws.services.secretsmanager.model.UpdateSecretResult;
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.microsoft.azure.keyvault.KeyVaultClient;
 import com.microsoft.azure.keyvault.models.DeletedSecretBundle;
 import com.microsoft.azure.keyvault.models.SecretBundle;
 import com.microsoft.azure.keyvault.requests.SetSecretRequest;
 import io.harness.beans.EmbeddedUser;
-import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.exception.WingsException;
-import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -79,6 +63,7 @@ import software.wings.helpers.ext.vault.VaultSysAuthRestClient;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.service.impl.security.cyberark.CyberArkReadResponse;
+import software.wings.service.impl.security.kms.KmsEncryptDecryptClient;
 import software.wings.service.impl.security.vault.SecretEngineSummary;
 import software.wings.service.impl.security.vault.SysMount;
 import software.wings.service.impl.security.vault.SysMountsResponse;
@@ -92,11 +77,6 @@ import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.Key;
-import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -105,11 +85,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.spec.SecretKeySpec;
 
 @Singleton
 @Slf4j
@@ -118,22 +93,15 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   private static final JsonParser JSON_PARSER = new JsonParser();
 
   private TimeLimiter timeLimiter;
+  private KmsEncryptDecryptClient kmsEncryptDecryptClient;
 
   @Inject
-  public SecretManagementDelegateServiceImpl(TimeLimiter timeLimiter) {
+  public SecretManagementDelegateServiceImpl(TimeLimiter timeLimiter, KmsEncryptDecryptClient kmsEncryptDecryptClient) {
     this.timeLimiter = timeLimiter;
+    this.kmsEncryptDecryptClient = kmsEncryptDecryptClient;
   }
 
-  // Caffeine cache is a high performance java cache just like Guava Cache. Below is the benchmark result
-  // https://github.com/ben-manes/caffeine/wiki/Benchmarks
-  private Cache<KmsEncryptionKeyCacheKey, byte[]> kmsEncryptionKeyCache =
-      Caffeine.newBuilder().maximumSize(2000).expireAfterAccess(2, TimeUnit.HOURS).build();
-
-  long getKmsEncryptionKeyCacheSize() {
-    return kmsEncryptionKeyCache.estimatedSize();
-  }
-
-  private boolean isRetryable(Exception e) {
+  public static boolean isRetryable(Exception e) {
     // TimeLimiter.callWithTimer will throw a new exception wrapping around the AwsKMS exceptions. Unwrap it.
     Throwable t = e.getCause() == null ? e : e.getCause();
 
@@ -152,70 +120,12 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
 
   @Override
   public EncryptedRecord encrypt(String accountId, char[] value, KmsConfig kmsConfig) {
-    if (kmsConfig == null) {
-      throw new SecretManagementDelegateException(
-          KMS_OPERATION_ERROR, "null secret manager for account " + accountId, USER);
-    }
-
-    int failedAttempts = 0;
-    while (true) {
-      try {
-        return timeLimiter.callWithTimeout(
-            () -> encryptInternal(accountId, value, kmsConfig), 5, TimeUnit.SECONDS, true);
-      } catch (Exception e) {
-        failedAttempts++;
-        logger.warn(format("Encryption failed. trial num: %d", failedAttempts), e);
-        if (isRetryable(e)) {
-          if (failedAttempts == NUM_OF_RETRIES) {
-            String reason = format("Encryption failed after %d retries", NUM_OF_RETRIES);
-            throw new DelegateRetryableException(
-                new SecretManagementDelegateException(KMS_OPERATION_ERROR, reason, e, USER));
-          }
-          sleep(ofMillis(1000));
-        } else {
-          throw new SecretManagementDelegateException(KMS_OPERATION_ERROR, e.getMessage(), e, USER);
-        }
-      }
-    }
+    return kmsEncryptDecryptClient.encrypt(accountId, value, kmsConfig);
   }
 
   @Override
   public char[] decrypt(EncryptedRecord data, KmsConfig kmsConfig) {
-    if (data.getEncryptedValue() == null) {
-      return null;
-    }
-    if (kmsConfig == null) {
-      throw new SecretManagementDelegateException(
-          KMS_OPERATION_ERROR, "null secret manager for encrypted record " + data.getUuid(), USER);
-    }
-
-    int failedAttempts = 0;
-    while (true) {
-      try {
-        KmsEncryptionKeyCacheKey cacheKey = new KmsEncryptionKeyCacheKey(data.getUuid(), data.getEncryptionKey());
-        byte[] cachedEncryptedKey = kmsEncryptionKeyCache.getIfPresent(cacheKey);
-        if (isNotEmpty(cachedEncryptedKey)) {
-          return decryptInternalIfCached(cacheKey, data, cachedEncryptedKey, System.currentTimeMillis());
-        } else {
-          // Use TimeLimiter.callWithTimeout only if the KMS plain text key is not cached.
-          return timeLimiter.callWithTimeout(() -> decryptInternal(data, kmsConfig), 5, TimeUnit.SECONDS, true);
-        }
-      } catch (Exception e) {
-        failedAttempts++;
-        logger.warn(format("Decryption failed. trial num: %d", failedAttempts), e);
-        if (isRetryable(e)) {
-          if (failedAttempts == NUM_OF_RETRIES) {
-            String reason =
-                format("Decryption failed for encryptedData %s after %d retries", data.getName(), NUM_OF_RETRIES);
-            throw new DelegateRetryableException(
-                new SecretManagementDelegateException(KMS_OPERATION_ERROR, reason, e, USER));
-          }
-          sleep(ofMillis(1000));
-        } else {
-          throw new SecretManagementDelegateException(KMS_OPERATION_ERROR, e.getMessage(), e, USER);
-        }
-      }
-    }
+    return kmsEncryptDecryptClient.decrypt(data, kmsConfig);
   }
 
   @Override
@@ -649,90 +559,6 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         .build();
   }
 
-  private EncryptedRecord encryptInternal(String accountId, char[] value, KmsConfig kmsConfig) throws Exception {
-    long startTime = System.currentTimeMillis();
-    logger.info("Encrypting one secret in account {} with KMS secret manager '{}'", accountId, kmsConfig.getName());
-
-    final AWSKMS kmsClient =
-        AWSKMSClientBuilder.standard()
-            .withCredentials(new AWSStaticCredentialsProvider(
-                new BasicAWSCredentials(kmsConfig.getAccessKey(), kmsConfig.getSecretKey())))
-            .withRegion(kmsConfig.getRegion() == null ? Regions.US_EAST_1 : Regions.fromName(kmsConfig.getRegion()))
-            .build();
-    GenerateDataKeyRequest dataKeyRequest = new GenerateDataKeyRequest();
-    dataKeyRequest.setKeyId(kmsConfig.getKmsArn());
-    dataKeyRequest.setKeySpec("AES_128");
-    GenerateDataKeyResult dataKeyResult = kmsClient.generateDataKey(dataKeyRequest);
-
-    ByteBuffer plainTextKey = dataKeyResult.getPlaintext();
-
-    char[] encryptedValue =
-        value == null ? null : encrypt(new String(value), new SecretKeySpec(getByteArray(plainTextKey), "AES"));
-    String encryptedKeyString = StandardCharsets.ISO_8859_1.decode(dataKeyResult.getCiphertextBlob()).toString();
-
-    // Shutdown the KMS client so as to prevent resource leaking,
-    kmsClient.shutdown();
-
-    logger.info("Finished encrypting one secret in account {} with KMS secret manager '{}' in {} ms.", accountId,
-        kmsConfig.getName(), System.currentTimeMillis() - startTime);
-    return EncryptedData.builder()
-        .encryptionKey(encryptedKeyString)
-        .encryptedValue(encryptedValue)
-        .encryptionType(EncryptionType.KMS)
-        .kmsId(kmsConfig.getUuid())
-        .enabled(true)
-        .parentIds(new HashSet<>())
-        .accountId(accountId)
-        .build();
-  }
-
-  private char[] decryptInternal(EncryptedRecord data, KmsConfig kmsConfig) throws Exception {
-    long startTime = System.currentTimeMillis();
-    logger.info("Decrypting secret {} with KMS secret manager '{}'", data.getUuid(), kmsConfig.getName());
-
-    KmsEncryptionKeyCacheKey cacheKey = new KmsEncryptionKeyCacheKey(data.getUuid(), data.getEncryptionKey());
-    // HAR-9752: Caching KMS encryption key to plain text key mapping to reduce KMS decrypt call volume.
-    byte[] encryptedPlainTextKey = kmsEncryptionKeyCache.asMap().computeIfAbsent(cacheKey, key -> {
-      ByteBuffer plainTextKey = getPlainTextKeyFromKMS(kmsConfig, key.encryptionKey);
-      // Encrypt plain text KMS key before caching it in memory.
-      byte[] encryptedKey = encryptPlainTextKey(plainTextKey, key.uuid);
-
-      logger.info("Decrypted encryption key from KMS secret manager '{}' in {} ms.", kmsConfig.getName(),
-          System.currentTimeMillis() - startTime);
-      return encryptedKey;
-    });
-
-    return decryptInternalIfCached(cacheKey, data, encryptedPlainTextKey, startTime);
-  }
-
-  private char[] decryptInternalIfCached(KmsEncryptionKeyCacheKey cacheKey, EncryptedRecord data,
-      byte[] encryptedPlainTextKey, long startTime) throws Exception {
-    byte[] plainTextKey = decryptPlainTextKey(encryptedPlainTextKey, cacheKey.uuid);
-    char[] decryptedSecret = decrypt(data.getEncryptedValue(), new SecretKeySpec(plainTextKey, "AES")).toCharArray();
-
-    logger.info("Finished decrypting secret {} in {} ms.", data.getUuid(), System.currentTimeMillis() - startTime);
-    return decryptedSecret;
-  }
-
-  private ByteBuffer getPlainTextKeyFromKMS(KmsConfig kmsConfig, String encryptionKey) {
-    final AWSKMS kmsClient =
-        AWSKMSClientBuilder.standard()
-            .withCredentials(new AWSStaticCredentialsProvider(
-                new BasicAWSCredentials(kmsConfig.getAccessKey(), kmsConfig.getSecretKey())))
-            .withRegion(kmsConfig.getRegion() == null ? Regions.US_EAST_1 : Regions.fromName(kmsConfig.getRegion()))
-            .build();
-
-    DecryptRequest decryptRequest =
-        new DecryptRequest().withCiphertextBlob(StandardCharsets.ISO_8859_1.encode(encryptionKey));
-    new DecryptRequest().withCiphertextBlob(StandardCharsets.ISO_8859_1.encode(encryptionKey));
-    ByteBuffer plainTextKey = kmsClient.decrypt(decryptRequest).getPlaintext();
-
-    // Shutdown the KMS client so as to prevent resource leaking,
-    kmsClient.shutdown();
-
-    return plainTextKey;
-  }
-
   private EncryptedRecord encryptInternal(String name, String value, String accountId, SettingVariableTypes settingType,
       VaultConfig vaultConfig, EncryptedRecord savedEncryptedData) throws Exception {
     String keyUrl = settingType + "/" + name;
@@ -1054,41 +880,6 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     return KeyVaultADALAuthenticator.getClient(azureVaultConfig.getClientId(), azureVaultConfig.getSecretKey());
   }
 
-  public static char[] encrypt(String src, Key key) throws NoSuchAlgorithmException, NoSuchPaddingException,
-                                                           InvalidKeyException, IllegalBlockSizeException,
-                                                           BadPaddingException {
-    Cipher cipher = Cipher.getInstance("AES");
-    cipher.init(Cipher.ENCRYPT_MODE, key);
-    return encodeBase64(cipher.doFinal(src.getBytes(Charsets.UTF_8))).toCharArray();
-  }
-
-  public static String decrypt(char[] src, Key key) throws NoSuchAlgorithmException, NoSuchPaddingException,
-                                                           InvalidKeyException, IllegalBlockSizeException,
-                                                           BadPaddingException {
-    if (src == null) {
-      return null;
-    }
-    Cipher cipher = Cipher.getInstance("AES");
-    cipher.init(Cipher.DECRYPT_MODE, key);
-    return new String(cipher.doFinal(decodeBase64(src)), Charsets.UTF_8);
-  }
-
-  private byte[] encryptPlainTextKey(ByteBuffer plainTextKey, String localEncryptionKey) {
-    SimpleEncryption simpleEncryption = new SimpleEncryption(localEncryptionKey);
-    return simpleEncryption.encrypt(getByteArray(plainTextKey));
-  }
-
-  private byte[] decryptPlainTextKey(byte[] encryptedPlainTextKey, String localEncryptionKey) {
-    SimpleEncryption simpleEncryption = new SimpleEncryption(localEncryptionKey);
-    return simpleEncryption.decrypt(encryptedPlainTextKey);
-  }
-
-  private byte[] getByteArray(ByteBuffer b) {
-    byte[] byteArray = new byte[b.remaining()];
-    b.get(byteArray);
-    return byteArray;
-  }
-
   private ParsedSecretRef parsedSecretRef(String path) {
     String[] parts = path.split(KEY_SEPARATOR);
     ParsedSecretRef secretRef = new ParsedSecretRef();
@@ -1097,14 +888,6 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       secretRef.keyName = parts[1];
     }
     return secretRef;
-  }
-
-  @Data
-  @AllArgsConstructor
-  @EqualsAndHashCode
-  private class KmsEncryptionKeyCacheKey {
-    String uuid;
-    String encryptionKey;
   }
 
   @ToString

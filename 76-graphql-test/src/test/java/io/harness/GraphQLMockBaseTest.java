@@ -13,8 +13,8 @@ import software.wings.beans.KmsConfig;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.VaultConfig;
 import software.wings.security.encryption.EncryptedData;
-import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.impl.security.SecretManagementException;
+import software.wings.service.impl.security.kms.KmsEncryptDecryptClient;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.IOException;
@@ -34,9 +34,9 @@ public abstract class GraphQLMockBaseTest extends CategoryTest implements Mockab
     if (kmsConfig.getAccessKey().equals("invalidKey")) {
       throw new SecretManagementException("Invalid credentials");
     }
-    char[] encryptedValue = value == null ? null
-                                          : SecretManagementDelegateServiceImpl.encrypt(
-                                                new String(value), new SecretKeySpec(plainTextKey.getBytes(), "AES"));
+    char[] encryptedValue = value == null
+        ? null
+        : KmsEncryptDecryptClient.encrypt(new String(value), new SecretKeySpec(plainTextKey.getBytes(), "AES"));
 
     return EncryptedData.builder()
         .encryptionKey(plainTextKey)
@@ -50,8 +50,7 @@ public abstract class GraphQLMockBaseTest extends CategoryTest implements Mockab
   }
 
   protected char[] decrypt(EncryptedData data, KmsConfig kmsConfig) throws Exception {
-    return SecretManagementDelegateServiceImpl
-        .decrypt(data.getEncryptedValue(), new SecretKeySpec(plainTextKey.getBytes(), "AES"))
+    return KmsEncryptDecryptClient.decrypt(data.getEncryptedValue(), new SecretKeySpec(plainTextKey.getBytes(), "AES"))
         .toCharArray();
   }
 

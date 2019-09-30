@@ -31,10 +31,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.BaseFile;
+import software.wings.beans.FeatureName;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.SyncTaskContext;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
+import software.wings.service.impl.security.kms.KmsEncryptDecryptClient;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
@@ -57,16 +60,29 @@ import java.util.UUID;
 @Slf4j
 public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsService {
   @Inject private FileService fileService;
+  @Inject private FeatureFlagService featureFlagService;
+  @Inject private KmsEncryptDecryptClient kmsEncryptDecryptClient;
 
   @Override
   public EncryptedData encrypt(char[] value, String accountId, KmsConfig kmsConfig) {
     if (kmsConfig == null || value == null) {
       return encryptLocal(value);
     }
-    SyncTaskContext syncTaskContext =
-        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
-    return (EncryptedData) delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
-        .encrypt(accountId, value, kmsConfig);
+
+    if (GLOBAL_ACCOUNT_ID.equals(kmsConfig.getAccountId())
+        && featureFlagService.isEnabled(FeatureName.GLOBAL_KMS_PRE_PROCESSING, accountId)) {
+      // PL-1836: Perform encrypt/decrypt at manager side for global shared KMS.
+      logger.info("Encrypt secret with global KMS secret manager for account {}", accountId);
+      return (EncryptedData) kmsEncryptDecryptClient.encrypt(accountId, value, kmsConfig);
+    } else {
+      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                            .accountId(accountId)
+                                            .appId(GLOBAL_APP_ID)
+                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                            .build();
+      return (EncryptedData) delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
+          .encrypt(accountId, value, kmsConfig);
+    }
   }
 
   @Override
@@ -75,25 +91,32 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       return decryptLocal(data);
     }
 
-    // HAR-7605: Shorter timeout for decryption tasks, and it should retry on timeout or failure.
-    int failedAttempts = 0;
-    while (true) {
-      try {
-        SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                              .accountId(accountId)
-                                              .timeout(Duration.ofSeconds(5).toMillis())
-                                              .appId(GLOBAL_APP_ID)
-                                              .correlationId(data.getName())
-                                              .build();
-        return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
-            .decrypt(data, kmsConfig);
-      } catch (WingsException e) {
-        failedAttempts++;
-        logger.info("KMS Decryption failed for encryptedData {}. trial num: {}", data.getName(), failedAttempts, e);
-        if (failedAttempts == NUM_OF_RETRIES) {
-          throw e;
+    if (GLOBAL_ACCOUNT_ID.equals(kmsConfig.getAccountId())
+        && featureFlagService.isEnabled(FeatureName.GLOBAL_KMS_PRE_PROCESSING, accountId)) {
+      // PL-1836: Perform encrypt/decrypt at manager side for global shared KMS.
+      logger.info("Decrypt secret with global KMS secret manager for account {}", accountId);
+      return kmsEncryptDecryptClient.decrypt(data, kmsConfig);
+    } else {
+      // HAR-7605: Shorter timeout for decryption tasks, and it should retry on timeout or failure.
+      int failedAttempts = 0;
+      while (true) {
+        try {
+          SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                                .accountId(accountId)
+                                                .timeout(Duration.ofSeconds(5).toMillis())
+                                                .appId(GLOBAL_APP_ID)
+                                                .correlationId(data.getName())
+                                                .build();
+          return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
+              .decrypt(data, kmsConfig);
+        } catch (WingsException e) {
+          failedAttempts++;
+          logger.info("KMS Decryption failed for encryptedData {}. trial num: {}", data.getName(), failedAttempts, e);
+          if (failedAttempts == NUM_OF_RETRIES) {
+            throw e;
+          }
+          sleep(ofMillis(1000));
         }
-        sleep(ofMillis(1000));
       }
     }
   }

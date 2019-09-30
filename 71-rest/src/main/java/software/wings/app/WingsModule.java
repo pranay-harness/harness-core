@@ -317,6 +317,7 @@ import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.impl.security.SecretManagerConfigServiceImpl;
 import software.wings.service.impl.security.SecretManagerImpl;
 import software.wings.service.impl.security.VaultServiceImpl;
+import software.wings.service.impl.security.kms.KmsEncryptDecryptClient;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl;
 import software.wings.service.impl.splunk.SplunkAnalysisServiceImpl;
 import software.wings.service.impl.stackdriver.StackDriverServiceImpl;
@@ -714,6 +715,7 @@ public class WingsModule extends DependencyModule {
     bind(HarnessApiKeyService.class).to(HarnessApiKeyServiceImpl.class);
     bind(K8sGlobalConfigService.class).to(K8sGlobalConfigServiceUnsupported.class);
 
+    bind(KmsEncryptDecryptClient.class);
     bind(GraphQLRateLimiter.class);
     bind(DelegateRequestRateLimiter.class);
     bind(SamlUserGroupSync.class);

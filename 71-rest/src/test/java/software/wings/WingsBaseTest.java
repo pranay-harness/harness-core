@@ -34,8 +34,8 @@ import software.wings.dl.WingsPersistence;
 import software.wings.resources.SecretManagementResource;
 import software.wings.rules.WingsRule;
 import software.wings.security.encryption.EncryptedData;
-import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.impl.security.SecretManagementException;
+import software.wings.service.impl.security.kms.KmsEncryptDecryptClient;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -75,9 +75,9 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
       throw new SecretManagementException(
           ErrorCode.SECRET_MANAGEMENT_ERROR, "Invalid credentials", WingsException.USER);
     }
-    char[] encryptedValue = value == null ? null
-                                          : SecretManagementDelegateServiceImpl.encrypt(
-                                                new String(value), new SecretKeySpec(plainTextKey.getBytes(), "AES"));
+    char[] encryptedValue = value == null
+        ? null
+        : KmsEncryptDecryptClient.encrypt(new String(value), new SecretKeySpec(plainTextKey.getBytes(), "AES"));
 
     return EncryptedData.builder()
         .encryptionKey(plainTextKey)
@@ -91,8 +91,7 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
   }
 
   protected char[] decrypt(EncryptedRecord data, KmsConfig kmsConfig) throws Exception {
-    return SecretManagementDelegateServiceImpl
-        .decrypt(data.getEncryptedValue(), new SecretKeySpec(plainTextKey.getBytes(), "AES"))
+    return KmsEncryptDecryptClient.decrypt(data.getEncryptedValue(), new SecretKeySpec(plainTextKey.getBytes(), "AES"))
         .toCharArray();
   }
 
@@ -113,7 +112,7 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
     }
     char[] encryptedValue = value == null
         ? null
-        : SecretManagementDelegateServiceImpl.encrypt(value, new SecretKeySpec(plainTextKey.getBytes(), "AES"));
+        : KmsEncryptDecryptClient.encrypt(value, new SecretKeySpec(plainTextKey.getBytes(), "AES"));
 
     return EncryptedData.builder()
         .encryptionKey(plainTextKey)

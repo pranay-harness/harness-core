@@ -184,6 +184,7 @@ import software.wings.service.impl.prometheus.PrometheusDelegateServiceImpl;
 import software.wings.service.impl.security.DelegateDecryptionServiceImpl;
 import software.wings.service.impl.security.EncryptionServiceImpl;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
+import software.wings.service.impl.security.kms.KmsEncryptDecryptClient;
 import software.wings.service.impl.servicenow.ServiceNowDelegateServiceImpl;
 import software.wings.service.impl.splunk.SplunkDelegateServiceImpl;
 import software.wings.service.impl.stackdriver.StackDriverDelegateServiceImpl;
@@ -382,6 +383,7 @@ public class DelegateModule extends DependencyModule {
     bind(ContainerService.class).to(ContainerServiceImpl.class);
     bind(GitClient.class).to(GitClientImpl.class).asEagerSingleton();
     bind(SecretManagementDelegateService.class).to(SecretManagementDelegateServiceImpl.class);
+    bind(KmsEncryptDecryptClient.class);
     bind(EncryptionService.class).to(EncryptionServiceImpl.class);
     bind(Clock.class).toInstance(Clock.systemUTC());
     bind(HelmClient.class).to(HelmClientImpl.class);
