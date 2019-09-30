@@ -144,10 +144,8 @@ import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.sm.PipelineSummary;
 
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 /**
@@ -324,29 +322,6 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
                           .podName(containerId)
                           .build())
         .build();
-  }
-
-  @Test
-  @Category(UnitTests.class)
-  @RealMongo
-  public void testUsageMetrics() {
-    Map<String, Integer> instanceCountMap = usageMetricsHelper.getAllValidInstanceCounts();
-    boolean account1Validation = false;
-    boolean account2Validation = false;
-    final Iterator<Entry<String, Integer>> mapIterator = instanceCountMap.entrySet().iterator();
-    while (mapIterator.hasNext()) {
-      Map.Entry entry = mapIterator.next();
-      if (entry.getKey().equals(ACCOUNT_1_ID)) {
-        assertThat(entry.getValue()).isEqualTo(6);
-        account1Validation = true;
-      }
-      if (entry.getKey().equals(ACCOUNT_2_ID)) {
-        assertThat(entry.getValue()).isEqualTo(2);
-        account2Validation = true;
-      }
-    }
-    assertThat(account1Validation).isTrue();
-    assertThat(account2Validation).isTrue();
   }
 
   @Test
