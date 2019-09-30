@@ -18,7 +18,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Singleton
-public class DeploymentViewBuilder {
+class DeploymentViewBuilder {
   @Inject private WingsPersistence wingsPersistence;
   private DeploymentView deploymentView;
 
@@ -93,7 +93,7 @@ public class DeploymentViewBuilder {
     }
   }
 
-  public DeploymentView createDeploymentView(WorkflowExecution workflowExecution) {
+  DeploymentView createDeploymentView(WorkflowExecution workflowExecution) {
     createBaseView(workflowExecution);
     setWorkflowInPipeline(workflowExecution);
     setPipeline(workflowExecution);
@@ -103,7 +103,7 @@ public class DeploymentViewBuilder {
     return deploymentView;
   }
 
-  public DeploymentView createDeploymentView(WorkflowExecution workflowExecution, DBObject changeDocument) {
+  DeploymentView createDeploymentView(WorkflowExecution workflowExecution, DBObject changeDocument) {
     createBaseView(workflowExecution);
     setWorkflowInPipeline(workflowExecution);
     if (changeDocument.containsField(WorkflowExecutionKeys.pipelineSummary)) {

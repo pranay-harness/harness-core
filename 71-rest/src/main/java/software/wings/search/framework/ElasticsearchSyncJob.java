@@ -25,15 +25,18 @@ public class ElasticsearchSyncJob implements Runnable {
   public void run() {
     String uuid = UUID.randomUUID().toString();
     try {
-      scheduledFuture = perpetualSearchLocker.tryToAcquireLock(ElasticsearchSyncJob.class.getName(), uuid, this ::stop);
+      scheduledFuture = perpetualSearchLocker.acquireLock(ElasticsearchSyncJob.class.getName(), uuid, this ::stop);
       logger.info("Starting search synchronization now");
 
       boolean isBulkMigrated = elasticsearchBulkSyncTask.run();
       if (isBulkMigrated) {
         elasticsearchRealtimeSyncTask.run();
       }
-    } catch (RuntimeException | InterruptedException e) {
+    } catch (RuntimeException e) {
       logger.error("Search Sync Job unexpectedly stopped", e);
+    } catch (InterruptedException e) {
+      logger.error("Search Sync job interrupted", e);
+      Thread.currentThread().interrupt();
     } finally {
       logger.info("Search sync job has stopped");
       stop();

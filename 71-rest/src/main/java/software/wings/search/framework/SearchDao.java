@@ -3,6 +3,12 @@ package software.wings.search.framework;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * The search DAO interface that has
+ * to be implemented for CRUD operations.
+ *
+ * @author utkarsh
+ */
 public interface SearchDao {
   // Upserts the partial document to Elasticsearch
   boolean upsertDocument(String entityType, String entityId, String entityJson);

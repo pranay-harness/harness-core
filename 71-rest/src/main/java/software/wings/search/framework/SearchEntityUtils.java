@@ -6,6 +6,7 @@ import com.google.gson.JsonParser;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.mongo.HObjectFactory;
 import lombok.experimental.UtilityClass;
@@ -18,6 +19,12 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * Utils class for common operations
+ * required by search entities
+ *
+ * @author utkarsh
+ */
 @Slf4j
 @UtilityClass
 public final class SearchEntityUtils {
@@ -34,7 +41,7 @@ public final class SearchEntityUtils {
     return entityCache;
   }
 
-  public static String mergeSettings(String baseSettingsString, String entitySettingsString) {
+  static String mergeSettings(String baseSettingsString, String entitySettingsString) {
     JsonObject entitySettings = new JsonParser().parse(entitySettingsString).getAsJsonObject();
     JsonObject baseSettings = new JsonParser().parse(baseSettingsString).getAsJsonObject();
     JsonObject temp = entitySettings.get("mappings").getAsJsonObject().get("properties").getAsJsonObject();
@@ -61,5 +68,9 @@ public final class SearchEntityUtils {
       logger.error("Could not convert view to json", e);
       return Optional.empty();
     }
+  }
+
+  public static Map<String, Object> convertToMap(Object object) {
+    return new ObjectMapper().convertValue(object, new TypeReference<Map<String, Object>>() {});
   }
 }

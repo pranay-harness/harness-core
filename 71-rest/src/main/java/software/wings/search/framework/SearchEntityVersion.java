@@ -8,31 +8,34 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
 /**
- * The current sync state representation
+ * The current version
  * of a search entity.
  *
  * @author utkarsh
  */
 
 @Value
-@Entity(value = "searchEntitiesSyncState", noClassnameStored = true)
-@FieldNameConstants(innerTypeName = "SearchEntitySyncStateKeys")
+@Entity(value = "searchEntitiesVersion", noClassnameStored = true)
+@FieldNameConstants(innerTypeName = "SearchEntityVersionKeys")
 @Slf4j
-public class SearchEntitySyncState implements PersistentEntity {
-  @Id private String searchEntityClass;
+public class SearchEntityVersion implements PersistentEntity {
+  @Id private String entityClass;
   private String syncVersion;
-  private String lastSyncedToken;
 
   private SearchEntity getSearchEntity() {
     try {
-      return (SearchEntity) Class.forName(searchEntityClass).newInstance();
+      return (SearchEntity) Class.forName(entityClass).newInstance();
     } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
       logger.error("Could not create new instance", e);
     }
     return null;
   }
 
-  public boolean shouldBulkSync() {
-    return !getSearchEntity().getVersion().equals(syncVersion);
+  boolean shouldBulkSync() {
+    SearchEntity searchEntity = getSearchEntity();
+    if (searchEntity != null) {
+      return !searchEntity.getVersion().equals(syncVersion);
+    }
+    return true;
   }
 }

@@ -13,14 +13,16 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * A lock implementation based on
+ * Mongo TTL indexes.
+ *
+ * @author utkarsh
+ */
 @Slf4j
 public class PerpetualSearchLocker {
   @Inject WingsPersistence wingsPersistence;
   @Inject private ScheduledExecutorService scheduledExecutorService;
-
-  private boolean canAcquireLock(String lockName) {
-    return wingsPersistence.get(SearchDistributedLock.class, lockName) != null;
-  }
 
   private boolean isLockAcquired(String lockName, String uuid) {
     Query<SearchDistributedLock> query = wingsPersistence.createQuery(SearchDistributedLock.class)
@@ -31,25 +33,25 @@ public class PerpetualSearchLocker {
     return query.get() != null;
   }
 
-  private boolean acquireLock(String lockName, String uuid) {
-    Instant instant = Instant.now();
-    SearchDistributedLock searchDistributedLock =
-        new SearchDistributedLock(lockName, uuid, Date.from(instant), instant.toEpochMilli());
-    wingsPersistence.save(searchDistributedLock);
-    return isLockAcquired(lockName, uuid);
+  private boolean tryToAcquireLock(String lockName, String uuid) {
+    if (wingsPersistence.get(SearchDistributedLock.class, lockName) == null) {
+      Instant instant = Instant.now();
+      SearchDistributedLock searchDistributedLock =
+          new SearchDistributedLock(lockName, uuid, Date.from(instant), instant.toEpochMilli());
+      wingsPersistence.save(searchDistributedLock);
+      return isLockAcquired(lockName, uuid);
+    }
+    return false;
   }
 
-  public ScheduledFuture tryToAcquireLock(String lockName, String uuid, LockTimeoutCallback lockTimeoutCallback)
+  public ScheduledFuture acquireLock(String lockName, String uuid, LockTimeoutCallback lockTimeoutCallback)
       throws InterruptedException {
     if (!isLockAcquired(lockName, uuid)) {
       logger.info("Attempting to acquire lock");
-      boolean shouldAcquireLock = false;
-      while (!shouldAcquireLock) {
+      boolean isLockAcquired = false;
+      while (!isLockAcquired) {
         Thread.sleep(1000);
-        shouldAcquireLock = !canAcquireLock(lockName);
-      }
-      if (!acquireLock(lockName, uuid)) {
-        tryToAcquireLock(lockName, uuid, lockTimeoutCallback);
+        isLockAcquired = tryToAcquireLock(lockName, uuid);
       }
     }
     logger.info("Search lock acquired");

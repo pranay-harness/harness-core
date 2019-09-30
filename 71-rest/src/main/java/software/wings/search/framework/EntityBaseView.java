@@ -7,6 +7,12 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import software.wings.beans.EntityType;
 
+/**
+ * The base entity view which can be
+ * used by search entities.
+ *
+ * @author utkarsh
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

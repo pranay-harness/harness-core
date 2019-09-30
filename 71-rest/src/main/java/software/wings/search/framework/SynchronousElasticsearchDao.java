@@ -13,6 +13,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+/**
+ * Decorator over Elasticsearch Dao
+ * to enable updates to be processed
+ * synchronously using a single thread.
+ *
+ * @author utkarsh
+ */
 @Slf4j
 public class SynchronousElasticsearchDao implements SearchDao {
   @Inject private ElasticsearchDao elasticsearchDao;

@@ -7,14 +7,12 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
-import io.harness.persistence.PersistentEntity;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.BsonDocument;
 import org.bson.Document;
 
 import java.util.concurrent.CountDownLatch;
-import java.util.function.Consumer;
 
 /**
  * The change tracking task collection class which handles
@@ -27,16 +25,14 @@ import java.util.function.Consumer;
 @Value
 @Slf4j
 public class ChangeTrackingTask implements Runnable {
-  private Class<? extends PersistentEntity> morphiaClass;
   private MongoCollection<DBObject> collection;
-  private Consumer<ChangeEvent> changeEventConsumer;
+  private ChangeStreamSubscriber changeStreamSubscriber;
   private BsonDocument resumeToken;
   private CountDownLatch latch;
 
-  public ChangeTrackingTask(Class<? extends PersistentEntity> morphiaClass, Consumer<ChangeEvent> changeEventConsumer,
-      MongoCollection<DBObject> collection, String tokenParam, CountDownLatch latch) {
-    this.morphiaClass = morphiaClass;
-    this.changeEventConsumer = changeEventConsumer;
+  ChangeTrackingTask(ChangeStreamSubscriber changeStreamSubscriber, MongoCollection<DBObject> collection,
+      String tokenParam, CountDownLatch latch) {
+    this.changeStreamSubscriber = changeStreamSubscriber;
     this.collection = collection;
     if (tokenParam != null) {
       this.resumeToken =
@@ -47,31 +43,8 @@ public class ChangeTrackingTask implements Runnable {
     this.latch = latch;
   }
 
-  public void handleChangeStreamTask(final ChangeStreamDocument<DBObject> changeStreamDocument) {
-    ChangeEvent changeEvent = new ChangeEvent(changeStreamDocument, morphiaClass);
-    changeEventConsumer.accept(changeEvent);
-  }
-
-  public void run() {
-    MongoCursor<ChangeStreamDocument<DBObject>> cursor = null;
-    try {
-      cursor = openChangeStream();
-      logger.info(String.format("changeStream opened on %s", morphiaClass.getCanonicalName()));
-      while (!Thread.interrupted()) {
-        try {
-          handleChangeStreamTask(cursor.next());
-        } catch (MongoInterruptedException e) {
-          logger.warn(String.format("Changestream on %s interrupted", morphiaClass.getCanonicalName()), e);
-          Thread.currentThread().interrupt();
-        }
-      }
-    } catch (RuntimeException e) {
-      logger.error(String.format("Unexpectedly %s changeStream shutting down", morphiaClass.getCanonicalName()), e);
-    } finally {
-      logger.warn(String.format("%s changeStream shutting down.", morphiaClass.getCanonicalName()));
-      closeChangeStream(cursor);
-      latch.countDown();
-    }
+  private void handleChange(final ChangeStreamDocument<DBObject> changeStreamDocument) {
+    changeStreamSubscriber.onChange(changeStreamDocument);
   }
 
   private MongoCursor<ChangeStreamDocument<DBObject>> openChangeStream() {
@@ -89,6 +62,26 @@ public class ChangeTrackingTask implements Runnable {
   private void closeChangeStream(MongoCursor<ChangeStreamDocument<DBObject>> cursor) {
     if (cursor != null) {
       cursor.close();
+    }
+  }
+
+  public void run() {
+    MongoCursor<ChangeStreamDocument<DBObject>> cursor = null;
+    try {
+      cursor = openChangeStream();
+      logger.info(String.format("changeStream opened on %s", collection.getNamespace()));
+      while (!Thread.interrupted()) {
+        handleChange(cursor.next());
+      }
+    } catch (MongoInterruptedException e) {
+      logger.warn(String.format("Changestream on %s interrupted", collection.getNamespace()), e);
+      Thread.currentThread().interrupt();
+    } catch (RuntimeException e) {
+      logger.error(String.format("Unexpectedly %s changeStream shutting down", collection.getNamespace()), e);
+    } finally {
+      logger.warn(String.format("%s changeStream shutting down.", collection.getNamespace()));
+      closeChangeStream(cursor);
+      latch.countDown();
     }
   }
 }

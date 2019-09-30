@@ -9,4 +9,4 @@ import software.wings.search.framework.changestreams.ChangeEvent;
  * @author utkarsh
  */
 
-public interface ChangeHandler { boolean handleChange(ChangeEvent changeEvent); }
+public interface ChangeHandler { boolean handleChange(ChangeEvent<?> changeEvent); }

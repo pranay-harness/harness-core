@@ -5,21 +5,17 @@ import com.google.inject.Singleton;
 
 import com.mongodb.DBObject;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.mapping.Mapper;
-import org.mongodb.morphia.mapping.cache.EntityCache;
+import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
+import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
+import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceKeys;
+import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowKeys;
 import software.wings.beans.WorkflowExecution;
-import software.wings.dl.WingsPersistence;
-import software.wings.search.entities.application.ApplicationSearchEntity;
 import software.wings.search.entities.deployment.DeploymentView.DeploymentViewKeys;
-import software.wings.search.entities.environment.EnvironmentSearchEntity;
 import software.wings.search.entities.pipeline.PipelineView.PipelineViewKeys;
-import software.wings.search.entities.service.ServiceSearchEntity;
-import software.wings.search.entities.workflow.WorkflowSearchEntity;
 import software.wings.search.framework.ChangeHandler;
 import software.wings.search.framework.SearchDao;
 import software.wings.search.framework.SearchEntityUtils;
@@ -32,12 +28,9 @@ import java.util.Optional;
 @Singleton
 public class DeploymentChangeHandler implements ChangeHandler {
   @Inject private SearchDao searchDao;
-  @Inject private WingsPersistence wingsPersistence;
   @Inject private DeploymentViewBuilder deploymentViewBuilder;
-  private static final Mapper mapper = SearchEntityUtils.getMapper();
-  private static final EntityCache entityCache = SearchEntityUtils.getEntityCache();
 
-  private boolean handleApplicationChange(ChangeEvent changeEvent) {
+  private boolean handleApplicationChange(ChangeEvent<?> changeEvent) {
     if (changeEvent.getChangeType() == ChangeType.UPDATE) {
       DBObject document = changeEvent.getChanges();
       if (document.containsField(ApplicationKeys.name)) {
@@ -52,7 +45,7 @@ public class DeploymentChangeHandler implements ChangeHandler {
     return true;
   }
 
-  private boolean handleEnvironmentChange(ChangeEvent changeEvent) {
+  private boolean handleEnvironmentChange(ChangeEvent<?> changeEvent) {
     if (changeEvent.getChangeType() == ChangeType.UPDATE) {
       DBObject document = changeEvent.getChanges();
       if (document.containsField(EnvironmentKeys.name)) {
@@ -67,7 +60,7 @@ public class DeploymentChangeHandler implements ChangeHandler {
     return true;
   }
 
-  private boolean handleServiceChange(ChangeEvent changeEvent) {
+  private boolean handleServiceChange(ChangeEvent<?> changeEvent) {
     if (changeEvent.getChangeType() == ChangeType.UPDATE) {
       DBObject document = changeEvent.getChanges();
       if (document.containsField(ServiceKeys.name)) {
@@ -82,7 +75,7 @@ public class DeploymentChangeHandler implements ChangeHandler {
     return true;
   }
 
-  private boolean handleWorkflowChange(ChangeEvent changeEvent) {
+  private boolean handleWorkflowChange(ChangeEvent<?> changeEvent) {
     if (changeEvent.getChangeType() == ChangeType.UPDATE) {
       DBObject document = changeEvent.getChanges();
       if (document.containsField(WorkflowKeys.name)) {
@@ -97,57 +90,55 @@ public class DeploymentChangeHandler implements ChangeHandler {
     return true;
   }
 
-  private boolean handleWorkflowExecutionChange(ChangeEvent changeEvent) {
-    AdvancedDatastore advancedDatastore = wingsPersistence.getDatastore(changeEvent.getEntityType());
-    switch (changeEvent.getChangeType()) {
-      case INSERT: {
-        DBObject fullDocument = changeEvent.getFullDocument();
-        WorkflowExecution workflowExecution = (WorkflowExecution) mapper.fromDBObject(
-            advancedDatastore, changeEvent.getEntityType(), fullDocument, entityCache);
-        workflowExecution.setUuid(changeEvent.getUuid());
-        DeploymentView deploymentView = deploymentViewBuilder.createDeploymentView(workflowExecution);
-        Optional<String> jsonString = SearchEntityUtils.convertToJson(deploymentView);
-        if (jsonString.isPresent()) {
-          return searchDao.upsertDocument(DeploymentSearchEntity.TYPE, deploymentView.getId(), jsonString.get());
-        }
-        return false;
-      }
-      case UPDATE: {
-        DBObject fullDocument = changeEvent.getFullDocument();
-        DBObject changeDocument = changeEvent.getChanges();
-        WorkflowExecution workflowExecution = (WorkflowExecution) mapper.fromDBObject(
-            advancedDatastore, changeEvent.getEntityType(), fullDocument, entityCache);
-        workflowExecution.setUuid(changeEvent.getUuid());
-        DeploymentView deploymentView = deploymentViewBuilder.createDeploymentView(workflowExecution, changeDocument);
-        Optional<String> jsonString = SearchEntityUtils.convertToJson(deploymentView);
-        if (jsonString.isPresent()) {
-          return searchDao.upsertDocument(DeploymentSearchEntity.TYPE, deploymentView.getId(), jsonString.get());
-        }
-        return false;
-      }
-      case DELETE: {
-        return searchDao.deleteDocument(DeploymentSearchEntity.TYPE, changeEvent.getUuid());
-      }
-      default: { break; }
+  private boolean handleWorkflowExecutionInsert(ChangeEvent<?> changeEvent) {
+    WorkflowExecution workflowExecution = (WorkflowExecution) changeEvent.getFullDocument();
+    DeploymentView deploymentView = deploymentViewBuilder.createDeploymentView(workflowExecution);
+    Optional<String> jsonString = SearchEntityUtils.convertToJson(deploymentView);
+    if (jsonString.isPresent()) {
+      return searchDao.upsertDocument(DeploymentSearchEntity.TYPE, deploymentView.getId(), jsonString.get());
     }
-    return true;
+    return false;
   }
 
-  public boolean handleChange(ChangeEvent changeEvent) {
+  private boolean handleWorkflowExecutionUpdate(ChangeEvent<?> changeEvent) {
+    WorkflowExecution workflowExecution = (WorkflowExecution) changeEvent.getFullDocument();
+    DBObject changeDocument = changeEvent.getChanges();
+    DeploymentView deploymentView = deploymentViewBuilder.createDeploymentView(workflowExecution, changeDocument);
+    Optional<String> jsonString = SearchEntityUtils.convertToJson(deploymentView);
+    if (jsonString.isPresent()) {
+      return searchDao.upsertDocument(DeploymentSearchEntity.TYPE, deploymentView.getId(), jsonString.get());
+    }
+    return false;
+  }
+
+  private boolean handleWorkflowExecutionChange(ChangeEvent<?> changeEvent) {
+    switch (changeEvent.getChangeType()) {
+      case INSERT:
+        return handleWorkflowExecutionInsert(changeEvent);
+      case UPDATE:
+        return handleWorkflowExecutionUpdate(changeEvent);
+      case DELETE:
+        return searchDao.deleteDocument(DeploymentSearchEntity.TYPE, changeEvent.getUuid());
+      default:
+        return true;
+    }
+  }
+
+  public boolean handleChange(ChangeEvent<?> changeEvent) {
     boolean isChangeHandled = true;
-    if (changeEvent.getEntityType().equals(DeploymentSearchEntity.SOURCE_ENTITY_CLASS)) {
+    if (changeEvent.isChangeFor(WorkflowExecution.class)) {
       isChangeHandled = handleWorkflowExecutionChange(changeEvent);
     }
-    if (changeEvent.getEntityType().equals(ApplicationSearchEntity.SOURCE_ENTITY_CLASS)) {
+    if (changeEvent.isChangeFor(Application.class)) {
       isChangeHandled = handleApplicationChange(changeEvent);
     }
-    if (changeEvent.getEntityType().equals(EnvironmentSearchEntity.SOURCE_ENTITY_CLASS)) {
+    if (changeEvent.isChangeFor(Environment.class)) {
       isChangeHandled = handleEnvironmentChange(changeEvent);
     }
-    if (changeEvent.getEntityType().equals(ServiceSearchEntity.SOURCE_ENTITY_CLASS)) {
+    if (changeEvent.isChangeFor(Service.class)) {
       isChangeHandled = handleServiceChange(changeEvent);
     }
-    if (changeEvent.getEntityType().equals(WorkflowSearchEntity.SOURCE_ENTITY_CLASS)) {
+    if (changeEvent.isChangeFor(Workflow.class)) {
       isChangeHandled = handleWorkflowChange(changeEvent);
     }
     return isChangeHandled;

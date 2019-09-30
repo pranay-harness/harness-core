@@ -2,7 +2,6 @@ package software.wings.search.entities.application;
 
 import com.google.inject.Inject;
 
-import com.mongodb.DBObject;
 import io.harness.persistence.HIterator;
 import org.mongodb.morphia.query.Sort;
 import software.wings.audit.AuditHeader;
@@ -31,7 +30,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-public class ApplicationViewBuilder {
+class ApplicationViewBuilder {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private RelatedAuditViewBuilder relatedAuditViewBuilder;
   private ApplicationView applicationView;
@@ -46,68 +45,79 @@ public class ApplicationViewBuilder {
 
   private void setServices(Application application) {
     Set<EntityInfo> services = new HashSet<>();
-    HIterator<Service> iterator = new HIterator<>(
-        wingsPersistence.createQuery(Service.class).field(ServiceKeys.appId).equal(application.getUuid()).fetch());
-    while (iterator.hasNext()) {
-      final Service service = iterator.next();
-      EntityInfo entityInfo = new EntityInfo(service.getUuid(), service.getName());
-      services.add(entityInfo);
+    try (HIterator<Service> iterator = new HIterator<>(wingsPersistence.createQuery(Service.class)
+                                                           .field(ServiceKeys.appId)
+                                                           .equal(application.getUuid())
+                                                           .fetch())) {
+      while (iterator.hasNext()) {
+        final Service service = iterator.next();
+        EntityInfo entityInfo = new EntityInfo(service.getUuid(), service.getName());
+        services.add(entityInfo);
+      }
     }
     applicationView.setServices(services);
   }
 
   private void setWorkflows(Application application) {
     Set<EntityInfo> workflows = new HashSet<>();
-    HIterator<Workflow> iterator = new HIterator<>(
-        wingsPersistence.createQuery(Workflow.class).field(WorkflowKeys.appId).equal(application.getUuid()).fetch());
-    while (iterator.hasNext()) {
-      final Workflow workflow = iterator.next();
-      EntityInfo entityInfo = new EntityInfo(workflow.getUuid(), workflow.getName());
-      workflows.add(entityInfo);
+    try (HIterator<Workflow> iterator = new HIterator<>(wingsPersistence.createQuery(Workflow.class)
+                                                            .field(WorkflowKeys.appId)
+                                                            .equal(application.getUuid())
+                                                            .fetch())) {
+      while (iterator.hasNext()) {
+        final Workflow workflow = iterator.next();
+        EntityInfo entityInfo = new EntityInfo(workflow.getUuid(), workflow.getName());
+        workflows.add(entityInfo);
+      }
     }
     applicationView.setWorkflows(workflows);
   }
 
   private void setEnvironments(Application application) {
     Set<EntityInfo> environments = new HashSet<>();
-    HIterator<Environment> iterator = new HIterator<>(wingsPersistence.createQuery(Environment.class)
-                                                          .field(EnvironmentKeys.appId)
-                                                          .equal(application.getUuid())
-                                                          .fetch());
-    while (iterator.hasNext()) {
-      final Environment environment = iterator.next();
-      EntityInfo entityInfo = new EntityInfo(environment.getUuid(), environment.getName());
-      environments.add(entityInfo);
+    try (HIterator<Environment> iterator = new HIterator<>(wingsPersistence.createQuery(Environment.class)
+                                                               .field(EnvironmentKeys.appId)
+                                                               .equal(application.getUuid())
+                                                               .fetch())) {
+      while (iterator.hasNext()) {
+        final Environment environment = iterator.next();
+        EntityInfo entityInfo = new EntityInfo(environment.getUuid(), environment.getName());
+        environments.add(entityInfo);
+      }
     }
     applicationView.setEnvironments(environments);
   }
 
   private void setPipelines(Application application) {
     Set<EntityInfo> pipelines = new HashSet<>();
-    HIterator<Pipeline> iterator = new HIterator<>(
-        wingsPersistence.createQuery(Pipeline.class).field(PipelineKeys.appId).equal(application.getUuid()).fetch());
-    while (iterator.hasNext()) {
-      final Pipeline pipeline = iterator.next();
-      EntityInfo entityInfo = new EntityInfo(pipeline.getUuid(), pipeline.getName());
-      pipelines.add(entityInfo);
+    try (HIterator<Pipeline> iterator = new HIterator<>(wingsPersistence.createQuery(Pipeline.class)
+                                                            .field(PipelineKeys.appId)
+                                                            .equal(application.getUuid())
+                                                            .fetch())) {
+      while (iterator.hasNext()) {
+        final Pipeline pipeline = iterator.next();
+        EntityInfo entityInfo = new EntityInfo(pipeline.getUuid(), pipeline.getName());
+        pipelines.add(entityInfo);
+      }
     }
     applicationView.setPipelines(pipelines);
   }
 
-  public void setAuditsAndAuditTimestamps(Application application) {
+  private void setAuditsAndAuditTimestamps(Application application) {
     long startTimestamp = System.currentTimeMillis() - DAYS_TO_RETAIN * 86400 * 1000;
     List<RelatedAuditView> audits = new ArrayList<>();
     List<Long> auditTimestamps = new ArrayList<>();
-    HIterator<AuditHeader> iterator = new HIterator<>(wingsPersistence.createQuery(AuditHeader.class)
-                                                          .field("entityAuditRecords.entityId")
-                                                          .equal(application.getUuid())
-                                                          .field(ApplicationKeys.createdAt)
-                                                          .greaterThanOrEq(startTimestamp)
-                                                          .order(Sort.descending(AuditHeaderKeys.createdAt))
-                                                          .fetch());
-    while (iterator.hasNext()) {
-      final AuditHeader auditHeader = iterator.next();
-      if (auditHeader.getEntityAuditRecords() != null) {
+    try (HIterator<AuditHeader> iterator = new HIterator<>(wingsPersistence.createQuery(AuditHeader.class)
+                                                               .field(AuditHeaderKeys.accountId)
+                                                               .equal(application.getAccountId())
+                                                               .field("entityAuditRecords.entityId")
+                                                               .equal(application.getUuid())
+                                                               .field(ApplicationKeys.createdAt)
+                                                               .greaterThanOrEq(startTimestamp)
+                                                               .order(Sort.descending(AuditHeaderKeys.createdAt))
+                                                               .fetch())) {
+      while (iterator.hasNext()) {
+        final AuditHeader auditHeader = iterator.next();
         for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
           if (entityAuditRecord.getAffectedResourceType().equals(EntityType.APPLICATION.name())
               && entityAuditRecord.getAppId().equals(application.getUuid())) {
@@ -125,18 +135,15 @@ public class ApplicationViewBuilder {
     applicationView.setAuditTimestamps(auditTimestamps);
   }
 
-  public ApplicationView createApplicationView(Application application) {
+  ApplicationView createApplicationView(Application application, boolean updateOnly) {
     createBaseView(application);
-    setWorkflows(application);
-    setEnvironments(application);
-    setPipelines(application);
-    setServices(application);
-    setAuditsAndAuditTimestamps(application);
-    return applicationView;
-  }
-
-  public ApplicationView createApplicationView(Application application, DBObject changeDocument) {
-    createBaseView(application);
+    if (!updateOnly) {
+      setWorkflows(application);
+      setEnvironments(application);
+      setPipelines(application);
+      setServices(application);
+      setAuditsAndAuditTimestamps(application);
+    }
     return applicationView;
   }
 }

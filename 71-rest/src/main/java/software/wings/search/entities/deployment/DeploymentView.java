@@ -29,8 +29,8 @@ public class DeploymentView extends EntityBaseView {
   private String pipelineName;
   private boolean workflowInPipeline;
 
-  public DeploymentView(String uuid, String name, long createdAt, EmbeddedUser createdBy, String appId,
-      ExecutionStatus status, String appName, EntityType type, String accountId) {
+  DeploymentView(String uuid, String name, long createdAt, EmbeddedUser createdBy, String appId, ExecutionStatus status,
+      String appName, EntityType type, String accountId) {
     super(uuid, name, null, accountId, createdAt, 0, type, createdBy, null);
     this.status = status;
     this.appId = appId;

@@ -32,7 +32,7 @@ public class ServiceView extends EntityBaseView {
   private List<Long> deploymentTimestamps;
   private List<Long> auditTimestamps;
 
-  public ServiceView(String uuid, String name, String description, String accountId, long createdAt, long lastUpdatedAt,
+  ServiceView(String uuid, String name, String description, String accountId, long createdAt, long lastUpdatedAt,
       EntityType entityType, EmbeddedUser createdBy, EmbeddedUser lastUpdatedBy, String appId,
       ArtifactType artifactType, DeploymentType deploymentType) {
     super(uuid, name, description, accountId, createdAt, lastUpdatedAt, entityType, createdBy, lastUpdatedBy);

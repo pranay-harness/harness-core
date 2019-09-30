@@ -31,10 +31,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Elasticsearch Dao
+ *
+ * @author utkarsh
+ */
 @Slf4j
 public final class ElasticsearchDao implements SearchDao {
   @Inject RestHighLevelClient client;
   @Inject ElasticsearchIndexManager elasticsearchIndexManager;
+  private static final String SCRIPT_LANGUAGE = "painless";
+  private static final String COULD_NOT_CONNECT_ERROR_MESSAGE = "Could not connect to elasticsearch";
+  private static final String FIELD_TO_UPDATE_PARAMS_KEY = "fieldToUpdate";
+  private static final String NEW_ELEMENT_PARAMS_KEY = "newList";
+  private static final String ID_TO_BE_DELETED_PARAMS_KEY = "idToBeDeleted";
 
   public boolean upsertDocument(String entityType, String entityId, String entityJson) {
     String indexName = elasticsearchIndexManager.getIndexName(entityType);
@@ -49,7 +59,7 @@ public final class ElasticsearchDao implements SearchDao {
     } catch (ElasticsearchException e) {
       logger.error(String.format("Error while updating document %s in index %s", entityJson, indexName), e);
     } catch (IOException e) {
-      logger.error("Could not connect to elasticsearch", e);
+      logger.error(COULD_NOT_CONNECT_ERROR_MESSAGE, e);
     }
     return false;
   }
@@ -61,12 +71,11 @@ public final class ElasticsearchDao implements SearchDao {
     request.setRefresh(true);
 
     Map<String, Object> params = new HashMap<>();
-    params.put("fieldToUpdate", fieldToUpdate);
-    params.put("newList", newElement);
+    params.put(FIELD_TO_UPDATE_PARAMS_KEY, fieldToUpdate);
+    params.put(NEW_ELEMENT_PARAMS_KEY, newElement);
     request.setRefresh(true);
-    String key = fieldToUpdate + "." + EntityInfoKeys.id;
     request.setQuery(QueryBuilders.termsQuery(EntityBaseViewKeys.id, documentIds));
-    request.setScript(new Script(ScriptType.INLINE, "painless",
+    request.setScript(new Script(ScriptType.INLINE, SCRIPT_LANGUAGE,
         "if(ctx._source[params.fieldToUpdate]!=null){ctx._source[params.fieldToUpdate].add(params.newList);} "
             + "else{ctx._source[params.fieldToUpdate] = [params.newList];}",
         params));
@@ -81,15 +90,15 @@ public final class ElasticsearchDao implements SearchDao {
     request.setRefresh(true);
     String key = listToUpdate + "." + EntityInfoKeys.id;
     Map<String, Object> params = new HashMap<>();
-    params.put("fieldToUpdate", listToUpdate);
-    params.put("newList", newElement);
+    params.put(FIELD_TO_UPDATE_PARAMS_KEY, listToUpdate);
+    params.put(NEW_ELEMENT_PARAMS_KEY, newElement);
     request.setQuery(
         QueryBuilders.boolQuery()
             .must(QueryBuilders.termQuery(EntityBaseViewKeys.id, documentId))
             .mustNot(QueryBuilders.nestedQuery(listToUpdate,
                 QueryBuilders.boolQuery().filter(QueryBuilders.termQuery(key, newElement.get(EntityInfoKeys.id))),
                 ScoreMode.Max)));
-    request.setScript(new Script(ScriptType.INLINE, "painless",
+    request.setScript(new Script(ScriptType.INLINE, SCRIPT_LANGUAGE,
         "if(ctx._source[params.fieldToUpdate]!=null){ctx._source[params.fieldToUpdate].add(params.newList);} "
             + "else{ctx._source[params.fieldToUpdate] = [params.newList];}",
         params));
@@ -104,8 +113,8 @@ public final class ElasticsearchDao implements SearchDao {
 
     String key = listToUpdate + "." + EntityInfoKeys.id;
     Map<String, Object> params = new HashMap<>();
-    params.put("fieldToUpdate", listToUpdate);
-    params.put("newList", newElement);
+    params.put(FIELD_TO_UPDATE_PARAMS_KEY, listToUpdate);
+    params.put(NEW_ELEMENT_PARAMS_KEY, newElement);
     params.put("maxElementsInList", maxElementsInList);
     request.setQuery(
         QueryBuilders.boolQuery()
@@ -113,7 +122,7 @@ public final class ElasticsearchDao implements SearchDao {
             .mustNot(QueryBuilders.nestedQuery(listToUpdate,
                 QueryBuilders.boolQuery().filter(QueryBuilders.termQuery(key, newElement.get(EntityBaseViewKeys.id))),
                 ScoreMode.Max)));
-    request.setScript(new Script(ScriptType.INLINE, "painless",
+    request.setScript(new Script(ScriptType.INLINE, SCRIPT_LANGUAGE,
         "if (ctx._source[params.fieldToUpdate] != null) {if (ctx._source[params.fieldToUpdate].length == params.maxElementsInList) { ctx._source[params.fieldToUpdate] = ctx._source[params.fieldToUpdate].stream().skip(1).collect(Collectors.toList());} ctx._source[params.fieldToUpdate].add(params.newList);} else {ctx._source[params.fieldToUpdate] = [params.newList];}",
         params));
     return processUpdateByQuery(request, params, indexName);
@@ -126,11 +135,11 @@ public final class ElasticsearchDao implements SearchDao {
     request.setRefresh(true);
 
     Map<String, Object> params = new HashMap<>();
-    params.put("fieldToUpdate", listToUpdate);
-    params.put("idToBeDeleted", idToBeDeleted);
+    params.put(FIELD_TO_UPDATE_PARAMS_KEY, listToUpdate);
+    params.put(ID_TO_BE_DELETED_PARAMS_KEY, idToBeDeleted);
 
     request.setQuery(QueryBuilders.termsQuery(EntityBaseViewKeys.id, documentIds));
-    request.setScript(new Script(ScriptType.INLINE, "painless",
+    request.setScript(new Script(ScriptType.INLINE, SCRIPT_LANGUAGE,
         "if(ctx._source[params.fieldToUpdate]!=null){ctx._source[params.fieldToUpdate] = ctx._source[params.fieldToUpdate].stream().filter(item -> item.id != params.idToBeDeleted).collect(Collectors.toList());}",
         params));
     return processUpdateByQuery(request, params, indexName);
@@ -143,11 +152,11 @@ public final class ElasticsearchDao implements SearchDao {
     request.setRefresh(true);
 
     Map<String, Object> params = new HashMap<>();
-    params.put("fieldToUpdate", listToUpdate);
-    params.put("idToBeDeleted", idToBeDeleted);
+    params.put(FIELD_TO_UPDATE_PARAMS_KEY, listToUpdate);
+    params.put(ID_TO_BE_DELETED_PARAMS_KEY, idToBeDeleted);
 
     request.setQuery(QueryBuilders.termsQuery(EntityBaseViewKeys.id, documentId));
-    request.setScript(new Script(ScriptType.INLINE, "painless",
+    request.setScript(new Script(ScriptType.INLINE, SCRIPT_LANGUAGE,
         "if(ctx._source[params.fieldToUpdate]!=null){ctx._source[params.fieldToUpdate] = ctx._source[params.fieldToUpdate].stream().filter(item -> item.id != params.idToBeDeleted).collect(Collectors.toList());}",
         params));
     return processUpdateByQuery(request, params, indexName);
@@ -160,12 +169,12 @@ public final class ElasticsearchDao implements SearchDao {
 
     Map<String, Object> params = new HashMap<>();
     params.put("listKey", listToUpdate);
-    params.put("idToBeDeleted", idToBeDeleted);
+    params.put(ID_TO_BE_DELETED_PARAMS_KEY, idToBeDeleted);
     String key = listToUpdate + "." + EntityInfoKeys.id;
 
     request.setQuery(QueryBuilders.nestedQuery(
         listToUpdate, QueryBuilders.boolQuery().filter(QueryBuilders.termQuery(key, idToBeDeleted)), ScoreMode.Max));
-    request.setScript(new Script(ScriptType.INLINE, "painless",
+    request.setScript(new Script(ScriptType.INLINE, SCRIPT_LANGUAGE,
         "if(ctx._source[params.listKey]!=null){ctx._source[params.listKey] = ctx._source[params.listKey].stream().filter(item -> item.id != params.idToBeDeleted).collect(Collectors.toList());}",
         params));
     return processUpdateByQuery(request, params, indexName);
@@ -181,12 +190,12 @@ public final class ElasticsearchDao implements SearchDao {
     params.put("entityType", listToUpdate);
     params.put("newValue", newElement);
     params.put("filterId", elementId);
-    params.put("fieldToUpdate", elementKeyToChange);
+    params.put(FIELD_TO_UPDATE_PARAMS_KEY, elementKeyToChange);
     String key = listToUpdate + "." + EntityInfoKeys.id;
 
     request.setQuery(QueryBuilders.nestedQuery(
         listToUpdate, QueryBuilders.boolQuery().filter(QueryBuilders.termQuery(key, elementId)), ScoreMode.Max));
-    request.setScript(new Script(ScriptType.INLINE, "painless",
+    request.setScript(new Script(ScriptType.INLINE, SCRIPT_LANGUAGE,
         "if (ctx._source[params.entityType] != null){for(item in ctx._source[params.entityType]){ if(item.id==params.filterId){item[params.fieldToUpdate] = params.newValue;}}}",
         params));
     return processUpdateByQuery(request, params, indexName);
@@ -205,7 +214,7 @@ public final class ElasticsearchDao implements SearchDao {
 
     request.setRefresh(true);
     request.setQuery(QueryBuilders.termQuery(filterKey, filterValue));
-    request.setScript(new Script(ScriptType.INLINE, "painless",
+    request.setScript(new Script(ScriptType.INLINE, SCRIPT_LANGUAGE,
         "if (ctx._source[params.filterKey] == params.filterValue) {ctx._source[params.keyToUpdate] = params.newValue;}",
         params));
     return processUpdateByQuery(request, params, indexName);
@@ -220,7 +229,7 @@ public final class ElasticsearchDao implements SearchDao {
     } catch (ElasticsearchException e) {
       logger.error(String.format("Error while trying to delete document %s in index %s", documentId, indexName), e);
     } catch (IOException e) {
-      logger.error("Could not connect to elasticsearch", e);
+      logger.error(COULD_NOT_CONNECT_ERROR_MESSAGE, e);
     }
     return false;
   }
@@ -232,12 +241,12 @@ public final class ElasticsearchDao implements SearchDao {
     Map<String, Object> params = new HashMap<>();
     long currentTimestampValue = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
     long newTimestampValue = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) - daysToRetain * 86400;
-    params.put("fieldToUpdate", fieldToUpdate);
+    params.put(FIELD_TO_UPDATE_PARAMS_KEY, fieldToUpdate);
     params.put("newTimestampValue", newTimestampValue);
     params.put("currentTimestampValue", currentTimestampValue);
 
     request.setQuery(QueryBuilders.termQuery(EntityBaseViewKeys.id, documentId));
-    request.setScript(new Script(ScriptType.INLINE, "painless",
+    request.setScript(new Script(ScriptType.INLINE, SCRIPT_LANGUAGE,
         "if (ctx._source[params.fieldToUpdate] != null) { ctx._source[params.fieldToUpdate] = ctx._source[params.fieldToUpdate].stream().filter(item -> item >= params.newTimestampValue).collect(Collectors.toList()); ctx._source[params.fieldToUpdate].add(params.currentTimestampValue); } else { ctx._source[params.fieldToUpdate] = [params.currentTimestampValue]; }",
         params));
     return processUpdateByQuery(request, params, indexName);
@@ -261,7 +270,7 @@ public final class ElasticsearchDao implements SearchDao {
       }
       return requiredIds;
     } catch (IOException e) {
-      logger.error("Could not connect to elasticsearch", e);
+      logger.error(COULD_NOT_CONNECT_ERROR_MESSAGE, e);
     }
     return new ArrayList<>();
   }
@@ -279,7 +288,7 @@ public final class ElasticsearchDao implements SearchDao {
       }
       logger.error(String.format("Failed to update index %s by query with params %s", indexName, params.toString()));
     } catch (IOException e) {
-      logger.error("Could not connect to elasticsearch", e);
+      logger.error(COULD_NOT_CONNECT_ERROR_MESSAGE, e);
     }
     return false;
   }

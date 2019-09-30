@@ -55,39 +55,33 @@ public class ElasticsearchServiceImpl implements SearchService {
     for (SearchHit hit : hits) {
       Map<String, Object> result = hit.getSourceAsMap();
       switch (EntityType.valueOf(result.get(EntityBaseViewKeys.type).toString())) {
-        case APPLICATION: {
+        case APPLICATION:
           ApplicationView applicationView = mapper.convertValue(result, ApplicationView.class);
           applicationViewList.add(applicationView);
           break;
-        }
-        case SERVICE: {
+        case SERVICE:
           ServiceView serviceView = mapper.convertValue(result, ServiceView.class);
           serviceViewList.add(serviceView);
           break;
-        }
-        case ENVIRONMENT: {
+        case ENVIRONMENT:
           EnvironmentView environmentView = mapper.convertValue(result, EnvironmentView.class);
           environmentViewList.add(environmentView);
           break;
-        }
-        case WORKFLOW: {
+        case WORKFLOW:
           WorkflowView workflowView = mapper.convertValue(result, WorkflowView.class);
           workflowViewList.add(workflowView);
           break;
-        }
-        case PIPELINE: {
+        case PIPELINE:
           PipelineView pipelineView = mapper.convertValue(result, PipelineView.class);
           pipelineViewList.add(pipelineView);
           break;
-        }
-        case DEPLOYMENT: {
+        case DEPLOYMENT:
           if (result.get(DeploymentViewKeys.workflowInPipeline) != null
               && result.get(DeploymentViewKeys.workflowInPipeline).equals(false)) {
             DeploymentView deploymentView = mapper.convertValue(result, DeploymentView.class);
             deploymentViewList.add(deploymentView);
           }
           break;
-        }
         default:
       }
     }
