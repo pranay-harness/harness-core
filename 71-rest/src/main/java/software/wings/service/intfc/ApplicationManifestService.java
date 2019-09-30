@@ -25,7 +25,7 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
 
   ApplicationManifest update(ApplicationManifest applicationManifest);
 
-  ApplicationManifest getK8sManifestByServiceId(String appId, String serviceId);
+  ApplicationManifest getManifestByServiceId(String appId, String serviceId);
 
   ApplicationManifest getById(String appId, String id);
 

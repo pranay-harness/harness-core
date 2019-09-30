@@ -296,7 +296,7 @@ public class ApplicationManifestUtils {
     Service service = serviceResourceService.get(app.getUuid(), serviceElement.getUuid(), false);
 
     ApplicationManifest applicationManifest =
-        applicationManifestService.getK8sManifestByServiceId(app.getUuid(), serviceElement.getUuid());
+        applicationManifestService.getManifestByServiceId(app.getUuid(), serviceElement.getUuid());
 
     if (service.isK8sV2() && applicationManifest == null) {
       throw new InvalidRequestException("Manifests not found for service.");

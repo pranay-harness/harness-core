@@ -428,7 +428,6 @@ public class EnvironmentResource {
       @QueryParam("appId") String appId, @PathParam("envId") String envId, ApplicationManifest applicationManifest) {
     applicationManifest.setAppId(appId);
     applicationManifest.setEnvId(envId);
-    applicationManifest.setKind(AppManifestKind.VALUES);
     return new RestResponse<>(applicationManifestService.create(applicationManifest));
   }
 
@@ -478,7 +477,6 @@ public class EnvironmentResource {
     applicationManifest.setAppId(appId);
     applicationManifest.setEnvId(envId);
     applicationManifest.setServiceId(serviceId);
-    applicationManifest.setKind(AppManifestKind.VALUES);
     return new RestResponse<>(applicationManifestService.create(applicationManifest));
   }
 

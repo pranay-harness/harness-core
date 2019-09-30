@@ -262,7 +262,7 @@ public class K8sStateHelper {
     }
 
     ApplicationManifest applicationManifest =
-        applicationManifestService.getK8sManifestByServiceId(appId, infraMapping.getServiceId());
+        applicationManifestService.getManifestByServiceId(appId, infraMapping.getServiceId());
     if (doesValuesFileContainArtifact(applicationManifest)) {
       return true;
     }
@@ -285,7 +285,7 @@ public class K8sStateHelper {
           format("Infra mapping not found for appId %s infraMappingId %s", appId, infraDefinitionId));
     }
 
-    ApplicationManifest applicationManifest = applicationManifestService.getK8sManifestByServiceId(appId, serviceId);
+    ApplicationManifest applicationManifest = applicationManifestService.getManifestByServiceId(appId, serviceId);
     if (doesValuesFileContainArtifact(applicationManifest)) {
       return true;
     }
@@ -361,7 +361,7 @@ public class K8sStateHelper {
 
   public void updateManifestsArtifactVariableNames(
       String appId, Set<String> serviceArtifactVariableNames, String serviceId, String envId) {
-    ApplicationManifest applicationManifest = applicationManifestService.getK8sManifestByServiceId(appId, serviceId);
+    ApplicationManifest applicationManifest = applicationManifestService.getManifestByServiceId(appId, serviceId);
     updateManifestFileVariableNames(applicationManifest, serviceArtifactVariableNames);
 
     applicationManifest = applicationManifestService.getByEnvId(appId, envId, AppManifestKind.VALUES);

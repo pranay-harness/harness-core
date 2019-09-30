@@ -149,7 +149,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
         accountId, applicationManifest, null, Type.DELETE, applicationManifest.isSyncFromGit(), false);
   }
 
-  public ApplicationManifest getK8sManifestByServiceId(String appId, String serviceId) {
+  public ApplicationManifest getManifestByServiceId(String appId, String serviceId) {
     Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
                                            .filter(ApplicationKeys.appId, appId)
                                            .filter(ApplicationManifestKeys.serviceId, serviceId)
@@ -551,6 +551,10 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       throw new InvalidRequestException("Both envId and serviceId cannot be empty for application manifest", USER);
     }
 
+    if (applicationManifest.getKind() == null) {
+      throw new InvalidRequestException("Application manifest kind cannot be empty", USER);
+    }
+
     validateAppManifestForEnvironment(applicationManifest);
 
     switch (applicationManifest.getStoreType()) {
@@ -686,7 +690,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     }
 
     return upsertApplicationManifestFile(
-        manifestFile, getK8sManifestByServiceId(manifestFile.getAppId(), serviceId), isCreate);
+        manifestFile, getManifestByServiceId(manifestFile.getAppId(), serviceId), isCreate);
   }
 
   @Override

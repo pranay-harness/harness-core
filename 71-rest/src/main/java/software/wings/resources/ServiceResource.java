@@ -642,7 +642,7 @@ public class ServiceResource {
   @ExceptionMetered
   public RestResponse<ApplicationManifest> getAppManifest(
       @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
-    return new RestResponse<>(applicationManifestService.getK8sManifestByServiceId(appId, serviceId));
+    return new RestResponse<>(applicationManifestService.getManifestByServiceId(appId, serviceId));
   }
 
   @POST
