@@ -326,15 +326,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
     // update related field for envId var.
     if (workflow.checkEnvironmentTemplatized()) {
-      String envVarName = workflow.fetchEnvTemplatizedName();
-      Variable variable = contains(userVariables, envVarName);
-      if (variable != null) {
-        if (infraRefactor) {
-          variable.getMetadata().put("relatedField", Joiner.on(",").join(fetchInfraDefVariableNames()));
-        } else {
-          variable.getMetadata().put("relatedField", Joiner.on(",").join(fetchInfraMappingVariableNames()));
-        }
-      }
+      updateRelatedFieldEnv(infraRefactor, workflow);
     }
 
     workflowPhases = new ArrayList<>();
@@ -345,34 +337,11 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
       if (infraRefactor) {
         if (workflowPhase.checkInfraDefinitionTemplatized()) {
-          String infraVarName = workflowPhase.fetchInfraDefinitionTemplatizedName();
-          Variable variable = contains(userVariables, infraVarName);
-          if (variable != null) {
-            if (!workflow.checkEnvironmentTemplatized()) {
-              variable.getMetadata().put("envId", workflow.getEnvId());
-            }
-            if (!workflowPhase.checkServiceTemplatized()) {
-              variable.getMetadata().put("serviceId", workflowPhase.getServiceId());
-            }
-          }
+          updateMetadataInfraDefinition(workflow, workflowPhase);
         }
       } else {
         if (workflowPhase.checkInfraTemplatized()) {
-          String infraVarName = workflowPhase.fetchInfraMappingTemplatizedName();
-          // if env is not templatised add envId in metadata
-          Variable variable = contains(userVariables, infraVarName);
-          if (variable != null) {
-            if (!workflow.checkEnvironmentTemplatized()) {
-              variable.getMetadata().put("envId", workflow.getEnvId());
-            } else {
-              variable.getMetadata().put("envId", "");
-            }
-            if (!workflowPhase.checkServiceTemplatized()) {
-              variable.getMetadata().put("serviceId", workflowPhase.getServiceId());
-            } else {
-              variable.getMetadata().put("serviceId", "");
-            }
-          }
+          updateMetadataInfraMapping(workflow, workflowPhase);
         }
       }
     }
@@ -383,6 +352,53 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     }
     populatePhaseSteps(postDeploymentSteps, getGraph());
     reorderUserVariables();
+  }
+  private void updateMetadataInfraMapping(Workflow workflow, WorkflowPhase workflowPhase) {
+    String infraVarName = workflowPhase.fetchInfraMappingTemplatizedName();
+    // if env is not templatised add envId in metadata
+    Variable variable = contains(userVariables, infraVarName);
+    if (variable != null) {
+      if (!workflow.checkEnvironmentTemplatized()) {
+        variable.getMetadata().put(Variable.ENV_ID, workflow.getEnvId());
+      } else {
+        variable.getMetadata().remove(Variable.ENV_ID);
+      }
+      if (!workflowPhase.checkServiceTemplatized()) {
+        variable.getMetadata().put(Variable.SERVICE_ID, workflowPhase.getServiceId());
+      } else {
+        variable.getMetadata().remove(Variable.SERVICE_ID);
+      }
+    }
+  }
+
+  private void updateMetadataInfraDefinition(Workflow workflow, WorkflowPhase workflowPhase) {
+    String infraVarName = workflowPhase.fetchInfraDefinitionTemplatizedName();
+    Variable variable = contains(userVariables, infraVarName);
+    if (variable != null && variable.getMetadata() != null
+        && !variable.getMetadata().containsKey(Variable.RELATED_FIELD)) {
+      if (!workflow.checkEnvironmentTemplatized()) {
+        variable.getMetadata().put(Variable.ENV_ID, workflow.getEnvId());
+      } else {
+        variable.getMetadata().remove(Variable.ENV_ID);
+      }
+      if (!workflowPhase.checkServiceTemplatized()) {
+        variable.getMetadata().put(Variable.SERVICE_ID, workflowPhase.getServiceId());
+      } else {
+        variable.getMetadata().remove(Variable.SERVICE_ID);
+      }
+    }
+  }
+
+  private void updateRelatedFieldEnv(boolean infraRefactor, Workflow workflow) {
+    String envVarName = workflow.fetchEnvTemplatizedName();
+    Variable variable = contains(userVariables, envVarName);
+    if (variable != null && variable.getMetadata() != null) {
+      if (infraRefactor) {
+        variable.getMetadata().put(Variable.RELATED_FIELD, Joiner.on(",").join(fetchInfraDefVariableNames()));
+      } else {
+        variable.getMetadata().put(Variable.RELATED_FIELD, Joiner.on(",").join(fetchInfraMappingVariableNames()));
+      }
+    }
   }
 
   private List<String> fetchInfraMappingVariableNames() {
