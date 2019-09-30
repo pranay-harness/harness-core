@@ -8,7 +8,6 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.sm.StateType.APM_VERIFICATION;
@@ -525,33 +524,33 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     RestResponse<APMCVServiceConfiguration> getRequestResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<APMCVServiceConfiguration>>() {});
     APMCVServiceConfiguration fetchedObject = getRequestResponse.getResource();
-    assertEquals(savedObjectUuid, fetchedObject.getUuid());
-    assertEquals(accountId, fetchedObject.getAccountId());
-    assertEquals(appId, fetchedObject.getAppId());
-    assertEquals(envId, fetchedObject.getEnvId());
-    assertEquals(serviceId, fetchedObject.getServiceId());
-    assertEquals(APM_VERIFICATION, fetchedObject.getStateType());
-    assertEquals(AnalysisTolerance.MEDIUM, fetchedObject.getAnalysisTolerance());
+    assertThat(savedObjectUuid).isEqualTo(fetchedObject.getUuid());
+    assertThat(accountId).isEqualTo(fetchedObject.getAccountId());
+    assertThat(appId).isEqualTo(fetchedObject.getAppId());
+    assertThat(envId).isEqualTo(fetchedObject.getEnvId());
+    assertThat(serviceId).isEqualTo(fetchedObject.getServiceId());
+    assertThat(APM_VERIFICATION).isEqualTo(fetchedObject.getStateType());
+    assertThat(AnalysisTolerance.MEDIUM).isEqualTo(fetchedObject.getAnalysisTolerance());
 
     List<MetricCollectionInfo> metricCollectionInfos = fetchedObject.getMetricCollectionInfos();
-    assertEquals(1, metricCollectionInfos.size());
+    assertThat(1).isEqualTo(metricCollectionInfos.size());
     MetricCollectionInfo metricCollectionInfo = metricCollectionInfos.get(0);
-    assertEquals("metricName", metricCollectionInfo.getMetricName());
-    assertEquals("dummyuri", metricCollectionInfo.getCollectionUrl());
-    assertEquals("bodycollection", metricCollectionInfo.getCollectionBody());
-    assertEquals(MetricType.INFRA, metricCollectionInfo.getMetricType());
-    assertEquals(Method.POST, metricCollectionInfo.getMethod());
-    assertEquals(ResponseType.JSON, metricCollectionInfo.getResponseType());
+    assertThat("metricName").isEqualTo(metricCollectionInfo.getMetricName());
+    assertThat("dummyuri").isEqualTo(metricCollectionInfo.getCollectionUrl());
+    assertThat("bodycollection").isEqualTo(metricCollectionInfo.getCollectionBody());
+    assertThat(MetricType.INFRA).isEqualTo(metricCollectionInfo.getMetricType());
+    assertThat(Method.POST).isEqualTo(metricCollectionInfo.getMethod());
+    assertThat(ResponseType.JSON).isEqualTo(metricCollectionInfo.getResponseType());
 
     ResponseMapping responseMapping = metricCollectionInfo.getResponseMapping();
-    assertEquals("timestamppath", responseMapping.getTimestampJsonPath());
-    assertEquals("queries[*].results.[0].name", responseMapping.getTxnNameFieldValue());
-    assertEquals("hostpath", responseMapping.getHostJsonPath());
-    assertEquals("hostregex", responseMapping.getHostRegex());
-    assertEquals("sometxnname", responseMapping.getTxnNameRegex());
-    assertEquals("somemetricjsonpath", responseMapping.getMetricValueJsonPath());
-    assertEquals("formattimestamp", responseMapping.getTimestampFormat());
-    assertEquals("somejsonpath", responseMapping.getTxnNameJsonPath());
+    assertThat("timestamppath").isEqualTo(responseMapping.getTimestampJsonPath());
+    assertThat("queries[*].results.[0].name").isEqualTo(responseMapping.getTxnNameFieldValue());
+    assertThat("hostpath").isEqualTo(responseMapping.getHostJsonPath());
+    assertThat("hostregex").isEqualTo(responseMapping.getHostRegex());
+    assertThat("sometxnname").isEqualTo(responseMapping.getTxnNameRegex());
+    assertThat("somemetricjsonpath").isEqualTo(responseMapping.getMetricValueJsonPath());
+    assertThat("formattimestamp").isEqualTo(responseMapping.getTimestampFormat());
+    assertThat("somejsonpath").isEqualTo(responseMapping.getTxnNameJsonPath());
   }
 
   @Test

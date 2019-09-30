@@ -27,7 +27,6 @@ import static software.wings.beans.EntityType.NEWRELIC_CONFIGID;
 import static software.wings.beans.EntityType.NEWRELIC_MARKER_CONFIGID;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.PipelineExecution.PIPELINE_ID_KEY;
-import static software.wings.common.Constants.PIPELINE_ENV_STATE_VALIDATION_MESSAGE;
 import static software.wings.expression.ManagerExpressionEvaluator.getName;
 import static software.wings.expression.ManagerExpressionEvaluator.matchesVariablePattern;
 import static software.wings.sm.StateType.ENV_STATE;
@@ -124,6 +123,9 @@ import javax.validation.executable.ValidateOnExecution;
 public class PipelineServiceImpl implements PipelineService {
   private static final Set<Character> ALLOWED_CHARS_SET_PIPELINE_STAGE =
       Sets.newHashSet(Lists.charactersOf("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_ ()"));
+
+  private static final String PIPELINE_ENV_STATE_VALIDATION_MESSAGE =
+      "Some workflows %s are found to be invalid/incomplete.";
 
   @Inject private AppService appService;
   @Inject private ExecutorService executorService;
