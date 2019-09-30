@@ -1,7 +1,7 @@
 package software.wings.beans;
 
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
 import io.harness.distribution.constraint.Constraint;
@@ -33,7 +33,7 @@ import javax.validation.constraints.NotNull;
 @Indexes(@Index(
     options = @IndexOptions(unique = true, name = "uniqueName"), fields = { @Field("accountId")
                                                                             , @Field("name") }))
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)

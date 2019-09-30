@@ -4,7 +4,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.encryption.Encrypted;
@@ -35,7 +35,7 @@ import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 @FieldNameConstants(innerTypeName = "AccountKeys")
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "accounts", noClassnameStored = true)
 public class Account extends Base implements PersistentRegularIterable {

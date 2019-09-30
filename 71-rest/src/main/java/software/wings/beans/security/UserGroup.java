@@ -7,7 +7,7 @@ import com.google.common.collect.ImmutableSet;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.notifications.NotificationReceiverInfo;
@@ -44,7 +44,7 @@ import javax.annotation.Nullable;
  */
 @JsonInclude(NON_EMPTY)
 @Entity(value = "userGroups", noClassnameStored = true)
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)

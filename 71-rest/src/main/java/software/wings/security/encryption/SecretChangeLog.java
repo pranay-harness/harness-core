@@ -1,5 +1,6 @@
 package software.wings.security.encryption;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,6 +27,7 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "secretChangeLogs", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Indexes({
   @Index(fields = {
     @Field("accountId"), @Field("encryptedDataId")

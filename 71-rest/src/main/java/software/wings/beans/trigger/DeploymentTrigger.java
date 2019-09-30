@@ -5,7 +5,7 @@ import static software.wings.scheduler.ScheduledTriggerJob.PREFIX;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
@@ -59,7 +59,7 @@ import javax.validation.constraints.NotNull;
       }), @Index(options = @IndexOptions(name = "iterations"), fields = { @Field("type")
                                                                           , @Field("nextIterations") })
 })
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "DeploymentTriggerKeys")
 public class DeploymentTrigger implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                           UpdatedByAware, PersistentCronIterable, TagAware, ApplicationAccess {

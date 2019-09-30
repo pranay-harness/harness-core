@@ -3,12 +3,14 @@ package software.wings.beans;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.utils.CryptoUtils.secureRandAlphaNumString;
 
+import io.harness.annotation.HarnessEntity;
 import org.mongodb.morphia.annotations.Entity;
 
 /**
  * Created by rsingh on 06/21/17.
  */
 @Entity(value = "externalServiceAuthTokens", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class ExternalServiceAuthToken extends Base {
   private long expireAt;
 

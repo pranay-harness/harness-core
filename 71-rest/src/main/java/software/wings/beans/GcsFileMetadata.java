@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -31,7 +31,7 @@ import java.util.Map;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "gcsFileMetadata", noClassnameStored = true)
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "GcsFileMetadataKeys")
 public class GcsFileMetadata extends Base {
   @NotEmpty private String accountId;

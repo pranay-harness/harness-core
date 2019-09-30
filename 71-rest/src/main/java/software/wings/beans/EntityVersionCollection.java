@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -20,7 +20,7 @@ import software.wings.yaml.BaseYaml;
     fields = { @Field("entityType")
                , @Field("entityUuid"), @Field("version") }))
 @Entity(value = "entityVersions", noClassnameStored = true)
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "EntityVersionCollectionKeys")
 public class EntityVersionCollection extends EntityVersion {
   public static final class Builder {

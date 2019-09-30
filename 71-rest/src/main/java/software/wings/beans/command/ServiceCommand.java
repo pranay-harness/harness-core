@@ -9,7 +9,7 @@ import com.google.common.collect.Maps;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
@@ -26,7 +26,7 @@ import java.util.Optional;
  * Created by peeyushaggarwal on 11/16/16.
  */
 @Entity(value = "serviceCommands", noClassnameStored = true)
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ServiceCommandKeys")
 public class ServiceCommand extends Base {
   public static final String TEMPLATE_UUID_KEY = "templateUuid";

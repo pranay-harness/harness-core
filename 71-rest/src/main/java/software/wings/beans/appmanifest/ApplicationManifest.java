@@ -1,6 +1,6 @@
 package software.wings.beans.appmanifest;
 
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -18,7 +18,7 @@ import software.wings.beans.HelmChartConfig;
 import software.wings.yaml.BaseEntityYaml;
 
 @Entity("applicationManifests")
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Indexes(@Index(options = @IndexOptions(name = "appManifestIdx", unique = true),
     fields = { @Field("appId")
                , @Field("envId"), @Field("serviceId"), @Field("kind") }))

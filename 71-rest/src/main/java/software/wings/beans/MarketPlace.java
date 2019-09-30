@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -22,6 +23,7 @@ import java.util.Date;
 import javax.validation.constraints.NotNull;
 
 @Entity(value = "marketPlaces", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)

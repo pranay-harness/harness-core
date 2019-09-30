@@ -1,5 +1,6 @@
 package software.wings.search.framework;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.persistence.PersistentEntity;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
@@ -16,6 +17,7 @@ import org.mongodb.morphia.annotations.Id;
 
 @Value
 @Entity(value = "searchEntitiesVersion", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "SearchEntityVersionKeys")
 @Slf4j
 public class SearchEntityVersion implements PersistentEntity {

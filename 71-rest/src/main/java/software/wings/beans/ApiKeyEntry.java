@@ -1,7 +1,7 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonView;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
@@ -21,7 +21,7 @@ import java.util.List;
 @Data
 @Builder
 @Entity(value = "apiKeys", noClassnameStored = true)
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ApiKeyEntryKeys")
 public class ApiKeyEntry implements PersistentEntity, UuidAccess, CreatedAtAccess {
   @Id private String uuid;

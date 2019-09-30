@@ -9,6 +9,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
@@ -58,6 +59,7 @@ import javax.validation.constraints.NotNull;
 @Builder
 @FieldNameConstants(innerTypeName = "WorkflowExecutionKeys")
 @Entity(value = "workflowExecutions", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Indexes({
   @Index(options = @IndexOptions(name = "search"),
       fields = { @Field(WorkflowExecutionKeys.workflowId)

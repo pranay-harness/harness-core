@@ -1,5 +1,6 @@
 package software.wings.prune;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.queue.Queuable;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -12,6 +13,7 @@ import java.util.Date;
 @Value
 @EqualsAndHashCode(callSuper = true)
 @Entity(value = "pruneQueue", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class PruneEvent extends Queuable {
   public static final Duration DELAY = Duration.ofSeconds(5);
   public static final int MAX_RETRIES = 24;

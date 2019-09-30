@@ -1,5 +1,6 @@
 package software.wings.api;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.queue.Queuable;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
@@ -18,6 +19,7 @@ import org.mongodb.morphia.annotations.Entity;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "kmsTransitionEvent", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class KmsTransitionEvent extends Queuable {
   private String entityId;
   private EncryptionType fromEncryptionType;

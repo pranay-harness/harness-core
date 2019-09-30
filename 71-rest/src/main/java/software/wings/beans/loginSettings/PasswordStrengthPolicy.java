@@ -1,10 +1,10 @@
 package software.wings.beans.loginSettings;
 
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import lombok.Builder;
 import lombok.Data;
 
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Data
 @Builder
 public class PasswordStrengthPolicy {

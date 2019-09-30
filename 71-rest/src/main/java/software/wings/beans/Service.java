@@ -4,7 +4,7 @@ import static java.util.Arrays.asList;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
@@ -47,7 +47,7 @@ import java.util.Set;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("appId")
                                                                                   , @Field("name") }))
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)

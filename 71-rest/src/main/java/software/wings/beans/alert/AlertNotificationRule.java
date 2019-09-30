@@ -1,6 +1,7 @@
 package software.wings.beans.alert;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.annotation.HarnessEntity;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -19,6 +20,7 @@ import java.util.Set;
 
 @Getter
 @Entity(value = "alertNotificationRules", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)

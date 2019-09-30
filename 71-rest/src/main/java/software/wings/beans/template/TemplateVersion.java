@@ -1,5 +1,6 @@
 package software.wings.beans.template;
 
+import io.harness.annotation.HarnessEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,6 +18,7 @@ import software.wings.beans.Base;
     fields = { @Field("templateUuid")
                , @Field("version") }, options = @IndexOptions(name = "yaml", unique = true)))
 @Entity(value = "templateVersions", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 @Data
 @Builder
 @NoArgsConstructor

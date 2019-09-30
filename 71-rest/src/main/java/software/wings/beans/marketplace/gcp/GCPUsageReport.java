@@ -2,7 +2,7 @@ package software.wings.beans.marketplace.gcp;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAccess;
@@ -22,7 +22,7 @@ import java.time.Instant;
 import javax.validation.constraints.NotNull;
 
 @Entity(value = "gcpUsageReport", noClassnameStored = true)
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Indexes(@Index(fields = { @Field("accountId")
                            , @Field("startTimestamp") },
     options = @IndexOptions(unique = true, name = "accountId_startTimestamp_unique_idx", background = true)))

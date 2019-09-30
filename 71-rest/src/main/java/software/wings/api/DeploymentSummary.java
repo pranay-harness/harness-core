@@ -1,5 +1,6 @@
 package software.wings.api;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Data;
@@ -15,6 +16,7 @@ import software.wings.beans.infrastructure.instance.key.deployment.PcfDeployment
 import software.wings.beans.infrastructure.instance.key.deployment.SpotinstAmiDeploymentKey;
 
 @Entity(value = "deploymentSummary", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class DeploymentSummary extends Base {

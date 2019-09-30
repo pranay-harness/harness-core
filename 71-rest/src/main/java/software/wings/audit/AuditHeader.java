@@ -1,6 +1,7 @@
 package software.wings.audit;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -30,6 +31,7 @@ import java.util.List;
  * @author Rishi
  */
 @Entity(value = "audits", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "AuditHeaderKeys")
 @Indexes({

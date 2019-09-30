@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.expression.ExpressionEvaluator;
@@ -47,7 +47,7 @@ import java.util.Set;
 @JsonTypeName("COMMAND")
 @Attributes(title = "Command")
 @Entity(value = "commands")
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true),
     fields = { @Field("appId")
                , @Field("originEntityId"), @Field("version") }))

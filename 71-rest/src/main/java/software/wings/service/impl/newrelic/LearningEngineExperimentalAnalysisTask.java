@@ -3,6 +3,7 @@ package software.wings.service.impl.newrelic;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.beans.ExecutionStatus;
 import lombok.Builder;
@@ -33,6 +34,7 @@ import java.util.concurrent.TimeUnit;
  * Created by rsingh on 1/8/18.
  */
 @Entity(value = "learningEngineExperimentalAnalysisTask", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Indexes({
   @Index(fields = {
     @Field("workflow_execution_id")

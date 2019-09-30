@@ -4,7 +4,7 @@ import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
@@ -25,7 +25,7 @@ import java.util.List;
  * Created by anubhaw on 3/6/17.
  */
 @Entity(value = "userInvites", noClassnameStored = true)
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 //@Indexes(@Index(fields = {@Field("accountId"), @Field("email")}, options = @IndexOptions(unique = true))) //TODO:
 // handle update with insert and then uncomment
 @FieldNameConstants(innerTypeName = "UserInviteKeys")

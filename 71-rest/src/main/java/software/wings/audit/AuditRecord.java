@@ -1,5 +1,6 @@
 package software.wings.audit;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -24,6 +25,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @Builder
 @Entity(value = "entityAuditRecords", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "AuditRecordKeys")
 @Indexes({
   @Index(fields = {

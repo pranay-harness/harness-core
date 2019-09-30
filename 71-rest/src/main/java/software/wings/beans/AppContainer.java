@@ -2,7 +2,7 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.experimental.FieldNameConstants;
 import org.glassfish.jersey.media.multipart.FormDataParam;
@@ -25,7 +25,7 @@ import java.util.Objects;
     @Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("accountId")
                                                                              , @Field("name") }))
 @Entity(value = "appContainers", noClassnameStored = true)
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "AppContainerKeys")
 public class AppContainer extends BaseFile {
   @FormDataParam("standard") private boolean standard;

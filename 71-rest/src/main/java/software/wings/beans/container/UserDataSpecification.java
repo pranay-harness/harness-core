@@ -1,6 +1,6 @@
 package software.wings.beans.container;
 
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -18,7 +18,7 @@ import javax.validation.constraints.NotNull;
  * Created by anubhaw on 12/18/17.
  */
 @Entity("userDataSpecifications")
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)

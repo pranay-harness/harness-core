@@ -2,7 +2,7 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.utils.ContainerFamily;
@@ -14,7 +14,7 @@ import java.util.Objects;
  * Created by sgurubelli on 5/23/17.
  */
 @Entity(value = "systemCatalogs", noClassnameStored = true)
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 public class SystemCatalog extends BaseFile {
   private CatalogType catalogType;
   private String stackRootDirectory;

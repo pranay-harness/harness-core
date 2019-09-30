@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
@@ -37,6 +38,7 @@ import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 @Entity(value = "activities", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "ActivityKeys")

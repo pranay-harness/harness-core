@@ -2,7 +2,7 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -30,7 +30,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @Builder
 @Indexes({ @Index(fields = { @Field("accountId") }, options = @IndexOptions(name = "delegateAccountIdIdx")) })
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "DelegateKeys")
 public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, PersistentRegularIterable {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;

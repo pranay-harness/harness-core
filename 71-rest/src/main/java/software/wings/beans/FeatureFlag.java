@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.annotation.HarnessEntity;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
@@ -15,6 +16,7 @@ import java.util.Set;
 @Data
 @Builder
 @Entity(value = "featureFlag", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @JsonIgnoreProperties({"obsolete", "accountIds"})
 @FieldNameConstants(innerTypeName = "FeatureFlagKeys")
 public class FeatureFlag implements PersistentEntity, UuidAware, UpdatedAtAware {

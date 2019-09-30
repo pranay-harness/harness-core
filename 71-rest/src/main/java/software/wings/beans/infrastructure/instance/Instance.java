@@ -1,5 +1,6 @@
 package software.wings.beans.infrastructure.instance;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Data;
@@ -28,6 +29,7 @@ import software.wings.beans.infrastructure.instance.key.PodInstanceKey;
  * @author rktummala
  */
 @Entity(value = "instance", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Indexes({

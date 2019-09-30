@@ -2,6 +2,7 @@ package software.wings.scheduler.events.segment;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessEntity;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.persistence.CreatedAtAccess;
@@ -19,6 +20,7 @@ import javax.validation.constraints.NotNull;
 
 @Value
 @Entity(value = "segmentGroupEventJobContexts")
+@HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "SegmentGroupEventJobContextKeys")
 public class SegmentGroupEventJobContext implements PersistentRegularIterable, CreatedAtAccess, UpdatedAtAccess {
   @Id private String uuid;

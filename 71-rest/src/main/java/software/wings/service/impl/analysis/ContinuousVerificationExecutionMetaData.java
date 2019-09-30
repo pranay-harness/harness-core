@@ -4,6 +4,7 @@ import static software.wings.common.VerificationConstants.ML_RECORDS_TTL_MONTHS;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ExecutionStatus;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -25,6 +26,7 @@ import java.time.OffsetDateTime;
 import java.util.Date;
 
 @Entity(value = "cvExecutionData", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})

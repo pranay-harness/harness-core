@@ -4,6 +4,7 @@ import com.google.common.base.MoreObjects;
 
 import com.amazonaws.services.ec2.model.Instance;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -18,6 +19,7 @@ import java.util.Objects;
  * The Class Host.
  */
 @Entity(value = "hosts", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "HostKeys")
 public class Host extends Base {

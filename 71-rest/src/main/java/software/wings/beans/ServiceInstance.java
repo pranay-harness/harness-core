@@ -3,6 +3,7 @@ package software.wings.beans;
 import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import lombok.experimental.FieldNameConstants;
@@ -17,6 +18,7 @@ import java.util.Objects;
  * The Class ServiceInstance.
  */
 @Entity(value = "serviceInstance", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "ServiceInstanceKeys")
 public class ServiceInstance extends Base {
   private String envId;

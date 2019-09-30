@@ -4,7 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
 import lombok.Data;
@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 @Entity(value = "artifacts", noClassnameStored = true)
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)

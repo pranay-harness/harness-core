@@ -10,6 +10,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.encoding.EncodingUtils;
 import io.harness.exception.WingsException;
@@ -51,6 +52,7 @@ import java.util.Map;
  * Created by rsingh on 6/23/17.
  */
 @Entity(value = "logAnalysisRecords", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Indexes({
   @Index(fields =
       { @Field("cvConfigId")

@@ -1,5 +1,6 @@
 package software.wings.beans.trigger;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import lombok.Builder;
@@ -22,6 +23,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Entity(value = "triggerExecutions")
+@HarnessEntity(exportable = false)
 public class TriggerExecution extends Base {
   public static final String TRIGGER_ID_KEY = "triggerId";
   public static final String WEBHOOK_TOKEN_KEY = "webhookToken";

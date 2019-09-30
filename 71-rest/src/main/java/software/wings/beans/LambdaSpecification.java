@@ -2,7 +2,7 @@ package software.wings.beans;
 
 import static org.apache.commons.lang3.StringUtils.trim;
 
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -19,7 +19,7 @@ import java.util.List;
 import javax.validation.Valid;
 
 @Entity("lambdaSpecifications")
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)

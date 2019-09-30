@@ -1,5 +1,6 @@
 package software.wings.yaml.errorhandling;
 
+import io.harness.annotation.HarnessEntity;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -15,6 +16,7 @@ import software.wings.beans.Base;
  * @author rktummala on 12/15/17
  */
 @Entity(value = "gitSyncError")
+@HarnessEntity(exportable = false)
 @Indexes(@Index(fields = { @Field("accountId")
                            , @Field("yamlFilePath") },
     options = @IndexOptions(unique = true, name = "uniqueIdx")))

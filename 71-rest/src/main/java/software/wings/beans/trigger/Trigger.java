@@ -5,7 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import io.harness.persistence.NameAccess;
@@ -49,7 +49,7 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "TriggerKeys")
 @Entity(value = "triggers")
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Indexes({
   @Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("appId")
                                                                            , @Field("name") })

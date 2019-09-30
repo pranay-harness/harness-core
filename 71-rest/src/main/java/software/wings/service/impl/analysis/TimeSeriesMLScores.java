@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Data;
@@ -21,6 +22,7 @@ import java.util.Map;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "timeSeriesMLScores", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "TimeSeriesMLScoresKeys")
 public class TimeSeriesMLScores extends Base {
   @NotEmpty private StateType stateType;

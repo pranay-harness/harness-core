@@ -9,7 +9,7 @@ import static java.util.Arrays.asList;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.persistence.NameAccess;
@@ -42,7 +42,7 @@ import javax.validation.constraints.NotNull;
  * @author Rishi
  */
 @Entity(value = "pipelines", noClassnameStored = true)
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

@@ -1,6 +1,6 @@
 package software.wings.beans.appmanifest;
 
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,7 +16,7 @@ import software.wings.beans.Base;
 import software.wings.yaml.BaseEntityYaml;
 
 @Entity("manifestFile")
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Indexes(@Index(options = @IndexOptions(name = "manifestFileIdx", unique = true),
     fields = { @Field("applicationManifestId")
                , @Field("fileName") }))

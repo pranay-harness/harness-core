@@ -11,7 +11,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import io.harness.data.validator.EntityName;
@@ -40,7 +40,7 @@ import javax.validation.constraints.NotNull;
  * @author Rishi
  */
 @Entity(value = "workflows", noClassnameStored = true)
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "WorkflowKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Workflow extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, ApplicationAccess {

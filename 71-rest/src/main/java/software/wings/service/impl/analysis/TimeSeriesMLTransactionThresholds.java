@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import io.harness.annotation.HarnessEntity;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -15,6 +16,7 @@ import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.sm.StateType;
 
 @Entity(value = "timeseriesTransactionThresholds", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Indexes({
   @Index(fields = {
     @Field("appId")

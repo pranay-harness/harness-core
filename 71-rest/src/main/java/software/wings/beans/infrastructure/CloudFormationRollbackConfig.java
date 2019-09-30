@@ -1,7 +1,7 @@
 package software.wings.beans.infrastructure;
 
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -22,7 +22,7 @@ import javax.validation.constraints.NotNull;
 @Builder(toBuilder = true)
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "cloudFormationRollbackConfig")
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "CloudFormationRollbackConfigKeys")
 public class CloudFormationRollbackConfig implements PersistentEntity, UuidAware, CreatedAtAware {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;

@@ -1,5 +1,6 @@
 package software.wings.api;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.queue.Queuable;
 import lombok.Builder;
 import lombok.Data;
@@ -16,6 +17,7 @@ import java.util.List;
  *
  */
 @Entity(value = "instanceChangeQueue", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)

@@ -1,5 +1,6 @@
 package io.harness.limits.checker.rate;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.persistence.PersistentEntity;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
@@ -13,6 +14,7 @@ import java.util.List;
  */
 @Value
 @Entity(value = "usageBuckets", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "UsageBucketKeys")
 public class UsageBucket implements PersistentEntity {
   // key which uniquely identifies this bucket

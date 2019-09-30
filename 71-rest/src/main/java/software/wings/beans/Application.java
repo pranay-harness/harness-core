@@ -4,7 +4,7 @@ import static java.util.Arrays.asList;
 
 import com.google.common.base.MoreObjects;
 
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.persistence.NameAccess;
 import lombok.Data;
@@ -40,7 +40,7 @@ import java.util.Set;
  * @author Rishi
  */
 @Entity(value = "applications", noClassnameStored = true)
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ApplicationKeys")
 @Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true),
     fields = { @Field(ApplicationKeys.accountId)

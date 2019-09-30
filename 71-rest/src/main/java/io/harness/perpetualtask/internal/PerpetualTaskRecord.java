@@ -1,5 +1,6 @@
 package io.harness.perpetualtask.internal;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskType;
@@ -25,6 +26,7 @@ import org.mongodb.morphia.annotations.Indexed;
 @FieldNameConstants(innerTypeName = "PerpetualTaskRecordKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(value = "perpetualTask", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class PerpetualTaskRecord
     implements PersistentEntity, UuidAware, PersistentRegularIterable, CreatedAtAware, UpdatedAtAware {
   @Id String uuid;

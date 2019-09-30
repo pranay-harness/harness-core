@@ -1,5 +1,6 @@
 package io.harness.beans;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.DelegateTask.ParametersConverter;
 import io.harness.beans.DelegateTask.ResponseDataConverter;
 import io.harness.delegate.beans.ResponseData;
@@ -34,6 +35,7 @@ import javax.validation.constraints.NotNull;
 @Builder
 @EqualsAndHashCode(exclude = {"uuid", "createdAt", "lastUpdatedAt", "validUntil"})
 @Entity(value = "delegateTasks", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Converters({ParametersConverter.class, ResponseDataConverter.class})
 @FieldNameConstants(innerTypeName = "DelegateTaskKeys")
 public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {

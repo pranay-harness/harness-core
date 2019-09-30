@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
 import io.harness.persistence.NameAccess;
@@ -34,7 +34,7 @@ import javax.validation.Valid;
       @Type(value = CloudFormationInfrastructureProvisioner.class, name = "CLOUD_FORMATION")
 })
 @Entity(value = "infrastructureProvisioner")
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "InfrastructureProvisionerKeys")
 public abstract class InfrastructureProvisioner
     extends Base implements NameAccess, TagAware, AccountAccess, ApplicationAccess {

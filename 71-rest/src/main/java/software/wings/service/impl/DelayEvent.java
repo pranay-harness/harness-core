@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.queue.Queuable;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -9,6 +10,7 @@ import java.util.Date;
 import java.util.Map;
 
 @Entity(value = "delayQueue", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Value
 @EqualsAndHashCode(callSuper = false)
 public class DelayEvent extends Queuable {

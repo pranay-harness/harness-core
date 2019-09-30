@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -26,6 +27,7 @@ import java.util.List;
 import javax.validation.constraints.NotNull;
 
 @Entity(value = "barrierInstances", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Indexes({
   @Index(options = @IndexOptions(name = "search2", unique = true),
       fields = { @Field("name")

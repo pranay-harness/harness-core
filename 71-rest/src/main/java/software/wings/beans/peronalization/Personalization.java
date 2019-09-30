@@ -1,6 +1,6 @@
 package software.wings.beans.peronalization;
 
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.persistence.PersistentEntity;
 import lombok.Builder;
 import lombok.Value;
@@ -20,7 +20,7 @@ import java.util.Set;
 
 @Value
 @Builder
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Entity(value = "personalization", noClassnameStored = true)
 @Indexes(@Index(options = @IndexOptions(name = "identification", unique = true),
     fields = { @Field("accountId")

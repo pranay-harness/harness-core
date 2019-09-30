@@ -7,6 +7,7 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SortOrder;
 import io.harness.exception.WingsException;
@@ -37,6 +38,7 @@ import java.util.List;
  * Created by rsingh on 08/30/17.
  */
 @Entity(value = "newRelicMetricAnalysisRecords", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Indexes({
   @Index(fields = {
     @Field("workflowExecutionId"), @Field("stateExecutionId"), @Field("groupName"), @Field("analysisMinute")

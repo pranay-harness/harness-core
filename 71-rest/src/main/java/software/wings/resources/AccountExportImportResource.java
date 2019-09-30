@@ -20,7 +20,7 @@ import com.google.inject.name.Named;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.PersistentEntity;
@@ -38,7 +38,6 @@ import org.mongodb.morphia.query.Query;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.Application;
-import software.wings.beans.Base;
 import software.wings.beans.GitCommit;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LicenseInfo;
@@ -137,7 +136,7 @@ public class AccountExportImportResource {
   private UsageRestrictionsService usageRestrictionsService;
   private AccountPermissionUtils accountPermissionUtils;
 
-  private Map<String, Class<? extends Base>> genericExportableEntityTypes = new LinkedHashMap<>();
+  private Map<String, Class<? extends PersistentEntity>> genericExportableEntityTypes = new LinkedHashMap<>();
   private Gson gson = new GsonBuilder().setPrettyPrinting().create();
   private JsonParser jsonParser = new JsonParser();
 
@@ -255,9 +254,9 @@ public class AccountExportImportResource {
     exportConfigFilesContent(zipOutputStream, fileOutputStream, accountOrAppIdsFilter);
 
     // 6. Export all other Harness entities that has @Entity annotation excluding what's in the blacklist.
-    for (Entry<String, Class<? extends Base>> entry : genericExportableEntityTypes.entrySet()) {
+    for (Entry<String, Class<? extends PersistentEntity>> entry : genericExportableEntityTypes.entrySet()) {
       if (isExportable(toBeExported, entry.getKey())) {
-        Class<? extends Base> entityClazz = entry.getValue();
+        Class<? extends PersistentEntity> entityClazz = entry.getValue();
         if (entityClazz != null) {
           final DBObject exportFilter;
           // 'gitCommits' and 'yamlChangeSet' need special export filter.
@@ -460,7 +459,7 @@ public class AccountExportImportResource {
     }
 
     // 6. Import all other entity types.
-    for (Entry<String, Class<? extends Base>> entry : genericExportableEntityTypes.entrySet()) {
+    for (Entry<String, Class<? extends PersistentEntity>> entry : genericExportableEntityTypes.entrySet()) {
       String collectionName = getCollectionName(entry.getValue());
       JsonArray jsonArray = getJsonArray(zipEntryDataMap, collectionName, clashedUserIdMapping);
       if (jsonArray == null) {
@@ -738,9 +737,9 @@ public class AccountExportImportResource {
   @SuppressWarnings("unchecked")
   private void findExportableEntityTypes() {
     morphia.getMapper().getMappedClasses().forEach(mc -> {
-      Class<? extends Base> clazz = (Class<? extends Base>) mc.getClazz();
-      if (mc.getEntityAnnotation() != null && clazz.isAnnotationPresent(HarnessExportableEntity.class)) {
-        // Find out non-abstract classes with both 'Entity' and 'HarnessExportableEntity' annotation.
+      Class<? extends PersistentEntity> clazz = (Class<? extends PersistentEntity>) mc.getClazz();
+      if (mc.getEntityAnnotation() != null && isAnnotatedExportable(clazz)) {
+        // Find out non-abstract classes with both 'Entity' and 'HarnessEntity' annotation.
         String mongoCollectionName = mc.getEntityAnnotation().value();
         if (!includedMongoCollections.contains(mongoCollectionName)) {
           logger.debug("Collection '{}' is exportable", mongoCollectionName);
@@ -748,6 +747,11 @@ public class AccountExportImportResource {
         }
       }
     });
+  }
+
+  private boolean isAnnotatedExportable(Class<? extends PersistentEntity> clazz) {
+    HarnessEntity harnessEntity = clazz.getAnnotation(HarnessEntity.class);
+    return harnessEntity != null && harnessEntity.exportable();
   }
 
   private Map<String, Boolean> getToBeExported(ExportMode exportType, List<String> entityTypes) {

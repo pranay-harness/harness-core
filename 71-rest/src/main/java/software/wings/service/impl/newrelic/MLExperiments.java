@@ -1,5 +1,6 @@
 package software.wings.service.impl.newrelic;
 
+import io.harness.annotation.HarnessEntity;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -13,6 +14,7 @@ import software.wings.beans.Base;
 import software.wings.service.impl.analysis.MLAnalysisType;
 
 @Entity(value = "mlExperiments", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Indexes({
   @Index(fields = {
     @Field("ml_analysis_type"), @Field("experimentName")

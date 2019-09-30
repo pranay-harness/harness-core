@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import lombok.Builder;
@@ -16,6 +17,7 @@ import org.mongodb.morphia.annotations.Indexed;
 @Data
 @NoArgsConstructor
 @Entity(value = "harnessApiKeys", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "HarnessApiKeyKeys")
 public class HarnessApiKey implements PersistentEntity, UuidAware {
   @Id private String uuid;

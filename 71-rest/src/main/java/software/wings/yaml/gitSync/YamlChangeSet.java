@@ -1,5 +1,6 @@
 package software.wings.yaml.gitSync;
 
+import io.harness.annotation.HarnessEntity;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -22,6 +23,7 @@ import javax.validation.constraints.NotNull;
  * @author bsollish 9/26/17
  */
 @Entity(value = "yamlChangeSet")
+@HarnessEntity(exportable = false)
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Indexes({ @Index(fields = { @Field("accountId")

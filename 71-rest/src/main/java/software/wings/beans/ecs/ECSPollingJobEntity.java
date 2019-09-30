@@ -2,7 +2,7 @@ package software.wings.beans.ecs;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.UpdatedAtAccess;
@@ -21,7 +21,7 @@ import javax.validation.constraints.NotNull;
 
 @Entity(value = "ecsPollingJobEntity")
 @FieldNameConstants(innerTypeName = "ECSPollingJobEntityKeys")
-@HarnessExportableEntity
+@HarnessEntity(exportable = false)
 @Getter
 @ToString
 @EqualsAndHashCode

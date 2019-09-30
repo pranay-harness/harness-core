@@ -4,7 +4,7 @@ import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 
 import com.google.common.base.MoreObjects;
 
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,7 +31,7 @@ import java.util.Objects;
 @Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true),
     fields = { @Field("appId")
                , @Field("envId"), @Field("name") }))
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ServiceTemplateKeys")
 public class ServiceTemplate extends Base {
   public static final String SERVICE_ID_KEY = "serviceId";

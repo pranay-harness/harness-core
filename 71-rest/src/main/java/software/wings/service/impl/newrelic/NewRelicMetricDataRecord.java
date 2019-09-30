@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.beans.EmbeddedUser;
 import io.harness.persistence.GoogleDataStoreAware;
@@ -48,6 +49,7 @@ import java.util.Map;
  * Created by rsingh on 08/30/17.
  */
 @Entity(value = "newRelicMetricRecords", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 
 @Indexes({
   @Index(fields =

@@ -1,6 +1,7 @@
 package software.wings.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.annotation.HarnessEntity;
 import io.harness.queue.Queuable;
 import lombok.Builder;
 import lombok.Data;
@@ -15,6 +16,7 @@ import software.wings.service.impl.event.timeseries.TimeSeriesEventInfo;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "deploymentTimeSeriesEventQueue", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)

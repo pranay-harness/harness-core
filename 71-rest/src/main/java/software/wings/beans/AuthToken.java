@@ -3,7 +3,7 @@ package software.wings.beans;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.utils.CryptoUtils.secureRandAlphaNumString;
 
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
@@ -17,7 +17,7 @@ import java.util.Date;
 
 @Entity(value = "authTokens", noClassnameStored = true)
 @Data
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "AuthTokenKeys")
 public class AuthToken extends Base {

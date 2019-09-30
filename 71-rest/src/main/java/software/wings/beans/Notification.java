@@ -5,6 +5,7 @@ import com.google.common.base.MoreObjects;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
+import io.harness.annotation.HarnessEntity;
 import org.mongodb.morphia.annotations.Entity;
 
 import java.util.HashMap;
@@ -15,6 +16,7 @@ import javax.validation.constraints.NotNull;
  * Created by anubhaw on 7/22/16.
  */
 @Entity(value = "notifications")
+@HarnessEntity(exportable = false)
 @JsonTypeInfo(use = Id.NAME, property = "notificationType", include = As.EXISTING_PROPERTY)
 public abstract class Notification extends Base {
   private String environmentId;

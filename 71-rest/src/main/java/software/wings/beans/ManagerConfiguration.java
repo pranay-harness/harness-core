@@ -1,11 +1,13 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.annotation.HarnessEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
 
 @Entity(value = "managerConfiguration", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)

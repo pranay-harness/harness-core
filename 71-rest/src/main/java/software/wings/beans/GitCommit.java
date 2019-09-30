@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -38,7 +38,7 @@ import java.util.List;
         , @Field(GitCommitKeys.status), @Field(value = GitCommitKeys.lastUpdatedAt, type = IndexType.DESC)
       }, options = @IndexOptions(name = "gitCommitStatusLastUpdatedIdx"))
 })
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "GitCommitKeys")
 public class GitCommit extends Base {
   private String accountId;

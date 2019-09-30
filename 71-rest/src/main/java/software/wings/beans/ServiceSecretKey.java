@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -17,7 +17,7 @@ import org.mongodb.morphia.annotations.Indexes;
 @Indexes(
     { @Index(fields = { @Field("serviceType") }, options = @IndexOptions(unique = true, name = "serviceSecretIndex")) })
 @Entity(value = "serviceSecrets", noClassnameStored = true)
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)

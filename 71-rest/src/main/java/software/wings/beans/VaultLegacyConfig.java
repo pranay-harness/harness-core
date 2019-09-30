@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessEntity;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
@@ -46,6 +47,7 @@ import java.util.List;
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "vaultConfig", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "VaultConfigKeys")
 public class VaultLegacyConfig extends Base implements EncryptionConfig, ExecutionCapabilityDemander {
   @Attributes(title = "Name", required = true) private String name;

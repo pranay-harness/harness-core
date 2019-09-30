@@ -2,6 +2,7 @@ package io.harness.migration;
 
 import static io.harness.migration.MigrationJobInstance.COLLECTION_NAME;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import lombok.Builder;
@@ -16,6 +17,7 @@ import java.util.Set;
 @Data
 @Builder
 @Entity(value = COLLECTION_NAME, noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "MigrationJobInstanceKeys")
 public class MigrationJobInstance implements PersistentEntity, UpdatedAtAware {
   public static final String COLLECTION_NAME = "migrationJobInstances";

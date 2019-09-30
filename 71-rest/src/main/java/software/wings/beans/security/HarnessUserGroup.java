@@ -3,7 +3,7 @@ package software.wings.beans.security;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Data;
@@ -23,7 +23,7 @@ import java.util.Set;
  */
 @JsonInclude(NON_EMPTY)
 @Entity(value = "harnessUserGroups", noClassnameStored = true)
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)

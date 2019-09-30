@@ -2,7 +2,7 @@ package software.wings.beans.container;
 
 import static software.wings.yaml.YamlHelper.trimYaml;
 
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -14,7 +14,7 @@ import software.wings.beans.DeploymentSpecification;
 import javax.validation.constraints.NotNull;
 
 @Entity("pcfServiceSpecification")
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)

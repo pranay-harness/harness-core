@@ -1,7 +1,7 @@
 package io.harness.limits;
 
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.limits.lib.Limit;
 import io.harness.persistence.PersistentEntity;
 import io.harness.validation.Update;
@@ -25,7 +25,7 @@ import javax.validation.constraints.NotNull;
     @Index(fields = { @Field("key")
                       , @Field("accountId") }, options = @IndexOptions(name = "key_idx", unique = true)))
 @FieldNameConstants(innerTypeName = "ConfiguredLimitKeys")
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 public class ConfiguredLimit<T extends Limit> implements PersistentEntity {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private ObjectId id;
 

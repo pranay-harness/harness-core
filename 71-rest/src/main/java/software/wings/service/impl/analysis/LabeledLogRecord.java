@@ -13,6 +13,7 @@ import com.google.cloud.datastore.Key;
 import com.google.common.collect.Sets;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.annotation.HarnessEntity;
 import io.harness.persistence.GoogleDataStoreAware;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,6 +31,7 @@ import java.util.Set;
  * @author Praveen
  */
 @Entity(value = "supervisedLogRecords", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "LabeledLogRecordKeys")

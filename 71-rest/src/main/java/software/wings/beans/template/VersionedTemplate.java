@@ -3,7 +3,7 @@ package software.wings.beans.template;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,7 +22,7 @@ import javax.validation.constraints.NotNull;
 
 @JsonInclude(NON_NULL)
 @Entity(value = "versionedTemplate", noClassnameStored = true)
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Indexes({
   @Index(fields = { @Field("accountId")
                     , @Field("templateId"), @Field("version") },

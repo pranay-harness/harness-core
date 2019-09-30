@@ -14,6 +14,7 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ExecutionStatus;
 import io.harness.persistence.GoogleDataStoreAware;
 import io.harness.persistence.UuidAware;
@@ -45,6 +46,7 @@ import java.util.Map;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @org.mongodb.morphia.annotations.Entity(value = "timeSeriesRawData", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "TimeSeriesRawDataKeys")
 @Slf4j
 public class TimeSeriesRawData implements GoogleDataStoreAware, UuidAware {

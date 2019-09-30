@@ -3,6 +3,7 @@ package software.wings.verification;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ExecutionStatus;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -24,6 +25,7 @@ import java.time.OffsetDateTime;
 import java.util.Date;
 
 @Entity(value = "cvTasks", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "CVTaskKeys")
 @Data
 @Builder

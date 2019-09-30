@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Data;
@@ -14,6 +15,7 @@ import java.util.Date;
  * Created by anubhaw on 7/17/18.
  */
 @Entity(value = "permits", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class Permit extends Base {

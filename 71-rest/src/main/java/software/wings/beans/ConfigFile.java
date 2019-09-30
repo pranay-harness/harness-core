@@ -6,7 +6,7 @@ import com.google.common.collect.Maps;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.validation.Create;
 import lombok.AllArgsConstructor;
@@ -54,7 +54,7 @@ import javax.ws.rs.DefaultValue;
         @Field("appId"), @Field("templateId"), @Field("entityId")
       }, options = @IndexOptions(name = "app_template_entityId"))
 })
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Data
 @Builder
 @NoArgsConstructor

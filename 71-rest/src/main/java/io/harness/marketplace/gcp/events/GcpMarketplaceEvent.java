@@ -1,5 +1,6 @@
 package io.harness.marketplace.gcp.events;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.marketplace.gcp.events.intfc.Event;
 import io.harness.persistence.PersistentEntity;
 import lombok.Value;
@@ -9,6 +10,7 @@ import org.mongodb.morphia.annotations.Id;
 
 @Value
 @Entity(value = "gcpMarketplaceEvents", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "GcpMarketplaceEventKeys")
 public class GcpMarketplaceEvent implements PersistentEntity {
   @Id String messageId;

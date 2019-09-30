@@ -2,6 +2,7 @@ package software.wings.service.impl.analysis;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import lombok.AllArgsConstructor;
@@ -32,6 +33,7 @@ import java.util.stream.Collectors;
  * Created by sriram_parthasarathy on 8/23/17.
  */
 @Entity(value = "verificationServiceTask", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Indexes({
   @Index(fields = {
     @Field("workflowExecutionId"), @Field("stateExecutionId"), @Field("serviceId"), @Field("executionStatus")

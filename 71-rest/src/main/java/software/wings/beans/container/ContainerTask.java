@@ -5,7 +5,7 @@ import static software.wings.yaml.YamlHelper.trimYaml;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
     fields = { @Field("serviceId")
                , @Field("deploymentType") }))
 @Entity("containerTasks")
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ContainerTaskKeys")
 public abstract class ContainerTask extends DeploymentSpecification {
   static final String DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_NAME}";

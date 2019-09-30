@@ -1,7 +1,7 @@
 package software.wings.beans.loginSettings;
 
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -17,7 +17,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @Entity(value = "loginSettings")
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "LoginSettingKeys")
