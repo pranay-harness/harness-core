@@ -2114,7 +2114,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     pcfServiceSpecification.setAppId(APP_ID);
 
     when(mockWingsPersistence.saveAndGet(any(), any())).thenReturn(pcfServiceSpecification);
-    when(applicationManifestService.getK8sManifestByServiceId(APP_ID, SERVICE_ID))
+    when(applicationManifestService.getManifestByServiceId(APP_ID, SERVICE_ID))
         .thenReturn(ApplicationManifest.builder().storeType(StoreType.Local).build());
     when(applicationManifestService.getManifestFileByFileName(any(), any())).thenReturn(ManifestFile.builder().build());
 

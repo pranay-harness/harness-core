@@ -2302,7 +2302,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       String serviceId = pcfServiceSpecification.getServiceId();
       String appId = pcfServiceSpecification.getAppId();
 
-      ApplicationManifest applicationManifest = applicationManifestService.getK8sManifestByServiceId(appId, serviceId);
+      ApplicationManifest applicationManifest = applicationManifestService.getManifestByServiceId(appId, serviceId);
 
       if (applicationManifest == null) {
         applicationManifest = ApplicationManifest.builder()
