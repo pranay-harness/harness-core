@@ -24,9 +24,11 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 import software.wings.beans.CyberArkConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.service.impl.security.kms.KmsEncryptDecryptClient;
 
 /**
  * @author marklu on 2019-03-06
@@ -35,6 +37,7 @@ import software.wings.security.encryption.EncryptedData;
 public class SecretManagementDelegateServiceTest extends CategoryTest {
   private SecretManagementDelegateServiceImpl secretManagementDelegateService;
   private TimeLimiter timeLimiter = new SimpleTimeLimiter();
+  @Mock private KmsEncryptDecryptClient kmsEncryptDecryptClient;
   private MockWebServer mockWebServer = new MockWebServer();
 
   private ScmSecret scmSecret = new ScmSecret();
@@ -47,7 +50,7 @@ public class SecretManagementDelegateServiceTest extends CategoryTest {
 
     mockWebServer.start();
 
-    secretManagementDelegateService = new SecretManagementDelegateServiceImpl(timeLimiter);
+    secretManagementDelegateService = new SecretManagementDelegateServiceImpl(timeLimiter, kmsEncryptDecryptClient);
 
     kmsConfig = KmsConfig.builder()
                     .name("TestAwsKMS")
@@ -78,8 +81,6 @@ public class SecretManagementDelegateServiceTest extends CategoryTest {
       char[] decryptedSecret = secretManagementDelegateService.decrypt(encryptedRecord, kmsConfig);
       assertThat(new String(decryptedSecret)).isEqualTo(secret);
     }
-
-    assertThat(secretManagementDelegateService.getKmsEncryptionKeyCacheSize()).isEqualTo(1);
   }
 
   @Test

@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.common.base.MoreObjects;
 

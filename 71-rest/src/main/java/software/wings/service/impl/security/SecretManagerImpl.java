@@ -54,11 +54,13 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.event.model.EventType;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.UuidAware;
 import io.harness.queue.Queue;
+import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
@@ -86,6 +88,7 @@ import software.wings.beans.CyberArkConfig;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
+import software.wings.beans.FeatureName;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.LocalEncryptionConfig;
@@ -111,10 +114,12 @@ import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretChangeLog.SecretChangeLogKeys;
 import software.wings.security.encryption.SecretUsageLog;
 import software.wings.service.impl.AuditServiceHelper;
+import software.wings.service.impl.security.kms.KmsEncryptDecryptClient;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SettingsService;
@@ -183,6 +188,8 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private SecretManagerConfigService secretManagerConfigService;
   @Inject private AzureSecretsManagerService azureSecretsManagerService;
   @Inject private SegmentClientBuilder segmentClientBuilder;
+  @Inject private KmsEncryptDecryptClient kmsEncryptDecryptClient;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public EncryptionType getEncryptionType(String accountId) {
@@ -388,10 +395,27 @@ public class SecretManagerImpl implements SecretManager {
             logger.info("No encrypted record set for field {} for id: {}", f.getName(), id);
             continue;
           }
-          EncryptionConfig encryptionConfig = getSecretManager(object.getAccountId(), encryptedData.getKmsId());
+
+          String accountId = object.getAccountId();
+          EncryptionConfig encryptionConfig = getSecretManager(accountId, encryptedData.getKmsId());
+
+          // PL-1836: Need to preprocess global KMS and turn the KMS encryption into a LOCAL encryption.
+          final EncryptedRecordData encryptedRecordData;
+          if (encryptionConfig instanceof KmsConfig && encryptionConfig.getAccountId().equals(GLOBAL_ACCOUNT_ID)
+              && featureFlagService.isEnabled(FeatureName.GLOBAL_KMS_PRE_PROCESSING, object.getAccountId())) {
+            logger.info("Pre-processing the encrypted secret by global KMS secret manager for secret {} in account {}",
+                encryptedData, accountId);
+
+            encryptedRecordData = kmsEncryptDecryptClient.convertEncryptedRecordToLocallyEncrypted(
+                encryptedData, (KmsConfig) encryptionConfig);
+            encryptionConfig = localEncryptionService.getEncryptionConfig(accountId);
+            logger.info("Replaced it with LOCAL encryption for secret {} in account {}", encryptedData, accountId);
+          } else {
+            encryptedRecordData = SecretManager.buildRecordData(encryptedData);
+          }
 
           EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder()
-                                                        .encryptedData(SecretManager.buildRecordData(encryptedData))
+                                                        .encryptedData(encryptedRecordData)
                                                         .encryptionConfig(encryptionConfig)
                                                         .fieldName(f.getName())
                                                         .build();

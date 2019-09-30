@@ -24,7 +24,6 @@ import software.wings.beans.VaultConfig;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.List;
 
@@ -72,7 +71,7 @@ public class EncryptionServiceImpl implements EncryptionService {
   }
 
   @Override
-  public char[] getDecryptedValue(EncryptedDataDetail encryptedDataDetail) throws IOException {
+  public char[] getDecryptedValue(EncryptedDataDetail encryptedDataDetail) {
     switch (encryptedDataDetail.getEncryptedData().getEncryptionType()) {
       case LOCAL:
         SimpleEncryption encryption = new SimpleEncryption(encryptedDataDetail.getEncryptedData().getEncryptionKey());
