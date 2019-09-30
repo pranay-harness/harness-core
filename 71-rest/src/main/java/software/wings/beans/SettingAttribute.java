@@ -50,7 +50,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.WINRM_CO
 import com.google.common.collect.Lists;
 
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
@@ -93,7 +93,7 @@ import javax.validation.Valid;
       @Index(options = @IndexOptions(name = "acctValTypeIdx"), fields = { @Field("accountId")
                                                                           , @Field("value.type") })
 })
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Data
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "SettingAttributeKeys")

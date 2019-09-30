@@ -1,5 +1,6 @@
 package io.harness.state.inspection;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.persistence.PersistentEntity;
 import io.harness.state.State;
 import lombok.Builder;
@@ -17,6 +18,7 @@ import java.util.Map;
 @Value
 @Builder
 @Entity(value = "stateInspections", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "StateInspectionKeys")
 public class StateInspection implements PersistentEntity {
   @Id private String stateExecutionInstanceId;

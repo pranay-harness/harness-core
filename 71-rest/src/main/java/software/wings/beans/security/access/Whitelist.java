@@ -3,6 +3,7 @@ package software.wings.beans.security.access;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Data;
@@ -20,6 +21,7 @@ import software.wings.beans.Base;
 
 @JsonInclude(NON_EMPTY)
 @Entity(value = "whitelist", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)

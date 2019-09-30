@@ -1,5 +1,6 @@
 package io.harness.event.reconciliation.deployment;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.event.reconciliation.deployment.DeploymentReconRecord.DeploymentReconRecordKeys;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -24,6 +25,7 @@ import java.util.Date;
 @FieldNameConstants(innerTypeName = "DeploymentReconRecordKeys")
 @ToString
 @Entity(value = "deploymentReconciliation", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Indexes({
   @Index(options = @IndexOptions(name = "accountId_durationEndTs"),
       fields = { @Field(DeploymentReconRecordKeys.accountId)

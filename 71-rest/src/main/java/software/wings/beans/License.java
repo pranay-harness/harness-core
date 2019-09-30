@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
  * Created by peeyushaggarwal on 3/22/17.
  */
 @Entity(value = "licenses", noClassnameStored = true)
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @EqualsAndHashCode(callSuper = false)
 public class License extends Base {
   private String name;

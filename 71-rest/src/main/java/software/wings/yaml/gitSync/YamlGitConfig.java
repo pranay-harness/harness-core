@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -27,7 +27,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import javax.validation.constraints.NotNull;
 
 @Entity(value = "yamlGitConfig", noClassnameStored = true)
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Indexes(@Index(options = @IndexOptions(name = "locate", unique = true),
     fields = { @Field("accountId")
                , @Field("entityId"), @Field("entityType") }))

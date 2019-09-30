@@ -7,7 +7,7 @@ import static java.util.stream.Collectors.toList;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.Getter;
 import lombok.Setter;
@@ -39,7 +39,7 @@ import javax.security.auth.Subject;
  */
 @JsonInclude(NON_EMPTY)
 @Entity(value = "users", noClassnameStored = true)
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "UserKeys")
 public class User extends Base implements Principal {
   public static final String EMAIL_KEY = "email";

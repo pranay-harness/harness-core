@@ -3,7 +3,7 @@ package software.wings.beans.governance;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
@@ -30,7 +30,7 @@ import javax.annotation.Nonnull;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "GovernanceConfigKeys")
 public class GovernanceConfig implements PersistentEntity, UuidAware, UpdatedByAware {
   @Id private String uuid;

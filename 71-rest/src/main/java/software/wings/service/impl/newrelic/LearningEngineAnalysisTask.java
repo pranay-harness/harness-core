@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ExecutionStatus;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -34,6 +35,7 @@ import java.util.concurrent.TimeUnit;
  * Created by rsingh on 1/8/18.
  */
 @Entity(value = "learningEngineAnalysisTask", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Indexes({
   @Index(fields =
       {

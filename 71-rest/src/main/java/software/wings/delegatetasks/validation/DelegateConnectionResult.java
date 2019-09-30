@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.validation;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.annotation.HarnessEntity;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
@@ -24,6 +25,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @Builder
 @Entity(value = "delegateConnectionResults", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Indexes({
   @Index(fields = {
     @Field("accountId"), @Field("delegateId"), @Field("criteria")

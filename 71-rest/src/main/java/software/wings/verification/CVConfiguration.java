@@ -2,7 +2,7 @@ package software.wings.verification;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.persistence.NameAccess;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -35,7 +35,7 @@ import javax.validation.constraints.NotNull;
     @Field("appId"), @Field("envId"), @Field("name")
   }, options = @IndexOptions(unique = true, name = "nameUniqueIndex"))
 })
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Data
 @FieldNameConstants(innerTypeName = "CVConfigurationKeys")
 @NoArgsConstructor

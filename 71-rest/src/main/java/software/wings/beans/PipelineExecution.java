@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
@@ -20,6 +21,7 @@ import javax.validation.constraints.NotNull;
 
 @Data
 @Entity(value = "pipelineExecutions", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class PipelineExecution implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware {
   public static final String PIPELINE_ID_KEY = "pipelineId";
 

@@ -64,6 +64,7 @@ public class AnnotationOrderCheck extends AbstractCheck {
 
   Map<String, Set<String>> required = ImmutableMap.<String, Set<String>>builder()
                                           .put("Ignore", ImmutableSet.<String>builder().add("Owner").build())
+                                          .put("Entity", ImmutableSet.<String>builder().add("HarnessEntity").build())
                                           .build();
 
   @Override

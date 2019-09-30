@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
@@ -18,6 +19,7 @@ import software.wings.beans.EntityYamlRecord.EntityYamlRecordKeys;
 @Value
 @Builder
 @Entity(value = "entityYamlRecord", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "EntityYamlRecordKeys")
 @Indexes({
   @Index(options = @IndexOptions(name = "index_1"), fields = {

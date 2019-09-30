@@ -15,6 +15,7 @@ import com.google.cloud.datastore.Key;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessEntity;
 import io.harness.persistence.GoogleDataStoreAware;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -44,6 +45,7 @@ import java.util.List;
  * Created by rsingh on 6/20/17.
  */
 @Entity(value = "logDataRecords", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Indexes({
   @Index(fields = { @Field("stateExecutionId")
                     , @Field("logCollectionMinute") },

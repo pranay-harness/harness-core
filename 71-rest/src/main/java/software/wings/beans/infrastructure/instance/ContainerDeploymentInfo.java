@@ -1,6 +1,7 @@
 package software.wings.beans.infrastructure.instance;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Data;
@@ -15,6 +16,7 @@ import software.wings.beans.Base;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "containerDeploymentInfo", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class ContainerDeploymentInfo extends Base {

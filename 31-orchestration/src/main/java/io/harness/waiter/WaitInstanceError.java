@@ -1,5 +1,6 @@
 package io.harness.waiter;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.persistence.PersistentEntity;
 import lombok.Builder;
@@ -13,6 +14,7 @@ import java.util.Map;
  * Represents errors thrown by callback of wait instance.
  */
 @Entity(value = "waitInstanceErrors", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Value
 @Builder
 public class WaitInstanceError implements PersistentEntity {

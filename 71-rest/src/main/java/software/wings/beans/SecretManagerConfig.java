@@ -1,7 +1,7 @@
 package software.wings.beans;
 
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -41,7 +41,7 @@ import javax.validation.constraints.NotNull;
     @Field("name"), @Field("accountId"), @Field("encryptionType")
   }, options = @IndexOptions(unique = true, name = "uniqueIdx"))
 })
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 public abstract class SecretManagerConfig implements EncryptionConfig, PersistentEntity, UuidAware, CreatedAtAware,
                                                      CreatedByAware, UpdatedAtAware, UpdatedByAware {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;

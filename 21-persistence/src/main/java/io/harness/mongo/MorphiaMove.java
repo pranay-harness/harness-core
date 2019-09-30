@@ -1,5 +1,6 @@
 package io.harness.mongo;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.persistence.PersistentEntity;
 import lombok.Builder;
 import lombok.Value;
@@ -13,6 +14,7 @@ import java.util.Set;
 @Builder
 @FieldNameConstants(innerTypeName = "MorphiaMoveKeys")
 @Entity(value = "morphiaMove", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class MorphiaMove implements PersistentEntity {
   @Id private String target;
   private Set<String> sources;

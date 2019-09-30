@@ -10,6 +10,7 @@ import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.Key;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.annotation.HarnessEntity;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.GoogleDataStoreAware;
 import io.harness.persistence.UuidAware;
@@ -25,6 +26,7 @@ import org.mongodb.morphia.annotations.Id;
  * @author Praveen
  */
 @Entity(value = "supervisedTrainingStatus", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "SupervisedTrainingStatusKeys")

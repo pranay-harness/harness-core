@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ExecutionStatus;
 import io.harness.exception.WingsException;
 import io.harness.persistence.CreatedAtAware;
@@ -56,6 +57,7 @@ import java.util.List;
  * Created by rsingh on 1/8/18.
  */
 @Entity(value = "thirdPartyApiCallLog")
+@HarnessEntity(exportable = false)
 @Data
 @Builder
 @NoArgsConstructor

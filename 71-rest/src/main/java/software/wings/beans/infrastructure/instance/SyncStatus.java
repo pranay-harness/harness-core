@@ -1,5 +1,6 @@
 package software.wings.beans.infrastructure.instance;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Data;
@@ -17,6 +18,7 @@ import software.wings.beans.Base;
  * @author rktummala on 05/19/18
  */
 @Entity(value = "syncStatus", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Indexes({

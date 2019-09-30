@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.distribution.idempotence.IdempotentResult;
 import io.harness.persistence.PersistentEntity;
 import lombok.Builder;
@@ -19,6 +20,7 @@ import java.util.List;
 @Builder
 @FieldNameConstants(innerTypeName = "IdempotentKeys")
 @Entity(value = "idempotent_locks", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class Idempotent implements PersistentEntity {
   @Id private String uuid;
 

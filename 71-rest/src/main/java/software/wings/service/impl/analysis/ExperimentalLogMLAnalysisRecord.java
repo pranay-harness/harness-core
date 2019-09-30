@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.IgnoreUnusedIndex;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 @Entity(value = "experimentalLogAnalysisRecords", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Indexes(@Index(fields = { @Field("stateExecutionId")
                            , @Field(value = "logCollectionMinute", type = IndexType.DESC) },
     options = @IndexOptions(name = "stateExecutionIdx")))

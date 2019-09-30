@@ -1,5 +1,6 @@
 package software.wings.beans.approval;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -14,6 +15,7 @@ import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTi
 import software.wings.sm.states.ApprovalState.ApprovalStateType;
 
 @Entity(value = "approvalPollingJob")
+@HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "ApprovalPollingJobEntityKeys")
 @Data
 @Builder

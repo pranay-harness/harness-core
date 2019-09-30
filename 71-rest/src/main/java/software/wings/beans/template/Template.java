@@ -5,7 +5,7 @@ import static java.util.Arrays.asList;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.persistence.NameAccess;
@@ -33,7 +33,7 @@ import javax.validation.constraints.NotNull;
 
 @JsonInclude(NON_NULL)
 @Entity(value = "templates", noClassnameStored = true)
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true),
     fields = { @Field("accountId")
                , @Field("name"), @Field("folderId"), @Field("appId") }))

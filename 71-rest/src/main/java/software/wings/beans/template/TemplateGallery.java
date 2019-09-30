@@ -3,7 +3,7 @@ package software.wings.beans.template;
 import static java.util.Arrays.asList;
 
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Data;
@@ -21,7 +21,7 @@ import software.wings.beans.entityinterface.KeywordsAware;
 import java.util.Set;
 
 @Entity("templateGalleries")
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Indexes(
     @Index(fields = { @Field("name")
                       , @Field("accountId") }, options = @IndexOptions(name = "yaml", unique = true)))

@@ -19,6 +19,7 @@ import com.google.cloud.datastore.StringValue;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.WingsException;
@@ -41,6 +42,7 @@ import javax.validation.constraints.NotNull;
  * Created by peeyushaggarwal on 5/27/16.
  */
 @Entity(value = "commandLogs", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Data
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @FieldNameConstants(innerTypeName = "LogKeys")

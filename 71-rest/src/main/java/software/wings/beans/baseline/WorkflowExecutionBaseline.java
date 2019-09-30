@@ -1,5 +1,6 @@
 package software.wings.beans.baseline;
 
+import io.harness.annotation.HarnessEntity;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -17,6 +18,7 @@ import software.wings.beans.Base;
  * Created by rsingh on 2/16/18.
  */
 @Entity(value = "workflowExecutionBaselines", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Indexes({
   @Index(fields = {
     @Field("workflowId"), @Field("envId"), @Field("serviceId")

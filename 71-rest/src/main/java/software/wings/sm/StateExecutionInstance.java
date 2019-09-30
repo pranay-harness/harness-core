@@ -3,6 +3,7 @@ package software.wings.sm;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
@@ -37,6 +38,7 @@ import java.util.Map;
  * @author Rishi
  */
 @Entity(value = "stateExecutionInstances", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Data
 @FieldNameConstants(innerTypeName = "StateExecutionInstanceKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)

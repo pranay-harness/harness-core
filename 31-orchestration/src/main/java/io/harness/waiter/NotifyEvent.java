@@ -2,6 +2,7 @@ package io.harness.waiter;
 
 import com.google.common.base.MoreObjects;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.queue.Queuable;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -13,6 +14,7 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "notifyQueue", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class NotifyEvent extends Queuable {
   private String waitInstanceId;
 

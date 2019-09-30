@@ -5,7 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.persistence.NameAccess;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
@@ -47,7 +47,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @ToString(exclude = {"encryptionKey", "encryptedValue"})
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "encryptedRecords", noClassnameStored = true)
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Indexes({
   @Index(fields = { @Field("accountId")

@@ -1,6 +1,6 @@
 package io.harness.limits;
 
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -19,7 +19,7 @@ import software.wings.beans.Base;
 @Entity(value = "limitCounters", noClassnameStored = true)
 @Indexes(@Index(fields = @Field("key"), options = @IndexOptions(name = "key_idx", unique = true)))
 @FieldNameConstants(innerTypeName = "CounterKeys")
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 public class Counter extends Base {
   private final String key;
   private final Long value;

@@ -4,6 +4,7 @@ import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.harness.annotation.HarnessEntity;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.persistence.PersistentEntity;
@@ -29,6 +30,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @Value
 @Entity(value = "pipelineGovernanceConfigs")
+@HarnessEntity(exportable = true)
 @Indexes(@Index(fields = @Field("accountId"), options = @IndexOptions(name = "account_id_idx")))
 @FieldNameConstants(innerTypeName = "PipelineGovernanceConfigKeys")
 @ParametersAreNonnullByDefault

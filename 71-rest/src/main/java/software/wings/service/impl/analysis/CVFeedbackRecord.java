@@ -13,6 +13,7 @@ import com.google.cloud.datastore.Key;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.beans.EmbeddedUser;
 import io.harness.persistence.GoogleDataStoreAware;
@@ -32,6 +33,7 @@ import software.wings.security.ThreadLocalUserProvider;
 import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
 
 @Entity(value = "cvFeedbackRecords", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "CVFeedbackRecordKeys")

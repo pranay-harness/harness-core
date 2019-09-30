@@ -1,7 +1,7 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.notifications.NotificationReceiverInfo;
 import io.harness.persistence.NameAccess;
@@ -38,7 +38,7 @@ import javax.validation.constraints.NotNull;
 @Indexes(
     @Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("accountId")
                                                                              , @Field("name") }))
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Deprecated
 public class NotificationGroup extends Base implements NotificationReceiverInfo, NameAccess {
   public static final String NAME_KEY = "name";

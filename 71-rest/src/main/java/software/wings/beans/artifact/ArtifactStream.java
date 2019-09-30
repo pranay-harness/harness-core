@@ -4,7 +4,7 @@ import static java.util.Arrays.asList;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.iterator.PersistentRegularIterable;
@@ -55,7 +55,7 @@ import java.util.Set;
 // TODO: ASR: migrate the index and name of existing artifact streams (name + service name + app name + setting name)
 // TODO: ASR: removing serviceId from ArtifactStream
 // TODO: ASR: add feature flag: should not have serviceId in ArtifactStream
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Data
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)

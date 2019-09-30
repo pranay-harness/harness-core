@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.queue.Queuable;
 import lombok.Builder;
 import lombok.Data;
@@ -9,6 +10,7 @@ import org.mongodb.morphia.annotations.Entity;
 import java.util.List;
 
 @Entity(value = "executionQueue", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)

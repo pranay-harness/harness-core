@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.mail;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.queue.Queuable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity(value = "emailQueue", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Data
 @Builder
 @NoArgsConstructor

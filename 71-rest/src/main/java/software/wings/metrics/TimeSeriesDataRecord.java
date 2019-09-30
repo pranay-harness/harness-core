@@ -21,6 +21,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessEntity;
 import io.harness.exception.WingsException;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.GoogleDataStoreAware;
@@ -63,6 +64,7 @@ import java.util.Set;
  * Created by rsingh on 08/30/17.
  */
 @Entity(value = "timeSeriesMetricRecords", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 
 @Indexes({
   @Index(fields =

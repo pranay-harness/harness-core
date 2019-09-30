@@ -1,6 +1,7 @@
 package software.wings.service.impl.analysis;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.IgnoreUnusedIndex;
 import lombok.Builder;
 import lombok.Data;
@@ -19,6 +20,7 @@ import org.mongodb.morphia.annotations.Indexes;
  * Created by Pranjal on 08/14/2018
  */
 @Entity(value = "experimentalTimeSeriesAnalysisRecords", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Indexes(@Index(fields =
     { @Field("workflowExecutionId")
       , @Field("stateExecutionId"), @Field("analysisMinute"), @Field("groupName") },

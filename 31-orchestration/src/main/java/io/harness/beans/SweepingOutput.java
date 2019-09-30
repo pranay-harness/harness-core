@@ -1,5 +1,6 @@
 package io.harness.beans;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.SweepingOutput.SweepingOutputKeys;
 import io.harness.data.validator.Trimmed;
 import io.harness.persistence.PersistentEntity;
@@ -21,6 +22,7 @@ import java.util.Date;
 import javax.validation.constraints.NotNull;
 
 @Entity(value = "sweepingOutput", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Value
 @Builder
 @Indexes({

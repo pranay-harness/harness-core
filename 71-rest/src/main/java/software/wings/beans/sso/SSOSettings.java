@@ -3,7 +3,7 @@ package software.wings.beans.sso;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
@@ -14,7 +14,7 @@ import software.wings.beans.Base;
 import javax.validation.constraints.NotNull;
 
 @Entity(value = "ssoSettings")
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Data
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "SSOSettingsKeys")

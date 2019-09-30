@@ -9,6 +9,7 @@ import static software.wings.service.impl.GoogleDataStoreServiceImpl.readString;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.Key;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.beans.EmbeddedUser;
 import io.harness.persistence.GoogleDataStoreAware;
@@ -30,6 +31,7 @@ import software.wings.service.impl.analysis.AnalysisServiceImpl.LogMLFeedbackTyp
 import software.wings.sm.StateType;
 
 @Entity(value = "logMlFeedbackRecords", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Indexes({
   @Index(fields = {
     @Field("applicationId"), @Field("stateExecutionId"), @Field("clusterType"), @Field("clusterLabel")

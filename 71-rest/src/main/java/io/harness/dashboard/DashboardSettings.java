@@ -1,7 +1,7 @@
 package io.harness.dashboard;
 
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -26,7 +26,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "keys")
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 public class DashboardSettings
     implements NameAccess, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
   private EmbeddedUser createdBy;

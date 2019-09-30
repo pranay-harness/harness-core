@@ -7,7 +7,7 @@ import static software.wings.yaml.YamlHelper.trimYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.persistence.NameAccess;
@@ -48,7 +48,7 @@ import javax.validation.constraints.NotNull;
     @Field(EnvironmentKeys.appId), @Field(EnvironmentKeys.name)
   })
 })
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper = false)

@@ -1,5 +1,6 @@
 package io.harness.waiter;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
@@ -22,6 +23,7 @@ import javax.validation.constraints.NotNull;
  * @author Rishi
  */
 @Entity(value = "waitQueues", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "WaitQueueKeys")

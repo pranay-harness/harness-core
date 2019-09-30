@@ -1,5 +1,6 @@
 package software.wings.search.framework;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.validation.Update;
@@ -23,6 +24,7 @@ import javax.validation.constraints.NotNull;
 @Value
 @Builder
 @Entity(value = "searchDistributedLocks", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "SearchDistributedLockKeys")
 public class SearchDistributedLock implements PersistentEntity, CreatedAtAccess {
   @Id @NotNull(groups = {Update.class}) private String name;

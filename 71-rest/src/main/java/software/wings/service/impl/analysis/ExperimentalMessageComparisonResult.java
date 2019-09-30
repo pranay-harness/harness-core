@@ -12,6 +12,7 @@ import com.google.cloud.datastore.Key;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessEntity;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.GoogleDataStoreAware;
 import io.harness.persistence.PersistentEntity;
@@ -31,6 +32,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import java.util.Map;
 
 @Entity(value = "experimentalLogMessageComparisonResult")
+@HarnessEntity(exportable = false)
 @Data
 @Builder
 @NoArgsConstructor

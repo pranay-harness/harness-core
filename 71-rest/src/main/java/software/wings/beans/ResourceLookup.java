@@ -1,7 +1,7 @@
 package software.wings.beans;
 
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -24,7 +24,7 @@ import java.util.List;
 import javax.validation.constraints.NotNull;
 
 @Entity(value = "resourceLookup", noClassnameStored = true)
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ResourceLookupKeys")
 @Indexes({
   @Index(options = @IndexOptions(name = "resourceIndex_1"),

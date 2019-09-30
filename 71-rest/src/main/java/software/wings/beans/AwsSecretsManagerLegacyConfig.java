@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessEntity;
 import io.harness.encryption.Encrypted;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
@@ -36,6 +37,7 @@ import software.wings.delegatetasks.validation.AbstractSecretManagerValidation;
   @Index(fields = { @Field("name"), @Field("accountId") }, options = @IndexOptions(unique = true, name = "uniqueIdx"))
 })
 @Entity(value = "awsSecretsManagerConfig", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "AwsSecretsManagerConfigKeys")
 public class AwsSecretsManagerLegacyConfig extends Base implements EncryptionConfig {

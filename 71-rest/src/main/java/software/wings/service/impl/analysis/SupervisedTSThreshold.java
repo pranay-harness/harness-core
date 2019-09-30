@@ -9,6 +9,7 @@ import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Key;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.annotation.HarnessEntity;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.GoogleDataStoreAware;
 import lombok.AllArgsConstructor;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Optional;
 
 @org.mongodb.morphia.annotations.Entity(value = "supervisedTSThreshold", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Data
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)

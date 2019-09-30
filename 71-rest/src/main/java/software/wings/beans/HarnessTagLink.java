@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -30,7 +30,7 @@ import javax.validation.constraints.NotNull;
 
 @Entity(value = "tagLinks", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Indexes({
   @Index(options = @IndexOptions(name = "entityTagIdx", unique = true),
       fields =

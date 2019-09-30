@@ -4,6 +4,7 @@
 
 package software.wings.sm;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
@@ -20,6 +21,7 @@ import javax.validation.constraints.NotNull;
  * @author Rishi
  */
 @Entity(value = "executionInterrupts", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "ExecutionInterruptKeys")
 public class ExecutionInterrupt extends Base {
   @NotNull private ExecutionInterruptType executionInterruptType;

@@ -3,7 +3,7 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -31,7 +31,7 @@ import software.wings.beans.Preference.PreferenceKeys;
   })
 })
 
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @EqualsAndHashCode(callSuper = false)
 
 public abstract class Preference extends Base {

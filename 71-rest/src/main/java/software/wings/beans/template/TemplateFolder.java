@@ -8,7 +8,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.persistence.NameAccess;
@@ -34,7 +34,7 @@ import java.util.Set;
 
 @Data
 @Entity(value = "templateFolders", noClassnameStored = true)
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @NoArgsConstructor
 @JsonInclude(NON_NULL)
 @EqualsAndHashCode(callSuper = false)

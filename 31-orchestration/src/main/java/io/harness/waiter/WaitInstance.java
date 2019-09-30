@@ -1,5 +1,6 @@
 package io.harness.waiter;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ExecutionStatus;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
@@ -20,6 +21,7 @@ import java.util.List;
  * Represents which waiter is waiting on which correlation Ids and callback to execute when done.
  */
 @Entity(value = "waitInstances", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "WaitInstanceKeys")

@@ -2,6 +2,7 @@ package software.wings.beans.infrastructure.instance.stats;
 
 import com.google.common.collect.ImmutableList;
 
+import io.harness.annotation.HarnessEntity;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -27,6 +28,7 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "instanceStats", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Indexes(@Index(fields = { @Field("accountId")
                            , @Field("timestamp") },
     options = @IndexOptions(unique = true, name = "accountId_timestamp_unique_idx", background = true)))

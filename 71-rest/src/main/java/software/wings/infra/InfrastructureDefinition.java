@@ -2,6 +2,7 @@ package software.wings.infra;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.persistence.CreatedAtAware;
@@ -35,6 +36,7 @@ import java.util.List;
 import javax.validation.constraints.NotNull;
 
 @Entity(value = "infrastructureDefinitions", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 @Indexes(@Index(options = @IndexOptions(name = "infraDefinitionIdx", unique = true),
     fields = { @Field("appId")
                , @Field("envId"), @Field("name") }))

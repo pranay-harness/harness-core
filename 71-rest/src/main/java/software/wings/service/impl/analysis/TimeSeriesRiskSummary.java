@@ -8,6 +8,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.annotation.HarnessEntity;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 import lombok.AllArgsConstructor;
@@ -34,6 +35,7 @@ import java.util.Map;
  */
 
 @Entity(value = "timeSeriesRiskSummary", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Indexes(@Index(fields = { @Field("cvConfigId")
                            , @Field("analysisMinute"), @Field("tag") },
     options = @IndexOptions(name = "minute_idx")))

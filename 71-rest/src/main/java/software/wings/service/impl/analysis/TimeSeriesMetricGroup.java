@@ -2,6 +2,7 @@ package software.wings.service.impl.analysis;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Data;
@@ -24,6 +25,7 @@ import java.util.Map;
  * Created by rsingh on 08/30/17.
  */
 @Entity(value = "timeSeriesMetricGroup", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Indexes({
   @Index(fields = {
     @Field("stateType"), @Field("stateExecutionId")

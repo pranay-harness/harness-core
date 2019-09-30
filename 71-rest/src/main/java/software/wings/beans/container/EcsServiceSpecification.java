@@ -1,6 +1,6 @@
 package software.wings.beans.container;
 
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -12,7 +12,7 @@ import software.wings.beans.DeploymentSpecification;
 import javax.validation.constraints.NotNull;
 
 @Entity("ecsServiceSpecification")
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)

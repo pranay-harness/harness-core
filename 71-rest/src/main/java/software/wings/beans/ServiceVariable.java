@@ -6,7 +6,7 @@ import static io.harness.data.validator.EntityNameValidator.ALLOWED_CHARS_SERVIC
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.data.validator.EntityName;
 import io.harness.encryption.Encrypted;
 import io.harness.encryption.EncryptionReflectUtils;
@@ -53,7 +53,7 @@ import javax.validation.constraints.NotNull;
         @Field("appId"), @Field("envId"), @Field("templateId")
       }, options = @IndexOptions(name = "app_env_templateId"))
 })
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @Data
 @Builder
 @NoArgsConstructor

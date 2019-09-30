@@ -1,6 +1,7 @@
 package io.harness.event.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.annotation.HarnessEntity;
 import io.harness.queue.Queuable;
 import io.harness.queue.Queuable.Keys;
 import lombok.Builder;
@@ -14,6 +15,7 @@ import org.mongodb.morphia.annotations.Indexes;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "genericEvent", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)

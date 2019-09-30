@@ -2,6 +2,7 @@ package software.wings.beans.alert;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessEntity;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -38,6 +39,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @Builder
 @Entity(value = "alerts")
+@HarnessEntity(exportable = false)
 public class Alert implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @Indexed @NotNull @SchemaIgnore protected String appId;

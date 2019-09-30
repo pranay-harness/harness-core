@@ -1,5 +1,6 @@
 package software.wings.beans.infrastructure.instance;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Data;
@@ -16,6 +17,7 @@ import software.wings.beans.Base;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Entity(value = "manualSyncJobStatus", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class ManualSyncJob extends Base {
   private String accountId;
 

@@ -12,7 +12,7 @@ import static software.wings.sm.states.RepeatState.Builder.aRepeatState;
 
 import com.google.common.collect.Lists;
 
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.ListUtils;
@@ -77,7 +77,7 @@ import javax.validation.constraints.NotNull;
     @Field("appId"), @Field("originId"), @Field("originVersion")
   })
 })
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "StateMachineKeys")
 @Slf4j
 public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware {

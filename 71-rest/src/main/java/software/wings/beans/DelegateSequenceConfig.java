@@ -1,7 +1,7 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -23,7 +23,7 @@ import org.mongodb.morphia.annotations.Indexes;
 
       options = @IndexOptions(unique = true, name = "uniqueDelegateSequenceIdx"))
 })
-@HarnessExportableEntity
+@HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "DelegateSequenceConfigKeys")
 public class DelegateSequenceConfig extends Base {
   @NotEmpty private String accountId;
