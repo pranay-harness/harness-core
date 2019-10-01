@@ -17,6 +17,7 @@ import static io.harness.eraro.ErrorCode.WORKFLOW_EXECUTION_IN_PROGRESS;
 import static io.harness.exception.HintException.MOVE_TO_THE_PARENT_OBJECT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.expression.ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
@@ -43,6 +44,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.CanaryWorkflowExecutionAdvisor.ROLLBACK_PROVISIONERS;
 import static software.wings.beans.EntityType.ARTIFACT;
+import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
@@ -2266,36 +2268,46 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
 
       String accountId = appService.getAccountIdByAppId(appId);
+      List<ArtifactVariable> artifactVariables = new ArrayList<>();
       if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-        List<ArtifactVariable> artifactVariables = new ArrayList<>();
         fetchArtifactNeededServiceIds(
             appId, workflow, workflowVariables, artifactRequiredServiceIds, artifactVariables);
-        deploymentMetadataBuilder.artifactVariables(artifactVariables);
-
-        // Update artifact variables with display info and artifact stream summaries
-        if (isNotEmpty(artifactVariables)) {
-          for (ArtifactVariable artifactVariable : artifactVariables) {
-            artifactVariable.setDisplayInfo(getDisplayInfo(appId, workflow, artifactVariable));
-
-            if (isEmpty(artifactVariable.getAllowedList())) {
-              continue;
-            }
-
-            List<ArtifactStream> artifactStreams = artifactStreamService.listByIds(artifactVariable.getAllowedList());
-            if (isEmpty(artifactStreams)) {
-              continue;
-            }
-
-            artifactVariable.setArtifactStreamSummaries(
-                artifactStreams.stream()
-                    .map(artifactStream -> {
-                      return ArtifactStreamSummary.prepareSummaryFromArtifactStream(artifactStream, null);
-                    })
-                    .collect(Collectors.toList()));
-          }
-        }
       } else {
         fetchArtifactNeededServiceIds(appId, workflow, workflowVariables, artifactRequiredServiceIds);
+        if (featureFlagService.isEnabled(FeatureName.DEPLOYMENT_MODAL_REFACTOR, accountId)
+            && isNotEmpty(artifactRequiredServiceIds)) {
+          for (String serviceId : artifactRequiredServiceIds) {
+            artifactVariables.add(
+                ArtifactVariable.builder()
+                    .type(VariableType.ARTIFACT)
+                    .name(DEFAULT_ARTIFACT_VARIABLE_NAME)
+                    .entityType(SERVICE)
+                    .entityId(serviceId)
+                    .allowedList(artifactStreamServiceBindingService.listArtifactStreamIds(appId, serviceId))
+                    .build());
+          }
+        }
+      }
+
+      // Update artifact variables with display info and artifact stream summaries.
+      if (isNotEmpty(artifactVariables)) {
+        deploymentMetadataBuilder.artifactVariables(artifactVariables);
+        for (ArtifactVariable artifactVariable : artifactVariables) {
+          artifactVariable.setDisplayInfo(getDisplayInfo(appId, workflow, artifactVariable));
+          if (isEmpty(artifactVariable.getAllowedList())) {
+            continue;
+          }
+
+          List<ArtifactStream> artifactStreams = artifactStreamService.listByIds(artifactVariable.getAllowedList());
+          if (isEmpty(artifactStreams)) {
+            continue;
+          }
+
+          artifactVariable.setArtifactStreamSummaries(
+              artifactStreams.stream()
+                  .map(artifactStream -> ArtifactStreamSummary.prepareSummaryFromArtifactStream(artifactStream, null))
+                  .collect(Collectors.toList()));
+        }
       }
 
       deploymentMetadataBuilder.artifactRequiredServiceIds(artifactRequiredServiceIds);

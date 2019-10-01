@@ -216,7 +216,6 @@ public class EnvState extends State {
         entityId = savElement.getServiceId();
       }
 
-      List<String> serviceIds;
       switch (entityType) {
         case WORKFLOW:
           // Skip if workflow ids are different.

@@ -1195,32 +1195,51 @@ public class PipelineServiceImpl implements PipelineService {
 
           List<ArtifactVariable> finalArtifactVariables = finalDeploymentMetadata.getArtifactVariables();
           for (ArtifactVariable artifactVariable : deploymentMetadata.getArtifactVariables()) {
-            ArtifactVariable finalArtifactVariable = finalArtifactVariables.stream()
-                                                         .filter(av -> av.getName().equals(artifactVariable.getName()))
-                                                         .findFirst()
-                                                         .orElse(null);
-            if (finalArtifactVariable != null) {
-              String finalServiceId = finalArtifactVariable.fetchAssociatedService();
-              if (finalServiceId != null) {
-                String serviceId = artifactVariable.fetchAssociatedService();
-                if (serviceId != null && serviceId.equals(finalServiceId)
-                    && !finalArtifactVariable.getWorkflowIds().contains(workflow.getUuid())) {
-                  finalArtifactVariable.getWorkflowIds().add(workflow.getUuid());
-                  continue;
-                }
-              }
-            }
-
-            List<String> workflowIds = new ArrayList<>();
-            workflowIds.add(workflow.getUuid());
-            artifactVariable.setWorkflowIds(workflowIds);
-            finalArtifactVariables.add(artifactVariable);
+            mergeArtifactVariable(finalArtifactVariables, artifactVariable, workflow.getUuid());
           }
         }
       }
     }
 
     return finalDeploymentMetadata;
+  }
+
+  private void mergeArtifactVariable(
+      List<ArtifactVariable> finalArtifactVariables, ArtifactVariable artifactVariable, String workflowId) {
+    if (artifactVariable == null) {
+      return;
+    }
+
+    List<ArtifactVariable> duplicateArtifactVariables =
+        finalArtifactVariables.stream().filter(av -> av.getName().equals(artifactVariable.getName())).collect(toList());
+    if (isEmpty(duplicateArtifactVariables)) {
+      addArtifactVariable(finalArtifactVariables, artifactVariable, workflowId);
+      return;
+    }
+
+    boolean merged = false;
+    for (ArtifactVariable duplicateArtifactVariable : duplicateArtifactVariables) {
+      String duplicateServiceId = duplicateArtifactVariable.fetchAssociatedService();
+      if (duplicateServiceId != null) {
+        String serviceId = artifactVariable.fetchAssociatedService();
+        if (serviceId != null && serviceId.equals(duplicateServiceId)
+            && !duplicateArtifactVariable.getWorkflowIds().contains(workflowId)) {
+          duplicateArtifactVariable.getWorkflowIds().add(workflowId);
+          merged = true;
+          break;
+        }
+      }
+    }
+
+    if (!merged) {
+      addArtifactVariable(finalArtifactVariables, artifactVariable, workflowId);
+    }
+  }
+
+  private void addArtifactVariable(
+      List<ArtifactVariable> finalArtifactVariables, ArtifactVariable artifactVariable, String workflowId) {
+    artifactVariable.setWorkflowIds(new ArrayList<>(Collections.singletonList(workflowId)));
+    finalArtifactVariables.add(artifactVariable);
   }
 
   private static <T> void mergeLists(List<T> to, List<T> from) {

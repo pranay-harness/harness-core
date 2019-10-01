@@ -107,7 +107,7 @@ public class MultiArtifactWorkflowExecutionServiceHelper {
     return null;
   }
 
-  public List<Artifact> filterArtifactsForExecution(
+  List<Artifact> filterArtifactsForExecution(
       List<ArtifactVariable> artifactVariables, WorkflowExecution workflowExecution, String accountId) {
     List<Artifact> artifacts = new ArrayList<>();
     if (isNotEmpty(artifactVariables)) {
