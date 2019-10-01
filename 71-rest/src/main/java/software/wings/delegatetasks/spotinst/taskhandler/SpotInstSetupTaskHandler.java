@@ -159,7 +159,8 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
         .build();
   }
 
-  private SpotInstTaskExecutionResponse executeTaskInternalForBlueGreen(SpotInstSetupTaskParameters setupTaskParameters,
+  @VisibleForTesting
+  SpotInstTaskExecutionResponse executeTaskInternalForBlueGreen(SpotInstSetupTaskParameters setupTaskParameters,
       String spotInstAccountId, String spotInstToken, AwsConfig awsConfig, ExecutionLogCallback logCallback)
       throws Exception {
     SpotInstSetupTaskResponseBuilder builder = SpotInstSetupTaskResponse.builder();
