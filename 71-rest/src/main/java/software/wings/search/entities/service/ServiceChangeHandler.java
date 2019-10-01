@@ -5,7 +5,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DBObject;
-import io.harness.beans.WorkflowType;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.AuditHeaderKeys;
@@ -198,16 +197,14 @@ public class ServiceChangeHandler implements ChangeHandler {
 
   private boolean handleWorkflowExecutionUpdate(ChangeEvent<?> changeEvent) {
     WorkflowExecution workflowExecution = (WorkflowExecution) changeEvent.getFullDocument();
-    if (workflowExecution.getWorkflowType().equals(WorkflowType.ORCHESTRATION)) {
-      DBObject changes = changeEvent.getChanges();
-      if (changes.containsField(WorkflowExecutionKeys.status)) {
-        String entityType = ServiceViewKeys.deployments;
-        String newNameValue = workflowExecution.getStatus().toString();
-        String documentToUpdate = workflowExecution.getUuid();
-        String fieldToUpdate = DeploymentRelatedEntityViewKeys.status;
-        return searchDao.updateListInMultipleDocuments(
-            ServiceSearchEntity.TYPE, entityType, newNameValue, documentToUpdate, fieldToUpdate);
-      }
+    DBObject changes = changeEvent.getChanges();
+    if (changes.containsField(WorkflowExecutionKeys.status)) {
+      String entityType = ServiceViewKeys.deployments;
+      String newNameValue = workflowExecution.getStatus().toString();
+      String documentToUpdate = workflowExecution.getUuid();
+      String fieldToUpdate = DeploymentRelatedEntityViewKeys.status;
+      return searchDao.updateListInMultipleDocuments(
+          ServiceSearchEntity.TYPE, entityType, newNameValue, documentToUpdate, fieldToUpdate);
     }
     return true;
   }

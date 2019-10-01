@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.Future;
 
 /**
  * The task responsible for carrying out the bulk sync
@@ -176,7 +177,7 @@ public class ElasticsearchBulkSyncTask extends ElasticsearchSyncTask {
 
   public boolean run() {
     logger.info("Initializing change listeners for search entities for bulk sync.");
-    super.initializeChangeListeners();
+    Future f = super.initializeChangeListeners();
 
     logger.info("Getting the entities that have to bulk synced");
     setEntitiesToBulkSync();
@@ -212,6 +213,7 @@ public class ElasticsearchBulkSyncTask extends ElasticsearchSyncTask {
 
     logger.info("Calling change tracker to close change listeners after bulk sync was completed.");
     super.stopChangeListeners();
+    f.cancel(true);
 
     return hasMigrationSucceeded;
   }
