@@ -19,13 +19,13 @@ import java.util.Collections;
 import java.util.Set;
 
 @Getter
-@Entity(value = "alertNotificationRules", noClassnameStored = true)
-@HarnessEntity(exportable = true)
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Entity(value = "alertNotificationRules", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class AlertNotificationRule extends Base {
   public static final String ALERT_CATEGORY = "alertCategory";
 

@@ -32,8 +32,6 @@ import org.mongodb.morphia.annotations.PrePersist;
 import software.wings.security.ThreadLocalUserProvider;
 import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
 
-@Entity(value = "cvFeedbackRecords", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "CVFeedbackRecordKeys")
@@ -42,6 +40,8 @@ import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper = false)
 @IgnoreUnusedIndex
+@Entity(value = "cvFeedbackRecords", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class CVFeedbackRecord implements GoogleDataStoreAware {
   @Id private String uuid;
   @NotEmpty @Indexed private String accountId;

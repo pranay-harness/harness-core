@@ -44,8 +44,6 @@ import java.util.List;
 /**
  * Created by rsingh on 6/20/17.
  */
-@Entity(value = "logDataRecords", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Indexes({
   @Index(fields = { @Field("stateExecutionId")
                     , @Field("logCollectionMinute") },
@@ -72,6 +70,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil", "logMessage"})
+@Entity(value = "logDataRecords", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class LogDataRecord extends Base implements GoogleDataStoreAware {
   @NotEmpty private StateType stateType;
 

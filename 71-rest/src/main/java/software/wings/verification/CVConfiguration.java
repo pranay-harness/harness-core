@@ -29,17 +29,17 @@ import javax.validation.constraints.NotNull;
  * 05/Oct/2018
  */
 
-@Entity(value = "verificationServiceConfigurations")
 @Indexes({
   @Index(fields = {
     @Field("appId"), @Field("envId"), @Field("name")
   }, options = @IndexOptions(unique = true, name = "nameUniqueIndex"))
 })
-@HarnessEntity(exportable = true)
 @Data
 @FieldNameConstants(innerTypeName = "CVConfigurationKeys")
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@Entity(value = "verificationServiceConfigurations")
+@HarnessEntity(exportable = true)
 public class CVConfiguration extends Base implements NameAccess {
   @NotNull private String name;
   @NotNull @Indexed private String accountId;

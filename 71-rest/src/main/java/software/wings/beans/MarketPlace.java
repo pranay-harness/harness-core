@@ -22,11 +22,11 @@ import software.wings.beans.marketplace.MarketPlaceType;
 import java.util.Date;
 import javax.validation.constraints.NotNull;
 
-@Entity(value = "marketPlaces", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
+@Entity(value = "marketPlaces", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class MarketPlace
     implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
   private MarketPlaceType type;

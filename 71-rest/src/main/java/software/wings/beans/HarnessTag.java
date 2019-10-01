@@ -34,9 +34,7 @@ import java.util.List;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 
-@Entity(value = "tags", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@HarnessEntity(exportable = true)
 @Indexes(@Index(options = @IndexOptions(name = "tagIdx", unique = true),
     fields = { @Field(HarnessTagKeys.accountId)
                , @Field(HarnessTagKeys.key) }))
@@ -44,6 +42,8 @@ import javax.validation.constraints.NotNull;
 @Builder
 @JsonInclude(Include.NON_NULL)
 @FieldNameConstants(innerTypeName = "HarnessTagKeys")
+@Entity(value = "tags", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class HarnessTag
     implements PersistentEntity, UuidAware, UpdatedAtAware, UpdatedByAware, CreatedAtAware, CreatedByAware {
   @Id private String uuid;

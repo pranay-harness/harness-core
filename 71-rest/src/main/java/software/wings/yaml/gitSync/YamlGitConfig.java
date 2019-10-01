@@ -26,8 +26,6 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import javax.validation.constraints.NotNull;
 
-@Entity(value = "yamlGitConfig", noClassnameStored = true)
-@HarnessEntity(exportable = true)
 @Indexes(@Index(options = @IndexOptions(name = "locate", unique = true),
     fields = { @Field("accountId")
                , @Field("entityId"), @Field("entityType") }))
@@ -35,6 +33,8 @@ import javax.validation.constraints.NotNull;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Entity(value = "yamlGitConfig", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class YamlGitConfig extends Base implements EncryptableSetting {
   public static final String ENTITY_ID_KEY = "entityId";
   public static final String ENTITY_TYPE_KEY = "entityType";

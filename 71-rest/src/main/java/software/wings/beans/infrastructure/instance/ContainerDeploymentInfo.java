@@ -15,10 +15,10 @@ import software.wings.beans.Base;
  * @author rktummala on 09/13/17
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Entity(value = "containerDeploymentInfo", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Data
 @EqualsAndHashCode(callSuper = true)
+@Entity(value = "containerDeploymentInfo", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class ContainerDeploymentInfo extends Base {
   private String accountId;
   private String serviceId;

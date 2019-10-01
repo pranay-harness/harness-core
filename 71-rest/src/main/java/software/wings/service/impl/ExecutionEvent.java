@@ -9,11 +9,11 @@ import org.mongodb.morphia.annotations.Entity;
 
 import java.util.List;
 
-@Entity(value = "executionQueue", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
+@Entity(value = "executionQueue", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class ExecutionEvent extends Queuable {
   private String appId;
   private String workflowId;

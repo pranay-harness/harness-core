@@ -15,8 +15,6 @@ import software.wings.beans.Base;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.sm.StateType;
 
-@Entity(value = "timeseriesTransactionThresholds", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Indexes({
   @Index(fields = {
     @Field("appId")
@@ -28,6 +26,8 @@ import software.wings.sm.StateType;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "TimeSeriesMLTransactionThresholdKeys")
+@Entity(value = "timeseriesTransactionThresholds", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class TimeSeriesMLTransactionThresholds extends Base {
   @NotEmpty private String serviceId;
 

@@ -18,12 +18,12 @@ import software.wings.yaml.BaseYaml;
 import java.util.List;
 import javax.validation.Valid;
 
-@Entity("lambdaSpecifications")
-@HarnessEntity(exportable = true)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "LambdaSpecificationKeys")
+@Entity("lambdaSpecifications")
+@HarnessEntity(exportable = true)
 public class LambdaSpecification extends DeploymentSpecification {
   @NotEmpty @Indexed(options = @IndexOptions(unique = true)) private String serviceId;
   private DefaultSpecification defaults;

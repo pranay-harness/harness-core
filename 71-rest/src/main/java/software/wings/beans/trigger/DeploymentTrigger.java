@@ -42,7 +42,6 @@ import javax.validation.constraints.NotNull;
  * Created by sgurubelli on 10/25/17.
  */
 
-@Entity(value = "deploymentTriggers", noClassnameStored = true)
 @Data
 @Builder
 @AllArgsConstructor
@@ -59,8 +58,9 @@ import javax.validation.constraints.NotNull;
       }), @Index(options = @IndexOptions(name = "iterations"), fields = { @Field("type")
                                                                           , @Field("nextIterations") })
 })
-@HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "DeploymentTriggerKeys")
+@Entity(value = "deploymentTriggers", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class DeploymentTrigger implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                           UpdatedByAware, PersistentCronIterable, TagAware, ApplicationAccess {
   @Id @NotNull(groups = {DeploymentTrigger.class}) @SchemaIgnore private String uuid;

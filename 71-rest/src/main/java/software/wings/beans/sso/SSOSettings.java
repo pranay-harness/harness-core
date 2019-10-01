@@ -13,11 +13,11 @@ import software.wings.beans.Base;
 
 import javax.validation.constraints.NotNull;
 
-@Entity(value = "ssoSettings")
-@HarnessEntity(exportable = true)
 @Data
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "SSOSettingsKeys")
+@Entity(value = "ssoSettings")
+@HarnessEntity(exportable = true)
 public abstract class SSOSettings extends Base {
   @NotNull protected SSOType type;
   @NotEmpty protected String displayName;

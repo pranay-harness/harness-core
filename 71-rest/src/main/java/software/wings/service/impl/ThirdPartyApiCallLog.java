@@ -56,8 +56,6 @@ import java.util.List;
 /**
  * Created by rsingh on 1/8/18.
  */
-@Entity(value = "thirdPartyApiCallLog")
-@HarnessEntity(exportable = false)
 @Data
 @Builder
 @NoArgsConstructor
@@ -71,6 +69,8 @@ import java.util.List;
     @Field("stateExecutionId"), @Field(value = CreatedAtAware.CREATED_AT_KEY, type = IndexType.DESC)
   }, options = @IndexOptions(name = "queryIdx"))
 })
+@Entity(value = "thirdPartyApiCallLog")
+@HarnessEntity(exportable = false)
 public class ThirdPartyApiCallLog implements GoogleDataStoreAware, CreatedAtAware, UuidAware {
   public static final String NO_STATE_EXECUTION_ID = "NO_STATE_EXECUTION";
   private static final int MAX_JSON_RESPONSE_LENGTH = 16384;

@@ -29,15 +29,15 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
-@Entity(value = "resourceConstraint", noClassnameStored = true)
 @Indexes(@Index(
     options = @IndexOptions(unique = true, name = "uniqueName"), fields = { @Field("accountId")
                                                                             , @Field("name") }))
-@HarnessEntity(exportable = true)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "ResourceConstraintKeys")
+@Entity(value = "resourceConstraint", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class ResourceConstraint
     implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
   public static final String ACCOUNT_ID_KEY = "accountId";

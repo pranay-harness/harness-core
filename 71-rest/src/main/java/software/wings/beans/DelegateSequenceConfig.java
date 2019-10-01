@@ -13,7 +13,6 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 
-@Entity(value = "delegateSequenceConfig", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -23,8 +22,9 @@ import org.mongodb.morphia.annotations.Indexes;
 
       options = @IndexOptions(unique = true, name = "uniqueDelegateSequenceIdx"))
 })
-@HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "DelegateSequenceConfigKeys")
+@Entity(value = "delegateSequenceConfig", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class DelegateSequenceConfig extends Base {
   @NotEmpty private String accountId;
   @NotEmpty private String hostName;

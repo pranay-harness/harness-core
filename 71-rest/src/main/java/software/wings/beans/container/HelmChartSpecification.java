@@ -14,12 +14,12 @@ import software.wings.beans.DeploymentSpecification;
 
 import javax.validation.constraints.NotNull;
 
-@Entity("helmChartSpecifications")
-@HarnessEntity(exportable = true)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "HelmChartSpecificationKeys")
+@Entity("helmChartSpecifications")
+@HarnessEntity(exportable = true)
 public class HelmChartSpecification extends DeploymentSpecification {
   @NotEmpty @Indexed(options = @IndexOptions(unique = true)) private String serviceId;
   @NotNull private String chartUrl;

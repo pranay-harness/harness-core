@@ -17,13 +17,13 @@ import java.util.List;
 /**
  * Created by brett on 7/20/17
  */
-@Entity(value = "delegateScopes")
-@HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "DelegateScopeKeys")
+@Entity(value = "delegateScopes")
+@HarnessEntity(exportable = true)
 public class DelegateScope extends Base {
   @NotEmpty private String accountId;
   private String name;

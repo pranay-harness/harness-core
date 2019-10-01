@@ -15,10 +15,10 @@ import software.wings.beans.infrastructure.instance.key.deployment.K8sDeployment
 import software.wings.beans.infrastructure.instance.key.deployment.PcfDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.SpotinstAmiDeploymentKey;
 
-@Entity(value = "deploymentSummary", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Data
 @EqualsAndHashCode(callSuper = true)
+@Entity(value = "deploymentSummary", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class DeploymentSummary extends Base {
   private String accountId;
   @Indexed private String infraMappingId;

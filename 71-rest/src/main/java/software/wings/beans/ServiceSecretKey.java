@@ -16,12 +16,12 @@ import org.mongodb.morphia.annotations.Indexes;
  */
 @Indexes(
     { @Index(fields = { @Field("serviceType") }, options = @IndexOptions(unique = true, name = "serviceSecretIndex")) })
-@Entity(value = "serviceSecrets", noClassnameStored = true)
-@HarnessEntity(exportable = true)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "ServiceSecretKeyKeys")
+@Entity(value = "serviceSecrets", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class ServiceSecretKey extends Base {
   private String serviceSecret;
   private ServiceType serviceType;

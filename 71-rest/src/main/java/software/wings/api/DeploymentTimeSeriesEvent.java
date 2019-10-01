@@ -15,11 +15,11 @@ import software.wings.service.impl.event.timeseries.TimeSeriesEventInfo;
  *
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Entity(value = "deploymentTimeSeriesEventQueue", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
+@Entity(value = "deploymentTimeSeriesEventQueue", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class DeploymentTimeSeriesEvent extends Queuable {
   private TimeSeriesEventInfo timeSeriesEventInfo;
 }

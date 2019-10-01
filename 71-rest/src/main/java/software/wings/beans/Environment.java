@@ -42,17 +42,17 @@ import javax.validation.constraints.NotNull;
  *
  * @author Rishi
  */
-@Entity(value = "environments", noClassnameStored = true)
 @Indexes({
   @Index(options = @IndexOptions(name = "yaml", unique = true), fields = {
     @Field(EnvironmentKeys.appId), @Field(EnvironmentKeys.name)
   })
 })
-@HarnessEntity(exportable = true)
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "EnvironmentKeys")
+@Entity(value = "environments", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class Environment extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, ApplicationAccess {
   public static final String GLOBAL_ENV_ID = "__GLOBAL_ENV_ID__";
 

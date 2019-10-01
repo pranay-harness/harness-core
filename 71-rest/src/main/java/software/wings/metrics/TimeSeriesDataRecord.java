@@ -63,9 +63,6 @@ import java.util.Set;
 /**
  * Created by rsingh on 08/30/17.
  */
-@Entity(value = "timeSeriesMetricRecords", noClassnameStored = true)
-@HarnessEntity(exportable = false)
-
 @Indexes({
   @Index(fields =
       {
@@ -87,6 +84,8 @@ import java.util.Set;
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil", "values", "deeplinkMetadata", "deeplinkUrl"})
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "TimeSeriesMetricRecordKeys")
+@Entity(value = "timeSeriesMetricRecords", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class TimeSeriesDataRecord implements GoogleDataStoreAware, UuidAware, CreatedAtAware {
   @Id private String uuid;
 

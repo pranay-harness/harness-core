@@ -41,14 +41,14 @@ import javax.validation.constraints.NotNull;
  *
  * @author Rishi
  */
-@Entity(value = "pipelines", noClassnameStored = true)
-@HarnessEntity(exportable = true)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "PipelineKeys")
+@Entity(value = "pipelines", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class Pipeline extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, ApplicationAccess {
   public static final String NAME_KEY = "name";
   public static final String DESCRIPTION_KEY = "description";

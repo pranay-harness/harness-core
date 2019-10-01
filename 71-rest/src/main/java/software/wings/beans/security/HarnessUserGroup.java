@@ -22,11 +22,11 @@ import java.util.Set;
  * @author Rishi
  */
 @JsonInclude(NON_EMPTY)
-@Entity(value = "harnessUserGroups", noClassnameStored = true)
-@HarnessEntity(exportable = true)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@Entity(value = "harnessUserGroups", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class HarnessUserGroup extends Base {
   @NotEmpty private String name;
   private String description;

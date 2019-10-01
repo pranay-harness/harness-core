@@ -13,11 +13,11 @@ import java.util.List;
 /**
  * Created by anubhaw on 4/13/17.
  */
-@Entity(value = "notificationBatch", noClassnameStored = true)
-@HarnessEntity(exportable = true)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@Entity(value = "notificationBatch", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class NotificationBatch extends Base {
   private String batchId;
   private NotificationRule notificationRule;

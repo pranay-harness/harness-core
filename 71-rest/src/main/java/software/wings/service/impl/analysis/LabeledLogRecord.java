@@ -30,14 +30,14 @@ import java.util.Set;
 /**
  * @author Praveen
  */
-@Entity(value = "supervisedLogRecords", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "LabeledLogRecordKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity(value = "supervisedLogRecords", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class LabeledLogRecord implements GoogleDataStoreAware {
   private String label;
   private String accountId;

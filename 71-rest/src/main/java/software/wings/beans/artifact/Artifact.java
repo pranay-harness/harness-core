@@ -24,14 +24,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@Entity(value = "artifacts", noClassnameStored = true)
-@HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Indexes(@Index(options = @IndexOptions(name = "owners"), fields = { @Field("artifactStreamId")
                                                                      , @Field("appId") }))
 @FieldNameConstants(innerTypeName = "ArtifactKeys")
+@Entity(value = "artifacts", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class Artifact extends Base {
   public static final class ArtifactMetadataKeys {
     public static final String artifactFileName = "artifactFileName";

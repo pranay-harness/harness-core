@@ -6,11 +6,11 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
 
-@Entity(value = "managerConfiguration", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
+@Entity(value = "managerConfiguration", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class ManagerConfiguration extends Base {
   public static final String GLOBAL_CONFIG_ID = "__GLOBAL_CONFIG_ID__";
   public static final String MATCH_ALL_VERSION = "*";

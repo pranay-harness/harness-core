@@ -7,6 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.annotation.HarnessEntity;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 import lombok.AllArgsConstructor;
@@ -30,7 +31,6 @@ import java.util.Map;
  * Class representing entity for TimeSeries Analysis Record.
  * Created by sriram_parthasarathy on 9/22/17.
  */
-@Entity(value = "timeSeriesAnomaliesRecords", noClassnameStored = true)
 @Data
 @Builder
 @NoArgsConstructor
@@ -38,6 +38,8 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "TimeSeriesAnomaliesRecordKeys")
+@Entity(value = "timeSeriesAnomaliesRecords", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class TimeSeriesAnomaliesRecord extends Base {
   @NotEmpty @Indexed private String cvConfigId;
   @Transient private Map<String, Map<String, List<TimeSeriesMLHostSummary>>> anomalies;

@@ -26,12 +26,12 @@ import javax.annotation.Nonnull;
  * @author rktummala on 02/04/19
  */
 @JsonInclude(NON_EMPTY)
-@Entity(value = "governanceConfig", noClassnameStored = true)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "GovernanceConfigKeys")
+@Entity(value = "governanceConfig", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class GovernanceConfig implements PersistentEntity, UuidAware, UpdatedByAware {
   @Id private String uuid;
 

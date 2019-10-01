@@ -33,8 +33,6 @@ import java.util.List;
 import java.util.Set;
 
 @Data
-@Entity(value = "templateFolders", noClassnameStored = true)
-@HarnessEntity(exportable = true)
 @NoArgsConstructor
 @JsonInclude(NON_NULL)
 @EqualsAndHashCode(callSuper = false)
@@ -42,6 +40,8 @@ import java.util.Set;
     fields = { @Field("accountId")
                , @Field("name"), @Field("pathId"), @Field("appId") }))
 @FieldNameConstants(innerTypeName = "TemplateFolderKeys")
+@Entity(value = "templateFolders", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class TemplateFolder extends Base implements KeywordsAware, NameAccess {
   public static final String GALLERY_ID_KEY = "galleryId";
   public static final String KEYWORDS_KEY = "keywords";

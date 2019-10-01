@@ -25,8 +25,6 @@ import software.wings.sm.StateType;
 import java.time.OffsetDateTime;
 import java.util.Date;
 
-@Entity(value = "cvExecutionData", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
@@ -43,6 +41,8 @@ import java.util.Date;
         @Field("workflowExecutionId"), @Field(value = "createdAt", type = IndexType.DESC)
       }, options = @IndexOptions(name = "workflowExec_idx"))
 })
+@Entity(value = "cvExecutionData", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class ContinuousVerificationExecutionMetaData extends Base {
   @NotEmpty @Indexed private long workflowStartTs;
   @NotEmpty private long pipelineStartTs;

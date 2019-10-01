@@ -24,8 +24,6 @@ import java.util.Map;
 /**
  * Created by rsingh on 08/30/17.
  */
-@Entity(value = "timeSeriesMetricGroup", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Indexes({
   @Index(fields = {
     @Field("stateType"), @Field("stateExecutionId")
@@ -33,6 +31,8 @@ import java.util.Map;
 })
 @Data
 @EqualsAndHashCode(callSuper = false)
+@Entity(value = "timeSeriesMetricGroup", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class TimeSeriesMetricGroup extends Base {
   @NotEmpty private StateType stateType;
 

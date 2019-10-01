@@ -12,13 +12,13 @@ import org.mongodb.morphia.annotations.Entity;
 /**
  * Created by rishi on 7/31/18
  */
-@Entity(value = "delegateProfiles")
-@HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "DelegateProfileKeys")
+@Entity(value = "delegateProfiles")
+@HarnessEntity(exportable = true)
 public class DelegateProfile extends Base {
   @NotEmpty private String accountId;
   @NotEmpty private String name;

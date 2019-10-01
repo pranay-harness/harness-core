@@ -34,8 +34,6 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by rsingh on 1/8/18.
  */
-@Entity(value = "learningEngineAnalysisTask", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Indexes({
   @Index(fields =
       {
@@ -58,6 +56,8 @@ import java.util.concurrent.TimeUnit;
 @FieldNameConstants(innerTypeName = "LearningEngineAnalysisTaskKeys")
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Entity(value = "learningEngineAnalysisTask", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class LearningEngineAnalysisTask extends Base {
   public static long TIME_SERIES_ANALYSIS_TASK_TIME_OUT = TimeUnit.MINUTES.toMillis(12);
   public static final int RETRIES = 3;

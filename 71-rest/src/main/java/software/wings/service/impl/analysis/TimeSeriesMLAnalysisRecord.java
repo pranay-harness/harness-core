@@ -16,8 +16,6 @@ import org.mongodb.morphia.utils.IndexType;
  * Class representing entity for TimeSeries Analysis Record.
  * Created by sriram_parthasarathy on 9/22/17.
  */
-@Entity(value = "timeSeriesAnalysisRecords", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Indexes({
   @Index(fields =
       { @Field("stateExecutionId")
@@ -32,4 +30,6 @@ import org.mongodb.morphia.utils.IndexType;
 @Builder
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Entity(value = "timeSeriesAnalysisRecords", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class TimeSeriesMLAnalysisRecord extends MetricAnalysisRecord {}

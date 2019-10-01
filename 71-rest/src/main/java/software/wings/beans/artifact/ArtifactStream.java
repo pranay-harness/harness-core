@@ -40,7 +40,6 @@ import java.util.Set;
  * @author Rishi
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "artifactStreamType")
-@Entity(value = "artifactStream")
 @Indexes({
   @Index(options = @IndexOptions(name = "yaml", unique = true),
       fields = { @Field("appId")
@@ -55,11 +54,12 @@ import java.util.Set;
 // TODO: ASR: migrate the index and name of existing artifact streams (name + service name + app name + setting name)
 // TODO: ASR: removing serviceId from ArtifactStream
 // TODO: ASR: add feature flag: should not have serviceId in ArtifactStream
-@HarnessEntity(exportable = true)
 @Data
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "ArtifactStreamKeys")
+@Entity(value = "artifactStream")
+@HarnessEntity(exportable = true)
 public abstract class ArtifactStream
     extends Base implements ArtifactSourceable, PersistentRegularIterable, NameAccess, KeywordsAware {
   protected static final String dateFormat = "HHMMSS";

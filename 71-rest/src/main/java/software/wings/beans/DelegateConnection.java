@@ -16,12 +16,12 @@ import org.mongodb.morphia.annotations.Indexed;
 import java.util.Date;
 
 @FieldNameConstants(innerTypeName = "DelegateConnectionKeys")
-@Entity(value = "delegateConnections", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
+@Entity(value = "delegateConnections", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class DelegateConnection extends Base {
   public static final int defaultExpiryTimeInMinutes = 5;
 

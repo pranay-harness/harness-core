@@ -26,12 +26,12 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-@Entity(value = "cvActivityLogs", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "CVActivityLogKeys")
 @Data
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Entity(value = "cvActivityLogs", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class CVActivityLog implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id private String uuid;
   @Indexed private String cvConfigId;

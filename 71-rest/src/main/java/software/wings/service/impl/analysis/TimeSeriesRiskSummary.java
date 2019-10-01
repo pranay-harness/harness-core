@@ -33,9 +33,6 @@ import java.util.Map;
  * Class representing an entity of cumulative sums and risk for each window of analysis.
  * Created by Praveen.
  */
-
-@Entity(value = "timeSeriesRiskSummary", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Indexes(@Index(fields = { @Field("cvConfigId")
                            , @Field("analysisMinute"), @Field("tag") },
     options = @IndexOptions(name = "minute_idx")))
@@ -46,6 +43,8 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "TimeSeriesRiskSummaryKeys")
+@Entity(value = "timeSeriesRiskSummary", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class TimeSeriesRiskSummary extends Base {
   @NotEmpty private String cvConfigId;
   @NotEmpty private int analysisMinute;

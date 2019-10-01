@@ -39,7 +39,6 @@ import javax.ws.rs.DefaultValue;
 /**
  * Created by anubhaw on 4/12/16.
  */
-@Entity(value = "configFiles", noClassnameStored = true)
 @Indexes({
   @Index(fields =
       {
@@ -54,13 +53,14 @@ import javax.ws.rs.DefaultValue;
         @Field("appId"), @Field("templateId"), @Field("entityId")
       }, options = @IndexOptions(name = "app_template_entityId"))
 })
-@HarnessEntity(exportable = true)
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "ConfigFileKeys")
+@Entity(value = "configFiles", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class ConfigFile extends BaseFile implements EncryptableSetting {
   public static final String DEFAULT_TEMPLATE_ID = "__TEMPLATE_ID";
 

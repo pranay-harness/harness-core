@@ -17,8 +17,6 @@ import software.wings.beans.Base;
  *
  * @author rktummala on 05/19/18
  */
-@Entity(value = "syncStatus", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Indexes({
@@ -29,6 +27,8 @@ import software.wings.beans.Base;
       @Index(fields = { @Field("appId")
                         , @Field("infraMappingId") }, options = @IndexOptions(name = "compositeIdx2"))
 })
+@Entity(value = "syncStatus", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class SyncStatus extends Base {
   public static final String SERVICE_ID_KEY = "serviceId";
   public static final String ENV_ID_KEY = "envId";

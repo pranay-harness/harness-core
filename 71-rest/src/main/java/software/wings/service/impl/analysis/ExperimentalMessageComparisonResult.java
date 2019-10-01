@@ -31,8 +31,6 @@ import org.mongodb.morphia.annotations.Indexed;
 
 import java.util.Map;
 
-@Entity(value = "experimentalLogMessageComparisonResult")
-@HarnessEntity(exportable = false)
 @Data
 @Builder
 @NoArgsConstructor
@@ -40,6 +38,8 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "ExperimentalMessageComparisonResultKeys")
+@Entity(value = "experimentalLogMessageComparisonResult")
+@HarnessEntity(exportable = false)
 public class ExperimentalMessageComparisonResult
     implements PersistentEntity, UuidAware, GoogleDataStoreAware, CreatedAtAware {
   @NotEmpty @Indexed private String stateExecutionId;

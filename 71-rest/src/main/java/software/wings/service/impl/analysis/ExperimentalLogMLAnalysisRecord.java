@@ -29,8 +29,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-@Entity(value = "experimentalLogAnalysisRecords", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Indexes(@Index(fields = { @Field("stateExecutionId")
                            , @Field(value = "logCollectionMinute", type = IndexType.DESC) },
     options = @IndexOptions(name = "stateExecutionIdx")))
@@ -39,6 +37,8 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "ExperimentalLogMLAnalysisRecordKeys")
 @IgnoreUnusedIndex
+@Entity(value = "experimentalLogAnalysisRecords", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class ExperimentalLogMLAnalysisRecord extends Base {
   @NotEmpty @Indexed private String stateExecutionId;
 

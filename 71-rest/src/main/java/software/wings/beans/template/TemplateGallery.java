@@ -20,14 +20,14 @@ import software.wings.beans.entityinterface.KeywordsAware;
 
 import java.util.Set;
 
-@Entity("templateGalleries")
-@HarnessEntity(exportable = true)
 @Indexes(
     @Index(fields = { @Field("name")
                       , @Field("accountId") }, options = @IndexOptions(name = "yaml", unique = true)))
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@Entity("templateGalleries")
+@HarnessEntity(exportable = true)
 public class TemplateGallery extends Base implements KeywordsAware {
   public static final String ACCOUNT_NAME_KEY = "accountName";
   public static final String NAME_KEY = "name";

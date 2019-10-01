@@ -32,8 +32,6 @@ import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 @JsonInclude(NON_NULL)
-@Entity(value = "templates", noClassnameStored = true)
-@HarnessEntity(exportable = true)
 @Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true),
     fields = { @Field("accountId")
                , @Field("name"), @Field("folderId"), @Field("appId") }))
@@ -41,6 +39,8 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "TemplateKeys")
+@Entity(value = "templates", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class Template extends Base implements KeywordsAware, NameAccess {
   public static final String FOLDER_ID_KEY = "folderId";
   public static final String FOLDER_PATH_ID_KEY = "folderPathId";

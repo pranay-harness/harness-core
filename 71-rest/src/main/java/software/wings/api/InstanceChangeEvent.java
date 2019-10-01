@@ -16,11 +16,11 @@ import java.util.List;
  * @author rktummala on 08/24/17
  *
  */
-@Entity(value = "instanceChangeQueue", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
+@Entity(value = "instanceChangeQueue", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class InstanceChangeEvent extends Queuable {
   private List<Instance> instanceList;
   private List<String> autoScalingGroupList;

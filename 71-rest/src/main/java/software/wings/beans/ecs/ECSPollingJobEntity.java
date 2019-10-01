@@ -19,12 +19,12 @@ import software.wings.service.impl.aws.model.AwsEcsRequest.AwsEcsRequestType;
 
 import javax.validation.constraints.NotNull;
 
-@Entity(value = "ecsPollingJobEntity")
 @FieldNameConstants(innerTypeName = "ECSPollingJobEntityKeys")
-@HarnessEntity(exportable = false)
 @Getter
 @ToString
 @EqualsAndHashCode
+@Entity(value = "ecsPollingJobEntity")
+@HarnessEntity(exportable = false)
 public class ECSPollingJobEntity implements PersistentRegularIterable, CreatedAtAccess, UpdatedAtAccess {
   @Id private String uuid;
   @Indexed private String clusterName;

@@ -35,9 +35,9 @@ import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 @FieldNameConstants(innerTypeName = "AccountKeys")
-@HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "accounts", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class Account extends Base implements PersistentRegularIterable {
   public static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
 

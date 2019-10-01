@@ -13,8 +13,6 @@ import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.service.impl.analysis.MLAnalysisType;
 
-@Entity(value = "mlExperiments", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Indexes({
   @Index(fields = {
     @Field("ml_analysis_type"), @Field("experimentName")
@@ -24,6 +22,8 @@ import software.wings.service.impl.analysis.MLAnalysisType;
 @FieldNameConstants(innerTypeName = "MLExperimentsKeys")
 @Builder
 @EqualsAndHashCode(callSuper = false)
+@Entity(value = "mlExperiments", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class MLExperiments extends Base {
   private MLAnalysisType ml_analysis_type;
   private String experimentName;

@@ -9,10 +9,10 @@ import org.mongodb.morphia.annotations.Entity;
 import java.util.Date;
 import java.util.Map;
 
-@Entity(value = "delayQueue", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Value
 @EqualsAndHashCode(callSuper = false)
+@Entity(value = "delayQueue", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class DelayEvent extends Queuable {
   private String resumeId;
   private Map<String, String> context;

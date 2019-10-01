@@ -17,8 +17,6 @@ import software.wings.beans.Base;
 /**
  * Created by rsingh on 2/16/18.
  */
-@Entity(value = "workflowExecutionBaselines", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Indexes({
   @Index(fields = {
     @Field("workflowId"), @Field("envId"), @Field("serviceId")
@@ -28,6 +26,8 @@ import software.wings.beans.Base;
 @Builder
 @EqualsAndHashCode(callSuper = false, exclude = {"workflowExecutionId"})
 @FieldNameConstants(innerTypeName = "WorkflowExecutionBaselineKeys")
+@Entity(value = "workflowExecutionBaselines", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class WorkflowExecutionBaseline extends Base {
   public static final String WORKFLOW_ID_KEY = "workflowId";
   public static final String ENV_ID_KEY = "envId";

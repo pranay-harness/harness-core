@@ -35,8 +35,6 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
-@Entity(value = "infrastructureDefinitions", noClassnameStored = true)
-@HarnessEntity(exportable = true)
 @Indexes(@Index(options = @IndexOptions(name = "infraDefinitionIdx", unique = true),
     fields = { @Field("appId")
                , @Field("envId"), @Field("name") }))
@@ -44,6 +42,8 @@ import javax.validation.constraints.NotNull;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "InfrastructureDefinitionKeys")
+@Entity(value = "infrastructureDefinitions", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class InfrastructureDefinition implements PersistentEntity, UuidAware, NameAccess, CreatedAtAware,
                                                  CreatedByAware, UpdatedAtAware, UpdatedByAware, ApplicationAccess {
   @Id private String uuid;

@@ -17,12 +17,12 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by anubhaw on 12/18/17.
  */
-@Entity("userDataSpecifications")
-@HarnessEntity(exportable = true)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "UserDataSpecificationKeys")
+@Entity("userDataSpecifications")
+@HarnessEntity(exportable = true)
 public class UserDataSpecification extends DeploymentSpecification {
   @NotEmpty @Indexed(options = @IndexOptions(unique = true)) private String serviceId;
   @NotNull private String data;

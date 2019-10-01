@@ -16,11 +16,11 @@ import java.util.List;
  *
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Entity(value = "deploymentEventQueue", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
+@Entity(value = "deploymentEventQueue", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class DeploymentEvent extends Queuable {
   private boolean isRollback;
   private List<DeploymentSummary> deploymentSummaries;

@@ -7,6 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.annotation.HarnessEntity;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 import lombok.AllArgsConstructor;
@@ -34,7 +35,6 @@ import java.util.Map;
  * Created by Praveen.
  */
 
-@Entity(value = "timeSeriesCumulativeSums", noClassnameStored = true)
 @Indexes({
   @Index(fields = { @Field("appId")
                     , @Field("cvConfigId"), @Field("analysisMinute"), @Field("tag") },
@@ -52,6 +52,8 @@ import java.util.Map;
 @FieldNameConstants(innerTypeName = "TimeSeriesCumulativeSumsKeys")
 @EqualsAndHashCode(callSuper = false, exclude = {"transactionMetricSums", "compressedMetricSums"})
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Entity(value = "timeSeriesCumulativeSums", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class TimeSeriesCumulativeSums extends Base {
   @NotEmpty @Indexed private String cvConfigId;
   @NotEmpty @Indexed private int analysisMinute;

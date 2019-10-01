@@ -30,8 +30,6 @@ import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
 import software.wings.service.impl.analysis.AnalysisServiceImpl.LogMLFeedbackType;
 import software.wings.sm.StateType;
 
-@Entity(value = "logMlFeedbackRecords", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Indexes({
   @Index(fields = {
     @Field("applicationId"), @Field("stateExecutionId"), @Field("clusterType"), @Field("clusterLabel")
@@ -42,6 +40,8 @@ import software.wings.sm.StateType;
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "LogMLFeedbackRecordKeys")
 @IgnoreUnusedIndex
+@Entity(value = "logMlFeedbackRecords", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class LogMLFeedbackRecord extends Base implements GoogleDataStoreAware {
   @NotEmpty @Indexed private String serviceId;
 

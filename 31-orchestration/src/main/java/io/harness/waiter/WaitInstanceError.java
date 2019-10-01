@@ -13,10 +13,10 @@ import java.util.Map;
 /**
  * Represents errors thrown by callback of wait instance.
  */
-@Entity(value = "waitInstanceErrors", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Value
 @Builder
+@Entity(value = "waitInstanceErrors", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class WaitInstanceError implements PersistentEntity {
   @Id private String waitInstanceId;
   private Map<String, ResponseData> responseMap;
