@@ -51,8 +51,6 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testHandleEcsDelegateRequest_KeepAliveRequest() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
-    doReturn(null).when(delegateService).handleEcsDelegateKeepAlivePacket(any());
-
     delegateService.handleEcsDelegateRequest(Delegate.builder().keepAlivePacket(true).build());
 
     verify(delegateService).handleEcsDelegateKeepAlivePacket(any());

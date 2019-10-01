@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.ServiceVariable.Type.TEXT;
@@ -1078,7 +1079,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       context.put(StateExecutionInstanceLogContext.ID, getStateExecutionInstanceId());
     }
 
-    return new AutoLogContext(context.build());
+    return new AutoLogContext(context.build(), OVERRIDE_ERROR);
   }
 
   @Override

@@ -24,9 +24,9 @@ import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
-import static software.wings.common.Constants.DELEGATE_DIR;
-import static software.wings.common.Constants.DOCKER_DELEGATE;
-import static software.wings.common.Constants.KUBERNETES_DELEGATE;
+import static software.wings.service.impl.DelegateServiceImpl.DELEGATE_DIR;
+import static software.wings.service.impl.DelegateServiceImpl.DOCKER_DELEGATE;
+import static software.wings.service.impl.DelegateServiceImpl.KUBERNETES_DELEGATE;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
@@ -483,11 +483,11 @@ public class DelegateServiceTest extends WingsBaseTest {
     DelegateTask updatedDelegateTask =
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get();
 
-    assertThat(updatedDelegateTask != null);
-    assertThat(updatedDelegateTask.getDelegateId() == null);
+    assertThat(updatedDelegateTask).isNotNull();
+    assertThat(updatedDelegateTask.getDelegateId()).isNull();
     assertThat(updatedDelegateTask.getAlreadyTriedDelegates()).isNotNull();
-    assertThat(updatedDelegateTask.getAlreadyTriedDelegates().size() == 1);
-    assertThat(updatedDelegateTask.getAlreadyTriedDelegates().contains(DELEGATE_ID));
+    assertThat(updatedDelegateTask.getAlreadyTriedDelegates().size()).isEqualTo(1);
+    assertThat(updatedDelegateTask.getAlreadyTriedDelegates()).contains(DELEGATE_ID);
   }
 
   @Test

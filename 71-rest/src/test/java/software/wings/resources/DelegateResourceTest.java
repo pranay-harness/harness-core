@@ -39,10 +39,10 @@ import org.mockito.ArgumentCaptor;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateStatus;
-import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.ratelimit.DelegateRequestRateLimiter;
+import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateService;
@@ -283,7 +283,7 @@ public class DelegateResourceTest extends CategoryTest {
     verify(DOWNLOAD_TOKEN_SERVICE, atLeastOnce()).validateDownloadToken("delegate." + ACCOUNT_ID, "token");
 
     assertThat(restResponse.getHeaderString("Content-Disposition"))
-        .isEqualTo("attachment; filename=" + Constants.DELEGATE_DIR + ".tar.gz");
+        .isEqualTo("attachment; filename=" + DelegateServiceImpl.DELEGATE_DIR + ".tar.gz");
     assertThat(IOUtils.readLines((InputStream) restResponse.getEntity(), Charset.defaultCharset()).get(0))
         .isEqualTo("Test");
   }

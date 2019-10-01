@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.validation;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.network.Http.connectableHttpUrl;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
@@ -41,7 +42,7 @@ public abstract class AbstractDelegateValidateTask implements DelegateValidateTa
 
   @Override
   public void run() {
-    try (TaskLogContext ctx = new TaskLogContext(this.delegateTaskId)) {
+    try (TaskLogContext ignore = new TaskLogContext(this.delegateTaskId, OVERRIDE_ERROR)) {
       List<DelegateConnectionResult> results = null;
       try {
         long startTime = System.currentTimeMillis();

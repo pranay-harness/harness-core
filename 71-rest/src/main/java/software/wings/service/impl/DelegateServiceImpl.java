@@ -18,9 +18,12 @@ import static io.harness.exception.WingsException.NOBODY;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
+import static java.lang.String.join;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Comparator.comparingInt;
@@ -41,10 +44,6 @@ import static software.wings.beans.FeatureName.CCM_EVENT_COLLECTION;
 import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK;
 import static software.wings.beans.TaskType.HOST_VALIDATION;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
-import static software.wings.common.Constants.DELEGATE_DIR;
-import static software.wings.common.Constants.DOCKER_DELEGATE;
-import static software.wings.common.Constants.ECS_DELEGATE;
-import static software.wings.common.Constants.KUBERNETES_DELEGATE;
 import static software.wings.common.Constants.MAX_DELEGATE_LAST_HEARTBEAT;
 import static software.wings.service.impl.DelegateGrpcConfigExtractor.extractTarget;
 import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
@@ -83,7 +82,6 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.CapabilityUtils;
-import io.harness.delegate.task.DelegateLogContext;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
@@ -206,6 +204,13 @@ import javax.ws.rs.NotFoundException;
 @ValidateOnExecution
 @Slf4j
 public class DelegateServiceImpl implements DelegateService, Runnable {
+  /**
+   * The constant DELEGATE_DIR.
+   */
+  public static final String DELEGATE_DIR = "harness-delegate";
+  public static final String DOCKER_DELEGATE = "harness-delegate-docker";
+  public static final String KUBERNETES_DELEGATE = "harness-delegate-kubernetes";
+  public static final String ECS_DELEGATE = "harness-delegate-ecs";
   private static final Configuration cfg = new Configuration(VERSION_2_3_23);
   private static final int MAX_DELEGATE_META_INFO_ENTRIES = 10000;
   private static final Set<DelegateTask.Status> TASK_COMPLETED_STATUSES = ImmutableSet.of(FINISHED, ABORTED, ERROR);
@@ -1414,8 +1419,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   public String queueTask(DelegateTask task) {
     DelegateTask savedTask = saveDelegateTask(task, true);
     try (AutoLogContext ignore1 = new TaskLogContext(savedTask.getUuid(), savedTask.getData().getTaskType(),
-             TaskType.valueOf(savedTask.getData().getTaskType()).getTaskGroup().name());
-         AutoLogContext ignore2 = new AccountLogContext(savedTask.getAccountId())) {
+             TaskType.valueOf(savedTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_NESTS);
+         AutoLogContext ignore2 = new AccountLogContext(savedTask.getAccountId(), OVERRIDE_ERROR)) {
       logger.info("Queueing async task");
       broadcastHelper.broadcastNewDelegateTaskAsync(savedTask);
     }
@@ -1430,8 +1435,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     ResponseData responseData;
     DelegateTask delegateTask = saveDelegateTask(task, false);
     try (AutoLogContext ignore1 = new TaskLogContext(delegateTask.getUuid(), delegateTask.getData().getTaskType(),
-             TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name());
-         AutoLogContext ignore2 = new AccountLogContext(delegateTask.getAccountId())) {
+             TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_NESTS);
+         AutoLogContext ignore2 = new AccountLogContext(delegateTask.getAccountId(), OVERRIDE_ERROR)) {
       List<String> eligibleDelegateIds = ensureDelegateAvailableToExecuteTask(task);
       if (isEmpty(eligibleDelegateIds)) {
         throw new WingsException(UNAVAILABLE_DELEGATES, USER_ADMIN);
@@ -1591,7 +1596,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       }
 
       try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
-               TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name())) {
+               TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
         if (!assignDelegateService.canAssign(delegateId, delegateTask)) {
           logger.info("Delegate is not scoped for task");
           ensureDelegateAvailableToExecuteTask(delegateTask); // Raises an alert if there are no eligible delegates.
@@ -1623,7 +1628,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     }
 
     try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
-             TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name())) {
+             TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
       logger.info("Delegate completed validating {} task", delegateTask.isAsync() ? "async" : "sync");
 
       UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
@@ -1652,7 +1657,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       return null;
     }
     try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
-             TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name())) {
+             TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
       if (isValidationComplete(delegateTask)) {
         // Check whether a whitelisted delegate is connected
         List<String> whitelistedDelegates = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
@@ -1769,33 +1774,30 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   private DelegateTask getUnassignedDelegateTask(String accountId, String taskId, String delegateId) {
-    try (AutoLogContext ignore1 = new TaskLogContext(taskId); AutoLogContext ignore2 = new AccountLogContext(accountId);
-         AutoLogContext ignore3 = new DelegateLogContext(delegateId)) {
-      DelegateTask delegateTask = wingsPersistence.createQuery(DelegateTask.class)
-                                      .filter(DelegateTaskKeys.accountId, accountId)
-                                      .filter(ID_KEY, taskId)
-                                      .get();
-      if (delegateTask != null) {
-        try (AutoLogContext ignore4 = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
-                 TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name())) {
-          if (delegateTask.getDelegateId() == null && delegateTask.getStatus() == QUEUED) {
-            logger.info("Found unassigned delegate task");
-            return delegateTask;
-          } else if (delegateId.equals(delegateTask.getDelegateId())) {
-            logger.info("Returning already assigned task to delegate from getUnassigned");
-            return delegateTask;
-          }
-          logger.info("Task not available for delegate - it was assigned to {} and has status {}",
-              delegateTask.getDelegateId(), delegateTask.getStatus());
+    DelegateTask delegateTask = wingsPersistence.createQuery(DelegateTask.class)
+                                    .filter(DelegateTaskKeys.accountId, accountId)
+                                    .filter(ID_KEY, taskId)
+                                    .get();
+    if (delegateTask != null) {
+      try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
+               TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
+        if (delegateTask.getDelegateId() == null && delegateTask.getStatus() == QUEUED) {
+          logger.info("Found unassigned delegate task");
+          return delegateTask;
+        } else if (delegateId.equals(delegateTask.getDelegateId())) {
+          logger.info("Returning already assigned task to delegate from getUnassigned");
+          return delegateTask;
         }
-      } else {
-        logger.info("Task no longer exists", taskId);
+        logger.info("Task not available for delegate - it was assigned to {} and has status {}",
+            delegateTask.getDelegateId(), delegateTask.getStatus());
       }
-      return null;
+    } else {
+      logger.info("Task no longer exists", taskId);
     }
+    return null;
   }
 
-  private DelegatePackage resolvePreAssignmentExpressions(DelegateTask delegateTask, String delegateId) {
+  private DelegatePackage resolvePreAssignmentExpressions(DelegateTask delegateTask) {
     logger.info("Entering resolvePreAssignmentExpressions");
 
     try {
@@ -1843,7 +1845,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   private DelegatePackage getDelegatePackageWithEncryptionConfig(DelegateTask delegateTask, String delegateId) {
     try {
       if (CapabilityHelper.isTaskParameterType(delegateTask.getData())) {
-        return resolvePreAssignmentExpressions(delegateTask, delegateId);
+        return resolvePreAssignmentExpressions(delegateTask);
       } else {
         // TODO: Ideally we should not land here, as we should always be passing TaskParameter only for
         // TODO: delegate task. But for now, this is needed. (e.g. Tasks containing Jenkinsonfig, BambooConfig etc.)
@@ -1908,7 +1910,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     if (task != null) {
       logger.info("Task assigned to delegate");
       task.getData().setParameters(delegateTask.getData().getParameters());
-      return resolvePreAssignmentExpressions(task, delegateId);
+      return resolvePreAssignmentExpressions(task);
     }
     task = wingsPersistence.createQuery(DelegateTask.class)
                .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
@@ -1924,7 +1926,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     task.getData().setParameters(delegateTask.getData().getParameters());
     logger.info("Returning previously assigned task to delegate");
-    return resolvePreAssignmentExpressions(task, delegateId);
+    return resolvePreAssignmentExpressions(task);
   }
 
   @Override
@@ -1949,7 +1951,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     if (delegateTask != null) {
       try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
-               TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name())) {
+               TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
         if (!StringUtils.equals(delegateTask.getVersion(), getVersion())) {
           logger.warn("Version mismatch for task. [managerVersion {}, taskVersion {}]", getVersion(),
               delegateTask.getVersion());
@@ -2010,8 +2012,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   @Override
   public void expireTask(String accountId, String delegateTaskId) {
-    try (AutoLogContext ignore1 = new TaskLogContext(delegateTaskId);
-         AutoLogContext ignore2 = new AccountLogContext(accountId)) {
+    try (AutoLogContext ignore1 = new TaskLogContext(delegateTaskId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       if (delegateTaskId == null) {
         logger.warn("Delegate task id was null", new IllegalArgumentException());
         return;
@@ -2023,7 +2025,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
       if (delegateTask != null) {
         try (AutoLogContext ignore3 = new TaskLogContext(delegateTaskId, delegateTask.getData().getTaskType(),
-                 TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name())) {
+                 TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
           String errorMessage =
               "Task expired. " + assignDelegateService.getActiveDelegateAssignmentErrorMessage(delegateTask);
           logger.info("Marking task as expired: {}", errorMessage);
@@ -2041,8 +2043,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   @Override
   public void abortTask(String accountId, String delegateTaskId) {
-    try (AutoLogContext ignore1 = new TaskLogContext(delegateTaskId);
-         AutoLogContext ignore2 = new AccountLogContext(accountId)) {
+    try (AutoLogContext ignore1 = new TaskLogContext(delegateTaskId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       if (delegateTaskId == null) {
         logger.warn("Delegate task id was null", new IllegalArgumentException());
         return;
@@ -2073,19 +2075,16 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   @Override
   public List<DelegateTaskEvent> getDelegateTaskEvents(String accountId, String delegateId, boolean syncOnly) {
-    try (AutoLogContext ignore1 = new AccountLogContext(accountId);
-         AutoLogContext ignore2 = new DelegateLogContext(delegateId)) {
-      List<DelegateTaskEvent> delegateTaskEvents = new ArrayList<>(getQueuedEvents(accountId, true));
-      if (!syncOnly) {
-        delegateTaskEvents.addAll(getQueuedEvents(accountId, false));
-        delegateTaskEvents.addAll(getAbortedEvents(accountId, delegateId));
-      }
-
-      logger.info("Dispatched delegateTaskIds: {}",
-          Joiner.on(",").join(delegateTaskEvents.stream().map(DelegateTaskEvent::getDelegateTaskId).collect(toList())));
-
-      return delegateTaskEvents;
+    List<DelegateTaskEvent> delegateTaskEvents = new ArrayList<>(getQueuedEvents(accountId, true));
+    if (!syncOnly) {
+      delegateTaskEvents.addAll(getQueuedEvents(accountId, false));
+      delegateTaskEvents.addAll(getAbortedEvents(accountId, delegateId));
     }
+
+    logger.info("Dispatched delegateTaskIds: {}",
+        join(",", delegateTaskEvents.stream().map(DelegateTaskEvent::getDelegateTaskId).collect(toList())));
+
+    return delegateTaskEvents;
   }
 
   private List<DelegateTaskEvent> getQueuedEvents(String accountId, boolean sync) {
@@ -2149,7 +2148,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Override
   public Delegate handleEcsDelegateRequest(Delegate delegate) {
     if (delegate.isKeepAlivePacket()) {
-      return handleEcsDelegateKeepAlivePacket(delegate);
+      handleEcsDelegateKeepAlivePacket(delegate);
+      return null;
     }
     Delegate registeredDelegate = handleEcsDelegateRegistration(delegate);
     updateExistingDelegateWithSequenceConfigData(registeredDelegate);
@@ -2165,17 +2165,17 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
    * registration.
    */
   @VisibleForTesting
-  Delegate handleEcsDelegateKeepAlivePacket(Delegate delegate) {
+  void handleEcsDelegateKeepAlivePacket(Delegate delegate) {
     logger.info("Handling Keep alive packet ");
     if (isBlank(delegate.getHostName()) || isBlank(delegate.getDelegateRandomToken()) || isBlank(delegate.getUuid())
         || isBlank(delegate.getSequenceNum())) {
-      return null;
+      return;
     }
 
     Delegate existingDelegate =
         getDelegateUsingSequenceNum(delegate.getAccountId(), delegate.getHostName(), delegate.getSequenceNum());
     if (existingDelegate == null) {
-      return null;
+      return;
     }
 
     DelegateSequenceConfig config = getDelegateSequenceConfig(
@@ -2188,8 +2188,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
           wingsPersistence.createUpdateOperations(DelegateSequenceConfig.class)
               .set(DelegateSequenceConfigKeys.delegateToken, delegate.getDelegateRandomToken()));
     }
-
-    return null;
   }
 
   /**

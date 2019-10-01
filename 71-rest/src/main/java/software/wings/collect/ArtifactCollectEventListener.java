@@ -14,7 +14,6 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.task.TaskLogContext;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
@@ -96,7 +95,6 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
       waitNotifyEngine.waitForAll(new ArtifactCollectionCallback(artifact.getUuid()), waitId);
       logger.info("Queuing delegate task for artifactId {} of artifactSourceName {} ", artifact.getUuid(),
           artifact.getArtifactSourceName());
-      TaskLogContext.clearTaskData();
       delegateService.queueTask(delegateTask);
     } catch (Exception ex) {
       logger.error(format("Failed to collect artifact. Reason %s", ExceptionUtils.getMessage(ex)), ex);

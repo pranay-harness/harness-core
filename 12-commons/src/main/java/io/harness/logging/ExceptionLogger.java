@@ -5,6 +5,7 @@ import static io.harness.exception.WingsException.ReportTarget.DELEGATE_LOG_SYST
 import static io.harness.exception.WingsException.ReportTarget.LOG_SYSTEM;
 import static io.harness.exception.WingsException.ReportTarget.UNIVERSAL;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static java.util.stream.Collectors.joining;
 
 import io.harness.data.structure.EmptyPredicate;
@@ -68,7 +69,7 @@ public class ExceptionLogger {
 
   public static void logProcessedMessages(WingsException exception, ExecutionContext context, Logger logger) {
     Exception processedException = null;
-    try (AutoLogContext ignore = new AutoLogContext(exception.calcRecursiveContextObjects())) {
+    try (AutoLogContext ignore = new AutoLogContext(exception.calcRecursiveContextObjects(), OVERRIDE_ERROR)) {
       ReportTarget target = LOG_SYSTEM;
 
       switch (context) {

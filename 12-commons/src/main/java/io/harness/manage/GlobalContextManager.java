@@ -1,6 +1,7 @@
 package io.harness.manage;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import io.harness.context.GlobalContext;
 import io.harness.context.GlobalContextData;
@@ -61,7 +62,7 @@ public class GlobalContextManager {
     if (globalContextData == null) {
       return null;
     }
-    return new AutoLogContext(globalContextData.getMap());
+    return new AutoLogContext(globalContextData.getMap(), OVERRIDE_ERROR);
   }
 
   public static void unset() {
