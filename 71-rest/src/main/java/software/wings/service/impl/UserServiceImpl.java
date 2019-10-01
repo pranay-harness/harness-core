@@ -334,7 +334,6 @@ public class UserServiceImpl implements UserService {
   @Override
   public boolean accountJoinRequest(AccountJoinRequest accountJoinRequest) {
     final String emailAddress = accountJoinRequest.getEmail().toLowerCase();
-    signupService.validateCluster();
     signupService.validateEmail(emailAddress);
     Map<String, String> params = new HashMap<>();
     params.put("email", emailAddress);
