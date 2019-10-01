@@ -2,9 +2,11 @@ package io.harness.functional.template;
 
 import static io.harness.generator.AccountGenerator.adminUserEmail;
 import static io.harness.generator.AccountGenerator.readOnlyEmail;
+import static io.harness.generator.TemplateFolderGenerator.TemplateFolders.APP_FOLDER_SHELL_SCRIPTS;
 import static io.harness.generator.TemplateFolderGenerator.TemplateFolders.TEMPLATE_FOLDER_SHELL_SCRIPTS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.VariableType.TEXT;
 
@@ -21,7 +23,9 @@ import io.harness.generator.TemplateFolderGenerator;
 import io.harness.generator.WorkflowGenerator;
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
+import io.harness.testframework.framework.utils.TestUtils;
 import io.restassured.http.ContentType;
+import org.apache.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -36,6 +40,7 @@ import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.ShellScriptTemplate;
 
 import java.util.Collections;
+import java.util.Set;
 import javax.ws.rs.core.GenericType;
 
 public class TemplateFunctionalTest extends AbstractFunctionalTest {
@@ -88,7 +93,8 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void createUpdateDeleteShellScriptTemplate() {
     // Create template
-    TemplateFolder parentFolder = templateFolderGenerator.ensurePredefined(seed, owners, TEMPLATE_FOLDER_SHELL_SCRIPTS);
+    TemplateFolder parentFolder =
+        templateFolderGenerator.ensurePredefined(seed, owners, TEMPLATE_FOLDER_SHELL_SCRIPTS, GLOBAL_APP_ID);
     ShellScriptTemplate shellScriptTemplate = ShellScriptTemplate.builder()
                                                   .scriptType(ScriptType.BASH.name())
                                                   .scriptString("echo \"Hello\" ${name}\n"
@@ -102,7 +108,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
                             .name(SCRIPT_TEMPLATE_NAME)
                             .templateObject(shellScriptTemplate)
                             .folderId(parentFolder.getUuid())
-                            .appId(Application.GLOBAL_APP_ID)
+                            .appId(GLOBAL_APP_ID)
                             .variables(asList(aVariable().type(TEXT).name("name").mandatory(true).build()))
                             .build();
     GenericType<RestResponse<Template>> templateType = new GenericType<RestResponse<Template>>() {
@@ -145,7 +151,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
                    .name(SCRIPT_TEMPLATE_NAME)
                    .templateObject(shellScriptTemplate)
                    .folderId(parentFolder.getUuid())
-                   .appId(Application.GLOBAL_APP_ID)
+                   .appId(GLOBAL_APP_ID)
                    .variables(asList(aVariable().type(TEXT).name("name").mandatory(true).build()))
                    .version(savedTemplate.getVersion())
                    .build();
@@ -213,7 +219,8 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
     String bearerToken = Setup.getAuthToken(readOnlyEmail, readOnlyPassword);
 
     // Create template
-    TemplateFolder parentFolder = templateFolderGenerator.ensurePredefined(seed, owners, TEMPLATE_FOLDER_SHELL_SCRIPTS);
+    TemplateFolder parentFolder =
+        templateFolderGenerator.ensurePredefined(seed, owners, TEMPLATE_FOLDER_SHELL_SCRIPTS, GLOBAL_APP_ID);
     ShellScriptTemplate shellScriptTemplate = ShellScriptTemplate.builder()
                                                   .scriptType(ScriptType.BASH.name())
                                                   .scriptString("echo \"Hello\" ${name}\n"
@@ -227,7 +234,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
                             .name(SCRIPT_NAME3)
                             .templateObject(shellScriptTemplate)
                             .folderId(parentFolder.getUuid())
-                            .appId(Application.GLOBAL_APP_ID)
+                            .appId(GLOBAL_APP_ID)
                             .variables(asList(aVariable().type(TEXT).name("name").mandatory(true).build()))
                             .build();
     GenericType<RestResponse<Template>> templateType = new GenericType<RestResponse<Template>>() {
@@ -266,7 +273,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
                    .name(SCRIPT_NAME3)
                    .templateObject(shellScriptTemplate)
                    .folderId(parentFolder.getUuid())
-                   .appId(Application.GLOBAL_APP_ID)
+                   .appId(GLOBAL_APP_ID)
                    .variables(asList(aVariable().type(TEXT).name("name").mandatory(true).build()))
                    .version(savedTemplate.getVersion())
                    .build();
@@ -311,8 +318,8 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void shouldNotUpdateTemplateWithDuplicateNameInSameFolder() {
     GenericType<RestResponse<Template>> templateType = new GenericType<RestResponse<Template>>() {};
-    Template template1 = createTemplateAndValidate(SCRIPT_NAME1);
-    Template template2 = createTemplateAndValidate(SCRIPT_NAME2);
+    Template template1 = createTemplateAndValidate(SCRIPT_NAME1, GLOBAL_APP_ID);
+    Template template2 = createTemplateAndValidate(SCRIPT_NAME2, GLOBAL_APP_ID);
     template2.setName(SCRIPT_NAME1);
     Setup.portal()
         .auth()
@@ -329,9 +336,98 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
     deleteTemplate(template2.getUuid());
   }
 
-  private Template createTemplateAndValidate(String name) {
+  @Test
+  @Category(FunctionalTests.class)
+  public void testAddFetchRemoveTemplateFavorites() {
+    GenericType<RestResponse<Set<String>>> responseType = new GenericType<RestResponse<Set<String>>>() {};
+    // create templates in global template library
+    Template template1 = createTemplateAndValidate(SCRIPT_NAME1, GLOBAL_APP_ID);
+    Template template2 = createTemplateAndValidate(SCRIPT_NAME2, GLOBAL_APP_ID);
+    Template template3 = createTemplateAndValidate(SCRIPT_NAME3, GLOBAL_APP_ID);
+    // create templates in app
+    Template template4 = createTemplateAndValidate("App template-1", application.getUuid());
+    resetCache(application.getAccountId());
+
+    // Mark template as favorites and validate favorites for user
+    markTemplateAsFavorite(template1.getUuid());
+    markTemplateAsFavorite(template2.getUuid());
+    markTemplateAsFavorite(template4.getUuid());
+
+    RestResponse<Set<String>> response = fetchFavoriteTemplates(responseType);
+    Set<String> favorites = response.getResource();
+    assertThat(favorites).isNotEmpty();
+    assertThat(favorites).contains(template1.getUuid(), template2.getUuid(), template4.getUuid());
+    assertThat(favorites).doesNotContain(template3.getUuid());
+
+    // un-mark template as favorite and validate favorites for user does not contain
+    unmarkTemplateAsFavorite(template1.getUuid());
+    unmarkTemplateAsFavorite(template2.getUuid());
+    unmarkTemplateAsFavorite(template4.getUuid());
+    response = fetchFavoriteTemplates(responseType);
+    favorites = response.getResource();
+    assertThat(favorites).doesNotContain(template1.getUuid(), template2.getUuid(), template4.getUuid());
+
+    // cleanup - delete all created templates
+    deleteTemplate(template1.getUuid());
+    deleteTemplate(template2.getUuid());
+    deleteTemplate(template3.getUuid());
+    deleteTemplate(template4.getUuid());
+  }
+
+  @Test
+  @Category(FunctionalTests.class)
+  public void testMarkInvalidTemplateAsFavorite() {
+    assertThat(Setup.portal()
+                   .auth()
+                   .oauth2(bearerToken)
+                   .contentType(ContentType.JSON)
+                   .queryParam("accountId", account.getUuid())
+                   .pathParam("templateId", TestUtils.generateRandomUUID())
+                   .put("/personalization/templates/{templateId}/favorite")
+                   .getStatusCode()
+        == HttpStatus.SC_BAD_REQUEST)
+        .isTrue();
+  }
+
+  private void markTemplateAsFavorite(String templateId) {
+    Setup.portal()
+        .auth()
+        .oauth2(bearerToken)
+        .contentType(ContentType.JSON)
+        .queryParam("accountId", account.getUuid())
+        .pathParam("templateId", templateId)
+        .put("/personalization/templates/{templateId}/favorite");
+  }
+
+  private void unmarkTemplateAsFavorite(String templateId) {
+    Setup.portal()
+        .auth()
+        .oauth2(bearerToken)
+        .contentType(ContentType.JSON)
+        .queryParam("accountId", account.getUuid())
+        .pathParam("templateId", templateId)
+        .delete("/personalization/templates/{templateId}/favorite");
+  }
+
+  private RestResponse<Set<String>> fetchFavoriteTemplates(GenericType<RestResponse<Set<String>>> responseType) {
+    return Setup.portal()
+        .auth()
+        .oauth2(bearerToken)
+        .contentType(ContentType.JSON)
+        .queryParam("accountId", account.getUuid())
+        .get("/personalization/templates/favorite")
+        .as(responseType.getType());
+  }
+
+  private Template createTemplateAndValidate(String name, String appId) {
     // Create template
-    TemplateFolder parentFolder = templateFolderGenerator.ensurePredefined(seed, owners, TEMPLATE_FOLDER_SHELL_SCRIPTS);
+    TemplateFolder parentFolder;
+    if (appId.equals(GLOBAL_APP_ID)) {
+      parentFolder =
+          templateFolderGenerator.ensurePredefined(seed, owners, TEMPLATE_FOLDER_SHELL_SCRIPTS, GLOBAL_APP_ID);
+    } else {
+      parentFolder = templateFolderGenerator.ensurePredefined(seed, owners, APP_FOLDER_SHELL_SCRIPTS, appId);
+    }
     ShellScriptTemplate shellScriptTemplate = ShellScriptTemplate.builder()
                                                   .scriptType(ScriptType.BASH.name())
                                                   .scriptString("echo \"Hello\" ${name}\n"
@@ -345,14 +441,14 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
                             .name(name)
                             .templateObject(shellScriptTemplate)
                             .folderId(parentFolder.getUuid())
-                            .appId(Application.GLOBAL_APP_ID)
+                            .appId(appId)
                             .variables(asList(aVariable().type(TEXT).name("name").mandatory(true).build()))
                             .build();
     GenericType<RestResponse<Template>> templateType = new GenericType<RestResponse<Template>>() {
 
     };
 
-    RestResponse<Template> savedTemplateResponse = saveTemplate(template, templateType, bearerToken);
+    RestResponse<Template> savedTemplateResponse = saveTemplate(template, templateType, bearerToken, appId);
 
     Template savedTemplate = savedTemplateResponse.getResource();
     assertTemplate(savedTemplate, name, 1L);
@@ -375,10 +471,16 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
 
   private RestResponse<Template> saveTemplate(
       Template template, GenericType<RestResponse<Template>> templateType, String bearerToken) {
+    return saveTemplate(template, templateType, bearerToken, GLOBAL_APP_ID);
+  }
+
+  private RestResponse<Template> saveTemplate(
+      Template template, GenericType<RestResponse<Template>> templateType, String bearerToken, String appId) {
     return Setup.portal()
         .auth()
         .oauth2(bearerToken)
         .queryParam("accountId", account.getUuid())
+        .queryParam("appId", appId)
         .body(template)
         .contentType(ContentType.JSON)
         .post("/templates")

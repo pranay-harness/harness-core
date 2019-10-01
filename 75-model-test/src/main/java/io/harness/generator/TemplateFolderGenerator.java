@@ -22,16 +22,27 @@ public class TemplateFolderGenerator {
   @Inject TemplateFolderService templateFolderService;
   @Inject WingsPersistence wingsPersistence;
 
-  public enum TemplateFolders { TEMPLATE_FOLDER_SHELL_SCRIPTS, TEMPLATE_FOLDER_SERVICE_COMMANDS }
+  public enum TemplateFolders {
+    TEMPLATE_FOLDER_SHELL_SCRIPTS,
+    TEMPLATE_FOLDER_SERVICE_COMMANDS,
+    APP_FOLDER_SHELL_SCRIPTS
+  }
 
-  public TemplateFolder ensurePredefined(Randomizer.Seed seed, OwnerManager.Owners owners, TemplateFolders predefined) {
+  public TemplateFolder ensurePredefined(
+      Randomizer.Seed seed, OwnerManager.Owners owners, TemplateFolders predefined, String appId) {
     switch (predefined) {
       case TEMPLATE_FOLDER_SHELL_SCRIPTS:
         return ensureTemplateFolder(
-            seed, owners, TemplateFolder.builder().name("Functional Test - Shell Scripts").build());
+            seed, owners, TemplateFolder.builder().name("Functional Test - Shell Scripts").appId(appId).build());
       case TEMPLATE_FOLDER_SERVICE_COMMANDS:
         return ensureTemplateFolder(
-            seed, owners, TemplateFolder.builder().name("Functional Test - Service Commands").build());
+            seed, owners, TemplateFolder.builder().name("Functional Test - Service Commands").appId(appId).build());
+      case APP_FOLDER_SHELL_SCRIPTS:
+        return ensureTemplateFolder(seed, owners,
+            TemplateFolder.builder()
+                .name("App-Functional Test Folder - " + System.currentTimeMillis())
+                .appId(appId)
+                .build());
       default:
         unhandled(predefined);
     }
@@ -90,7 +101,11 @@ public class TemplateFolderGenerator {
       }
     }
 
-    builder.appId(GLOBAL_APP_ID);
+    if (templateFolder != null && templateFolder.getAppId() != null) {
+      builder.appId(templateFolder.getAppId());
+    } else {
+      builder.appId(GLOBAL_APP_ID);
+    }
 
     TemplateFolder existing = exists(builder.build());
     if (existing != null) {
