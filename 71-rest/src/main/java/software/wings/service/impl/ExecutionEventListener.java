@@ -6,6 +6,7 @@ import static io.harness.beans.ExecutionStatus.QUEUED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.expression.ExpressionEvaluator.containsVariablePattern;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static java.util.Arrays.asList;
 
 import com.google.common.base.Joiner;
@@ -128,7 +129,7 @@ public class ExecutionEventListener extends QueueListener<ExecutionEvent> {
         return;
       }
 
-      try (AutoLogContext ignore = new WorkflowExecutionLogContext(workflowExecution.getUuid())) {
+      try (AutoLogContext ignore = new WorkflowExecutionLogContext(workflowExecution.getUuid(), OVERRIDE_ERROR)) {
         logger.info("Starting Queued execution..");
 
         boolean started = stateMachineExecutor.startQueuedExecution(message.getAppId(), workflowExecution.getUuid());

@@ -101,14 +101,6 @@ public interface Constants {
   String PROVISION_SHELL_SCRIPT = "Shell Script Provision";
 
   /**
-   * The constant DELEGATE_DIR.
-   */
-  String DELEGATE_DIR = "harness-delegate";
-  String DOCKER_DELEGATE = "harness-delegate-docker";
-  String KUBERNETES_DELEGATE = "harness-delegate-kubernetes";
-  String ECS_DELEGATE = "harness-delegate-ecs";
-
-  /**
    * The constant MAX_DELEGATE_LAST_HEARTBEAT.
    */
   long MAX_DELEGATE_LAST_HEARTBEAT = (5 * 60 * 1000L) + (15 * 1000L); // 5 minutes 15 seconds

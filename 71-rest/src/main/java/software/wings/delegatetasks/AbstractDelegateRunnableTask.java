@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
 import static io.harness.exception.WingsException.ExecutionContext.DELEGATE;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
@@ -65,7 +66,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
   @Override
   @SuppressWarnings("PMD")
   public void run() {
-    try (TaskLogContext ignore = new TaskLogContext(this.taskId)) {
+    try (TaskLogContext ignore = new TaskLogContext(this.taskId, OVERRIDE_ERROR)) {
       runDelegateTask();
     } catch (Throwable e) {
       logger.error(format("Unexpected error executing delegate taskId: [%s] in accountId: [%s]", taskId, accountId), e);

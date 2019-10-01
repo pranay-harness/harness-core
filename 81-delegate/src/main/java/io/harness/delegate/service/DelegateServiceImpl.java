@@ -39,6 +39,7 @@ import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.filesystem.FileIo.acquireLock;
 import static io.harness.filesystem.FileIo.isLocked;
 import static io.harness.filesystem.FileIo.releaseLock;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
 import static io.harness.network.Localhost.getLocalHostAddress;
 import static io.harness.network.Localhost.getLocalHostName;
@@ -197,6 +198,7 @@ public class DelegateServiceImpl implements DelegateService {
   private static final String DELEGATE_SEQUENCE_CONFIG_FILE = "./delegate_sequence_config";
   private static final int KEEP_ALIVE_INTERVAL = 23000;
   private static final int CLIENT_TOOL_RETRIES = 10;
+  private static final String TOKEN = "[TOKEN]";
 
   private static String hostName;
   private static String delegateId;
@@ -600,7 +602,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (StringUtils.startsWith(message, "[X]")) {
       String receivedId;
       if (isEcsDelegate()) {
-        int indexForToken = message.lastIndexOf("[TOKEN]");
+        int indexForToken = message.lastIndexOf(TOKEN);
         receivedId = message.substring(3, indexForToken); // Remove the "[X]
 
       } else {
@@ -627,7 +629,7 @@ public class DelegateServiceImpl implements DelegateService {
       logger.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
       try {
         DelegateTaskEvent delegateTaskEvent = JsonUtils.asObject(message, DelegateTaskEvent.class);
-        try (TaskLogContext ignore = new TaskLogContext(delegateTaskEvent.getDelegateTaskId())) {
+        try (TaskLogContext ignore = new TaskLogContext(delegateTaskEvent.getDelegateTaskId(), OVERRIDE_ERROR)) {
           if (delegateTaskEvent instanceof DelegateTaskAbortEvent) {
             abortDelegateTask((DelegateTaskAbortEvent) delegateTaskEvent);
           } else {
@@ -968,7 +970,7 @@ public class DelegateServiceImpl implements DelegateService {
         if (isNotEmpty(taskEvents)) {
           logger.info("Processing DelegateTaskEvents {}", taskEvents);
           for (DelegateTaskEvent taskEvent : taskEvents) {
-            try (TaskLogContext ignore = new TaskLogContext(taskEvent.getDelegateTaskId())) {
+            try (TaskLogContext ignore = new TaskLogContext(taskEvent.getDelegateTaskId(), OVERRIDE_ERROR)) {
               if (taskEvent instanceof DelegateTaskAbortEvent) {
                 abortDelegateTask((DelegateTaskAbortEvent) taskEvent);
               } else {
@@ -1277,8 +1279,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void updateTokenAndSeqNumFromPollingResponse(Delegate delegate) {
     if (isEcsDelegate()) {
-      handleEcsDelegateSpecificMessage(
-          "[TOKEN]" + delegate.getDelegateRandomToken() + "[SEQ]" + delegate.getSequenceNum());
+      handleEcsDelegateSpecificMessage(TOKEN + delegate.getDelegateRandomToken() + "[SEQ]" + delegate.getSequenceNum());
     }
   }
 
@@ -1678,7 +1679,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void handleEcsDelegateSpecificMessage(String message) {
     if (isEcsDelegate()) {
-      int indexForToken = message.lastIndexOf("[TOKEN]");
+      int indexForToken = message.lastIndexOf(TOKEN);
       int indexForSeqNum = message.lastIndexOf("[SEQ]");
       String token = message.substring(indexForToken + 7, indexForSeqNum);
       String sequenceNum = message.substring(indexForSeqNum + 5);
@@ -1689,8 +1690,8 @@ public class DelegateServiceImpl implements DelegateService {
       }
 
       try {
-        FileIo.writeWithExclusiveLockAcrossProcesses("[TOKEN]" + token + "[SEQ]" + sequenceNum,
-            DELEGATE_SEQUENCE_CONFIG_FILE, StandardOpenOption.TRUNCATE_EXISTING);
+        FileIo.writeWithExclusiveLockAcrossProcesses(
+            TOKEN + token + "[SEQ]" + sequenceNum, DELEGATE_SEQUENCE_CONFIG_FILE, StandardOpenOption.TRUNCATE_EXISTING);
         logger.info("Token Received From Manager : {}, SeqNum Received From Manager: {}", token, sequenceNum);
       } catch (Exception e) {
         logger.error("Failed to write registration response into delegate_sequence file");
@@ -1789,7 +1790,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (isEcsDelegate()) {
       try {
         FileIo.writeWithExclusiveLockAcrossProcesses(
-            "[TOKEN]" + delegate.getDelegateRandomToken() + "[SEQ]" + delegate.getSequenceNum(),
+            TOKEN + delegate.getDelegateRandomToken() + "[SEQ]" + delegate.getSequenceNum(),
             DELEGATE_SEQUENCE_CONFIG_FILE, StandardOpenOption.TRUNCATE_EXISTING);
       } catch (Exception e) {
         logger.error("Failed to write registration response into delegate_sequence file");
@@ -1806,7 +1807,7 @@ public class DelegateServiceImpl implements DelegateService {
       FileUtils.touch(new File(DELEGATE_SEQUENCE_CONFIG_FILE));
       String randomToken = UUIDGenerator.generateUuid();
       FileIo.writeWithExclusiveLockAcrossProcesses(
-          "[TOKEN]" + randomToken + "[SEQ]", DELEGATE_SEQUENCE_CONFIG_FILE, StandardOpenOption.TRUNCATE_EXISTING);
+          TOKEN + randomToken + "[SEQ]", DELEGATE_SEQUENCE_CONFIG_FILE, StandardOpenOption.TRUNCATE_EXISTING);
     } catch (IOException e) {
       logger.warn("Failed to create DelegateSequenceConfigFile");
     }

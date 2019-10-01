@@ -1,5 +1,6 @@
 package io.harness.manage;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.manage.GlobalContextManager.ensureGlobalContextGuard;
 import static io.harness.manage.GlobalContextManager.initGlobalContextGuard;
 import static io.harness.manage.GlobalContextManager.upsertGlobalContextRecord;
@@ -38,7 +39,7 @@ public class ManagedExecutorServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testMdcGlobalContext() throws Exception {
     try (GlobalContextGuard globalContextGuard = initGlobalContextGuard(new GlobalContext());
-         AutoLogContext ignore = new AutoLogContext(ImmutableMap.of("foo", "bar"))) {
+         AutoLogContext ignore = new AutoLogContext(ImmutableMap.of("foo", "bar"), OVERRIDE_ERROR)) {
       ExecutorService executor = Executors.newSingleThreadExecutor();
       ManagedExecutorService managedExecutorService = new ManagedExecutorService(executor);
 
