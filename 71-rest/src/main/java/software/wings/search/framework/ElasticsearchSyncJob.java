@@ -48,6 +48,6 @@ public class ElasticsearchSyncJob implements Runnable {
       logger.info("Cancelling search monitor future");
       scheduledFuture.cancel(true);
     }
-    elasticsearchRealtimeSyncTask.stopChangeListeners();
+    elasticsearchRealtimeSyncTask.stop();
   }
 }

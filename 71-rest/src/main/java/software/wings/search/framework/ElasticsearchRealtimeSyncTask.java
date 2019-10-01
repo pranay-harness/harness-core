@@ -15,28 +15,35 @@ import java.util.concurrent.Future;
 
 @Slf4j
 public class ElasticsearchRealtimeSyncTask extends ElasticsearchSyncTask {
+  private Future changeListenersFuture;
+
   public boolean run() {
     logger.info("Initializing change listeners for search entities");
 
     try {
-      Future<?> f = super.initializeChangeListeners();
-      f.get();
+      changeListenersFuture = super.initializeChangeListeners();
+      changeListenersFuture.get();
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       logger.error("Realtime sync stopped. stopping change listeners", e);
     } catch (ExecutionException e) {
       logger.error("Error occured during realtime sync", e);
     } finally {
-      stopChangeListeners();
+      stop();
     }
     return false;
+  }
+
+  public void stop() {
+    super.stopChangeListeners();
+    changeListenersFuture.cancel(true);
   }
 
   public void onChange(ChangeEvent<?> changeEvent) {
     boolean isRunningSuccessfully = processChange(changeEvent);
     if (!isRunningSuccessfully) {
       logger.error("Realtime sync failed. Stopping change listeners");
-      super.stopChangeListeners();
+      stop();
     }
   }
 }

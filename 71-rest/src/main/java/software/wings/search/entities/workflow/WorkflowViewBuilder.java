@@ -49,8 +49,8 @@ class WorkflowViewBuilder {
   private WorkflowView workflowView;
 
   private void populateServicesInWorkflow(Workflow workflow) {
-    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestration();
-    if (orchestrationWorkflow != null) {
+    if (workflow.getOrchestration() != null) {
+      OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestration();
       workflow.setServices(
           serviceResourceService.fetchServicesByUuids(workflow.getAppId(), orchestrationWorkflow.getServiceIds()));
     }
@@ -84,10 +84,13 @@ class WorkflowViewBuilder {
   }
 
   private void createBaseView(Workflow workflow) {
+    String orchestrationWorkflowType = null;
+    if (workflow.getOrchestration() != null && workflow.getOrchestration().getOrchestrationWorkflowType() != null) {
+      orchestrationWorkflowType = workflow.getOrchestration().getOrchestrationWorkflowType().name();
+    }
     this.workflowView = new WorkflowView(workflow.getUuid(), workflow.getName(), workflow.getDescription(),
         workflow.getAccountId(), workflow.getCreatedAt(), workflow.getLastUpdatedAt(), EntityType.WORKFLOW,
-        workflow.getCreatedBy(), workflow.getLastUpdatedBy(), workflow.getAppId(),
-        workflow.getOrchestration().getOrchestrationWorkflowType().name());
+        workflow.getCreatedBy(), workflow.getLastUpdatedBy(), workflow.getAppId(), orchestrationWorkflowType);
   }
 
   private void setApplicationName(Workflow workflow) {
@@ -174,6 +177,7 @@ class WorkflowViewBuilder {
               audits.add(relatedAuditViewBuilder.getAuditRelatedEntityView(auditHeader, entityAuditRecord));
             }
             auditTimestamps.add(TimeUnit.MILLISECONDS.toSeconds(auditHeader.getCreatedAt()));
+            break;
           }
         }
       }

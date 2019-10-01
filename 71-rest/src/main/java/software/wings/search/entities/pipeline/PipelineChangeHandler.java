@@ -77,7 +77,7 @@ public class PipelineChangeHandler implements ChangeHandler {
   private boolean handleWorkflowExecutionInsert(ChangeEvent<?> changeEvent) {
     boolean result = true;
     WorkflowExecution workflowExecution = (WorkflowExecution) changeEvent.getFullDocument();
-    if (workflowExecution.getWorkflowType().equals(WorkflowType.ORCHESTRATION)) {
+    if (workflowExecution.getWorkflowType().equals(WorkflowType.PIPELINE)) {
       String documentToUpdate = workflowExecution.getWorkflowId();
       String fieldToUpdate = WorkflowViewKeys.deployments;
       Map<String, Object> deploymentRelatedEntityViewMap =
@@ -95,7 +95,7 @@ public class PipelineChangeHandler implements ChangeHandler {
 
   private boolean handleWorkflowExecutionUpdate(ChangeEvent<?> changeEvent) {
     WorkflowExecution workflowExecution = (WorkflowExecution) changeEvent.getFullDocument();
-    if (workflowExecution.getWorkflowType().equals(WorkflowType.ORCHESTRATION)) {
+    if (workflowExecution.getWorkflowType().equals(WorkflowType.PIPELINE)) {
       DBObject changes = changeEvent.getChanges();
       if (changes.containsField(WorkflowExecutionKeys.status)) {
         String entityType = WorkflowViewKeys.deployments;
