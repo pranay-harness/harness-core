@@ -66,7 +66,8 @@ public class TemplateGenerator {
     if (account == null) {
       account = accountGenerator.ensurePredefined(seed, owners, AccountGenerator.Accounts.GENERIC_TEST);
     }
-    TemplateFolder parentFolder = templateFolderGenerator.ensurePredefined(seed, owners, TEMPLATE_FOLDER_SHELL_SCRIPTS);
+    TemplateFolder parentFolder =
+        templateFolderGenerator.ensurePredefined(seed, owners, TEMPLATE_FOLDER_SHELL_SCRIPTS, GLOBAL_APP_ID);
     ShellScriptTemplate shellScriptTemplate = ShellScriptTemplate.builder()
                                                   .scriptType(ScriptType.BASH.name())
                                                   .scriptString("echo ${var1}\n"
@@ -93,7 +94,7 @@ public class TemplateGenerator {
       account = accountGenerator.ensurePredefined(seed, owners, AccountGenerator.Accounts.GENERIC_TEST);
     }
     TemplateFolder parentFolder =
-        templateFolderGenerator.ensurePredefined(seed, owners, TEMPLATE_FOLDER_SERVICE_COMMANDS);
+        templateFolderGenerator.ensurePredefined(seed, owners, TEMPLATE_FOLDER_SERVICE_COMMANDS, GLOBAL_APP_ID);
     if (templates.equals(Templates.SERVICE_COMMAND_1)) {
       SshCommandTemplate command1 =
           SshCommandTemplate.builder()
@@ -168,7 +169,7 @@ public class TemplateGenerator {
       account = accountGenerator.ensurePredefined(seed, owners, AccountGenerator.Accounts.GENERIC_TEST);
     }
     TemplateFolder parentFolder =
-        templateFolderGenerator.ensurePredefined(seed, owners, TEMPLATE_FOLDER_SERVICE_COMMANDS);
+        templateFolderGenerator.ensurePredefined(seed, owners, TEMPLATE_FOLDER_SERVICE_COMMANDS, GLOBAL_APP_ID);
 
     Template commandTemplate1 = ensureServiceCommandTemplate(seed, owners, Templates.SERVICE_COMMAND_1);
     Template commandTemplate2 = ensureServiceCommandTemplate(seed, owners, Templates.SERVICE_COMMAND_2);
@@ -217,7 +218,8 @@ public class TemplateGenerator {
   public Template ensureTemplate(Randomizer.Seed seed, OwnerManager.Owners owners, Template template) {
     EnhancedRandom random = Randomizer.instance(seed);
     TemplateGallery templateGallery = templateGalleryGenerator.ensurePredefined(seed, owners, HARNESS_GALLERY);
-    TemplateFolder parentFolder = templateFolderGenerator.ensurePredefined(seed, owners, TEMPLATE_FOLDER_SHELL_SCRIPTS);
+    TemplateFolder parentFolder =
+        templateFolderGenerator.ensurePredefined(seed, owners, TEMPLATE_FOLDER_SHELL_SCRIPTS, GLOBAL_APP_ID);
     ShellScriptTemplate shellScriptTemplate = ShellScriptTemplate.builder()
                                                   .scriptType(ScriptType.BASH.name())
                                                   .scriptString("echo ${var1}\n"
