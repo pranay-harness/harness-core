@@ -1,5 +1,6 @@
 package software.wings.resources.graphql;
 
+import static io.harness.rule.OwnerRule.MARK;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
@@ -18,6 +19,7 @@ import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.limits.defaults.service.DefaultLimitsService;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.lib.RateBasedLimit;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -104,6 +106,7 @@ public class GraphQLRateLimiterTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = MARK, intermittent = true)
   @Category(UnitTests.class)
   public void testGlobalRateLimiter() {
     // Global rate limiter should check against cross-account overall requests on global limit.
