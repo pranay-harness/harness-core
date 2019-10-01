@@ -1,6 +1,7 @@
 package io.harness.event.handler.impl.account;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
 import com.google.common.collect.ImmutableMap;
@@ -24,11 +25,15 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.SecretManagerConfig;
+import software.wings.beans.User;
 import software.wings.beans.instance.dashboard.InstanceStatsUtils;
+import software.wings.service.impl.AuthServiceImpl.Keys;
 import software.wings.service.impl.event.AccountEntityEvent;
+import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 import software.wings.service.intfc.security.SecretManagerConfigService;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -39,6 +44,7 @@ public class AccountChangeHandler implements EventHandler {
   @Inject private InstanceStatService instanceStatService;
   @Inject private MainConfiguration mainConfiguration;
   @Inject private SecretManagerConfigService secretManagerConfigService;
+  @Inject private UserService userService;
 
   public AccountChangeHandler(EventListener eventListener) {
     eventListener.registerEventHandler(this, Sets.newHashSet(EventType.ACCOUNT_ENTITY_CHANGE));
@@ -109,6 +115,19 @@ public class AccountChangeHandler implements EventHandler {
       isGlobal = Objects.equals(GLOBAL_ACCOUNT_ID, defaultSecretManager.getAccountId());
     }
 
+    List<User> users = userService.getUsersOfAccount(accountId);
+    long count = 0;
+    if (isNotEmpty(users)) {
+      count = users.stream()
+                  .filter(userObj -> {
+                    if (userObj.getEmail() != null) {
+                      return !userObj.getEmail().endsWith(Keys.harness_email);
+                    }
+                    return true;
+                  })
+                  .count();
+    }
+
     Map<String, Object> groupTraits =
         ImmutableMap.<String, Object>builder()
             .put("name", account.getAccountName())
@@ -119,6 +138,7 @@ public class AccountChangeHandler implements EventHandler {
             .put("security_secrets_manager_default",
                 defaultSecretManager != null ? defaultSecretManager.getEncryptionType().name() : "LOCAL")
             .put("is_global", isGlobal)
+            .put("user_count", count)
             .build();
     logger.info("Enqueuing group event. accountId={} traits={}", accountId, groupTraits);
     // group
