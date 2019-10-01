@@ -126,7 +126,6 @@ import software.wings.scheduler.ResourceConstraintBackupJob;
 import software.wings.scheduler.UsageMetricsJob;
 import software.wings.scheduler.WorkflowExecutionMonitorJob;
 import software.wings.scheduler.YamlChangeSetPruneJob;
-import software.wings.scheduler.ZombieHunterJob;
 import software.wings.scheduler.approval.ApprovalPollingHandler;
 import software.wings.scheduler.artifact.ArtifactCleanupHandler;
 import software.wings.scheduler.artifact.ArtifactCollectionHandler;
@@ -661,7 +660,6 @@ public class WingsApplication extends Application<MainConfiguration> {
       if (acquiredLock != null) {
         WorkflowExecutionMonitorJob.add(jobScheduler);
         ResourceConstraintBackupJob.addJob(jobScheduler);
-        ZombieHunterJob.scheduleJobs(jobScheduler);
         AdministrativeJob.addJob(jobScheduler);
         LicenseCheckJob.addJob(jobScheduler);
         UsageMetricsJob.addJob(jobScheduler);
