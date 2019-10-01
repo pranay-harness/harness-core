@@ -33,6 +33,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
@@ -48,6 +49,7 @@ import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.crypto.DirectDecrypter;
 import com.nimbusds.jwt.EncryptedJWT;
 import io.harness.eraro.ErrorCode;
+import io.harness.event.handler.impl.segment.SegmentHandler;
 import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -114,6 +116,7 @@ import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -146,6 +149,7 @@ public class AuthServiceImpl implements AuthService {
   private SSOSettingService ssoSettingService;
   @Inject private ExecutorService executorService;
   @Inject private ApiKeyService apiKeyService;
+  @Inject @Named("SegmentHandlerAnnotation") private SegmentHandler segmentHandler;
   private AppService appService;
   private DashboardAuthHandler dashboardAuthHandler;
 
@@ -177,6 +181,12 @@ public class AuthServiceImpl implements AuthService {
     this.ssoSettingService = ssoSettingService;
     this.appService = appService;
     this.dashboardAuthHandler = dashboardAuthHandler;
+  }
+
+  public static final class Keys {
+    public static final String harness_email = "@harness.io";
+    public static String login_event = "User Authenticated";
+    public static String group_id = "groupId";
   }
 
   @Override
@@ -882,6 +892,29 @@ public class AuthServiceImpl implements AuthService {
     user.setToken(authToken.getJwtToken());
 
     user.setFirstLogin(isFirstLogin);
+    if (!user.getEmail().endsWith(Keys.harness_email)) {
+      executorService.submit(() -> {
+        String accountId = user.getLastAccountId();
+        if (isEmpty(accountId)) {
+          logger.warn("last accountId is null for User {}", user.getUuid());
+          return;
+        }
+
+        Account account = dbCache.get(Account.class, accountId);
+        if (account == null) {
+          logger.warn("last account is null for User {}", user.getUuid());
+          return;
+        }
+        try {
+          Map<String, String> properties = new HashMap<>();
+          properties.put(Keys.group_id, accountId);
+          segmentHandler.reportTrackEvent(account, Keys.login_event, user, properties);
+        } catch (Exception e) {
+          logger.error("Exception while reporting track event for User {} login", user.getUuid(), e);
+        }
+      });
+    }
+
     return user;
   }
 

@@ -1,5 +1,8 @@
 package io.harness.event.handler.impl.account;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.Sets;
@@ -19,11 +22,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
+import software.wings.beans.LicenseInfo;
+import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.instance.dashboard.InstanceStatsUtils;
 import software.wings.service.impl.event.AccountEntityEvent;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
+import software.wings.service.intfc.security.SecretManagerConfigService;
 
 import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @Singleton
@@ -31,6 +38,7 @@ public class AccountChangeHandler implements EventHandler {
   @Inject private SegmentClientBuilder segmentClientBuilder;
   @Inject private InstanceStatService instanceStatService;
   @Inject private MainConfiguration mainConfiguration;
+  @Inject private SecretManagerConfigService secretManagerConfigService;
 
   public AccountChangeHandler(EventListener eventListener) {
     eventListener.registerEventHandler(this, Sets.newHashSet(EventType.ACCOUNT_ENTITY_CHANGE));
@@ -90,12 +98,28 @@ public class AccountChangeHandler implements EventHandler {
     DummySystemUser user = new DummySystemUser(accountId, account.getAccountName());
 
     double usage = InstanceStatsUtils.actualUsage(accountId, instanceStatService);
-    Map<String, Object> groupTraits = ImmutableMap.<String, Object>builder()
-                                          .put("name", account.getAccountName())
-                                          .put("company_name", account.getCompanyName())
-                                          .put("usage_service_instances_30d", usage)
-                                          .build();
+    String env = System.getenv("ENV");
+    LicenseInfo licenseInfo = account.getLicenseInfo();
+    String accountType = licenseInfo != null ? licenseInfo.getAccountType() : null;
 
+    SecretManagerConfig defaultSecretManager = secretManagerConfigService.getDefaultSecretManager(accountId);
+
+    boolean isGlobal = false;
+    if (defaultSecretManager != null) {
+      isGlobal = Objects.equals(GLOBAL_ACCOUNT_ID, defaultSecretManager.getAccountId());
+    }
+
+    Map<String, Object> groupTraits =
+        ImmutableMap.<String, Object>builder()
+            .put("name", account.getAccountName())
+            .put("company_name", account.getCompanyName())
+            .put("account_type", isEmpty(accountType) ? "" : accountType)
+            .put("cluster", isEmpty(env) ? "" : env)
+            .put("usage_service_instances_30d", usage)
+            .put("security_secrets_manager_default",
+                defaultSecretManager != null ? defaultSecretManager.getEncryptionType().name() : "LOCAL")
+            .put("is_global", isGlobal)
+            .build();
     logger.info("Enqueuing group event. accountId={} traits={}", accountId, groupTraits);
     // group
     analytics.enqueue(GroupMessage.builder(accountId).userId(user.getId()).traits(groupTraits));

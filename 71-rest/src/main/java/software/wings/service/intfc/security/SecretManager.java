@@ -36,8 +36,6 @@ public interface SecretManager extends OwnedByAccount {
   String ID_KEY = "_id";
   String IS_DEFAULT_KEY = "isDefault";
   String CREATED_AT_KEY = "createdAt";
-  String TRAIT_DEFAULT_SECRET_MANAGER = "security_secrets_manager_default";
-  String TRAIT_IS_GLOBAL = "is_global";
 
   List<SecretManagerConfig> listSecretManagers(String accountId);
 

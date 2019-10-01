@@ -14,6 +14,7 @@ import com.hazelcast.core.HazelcastInstance;
 import graphql.GraphQL;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.marketo.MarketoConfig;
+import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ServersModule;
 import io.harness.module.TestMongoModule;
@@ -97,8 +98,10 @@ public class GraphQLRule
 
     MarketoConfig marketoConfig =
         MarketoConfig.builder().clientId("client_id").clientSecret("client_secret_id").enabled(false).build();
-
     configuration.setMarketoConfig(marketoConfig);
+
+    SegmentConfig segmentConfig = SegmentConfig.builder().enabled(false).url("dummy_url").apiKey("dummy_key").build();
+    configuration.setSegmentConfig(segmentConfig);
     return configuration;
   }
 

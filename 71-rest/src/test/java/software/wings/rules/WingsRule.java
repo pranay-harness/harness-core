@@ -22,6 +22,7 @@ import io.dropwizard.Configuration;
 import io.dropwizard.lifecycle.Managed;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.marketo.MarketoConfig;
+import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.exception.WingsException;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ServersModule;
@@ -265,8 +266,10 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
 
     MarketoConfig marketoConfig =
         MarketoConfig.builder().clientId("client_id").clientSecret("client_secret_id").enabled(false).build();
-
     configuration.setMarketoConfig(marketoConfig);
+
+    SegmentConfig segmentConfig = SegmentConfig.builder().enabled(false).url("dummy_url").apiKey("dummy_key").build();
+    configuration.setSegmentConfig(segmentConfig);
     return configuration;
   }
 

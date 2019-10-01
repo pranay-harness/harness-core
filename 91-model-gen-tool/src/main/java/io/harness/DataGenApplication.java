@@ -15,6 +15,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Environment;
 import io.harness.event.EventsModule;
+import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.exception.WingsException;
 import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
@@ -77,6 +78,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
     logger.info("Entering startup maintenance mode");
     MaintenanceController.forceMaintenance(true);
 
+    configuration.setSegmentConfig(SegmentConfig.builder().enabled(false).build());
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(20, 1000, 500L, TimeUnit.MILLISECONDS));
 
     List<Module> modules = new ArrayList<>();
