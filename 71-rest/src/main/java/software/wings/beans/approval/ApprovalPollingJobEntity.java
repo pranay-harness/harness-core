@@ -14,13 +14,13 @@ import org.mongodb.morphia.annotations.Indexed;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
 import software.wings.sm.states.ApprovalState.ApprovalStateType;
 
-@Entity(value = "approvalPollingJob")
-@HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "ApprovalPollingJobEntityKeys")
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ToString(exclude = "scriptString")
+@Entity(value = "approvalPollingJob")
+@HarnessEntity(exportable = false)
 public class ApprovalPollingJobEntity implements PersistentRegularIterable {
   String appId;
   String accountId;

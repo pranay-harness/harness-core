@@ -37,8 +37,6 @@ import java.util.List;
 /**
  * Created by rsingh on 08/30/17.
  */
-@Entity(value = "newRelicMetricAnalysisRecords", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Indexes({
   @Index(fields = {
     @Field("workflowExecutionId"), @Field("stateExecutionId"), @Field("groupName"), @Field("analysisMinute")
@@ -49,6 +47,8 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "NewRelicMetricAnalysisRecordKeys")
+@Entity(value = "newRelicMetricAnalysisRecords", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class NewRelicMetricAnalysisRecord extends Base implements Comparable<NewRelicMetricAnalysisRecord> {
   @NotEmpty private StateType stateType;
 

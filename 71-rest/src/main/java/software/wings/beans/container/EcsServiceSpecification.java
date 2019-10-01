@@ -11,12 +11,12 @@ import software.wings.beans.DeploymentSpecification;
 
 import javax.validation.constraints.NotNull;
 
-@Entity("ecsServiceSpecification")
-@HarnessEntity(exportable = true)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "EcsServiceSpecificationKeys")
+@Entity("ecsServiceSpecification")
+@HarnessEntity(exportable = true)
 public class EcsServiceSpecification extends DeploymentSpecification {
   public static final String ECS_REPLICA_SCHEDULING_STRATEGY = "REPLICA";
   @NotNull private String serviceId;

@@ -21,8 +21,6 @@ import java.time.OffsetDateTime;
 import java.util.Date;
 import javax.validation.constraints.NotNull;
 
-@Entity(value = "sweepingOutput", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Value
 @Builder
 @Indexes({
@@ -42,6 +40,8 @@ import javax.validation.constraints.NotNull;
         @Field(SweepingOutputKeys.appId), @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.stateExecutionId)
       })
 })
+@Entity(value = "sweepingOutput", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "SweepingOutputKeys")
 public class SweepingOutput implements PersistentEntity, UuidAccess {
   @Id private String uuid;

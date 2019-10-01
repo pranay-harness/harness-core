@@ -21,13 +21,13 @@ import software.wings.jersey.JsonViews;
 import java.time.Instant;
 import javax.validation.constraints.NotNull;
 
-@Entity(value = "gcpUsageReport", noClassnameStored = true)
-@HarnessEntity(exportable = true)
 @Indexes(@Index(fields = { @Field("accountId")
                            , @Field("startTimestamp") },
     options = @IndexOptions(unique = true, name = "accountId_startTimestamp_unique_idx", background = true)))
 @Value
 @FieldNameConstants(innerTypeName = "GCPUsageReportKeys")
+@Entity(value = "gcpUsageReport", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 
 public class GCPUsageReport implements PersistentEntity, UuidAccess, CreatedAtAccess, UpdatedAtAccess {
   @Id private String uuid;

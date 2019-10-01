@@ -17,11 +17,11 @@ import java.util.Set;
  *
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Entity(value = "instanceEventQueue", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
+@Entity(value = "instanceEventQueue", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class InstanceEvent extends Queuable {
   private String accountId;
   private Set<String> deletions;

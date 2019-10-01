@@ -15,14 +15,14 @@ import software.wings.beans.Base;
 /**
  * @author rktummala on 12/15/17
  */
-@Entity(value = "gitSyncError")
-@HarnessEntity(exportable = false)
 @Indexes(@Index(fields = { @Field("accountId")
                            , @Field("yamlFilePath") },
     options = @IndexOptions(unique = true, name = "uniqueIdx")))
 @Data
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "GitSyncErrorKeys")
+@Entity(value = "gitSyncError")
+@HarnessEntity(exportable = false)
 public class GitSyncError extends Base {
   private String accountId;
   private String yamlFilePath;

@@ -30,8 +30,6 @@ import java.util.List;
  *
  * @author Rishi
  */
-@Entity(value = "audits", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "AuditHeaderKeys")
 @Indexes({
@@ -55,6 +53,8 @@ import java.util.List;
             @Field(value = AuditHeaderKeys.createdAt, type = IndexType.DESC),
       }, options = @IndexOptions(name = "entityRecordIndex_3"))
 })
+@Entity(value = "audits", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 
 public class AuditHeader extends Base {
   /**

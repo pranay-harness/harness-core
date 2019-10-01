@@ -51,8 +51,6 @@ import java.util.Map;
 /**
  * Created by rsingh on 6/23/17.
  */
-@Entity(value = "logAnalysisRecords", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Indexes({
   @Index(fields =
       { @Field("cvConfigId")
@@ -90,6 +88,8 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "LogMLAnalysisRecordKeys")
+@Entity(value = "logAnalysisRecords", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class LogMLAnalysisRecord extends Base {
   @NotEmpty private String stateExecutionId;
   private String cvConfigId;

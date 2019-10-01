@@ -5,7 +5,6 @@ import static software.wings.service.impl.GoogleDataStoreServiceImpl.readDouble;
 import static software.wings.service.impl.GoogleDataStoreServiceImpl.readString;
 
 import com.google.cloud.datastore.Datastore;
-import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Key;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -19,6 +18,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.Threshold;
@@ -29,8 +29,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-@org.mongodb.morphia.annotations.Entity(value = "supervisedTSThreshold", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Data
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -39,6 +37,8 @@ import java.util.Optional;
 @AllArgsConstructor
 @EqualsAndHashCode
 @Slf4j
+@Entity(value = "supervisedTSThreshold", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class SupervisedTSThreshold implements GoogleDataStoreAware, CreatedAtAware {
   public static final String connector = ":";
 
@@ -61,7 +61,7 @@ public class SupervisedTSThreshold implements GoogleDataStoreAware, CreatedAtAwa
   }
 
   @Override
-  public Entity convertToCloudStorageEntity(Datastore datastore) {
+  public com.google.cloud.datastore.Entity convertToCloudStorageEntity(Datastore datastore) {
     Key taskKey =
         datastore.newKeyFactory()
             .setKind(this.getClass().getAnnotation(org.mongodb.morphia.annotations.Entity.class).value())
@@ -83,7 +83,7 @@ public class SupervisedTSThreshold implements GoogleDataStoreAware, CreatedAtAwa
   }
 
   @Override
-  public GoogleDataStoreAware readFromCloudStorageEntity(Entity entity) {
+  public GoogleDataStoreAware readFromCloudStorageEntity(com.google.cloud.datastore.Entity entity) {
     final SupervisedTSThreshold tsThreshold =
         SupervisedTSThreshold.builder()
             .accountId(readString(entity, SupervisedTSThresholdKeys.accountId))

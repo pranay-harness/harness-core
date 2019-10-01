@@ -34,3 +34,10 @@ public class Class {
   public void ignoredTest() {
   }
 }
+
+@FieldNameConstants(innerTypeName = "AccountKeys")
+@JsonIgnoreProperties(ignoreUnknown = true)
+@Entity(value = "accounts", noClassnameStored = true)
+@HarnessEntity(exportable = true)
+public class Account extends Base implements PersistentRegularIterable {
+}

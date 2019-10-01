@@ -37,8 +37,6 @@ import java.util.Map;
  *
  * @author Rishi
  */
-@Entity(value = "stateExecutionInstances", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Data
 @FieldNameConstants(innerTypeName = "StateExecutionInstanceKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -55,6 +53,8 @@ import java.util.Map;
         , @Field(StateExecutionInstanceKeys.parentInstanceId), @Field(StateExecutionInstanceKeys.createdAt)
       })
 })
+@Entity(value = "stateExecutionInstances", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class StateExecutionInstance implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id private String uuid;
   @Indexed protected String appId;

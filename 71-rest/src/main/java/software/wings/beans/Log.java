@@ -41,11 +41,11 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by peeyushaggarwal on 5/27/16.
  */
-@Entity(value = "commandLogs", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Data
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @FieldNameConstants(innerTypeName = "LogKeys")
+@Entity(value = "commandLogs", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class Log extends Base implements GoogleDataStoreAware {
   @NotEmpty private String activityId;
   private String hostName;

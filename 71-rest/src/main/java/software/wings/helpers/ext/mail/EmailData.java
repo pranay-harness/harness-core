@@ -12,13 +12,13 @@ import org.mongodb.morphia.annotations.Entity;
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity(value = "emailQueue", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@Entity(value = "emailQueue", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class EmailData extends Queuable {
   private String accountId;
   @Builder.Default private List<String> to = new ArrayList<>();

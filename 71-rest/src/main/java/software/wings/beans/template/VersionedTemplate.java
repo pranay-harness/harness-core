@@ -21,8 +21,6 @@ import java.util.List;
 import javax.validation.constraints.NotNull;
 
 @JsonInclude(NON_NULL)
-@Entity(value = "versionedTemplate", noClassnameStored = true)
-@HarnessEntity(exportable = true)
 @Indexes({
   @Index(fields = { @Field("accountId")
                     , @Field("templateId"), @Field("version") },
@@ -36,6 +34,8 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@Entity(value = "versionedTemplate", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class VersionedTemplate extends Base {
   public static final String TEMPLATE_ID_KEY = "templateId";
   public static final String VERSION_KEY = "version";

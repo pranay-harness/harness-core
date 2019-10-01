@@ -22,8 +22,6 @@ import java.time.OffsetDateTime;
 import java.util.Date;
 import javax.validation.constraints.NotNull;
 
-@Entity(value = "resourceConstraintInstances", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
@@ -31,6 +29,8 @@ import javax.validation.constraints.NotNull;
     fields = { @Field("resourceConstraintId")
                , @Field("resourceUnit"), @Field("order") }))
 @FieldNameConstants(innerTypeName = "ResourceConstraintInstanceKeys")
+@Entity(value = "resourceConstraintInstances", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class ResourceConstraintInstance implements PersistentEntity, UuidAware {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @Indexed @NotNull @SchemaIgnore protected String appId;

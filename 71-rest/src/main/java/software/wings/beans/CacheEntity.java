@@ -16,8 +16,6 @@ import org.mongodb.morphia.annotations.Indexes;
 
 import java.util.Date;
 
-@Entity(value = "cache", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Indexes({
   @Index(fields = {
     @Field("_id"), @Field("contextValue")
@@ -26,6 +24,8 @@ import java.util.Date;
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "CacheEntityKeys")
+@Entity(value = "cache", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class CacheEntity {
   private long contextValue;
   @Id private String canonicalKey;

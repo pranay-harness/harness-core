@@ -13,12 +13,12 @@ import software.wings.beans.DeploymentSpecification;
 
 import javax.validation.constraints.NotNull;
 
-@Entity("pcfServiceSpecification")
-@HarnessEntity(exportable = true)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "PcfServiceSpecificationKeys")
+@Entity("pcfServiceSpecification")
+@HarnessEntity(exportable = true)
 public class PcfServiceSpecification extends DeploymentSpecification {
   @NotNull private String serviceId;
   @NotNull private String manifestYaml;

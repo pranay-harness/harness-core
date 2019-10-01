@@ -14,6 +14,7 @@ import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.Key;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.annotation.HarnessEntity;
 import io.harness.exception.WingsException;
 import io.harness.persistence.GoogleDataStoreAware;
 import lombok.AllArgsConstructor;
@@ -33,7 +34,6 @@ import software.wings.sm.StateType;
  * 4/9/2019
  */
 
-@Entity(value = "anomalousLogRecords", noClassnameStored = true)
 @Indexes(@Index(fields = { @Field("serviceId")
                            , @Field("cvConfigId"), @Field("analysisMinute") },
     options = @IndexOptions(unique = true, name = "analysisMinIndex")))
@@ -42,6 +42,8 @@ import software.wings.sm.StateType;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Entity(value = "anomalousLogRecords", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class AnomalousLogRecord implements GoogleDataStoreAware {
   @Id private String uuid;
   private String cvConfigId;

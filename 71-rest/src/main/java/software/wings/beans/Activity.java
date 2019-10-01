@@ -37,13 +37,13 @@ import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 
-@Entity(value = "activities", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "ActivityKeys")
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity(value = "activities", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class Activity
     implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;

@@ -27,16 +27,16 @@ import java.util.Map;
 /**
  * Created by rsingh on 08/30/17.
  */
-@Entity(value = "timeSeriesMetricTemplates", noClassnameStored = true)
 @Indexes({
   @Index(fields = {
     @Field("stateExecutionId"), @Field("cvConfigId")
   }, options = @IndexOptions(unique = true, name = "unique_Idx"))
 })
-@HarnessEntity(exportable = true)
 @Data
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "TimeSeriesMetricTemplatesKeys")
+@Entity(value = "timeSeriesMetricTemplates", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class TimeSeriesMetricTemplates extends Base {
   @NotEmpty private StateType stateType;
 

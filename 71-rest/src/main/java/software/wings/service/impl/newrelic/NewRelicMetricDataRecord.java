@@ -48,9 +48,6 @@ import java.util.Map;
 /**
  * Created by rsingh on 08/30/17.
  */
-@Entity(value = "newRelicMetricRecords", noClassnameStored = true)
-@HarnessEntity(exportable = false)
-
 @Indexes({
   @Index(fields =
       {
@@ -72,6 +69,9 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "NewRelicMetricDataRecordKeys")
 @IgnoreUnusedIndex
+@Entity(value = "newRelicMetricRecords", noClassnameStored = true)
+@HarnessEntity(exportable = false)
+
 public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAware {
   @Transient public static String DEFAULT_GROUP_NAME = "default";
 

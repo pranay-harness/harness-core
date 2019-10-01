@@ -23,8 +23,6 @@ import software.wings.beans.ResourceLookup.ResourceLookupKeys;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
-@Entity(value = "resourceLookup", noClassnameStored = true)
-@HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ResourceLookupKeys")
 @Indexes({
   @Index(options = @IndexOptions(name = "resourceIndex_1"),
@@ -60,6 +58,8 @@ import javax.validation.constraints.NotNull;
 })
 @Data
 @Builder
+@Entity(value = "resourceLookup", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class ResourceLookup implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
 

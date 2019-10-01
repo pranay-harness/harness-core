@@ -14,8 +14,6 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Entity(value = "genericEvent", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
@@ -28,6 +26,8 @@ import org.mongodb.morphia.annotations.Indexes;
         @Field(Keys.version), @Field(Keys.running), @Field(Keys.earliestGet)
       })
 })
+@Entity(value = "genericEvent", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class QueableEvent extends Queuable {
   private Event event;
 }

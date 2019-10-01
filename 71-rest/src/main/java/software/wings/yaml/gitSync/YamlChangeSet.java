@@ -22,13 +22,13 @@ import javax.validation.constraints.NotNull;
 /**
  * @author bsollish 9/26/17
  */
-@Entity(value = "yamlChangeSet")
-@HarnessEntity(exportable = false)
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Indexes({ @Index(fields = { @Field("accountId")
                              , @Field("status") }, options = @IndexOptions(name = "searchIdx")) })
 @FieldNameConstants(innerTypeName = "YamlChangeSetKeys")
+@Entity(value = "yamlChangeSet")
+@HarnessEntity(exportable = false)
 public class YamlChangeSet extends Base {
   @NotEmpty private String accountId;
   @NotNull private List<GitFileChange> gitFileChanges = new ArrayList<>();

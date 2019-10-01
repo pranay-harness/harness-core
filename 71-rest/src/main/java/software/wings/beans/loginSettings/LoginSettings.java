@@ -16,11 +16,11 @@ import org.mongodb.morphia.annotations.Id;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
-@Entity(value = "loginSettings")
-@HarnessEntity(exportable = true)
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "LoginSettingKeys")
+@Entity(value = "loginSettings")
+@HarnessEntity(exportable = true)
 public class LoginSettings implements PersistentEntity, UuidAware, UpdatedAtAware, UpdatedByAware {
   @Id @NotNull @SchemaIgnore private String uuid;
 

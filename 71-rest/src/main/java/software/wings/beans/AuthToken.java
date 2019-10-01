@@ -15,11 +15,11 @@ import org.simpleframework.xml.Transient;
 import java.time.OffsetDateTime;
 import java.util.Date;
 
-@Entity(value = "authTokens", noClassnameStored = true)
 @Data
-@HarnessEntity(exportable = true)
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "AuthTokenKeys")
+@Entity(value = "authTokens", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class AuthToken extends Base {
   @Transient private User user;
   private String accountId;

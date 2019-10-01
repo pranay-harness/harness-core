@@ -11,9 +11,9 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by peeyushaggarwal on 3/22/17.
  */
+@EqualsAndHashCode(callSuper = false)
 @Entity(value = "licenses", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-@EqualsAndHashCode(callSuper = false)
 public class License extends Base {
   private String name;
   private List<Entitlement> entitlements;

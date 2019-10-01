@@ -17,8 +17,6 @@ import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
 import software.wings.yaml.BaseEntityYaml;
 
-@Entity("applicationManifests")
-@HarnessEntity(exportable = true)
 @Indexes(@Index(options = @IndexOptions(name = "appManifestIdx", unique = true),
     fields = { @Field("appId")
                , @Field("envId"), @Field("serviceId"), @Field("kind") }))
@@ -26,6 +24,8 @@ import software.wings.yaml.BaseEntityYaml;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "ApplicationManifestKeys")
+@Entity("applicationManifests")
+@HarnessEntity(exportable = true)
 public class ApplicationManifest extends Base {
   private String serviceId;
   private String envId;

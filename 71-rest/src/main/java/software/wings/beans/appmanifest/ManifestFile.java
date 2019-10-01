@@ -15,8 +15,6 @@ import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.yaml.BaseEntityYaml;
 
-@Entity("manifestFile")
-@HarnessEntity(exportable = true)
 @Indexes(@Index(options = @IndexOptions(name = "manifestFileIdx", unique = true),
     fields = { @Field("applicationManifestId")
                , @Field("fileName") }))
@@ -24,6 +22,8 @@ import software.wings.yaml.BaseEntityYaml;
 @Builder
 @FieldNameConstants(innerTypeName = "ManifestFileKeys")
 @EqualsAndHashCode(callSuper = false)
+@Entity("manifestFile")
+@HarnessEntity(exportable = true)
 public class ManifestFile extends Base {
   public static final String VALUES_YAML_KEY = "values.yaml";
 

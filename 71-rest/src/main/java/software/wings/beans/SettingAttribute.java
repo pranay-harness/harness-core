@@ -81,7 +81,6 @@ import javax.validation.Valid;
 /**
  * Created by anubhaw on 5/16/16.
  */
-@Entity(value = "settingAttributes")
 @Indexes({
   @Index(options = @IndexOptions(name = "locate", unique = true),
       fields = { @Field("accountId")
@@ -93,10 +92,11 @@ import javax.validation.Valid;
       @Index(options = @IndexOptions(name = "acctValTypeIdx"), fields = { @Field("accountId")
                                                                           , @Field("value.type") })
 })
-@HarnessEntity(exportable = true)
 @Data
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "SettingAttributeKeys")
+@Entity(value = "settingAttributes")
+@HarnessEntity(exportable = true)
 public class SettingAttribute extends Base implements NameAccess {
   public static final String CATEGORY_KEY = "category";
   public static final String ENV_ID_KEY = "envId";

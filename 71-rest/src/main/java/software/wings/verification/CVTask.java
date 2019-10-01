@@ -24,12 +24,12 @@ import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import java.time.OffsetDateTime;
 import java.util.Date;
 
-@Entity(value = "cvTasks", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "CVTaskKeys")
 @Data
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Entity(value = "cvTasks", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class CVTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id private String uuid;
 

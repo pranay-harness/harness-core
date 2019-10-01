@@ -26,8 +26,6 @@ import java.util.Date;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
-@Entity(value = "barrierInstances", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Indexes({
   @Index(options = @IndexOptions(name = "search2", unique = true),
       fields = { @Field("name")
@@ -40,6 +38,8 @@ import javax.validation.constraints.NotNull;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "BarrierInstanceKeys")
+@Entity(value = "barrierInstances", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class BarrierInstance implements PersistentEntity, UuidAware, PersistentRegularIterable {
   @Id private String uuid;
   @Indexed @NotNull protected String appId;

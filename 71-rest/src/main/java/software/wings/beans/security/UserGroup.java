@@ -43,8 +43,6 @@ import javax.annotation.Nullable;
  * @author Rishi
  */
 @JsonInclude(NON_EMPTY)
-@Entity(value = "userGroups", noClassnameStored = true)
-@HarnessEntity(exportable = true)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
@@ -52,6 +50,8 @@ import javax.annotation.Nullable;
                            , @Field("memberIds") },
     options = @IndexOptions(name = "accountAndMemberIds", background = true)))
 @FieldNameConstants(innerTypeName = "UserGroupKeys")
+@Entity(value = "userGroups", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class UserGroup extends Base implements NotificationReceiverInfo {
   public static final String MEMBER_IDS_KEY = "memberIds";
   public static final String NAME_KEY = "name";

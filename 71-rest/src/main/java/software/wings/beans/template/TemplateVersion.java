@@ -17,13 +17,13 @@ import software.wings.beans.Base;
 @Indexes(@Index(
     fields = { @Field("templateUuid")
                , @Field("version") }, options = @IndexOptions(name = "yaml", unique = true)))
-@Entity(value = "templateVersions", noClassnameStored = true)
-@HarnessEntity(exportable = true)
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@Entity(value = "templateVersions", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class TemplateVersion extends Base {
   public static final long INITIAL_VERSION = 1;
   public static String TEMPLATE_UUID_KEY = "templateUuid";

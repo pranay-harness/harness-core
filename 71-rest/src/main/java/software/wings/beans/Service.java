@@ -43,15 +43,15 @@ import java.util.Set;
  *
  * @author Rishi
  */
-@Entity(value = "services", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("appId")
                                                                                   , @Field("name") }))
-@HarnessEntity(exportable = true)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "ServiceKeys")
+@Entity(value = "services", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class Service extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess {
   @Trimmed @EntityName @NotEmpty private String name;
   private String description;

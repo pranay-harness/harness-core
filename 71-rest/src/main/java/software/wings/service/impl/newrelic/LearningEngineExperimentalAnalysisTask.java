@@ -33,8 +33,6 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by rsingh on 1/8/18.
  */
-@Entity(value = "learningEngineExperimentalAnalysisTask", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Indexes({
   @Index(fields = {
     @Field("workflow_execution_id")
@@ -47,6 +45,8 @@ import java.util.concurrent.TimeUnit;
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @FieldNameConstants(innerTypeName = "LearningEngineExperimentalAnalysisTaskKeys")
 @IgnoreUnusedIndex
+@Entity(value = "learningEngineExperimentalAnalysisTask", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class LearningEngineExperimentalAnalysisTask extends Base {
   public static long TIME_SERIES_ANALYSIS_TASK_TIME_OUT = TimeUnit.MINUTES.toMillis(2);
   public static final int RETRIES = 3;

@@ -23,7 +23,6 @@ import software.wings.beans.Preference.PreferenceKeys;
   @Type(value = DeploymentPreference.class, name = "DEPLOYMENT_PREFERENCE")
   , @Type(value = AuditPreference.class, name = "AUDIT_PREFERENCE")
 })
-@Entity(value = "preferences")
 @FieldNameConstants(innerTypeName = "PreferenceKeys")
 @Indexes({
   @Index(options = @IndexOptions(name = "preference_index"), fields = {
@@ -31,8 +30,9 @@ import software.wings.beans.Preference.PreferenceKeys;
   })
 })
 
-@HarnessEntity(exportable = true)
 @EqualsAndHashCode(callSuper = false)
+@Entity(value = "preferences")
+@HarnessEntity(exportable = true)
 
 public abstract class Preference extends Base {
   @NotEmpty private String name;

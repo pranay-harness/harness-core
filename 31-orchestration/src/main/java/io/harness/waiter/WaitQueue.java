@@ -22,11 +22,11 @@ import javax.validation.constraints.NotNull;
  *
  * @author Rishi
  */
-@Entity(value = "waitQueues", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "WaitQueueKeys")
+@Entity(value = "waitQueues", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class WaitQueue implements PersistentEntity, UuidAccess, CreatedAtAccess {
   public static final Duration TTL = Duration.ofDays(14);
 

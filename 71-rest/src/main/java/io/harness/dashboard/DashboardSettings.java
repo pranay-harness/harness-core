@@ -22,10 +22,10 @@ import org.mongodb.morphia.annotations.Transient;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
-@Entity(value = "dashboardSettings", noClassnameStored = true)
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "keys")
+@Entity(value = "dashboardSettings", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 public class DashboardSettings
     implements NameAccess, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {

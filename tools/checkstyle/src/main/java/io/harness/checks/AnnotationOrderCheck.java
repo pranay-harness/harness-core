@@ -50,6 +50,8 @@ public class AnnotationOrderCheck extends AbstractCheck {
                                              .put("Ignore", 35)
                                              .put("JsonIgnore", 41)
                                              .put("SchemaIgnore", 51)
+                                             .put("Entity", 61)
+                                             .put("HarnessEntity", 62)
                                              .build();
 
   Map<String, Map<String, String>> incompatible =
@@ -64,7 +66,7 @@ public class AnnotationOrderCheck extends AbstractCheck {
 
   Map<String, Set<String>> required = ImmutableMap.<String, Set<String>>builder()
                                           .put("Ignore", ImmutableSet.<String>builder().add("Owner").build())
-                                          .put("Entity", ImmutableSet.<String>builder().add("HarnessEntity").build())
+                                          .put("HarnessEntity", ImmutableSet.<String>builder().add("Entity").build())
                                           .build();
 
   @Override

@@ -19,8 +19,6 @@ import org.mongodb.morphia.annotations.Indexes;
  *
  * Created by Pranjal on 08/14/2018
  */
-@Entity(value = "experimentalTimeSeriesAnalysisRecords", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Indexes(@Index(fields =
     { @Field("workflowExecutionId")
       , @Field("stateExecutionId"), @Field("analysisMinute"), @Field("groupName") },
@@ -31,6 +29,8 @@ import org.mongodb.morphia.annotations.Indexes;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "ExperimentalMetricAnalysisRecordKeys")
 @IgnoreUnusedIndex
+@Entity(value = "experimentalTimeSeriesAnalysisRecords", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class ExperimentalMetricAnalysisRecord extends MetricAnalysisRecord {
   private String envId;
   @Builder.Default private boolean mismatched = true;

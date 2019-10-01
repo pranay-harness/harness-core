@@ -10,10 +10,10 @@ import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 
-@Entity(value = "emailVerificationTokens")
-@HarnessEntity(exportable = true)
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "EmailVerificationTokenKeys")
+@Entity(value = "emailVerificationTokens")
+@HarnessEntity(exportable = true)
 public class EmailVerificationToken extends Base {
   @NotEmpty private String token;
   @NotEmpty private String userId;

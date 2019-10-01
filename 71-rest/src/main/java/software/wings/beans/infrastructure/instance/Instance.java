@@ -28,8 +28,6 @@ import software.wings.beans.infrastructure.instance.key.PodInstanceKey;
  * We enforce unique constraint in code based on the instance key sub class.
  * @author rktummala
  */
-@Entity(value = "instance", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Indexes({
@@ -49,8 +47,9 @@ import software.wings.beans.infrastructure.instance.key.PodInstanceKey;
         @Field("appId"), @Field("serviceId"), @Field("isDeleted")
       }, options = @IndexOptions(name = "instance_index8", background = true))
 })
-
 @FieldNameConstants(innerTypeName = "InstanceKeys")
+@Entity(value = "instance", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class Instance extends Base implements AccountAccess, ApplicationAccess {
   @NotEmpty private InstanceType instanceType;
   private HostInstanceKey hostInstanceKey;

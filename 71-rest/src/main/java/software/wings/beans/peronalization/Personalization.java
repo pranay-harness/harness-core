@@ -20,12 +20,12 @@ import java.util.Set;
 
 @Value
 @Builder
-@HarnessEntity(exportable = true)
-@Entity(value = "personalization", noClassnameStored = true)
 @Indexes(@Index(options = @IndexOptions(name = "identification", unique = true),
     fields = { @Field("accountId")
                , @Field("userId") }))
 @FieldNameConstants(innerTypeName = "PersonalizationKeys")
+@Entity(value = "personalization", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class Personalization implements PersistentEntity {
   @Id private ObjectId id;
 

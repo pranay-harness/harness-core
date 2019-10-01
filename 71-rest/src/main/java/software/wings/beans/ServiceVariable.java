@@ -37,7 +37,6 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by peeyushaggarwal on 9/14/16.
  */
-@Entity(value = "serviceVariables", noClassnameStored = true)
 @Indexes({
   @Index(fields =
       {
@@ -53,13 +52,14 @@ import javax.validation.constraints.NotNull;
         @Field("appId"), @Field("envId"), @Field("templateId")
       }, options = @IndexOptions(name = "app_env_templateId"))
 })
-@HarnessEntity(exportable = true)
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "ServiceVariableKeys")
+@Entity(value = "serviceVariables", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class ServiceVariable extends Base implements EncryptableSetting {
   /**
    * The constant DEFAULT_TEMPLATE_ID.

@@ -32,8 +32,6 @@ import java.util.stream.Collectors;
 /**
  * Created by sriram_parthasarathy on 8/23/17.
  */
-@Entity(value = "verificationServiceTask", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Indexes({
   @Index(fields = {
     @Field("workflowExecutionId"), @Field("stateExecutionId"), @Field("serviceId"), @Field("executionStatus")
@@ -44,6 +42,8 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@Entity(value = "verificationServiceTask", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class AnalysisContext extends Base {
   private String accountId;
   private String workflowId;

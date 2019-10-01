@@ -20,11 +20,11 @@ import java.util.List;
 /**
  * Represents which waiter is waiting on which correlation Ids and callback to execute when done.
  */
-@Entity(value = "waitInstances", noClassnameStored = true)
-@HarnessEntity(exportable = false)
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "WaitInstanceKeys")
+@Entity(value = "waitInstances", noClassnameStored = true)
+@HarnessEntity(exportable = false)
 public class WaitInstance implements PersistentEntity, UuidAccess {
   public static final Duration TTL = WaitQueue.TTL.plusDays(7);
   public static final Duration AfterFinishTTL = Duration.ofHours(1);

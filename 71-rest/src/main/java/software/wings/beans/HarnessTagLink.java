@@ -28,9 +28,7 @@ import software.wings.jersey.JsonViews;
 
 import javax.validation.constraints.NotNull;
 
-@Entity(value = "tagLinks", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@HarnessEntity(exportable = true)
 @Indexes({
   @Index(options = @IndexOptions(name = "entityTagIdx", unique = true),
       fields =
@@ -45,6 +43,8 @@ import javax.validation.constraints.NotNull;
 @Builder
 @JsonInclude(Include.NON_NULL)
 @FieldNameConstants(innerTypeName = "HarnessTagLinkKeys")
+@Entity(value = "tagLinks", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class HarnessTagLink
     implements PersistentEntity, UuidAware, UpdatedAtAware, UpdatedByAware, CreatedAtAware, CreatedByAware {
   @Id private String uuid;

@@ -19,12 +19,12 @@ import software.wings.jersey.JsonViews;
 import java.time.Instant;
 import javax.validation.constraints.NotNull;
 
-@Entity(value = "gcpBillingJobEntity")
 @FieldNameConstants(innerTypeName = "GCPBillingJobEntityKeys")
-@HarnessEntity(exportable = true)
 @Getter
 @ToString
 @EqualsAndHashCode
+@Entity(value = "gcpBillingJobEntity")
+@HarnessEntity(exportable = true)
 public class GCPBillingJobEntity implements PersistentRegularIterable, CreatedAtAccess, UpdatedAtAccess {
   @Id private String uuid;
   @Indexed private String accountId;

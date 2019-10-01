@@ -25,13 +25,13 @@ import org.mongodb.morphia.annotations.Transient;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
-@Entity(value = "delegates", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @Builder
 @Indexes({ @Index(fields = { @Field("accountId") }, options = @IndexOptions(name = "delegateAccountIdIdx")) })
-@HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "DelegateKeys")
+@Entity(value = "delegates", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, PersistentRegularIterable {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @SchemaIgnore @Indexed private long createdAt;

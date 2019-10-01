@@ -20,12 +20,12 @@ import software.wings.beans.Base;
  */
 
 @JsonInclude(NON_EMPTY)
-@Entity(value = "whitelist", noClassnameStored = true)
-@HarnessEntity(exportable = true)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "WhitelistKeys")
+@Entity(value = "whitelist", noClassnameStored = true)
+@HarnessEntity(exportable = true)
 public class Whitelist extends Base {
   @Indexed @NotEmpty private String accountId;
   private String description;
