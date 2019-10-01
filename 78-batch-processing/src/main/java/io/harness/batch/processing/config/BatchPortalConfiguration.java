@@ -16,8 +16,8 @@ import org.springframework.guice.annotation.EnableGuiceModules;
 
 import java.util.Set;
 
-@EnableGuiceModules
 @Configuration
+@EnableGuiceModules
 public class BatchPortalConfiguration {
   private static final Set<Class> morphiaClasses =
       ImmutableSet.<Class>builder().addAll(BatchProcessingMorphiaClasses.classes).build();

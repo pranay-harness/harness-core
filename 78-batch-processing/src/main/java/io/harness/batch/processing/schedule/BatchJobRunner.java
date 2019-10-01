@@ -18,7 +18,6 @@ import java.time.temporal.ChronoUnit;
 @Service
 public class BatchJobRunner {
   @Autowired private JobLauncher jobLauncher;
-
   @Autowired private BatchJobScheduledDataService batchJobScheduledDataService;
 
   /**
@@ -42,7 +41,6 @@ public class BatchJobRunner {
                                  .addString("startDate", String.valueOf(startInstant.toEpochMilli()))
                                  .addString("endDate", String.valueOf(endInstant.toEpochMilli()))
                                  .toJobParameters();
-      logger.info("Job params {} ", params.toString());
       jobLauncher.run(job, params);
       BatchJobScheduledData batchJobScheduledData = new BatchJobScheduledData(batchJobType, startInstant, endInstant);
       batchJobScheduledDataService.create(batchJobScheduledData);

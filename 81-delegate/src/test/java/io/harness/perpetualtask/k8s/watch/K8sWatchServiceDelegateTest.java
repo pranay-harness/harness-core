@@ -43,8 +43,8 @@ public class K8sWatchServiceDelegateTest {
     this.k8sWatchServiceDelegate = new K8sWatchServiceDelegate(watcherFactory, kubernetesClientFactory);
     podWatcher = mock(PodWatcher.class);
     nodeWatcher = mock(NodeWatcher.class);
-    when(watcherFactory.createPodWatcher(any())).thenReturn(podWatcher);
-    when(watcherFactory.createNodeWatcher(any())).thenReturn(nodeWatcher);
+    when(watcherFactory.createPodWatcher(any(), any())).thenReturn(podWatcher);
+    when(watcherFactory.createNodeWatcher(any(), any())).thenReturn(nodeWatcher);
   }
 
   @Test
@@ -62,7 +62,7 @@ public class K8sWatchServiceDelegateTest {
     String watchId = k8sWatchServiceDelegate.create(k8sWatchTaskParams);
     assertThat(watchId).isNotNull();
     assertThat(k8sWatchServiceDelegate.watchIds()).contains(watchId);
-    verify(watcherFactory, atLeastOnce()).createPodWatcher(any());
+    verify(watcherFactory, atLeastOnce()).createPodWatcher(any(), any());
   }
 
   @Test
@@ -80,7 +80,7 @@ public class K8sWatchServiceDelegateTest {
     String watchId = k8sWatchServiceDelegate.create(k8sWatchTaskParams);
     assertThat(watchId).isNotNull();
     assertThat(k8sWatchServiceDelegate.watchIds()).contains(watchId);
-    verify(watcherFactory, atLeastOnce()).createNodeWatcher(any());
+    verify(watcherFactory, atLeastOnce()).createNodeWatcher(any(), any());
   }
 
   @Test
@@ -98,7 +98,7 @@ public class K8sWatchServiceDelegateTest {
     String watch1 = k8sWatchServiceDelegate.create(k8sWatchTaskParams);
     String watch2 = k8sWatchServiceDelegate.create(k8sWatchTaskParams);
     assertThat(watch2).isEqualTo(watch1);
-    verify(watcherFactory, times(1)).createPodWatcher(any(KubernetesClient.class));
+    verify(watcherFactory, times(1)).createPodWatcher(any(KubernetesClient.class), any());
   }
 
   @Test
@@ -124,7 +124,7 @@ public class K8sWatchServiceDelegateTest {
     String watch1 = k8sWatchServiceDelegate.create(k8sWatchTaskParams1);
     String watch2 = k8sWatchServiceDelegate.create(k8sWatchTaskParams2);
     assertThat(watch2).isNotEqualTo(watch1);
-    verify(watcherFactory, times(2)).createPodWatcher(any(KubernetesClient.class));
+    verify(watcherFactory, times(2)).createPodWatcher(any(KubernetesClient.class), any());
     assertThat(k8sWatchServiceDelegate.watchIds()).containsExactlyInAnyOrder(watch1, watch2);
   }
 

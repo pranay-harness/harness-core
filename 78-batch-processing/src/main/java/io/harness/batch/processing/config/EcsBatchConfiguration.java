@@ -1,6 +1,6 @@
 package io.harness.batch.processing.config;
 
-import io.harness.batch.processing.reader.EventReader;
+import io.harness.batch.processing.reader.EventReaderFactory;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.event.grpc.PublishedMessage;
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +46,7 @@ public class EcsBatchConfiguration {
 
   @Autowired @Qualifier("ecsSyncEventWriter") private ItemWriter ecsSyncEventWriter;
 
-  @Autowired @Qualifier("mongoEventReader") private EventReader mongoEventReader;
+  @Autowired @Qualifier("mongoEventReader") private EventReaderFactory mongoEventReader;
 
   @Bean
   @StepScope

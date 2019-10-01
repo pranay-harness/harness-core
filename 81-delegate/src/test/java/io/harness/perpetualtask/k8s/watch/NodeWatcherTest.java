@@ -1,8 +1,8 @@
 package io.harness.perpetualtask.k8s.watch;
 
-import static io.harness.event.payloads.NodeEvent.EventType.EVENT_TYPE_START;
-import static io.harness.event.payloads.NodeEvent.EventType.EVENT_TYPE_STOP;
 import static io.harness.grpc.utils.HTimestamps.toInstant;
+import static io.harness.perpetualtask.k8s.watch.NodeEvent.EventType.EVENT_TYPE_START;
+import static io.harness.perpetualtask.k8s.watch.NodeEvent.EventType.EVENT_TYPE_STOP;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static java.time.Instant.now;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,8 +27,6 @@ import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.harness.category.element.UnitTests;
 import io.harness.event.client.EventPublisher;
-import io.harness.event.payloads.NodeEvent;
-import io.harness.event.payloads.NodeInfo;
 import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,6 +47,7 @@ public class NodeWatcherTest {
   private NodeWatcher nodeWatcher;
   private EventPublisher eventPublisher;
   private Watch watch;
+  String cloudProviderId = "cloud-provider-id";
 
   @Before
   public void setUp() throws Exception {
@@ -60,7 +59,7 @@ public class NodeWatcherTest {
     watch = mock(Watch.class);
     when(kubernetesClient.nodes()).thenReturn(nodeOps);
     when(nodeOps.watch(any())).thenReturn(watch);
-    nodeWatcher = new NodeWatcher(kubernetesClient, eventPublisher);
+    nodeWatcher = new NodeWatcher(kubernetesClient, cloudProviderId, eventPublisher);
   }
 
   @Test
@@ -73,9 +72,9 @@ public class NodeWatcherTest {
     ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
     verify(eventPublisher, times(2)).publishMessage(captor.capture());
     assertThat(captor.getAllValues().get(1)).isInstanceOfSatisfying(NodeEvent.class, nodeEvent -> {
-      assertThat(nodeEvent.getUid()).isEqualTo(UID);
+      assertThat(nodeEvent.getNodeUid()).isEqualTo(UID);
       assertThat(nodeEvent.getType()).isEqualTo(EVENT_TYPE_START);
-      assertThat(toInstant(nodeEvent.getEventTime())).isEqualTo(creationTime);
+      assertThat(toInstant(nodeEvent.getTimestamp())).isEqualTo(creationTime);
     });
   }
 
@@ -89,10 +88,10 @@ public class NodeWatcherTest {
     ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
     verify(eventPublisher, times(2)).publishMessage(captor.capture());
     assertThat(captor.getAllValues().get(1)).isInstanceOfSatisfying(NodeEvent.class, nodeEvent -> {
-      assertThat(nodeEvent.getUid()).isEqualTo(UID);
+      assertThat(nodeEvent.getNodeUid()).isEqualTo(UID);
       assertThat(nodeEvent.getType()).isEqualTo(EVENT_TYPE_STOP);
       // approximate check as the time is measured within the NodeWatcher code.
-      assertThat(toInstant(nodeEvent.getEventTime())).isCloseTo(now(), within(5, ChronoUnit.SECONDS));
+      assertThat(toInstant(nodeEvent.getTimestamp())).isCloseTo(now(), within(5, ChronoUnit.SECONDS));
     });
   }
 
@@ -107,8 +106,8 @@ public class NodeWatcherTest {
     ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
     verify(eventPublisher, times(2)).publishMessage(captor.capture());
     assertThat(captor.getAllValues().get(0)).isInstanceOfSatisfying(NodeInfo.class, nodeInfo -> {
-      assertThat(nodeInfo.getUid()).isEqualTo(UID);
-      assertThat(nodeInfo.getName()).isEqualTo(NAME);
+      assertThat(nodeInfo.getNodeUid()).isEqualTo(UID);
+      assertThat(nodeInfo.getNodeName()).isEqualTo(NAME);
       assertThat(toInstant(nodeInfo.getCreationTime())).isEqualTo(creationTime);
       assertThat(nodeInfo.getLabelsMap()).isEqualTo(labels);
     });

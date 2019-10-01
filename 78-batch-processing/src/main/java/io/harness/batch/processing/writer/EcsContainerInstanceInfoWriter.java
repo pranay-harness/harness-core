@@ -1,8 +1,8 @@
 package io.harness.batch.processing.writer;
 
-import io.harness.batch.processing.ccm.InstanceResource;
 import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.ccm.InstanceType;
+import io.harness.batch.processing.ccm.Resource;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.writer.constants.EcsCCMConstants;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
@@ -50,10 +50,10 @@ public class EcsContainerInstanceInfoWriter extends EventWriter implements ItemW
             metaData.put(EcsCCMConstants.OPERATING_SYSTEM, ecsContainerInstanceDescription.getOperatingSystem());
             metaData.put(EcsCCMConstants.REGION, ecsContainerInstanceDescription.getRegion());
 
-            InstanceResource instanceResource = InstanceResource.builder()
-                                                    .cpu(ecsContainerInstanceResource.getCpu())
-                                                    .memory(ecsContainerInstanceResource.getMemory())
-                                                    .build();
+            Resource resource = Resource.builder()
+                                    .cpu(ecsContainerInstanceResource.getCpu())
+                                    .memory(ecsContainerInstanceResource.getMemory())
+                                    .build();
 
             instanceData = InstanceData.builder()
                                .accountId(accountId)
@@ -61,7 +61,7 @@ public class EcsContainerInstanceInfoWriter extends EventWriter implements ItemW
                                .clusterName(clusterArn)
                                .instanceType(InstanceType.ECS_CONTAINER_INSTANCE)
                                .instanceState(InstanceState.INITIALIZING)
-                               .instanceResource(instanceResource)
+                               .totalResource(resource)
                                .metaData(metaData)
                                .build();
             logger.info("Creating container instance {} ", containerInstanceArn);

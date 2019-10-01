@@ -1,5 +1,7 @@
 package io.harness.batch.processing.dao.intfc;
 
+import io.harness.batch.processing.ccm.InstanceEvent;
+import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.entities.InstanceData;
 
@@ -8,6 +10,9 @@ import java.util.List;
 
 public interface InstanceDataDao {
   boolean create(InstanceData instanceData);
+
+  InstanceData upsert(InstanceEvent instanceEvent);
+  InstanceData upsert(InstanceInfo instanceInfo);
 
   boolean updateInstanceState(
       InstanceData instanceData, Instant instant, String instantField, InstanceState instanceState);

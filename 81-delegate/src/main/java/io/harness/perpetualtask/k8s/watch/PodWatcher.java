@@ -1,7 +1,7 @@
 package io.harness.perpetualtask.k8s.watch;
 
-import static io.harness.event.payloads.PodEvent.EventType.EVENT_TYPE_DELETED;
-import static io.harness.event.payloads.PodEvent.EventType.EVENT_TYPE_SCHEDULED;
+import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_DELETED;
+import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_SCHEDULED;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
@@ -19,21 +19,12 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.harness.event.client.EventPublisher;
-import io.harness.event.payloads.Container;
-import io.harness.event.payloads.Container.Resource;
-import io.harness.event.payloads.Container.Resource.Quantity;
-import io.harness.event.payloads.Container.Resource.Quantity.Builder;
-import io.harness.event.payloads.Owner;
-import io.harness.event.payloads.PodEvent;
-import io.harness.event.payloads.PodInfo;
 import io.harness.grpc.utils.HTimestamps;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -43,12 +34,15 @@ public class PodWatcher implements Watcher<Pod> {
       TypeRegistry.newBuilder().add(PodInfo.getDescriptor()).add(PodEvent.getDescriptor()).build();
 
   private final Watch watch;
+  private final String cloudProviderId;
   private final EventPublisher eventPublisher;
   private final Set<String> publishedPods;
 
   @Inject
-  public PodWatcher(@Assisted KubernetesClient client, EventPublisher eventPublisher) {
+  public PodWatcher(
+      @Assisted KubernetesClient client, @Assisted String cloudProviderId, EventPublisher eventPublisher) {
     watch = client.pods().inAnyNamespace().watch(this);
+    this.cloudProviderId = cloudProviderId;
     publishedPods = new HashSet<>();
     this.eventPublisher = eventPublisher;
   }
@@ -62,10 +56,13 @@ public class PodWatcher implements Watcher<Pod> {
       // put the pod in the map and publish the spec
       Timestamp creationTimestamp = HTimestamps.parse(pod.getMetadata().getCreationTimestamp());
       PodInfo podInfo = PodInfo.newBuilder()
-                            .setUid(uid)
-                            .setName(pod.getMetadata().getName())
+                            .setCloudProviderId(cloudProviderId)
+                            .setPodUid(uid)
+                            .setPodName(pod.getMetadata().getName())
                             .setNamespace(pod.getMetadata().getNamespace())
                             .setNodeName(pod.getSpec().getNodeName())
+                            // TODO: test getting the total resource usage
+                            .setTotalResource(K8sResourceUtils.getTotalResourceRequest(pod.getSpec().getContainers()))
                             .setCreationTimestamp(creationTimestamp)
                             .addAllContainers(getAllContainers(pod.getSpec().getContainers()))
                             .putAllLabels(pod.getMetadata().getLabels())
@@ -74,7 +71,8 @@ public class PodWatcher implements Watcher<Pod> {
       logMessage(podInfo);
       eventPublisher.publishMessage(podInfo);
       PodEvent podEvent = PodEvent.newBuilder()
-                              .setUid(uid)
+                              .setCloudProviderId(cloudProviderId)
+                              .setPodUid(uid)
                               .setType(EVENT_TYPE_SCHEDULED)
                               .setTimestamp(HTimestamps.parse(podScheduledCondition.getLastTransitionTime()))
                               .build();
@@ -86,7 +84,12 @@ public class PodWatcher implements Watcher<Pod> {
     if (isPodDeleted(pod)) {
       String deletionTimestamp = pod.getMetadata().getDeletionTimestamp();
       Timestamp timestamp = HTimestamps.parse(deletionTimestamp);
-      PodEvent podEvent = PodEvent.newBuilder().setUid(uid).setType(EVENT_TYPE_DELETED).setTimestamp(timestamp).build();
+      PodEvent podEvent = PodEvent.newBuilder()
+                              .setCloudProviderId(cloudProviderId)
+                              .setPodUid(uid)
+                              .setType(EVENT_TYPE_DELETED)
+                              .setTimestamp(timestamp)
+                              .build();
       logMessage(podEvent);
       eventPublisher.publishMessage(podEvent);
       publishedPods.remove(uid);
@@ -109,70 +112,10 @@ public class PodWatcher implements Watcher<Pod> {
   private List<Container> getAllContainers(List<io.fabric8.kubernetes.api.model.Container> k8sContainerList) {
     List<Container> containerList = new ArrayList<>();
     for (io.fabric8.kubernetes.api.model.Container k8sContainer : k8sContainerList) {
-      // get the resource for each container
-      Map<String, io.fabric8.kubernetes.api.model.Quantity> resourceLimitsMap = k8sContainer.getResources().getLimits();
-      Map<String, io.fabric8.kubernetes.api.model.Quantity> resourceRequestsMap =
-          k8sContainer.getResources().getRequests();
-
-      io.harness.event.payloads.Container.Resource.Builder resourceBuilder = Resource.newBuilder();
-      if (resourceLimitsMap != null) {
-        Builder cpuLimitBuilder = Quantity.newBuilder();
-        if (resourceLimitsMap.get("cpu") != null) {
-          String cpuLimitAmount = resourceLimitsMap.get("cpu").getAmount();
-          if (!StringUtils.isBlank(cpuLimitAmount)) {
-            cpuLimitBuilder.setAmount(cpuLimitAmount);
-          }
-          String cpuLimitFormat = resourceLimitsMap.get("cpu").getFormat();
-          if (!StringUtils.isBlank(cpuLimitFormat)) {
-            cpuLimitBuilder.setFormat(cpuLimitFormat);
-          }
-        }
-
-        Builder memLimitBuilder = Quantity.newBuilder();
-        if (resourceLimitsMap.get("memory") != null) {
-          String memLimitAmount = resourceLimitsMap.get("memory").getAmount();
-          if (!StringUtils.isBlank(memLimitAmount)) {
-            memLimitBuilder.setAmount(memLimitAmount);
-          }
-          String memLimitFormat = resourceLimitsMap.get("memory").getFormat();
-          if (!StringUtils.isBlank(memLimitFormat)) {
-            memLimitBuilder.setFormat(memLimitFormat);
-          }
-        }
-        resourceBuilder.putLimits("cpu", cpuLimitBuilder.build()).putLimits("memory", memLimitBuilder.build());
-      }
-
-      if (resourceRequestsMap != null) {
-        Builder cpuRequestBuilder = Quantity.newBuilder();
-        if (resourceRequestsMap.get("cpu") != null) {
-          String cpuRequestAmount = resourceRequestsMap.get("cpu").getAmount();
-          if (!StringUtils.isBlank(cpuRequestAmount)) {
-            cpuRequestBuilder.setAmount(cpuRequestAmount);
-          }
-          String cpuRequestFormat = resourceRequestsMap.get("cpu").getFormat();
-          if (!StringUtils.isBlank(cpuRequestFormat)) {
-            cpuRequestBuilder.setFormat(cpuRequestFormat);
-          }
-        }
-
-        Builder memRequestBuilder = Quantity.newBuilder();
-        if (resourceRequestsMap.get("memory") != null) {
-          String memRequestAmount = resourceRequestsMap.get("memory").getAmount();
-          if (!StringUtils.isBlank(memRequestAmount)) {
-            memRequestBuilder.setAmount(memRequestAmount);
-          }
-          String memRequestFormat = resourceRequestsMap.get("memory").getFormat();
-          if (!StringUtils.isBlank(memRequestFormat)) {
-            memRequestBuilder.setFormat(memRequestFormat);
-          }
-        }
-        resourceBuilder.putRequests("cpu", cpuRequestBuilder.build()).putRequests("memory", memRequestBuilder.build());
-      }
-      Resource resource = resourceBuilder.build();
       Container container = Container.newBuilder()
                                 .setName(k8sContainer.getName())
                                 .setImage(k8sContainer.getImage())
-                                .setResource(resource)
+                                .setResource(K8sResourceUtils.getResource(k8sContainer))
                                 .build();
       containerList.add(container);
     }

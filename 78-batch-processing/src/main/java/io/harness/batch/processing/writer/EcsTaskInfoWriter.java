@@ -1,9 +1,9 @@
 package io.harness.batch.processing.writer;
 
 import com.amazonaws.services.ecs.model.LaunchType;
-import io.harness.batch.processing.ccm.InstanceResource;
 import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.ccm.InstanceType;
+import io.harness.batch.processing.ccm.Resource;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.writer.constants.EcsCCMConstants;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
@@ -42,8 +42,8 @@ public class EcsTaskInfoWriter extends EventWriter implements ItemWriter<Publish
           InstanceType instanceType = getInstanceType(ecsTaskDescription);
 
           if (null == instanceData && null != instanceType) {
-            InstanceResource instanceResource =
-                InstanceResource.builder().cpu(ecsTaskResource.getCpu()).memory(ecsTaskResource.getMemory()).build();
+            Resource resource =
+                Resource.builder().cpu(ecsTaskResource.getCpu()).memory(ecsTaskResource.getMemory()).build();
 
             Map<String, String> metaData = new HashMap<>();
             if (InstanceType.ECS_TASK_EC2 == instanceType) {
@@ -64,7 +64,7 @@ public class EcsTaskInfoWriter extends EventWriter implements ItemWriter<Publish
                                .clusterName(clusterArn)
                                .instanceType(instanceType)
                                .instanceState(InstanceState.INITIALIZING)
-                               .instanceResource(instanceResource)
+                               .totalResource(resource)
                                .serviceName(serviceName)
                                .metaData(metaData)
                                .build();
