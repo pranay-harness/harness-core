@@ -556,8 +556,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         ArtifactStream artifactStreamFromTemplate = (ArtifactStream) templateService.constructEntityFromTemplate(
             artifactStream.getTemplateUuid(), version, EntityType.ARTIFACT_STREAM);
         Validator.notNullCheck("Template does not exist", artifactStreamFromTemplate, USER);
-        artifactStream.setTemplateVariables(
-            templateHelper.overrideVariables(artifactStreamFromTemplate.getTemplateVariables(), oldTemplateVariables));
+        artifactStream.setTemplateVariables(templateHelper.overrideVariables(
+            artifactStreamFromTemplate.getTemplateVariables(), oldTemplateVariables, false));
         if (artifactStream.getArtifactStreamType().equals(CUSTOM.name())) {
           ((CustomArtifactStream) artifactStream)
               .setScripts(((CustomArtifactStream) artifactStreamFromTemplate).getScripts());
@@ -565,7 +565,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       }
     } else if (existingArtifactStream.getTemplateUuid() != null) {
       artifactStream.setTemplateVariables(
-          templateHelper.overrideVariables(artifactStream.getTemplateVariables(), oldTemplateVariables));
+          templateHelper.overrideVariables(artifactStream.getTemplateVariables(), oldTemplateVariables, false));
       if (artifactStream.getArtifactStreamType().equals(CUSTOM.name())) {
         ((CustomArtifactStream) artifactStream)
             .setScripts(((CustomArtifactStream) existingArtifactStream).getScripts());

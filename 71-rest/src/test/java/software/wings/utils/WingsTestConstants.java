@@ -73,6 +73,8 @@ public interface WingsTestConstants {
 
   String TEMPLATE_DESCRIPTION = "TEMPLATE_DESCRIPTION";
 
+  String TEMPLATE_VERSION = "LATEST";
+
   String FILE_NAME = "FILE_NAME";
 
   String FILE_PATH = "FILE_PATH";
