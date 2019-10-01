@@ -1,21 +1,57 @@
 package software.wings.delegatetasks.spotinst.taskhandler;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static software.wings.service.impl.aws.model.AwsConstants.FORWARD_LISTENER_ACTION;
 
+import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 
+import com.amazonaws.services.elasticloadbalancingv2.model.Action;
+import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
+import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters;
+import io.harness.delegate.task.spotinst.response.SpotInstSetupTaskResponse;
+import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
+import io.harness.delegate.task.spotinst.response.SpotInstTaskResponse;
+import io.harness.spotinst.SpotInstHelperServiceDelegate;
+import io.harness.spotinst.model.ElastiGroup;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
 import software.wings.WingsBaseTest;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.SpotInstConfig;
+import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.delegatetasks.DelegateLogService;
+import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
+import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 public class SpotInstSetupTaskHandlerTest extends WingsBaseTest {
-  @Inject @InjectMocks SpotInstSetupTaskHandler spotInstSetupTaskHandler;
+  @Mock private DelegateLogService mockDelegateLogService;
+  @Mock private SpotInstHelperServiceDelegate mockSpotInstHelperServiceDelegate;
+  @Mock private AwsElbHelperServiceDelegate mockAwsElbHelperServiceDelegate;
+  @Mock private TimeLimiter mockTimeLimiter;
+  @Mock private AwsEc2HelperServiceDelegate mockAwsEc2HelperServiceDelegate;
+
+  @Spy @Inject @InjectMocks SpotInstSetupTaskHandler spotInstSetupTaskHandler;
+
   public final String json = "{\n"
       + "  \"group\": {\n"
       + "    \"name\": \"adwait_11\",\n"
@@ -182,5 +218,128 @@ public class SpotInstSetupTaskHandlerTest extends WingsBaseTest {
             .build();
 
     assertThat(spotInstSetupTaskHandler.generateFinalJson(parameters, "newName")).isEqualTo(newJsonConfig);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testExecuteTaskInternalForBlueGreen() throws Exception {
+    String loadBalancerArn = "LOAD_BALANCER_ARN";
+    String loadBalancerName = "LOAD_BALANCER_NAME";
+    String protocol = "http";
+    String prodListenerArn = "PROD_LISTENER_ARN";
+    String prodTargetGroupArn = "PROD_TARGET_GROUP_ARN";
+    int prodPort = 8080;
+    String stageListenerArn = "STAGE_LISTENER_ARN";
+    int stagePort = 8181;
+    String stageTargetGroupArn = "STAGE_TARGET_GROUP_ARN";
+    doReturn(newArrayList(AwsElbListener.builder()
+                              .protocol(protocol)
+                              .loadBalancerArn(loadBalancerArn)
+                              .port(prodPort)
+                              .listenerArn(prodListenerArn)
+                              .build(),
+                 AwsElbListener.builder()
+                     .protocol(protocol)
+                     .loadBalancerArn(loadBalancerArn)
+                     .port(stagePort)
+                     .listenerArn(stageListenerArn)
+                     .build()))
+        .when(mockAwsElbHelperServiceDelegate)
+        .getElbListenersForLoadBalaner(any(), anyList(), anyString(), anyString());
+    String stageElastiGroupOldId = "STAGE_ELASTI_GROUP_OLD_ID";
+    String prodElastiGroupOldId = "PROD_ELASTI_GROUP_OLD_ID";
+    String stageElastiGroupNewId = "STAGE_ELASTI_GROUP_NEW_ID";
+    doReturn(Optional.of(ElastiGroup.builder().id(stageElastiGroupOldId).name("foo__STAGE__Harness").build()))
+        .doReturn(Optional.of(ElastiGroup.builder().id(prodElastiGroupOldId).name("foo").build()))
+        .when(mockSpotInstHelperServiceDelegate)
+        .getElastiGroupByName(anyString(), anyString(), anyString());
+    doReturn("JSON").when(spotInstSetupTaskHandler).generateFinalJson(any(), anyString());
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    doNothing().when(mockCallback).saveExecutionLog(anyString(), any(), any());
+    SpotInstSetupTaskParameters parameters =
+        SpotInstSetupTaskParameters.builder()
+            .blueGreen(true)
+            .elastiGroupNamePrefix("foo")
+            .elastiGroupJson("JSON")
+            .image("ami-id")
+            .awsLoadBalancerConfigs(Collections.singletonList(LoadBalancerDetailsForBGDeployment.builder()
+                                                                  .loadBalancerName(loadBalancerName)
+                                                                  .prodListenerPort(String.valueOf(prodPort))
+                                                                  .stageListenerPort(String.valueOf(stagePort))
+                                                                  .build()))
+            .build();
+    doReturn(new Listener().withDefaultActions(
+                 new Action().withTargetGroupArn(prodTargetGroupArn).withType(FORWARD_LISTENER_ACTION)))
+        .doReturn(new Listener().withDefaultActions(
+            new Action().withTargetGroupArn(stageTargetGroupArn).withType(FORWARD_LISTENER_ACTION)))
+        .when(mockAwsElbHelperServiceDelegate)
+        .getElbListener(any(), anyList(), anyString(), anyString());
+    doReturn(prodTargetGroupArn)
+        .doReturn(stageTargetGroupArn)
+        .when(mockAwsElbHelperServiceDelegate)
+        .getTargetGroupForDefaultAction(any(), any());
+    doReturn(Optional.of(new TargetGroup().withTargetGroupArn(prodTargetGroupArn).withTargetGroupName("PROD_TGT")))
+        .doReturn(
+            Optional.of(new TargetGroup().withTargetGroupArn(stageTargetGroupArn).withTargetGroupName("STAGE_TGT")))
+        .when(mockAwsElbHelperServiceDelegate)
+        .getTargetGroup(any(), anyList(), anyString(), anyString());
+    doReturn(ElastiGroup.builder().id(stageElastiGroupNewId).name("foo__STAGE__Harness").build())
+        .when(mockSpotInstHelperServiceDelegate)
+        .createElastiGroup(anyString(), anyString(), anyString());
+    SpotInstTaskExecutionResponse response = spotInstSetupTaskHandler.executeTaskInternalForBlueGreen(
+        parameters, "SPOTINST_ACCOUNT_ID", "TOKEN", AwsConfig.builder().build(), mockCallback);
+    assertThat(response).isNotNull();
+    SpotInstTaskResponse spotInstTaskResponse = response.getSpotInstTaskResponse();
+    assertThat(spotInstTaskResponse).isNotNull();
+    assertThat(spotInstTaskResponse instanceof SpotInstSetupTaskResponse);
+    SpotInstSetupTaskResponse setupResponse = (SpotInstSetupTaskResponse) spotInstTaskResponse;
+    ElastiGroup newElastiGroup = setupResponse.getNewElastiGroup();
+    assertThat(newElastiGroup).isNotNull();
+    assertThat(newElastiGroup.getName()).isEqualTo("foo__STAGE__Harness");
+    assertThat(newElastiGroup.getId()).isEqualTo(stageElastiGroupNewId);
+    List<ElastiGroup> groupToBeDownsized = setupResponse.getGroupToBeDownsized();
+    assertThat(groupToBeDownsized).isNotNull();
+    assertThat(groupToBeDownsized.size()).isEqualTo(1);
+    assertThat(groupToBeDownsized.get(0).getId()).isEqualTo(prodElastiGroupOldId);
+    assertThat(groupToBeDownsized.get(0).getName()).isEqualTo("foo");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testExecuteTaskInternalForCanary() throws Exception {
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    doNothing().when(mockCallback).saveExecutionLog(anyString(), any(), any());
+    doReturn(mockCallback).when(spotInstSetupTaskHandler).getLogCallBack(any(), anyString());
+    doReturn(newArrayList(ElastiGroup.builder().name("foo__1").build(), ElastiGroup.builder().name("foo__2").build()))
+        .when(mockSpotInstHelperServiceDelegate)
+        .listAllElastiGroups(anyString(), anyString(), anyString());
+    doReturn("JSON").when(spotInstSetupTaskHandler).generateFinalJson(any(), anyString());
+    doReturn(ElastiGroup.builder().id("newId").name("foo__3").build())
+        .when(mockSpotInstHelperServiceDelegate)
+        .createElastiGroup(anyString(), anyString(), anyString());
+    SpotInstSetupTaskParameters parameters = SpotInstSetupTaskParameters.builder()
+                                                 .blueGreen(false)
+                                                 .elastiGroupNamePrefix("foo")
+                                                 .elastiGroupJson("JSON")
+                                                 .image("ami-id")
+                                                 .build();
+    SpotInstTaskExecutionResponse response = spotInstSetupTaskHandler.executeTaskInternal(parameters,
+        SpotInstConfig.builder().spotInstAccountId("SPOTINST_ACCOUNT_ID").spotInstToken(new char[] {'a', 'b'}).build(),
+        AwsConfig.builder().build());
+    assertThat(response).isNotNull();
+    SpotInstTaskResponse spotInstTaskResponse = response.getSpotInstTaskResponse();
+    assertThat(spotInstTaskResponse).isNotNull();
+    assertThat(spotInstTaskResponse instanceof SpotInstSetupTaskResponse);
+    SpotInstSetupTaskResponse setupResponse = (SpotInstSetupTaskResponse) spotInstTaskResponse;
+    ElastiGroup newElastiGroup = setupResponse.getNewElastiGroup();
+    assertThat(newElastiGroup).isNotNull();
+    assertThat(newElastiGroup.getName()).isEqualTo("foo__3");
+    assertThat(newElastiGroup.getId()).isEqualTo("newId");
+    List<ElastiGroup> groupToBeDownsized = setupResponse.getGroupToBeDownsized();
+    assertThat(groupToBeDownsized).isNotNull();
+    assertThat(groupToBeDownsized.size()).isEqualTo(1);
+    assertThat(groupToBeDownsized.get(0).getName()).isEqualTo("foo__2");
   }
 }
