@@ -1,8 +1,9 @@
 package io.harness.batch.processing.entities;
 
-import io.harness.batch.processing.ccm.InstanceResource;
+import io.harness.batch.processing.ccm.Container;
 import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.ccm.InstanceType;
+import io.harness.batch.processing.ccm.Resource;
 import io.harness.batch.processing.entities.InstanceData.InstanceDataKeys;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -21,6 +22,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -42,17 +44,18 @@ import java.util.Map;
 public class InstanceData implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id String uuid;
   String accountId;
+  String cloudProviderId;
   String instanceId;
-  String appId;
-  String serviceId;
   String clusterName;
   String serviceName;
-  InstanceResource instanceResource;
-  InstanceState instanceState;
   InstanceType instanceType;
+  Resource totalResource;
+  List<Container> containerList;
+  Map<String, String> labels;
+  Map<String, String> metaData;
   Instant usageStartTime;
   Instant usageStopTime;
-  Map<String, String> metaData;
+  InstanceState instanceState;
 
   long createdAt;
   long lastUpdatedAt;

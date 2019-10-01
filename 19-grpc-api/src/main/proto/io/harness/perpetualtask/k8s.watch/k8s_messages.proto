@@ -1,0 +1,81 @@
+syntax = "proto3";
+
+package io.harness.perpetualtask.k8s.watch;
+
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+
+
+message Resource {
+  message Quantity {
+    string amount = 1;
+    string unit = 2;
+  }
+  map<string, Quantity> requests = 1;
+  map<string, Quantity> limits = 2;
+}
+
+
+message Container {
+  string name = 1;
+  string image = 2;
+  Resource resource = 3;
+}
+
+message Owner {
+  string uid = 1;
+  string kind = 2;
+  string name = 3;
+}
+
+message PodInfo {
+  string account_id = 1;
+  string cloud_provider_id = 2;
+  string pod_uid = 3;
+  string pod_name = 4;
+  string namespace = 5;
+  string node_name = 6;
+  Resource total_resource = 7;
+  google.protobuf.Timestamp creation_timestamp = 8;
+  // label without value is invalid
+  map<string, string> labels = 9;
+  repeated Owner owner = 10;
+  Owner top_level_owner = 11;
+  repeated Container containers = 12;
+}
+
+message PodEvent {
+  string account_id = 1;
+  string cloud_provider_id = 2;
+  string pod_uid = 3;
+  enum EventType {
+    EVENT_TYPE_INVALID = 0;
+    EVENT_TYPE_SCHEDULED = 1;
+    EVENT_TYPE_DELETED = 2;
+  }
+  EventType type = 4;
+  google.protobuf.Timestamp timestamp = 5;
+}
+
+message NodeInfo {
+  string account_id = 1;
+  string cloud_provider_id = 2;
+  string node_uid = 3;
+  string node_name = 4;
+  google.protobuf.Timestamp creation_time = 5;
+  map<string, string> labels = 6;
+}
+
+message NodeEvent {
+  string account_id = 1;
+  string cloud_provider_id = 2;
+  string node_uid = 3;
+  enum EventType {
+    EVENT_TYPE_INVALID = 0;
+    EVENT_TYPE_START = 1;
+    EVENT_TYPE_STOP = 2;
+  }
+  EventType type = 4;
+  google.protobuf.Timestamp timestamp = 5;
+}

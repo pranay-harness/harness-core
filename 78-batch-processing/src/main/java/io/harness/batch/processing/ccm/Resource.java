@@ -5,7 +5,12 @@ import lombok.Value;
 
 @Value
 @Builder
-public class InstanceResource {
+public class Resource {
   private Double cpu;
+  private String cpuUnit;
+  private String cpuFormat;
+
   private Double memory;
+  private String memoryUnit;
+  private String memoryFormat;
 }

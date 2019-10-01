@@ -11,8 +11,8 @@ import org.springframework.context.annotation.Configuration;
 
 import java.io.File;
 
-@Configuration
 @Slf4j
+@Configuration
 public class BatchConfiguration {
   @Bean
   public EventServiceConfig eventServiceConfig() throws Exception {

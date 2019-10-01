@@ -10,7 +10,7 @@ import org.springframework.boot.autoconfigure.mongo.embedded.EmbeddedMongoAutoCo
 
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class, MongoAutoConfiguration.class,
                            MongoDataAutoConfiguration.class, EmbeddedMongoAutoConfiguration.class})
-@EnableBatchProcessing
+@EnableBatchProcessing(modular = true)
 public class BatchProcessingApplication {
   public static void main(String[] args) throws Exception {
     SpringApplication.run(BatchProcessingApplication.class, args);

@@ -8,4 +8,8 @@ public interface EventTypeConstants {
   String ECS_TASK_INFO = "io.harness.event.payloads.EcsTaskInfo";
   String ECS_TASK_LIFECYCLE = "io.harness.event.payloads.EcsTaskLifecycle";
   String ECS_SYNC_EVENT = "io.harness.event.payloads.EcsSyncEvent";
+  String K8S_POD_INFO = "io.harness.perpetualtask.k8s.watch.PodInfo";
+  String K8S_POD_EVENT = "io.harness.perpetualtask.k8s.watch.PodEvent";
+  String K8S_NODE_INFO = "io.harness.perpetualtask.k8s.watch.NodeInfo";
+  String K8S_NODE_EVENT = "io.harness.perpetualtask.k8s.watch.NodeEvent";
 }

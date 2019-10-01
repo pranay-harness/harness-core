@@ -11,11 +11,12 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 import java.time.temporal.ChronoUnit;
 
+@Slf4j
 @Configuration
 @EnableScheduling
-@Slf4j
 public class EcsEventJobScheduler {
-  @Qualifier("ecsJob") @Autowired private Job ecsJob;
+  @Autowired @Qualifier("ecsJob") private Job ecsJob;
+  @Autowired @Qualifier("k8sJob") private Job k8sJob;
 
   @Autowired private BatchJobRunner batchJobRunner;
 
@@ -23,6 +24,15 @@ public class EcsEventJobScheduler {
   public void runEcsEventJob() {
     try {
       batchJobRunner.runJob(ecsJob, BatchJobType.ECS_EVENT, 1, ChronoUnit.DAYS);
+    } catch (Exception ex) {
+      logger.error("Exception while running job ", ex);
+    }
+  }
+
+  @Scheduled(cron = "0 */1 * * * ?")
+  public void runK8sEventJob() {
+    try {
+      batchJobRunner.runJob(k8sJob, BatchJobType.K8S_EVENT, 1, ChronoUnit.DAYS); // TODO: change to DAYS
     } catch (Exception ex) {
       logger.error("Exception while running job ", ex);
     }

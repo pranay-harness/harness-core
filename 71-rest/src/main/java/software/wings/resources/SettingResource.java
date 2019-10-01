@@ -207,13 +207,16 @@ public class SettingResource {
       @QueryParam("accountId") String accountId, SettingAttribute variable) {
     prePruneSettingAttribute(appId, accountId, variable);
     SettingAttribute savedSettingAttribute = settingsService.save(variable);
-
+    // the following IF statement is for testing purpose only
     if (featureFlagService.isGlobalEnabled(PERPETUAL_TASK_SERVICE)) {
       if (CLOUD_PROVIDER == savedSettingAttribute.getCategory()
           && "KUBERNETES_CLUSTER".equals(savedSettingAttribute.getValue().getType())) {
-        K8WatchPerpetualTaskClientParams params =
+        K8WatchPerpetualTaskClientParams podWatchParams =
             new K8WatchPerpetualTaskClientParams(savedSettingAttribute.getUuid(), "Pod");
-        k8SWatchPerpetualTaskServiceClient.create(savedSettingAttribute.getAccountId(), params);
+        k8SWatchPerpetualTaskServiceClient.create(savedSettingAttribute.getAccountId(), podWatchParams);
+        K8WatchPerpetualTaskClientParams nodeWatchParams =
+            new K8WatchPerpetualTaskClientParams(savedSettingAttribute.getUuid(), "Node");
+        k8SWatchPerpetualTaskServiceClient.create(savedSettingAttribute.getAccountId(), nodeWatchParams);
       }
     }
     return new RestResponse<>(savedSettingAttribute);

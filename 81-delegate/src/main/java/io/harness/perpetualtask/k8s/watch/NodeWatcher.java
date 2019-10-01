@@ -1,7 +1,7 @@
 package io.harness.perpetualtask.k8s.watch;
 
-import static io.harness.event.payloads.NodeEvent.EventType.EVENT_TYPE_START;
-import static io.harness.event.payloads.NodeEvent.EventType.EVENT_TYPE_STOP;
+import static io.harness.perpetualtask.k8s.watch.NodeEvent.EventType.EVENT_TYPE_START;
+import static io.harness.perpetualtask.k8s.watch.NodeEvent.EventType.EVENT_TYPE_STOP;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
@@ -12,8 +12,6 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.harness.event.client.EventPublisher;
-import io.harness.event.payloads.NodeEvent;
-import io.harness.event.payloads.NodeInfo;
 import io.harness.grpc.utils.HTimestamps;
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,14 +21,16 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 @Slf4j
 public class NodeWatcher implements Watcher<Node> {
-  private final EventPublisher eventPublisher;
   private final Watch watch;
-
+  private final String cloudProviderId;
+  private final EventPublisher eventPublisher;
   private final Set<String> publishedNodes;
 
   @Inject
-  public NodeWatcher(@Assisted KubernetesClient client, EventPublisher eventPublisher) {
+  public NodeWatcher(
+      @Assisted KubernetesClient client, @Assisted String cloudProviderId, EventPublisher eventPublisher) {
     this.watch = client.nodes().watch(this);
+    this.cloudProviderId = cloudProviderId;
     this.eventPublisher = eventPublisher;
     this.publishedNodes = new ConcurrentSkipListSet<>();
   }
@@ -48,9 +48,10 @@ public class NodeWatcher implements Watcher<Node> {
 
   private void publishNodeStartedEvent(Node node) {
     NodeEvent nodeStartedEvent = NodeEvent.newBuilder()
-                                     .setUid(node.getMetadata().getUid())
+                                     .setCloudProviderId(cloudProviderId)
+                                     .setNodeUid(node.getMetadata().getUid())
                                      .setType(EVENT_TYPE_START)
-                                     .setEventTime(HTimestamps.parse(node.getMetadata().getCreationTimestamp()))
+                                     .setTimestamp(HTimestamps.parse(node.getMetadata().getCreationTimestamp()))
                                      .build();
     logger.debug("Publishing event: {}", nodeStartedEvent);
     eventPublisher.publishMessage(nodeStartedEvent);
@@ -58,9 +59,10 @@ public class NodeWatcher implements Watcher<Node> {
 
   private void publishNodeStoppedEvent(Node node) {
     NodeEvent nodeStoppedEvent = NodeEvent.newBuilder()
-                                     .setUid(node.getMetadata().getUid())
+                                     .setCloudProviderId(cloudProviderId)
+                                     .setNodeUid(node.getMetadata().getUid())
                                      .setType(EVENT_TYPE_STOP)
-                                     .setEventTime(HTimestamps.fromInstant(Instant.now()))
+                                     .setTimestamp(HTimestamps.fromInstant(Instant.now()))
                                      .build();
     logger.debug("Publishing event: {}", nodeStoppedEvent);
     eventPublisher.publishMessage(nodeStoppedEvent);
@@ -70,8 +72,9 @@ public class NodeWatcher implements Watcher<Node> {
   private void publishNodeInfo(Node node) {
     if (!publishedNodes.contains(node.getMetadata().getUid())) {
       NodeInfo nodeInfo = NodeInfo.newBuilder()
-                              .setUid(node.getMetadata().getUid())
-                              .setName(node.getMetadata().getName())
+                              .setCloudProviderId(cloudProviderId)
+                              .setNodeUid(node.getMetadata().getUid())
+                              .setNodeName(node.getMetadata().getName())
                               .setCreationTime(HTimestamps.parse(node.getMetadata().getCreationTimestamp()))
                               .putAllLabels(node.getMetadata().getLabels())
                               .build();

@@ -51,10 +51,10 @@ public class K8sWatchServiceDelegate {
       Watcher watcher;
       switch (resourceKind) {
         case RESOURCE_KIND_POD:
-          watcher = watcherFactory.createPodWatcher(client);
+          watcher = watcherFactory.createPodWatcher(client, params.getCloudProviderId());
           break;
         case RESOURCE_KIND_NODE:
-          watcher = watcherFactory.createNodeWatcher(client);
+          watcher = watcherFactory.createNodeWatcher(client, params.getCloudProviderId());
           break;
         default:
           // Unreachable (checked in precondition)
