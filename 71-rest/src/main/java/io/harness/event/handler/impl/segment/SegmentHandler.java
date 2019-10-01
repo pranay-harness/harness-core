@@ -101,6 +101,10 @@ public class SegmentHandler implements EventHandler {
     return segmentConfig.isEnabled();
   }
 
+  public String getApiKey() {
+    return apiKey;
+  }
+
   @Override
   public void handleEvent(Event event) {
     if (event == null) {
@@ -238,7 +242,10 @@ public class SegmentHandler implements EventHandler {
     }
 
     if (wait) {
-      // Sleeping for 10 secs just to give the system time to update.
+      // Sleeping for 10 secs just to give the marketo system time to update.
+      // Marketo doesn't handle real-time changes very well.
+      // If the track event is reported with the newly created identity,
+      // marketo rejects the track request
       try {
         Thread.sleep(10000);
       } catch (InterruptedException ex) {
@@ -296,11 +303,11 @@ public class SegmentHandler implements EventHandler {
     return true;
   }
 
-  private void reportTrackEvent(Account account, String event, User user) throws IOException, URISyntaxException {
+  public void reportTrackEvent(Account account, String event, User user) throws IOException, URISyntaxException {
     reportTrackEvent(account, event, user, null);
   }
 
-  private void reportTrackEvent(Account account, String event, User user, Map<String, String> properties)
+  public void reportTrackEvent(Account account, String event, User user, Map<String, String> properties)
       throws IOException, URISyntaxException {
     String userId = user.getUuid();
     String identity = user.getSegmentIdentity();

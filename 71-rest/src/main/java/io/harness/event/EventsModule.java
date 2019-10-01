@@ -47,8 +47,9 @@ public class EventsModule extends AbstractModule {
 
     if (mainConfiguration.getSegmentConfig() != null) {
       bind(SegmentConfig.class).toInstance(mainConfiguration.getSegmentConfig());
-      eventHandlerMapBinder.addBinding("SegmentHandler")
-          .toInstance(new SegmentHandler(mainConfiguration.getSegmentConfig(), eventListener));
+      SegmentHandler segmentHandler = new SegmentHandler(mainConfiguration.getSegmentConfig(), eventListener);
+      bind(SegmentHandler.class).annotatedWith(Names.named("SegmentHandlerAnnotation")).toInstance(segmentHandler);
+      eventHandlerMapBinder.addBinding("SegmentHandler").toInstance(segmentHandler);
     }
 
     eventHandlerMapBinder.addBinding(AlertNotificationHandler.class.getSimpleName())

@@ -40,7 +40,6 @@ import static software.wings.service.intfc.security.VaultService.KEY_SPEARATOR;
 import static software.wings.service.intfc.security.VaultService.PATH_SEPARATOR;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeBasedTable;
@@ -49,18 +48,14 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
-import com.segment.analytics.messages.GroupMessage;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.data.structure.UUIDGenerator;
-import io.harness.event.model.EventType;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.UuidAware;
 import io.harness.queue.Queue;
-import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
@@ -2296,21 +2291,6 @@ public class SecretManagerImpl implements SecretManager {
   private void validateSecretManagerConfigs(String accountId) {
     List<SecretManagerConfig> encryptionConfigs = secretManagerConfigService.listSecretManagers(accountId, false);
     for (EncryptionConfig encryptionConfig : encryptionConfigs) {
-      // PL-3102: Publish default secret manager type for each account, piggy-back on the validate secret manager config
-      // job.
-      if (encryptionConfig.isDefault()) {
-        GroupMessage.Builder messageBuilder =
-            GroupMessage.builder(EventType.SECRET_MANAGER_TYPE.name())
-                .anonymousId(accountId)
-                .traits(new ImmutableMap.Builder<String, Object>()
-                            .put(ACCOUNT_ID_KEY, accountId)
-                            .put(TRAIT_DEFAULT_SECRET_MANAGER, encryptionConfig.getEncryptionType().name())
-                            .put(TRAIT_IS_GLOBAL, Objects.equals(GLOBAL_ACCOUNT_ID, encryptionConfig.getAccountId()))
-                            .build());
-
-        segmentClientBuilder.getInstance().enqueue(messageBuilder);
-      }
-
       KmsSetupAlert kmsSetupAlert =
           KmsSetupAlert.builder()
               .kmsId(encryptionConfig.getUuid())

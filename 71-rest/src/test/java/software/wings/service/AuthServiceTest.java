@@ -266,7 +266,11 @@ public class AuthServiceTest extends WingsBaseTest {
   public void testGenerateBearerTokenWithJWTToken() throws UnsupportedEncodingException {
     when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(true);
     Account mockAccount = Account.Builder.anAccount().withAccountKey("TestAccount").build();
-    User mockUser = Builder.anUser().withUuid(USER_ID).withAccounts(Arrays.asList(mockAccount)).build();
+    User mockUser = Builder.anUser()
+                        .withUuid(USER_ID)
+                        .withEmail("admin@harness.io")
+                        .withAccounts(Arrays.asList(mockAccount))
+                        .build();
     when(userCache.get(USER_ID)).thenReturn(mockUser);
     User user = authService.generateBearerTokenForUser(mockUser);
     assertThat(user.getToken().length()).isGreaterThan(32);
@@ -294,7 +298,11 @@ public class AuthServiceTest extends WingsBaseTest {
   public void testGenerateBearerTokenWithoutJWTToken() {
     when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(false);
     Account mockAccount = Account.Builder.anAccount().withAccountKey("TestAccount").build();
-    User mockUser = Builder.anUser().withUuid(USER_ID).withAccounts(Arrays.asList(mockAccount)).build();
+    User mockUser = Builder.anUser()
+                        .withUuid(USER_ID)
+                        .withEmail("admin@harness.io")
+                        .withAccounts(Arrays.asList(mockAccount))
+                        .build();
     when(userCache.get(USER_ID)).thenReturn(mockUser);
     User user = authService.generateBearerTokenForUser(mockUser);
     AuthToken authToken = new AuthToken(ACCOUNT_ID, USER_ID, 8640000L);

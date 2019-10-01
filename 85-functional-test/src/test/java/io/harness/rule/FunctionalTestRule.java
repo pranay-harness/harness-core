@@ -16,6 +16,7 @@ import graphql.GraphQL;
 import io.dropwizard.Configuration;
 import io.harness.configuration.ConfigurationType;
 import io.harness.event.EventsModule;
+import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.factory.ClosingFactory;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.govern.ServersModule;
@@ -119,6 +120,8 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
     configuration.getPortal().setUrl("PORTAL_URL");
     configuration.getPortal().setVerificationUrl("VERIFICATION_PATH");
     configuration.setMongoConnectionFactory(MongoConfig.builder().uri(mongoUri).build());
+    configuration.setSegmentConfig(
+        SegmentConfig.builder().enabled(false).apiKey("dummy_api_key").url("dummy_url").build());
     configuration.getBackgroundSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
     return configuration;
   }
