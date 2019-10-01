@@ -228,9 +228,10 @@ public class InstanceHelperTest extends WingsBaseTest {
 
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("Name");
     phaseStepSubWorkflow.setRollback(false);
+    doReturn(INFRA_MAP_ID).when(context).fetchInfraMappingId();
 
     instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
-        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution, phaseStepSubWorkflow, null);
+        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution, phaseStepSubWorkflow, context);
 
     // Capture the argument of the doSomething function
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
@@ -269,8 +270,10 @@ public class InstanceHelperTest extends WingsBaseTest {
 
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("Name");
     phaseStepSubWorkflow.setRollback(false);
+    doReturn(INFRA_MAP_ID).when(context).fetchInfraMappingId();
+
     instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
-        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution, phaseStepSubWorkflow, null);
+        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution, phaseStepSubWorkflow, context);
 
     // Capture the argument of the doSomething function
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
@@ -308,8 +311,10 @@ public class InstanceHelperTest extends WingsBaseTest {
 
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("Name");
     phaseStepSubWorkflow.setRollback(false);
+    doReturn(INFRA_MAP_ID).when(context).fetchInfraMappingId();
+
     instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
-        phaseStepExecutionData, workflowStandardParams, "app_1", workflowExecution, phaseStepSubWorkflow, null);
+        phaseStepExecutionData, workflowStandardParams, "app_1", workflowExecution, phaseStepSubWorkflow, context);
 
     // Capture the argument of the doSomething function
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
@@ -347,8 +352,10 @@ public class InstanceHelperTest extends WingsBaseTest {
 
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("Name");
     phaseStepSubWorkflow.setRollback(false);
+    doReturn(INFRA_MAP_ID).when(context).fetchInfraMappingId();
+
     instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
-        phaseStepExecutionData, workflowStandardParams, "app_1", workflowExecution, phaseStepSubWorkflow, null);
+        phaseStepExecutionData, workflowStandardParams, "app_1", workflowExecution, phaseStepSubWorkflow, context);
 
     // Capture the argument of the doSomething function
     ArgumentCaptor<DeploymentEvent> captor = ArgumentCaptor.forClass(DeploymentEvent.class);
@@ -415,8 +422,10 @@ public class InstanceHelperTest extends WingsBaseTest {
 
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("Name");
     phaseStepSubWorkflow.setRollback(false);
+    doReturn(INFRA_MAP_ID).when(context).fetchInfraMappingId();
+
     instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
-        phaseStepExecutionData, workflowStandardParams, "app_1", workflowExecution, phaseStepSubWorkflow, null);
+        phaseStepExecutionData, workflowStandardParams, "app_1", workflowExecution, phaseStepSubWorkflow, context);
 
     // Capture the argument of the doSomething function
     ArgumentCaptor<DeploymentEvent> captor = ArgumentCaptor.forClass(DeploymentEvent.class);
@@ -461,11 +470,12 @@ public class InstanceHelperTest extends WingsBaseTest {
                  .build())
         .when(infraMappingService)
         .get(anyString(), anyString());
+    doReturn(INFRA_MAP_ID).when(context).fetchInfraMappingId();
 
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("Name");
     phaseStepSubWorkflow.setRollback(false);
     instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
-        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution, phaseStepSubWorkflow, null);
+        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution, phaseStepSubWorkflow, context);
 
     // Capture the argument of the doSomething function
     ArgumentCaptor<DeploymentEvent> captor = ArgumentCaptor.forClass(DeploymentEvent.class);
@@ -527,8 +537,10 @@ public class InstanceHelperTest extends WingsBaseTest {
 
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("Name");
     phaseStepSubWorkflow.setRollback(false);
+    doReturn(INFRA_MAP_ID).when(context).fetchInfraMappingId();
+
     instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
-        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution, phaseStepSubWorkflow, null);
+        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution, phaseStepSubWorkflow, context);
 
     // Capture the argument of the doSomething function
     ArgumentCaptor<DeploymentEvent> captor = ArgumentCaptor.forClass(DeploymentEvent.class);
@@ -594,8 +606,10 @@ public class InstanceHelperTest extends WingsBaseTest {
 
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("Name");
     phaseStepSubWorkflow.setRollback(false);
+    doReturn(INFRA_MAP_ID).when(context).fetchInfraMappingId();
+
     instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
-        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution, phaseStepSubWorkflow, null);
+        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution, phaseStepSubWorkflow, context);
 
     // Capture the argument of the doSomething function
     ArgumentCaptor<DeploymentEvent> captor = ArgumentCaptor.forClass(DeploymentEvent.class);
@@ -656,8 +670,10 @@ public class InstanceHelperTest extends WingsBaseTest {
 
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("Name");
     phaseStepSubWorkflow.setRollback(true);
+    doReturn(INFRA_MAP_ID).when(context).fetchInfraMappingId();
+
     instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
-        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution, phaseStepSubWorkflow, null);
+        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution, phaseStepSubWorkflow, context);
 
     // Capture the argument of the doSomething function
     ArgumentCaptor<DeploymentEvent> captor = ArgumentCaptor.forClass(DeploymentEvent.class);

@@ -22,6 +22,7 @@ public class PhaseExecutionData extends ElementStateExecutionData {
   private String computeProviderType;
   private String deploymentType;
   private String infraMappingId;
+  private String infraDefinitionId;
   private String infraMappingName;
   private String clusterName;
   private String containerServiceName;
@@ -59,6 +60,14 @@ public class PhaseExecutionData extends ElementStateExecutionData {
 
   public void setInfraMappingId(String infraMappingId) {
     this.infraMappingId = infraMappingId;
+  }
+
+  public String getInfraDefinitionId() {
+    return infraDefinitionId;
+  }
+
+  public void setInfraDefinitionId(String infraDefinitionId) {
+    this.infraDefinitionId = infraDefinitionId;
   }
 
   public List<String> getInstanceIds() {
@@ -167,6 +176,7 @@ public class PhaseExecutionData extends ElementStateExecutionData {
     private String deploymentType;
     private String stateName;
     private String infraMappingId;
+    private String infraDefinitionId;
     private Map<String, ExecutionStatus> instanceIdStatusMap = new HashMap<>();
     private Long startTs;
     private String infraMappingName;
@@ -228,6 +238,11 @@ public class PhaseExecutionData extends ElementStateExecutionData {
 
     public PhaseExecutionDataBuilder withInfraMappingId(String infraMappingId) {
       this.infraMappingId = infraMappingId;
+      return this;
+    }
+
+    public PhaseExecutionDataBuilder withInfraDefinitionId(String infraDefinitionId) {
+      this.infraDefinitionId = infraDefinitionId;
       return this;
     }
 
@@ -314,6 +329,7 @@ public class PhaseExecutionData extends ElementStateExecutionData {
       phaseExecutionData.setWaitInterval(waitInterval);
       phaseExecutionData.setPhaseExecutionSummary(phaseExecutionSummary);
       phaseExecutionData.setElement(element);
+      phaseExecutionData.setInfraDefinitionId(infraDefinitionId);
       return phaseExecutionData;
     }
   }

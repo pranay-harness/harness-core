@@ -139,13 +139,12 @@ public class InstanceHelper {
         logger.info("artifact is null for stateExecutionInstance:" + stateExecutionInstanceId);
       }
 
-      if (phaseExecutionData.getInfraMappingId() == null) {
+      if (context.fetchInfraMappingId() == null) {
         logger.info("infraMappingId is null for appId:{}, WorkflowExecutionId:{}", appId, workflowExecution.getUuid());
         return;
       }
 
-      InfrastructureMapping infrastructureMapping =
-          infraMappingService.get(appId, phaseExecutionData.getInfraMappingId());
+      InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, context.fetchInfraMappingId());
 
       if (PHYSICAL_DATA_CENTER_SSH.getName().equals(infrastructureMapping.getInfraMappingType())
           || PHYSICAL_DATA_CENTER_WINRM.getName().equals(infrastructureMapping.getInfraMappingType())
@@ -253,8 +252,8 @@ public class InstanceHelper {
     HostElement host = instanceStatusSummary.getInstanceElement().getHost();
     Validator.notNullCheck("Host is null for workflow execution:" + workflowExecution.getWorkflowId(), host);
 
-    InstanceBuilder builder = buildInstanceBase(
-        workflowExecution, artifact, phaseExecutionData, phaseStepExecutionData, infraMapping.getInfraMappingType());
+    InstanceBuilder builder =
+        buildInstanceBase(workflowExecution, artifact, phaseExecutionData, phaseStepExecutionData, infraMapping);
     String hostUuid = host.getUuid();
 
     String region = null;
@@ -266,7 +265,7 @@ public class InstanceHelper {
 
     if (hostUuid == null) {
       if (host.getEc2Instance() != null) {
-        setInstanceInfoAndKey(builder, host.getEc2Instance(), phaseExecutionData.getInfraMappingId());
+        setInstanceInfoAndKey(builder, host.getEc2Instance(), infraMapping.getUuid());
       } else if (host.getInstanceId() != null && region != null) {
         // TODO:: Avoid sequential fetch for Instance
         SettingAttribute cloudProviderSetting = settingsService.get(infraMapping.getComputeProviderSettingId());
@@ -287,7 +286,7 @@ public class InstanceHelper {
                 .findFirst()
                 .orElse(null);
         if (instance != null) {
-          setInstanceInfoAndKey(builder, instance, phaseExecutionData.getInfraMappingId());
+          setInstanceInfoAndKey(builder, instance, infraMapping.getUuid());
         } else {
           logger.warn(
               "Cannot build host based instance info since instanceId is not found in AWS workflowId:{}, instanceId:{}",
@@ -303,8 +302,7 @@ public class InstanceHelper {
     } else {
       Host hostInfo = hostService.get(workflowExecution.getAppId(), workflowExecution.getEnvId(), hostUuid);
       Validator.notNullCheck("Host is null for workflow execution:" + workflowExecution.getWorkflowId(), hostInfo);
-      setInstanceInfoAndKey(
-          builder, hostInfo, infraMapping.getInfraMappingType(), phaseExecutionData.getInfraMappingId());
+      setInstanceInfoAndKey(builder, hostInfo, infraMapping.getInfraMappingType(), infraMapping.getUuid());
     }
     return builder.build();
   }
@@ -342,7 +340,8 @@ public class InstanceHelper {
   }
 
   public InstanceBuilder buildInstanceBase(WorkflowExecution workflowExecution, Artifact artifact,
-      PhaseExecutionData phaseExecutionData, PhaseStepExecutionData phaseStepExecutionData, String infraMappingType) {
+      PhaseExecutionData phaseExecutionData, PhaseStepExecutionData phaseStepExecutionData,
+      InfrastructureMapping infrastructureMapping) {
     PipelineSummary pipelineSummary = workflowExecution.getPipelineSummary();
     Application application = appService.get(workflowExecution.getAppId());
     Validator.notNullCheck("Application", application);
@@ -359,9 +358,9 @@ public class InstanceHelper {
             .envType(workflowExecution.getEnvType())
             .computeProviderId(phaseExecutionData.getComputeProviderId())
             .computeProviderName(phaseExecutionData.getComputeProviderName())
-            .infraMappingId(phaseExecutionData.getInfraMappingId())
-            .infraMappingName(phaseExecutionData.getInfraMappingName())
-            .infraMappingType(infraMappingType)
+            .infraMappingId(infrastructureMapping.getUuid())
+            .infraMappingName(infrastructureMapping.getDisplayName())
+            .infraMappingType(infrastructureMapping.getInfraMappingType())
             .lastDeployedAt(phaseStepExecutionData.getEndTs() != null ? phaseStepExecutionData.getEndTs()
                                                                       : System.currentTimeMillis())
             .lastDeployedById(triggeredBy.getUuid())
@@ -386,7 +385,7 @@ public class InstanceHelper {
     Validator.notNullCheck("WorkflowName", workflowName);
     builder.lastWorkflowExecutionName(workflowName);
 
-    instanceUtil.setInstanceType(builder, infraMappingType);
+    instanceUtil.setInstanceType(builder, infrastructureMapping.getInfraMappingType());
 
     return builder;
   }

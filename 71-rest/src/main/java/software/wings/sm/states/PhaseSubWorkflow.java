@@ -165,6 +165,12 @@ public class PhaseSubWorkflow extends SubWorkflowState {
           .withInfraMappingName(infrastructureMapping.getName())
           .withDeploymentType(deploymentType.getDisplayName());
     }
+    if (infrastructureDefinition != null) {
+      phaseExecutionDataBuilder.withInfraDefinitionId(infrastructureDefinition.getUuid())
+          .withDeploymentType(infrastructureDefinition.getDeploymentType().getDisplayName())
+          .withComputeProviderType(infrastructureDefinition.getCloudProviderType().name())
+          .withComputeProviderId(infrastructureDefinition.getInfrastructure().getCloudProviderId());
+    }
     if (service != null) {
       phaseExecutionDataBuilder.withServiceId(service.getUuid()).withServiceName(service.getName());
     }

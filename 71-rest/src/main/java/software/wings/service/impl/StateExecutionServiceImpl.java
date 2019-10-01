@@ -14,9 +14,12 @@ import org.mongodb.morphia.query.Sort;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.SelectNodeStepExecutionSummary;
+import software.wings.beans.FeatureName;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.PhaseExecutionSummary;
@@ -39,6 +42,8 @@ import javax.validation.executable.ValidateOnExecution;
 public class StateExecutionServiceImpl implements StateExecutionService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private FeatureFlagService featureFlagService;
+  @Inject private AppService appService;
 
   public Map<String, StateExecutionInstance> executionStatesMap(String appId, String executionUuid) {
     Map<String, StateExecutionInstance> allInstancesIdMap = new HashMap<>();
@@ -157,8 +162,17 @@ public class StateExecutionServiceImpl implements StateExecutionService {
 
     for (StateExecutionData stateExecutionData : previousPhaseExecutionsData) {
       PhaseExecutionData phaseExecutionData = (PhaseExecutionData) stateExecutionData;
-      if (infraMappingId != null && !phaseExecutionData.getInfraMappingId().equals(infraMappingId)) {
-        continue;
+
+      if (featureFlagService.isEnabled(
+              FeatureName.INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(stateExecutionInstance.getAppId()))) {
+        if (phaseElement != null && phaseElement.getInfraDefinitionId() != null
+            && !phaseElement.getInfraDefinitionId().equals(phaseExecutionData.getInfraDefinitionId())) {
+          continue;
+        }
+      } else {
+        if (infraMappingId != null && !phaseExecutionData.getInfraMappingId().equals(infraMappingId)) {
+          continue;
+        }
       }
       PhaseExecutionSummary phaseExecutionSummary = phaseExecutionData.getPhaseExecutionSummary();
       if (phaseExecutionSummary == null || phaseExecutionSummary.getPhaseStepExecutionSummaryMap() == null) {

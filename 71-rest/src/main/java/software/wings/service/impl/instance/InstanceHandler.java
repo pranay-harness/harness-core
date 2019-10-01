@@ -130,7 +130,7 @@ public abstract class InstanceHandler {
     DeploymentSummary deploymentSummary = DeploymentSummary.builder().build();
     deploymentSummary.setAppId(workflowExecution.getAppId());
     deploymentSummary.setAccountId(application.getAccountId());
-    deploymentSummary.setInfraMappingId(phaseExecutionData.getInfraMappingId());
+    deploymentSummary.setInfraMappingId(infrastructureMapping.getUuid());
     deploymentSummary.setStateExecutionInstanceId(stateExecutionInstanceId);
     deploymentSummary.setWorkflowExecutionId(workflowExecution.getUuid());
     deploymentSummary.setWorkflowExecutionName(workflowExecution.normalizedName());
