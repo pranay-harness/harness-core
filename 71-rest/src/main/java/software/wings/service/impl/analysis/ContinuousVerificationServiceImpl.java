@@ -141,6 +141,7 @@ import software.wings.service.intfc.verification.DataCollectionInfoService;
 import software.wings.settings.SettingValue;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateExecutionData;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.states.APMVerificationState.Method;
 import software.wings.sm.states.AppDynamicsState;
@@ -232,7 +233,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   private static final int PAGE_LIMIT = 999;
   private static final int START_OFFSET = 0;
   private static final String DATE_PATTERN = "yyyy-MM-dd HH:MM";
-  private static final String HARNESS_DEFAULT_TAG = "_HARNESS_DEFAULT_TAG_";
+  public static final String HARNESS_DEFAULT_TAG = "_HARNESS_DEFAULT_TAG_";
   private static final String DUMMY_METRIC_NAME = "DummyMetricName";
 
   @Override
@@ -1576,10 +1577,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               .serverConfigId(analysisContext.getAnalysisServerConfigId())
               .timeDuration(analysisContext.getTimeDuration())
               .canaryNewHostNames(analysisContext.getTestNodes() != null
-                      ? new HashSet<>(analysisContext.getTestNodes().values())
+                      ? new HashSet<>(analysisContext.getTestNodes().keySet())
                       : null)
               .lastExecutionNodes(analysisContext.getControlNodes() != null
-                      ? new HashSet<>(analysisContext.getControlNodes().values())
+                      ? new HashSet<>(analysisContext.getControlNodes().keySet())
                       : null)
               .delegateTaskId(analysisContext.getDelegateTaskId())
               .mlAnalysisType(analysisContext.getAnalysisType())
@@ -2381,5 +2382,26 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     alertService.openAlert(appService.getAccountIdByAppId(cvConfiguration.getAppId()), cvConfiguration.getAppId(),
         CONTINUOUS_VERIFICATION_ALERT, alertData);
     return true;
+  }
+
+  @Override
+  public VerificationStateAnalysisExecutionData getVerificationStateExecutionData(String stateExecutionId) {
+    final StateExecutionInstance stateExecutionInstance =
+        wingsPersistence.get(StateExecutionInstance.class, stateExecutionId);
+    if (stateExecutionInstance == null) {
+      logger.info("No state execution found for {}", stateExecutionId);
+      return null;
+    }
+
+    Map<String, StateExecutionData> stateExecutionMap = stateExecutionInstance.getStateExecutionMap();
+    if (isEmpty(stateExecutionMap)) {
+      logger.info("No state execution map found for {}", stateExecutionId);
+      return null;
+    }
+
+    Preconditions.checkState(
+        stateExecutionMap.size() == 1, "more than one entries in the stateExecutionMap for " + stateExecutionId);
+
+    return (VerificationStateAnalysisExecutionData) stateExecutionMap.get(stateExecutionInstance.getDisplayName());
   }
 }

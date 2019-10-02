@@ -25,6 +25,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.VerificationOperationException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
@@ -47,6 +48,7 @@ import software.wings.service.impl.analysis.TimeSeriesMetricTemplates.TimeSeries
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
+import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisRecordKeys;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
@@ -70,8 +72,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -80,6 +84,7 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService {
+  public static int DEFAULT_PAGE_SIZE = 10;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private LearningEngineService learningEngineService;
@@ -172,12 +177,12 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         stateExecutionId = DEMO_FAILURE_TS_STATE_EXECUTION_ID + stateExecutionInstance.getStateType();
       }
     }
-    return getToolTip(stateExecutionId, workflowExecutionId, analysisMinute, transactionName, metricName, groupName);
+    return getToolTip(stateExecutionId, analysisMinute, transactionName, metricName, groupName);
   }
 
   @Override
-  public List<NewRelicMetricHostAnalysisValue> getToolTip(String stateExecutionId, String workflowExecutionId,
-      int analysisMinute, String transactionName, String metricName, String groupName) {
+  public List<NewRelicMetricHostAnalysisValue> getToolTip(
+      String stateExecutionId, int analysisMinute, String transactionName, String metricName, String groupName) {
     /* Ignore analysisMinutue. Leaving it as a parameter since UI sends it.
        Fetch the latest */
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
@@ -306,6 +311,34 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                        .filter("cvConfigId", cvConfigId));
   }
 
+  @Override
+  public DeploymentTimeSeriesAnalysis getMetricsAnalysisForDemo(
+      String stateExecutionId, Optional<Integer> offset, Optional<Integer> pageSize) {
+    logger.info("Creating analysis summary for demo {}", stateExecutionId);
+    StateExecutionInstance stateExecutionInstance =
+        wingsPersistence.createQuery(StateExecutionInstance.class).field("_id").equal(stateExecutionId).get();
+    if (stateExecutionInstance == null) {
+      logger.error("State execution instance not found for {}", stateExecutionId);
+      throw new WingsException(ErrorCode.STATE_EXECUTION_INSTANCE_NOT_FOUND, stateExecutionId);
+    }
+
+    SettingAttribute settingAttribute =
+        settingsService.get(((VerificationStateAnalysisExecutionData) stateExecutionInstance.fetchStateExecutionData())
+                                .getServerConfigId());
+
+    if (settingAttribute.getName().toLowerCase().endsWith("dev")
+        || settingAttribute.getName().toLowerCase().endsWith("prod")) {
+      if (stateExecutionInstance.getStatus() == ExecutionStatus.SUCCESS) {
+        return getMetricsAnalysis(
+            DEMO_SUCCESS_TS_STATE_EXECUTION_ID + stateExecutionInstance.getStateType(), offset, pageSize);
+      } else {
+        return getMetricsAnalysis(
+            DEMO_FAILURE_TS_STATE_EXECUTION_ID + stateExecutionInstance.getStateType(), offset, pageSize);
+      }
+    }
+    return getMetricsAnalysis(stateExecutionId, offset, pageSize);
+  }
+
   public Set<NewRelicMetricAnalysisRecord> getMetricsAnalysisForDemo(
       final String appId, final String stateExecutionId, final String workflowExecutionId) {
     logger.info("Creating analysis summary for demo {}", stateExecutionId);
@@ -313,7 +346,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         wingsPersistence.createQuery(StateExecutionInstance.class).field("_id").equal(stateExecutionId).get();
     if (stateExecutionInstance == null) {
       logger.error("State execution instance not found for {}", stateExecutionId);
-      throw new WingsException(ErrorCode.STATE_EXECUTION_INSTANCE_NOT_FOUND, stateExecutionId);
+      throw new VerificationOperationException(ErrorCode.STATE_EXECUTION_INSTANCE_NOT_FOUND, stateExecutionId);
     }
 
     SettingAttribute settingAttribute =
@@ -331,6 +364,180 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       }
     }
     return getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId);
+  }
+
+  @Override
+  public DeploymentTimeSeriesAnalysis getMetricsAnalysis(
+      String stateExecutionId, Optional<Integer> offset, Optional<Integer> pageSize) {
+    final TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
+        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
+            .filter(MetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
+            .order(Sort.descending(MetricAnalysisRecordKeys.analysisMinute))
+            .get();
+
+    final NewRelicMetricAnalysisRecord newRelicMetricAnalysisRecord = timeSeriesMLAnalysisRecord == null
+        ? wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class, excludeAuthority)
+              .filter(NewRelicMetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
+              .order(Sort.descending(NewRelicMetricAnalysisRecordKeys.analysisMinute))
+              .get()
+        : null;
+    if (timeSeriesMLAnalysisRecord == null && newRelicMetricAnalysisRecord == null) {
+      logger.info("No analysis found for {}", stateExecutionId);
+      return null;
+    }
+
+    int txnOffset = offset.isPresent() ? offset.get() : 0;
+    int txnPageSize = pageSize.isPresent() ? pageSize.get() : 10;
+
+    final DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis =
+        DeploymentTimeSeriesAnalysis.builder()
+            .stateExecutionId(stateExecutionId)
+            .baseLineExecutionId(timeSeriesMLAnalysisRecord != null
+                    ? timeSeriesMLAnalysisRecord.getBaseLineExecutionId()
+                    : newRelicMetricAnalysisRecord.getBaseLineExecutionId())
+            .metricAnalyses(new ArrayList<>())
+            .progressPercentage(getProgress(stateExecutionId))
+            .build();
+
+    List<NewRelicMetricAnalysis> metricAnalyses = new ArrayList<>();
+    if (timeSeriesMLAnalysisRecord != null) {
+      timeSeriesMLAnalysisRecord.decompressTransactions();
+      if (timeSeriesMLAnalysisRecord.getTransactions() != null) {
+        for (TimeSeriesMLTxnSummary txnSummary : timeSeriesMLAnalysisRecord.getTransactions().values()) {
+          List<NewRelicMetricAnalysisValue> metricsList = new ArrayList<>();
+          RiskLevel globalRisk = RiskLevel.NA;
+          for (TimeSeriesMLMetricSummary mlMetricSummary : txnSummary.getMetrics().values()) {
+            RiskLevel riskLevel = getRiskLevel(mlMetricSummary.getMax_risk());
+
+            if (riskLevel.compareTo(globalRisk) < 0) {
+              globalRisk = riskLevel;
+            }
+            List<NewRelicMetricHostAnalysisValue> hostAnalysisValues = new ArrayList<>();
+            if (mlMetricSummary.getResults() != null) {
+              for (Entry<String, TimeSeriesMLHostSummary> mlHostSummaryEntry :
+                  mlMetricSummary.getResults().entrySet()) {
+                hostAnalysisValues.add(NewRelicMetricHostAnalysisValue.builder()
+                                           .testHostName(mlHostSummaryEntry.getKey())
+                                           .controlHostName(mlHostSummaryEntry.getValue().getNn())
+                                           .controlValues(mlHostSummaryEntry.getValue().getControl_data())
+                                           .testValues(mlHostSummaryEntry.getValue().getTest_data())
+                                           .riskLevel(getRiskLevel(mlHostSummaryEntry.getValue().getRisk()))
+                                           .testStartIndex(-1)
+                                           .anomalies(mlHostSummaryEntry.getValue().getAnomalies())
+                                           .build());
+              }
+            }
+            metricsList.add(NewRelicMetricAnalysisValue.builder()
+                                .name(mlMetricSummary.getMetric_name())
+                                .type(mlMetricSummary.getMetric_type())
+                                .alertType(mlMetricSummary.getAlert_type())
+                                .riskLevel(riskLevel)
+                                .controlValue(mlMetricSummary.getControl_avg())
+                                .testValue(mlMetricSummary.getTest_avg())
+                                .hostAnalysisValues(hostAnalysisValues)
+                                .build());
+          }
+
+          metricAnalyses.add(NewRelicMetricAnalysis.builder()
+                                 .metricName(txnSummary.getTxn_name())
+                                 .metricValues(metricsList)
+                                 .riskLevel(globalRisk)
+                                 .build());
+        }
+      }
+    }
+
+    if (newRelicMetricAnalysisRecord != null) {
+      for (NewRelicMetricAnalysis newRelicMetricAnalysis : newRelicMetricAnalysisRecord.getMetricAnalyses()) {
+        String tag = isEmpty(newRelicMetricAnalysis.getTag()) ? ContinuousVerificationServiceImpl.HARNESS_DEFAULT_TAG
+                                                              : newRelicMetricAnalysis.getTag();
+
+        newRelicMetricAnalysis.setTag(tag);
+        metricAnalyses.add(newRelicMetricAnalysis);
+      }
+    }
+
+    setOverAllRisk(deploymentTimeSeriesAnalysis, metricAnalyses);
+    deploymentTimeSeriesAnalysis.setTotal(metricAnalyses.size());
+
+    Collections.sort(metricAnalyses);
+    for (int i = txnOffset; i < metricAnalyses.size() && i < txnOffset + txnPageSize; i++) {
+      deploymentTimeSeriesAnalysis.getMetricAnalyses().add(metricAnalyses.get(i));
+    }
+
+    return deploymentTimeSeriesAnalysis;
+  }
+
+  private void setOverAllRisk(
+      DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis, List<NewRelicMetricAnalysis> metricAnalyses) {
+    AtomicInteger highRisk = new AtomicInteger();
+    AtomicInteger mediumRisk = new AtomicInteger();
+    metricAnalyses.forEach(metricAnalysis -> {
+      switch (metricAnalysis.getRiskLevel()) {
+        case HIGH:
+          highRisk.incrementAndGet();
+          break;
+        case MEDIUM:
+          mediumRisk.incrementAndGet();
+          break;
+        case NA:
+          noop();
+          break;
+        case LOW:
+          noop();
+          break;
+        default:
+          unhandled(metricAnalysis.getRiskLevel());
+      }
+    });
+
+    if (highRisk.get() == 0 && mediumRisk.get() == 0) {
+      deploymentTimeSeriesAnalysis.setMessage("No problems found");
+    } else {
+      StringBuffer message = new StringBuffer(20);
+      if (highRisk.get() > 0) {
+        message.append(highRisk + " high risk " + (highRisk.get() > 1 ? "transactions" : "transaction") + " found. ");
+      }
+
+      if (mediumRisk.get() > 0) {
+        message.append(
+            mediumRisk + " medium risk " + (mediumRisk.get() > 1 ? "transactions" : "transaction") + " found.");
+      }
+
+      deploymentTimeSeriesAnalysis.setMessage(message.toString());
+    }
+
+    if (highRisk.get() > 0) {
+      deploymentTimeSeriesAnalysis.setRiskLevel(RiskLevel.HIGH);
+    } else if (mediumRisk.get() > 0) {
+      deploymentTimeSeriesAnalysis.setRiskLevel(RiskLevel.MEDIUM);
+    } else {
+      deploymentTimeSeriesAnalysis.setRiskLevel(RiskLevel.LOW);
+    }
+  }
+
+  private int getProgress(String stateExecutionId) {
+    AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
+                                          .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId)
+                                          .get();
+    if (analysisContext == null) {
+      return 0;
+    }
+
+    int numOfAnalysis = (int) wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
+                            .filter(MetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
+                            .count()
+        + (int) wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class, excludeAuthority)
+              .filter(NewRelicMetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
+              .count();
+
+    if (numOfAnalysis == 0) {
+      numOfAnalysis = (int) wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class, excludeAuthority)
+                          .filter(NewRelicMetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
+                          .count();
+    }
+
+    return (numOfAnalysis * 100) / analysisContext.getTimeDuration();
   }
 
   @Override

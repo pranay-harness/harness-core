@@ -7,6 +7,7 @@ import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -33,6 +34,7 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "timeSeriesMetricGroup", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@FieldNameConstants(innerTypeName = "TimeSeriesMetricGroupKeys")
 public class TimeSeriesMetricGroup extends Base {
   @NotEmpty private StateType stateType;
 

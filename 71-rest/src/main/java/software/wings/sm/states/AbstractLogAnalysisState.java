@@ -158,9 +158,10 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       }
 
       String responseMessage = "Log Verification running.";
+      String baselineWorkflowExecutionId = null;
       if (getComparisonStrategy() == COMPARE_WITH_PREVIOUS) {
         WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
-        String baselineWorkflowExecutionId = workflowExecutionBaselineService.getBaselineExecutionId(
+        baselineWorkflowExecutionId = workflowExecutionBaselineService.getBaselineExecutionId(
             analysisContext.getAppId(), analysisContext.getWorkflowId(), workflowStandardParams.getEnv().getUuid(),
             analysisContext.getServiceId());
         if (isEmpty(baselineWorkflowExecutionId)) {
@@ -191,6 +192,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
               .appId(analysisContext.getAppId())
               .serviceId(getPhaseServiceId(executionContext))
               .stateExecutionInstanceId(analysisContext.getStateExecutionId())
+              .baselineExecutionId(baselineWorkflowExecutionId)
               .serverConfigId(getAnalysisServerConfigId())
               .query(getRenderedQuery())
               .timeDuration(Integer.parseInt(getTimeDuration()))

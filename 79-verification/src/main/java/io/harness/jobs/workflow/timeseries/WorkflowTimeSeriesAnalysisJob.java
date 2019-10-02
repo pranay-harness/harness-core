@@ -212,6 +212,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Job {
 
           NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue metricAnalysisValue =
               metricValueDefinition.analyze(metric.getValue(), controlRecordsByMetric.get(metricName));
+          metricAnalysisValue.setHostAnalysisValues(metricValueDefinition.getTestHostValues(metric.getValue()));
           metricAnalysis.addNewRelicMetricAnalysisValue(metricAnalysisValue);
 
           if (metricAnalysisValue.getRiskLevel().compareTo(metricAnalysis.getRiskLevel()) < 0) {
