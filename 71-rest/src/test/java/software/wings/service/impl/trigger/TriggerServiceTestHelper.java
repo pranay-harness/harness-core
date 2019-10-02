@@ -11,6 +11,7 @@ import static software.wings.beans.PipelineStage.PipelineStageElement;
 import static software.wings.beans.PipelineStage.builder;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
+import static software.wings.beans.VariableType.TEXT;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.sm.StateType.ENV_STATE;
@@ -50,7 +51,9 @@ import software.wings.beans.Workflow;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.trigger.ArtifactTriggerCondition;
+import software.wings.beans.trigger.Condition;
 import software.wings.beans.trigger.CustomPayloadExpression;
+import software.wings.beans.trigger.CustomPayloadSource;
 import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.GitHubPayloadSource;
 import software.wings.beans.trigger.NewInstanceTriggerCondition;
@@ -62,10 +65,14 @@ import software.wings.beans.trigger.ServiceInfraWorkflow;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.TriggerArgs;
 import software.wings.beans.trigger.TriggerArtifactSelectionLastCollected;
+import software.wings.beans.trigger.TriggerArtifactSelectionLastDeployed;
+import software.wings.beans.trigger.TriggerArtifactSelectionWebhook;
 import software.wings.beans.trigger.TriggerArtifactVariable;
+import software.wings.beans.trigger.TriggerLastDeployedType;
 import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.beans.trigger.WebhookCondition;
 import software.wings.beans.trigger.WebhookSource.GitHubEventType;
+import software.wings.beans.trigger.WorkflowAction;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -148,6 +155,54 @@ public class TriggerServiceTestHelper {
                                                     .build()))
                                      .build())
                     .build())
+        .build();
+  }
+
+  public static WorkflowAction getWorkflowAction() {
+    return WorkflowAction.builder().workflowId(WORKFLOW_ID).triggerArgs(getTriggerArgs()).build();
+  }
+  public static TriggerArgs getTriggerArgs() {
+    return TriggerArgs.builder()
+        .triggerArtifactVariables(asList(TriggerArtifactVariable.builder()
+                                             .variableName(VARIABLE_NAME)
+                                             .variableValue(TriggerArtifactSelectionLastCollected.builder()
+                                                                .artifactStreamId("${streamId}")
+                                                                .artifactServerId("${serverId}")
+                                                                .artifactFilter("${filter}")
+                                                                .build())
+                                             .entityId(ENTITY_ID)
+                                             .entityType(EntityType.SERVICE)
+                                             .build(),
+            TriggerArtifactVariable.builder()
+                .variableName(VARIABLE_NAME)
+                .variableValue(TriggerArtifactSelectionLastDeployed.builder()
+                                   .id("${id}")
+                                   .type(TriggerLastDeployedType.WORKFLOW)
+                                   .build())
+                .entityId(ENTITY_ID)
+                .entityType(EntityType.SERVICE)
+                .build(),
+            TriggerArtifactVariable.builder()
+                .variableName(VARIABLE_NAME)
+                .variableValue(TriggerArtifactSelectionWebhook.builder()
+                                   .artifactStreamId("${streamId}")
+                                   .artifactServerId("${serverId}")
+                                   .build())
+                .entityId(ENTITY_ID)
+                .entityType(EntityType.SERVICE)
+                .build()))
+        .variables(asList(aVariable().type(TEXT).name("name").value("${abc}").mandatory(true).build()))
+        .build();
+  }
+
+  public static PipelineAction getPipelineAction() {
+    return PipelineAction.builder().pipelineId(PIPELINE_ID).triggerArgs(getTriggerArgs()).build();
+  }
+
+  public static Condition getCustomCondition() {
+    return WebhookCondition.builder()
+        .payloadSource(CustomPayloadSource.builder().build())
+        .webHookToken(WebHookToken.builder().build())
         .build();
   }
 

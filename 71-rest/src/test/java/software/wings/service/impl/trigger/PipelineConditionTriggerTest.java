@@ -1,6 +1,7 @@
 package software.wings.service.impl.trigger;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.joor.Reflect.on;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
@@ -14,6 +15,9 @@ import static software.wings.utils.WingsTestConstants.PIPELINE_NAME;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.exception.TriggerException;
+import io.harness.exception.WingsException;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -44,6 +48,17 @@ public class PipelineConditionTriggerTest extends WingsBaseTest {
           .condition(PipelineCondition.builder().pipelineId("PIPELINE_ID1").build())
           .build();
 
+  @Before
+  public void setUp() {
+    on(pipelineTriggerProcessor).set("pipelineService", pipelineService);
+    on(deploymentTriggerServiceHelper).set("pipelineService", pipelineService);
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    when(pipelineService.fetchPipelineName(APP_ID, PIPELINE_ID)).thenReturn(PIPELINE_NAME);
+    when(pipelineService.fetchPipelineName(APP_ID, "PIPELINE_ID1")).thenReturn("PIPELINE_NAME1");
+    when(pipelineService.fetchPipelineName(APP_ID, "InvalidPipelineId"))
+        .thenThrow(new TriggerException("Pipeline does not exis", null));
+  }
+
   @Test
   @Category(UnitTests.class)
   public void shouldSavePipelineTriggerNoArtifactSelections() {
@@ -53,11 +68,6 @@ public class PipelineConditionTriggerTest extends WingsBaseTest {
     conditionPipeline.setName("PIPELINE_NAME1");
     setPipelineStages(pipeline);
     pipeline.getPipelineVariables().add(aVariable().name("MyVar").build());
-    on(pipelineTriggerProcessor).set("pipelineService", pipelineService);
-    on(deploymentTriggerServiceHelper).set("pipelineService", pipelineService);
-    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
-    when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
-    when(pipelineService.readPipeline(APP_ID, "PIPELINE_ID1", true)).thenReturn(conditionPipeline);
     when(pipelineService.fetchPipelineName(APP_ID, PIPELINE_ID)).thenReturn(PIPELINE_NAME);
     when(pipelineService.fetchPipelineName(APP_ID, "PIPELINE_ID1")).thenReturn("PIPELINE_NAME1");
 
@@ -69,5 +79,39 @@ public class PipelineConditionTriggerTest extends WingsBaseTest {
 
     assertThat(pipelineCondition.getPipelineName()).isEqualTo("PIPELINE_NAME1");
     assertThat(pipelineCondition.getPipelineId()).isEqualTo("PIPELINE_ID1");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldThrowConditionPipelineNotExistException() {
+    pipelineTrigger.setCondition(PipelineCondition.builder().pipelineId("InvalidPipelineId").build());
+    assertThatExceptionOfType(WingsException.class)
+        .isThrownBy(() -> deploymentTriggerService.save(pipelineTrigger, false));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldThrowConditionPipelineExceptionForNull() {
+    pipelineTrigger.setCondition(PipelineCondition.builder().pipelineId(null).build());
+    assertThatExceptionOfType(WingsException.class)
+        .isThrownBy(() -> deploymentTriggerService.save(pipelineTrigger, false));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldThrowActionPipelineNotExistException() {
+    pipelineTrigger.setAction(
+        PipelineAction.builder().pipelineId("InvalidPipelineId").triggerArgs(TriggerArgs.builder().build()).build());
+    assertThatExceptionOfType(WingsException.class)
+        .isThrownBy(() -> deploymentTriggerService.save(pipelineTrigger, false));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldThrowActionPipelineExceptionForNull() {
+    pipelineTrigger.setAction(
+        PipelineAction.builder().pipelineId(null).triggerArgs(TriggerArgs.builder().build()).build());
+    assertThatExceptionOfType(WingsException.class)
+        .isThrownBy(() -> deploymentTriggerService.save(pipelineTrigger, false));
   }
 }

@@ -5,6 +5,7 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -55,6 +56,8 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest;
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.idempotence.IdempotentLock;
+import io.harness.exception.TriggerException;
+import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -179,6 +182,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
     when(pipelineService.readPipelineWithResolvedVariables(APP_ID, PIPELINE_ID, new HashMap<>())).thenReturn(pipeline);
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(buildWorkflow());
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
+    when(artifactStreamService.get("INVALID_STREAM_ID")).thenReturn(null);
     when(artifactStreamServiceBindingService.listServiceIds(ARTIFACT_STREAM_ID)).thenReturn(asList(SERVICE_ID));
     when(artifactStreamServiceBindingService.listServiceIds(ARTIFACT_ID)).thenReturn(asList(SERVICE_ID));
     when(artifactStreamServiceBindingService.getService(APP_ID, ARTIFACT_STREAM_ID, true))
@@ -193,13 +197,6 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
         .thenReturn(anAzureInfrastructureMapping().withUuid(INFRA_MAPPING_ID).withName(INFRA_NAME).build());
     when(artifactService.get(ARTIFACT_ID)).thenReturn(prepareArtifact(ARTIFACT_ID));
     when(artifactService.getArtifactByBuildNumber(jenkinsArtifactStream, ARTIFACT_FILTER, false)).thenReturn(artifact);
-    when(featureFlagService.isEnabled(any(), anyString())).thenReturn(false);
-    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
-    when(settingsService.get(SETTING_ID)).thenReturn(artifactorySetting);
-
-    when(serviceResourceService.get(ENTITY_ID))
-        .thenReturn(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build());
-
     when(idempotentRegistry.create(any(), any(), any(), any()))
         .thenReturn(IdempotentLock.<TriggerIdempotentResult>builder()
                         .registry(idempotentRegistry)
@@ -207,6 +204,14 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
                         .build());
     when(artifactStreamServiceBindingService.getService(APP_ID, ARTIFACT_STREAM_ID, false))
         .thenReturn(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build());
+    when(featureFlagService.isEnabled(any(), anyString())).thenReturn(false);
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    when(settingsService.get(SETTING_ID)).thenReturn(artifactorySetting);
+    when(settingsService.get("INVALID_SETTING_ID")).thenThrow(new TriggerException("Invalid Setting Id", null));
+
+    when(serviceResourceService.get(ENTITY_ID))
+        .thenReturn(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build());
+
     on(triggerArtifactVariableHandler).set("serviceVariablesService", serviceVariablesService);
     on(triggerDeploymentExecution).set("serviceVariablesService", serviceVariablesService);
     when(serviceVariablesService.getServiceVariablesForEntity(APP_ID, ENTITY_ID, OBTAIN_VALUE))
@@ -549,6 +554,30 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
     Mockito.verify(workflowService, times(2)).readWorkflow(APP_ID, WORKFLOW_ID);
     Mockito.verify(workflowService, times(2)).fetchWorkflowName(APP_ID, WORKFLOW_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldThrowTriggerExceptionForInvalidSettingId() {
+    trigger.setCondition(ArtifactCondition.builder()
+                             .artifactStreamId("INVALID_STREAM_ID")
+                             .artifactServerId("INVALID_SETTING_ID")
+                             .artifactFilter("^release")
+                             .build());
+
+    assertThatExceptionOfType(WingsException.class).isThrownBy(() -> deploymentTriggerService.save(trigger, false));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldThrowTriggerExceptionForInvalidFilter() {
+    trigger.setCondition(ArtifactCondition.builder()
+                             .artifactStreamId("INVALID_STREAM_ID")
+                             .artifactServerId("INVALID_SETTING_ID")
+                             .artifactFilter("dlk*,release")
+                             .build());
+
+    assertThatExceptionOfType(WingsException.class).isThrownBy(() -> deploymentTriggerService.save(trigger, false));
   }
 
   private List<TriggerArtifactVariable> buildArtifactVariables() {

@@ -19,6 +19,7 @@ import static software.wings.service.impl.trigger.TriggerServiceTestHelper.build
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.BUILD_NO;
 import static software.wings.utils.WingsTestConstants.ENTITY_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -188,6 +189,9 @@ public class WebHookServiceTest extends WingsBaseTest {
     doReturn(trigger).when(triggerService).getTriggerByWebhookToken(anyString());
     on(webhookTriggerDeploymentExecution).set("appService", appService);
     on(webhookTriggerDeploymentExecution).set("settingsService", settingsService);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(buildJenkinsArtifactStream());
+    when(artifactStreamService.getArtifactStreamByName(anyString(), anyString(), anyString()))
+        .thenReturn(buildJenkinsArtifactStream());
     on(webhookTriggerDeploymentExecution).set("artifactStreamService", artifactStreamService);
     doReturn(execution).when(deploymentTriggerService).triggerExecutionByWebHook(any(), any(), any(), any());
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
@@ -360,10 +364,11 @@ public class WebHookServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldTestJsonBitBucketDeplpymentTrigger() throws IOException {
+  public void shouldTestJsonBitBucketDeploymentTrigger() throws IOException {
     webHookTriggerConditionWithBranch.setEventTypes(Arrays.asList(WebhookEventType.PULL_REQUEST));
     webHookTriggerConditionWithBranch.setBitBucketEvents(Arrays.asList(BitBucketEventType.PULL_REQUEST_CREATED));
     when(featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, ACCOUNT_ID)).thenReturn(true);
+    when(featureFlagService.isEnabled(FeatureName.DEPLOYMENT_MODAL_REFACTOR, ACCOUNT_ID)).thenReturn(true);
     when(deploymentTriggerService.getTriggerByWebhookToken(token)).thenReturn(deploymentTrigger);
 
     ClassLoader classLoader = getClass().getClassLoader();

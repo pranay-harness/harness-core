@@ -7,6 +7,10 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildJenkinsArtifactStream;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildPipeline;
+import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildWorkflow;
+import static software.wings.service.impl.trigger.TriggerServiceTestHelper.getCustomCondition;
+import static software.wings.service.impl.trigger.TriggerServiceTestHelper.getPipelineAction;
+import static software.wings.service.impl.trigger.TriggerServiceTestHelper.getWorkflowAction;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -21,6 +25,7 @@ import static software.wings.utils.WingsTestConstants.SETTING_NAME;
 import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
 import static software.wings.utils.WingsTestConstants.VARIABLE_NAME;
 import static software.wings.utils.WingsTestConstants.VARIABLE_VALUE;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
 import com.google.inject.Inject;
 
@@ -36,8 +41,10 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.Workflow;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.trigger.CustomPayloadSource;
 import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.GitHubPayloadSource;
 import software.wings.beans.trigger.WebhookCondition;
@@ -49,6 +56,7 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.trigger.DeploymentTriggerService;
 
 import java.util.List;
@@ -56,6 +64,7 @@ import java.util.List;
 public class WebhookConditionTriggerTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private PipelineService pipelineService;
+  @Mock private WorkflowService workflowService;
   @Mock private ServiceVariableService serviceVariablesService;
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private SettingsService settingsService;
@@ -80,9 +89,11 @@ public class WebhookConditionTriggerTest extends WingsBaseTest {
                                                              .build())
                                               .build();
     Pipeline pipeline = buildPipeline();
+    Workflow workflow = buildWorkflow();
     List<ServiceVariable> serviceVariableList = asList(
         ServiceVariable.builder().type(Type.ARTIFACT).name(VARIABLE_NAME).value(VARIABLE_VALUE.toCharArray()).build());
     when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
     when(settingsService.get(SETTING_ID)).thenReturn(artifactorySetting);
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
     when(artifactStreamServiceBindingService.getService(APP_ID, ARTIFACT_STREAM_ID, true))
@@ -116,6 +127,32 @@ public class WebhookConditionTriggerTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  public void shouldSaveWebhookConditionTriggerWithExpressions() {
+    DeploymentTrigger trigger = TriggerServiceTestHelper.buildWebhookConditionTrigger();
+
+    GitHubPayloadSource gitHubPayloadSource =
+        (GitHubPayloadSource) ((WebhookCondition) trigger.getCondition()).getPayloadSource();
+
+    trigger.setAction(getPipelineAction());
+    deploymentTriggerService.save(trigger, false);
+
+    DeploymentTrigger savedWebhookTrigger = deploymentTriggerService.get(trigger.getAppId(), trigger.getUuid(), false);
+
+    assertThat(savedWebhookTrigger.getUuid()).isNotEmpty();
+    assertThat(savedWebhookTrigger.getCondition()).isInstanceOf(WebhookCondition.class);
+    assertThat(((WebhookCondition) trigger.getCondition()).getWebHookToken()).isNotNull();
+    assertThat(((WebhookCondition) trigger.getCondition()).getPayloadSource()).isNotNull();
+
+    assertThat(gitHubPayloadSource.getGitHubEventTypes().equals(asList(GitHubEventType.PUSH)));
+
+    trigger.setAction(getWorkflowAction());
+
+    deploymentTriggerService.save(trigger, false);
+    assertThat(savedWebhookTrigger.getUuid()).isNotEmpty();
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void shouldUpdateWebhookConditionTrigger() {
     DeploymentTrigger trigger =
         deploymentTriggerService.save(TriggerServiceTestHelper.buildWebhookConditionTrigger(), false);
@@ -131,5 +168,19 @@ public class WebhookConditionTriggerTest extends WingsBaseTest {
 
     assertThat(gitHubPayloadSource.getGitHubEventTypes().equals(asList(GitHubEventType.PUSH)));
     assertThat(updatedTrigger.getDescription()).isNotNull().isEqualTo("updated description");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldSaveCustomWebhookConditionTrigger() {
+    DeploymentTrigger trigger = TriggerServiceTestHelper.buildWebhookConditionTrigger();
+    trigger.setCondition(getCustomCondition());
+    DeploymentTrigger savedTrigger = deploymentTriggerService.save(trigger, false);
+
+    assertThat(savedTrigger.getCondition()).isInstanceOf(WebhookCondition.class);
+    assertThat((WebhookCondition) savedTrigger.getCondition()).isNotNull();
+
+    assertThat(((WebhookCondition) savedTrigger.getCondition()).getPayloadSource())
+        .isInstanceOf(CustomPayloadSource.class);
   }
 }
