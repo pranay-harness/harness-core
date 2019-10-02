@@ -292,7 +292,7 @@ public class SpotInstSetupTaskHandlerTest extends WingsBaseTest {
     assertThat(response).isNotNull();
     SpotInstTaskResponse spotInstTaskResponse = response.getSpotInstTaskResponse();
     assertThat(spotInstTaskResponse).isNotNull();
-    assertThat(spotInstTaskResponse instanceof SpotInstSetupTaskResponse);
+    assertThat(spotInstTaskResponse instanceof SpotInstSetupTaskResponse).isTrue();
     SpotInstSetupTaskResponse setupResponse = (SpotInstSetupTaskResponse) spotInstTaskResponse;
     ElastiGroup newElastiGroup = setupResponse.getNewElastiGroup();
     assertThat(newElastiGroup).isNotNull();
@@ -331,7 +331,7 @@ public class SpotInstSetupTaskHandlerTest extends WingsBaseTest {
     assertThat(response).isNotNull();
     SpotInstTaskResponse spotInstTaskResponse = response.getSpotInstTaskResponse();
     assertThat(spotInstTaskResponse).isNotNull();
-    assertThat(spotInstTaskResponse instanceof SpotInstSetupTaskResponse);
+    assertThat(spotInstTaskResponse instanceof SpotInstSetupTaskResponse).isTrue();
     SpotInstSetupTaskResponse setupResponse = (SpotInstSetupTaskResponse) spotInstTaskResponse;
     ElastiGroup newElastiGroup = setupResponse.getNewElastiGroup();
     assertThat(newElastiGroup).isNotNull();
