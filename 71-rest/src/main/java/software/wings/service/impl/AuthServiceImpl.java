@@ -184,9 +184,9 @@ public class AuthServiceImpl implements AuthService {
   }
 
   public static final class Keys {
-    public static final String harness_email = "@harness.io";
-    public static String login_event = "User Authenticated";
-    public static String group_id = "groupId";
+    public static final String HARNESS_EMAIL = "@harness.io";
+    public static String LOGIN_EVENT = "User Authenticated";
+    public static String GROUP_ID = "groupId";
   }
 
   @Override
@@ -892,7 +892,7 @@ public class AuthServiceImpl implements AuthService {
     user.setToken(authToken.getJwtToken());
 
     user.setFirstLogin(isFirstLogin);
-    if (!user.getEmail().endsWith(Keys.harness_email)) {
+    if (!user.getEmail().endsWith(Keys.HARNESS_EMAIL)) {
       executorService.submit(() -> {
         String accountId = user.getLastAccountId();
         if (isEmpty(accountId)) {
@@ -907,8 +907,8 @@ public class AuthServiceImpl implements AuthService {
         }
         try {
           Map<String, String> properties = new HashMap<>();
-          properties.put(Keys.group_id, accountId);
-          segmentHandler.reportTrackEvent(account, Keys.login_event, user, properties);
+          properties.put(Keys.GROUP_ID, accountId);
+          segmentHandler.reportTrackEvent(account, Keys.LOGIN_EVENT, user, properties);
         } catch (Exception e) {
           logger.error("Exception while reporting track event for User {} login", user.getUuid(), e);
         }
