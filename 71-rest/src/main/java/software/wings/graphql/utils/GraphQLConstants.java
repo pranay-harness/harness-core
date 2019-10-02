@@ -8,9 +8,8 @@ public class GraphQLConstants {
 
   // Error messages
   public static final String FEATURE_NOT_ENABLED = FeatureName.GRAPHQL + " feature not enabled";
-  public static final String EXTERNAL_RATE_LIMIT_REACHED =
-      "External " + FeatureName.GRAPHQL + " API rate limit reached for account %s";
-  public static final String INTERNAL_RATE_LIMIT_REACHED =
-      "Internal " + FeatureName.GRAPHQL + " API rate limit reached for account %s";
+  public static final String RATE_LIMIT_REACHED =
+      "You've reached your account's rate limit for data queries. Please try again later.";
   public static final String INVALID_API_KEY = "Invalid Api Key";
+  public static final String INVALID_TOKEN = "Invalid Token";
 }

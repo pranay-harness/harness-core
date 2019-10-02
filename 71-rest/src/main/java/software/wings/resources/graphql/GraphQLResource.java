@@ -1,8 +1,6 @@
 package software.wings.resources.graphql;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
-import static io.harness.exception.WingsException.USER_ADMIN;
 import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
 
 import com.google.common.collect.Maps;
@@ -12,11 +10,8 @@ import com.google.inject.name.Named;
 
 import graphql.ExecutionInput;
 import graphql.ExecutionResult;
-import graphql.ExecutionResultImpl;
 import graphql.GraphQL;
 import graphql.GraphQLContext;
-import graphql.GraphqlErrorBuilder;
-import io.harness.exception.WingsException;
 import io.swagger.annotations.Api;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -48,6 +43,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 
 @Api("/graphql")
@@ -64,20 +60,20 @@ public class GraphQLResource {
   ApiKeyService apiKeyService;
   PremiumFeature restApiFeature;
   DataLoaderRegistryHelper dataLoaderRegistryHelper;
-  GraphQLRateLimiter graphQLRateLimiter;
+  GraphQLUtils graphQLUtils;
 
   @Inject
   public GraphQLResource(@NotNull QueryLanguageProvider<GraphQL> queryLanguageProvider,
       @NotNull FeatureFlagService featureFlagService, @NotNull ApiKeyService apiKeyService,
-      DataLoaderRegistryHelper dataLoaderRegistryHelper, @NotNull GraphQLRateLimiter graphQLRateLimiter,
-      @Named(RestApiFeature.FEATURE_NAME) PremiumFeature restApiFeature) {
+      DataLoaderRegistryHelper dataLoaderRegistryHelper,
+      @Named(RestApiFeature.FEATURE_NAME) PremiumFeature restApiFeature, GraphQLUtils graphQLUtils) {
     this.privateGraphQL = queryLanguageProvider.getPrivateGraphQL();
     this.publicGraphQL = queryLanguageProvider.getPublicGraphQL();
     this.featureFlagService = featureFlagService;
     this.apiKeyService = apiKeyService;
     this.dataLoaderRegistryHelper = dataLoaderRegistryHelper;
     this.restApiFeature = restApiFeature;
-    this.graphQLRateLimiter = graphQLRateLimiter;
+    this.graphQLUtils = graphQLUtils;
   }
 
   @POST
@@ -150,17 +146,17 @@ public class GraphQLResource {
 
       if (accountId == null) {
         logger.info(GraphQLConstants.INVALID_API_KEY);
-        return getExecutionResultWithError(GraphQLConstants.INVALID_API_KEY).toSpecification();
+        throw graphQLUtils.getInvalidApiKeyException();
       }
     } else {
       logger.info(GraphQLConstants.INVALID_API_KEY);
-      return getExecutionResultWithError(GraphQLConstants.INVALID_API_KEY).toSpecification();
+      throw graphQLUtils.getInvalidApiKeyException();
     }
 
     if (!featureFlagService.isEnabled(FeatureName.GRAPHQL, accountId)
         || !restApiFeature.isAvailableForAccount(accountId)) {
       logger.info(GraphQLConstants.FEATURE_NOT_ENABLED);
-      return getExecutionResultWithError(GraphQLConstants.FEATURE_NOT_ENABLED).toSpecification();
+      throw graphQLUtils.getFeatureNotEnabledException();
     }
 
     ExecutionResult executionResult;
@@ -177,7 +173,7 @@ public class GraphQLResource {
       } else {
         ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(apiKey, accountId, true);
         if (apiKeyEntry == null) {
-          executionResult = getExecutionResultWithError(GraphQLConstants.INVALID_API_KEY);
+          throw graphQLUtils.getInvalidApiKeyException();
         } else {
           UserPermissionInfo apiKeyPermissions = apiKeyService.getApiKeyPermissions(apiKeyEntry, accountId);
           UserRestrictionInfo apiKeyRestrictions =
@@ -186,6 +182,8 @@ public class GraphQLResource {
               apiKeyPermissions, apiKeyRestrictions, accountId, graphQLQuery, dataLoaderRegistryHelper));
         }
       }
+    } catch (WebApplicationException e) {
+      throw e;
     } catch (Exception ex) {
       executionResult = handleException(accountId, ex);
     }
@@ -197,7 +195,7 @@ public class GraphQLResource {
     String errorMsg = String.format(
         "Error while handling api request for Graphql api for accountId %s : %s", accountId, ex.getMessage());
     logger.warn(errorMsg);
-    return getExecutionResultWithError(errorMsg);
+    throw graphQLUtils.getException(errorMsg, ex);
   }
 
   private Map<String, Object> executeInternal(GraphQLQuery graphQLQuery) {
@@ -210,7 +208,7 @@ public class GraphQLResource {
       userRequestContext = user.getUserRequestContext();
       hasUserContext = true;
     } else {
-      throw new WingsException(INVALID_TOKEN, USER_ADMIN);
+      throw graphQLUtils.getInvalidTokenException();
     }
 
     ExecutionResult executionResult;
@@ -220,19 +218,13 @@ public class GraphQLResource {
         executionResult = graphQL.execute(getExecutionInput(userRequestContext.getUserPermissionInfo(),
             userRequestContext.getUserRestrictionInfo(), accountId, graphQLQuery, dataLoaderRegistryHelper));
       } else {
-        throw new WingsException(INVALID_TOKEN, USER_ADMIN);
+        throw graphQLUtils.getInvalidTokenException();
       }
     } catch (Exception ex) {
       executionResult = handleException(accountId, ex);
     }
 
     return executionResult.toSpecification();
-  }
-
-  private ExecutionResultImpl getExecutionResultWithError(String message) {
-    return ExecutionResultImpl.newExecutionResult()
-        .addError(GraphqlErrorBuilder.newError().message(message).build())
-        .build();
   }
 
   private ExecutionInput getExecutionInput(UserPermissionInfo permissionInfo, UserRestrictionInfo restrictionInfo,
