@@ -187,9 +187,8 @@ public class ServiceChangeHandler implements ChangeHandler {
       Map<String, Object> deploymentRelatedEntityViewMap =
           relatedDeploymentViewBuilder.getDeploymentRelatedEntityViewMap(workflowExecution);
       String deploymentTimestampsField = ServiceViewKeys.deploymentTimestamps;
-      result = result
-          && searchDao.addTimestamp(
-                 ServiceSearchEntity.TYPE, deploymentTimestampsField, documentsToUpdate, DAYS_TO_RETAIN);
+      result = searchDao.addTimestamp(
+          ServiceSearchEntity.TYPE, deploymentTimestampsField, documentsToUpdate, DAYS_TO_RETAIN);
       result = result
           && searchDao.appendToListInMultipleDocuments(ServiceSearchEntity.TYPE, fieldToUpdate, documentsToUpdate,
                  deploymentRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
