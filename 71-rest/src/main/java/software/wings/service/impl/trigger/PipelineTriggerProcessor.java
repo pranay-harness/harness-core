@@ -49,7 +49,8 @@ public class PipelineTriggerProcessor implements TriggerProcessor {
       deploymentTrigger.setCondition(
           PipelineCondition.builder().pipelineId(pipelineCondition.getPipelineId()).pipelineName(pipelineName).build());
     } catch (WingsException exception) {
-      throw new WingsException("Pipeline does not exist for pipeline id " + pipelineCondition.getPipelineId(), USER);
+      throw new TriggerException(
+          "Pipeline does not exist for pipeline name " + pipelineCondition.getPipelineName(), USER);
     }
   }
 
@@ -91,13 +92,18 @@ public class PipelineTriggerProcessor implements TriggerProcessor {
 
       pipelineName = pipelineService.fetchPipelineName(deploymentTrigger.getAppId(), pipelineCondition.getPipelineId());
     } catch (WingsException exception) {
-      throw new WingsException("Pipeline does not exist for pipeline id " + pipelineCondition.getPipelineId(), USER);
+      logger.warn("Pipeline does not exist for pipeline id {} triggerId { } appId {}",
+          pipelineCondition.getPipelineId(), deploymentTrigger.getUuid(), deploymentTrigger.getAppId(), USER);
+      throw new TriggerException(
+          "Pipeline does not exist for pipeline name " + pipelineCondition.getPipelineName(), USER);
     }
     if (deploymentTrigger.getAction().getActionType().equals(PIPELINE)
         && ((PipelineCondition) deploymentTrigger.getCondition())
                .getPipelineId()
                .equals(((PipelineAction) deploymentTrigger.getAction()).getPipelineId())) {
-      throw new WingsException("Trigger condition pipeline " + pipelineName + " is same as that of action ");
+      logger.warn("Trigger condition pipeline " + pipelineName + " is same as that of action {} triggerId { } appId {}",
+          pipelineCondition.getPipelineId(), deploymentTrigger.getUuid(), deploymentTrigger.getAppId(), USER);
+      throw new TriggerException("Trigger condition pipeline " + pipelineName + " is same as that of action ", USER);
     }
   }
 

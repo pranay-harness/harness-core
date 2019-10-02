@@ -330,7 +330,8 @@ public class WebhookTriggerDeploymentExecution {
         String artifactStreamId = lastCollected.getArtifactStreamId();
         if (ExpressionEvaluator.matchesVariablePattern(artifactStreamId)) {
           String streamName = getSubstitutedValue(lastCollected.getArtifactStreamId(), payLoadMap);
-          ArtifactStream artifactStream = artifactStreamService.getArtifactStreamByName(artifactServerId, streamName);
+          ArtifactStream artifactStream =
+              artifactStreamService.getArtifactStreamByName(appId, triggerArtifactVariable.getEntityId(), streamName);
           if (artifactStream != null) {
             artifactStreamId = artifactStream.getUuid();
           } else {
@@ -436,7 +437,7 @@ public class WebhookTriggerDeploymentExecution {
                     webhookArtifactServerId = artifactStream.getSettingId();
                   } else {
                     throw new TriggerException(
-                        "Artifact stream does not exist for stream name " + webhookArtifactStreamId, USER);
+                        "Artifact stream does not exist for stream name " + artifactStreamName, USER);
                   }
                 }
               }

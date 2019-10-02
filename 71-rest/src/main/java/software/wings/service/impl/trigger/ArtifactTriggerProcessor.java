@@ -226,7 +226,7 @@ public class ArtifactTriggerProcessor implements TriggerProcessor {
                                              .filter(artifactFile -> pattern.matcher(artifactFile.getName()).find())
                                              .collect(toList());
       if (isNotEmpty(artifactFiles)) {
-        logger.info("Artifact file names matches with the given artifact filter");
+        logger.info("Artifact file names matches with the given artifact filter {}", triggerId);
         artifact.setArtifactFiles(artifactFiles);
         return true;
       }
@@ -260,7 +260,7 @@ public class ArtifactTriggerProcessor implements TriggerProcessor {
       List<ArtifactVariable> artifactVariables =
           triggerArtifactVariableHandler.fetchArtifactVariablesForExecution(trigger.getAppId(), trigger, artifacts);
 
-      if (!artifactVariables.isEmpty()) {
+      if (isNotEmpty(artifactVariables)) {
         logger.info("The artifact variables  set for the trigger {} are {}", trigger.getUuid(),
             artifactVariables.stream().map(ArtifactVariable::getName).collect(toList()));
       }
@@ -275,7 +275,6 @@ public class ArtifactTriggerProcessor implements TriggerProcessor {
       }
     } else {
       logger.info("No action exist. Hence Skipping the deployment");
-      return;
     }
   }
 

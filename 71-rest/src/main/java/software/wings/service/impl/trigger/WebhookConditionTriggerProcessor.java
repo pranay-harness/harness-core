@@ -98,7 +98,7 @@ public class WebhookConditionTriggerProcessor implements TriggerProcessor {
     Type type = webhookCondition.getPayloadSource().getType();
     if (!((type.equals(Type.BITBUCKET) || type.equals(Type.CUSTOM) || type.equals(Type.GITHUB)
             || type.equals(Type.GITLAB)))) {
-      throw new TriggerException("Invalid Payload type", null);
+      throw new TriggerException("Invalid Payload type " + type, null);
     }
   }
 

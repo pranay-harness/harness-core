@@ -2,6 +2,7 @@ package software.wings.service.impl.trigger;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -32,6 +33,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.idempotence.IdempotentLock;
+import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -160,5 +162,32 @@ public class ScheduleConditionTriggerTest extends WingsBaseTest {
         .isNotNull()
         .isEqualTo("* * * * ?");
     assertThat(updatedTrigger.getDescription()).isNotNull().isEqualTo("updated description");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldThrowCronParseException() {
+    scheduledConditionTrigger.setCondition(
+        ScheduledCondition.builder().cronDescription("as").cronExpression("* * ?").build());
+    assertThatExceptionOfType(WingsException.class)
+        .isThrownBy(() -> deploymentTriggerService.save(scheduledConditionTrigger, false));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldThrowCronParseExceptionOnNullCronExpression() {
+    scheduledConditionTrigger.setCondition(
+        ScheduledCondition.builder().cronDescription("as").cronExpression(null).build());
+    assertThatExceptionOfType(WingsException.class)
+        .isThrownBy(() -> deploymentTriggerService.save(scheduledConditionTrigger, false));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldThrowCronParseExceptionOnEmptyCronExpression() {
+    scheduledConditionTrigger.setCondition(
+        ScheduledCondition.builder().cronDescription("as").cronExpression("").build());
+    assertThatExceptionOfType(WingsException.class)
+        .isThrownBy(() -> deploymentTriggerService.save(scheduledConditionTrigger, false));
   }
 }
