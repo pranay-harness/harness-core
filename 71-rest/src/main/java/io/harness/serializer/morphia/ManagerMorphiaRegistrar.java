@@ -428,7 +428,14 @@ import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfDeployCommandResponse;
 import software.wings.helpers.ext.pcf.response.PcfSetupCommandResponse;
+import software.wings.infra.AwsAmiInfrastructure;
+import software.wings.infra.AwsEcsInfrastructure;
+import software.wings.infra.AwsInstanceInfrastructure;
+import software.wings.infra.AwsLambdaInfrastructure;
+import software.wings.infra.CodeDeployInfrastructure;
+import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.InfrastructureDefinition;
+import software.wings.infra.PhysicalInfra;
 import software.wings.metrics.TimeSeriesDataRecord;
 import software.wings.prune.PruneEvent;
 import software.wings.resources.DelegateFileResource.FileIdempotentResult;
@@ -912,15 +919,11 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
 
   @Override
   public void registerImplementationClasses(Map<String, Class> map) {
-    final HelperPut h = (name, clazz) -> {
-      map.put(pkgHarness + name, clazz);
-    };
+    final HelperPut h = (name, clazz) -> map.put(pkgHarness + name, clazz);
 
     h.put("marketplace.gcp.events.AccountActiveEvent", AccountActiveEvent.class);
 
-    final HelperPut w = (name, clazz) -> {
-      map.put(pkgWings + name, clazz);
-    };
+    final HelperPut w = (name, clazz) -> map.put(pkgWings + name, clazz);
 
     w.put("api.AmiServiceDeployElement", AmiServiceDeployElement.class);
     w.put("api.AmiServiceSetupElement", AmiServiceSetupElement.class);
@@ -1004,12 +1007,12 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("api.ServiceNowExecutionData", ServiceNowExecutionData.class);
     w.put("api.ServiceTemplateElement", ServiceTemplateElement.class);
     w.put("api.shellscript.provision.ShellScriptProvisionExecutionData", ShellScriptProvisionExecutionData.class);
+    w.put("api.ShellScriptProvisionerOutputElement", ShellScriptProvisionerOutputElement.class);
     w.put("api.SimpleWorkflowParam", SimpleWorkflowParam.class);
     w.put("api.terraform.TerraformProvisionInheritPlanElement", TerraformProvisionInheritPlanElement.class);
     w.put("api.TerraformExecutionData", TerraformExecutionData.class);
     w.put("api.TerraformOutputInfoElement", TerraformOutputInfoElement.class);
     w.put("audit.EntityAuditRecord", EntityAuditRecord.class);
-    w.put("api.ShellScriptProvisionerOutputElement", ShellScriptProvisionerOutputElement.class);
     w.put("beans.alert.ApprovalNeededAlert", ApprovalNeededAlert.class);
     w.put("beans.alert.ArtifactCollectionFailedAlert", ArtifactCollectionFailedAlert.class);
     w.put("beans.alert.cv.ContinuousVerificationAlertData", ContinuousVerificationAlertData.class);
@@ -1062,11 +1065,10 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.command.InitSshCommandUnit", InitSshCommandUnit.class);
     w.put("beans.command.InitSshCommandUnitV2", InitSshCommandUnitV2.class);
     w.put("beans.command.K8sDummyCommandUnit", K8sDummyCommandUnit.class);
-    w.put("beans.command.PcfDummyCommandUnit", PcfDummyCommandUnit.class);
-    w.put("beans.command.SpotinstDummyCommandUnit", SpotinstDummyCommandUnit.class);
     w.put("beans.command.KubernetesResizeCommandUnit", KubernetesResizeCommandUnit.class);
     w.put("beans.command.KubernetesSetupCommandUnit", KubernetesSetupCommandUnit.class);
     w.put("beans.command.KubernetesSetupParams", KubernetesSetupParams.class);
+    w.put("beans.command.PcfDummyCommandUnit", PcfDummyCommandUnit.class);
     w.put("beans.command.PortCheckClearedCommandUnit", PortCheckClearedCommandUnit.class);
     w.put("beans.command.PortCheckListeningCommandUnit", PortCheckListeningCommandUnit.class);
     w.put("beans.command.ProcessCheckRunningCommandUnit", ProcessCheckRunningCommandUnit.class);
@@ -1076,6 +1078,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.command.ScpCommandUnit", ScpCommandUnit.class);
     w.put("beans.command.SetupEnvCommandUnit", SetupEnvCommandUnit.class);
     w.put("beans.command.ShellExecutionData", ShellExecutionData.class);
+    w.put("beans.command.SpotinstDummyCommandUnit", SpotinstDummyCommandUnit.class);
     w.put("beans.config.ArtifactoryConfig", ArtifactoryConfig.class);
     w.put("beans.config.LogzConfig", LogzConfig.class);
     w.put("beans.config.NexusConfig", NexusConfig.class);
@@ -1171,6 +1174,13 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("helpers.ext.pcf.response.PcfCommandExecutionResponse", PcfCommandExecutionResponse.class);
     w.put("helpers.ext.pcf.response.PcfDeployCommandResponse", PcfDeployCommandResponse.class);
     w.put("helpers.ext.pcf.response.PcfSetupCommandResponse", PcfSetupCommandResponse.class);
+    w.put("infra.AwsAmiInfrastructure", AwsAmiInfrastructure.class);
+    w.put("infra.AwsEcsInfrastructure", AwsEcsInfrastructure.class);
+    w.put("infra.AwsInstanceInfrastructure", AwsInstanceInfrastructure.class);
+    w.put("infra.AwsLambdaInfrastructure", AwsLambdaInfrastructure.class);
+    w.put("infra.CodeDeployInfrastructure", CodeDeployInfrastructure.class);
+    w.put("infra.GoogleKubernetesEngine", GoogleKubernetesEngine.class);
+    w.put("infra.PhysicalInfra", PhysicalInfra.class);
     w.put("resources.DelegateFileResource$FileIdempotentResult", FileIdempotentResult.class);
     w.put("security.EnvFilter", EnvFilter.class);
     w.put("security.GenericEntityFilter", GenericEntityFilter.class);
@@ -1316,6 +1326,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("sm.states.ShellScriptState", ShellScriptState.class);
     w.put("sm.states.SplunkState", SplunkState.class);
     w.put("sm.states.SplunkV2State", SplunkV2State.class);
+    w.put("sm.states.spotinst.SpotinstDeployExecutionSummary", SpotinstDeployExecutionSummary.class);
     w.put("sm.states.spotinst.SpotInstDeployState", SpotInstDeployState.class);
     w.put("sm.states.spotinst.SpotInstListenerUpdateRollbackState", SpotInstListenerUpdateRollbackState.class);
     w.put("sm.states.spotinst.SpotInstListenerUpdateState", SpotInstListenerUpdateState.class);
@@ -1323,7 +1334,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("sm.states.spotinst.SpotInstServiceSetup", SpotInstServiceSetup.class);
     w.put("sm.states.spotinst.SpotInstSetupContextElement", SpotInstSetupContextElement.class);
     w.put("sm.states.spotinst.SpotInstSetupExecutionSummary", SpotInstSetupExecutionSummary.class);
-    w.put("sm.states.spotinst.SpotinstDeployExecutionSummary", SpotinstDeployExecutionSummary.class);
     w.put("sm.states.StackDriverLogState", StackDriverLogState.class);
     w.put("sm.states.StackDriverState", StackDriverState.class);
     w.put("sm.states.SubWorkflowState", SubWorkflowState.class);
