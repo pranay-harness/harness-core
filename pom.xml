@@ -42,6 +42,7 @@
         <aws.sdk.version>1.11.455</aws.sdk.version>
         <buildTimeStamp>${maven.build.timestamp}</buildTimeStamp>
         <categories>io.harness.category.element.UnitTests.class</categories>
+        <categories.integration>io.harness.category.element.IntegrationTests.class</categories.integration>
         <checkStyleFile>harness_checks.xml</checkStyleFile>
         <dbcp.version>1.4</dbcp.version>
         <deployHost>{env.HOSTNAME}</deployHost>
@@ -1603,9 +1604,10 @@
                     <artifactId>maven-failsafe-plugin</artifactId>
                     <version>2.20</version>
                     <configuration>
+                        <groups>${categories.integration}</groups>
+                        <excludedGroups>${excludedCategories}</excludedGroups>
                         <includes>
-                            <include>**/IntegrationTest*.java</include>
-                            <include>**/*IntegrationTest.java</include>
+                            <include>**/*.java</include>
                         </includes>
                         <excludes>
                             <exclude>**/DelegateIntegrationTest</exclude>
