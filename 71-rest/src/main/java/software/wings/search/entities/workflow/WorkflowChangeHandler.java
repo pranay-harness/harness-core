@@ -153,9 +153,8 @@ public class WorkflowChangeHandler implements ChangeHandler {
       Map<String, Object> deploymentRelatedEntityViewMap =
           relatedDeploymentViewBuilder.getDeploymentRelatedEntityViewMap(workflowExecution);
       String deploymentTimestampsField = WorkflowViewKeys.deploymentTimestamps;
-      result = result
-          && searchDao.addTimestamp(
-                 WorkflowSearchEntity.TYPE, deploymentTimestampsField, documentsToUpdate, DAYS_TO_RETAIN);
+      result = searchDao.addTimestamp(
+          WorkflowSearchEntity.TYPE, deploymentTimestampsField, documentsToUpdate, DAYS_TO_RETAIN);
 
       result = result
           && searchDao.appendToListInMultipleDocuments(WorkflowSearchEntity.TYPE, fieldToUpdate, documentsToUpdate,

@@ -183,9 +183,8 @@ public class EnvironmentChangeHandler implements ChangeHandler {
       Map<String, Object> deploymentRelatedEntityViewMap =
           relatedDeploymentViewBuilder.getDeploymentRelatedEntityViewMap(workflowExecution);
       String deploymentTimestampsField = EnvironmentViewKeys.deploymentTimestamps;
-      result = result
-          && searchDao.addTimestamp(
-                 EnvironmentSearchEntity.TYPE, deploymentTimestampsField, documentsToUpdate, DAYS_TO_RETAIN);
+      result = searchDao.addTimestamp(
+          EnvironmentSearchEntity.TYPE, deploymentTimestampsField, documentsToUpdate, DAYS_TO_RETAIN);
       result = result
           && searchDao.appendToListInMultipleDocuments(EnvironmentSearchEntity.TYPE, fieldToUpdate, documentsToUpdate,
                  deploymentRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
