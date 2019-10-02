@@ -11,8 +11,6 @@
         <Bug pattern="SE_BAD_FIELD" />
     </Match>
     <Match>
-    </Match>
-    <Match>
         <Package name="software.wings.service.impl.verification.generated" />
     </Match>
 </FindBugsFilter>

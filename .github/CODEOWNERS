@@ -1,8 +1,8 @@
 # pom files are essential for the build process and they can open security concerns with introducing new dependencies
 pom.xml                     @wings-software/portal_pom-maintainers
 
-# morphia registrar functionality can be tricky. Let have a second pair of eyes before we commit changes there.
-*MorphiaRegistrar.java      @george-harness
+# analytics configurations should be made carefully to avoid false positives
+/tools                      @george-harness
 
 # gitignores changes are ot frequent and can have tricky impact. Let have a second pair of eyes before we commit changes there.
 **/.gitignore               @george-harness
