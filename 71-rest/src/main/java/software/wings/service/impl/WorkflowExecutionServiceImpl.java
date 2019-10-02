@@ -1939,7 +1939,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public DeploymentMetadata fetchDeploymentMetadata(String appId, ExecutionArgs executionArgs) {
-    String accountId = appService.getAccountIdByAppId(appId);
     Validator.notNullCheck("Workflow type is required", executionArgs.getWorkflowType());
     DeploymentMetadata finalDeploymentMetadata;
     if (executionArgs.getWorkflowType() == ORCHESTRATION) {

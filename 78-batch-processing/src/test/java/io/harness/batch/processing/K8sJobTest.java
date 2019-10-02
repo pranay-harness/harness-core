@@ -1,10 +1,10 @@
 package io.harness.batch.processing;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
 import static io.harness.rule.OwnerRule.HANTANG;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.config.K8sBatchConfiguration;
