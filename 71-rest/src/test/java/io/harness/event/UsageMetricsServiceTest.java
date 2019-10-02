@@ -3,7 +3,7 @@ package io.harness.event;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.doNothing;
@@ -21,7 +21,6 @@ import io.harness.event.model.QueableEvent;
 import io.harness.event.usagemetrics.UsageMetricsService;
 import io.harness.metrics.HarnessMetricRegistry;
 import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -107,12 +106,12 @@ public class UsageMetricsServiceTest extends WingsBaseTest {
 
     String[] params = taskCaptorParams.getValue();
 
-    assertEquals(CV_META_DATA, taskCaptorName.getValue());
-    assertEquals(3, params.length);
-    assertEquals(1, taskCaptorValue.getValue().intValue());
+    assertThat(CV_META_DATA).isEqualTo(taskCaptorName.getValue());
+    assertThat(params.length).isEqualTo(3);
+    assertThat(taskCaptorValue.getValue().intValue()).isEqualTo(1);
 
     List<QueableEvent> events = wingsPersistence.createQuery(QueableEvent.class, excludeAuthority).asList();
-    Assert.assertTrue(isEmpty(events));
+    assertThat(isEmpty(events)).isTrue();
   }
 
   @Test

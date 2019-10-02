@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.annotation.HarnessEntity;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
@@ -42,12 +43,13 @@ public class PageRequestTest extends WingsBaseTest {
     String s;
   }
 
-  @Entity(value = "!!!testDummies", noClassnameStored = true)
   @Data
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
   @EqualsAndHashCode(callSuper = false)
+  @Entity(value = "!!!testDummies", noClassnameStored = true)
+  @HarnessEntity(exportable = false)
   public static class Dummy extends Base {
     private List<DummyItem> dummies;
     private String name;
