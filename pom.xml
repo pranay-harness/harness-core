@@ -55,7 +55,10 @@
         <gitCommitId>default</gitCommitId>
         <grpc.version>1.21.0</grpc.version>
         <ibatis.core.version>3.0</ibatis.core.version>
-        <jacoco.agent.skip>true</jacoco.agent.skip>
+        <jacoco.filename>jacoco</jacoco.filename>
+        <jacoco.integration.skip>true</jacoco.integration.skip>
+        <jacoco.merge.skip>true</jacoco.merge.skip>
+        <jacoco.unit.skip>true</jacoco.unit.skip>
         <jgit.version>5.3.0.201903130848-r</jgit.version>
         <maven.build.timestamp.format>yyMMdd-HHmm</maven.build.timestamp.format>
         <maven.deploy.skip>true</maven.deploy.skip>
@@ -1607,7 +1610,7 @@
                         <groups>${categories.integration}</groups>
                         <excludedGroups>${excludedCategories}</excludedGroups>
                         <includes>
-                            <include>**/*.java</include>
+                            <include>**/*.class</include>
                         </includes>
                         <excludes>
                             <exclude>**/DelegateIntegrationTest</exclude>
@@ -1736,18 +1739,36 @@
                     <fileSets>
                         <fileSet>
                             <directory>..</directory>
-                            <include>**/target/*.exec</include>
+                            <include>**/target/${jacoco.filename}.exec</include>
                         </fileSet>
                     </fileSets>
+                    <destFile>${project.build.directory}/${jacoco.filename}.exec</destFile>
                 </configuration>
                 <executions>
+                    <execution>
+                        <goals>
+                            <goal>merge</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${jacoco.merge.skip}</skip>
+                        </configuration>
+                    </execution>
                     <execution>
                         <id>agent</id>
                         <goals>
                             <goal>prepare-agent</goal>
                         </goals>
                         <configuration>
-                            <skip>${jacoco.agent.skip}</skip>
+                            <skip>${jacoco.unit.skip}</skip>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>agent-integration</id>
+                        <goals>
+                            <goal>prepare-agent-integration</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${jacoco.integration.skip}</skip>
                         </configuration>
                     </execution>
                 </executions>
