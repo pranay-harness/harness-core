@@ -160,6 +160,14 @@ public class StateExecutionServiceImpl implements StateExecutionService {
       return hostExclusionList;
     }
 
+    processPreviousPhaseExecutionsData(
+        stateExecutionInstance, phaseElement, infraMappingId, hostExclusionList, previousPhaseExecutionsData);
+    return hostExclusionList;
+  }
+
+  private void processPreviousPhaseExecutionsData(StateExecutionInstance stateExecutionInstance,
+      PhaseElement phaseElement, String infraMappingId, List<ServiceInstance> hostExclusionList,
+      List<StateExecutionData> previousPhaseExecutionsData) {
     for (StateExecutionData stateExecutionData : previousPhaseExecutionsData) {
       PhaseExecutionData phaseExecutionData = (PhaseExecutionData) stateExecutionData;
 
@@ -198,7 +206,6 @@ public class StateExecutionServiceImpl implements StateExecutionService {
         }
       }
     }
-    return hostExclusionList;
   }
 
   public StateExecutionData phaseStateExecutionData(String appId, String executionUuid, String phaseName) {
