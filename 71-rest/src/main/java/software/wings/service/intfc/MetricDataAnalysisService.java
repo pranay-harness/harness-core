@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import io.harness.beans.ExecutionStatus;
 import software.wings.metrics.TimeSeriesMetricDefinition;
+import software.wings.service.impl.analysis.DeploymentTimeSeriesAnalysis;
 import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
@@ -10,6 +11,7 @@ import software.wings.sm.StateType;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -21,13 +23,19 @@ public interface MetricDataAnalysisService {
   Set<NewRelicMetricAnalysisRecord> getMetricsAnalysis(
       String appId, String stateExecutionId, String workflowExecutionId);
 
+  DeploymentTimeSeriesAnalysis getMetricsAnalysis(
+      String stateExecutionId, Optional<Integer> offset, Optional<Integer> pageSize);
+
+  DeploymentTimeSeriesAnalysis getMetricsAnalysisForDemo(
+      String stateExecutionId, Optional<Integer> offset, Optional<Integer> pageSize);
+
   boolean isStateValid(String appId, String stateExecutionID);
 
   String getLastSuccessfulWorkflowExecutionIdWithData(
       StateType stateType, String appId, String workflowId, String serviceId, String infraMappingIds, String envId);
 
-  List<NewRelicMetricHostAnalysisValue> getToolTip(String stateExecutionId, String workflowExecutionId,
-      int analysisMinute, String transactionName, String metricName, String groupName);
+  List<NewRelicMetricHostAnalysisValue> getToolTip(
+      String stateExecutionId, int analysisMinute, String transactionName, String metricName, String groupName);
 
   List<NewRelicMetricHostAnalysisValue> getToolTipForDemo(String stateExecutionId, String workflowExecutionId,
       int analysisMinute, String transactionName, String metricName, String groupName);

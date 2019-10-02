@@ -12,6 +12,7 @@ import software.wings.verification.HeatMap;
 import software.wings.verification.TimeSeriesOfMetric;
 import software.wings.verification.TransactionTimeSeries;
 import software.wings.verification.VerificationDataAnalysisResponse;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.text.ParseException;
 import java.time.Instant;
@@ -65,4 +66,6 @@ public interface ContinuousVerificationService {
   boolean collectCVData(String cvTaskId);
 
   boolean createCVTask247(String cvTaskId, Instant startTime, Instant endTime);
+
+  VerificationStateAnalysisExecutionData getVerificationStateExecutionData(String stateExecutionId);
 }

@@ -37,6 +37,7 @@ public class VerificationStateAnalysisExecutionData extends StateExecutionData {
   private String correlationId;
   private String workflowExecutionId;
   private String stateExecutionInstanceId;
+  private String baselineExecutionId;
   private String serverConfigId;
   private int timeDuration;
   private Set<String> canaryNewHostNames;

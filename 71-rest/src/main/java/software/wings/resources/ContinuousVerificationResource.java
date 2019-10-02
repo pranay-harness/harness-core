@@ -4,6 +4,7 @@ import static software.wings.common.VerificationConstants.COLLECT_CV_DATA;
 import static software.wings.common.VerificationConstants.CREATE_CV_TASK_24X7_PATH_PREFIX;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
+import static software.wings.security.PermissionAttribute.ResourceType.SERVICE;
 
 import com.google.inject.Inject;
 
@@ -17,11 +18,13 @@ import software.wings.common.VerificationConstants;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.LearningEngineAuth;
+import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.apm.APMSetupTestNodeData;
 import software.wings.sm.StateType;
 import software.wings.verification.VerificationDataAnalysisResponse;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.time.Instant;
 import javax.validation.Valid;
@@ -37,6 +40,16 @@ import javax.ws.rs.QueryParam;
 @Slf4j
 public class ContinuousVerificationResource {
   @Inject private ContinuousVerificationService cvManagerService;
+
+  @GET
+  @Path("/verification-state-details")
+  @Timed
+  @Scope(SERVICE)
+  @ExceptionMetered
+  public RestResponse<VerificationStateAnalysisExecutionData> getVerificationStateExecutionData(
+      @QueryParam("accountId") final String accountId, @QueryParam("stateExecutionId") final String stateExecutionId) {
+    return new RestResponse<>(cvManagerService.getVerificationStateExecutionData(stateExecutionId));
+  }
 
   /**
    * Api to fetch Metric data for given node.

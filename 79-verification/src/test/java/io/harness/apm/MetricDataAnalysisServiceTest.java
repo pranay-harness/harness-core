@@ -10,9 +10,15 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.common.VerificationConstants.DEMO_FAILURE_TS_STATE_EXECUTION_ID;
+import static software.wings.common.VerificationConstants.DEMO_SUCCESS_TS_STATE_EXECUTION_ID;
+import static software.wings.service.impl.analysis.MetricDataAnalysisServiceImpl.DEFAULT_PAGE_SIZE;
+import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 
+import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
@@ -22,6 +28,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.managerclient.VerificationManagerClientHelper;
+import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
@@ -34,33 +41,49 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.beans.Application;
 import software.wings.dl.WingsPersistence;
+import software.wings.metrics.RiskLevel;
+import software.wings.service.impl.SettingsServiceImpl;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
+import software.wings.service.impl.analysis.DeploymentTimeSeriesAnalysis;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
 import software.wings.service.impl.analysis.MetricDataAnalysisServiceImpl;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLScores;
+import software.wings.service.impl.analysis.TimeSeriesMLTxnSummary;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
+import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
+import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.MetricDataAnalysisService;
+import software.wings.service.intfc.SettingsService;
+import software.wings.sm.StateExecutionData;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * Created by rsingh on 9/7/18.
@@ -96,7 +119,10 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     cvConfigId = wingsPersistence.save(new CVConfiguration());
     groupName = "groupName-";
     managerAnalysisService = new MetricDataAnalysisServiceImpl();
+    SettingsService settingsService = new SettingsServiceImpl();
     FieldUtils.writeField(managerAnalysisService, "wingsPersistence", wingsPersistence, true);
+    FieldUtils.writeField(settingsService, "wingsPersistence", wingsPersistence, true);
+    FieldUtils.writeField(managerAnalysisService, "settingsService", settingsService, true);
     FieldUtils.writeField(
         metricDataAnalysisService, "continuousVerificationService", continuousVerificationService, true);
   }
@@ -159,6 +185,242 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     assertThat(metricsAnalysis).isNotNull();
     assertThat(metricsAnalysis).hasSize(1);
     assertThat(isNotEmpty(metricsAnalysis.iterator().next().getMetricAnalyses())).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testAnalysisTag() throws IOException {
+    File file =
+        new File(getClass().getClassLoader().getResource("./time_series_todolist_analysis_record.json.zip").getFile());
+    TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
+        JsonUtils.asObject(readZippedContents(file), TimeSeriesMLAnalysisRecord.class);
+
+    int total = timeSeriesMLAnalysisRecord.getTransactions().size();
+    for (int i = 0; i < total; i++) {
+      final TimeSeriesMLTxnSummary timeSeriesMLTxnSummary =
+          timeSeriesMLAnalysisRecord.getTransactions().get(String.valueOf(i));
+      timeSeriesMLTxnSummary.setTxn_name("txn-" + i);
+      timeSeriesMLTxnSummary.getMetrics().forEach((s, timeSeriesSummary) -> {
+        timeSeriesSummary.setMax_risk(0);
+        timeSeriesSummary.setTest_avg(0.0);
+      });
+    }
+    timeSeriesMLAnalysisRecord.compressTransactions();
+    timeSeriesMLAnalysisRecord.setStateExecutionId(stateExecutionId);
+    timeSeriesMLAnalysisRecord.setAppId(appId);
+    timeSeriesMLAnalysisRecord.setUuid(null);
+    wingsPersistence.save(timeSeriesMLAnalysisRecord);
+
+    verifyAnalysisOffsetPageSizeAndSorting(total);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testLocalAnalysis() throws IOException {
+    File file = new File(
+        getClass().getClassLoader().getResource("./time_series_todolist_local_analysis_record.json.zip").getFile());
+    NewRelicMetricAnalysisRecord newRelicMetricAnalysisRecord =
+        JsonUtils.asObject(readZippedContents(file), NewRelicMetricAnalysisRecord.class);
+
+    int total = newRelicMetricAnalysisRecord.getMetricAnalyses().size();
+    for (int i = 0; i < total; i++) {
+      final NewRelicMetricAnalysis newRelicMetricAnalysis = newRelicMetricAnalysisRecord.getMetricAnalyses().get(i);
+      newRelicMetricAnalysis.setRiskLevel(RiskLevel.LOW);
+      newRelicMetricAnalysis.setMetricValues(Lists.newArrayList());
+      newRelicMetricAnalysis.setMetricName("txn-" + i);
+    }
+
+    newRelicMetricAnalysisRecord.setStateExecutionId(stateExecutionId);
+    newRelicMetricAnalysisRecord.setAppId(appId);
+    newRelicMetricAnalysisRecord.setUuid(null);
+    wingsPersistence.save(newRelicMetricAnalysisRecord);
+
+    verifyAnalysisOffsetPageSizeAndSorting(total);
+  }
+
+  private void verifyAnalysisOffsetPageSizeAndSorting(int total) {
+    wingsPersistence.save(AnalysisContext.builder().stateExecutionId(stateExecutionId).timeDuration(5).build());
+
+    DeploymentTimeSeriesAnalysis metricsAnalysis =
+        managerAnalysisService.getMetricsAnalysis(stateExecutionId, Optional.empty(), Optional.empty());
+    assertThat(metricsAnalysis).isNotNull();
+    assertThat(metricsAnalysis.getStateExecutionId()).isEqualTo(stateExecutionId);
+    assertThat(metricsAnalysis.getBaseLineExecutionId()).isNull();
+    assertThat(metricsAnalysis.getProgressPercentage()).isEqualTo(20);
+    assertThat(metricsAnalysis.getTotal()).isEqualTo(total);
+    assertThat(metricsAnalysis.getMetricAnalyses().size()).isEqualTo(DEFAULT_PAGE_SIZE);
+
+    List<NewRelicMetricAnalysis> metricAnalyses = metricsAnalysis.getMetricAnalyses();
+
+    // ask with page size
+    metricsAnalysis = managerAnalysisService.getMetricsAnalysis(stateExecutionId, Optional.empty(), Optional.of(10));
+    assertThat(metricsAnalysis).isNotNull();
+    assertThat(metricsAnalysis.getStateExecutionId()).isEqualTo(stateExecutionId);
+    assertThat(metricsAnalysis.getBaseLineExecutionId()).isNull();
+    assertThat(metricsAnalysis.getProgressPercentage()).isEqualTo(20);
+    assertThat(metricsAnalysis.getTotal()).isEqualTo(total);
+    assertThat(metricsAnalysis.getMetricAnalyses().size()).isEqualTo(DEFAULT_PAGE_SIZE);
+    assertThat(metricsAnalysis.getMetricAnalyses()).isEqualTo(metricAnalyses);
+    for (int i = 0; i < DEFAULT_PAGE_SIZE; i++) {
+      assertThat(metricsAnalysis.getMetricAnalyses().get(i).getMetricName()).isEqualTo("txn-" + i);
+    }
+
+    // test with offset and page size
+    int offset = 0;
+    while (offset < total) {
+      metricsAnalysis = managerAnalysisService.getMetricsAnalysis(
+          stateExecutionId, Optional.of(offset), Optional.of(DEFAULT_PAGE_SIZE));
+
+      for (int i = 0; i < metricsAnalysis.getMetricAnalyses().size(); i++) {
+        assertThat(metricsAnalysis.getMetricAnalyses().get(i).getMetricName()).isEqualTo("txn-" + (offset + i));
+      }
+      offset += metricsAnalysis.getMetricAnalyses().size();
+    }
+
+    // test with offset beyond the size
+    metricsAnalysis =
+        managerAnalysisService.getMetricsAnalysis(stateExecutionId, Optional.of(total), Optional.of(DEFAULT_PAGE_SIZE));
+    assertThat(metricsAnalysis.getMetricAnalyses().size()).isEqualTo(0);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testAnalysisNodeData() throws IOException {
+    File file =
+        new File(getClass().getClassLoader().getResource("./time_series_todolist_analysis_record.json.zip").getFile());
+    TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
+        JsonUtils.asObject(readZippedContents(file), TimeSeriesMLAnalysisRecord.class);
+
+    timeSeriesMLAnalysisRecord.compressTransactions();
+    timeSeriesMLAnalysisRecord.setStateExecutionId(stateExecutionId);
+    timeSeriesMLAnalysisRecord.setAppId(appId);
+    timeSeriesMLAnalysisRecord.setUuid(null);
+    wingsPersistence.save(timeSeriesMLAnalysisRecord);
+
+    wingsPersistence.save(AnalysisContext.builder().stateExecutionId(stateExecutionId).timeDuration(10).build());
+
+    DeploymentTimeSeriesAnalysis metricsAnalysis =
+        managerAnalysisService.getMetricsAnalysis(stateExecutionId, Optional.empty(), Optional.empty());
+    assertThat(metricsAnalysis).isNotNull();
+    assertThat(metricsAnalysis.getStateExecutionId()).isEqualTo(stateExecutionId);
+    assertThat(metricsAnalysis.getBaseLineExecutionId()).isNull();
+    assertThat(metricsAnalysis.getProgressPercentage()).isEqualTo(10);
+    assertThat(metricsAnalysis.getMetricAnalyses().size()).isEqualTo(DEFAULT_PAGE_SIZE);
+    verifyNodeData(metricsAnalysis, Optional.of("error"));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testAnalysisDemoFailure() throws IOException {
+    File file = new File(
+        getClass().getClassLoader().getResource("time_series_todolist_demo_failure_analysis.json.zip").getFile());
+    TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
+        JsonUtils.asObject(readZippedContents(file), TimeSeriesMLAnalysisRecord.class);
+
+    timeSeriesMLAnalysisRecord.compressTransactions();
+    timeSeriesMLAnalysisRecord.setAppId(appId);
+    wingsPersistence.save(timeSeriesMLAnalysisRecord);
+
+    wingsPersistence.save(AnalysisContext.builder().stateExecutionId(stateExecutionId).timeDuration(10).build());
+    final StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
+                                                              .uuid(stateExecutionId)
+                                                              .status(ExecutionStatus.FAILED)
+                                                              .stateType(StateType.APP_DYNAMICS.name())
+                                                              .displayName("abc")
+                                                              .build();
+    final String settingAttributeId = wingsPersistence.save(aSettingAttribute().withName("prod").build());
+    Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
+    stateExecutionMap.put(stateExecutionInstance.getDisplayName(),
+        VerificationStateAnalysisExecutionData.builder().serverConfigId(settingAttributeId).build());
+    stateExecutionInstance.setStateExecutionMap(stateExecutionMap);
+    wingsPersistence.save(stateExecutionInstance);
+
+    DeploymentTimeSeriesAnalysis metricsAnalysis =
+        managerAnalysisService.getMetricsAnalysisForDemo(stateExecutionId, Optional.empty(), Optional.empty());
+    assertThat(metricsAnalysis).isNotNull();
+    assertThat(metricsAnalysis.getStateExecutionId())
+        .isEqualTo(DEMO_FAILURE_TS_STATE_EXECUTION_ID + StateType.APP_DYNAMICS);
+    verifyNodeData(metricsAnalysis, Optional.empty());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testAnalysisDemoSuccess() throws IOException {
+    File file = new File(
+        getClass().getClassLoader().getResource("time_series_todolist_demo_success_analysis.json.zip").getFile());
+    TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
+        JsonUtils.asObject(readZippedContents(file), TimeSeriesMLAnalysisRecord.class);
+
+    timeSeriesMLAnalysisRecord.compressTransactions();
+    timeSeriesMLAnalysisRecord.setAppId(appId);
+    wingsPersistence.save(timeSeriesMLAnalysisRecord);
+
+    wingsPersistence.save(AnalysisContext.builder().stateExecutionId(stateExecutionId).timeDuration(10).build());
+    final StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
+                                                              .uuid(stateExecutionId)
+                                                              .status(ExecutionStatus.SUCCESS)
+                                                              .stateType(StateType.APP_DYNAMICS.name())
+                                                              .displayName("abc")
+                                                              .build();
+    final String settingAttributeId = wingsPersistence.save(aSettingAttribute().withName("dev").build());
+    Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
+    stateExecutionMap.put(stateExecutionInstance.getDisplayName(),
+        VerificationStateAnalysisExecutionData.builder().serverConfigId(settingAttributeId).build());
+    stateExecutionInstance.setStateExecutionMap(stateExecutionMap);
+    wingsPersistence.save(stateExecutionInstance);
+
+    DeploymentTimeSeriesAnalysis metricsAnalysis =
+        managerAnalysisService.getMetricsAnalysisForDemo(stateExecutionId, Optional.empty(), Optional.empty());
+    assertThat(metricsAnalysis).isNotNull();
+    assertThat(metricsAnalysis.getStateExecutionId())
+        .isEqualTo(DEMO_SUCCESS_TS_STATE_EXECUTION_ID + StateType.APP_DYNAMICS);
+    assertThat(metricsAnalysis.getMetricAnalyses().size()).isEqualTo(DEFAULT_PAGE_SIZE);
+    verifyNodeData(metricsAnalysis, Optional.empty());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testLocalAnalysisNodeData() throws IOException {
+    File file = new File(
+        getClass().getClassLoader().getResource("./time_series_todolist_local_analysis_record.json.zip").getFile());
+    NewRelicMetricAnalysisRecord newRelicMetricAnalysisRecord =
+        JsonUtils.asObject(readZippedContents(file), NewRelicMetricAnalysisRecord.class);
+
+    newRelicMetricAnalysisRecord.setStateExecutionId(stateExecutionId);
+    newRelicMetricAnalysisRecord.setAppId(appId);
+    newRelicMetricAnalysisRecord.setUuid(null);
+    wingsPersistence.save(newRelicMetricAnalysisRecord);
+
+    wingsPersistence.save(AnalysisContext.builder().stateExecutionId(stateExecutionId).timeDuration(5).build());
+
+    DeploymentTimeSeriesAnalysis metricsAnalysis =
+        managerAnalysisService.getMetricsAnalysis(stateExecutionId, Optional.empty(), Optional.empty());
+    assertThat(metricsAnalysis).isNotNull();
+    assertThat(metricsAnalysis.getStateExecutionId()).isEqualTo(stateExecutionId);
+    assertThat(metricsAnalysis.getBaseLineExecutionId()).isNull();
+    assertThat(metricsAnalysis.getProgressPercentage()).isEqualTo(20);
+    assertThat(metricsAnalysis.getMetricAnalyses().size()).isEqualTo(DEFAULT_PAGE_SIZE);
+    verifyNodeData(metricsAnalysis, Optional.of("error"));
+  }
+
+  private void verifyNodeData(DeploymentTimeSeriesAnalysis metricsAnalysis, Optional<String> metricName) {
+    for (int i = 0; i < DEFAULT_PAGE_SIZE; i++) {
+      final NewRelicMetricAnalysis metricAnalysis = metricsAnalysis.getMetricAnalyses().get(i);
+      metricAnalysis.getMetricValues().forEach(metricValue -> {
+        if (metricName.isPresent() && !metricValue.getName().equals(metricName)) {
+          return;
+        }
+        final List<NewRelicMetricHostAnalysisValue> hostAnalysisValues = metricValue.getHostAnalysisValues();
+        assertThat(hostAnalysisValues.size()).isGreaterThan(0);
+        hostAnalysisValues.forEach(hostAnalysisValue -> {
+          assertThat(hostAnalysisValue.getRiskLevel()).isNotNull();
+          assertThat(hostAnalysisValue.getTestHostName()).isNotNull();
+          assertThat(hostAnalysisValue.getControlHostName()).isNotNull();
+          assertThat(hostAnalysisValue.getTestValues().size()).isGreaterThan(0);
+          assertThat(hostAnalysisValue.getControlValues().size()).isGreaterThan(0);
+        });
+      });
+    }
   }
 
   private LearningEngineAnalysisTask getLearningEngineAnalysisTask() {
@@ -379,5 +641,26 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     config.setAppId("appId");
     config.setServiceId("serviceId");
     return config;
+  }
+
+  private String readZippedContents(File file) throws IOException {
+    ZipInputStream in = new ZipInputStream(new FileInputStream(file));
+
+    // Get the first entry
+    ZipEntry entry = in.getNextEntry();
+
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+    // Transfer bytes from the ZIP file to the output file
+    byte[] buf = new byte[1024];
+    int len;
+    while ((len = in.read(buf)) > 0) {
+      out.write(buf, 0, len);
+    }
+
+    out.close();
+    in.close();
+
+    return new String(out.toByteArray());
   }
 }

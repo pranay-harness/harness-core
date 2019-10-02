@@ -11,6 +11,7 @@ import software.wings.beans.FeatureName;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.analysis.DeploymentTimeSeriesAnalysis;
 import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
@@ -20,6 +21,7 @@ import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.StateType;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -39,6 +41,21 @@ public class TimeSeriesResource {
   @Inject private NewRelicService newRelicService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private MetricDataAnalysisService metricDataAnalysisService;
+
+  @GET
+  @Path("/metric-analysis")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<DeploymentTimeSeriesAnalysis> getMetricsAnalysis(
+      @QueryParam("stateExecutionId") final String stateExecutionId, @QueryParam("accountId") final String accountId,
+      @QueryParam("offset") final Integer offset, @QueryParam("pageSize") final Integer pageSize) {
+    if (featureFlagService.isEnabledReloadCache(FeatureName.CV_DEMO, accountId)) {
+      return new RestResponse<>(metricDataAnalysisService.getMetricsAnalysisForDemo(
+          stateExecutionId, Optional.ofNullable(offset), Optional.ofNullable(pageSize)));
+    }
+    return new RestResponse<>(metricDataAnalysisService.getMetricsAnalysis(
+        stateExecutionId, Optional.ofNullable(offset), Optional.ofNullable(pageSize)));
+  }
 
   @GET
   @Path("/generate-metrics-appdynamics")
@@ -69,8 +86,8 @@ public class TimeSeriesResource {
       return new RestResponse<>(metricDataAnalysisService.getToolTipForDemo(
           stateExecutionId, workflowExecutionId, analysisMinute, transactionName, metricName, groupName));
     }
-    return new RestResponse<>(metricDataAnalysisService.getToolTip(
-        stateExecutionId, workflowExecutionId, analysisMinute, transactionName, metricName, groupName));
+    return new RestResponse<>(
+        metricDataAnalysisService.getToolTip(stateExecutionId, analysisMinute, transactionName, metricName, groupName));
   }
 
   @POST

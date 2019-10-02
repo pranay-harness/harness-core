@@ -2,6 +2,7 @@ package software.wings.service.impl.newrelic;
 
 import static io.harness.beans.SortOrder.Builder.aSortOrder;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.math.Stats;
@@ -15,10 +16,12 @@ import software.wings.metrics.RiskLevel;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.appdynamics.AppdynamicsTimeSeries;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
+import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
 import software.wings.sm.StateType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -175,5 +178,28 @@ public class NewRelicMetricValueDefinition {
     }
 
     return values;
+  }
+
+  public List<NewRelicMetricHostAnalysisValue> getTestHostValues(Set<NewRelicMetricDataRecord> testRecords) {
+    List<NewRelicMetricHostAnalysisValue> hostAnalysisValues = new ArrayList<>();
+    Map<String, Set<NewRelicMetricDataRecord>> recordsSplitByHosts = new HashMap<>();
+    if (isNotEmpty(testRecords)) {
+      testRecords.forEach(testRecord -> {
+        if (!recordsSplitByHosts.containsKey(testRecord.getHost())) {
+          recordsSplitByHosts.put(testRecord.getHost(), new HashSet<>());
+        }
+
+        recordsSplitByHosts.get(testRecord.getHost()).add(testRecord);
+      });
+
+      recordsSplitByHosts.forEach(
+          (host, hostMetricDataRecords)
+              -> hostAnalysisValues.add(NewRelicMetricHostAnalysisValue.builder()
+                                            .testHostName(host)
+                                            .testValues(parseValuesForAnalysis(hostMetricDataRecords))
+                                            .build()));
+    }
+
+    return hostAnalysisValues;
   }
 }
