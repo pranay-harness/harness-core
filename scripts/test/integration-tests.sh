@@ -19,4 +19,5 @@ tar -czf dump.tar.gz dump/
 if [[ $test_status -ne 0 ]] ; then
   echo 'integration tests failed';
   exit $test_status
+
 fi
