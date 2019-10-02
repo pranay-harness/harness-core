@@ -4,7 +4,6 @@ import static io.harness.rule.OwnerRule.MARK;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
@@ -20,7 +19,8 @@ import io.harness.limits.defaults.service.DefaultLimitsService;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.lib.RateBasedLimit;
 import io.harness.rule.OwnerRule.Owner;
-import org.junit.BeforeClass;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -42,10 +42,11 @@ import java.util.concurrent.TimeUnit;
  * @author marklu on 9/12/19
  */
 @RunWith(Parameterized.class)
+@Slf4j
 public class GraphQLRateLimiterTest extends CategoryTest {
   @Parameter public boolean isInternalGraphQLCall;
   @Mock private LimitConfigurationService limitConfigurationService;
-  private static MainConfiguration mainConfiguration;
+  @Mock private MainConfiguration mainConfiguration;
 
   @Inject @InjectMocks private GraphQLRateLimiter rateLimiter;
 
@@ -56,12 +57,11 @@ public class GraphQLRateLimiterTest extends CategoryTest {
     return asList(new Object[][] {{true}, {false}});
   }
 
-  @BeforeClass
-  public static void setUp() {
-    mainConfiguration = mock(MainConfiguration.class);
+  @Before
+  public void setUp() {
     PortalConfig portalConfig = new PortalConfig();
-    portalConfig.setExternalGraphQLRateLimitPerMinute(50);
-    portalConfig.setCustomDashGraphQLRateLimitPerMinute(100);
+    portalConfig.setExternalGraphQLRateLimitPerMinute(25);
+    portalConfig.setCustomDashGraphQLRateLimitPerMinute(50);
     when(mainConfiguration.getPortal()).thenReturn(portalConfig);
   }
 
@@ -113,15 +113,12 @@ public class GraphQLRateLimiterTest extends CategoryTest {
     boolean overRateLimit = false;
     int globalRateLimit = isInternalGraphQLCall ? mainConfiguration.getPortal().getCustomDashGraphQLRateLimitPerMinute()
                                                 : mainConfiguration.getPortal().getExternalGraphQLRateLimitPerMinute();
-    for (int i = 0; i < globalRateLimit; i++) {
+    logger.info("isInternalGraphQLCall: {}; Global rate limit: {}", isInternalGraphQLCall, globalRateLimit);
+    // One more extra call will over the global limit
+    for (int i = 0; i < globalRateLimit + 1; i++) {
       String accountId = UUIDGenerator.generateUuid();
       overRateLimit = rateLimiter.isOverApiRateLimit(accountId, isInternalGraphQLCall);
     }
-    assertThat(overRateLimit).isFalse();
-
-    // One more extra call will over the limit
-    String accountId = UUIDGenerator.generateUuid();
-    overRateLimit = rateLimiter.isOverApiRateLimit(accountId, isInternalGraphQLCall);
     assertThat(overRateLimit).isTrue();
   }
 

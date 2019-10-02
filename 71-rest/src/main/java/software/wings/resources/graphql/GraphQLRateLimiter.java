@@ -7,15 +7,11 @@ import static io.harness.limits.defaults.service.DefaultLimitsService.GRAPHQL_RA
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import es.moki.ratelimitj.core.limiter.request.RequestLimitRule;
 import es.moki.ratelimitj.core.limiter.request.RequestRateLimiter;
 import es.moki.ratelimitj.inmemory.request.InMemorySlidingWindowRequestRateLimiter;
-import graphql.ExecutionResultImpl;
-import graphql.GraphqlErrorBuilder;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.limits.ActionType;
 import io.harness.limits.ConfiguredLimit;
@@ -27,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
-import software.wings.graphql.utils.GraphQLConstants;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -57,8 +52,6 @@ public class GraphQLRateLimiter {
 
   Cache<String, RequestRateLimiter> globalRateLimiterCache =
       Caffeine.newBuilder().maximumSize(10).expireAfterWrite(10, TimeUnit.MINUTES).build();
-
-  private static ObjectMapper objectMapper = new ObjectMapper();
 
   @Inject
   GraphQLRateLimiter(
@@ -95,20 +88,6 @@ public class GraphQLRateLimiter {
         }
       }
       return false;
-    }
-  }
-
-  public String getRateLimitReachedErrorMessage(String accountId, boolean isInternalGraphQLCall) {
-    String message = isInternalGraphQLCall ? String.format(GraphQLConstants.INTERNAL_RATE_LIMIT_REACHED, accountId)
-                                           : String.format(GraphQLConstants.EXTERNAL_RATE_LIMIT_REACHED, accountId);
-    try {
-      return objectMapper.writeValueAsString(ExecutionResultImpl.newExecutionResult()
-                                                 .addError(GraphqlErrorBuilder.newError().message(message).build())
-                                                 .build()
-                                                 .toSpecification());
-    } catch (JsonProcessingException e) {
-      // Should never happen.
-      return message;
     }
   }
 
