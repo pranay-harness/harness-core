@@ -54,6 +54,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
@@ -149,7 +150,8 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
     assertThat(result).hasSize(0);
   }
 
-  private LogMLAnalysisRecord buildAnalysisRecord(int analysisMin, LogMLAnalysisStatus status, String cvConfigId) {
+  private LogMLAnalysisRecord buildAnalysisRecord(
+      int analysisMin, LogMLAnalysisStatus status, String cvConfigId, Optional<String> feedbackId) {
     LogMLAnalysisRecord firstRec = LogMLAnalysisRecord.builder()
                                        .uuid(generateUuid())
                                        .cvConfigId(cvConfigId)
@@ -163,6 +165,9 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
     for (int i = 0; i < 10; i++) {
       SplunkAnalysisCluster cluster = getRandomClusterEvent();
       cluster.setCluster_label(i);
+      if (feedbackId.isPresent()) {
+        cluster.setFeedback_id(feedbackId.get());
+      }
       clusterEvents.add(cluster);
       Map<String, SplunkAnalysisCluster> hostMap = new HashMap<>();
       String host = UUID.randomUUID().toString() + ".harness.com";
@@ -220,10 +225,12 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
     int firstRecMinute = (int) TimeUnit.MILLISECONDS.toMinutes(startTime) - 15;
     int secondRecMinute = (int) TimeUnit.MILLISECONDS.toMinutes(endTime);
 
-    wingsPersistence.save(buildAnalysisRecord(firstRecMinute, LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE, cvConfigId));
-    wingsPersistence.save(buildAnalysisRecord(secondRecMinute, LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE, cvConfigId));
     wingsPersistence.save(
-        buildAnalysisRecord(secondRecMinute, LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE, cvConfigId));
+        buildAnalysisRecord(firstRecMinute, LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE, cvConfigId, Optional.empty()));
+    wingsPersistence.save(
+        buildAnalysisRecord(secondRecMinute, LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE, cvConfigId, Optional.empty()));
+    wingsPersistence.save(buildAnalysisRecord(
+        secondRecMinute, LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE, cvConfigId, Optional.empty()));
 
     LogMLAnalysisSummary summary = cv24x7DashboardService.getAnalysisSummary(cvConfigId, startTime, endTime, appId);
 
@@ -232,8 +239,32 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testGetAnalysisSummaryFeedbackData() throws Exception {
+  public void testFeedbackSummary() {
     String cvConfigId = generateUuid();
+    createAndSaveSumoConfig(cvConfigId);
+    enableFeatureFlag(FeatureName.CV_FEEDBACKS);
+
+    long endTime = Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(10);
+    long startTime = Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(25);
+    int firstRecMinute = (int) TimeUnit.MILLISECONDS.toMinutes(startTime) - 15;
+    int secondRecMinute = (int) TimeUnit.MILLISECONDS.toMinutes(endTime);
+    CVFeedbackRecord record = createFeedbackRecordInDB(cvConfigId, firstRecMinute);
+    wingsPersistence.save(
+        buildAnalysisRecord(secondRecMinute, LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE, cvConfigId, Optional.empty()));
+    LogMLAnalysisRecord analysisRecord = buildAnalysisRecord(
+        secondRecMinute, LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE, cvConfigId, Optional.of(record.getUuid()));
+
+    wingsPersistence.save(analysisRecord);
+
+    LogMLAnalysisSummary summary = cv24x7DashboardService.getAnalysisSummary(cvConfigId, startTime, endTime, appId);
+
+    assertThat(summary.getUnknownClusters()).hasSize(10);
+    assertThat(summary.getUnknownClusters().get(0).getLogMLFeedbackId()).isEqualTo(record.getUuid());
+    assertThat(summary.getUnknownClusters().get(0).getFeedbackSummary()).isNotNull();
+    assertThat(summary.getUnknownClusters().get(0).getFeedbackSummary().getJiraLink()).isEqualTo("testJiraLink");
+  }
+
+  private void createAndSaveSumoConfig(String cvConfigId) {
     LogsCVConfiguration sumoCOnfig = new LogsCVConfiguration();
     sumoCOnfig.setAppId(appId);
     sumoCOnfig.setQuery("exception");
@@ -241,6 +272,33 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
     sumoCOnfig.setUuid(cvConfigId);
 
     wingsPersistence.save(sumoCOnfig);
+  }
+
+  private CVFeedbackRecord createFeedbackRecordInDB(String cvConfigId, long analysisMin) {
+    String uuid = generateUuid();
+    CVFeedbackRecord feedbackRecord =
+        CVFeedbackRecord.builder()
+            .accountId(accountId)
+            .cvConfigId(cvConfigId)
+            .analysisMinute(analysisMin)
+            .clusterType(CLUSTER_TYPE.UNKNOWN)
+            .actionTaken(FeedbackAction.UPDATE_PRIORITY)
+            .priority(FeedbackPriority.P4)
+            .lastUpdatedBy(EmbeddedUser.builder().name("HarnessTestUser").uuid(generateUuid()).build())
+            .lastUpdatedAt(System.currentTimeMillis())
+            .jiraLink("testJiraLink")
+            .uuid(uuid)
+            .build();
+
+    wingsPersistence.save(feedbackRecord);
+    return feedbackRecord;
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetAnalysisSummaryFeedbackData() throws Exception {
+    String cvConfigId = generateUuid();
+    createAndSaveSumoConfig(cvConfigId);
     enableFeatureFlag(FeatureName.CV_FEEDBACKS);
 
     long endTime = Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(10);
@@ -249,24 +307,14 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
     int secondRecMinute = (int) TimeUnit.MILLISECONDS.toMinutes(endTime);
 
     // create feedbacks
-    CVFeedbackRecord feedbackRecord =
-        CVFeedbackRecord.builder()
-            .accountId(accountId)
-            .cvConfigId(cvConfigId)
-            .analysisMinute(secondRecMinute)
-            .clusterType(CLUSTER_TYPE.UNKNOWN)
-            .actionTaken(FeedbackAction.UPDATE_PRIORITY)
-            .priority(FeedbackPriority.P4)
-            .lastUpdatedBy(EmbeddedUser.builder().name("HarnessTestUser").uuid(generateUuid()).build())
-            .lastUpdatedAt(System.currentTimeMillis())
-            .build();
+    CVFeedbackRecord feedbackRecord = createFeedbackRecordInDB(cvConfigId, secondRecMinute);
 
-    wingsPersistence.save(feedbackRecord);
-
-    wingsPersistence.save(buildAnalysisRecord(firstRecMinute, LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE, cvConfigId));
-    wingsPersistence.save(buildAnalysisRecord(secondRecMinute, LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE, cvConfigId));
     wingsPersistence.save(
-        buildAnalysisRecord(secondRecMinute, LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE, cvConfigId));
+        buildAnalysisRecord(firstRecMinute, LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE, cvConfigId, Optional.empty()));
+    wingsPersistence.save(
+        buildAnalysisRecord(secondRecMinute, LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE, cvConfigId, Optional.empty()));
+    wingsPersistence.save(buildAnalysisRecord(
+        secondRecMinute, LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE, cvConfigId, Optional.empty()));
 
     LogMLAnalysisSummary summary = cv24x7DashboardService.getAnalysisSummary(cvConfigId, startTime, endTime, appId);
 
@@ -303,10 +351,12 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
     int firstRecMinute = (int) TimeUnit.MILLISECONDS.toMinutes(startTime) + 15;
     int secondRecMinute = (int) TimeUnit.MILLISECONDS.toMinutes(endTime);
 
-    wingsPersistence.save(buildAnalysisRecord(firstRecMinute, LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE, cvConfigId));
-    wingsPersistence.save(buildAnalysisRecord(secondRecMinute, LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE, cvConfigId));
     wingsPersistence.save(
-        buildAnalysisRecord(secondRecMinute, LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE, cvConfigId));
+        buildAnalysisRecord(firstRecMinute, LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE, cvConfigId, Optional.empty()));
+    wingsPersistence.save(
+        buildAnalysisRecord(secondRecMinute, LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE, cvConfigId, Optional.empty()));
+    wingsPersistence.save(buildAnalysisRecord(
+        secondRecMinute, LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE, cvConfigId, Optional.empty()));
 
     LogMLAnalysisSummary summary = cv24x7DashboardService.getAnalysisSummary(cvConfigId, startTime, endTime, appId);
 

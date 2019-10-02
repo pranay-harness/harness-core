@@ -863,27 +863,44 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   public void updateClustersWithFeedback(Map<CLUSTER_TYPE, Map<Integer, CVFeedbackRecord>> clusterTypeRecordMap,
       CLUSTER_TYPE type, List<LogMLClusterSummary> clusterList) {
+    // first set all the feedback data for which the logMLFeedbackId is already present.
+    if (isNotEmpty(clusterList)) {
+      clusterList.forEach(cluster -> {
+        if (isNotEmpty(cluster.getLogMLFeedbackId())) {
+          CVFeedbackRecord feedbackRecord =
+              dataStoreService.getEntity(CVFeedbackRecord.class, cluster.getLogMLFeedbackId());
+          addFeedbackDataToCluster(cluster, feedbackRecord);
+        }
+      });
+    }
+
+    // update the clusters for which feedback was given in this state
     if (clusterTypeRecordMap.containsKey(type)) {
       Map<Integer, CVFeedbackRecord> labelMap = clusterTypeRecordMap.get(type);
       clusterList.forEach(cluster -> {
         if (labelMap.containsKey(cluster.getClusterLabel())) {
-          CVFeedbackRecord record = labelMap.get(cluster.getClusterLabel());
-          cluster.setJiraLink(record.getJiraLink());
-          cluster.setPriority(record.getPriority());
-          cluster.setLogMLFeedbackId(record.getUuid());
-          LogMLFeedbackSummary feedbackSummary = LogMLFeedbackSummary.builder()
-                                                     .logMLFeedbackId(record.getUuid())
-                                                     .jiraLink(record.getJiraLink())
-                                                     .priority(record.getPriority())
-                                                     .feedbackNote(record.getFeedbackNote())
-                                                     .lastUpdatedAt(record.getLastUpdatedAt())
-                                                     .lastUpdatedBy(record.getLastUpdatedBy())
-                                                     .build();
-          cluster.setFeedbackSummary(feedbackSummary);
+          CVFeedbackRecord feedbackRecord = labelMap.get(cluster.getClusterLabel());
+          addFeedbackDataToCluster(cluster, feedbackRecord);
         }
       });
     }
   }
+
+  private void addFeedbackDataToCluster(LogMLClusterSummary cluster, CVFeedbackRecord record) {
+    cluster.setJiraLink(record.getJiraLink());
+    cluster.setPriority(record.getPriority());
+    cluster.setLogMLFeedbackId(record.getUuid());
+    LogMLFeedbackSummary feedbackSummary = LogMLFeedbackSummary.builder()
+                                               .logMLFeedbackId(record.getUuid())
+                                               .jiraLink(record.getJiraLink())
+                                               .priority(record.getPriority())
+                                               .feedbackNote(record.getFeedbackNote())
+                                               .lastUpdatedAt(record.getLastUpdatedAt())
+                                               .lastUpdatedBy(record.getLastUpdatedBy())
+                                               .build();
+    cluster.setFeedbackSummary(feedbackSummary);
+  }
+
   private void populateWorkflowDetails(LogMLAnalysisSummary analysisSummary, AnalysisContext analysisContext) {
     if (analysisSummary == null || analysisContext == null) {
       return;
