@@ -401,7 +401,7 @@ public class HelmDeployState extends State {
       ExecutionContext context, Map<String, ResponseData> response) throws InterruptedException {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String appId = workflowStandardParams.getAppId();
-    String activityId = getActivityId(context);
+    String activityId = obtainActivityId(context);
     HelmValuesFetchTaskResponse executionResponse = (HelmValuesFetchTaskResponse) response.values().iterator().next();
     ExecutionStatus executionStatus =
         executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
@@ -430,7 +430,7 @@ public class HelmDeployState extends State {
     }
   }
 
-  public String getActivityId(ExecutionContext context) {
+  public String obtainActivityId(ExecutionContext context) {
     return ((HelmDeployStateExecutionData) context.getStateExecutionData()).getActivityId();
   }
 
@@ -870,7 +870,7 @@ public class HelmDeployState extends State {
       ExecutionContext context, Map<String, ResponseData> response) throws InterruptedException {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String appId = workflowStandardParams.getAppId();
-    String activityId = getActivityId(context);
+    String activityId = obtainActivityId(context);
 
     GitCommandExecutionResponse executionResponse = (GitCommandExecutionResponse) response.values().iterator().next();
     ExecutionStatus executionStatus = executionResponse.getGitCommandStatus().equals(GitCommandStatus.SUCCESS)
