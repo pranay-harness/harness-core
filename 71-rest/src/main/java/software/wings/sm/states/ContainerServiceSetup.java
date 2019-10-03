@@ -27,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
-import software.wings.api.ClusterElement;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.CommandStateExecutionData.Builder;
 import software.wings.api.ContainerServiceData;
@@ -56,7 +55,6 @@ import software.wings.beans.command.KubernetesSetupParams;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ImageDetails;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
-import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -94,17 +92,16 @@ public abstract class ContainerServiceSetup extends State {
   private String maxInstances; // Number for first time when using "Same as already running" in the UI
   private ResizeStrategy resizeStrategy;
   private int serviceSteadyStateTimeout; // Minutes
-  @Inject @Transient protected transient SettingsService settingsService;
-  @Inject @Transient protected transient ServiceResourceService serviceResourceService;
-  @Inject @Transient protected transient InfrastructureMappingService infrastructureMappingService;
-  @Inject @Transient protected transient ArtifactStreamService artifactStreamService;
-  @Inject @Transient protected transient FeatureFlagService featureFlagService;
-  @Inject @Transient protected transient SecretManager secretManager;
-  @Inject @Transient protected transient EncryptionService encryptionService;
-  @Inject @Transient protected transient ActivityService activityService;
-  @Inject @Transient protected transient DelegateService delegateService;
-  @Inject @Transient protected transient ContainerDeploymentManagerHelper containerDeploymentHelper;
-  @Inject @Transient private transient AwsCommandHelper awsCommandHelper;
+  @Inject @Transient protected SettingsService settingsService;
+  @Inject @Transient protected ServiceResourceService serviceResourceService;
+  @Inject @Transient protected InfrastructureMappingService infrastructureMappingService;
+  @Inject @Transient protected ArtifactStreamService artifactStreamService;
+  @Inject @Transient protected FeatureFlagService featureFlagService;
+  @Inject @Transient protected SecretManager secretManager;
+  @Inject @Transient protected EncryptionService encryptionService;
+  @Inject @Transient protected ActivityService activityService;
+  @Inject @Transient protected DelegateService delegateService;
+  @Inject @Transient private AwsCommandHelper awsCommandHelper;
   @Inject @Transient private ArtifactCollectionUtils artifactCollectionUtils;
 
   ContainerServiceSetup(String name, String type) {
@@ -424,16 +421,6 @@ public abstract class ContainerServiceSetup extends State {
 
     activity.setAppId(app.getUuid());
     return activityService.save(activity);
-  }
-
-  protected String getClusterNameFromContextElement(ExecutionContext context) {
-    Optional<ClusterElement> contextElement =
-        context.<ClusterElement>getContextElementList(ContextElementType.CLUSTER)
-            .stream()
-            .filter(clusterElement -> context.fetchInfraMappingId().equals(clusterElement.getInfraMappingId()))
-            .findFirst();
-
-    return contextElement.isPresent() ? contextElement.get().getName() : "";
   }
 
   protected abstract String getDeploymentType();

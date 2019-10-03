@@ -91,7 +91,7 @@ public class RestLogAppender<E> extends AppenderBase<E> {
     lines.add(new LogLine("Init logdna using " + baseUrl, Level.INFO.toString(), programName));
 
     new SimpleTimeLimiter().callWithTimeout(() -> {
-      Flow.retry(3, ofSeconds(1), () -> restClient.postLogs(getAuthHeader(), localhostName, logLines).execute());
+      Flow.retry(3, ofSeconds(1), () -> restClient.postLogs(getAuthHeader(), localhostName, lines).execute());
       return true;
     }, 5, TimeUnit.SECONDS, true);
     logger.info("Connection to logdna succeeded using connection: {}", baseUrl);
