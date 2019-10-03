@@ -299,6 +299,38 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  public void shouldThrowExceptionWithArtifactStreamId() {
+    DeploymentTrigger trigger =
+        DeploymentTrigger.builder()
+            .name("Artifact Pipeline1")
+            .appId(APP_ID)
+            .action(PipelineAction.builder()
+                        .pipelineId(PIPELINE_ID)
+                        .triggerArgs(TriggerArgs.builder().triggerArtifactVariables(triggerArtifactVariables).build())
+                        .build())
+            .condition(ArtifactCondition.builder()
+                           .artifactStreamId(ARTIFACT_STREAM_ID)
+                           .artifactServerId(SETTING_ID)
+                           .artifactFilter(ARTIFACT_FILTER)
+                           .build())
+            .build();
+
+    Artifact artifact = prepareArtifact(ARTIFACT_ID);
+
+    deploymentTriggerService.save(trigger, false);
+
+    when(pipelineService.fetchDeploymentMetadata(
+             APP_ID, PIPELINE_ID, new HashMap<>(), null, null, Include.ARTIFACT_SERVICE))
+        .thenThrow(new TriggerException("Invalid input", null));
+
+    assertThatExceptionOfType(TriggerException.class)
+        .isThrownBy(()
+                        -> deploymentTriggerService.triggerExecutionPostArtifactCollectionAsync(
+                            ACCOUNT_ID, APP_ID, ARTIFACT_STREAM_ID, asList(artifact)));
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void shouldTriggerExecutionPostArtifactCollectionWithFileNotMatchesArtifactFilter() {
     when(workflowExecutionService.triggerEnvExecution(
              anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class)))

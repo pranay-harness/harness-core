@@ -16,7 +16,6 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.EntityType;
@@ -171,19 +170,14 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
   @Override
   public void triggerExecutionPostArtifactCollectionAsync(
       String accountId, String appId, String artifactStreamId, List<Artifact> artifacts) {
-    try {
-      ArtifactTriggerProcessor triggerProcessor =
-          (ArtifactTriggerProcessor) triggerProcessorMapBinder.get(NEW_ARTIFACT.name());
+    ArtifactTriggerProcessor triggerProcessor =
+        (ArtifactTriggerProcessor) triggerProcessorMapBinder.get(NEW_ARTIFACT.name());
 
-      triggerProcessor.executeTriggerOnEvent(appId,
-          ArtifactTriggerProcessor.ArtifactTriggerExecutionParams.builder()
-              .artifactStreamId(artifactStreamId)
-              .collectedArtifacts(artifacts)
-              .build());
-    } catch (WingsException wingsException) {
-      logger.error(wingsException.getMessage() + "for artifactStreamId ${} appId ${}", artifactStreamId, appId);
-      throw wingsException;
-    }
+    triggerProcessor.executeTriggerOnEvent(appId,
+        ArtifactTriggerProcessor.ArtifactTriggerExecutionParams.builder()
+            .artifactStreamId(artifactStreamId)
+            .collectedArtifacts(artifacts)
+            .build());
   }
 
   @Override
