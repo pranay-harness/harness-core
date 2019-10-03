@@ -73,7 +73,7 @@ public class CVConfigurationServiceTest extends BaseIntegrationTest {
     String updated = cvConfigurationService.updateConfiguration(
         accountId, appId, StateType.APP_DYNAMICS, cvServiceConfiguration2, uuid2);
 
-    assertThat(updated).isEqualTo("Updated UUID should be same", uuid2);
+    assertThat(updated).isEqualTo(uuid2, "Updated UUID should be same");
   }
 
   @Test(expected = WingsException.class)
