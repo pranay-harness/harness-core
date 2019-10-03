@@ -15,7 +15,7 @@ public class TestPersistenceMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerImplementationClasses(Map<String, Class> map) {
     final HelperPut h = (name, clazz) -> {
-      map.put(pkgHarness + name, clazz);
+      map.put(PKG_HARNESS + name, clazz);
     };
 
     // from commons

@@ -919,11 +919,11 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
 
   @Override
   public void registerImplementationClasses(Map<String, Class> map) {
-    final HelperPut h = (name, clazz) -> map.put(pkgHarness + name, clazz);
+    final HelperPut h = (name, clazz) -> map.put(PKG_HARNESS + name, clazz);
 
     h.put("marketplace.gcp.events.AccountActiveEvent", AccountActiveEvent.class);
 
-    final HelperPut w = (name, clazz) -> map.put(pkgWings + name, clazz);
+    final HelperPut w = (name, clazz) -> map.put(PKG_WINGS + name, clazz);
 
     w.put("api.AmiServiceDeployElement", AmiServiceDeployElement.class);
     w.put("api.AmiServiceSetupElement", AmiServiceSetupElement.class);
