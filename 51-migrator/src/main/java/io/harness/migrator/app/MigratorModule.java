@@ -9,7 +9,9 @@ import java.util.Set;
 
 public class MigratorModule extends DependencyModule {
   @Override
-  protected void configure() {}
+  protected void configure() {
+    // nothing to configure
+  }
 
   @Override
   public Set<DependencyModule> dependencies() {

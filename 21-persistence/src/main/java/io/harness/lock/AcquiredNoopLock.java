@@ -11,8 +11,12 @@ public class AcquiredNoopLock implements AcquiredLock {
   }
 
   @Override
-  public void release() {}
+  public void release() {
+    // noop release
+  }
 
   @Override
-  public void close() {}
+  public void close() {
+    // noop close
+  }
 }

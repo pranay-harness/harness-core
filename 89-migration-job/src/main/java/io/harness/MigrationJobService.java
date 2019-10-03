@@ -10,5 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MigrationJobService {
   @Inject MongoIndexMigrationService mongoIndexMigrationService;
-  public void migrate() {}
+  public void migrate() {
+    // TODO: implement this
+  }
 }

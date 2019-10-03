@@ -17,5 +17,7 @@ public class VerificationMorphiaRegistrar implements MorphiaRegistrar {
   }
 
   @Override
-  public void registerImplementationClasses(Map<String, Class> map) {}
+  public void registerImplementationClasses(Map<String, Class> map) {
+    // no classes to register
+  }
 }

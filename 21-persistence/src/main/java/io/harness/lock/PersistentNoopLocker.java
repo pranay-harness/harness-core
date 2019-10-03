@@ -50,5 +50,7 @@ public class PersistentNoopLocker implements Locker {
   }
 
   @Override
-  public void destroy(AcquiredLock acquiredLock) {}
+  public void destroy(AcquiredLock acquiredLock) {
+    // Nothing to do
+  }
 }

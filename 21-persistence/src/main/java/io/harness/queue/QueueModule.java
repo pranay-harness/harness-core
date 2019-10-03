@@ -9,6 +9,7 @@ import io.harness.govern.ServersModule;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Closeable;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -24,11 +25,13 @@ public class QueueModule extends DependencyModule implements ServersModule {
   }
 
   @Override
-  protected void configure() {}
+  protected void configure() {
+    // nothing to configure
+  }
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return null;
+    return Collections.emptySet();
   }
 
   @Override
