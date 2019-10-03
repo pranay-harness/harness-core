@@ -7,7 +7,9 @@ import javax.validation.ConstraintValidatorContext;
 
 public class TrimmedValidatorForString implements ConstraintValidator<Trimmed, String> {
   @Override
-  public void initialize(Trimmed constraintAnnotation) {}
+  public void initialize(Trimmed constraintAnnotation) {
+    // Nothing to initialize
+  }
 
   @Override
   public boolean isValid(String value, ConstraintValidatorContext context) {
