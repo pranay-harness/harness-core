@@ -387,7 +387,7 @@ public class TemplateServiceTest extends TemplateBaseTest {
 
     Object command = templateService.constructEntityFromTemplate(template.getUuid(), "1", EntityType.COMMAND);
     assertThat(command).isNotNull();
-    assertThat(command instanceof Command);
+    assertThat(command instanceof Command).isTrue();
     Command sshcommand = (Command) command;
     assertThat(sshcommand.getCommandUnits()).isNotEmpty();
   }
@@ -436,7 +436,7 @@ public class TemplateServiceTest extends TemplateBaseTest {
 
     Object http = templateService.constructEntityFromTemplate(savedTemplate.getUuid(), "1", EntityType.WORKFLOW);
     assertThat(http).isNotNull();
-    assertThat(http instanceof GraphNode);
+    assertThat(http instanceof GraphNode).isTrue();
     GraphNode graphNode = (GraphNode) http;
     assertThat(graphNode).isNotNull();
     assertThat(graphNode.getProperties()).isNotNull().containsKeys("url", "header");

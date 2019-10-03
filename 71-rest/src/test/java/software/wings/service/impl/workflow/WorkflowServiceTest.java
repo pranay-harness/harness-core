@@ -880,10 +880,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .extracting(PhaseStep::getPhaseStepType)
         .contains(CONTAINER_SETUP, CONTAINER_DEPLOY, VERIFY_SERVICE, WRAP_UP);
 
-    assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, workflow)).contains(EntityType.ARTIFACT);
+    assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, workflow).contains(EntityType.ARTIFACT)).isTrue();
     assertThat(workflowService.fetchDeploymentMetadata(APP_ID, savedWorkflow, null, null, null)
                    .getArtifactRequiredServiceIds()
-                   .contains(SERVICE_ID));
+                   .contains(SERVICE_ID))
+        .isTrue();
   }
 
   @Test
@@ -913,7 +914,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .extracting(PhaseStep::getPhaseStepType)
         .contains(CLUSTER_SETUP, CONTAINER_SETUP, CONTAINER_DEPLOY, VERIFY_SERVICE, WRAP_UP);
 
-    assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, workflow)).contains(EntityType.ARTIFACT);
+    assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, workflow).contains(EntityType.ARTIFACT)).isTrue();
     assertThat(workflowService.fetchDeploymentMetadata(APP_ID, savedWorkflow, null, null, null)
                    .getArtifactRequiredServiceIds()
                    .contains(SERVICE_ID));
@@ -971,7 +972,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, workflow)).contains(EntityType.ARTIFACT);
     assertThat(workflowService.fetchDeploymentMetadata(APP_ID, savedWorkflow, null, null, null)
                    .getArtifactRequiredServiceIds()
-                   .contains(SERVICE_ID));
+                   .contains(SERVICE_ID))
+        .isTrue();
 
     Set<Entry<String, WorkflowPhase>> entries = orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().entrySet();
     Entry<String, WorkflowPhase> entry = (Entry<String, WorkflowPhase>) entries.toArray()[0];

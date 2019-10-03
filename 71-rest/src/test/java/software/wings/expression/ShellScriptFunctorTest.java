@@ -12,20 +12,21 @@ import software.wings.WingsBaseTest;
 public class ShellScriptFunctorTest extends WingsBaseTest {
   private static final String ESCAPE_CHAR = "a'b\"c`d$e~f!g@h#i%j^k&l*m(n)o-p_r{s}t[]|;:u,v.w/x?y";
   public static final String ESCAPED_CHARS = "a\\'b\\\"c\\`d\\$e~f!g@h#i%j^k\\&l*m\\(n\\)o-p_r{s}t[]\\|\\;:u,v.w/x?y";
+  public static final String POWERSHELL_ESCAPED_CHARS = "\"a'b`\"c`d$e~f!g@h#i%j^k&l*m(n)o-p_r{s}t[]|;:u,v.w/x?y\"";
   public static final String DON_T = "don't";
 
   @Test
   @Category(UnitTests.class)
   public void testEscapifyBash() {
     ShellScriptFunctor shellScriptFunctor = new ShellScriptFunctor(ScriptType.BASH);
-    assertThat(shellScriptFunctor.escape(ESCAPE_CHAR).equals(ESCAPED_CHARS));
+    assertThat(shellScriptFunctor.escape(ESCAPE_CHAR)).isEqualTo(ESCAPED_CHARS);
   }
 
   @Test
   @Category(UnitTests.class)
   public void testEscapifyPowershell() {
     ShellScriptFunctor shellScriptFunctor = new ShellScriptFunctor(ScriptType.POWERSHELL);
-    assertThat(shellScriptFunctor.escape(ESCAPE_CHAR).equals(ESCAPED_CHARS));
+    assertThat(shellScriptFunctor.escape(ESCAPE_CHAR)).isEqualTo(POWERSHELL_ESCAPED_CHARS);
   }
 
   @Test
