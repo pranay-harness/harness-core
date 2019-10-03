@@ -28,7 +28,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DepTriggerWebhookFunctionalTest extends AbstractTriggerFunctionalTest {
+public class DepTriggerWebhookFunctionalTest extends AbstractTriggerFunctionalTestHelper {
   @Inject private WebHookServiceImpl webHookService;
   final String token = CryptoUtils.secureRandAlphaNumString(40);
 

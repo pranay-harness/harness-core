@@ -17,7 +17,7 @@ import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.TriggerArgs;
 import software.wings.beans.trigger.WorkflowAction;
 
-public class DepTriggerNewArtifactFunctionalTest extends AbstractTriggerFunctionalTest {
+public class DepTriggerNewArtifactFunctionalTest extends AbstractTriggerFunctionalTestHelper {
   @Test
   @Category(FunctionalTests.class)
   public void shouldCRUDArtifactTriggerForWorkflow() {

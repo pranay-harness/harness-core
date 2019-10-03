@@ -143,7 +143,7 @@ public class WebhookConditionTriggerTest extends WingsBaseTest {
     assertThat(((WebhookCondition) trigger.getCondition()).getWebHookToken()).isNotNull();
     assertThat(((WebhookCondition) trigger.getCondition()).getPayloadSource()).isNotNull();
 
-    assertThat(gitHubPayloadSource.getGitHubEventTypes().equals(asList(GitHubEventType.PUSH)));
+    assertThat(gitHubPayloadSource.getGitHubEventTypes().equals(asList(GitHubEventType.PUSH))).isTrue();
 
     trigger.setAction(getWorkflowAction());
 
