@@ -1,5 +1,6 @@
-package software.wings.service.impl;
+package software.wings.service.impl.analysis;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -7,13 +8,18 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.common.base.Charsets;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.common.io.Resources;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
 import io.harness.category.element.UnitTests;
+import io.harness.serializer.YamlUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,28 +33,43 @@ import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.User;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
+import software.wings.metrics.MetricType;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserPermissionInfo;
-import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
-import software.wings.service.impl.analysis.ContinuousVerificationServiceImpl;
-import software.wings.service.impl.analysis.DataCollectionInfoV2;
+import software.wings.service.impl.CloudWatchServiceImpl;
 import software.wings.service.impl.apm.APMMetricInfo;
+import software.wings.service.impl.appdynamics.AppdynamicsTimeSeries;
+import software.wings.service.impl.cloudwatch.AwsNameSpace;
+import software.wings.service.impl.cloudwatch.CloudWatchMetric;
+import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.verification.CVTaskService;
 import software.wings.service.intfc.verification.DataCollectionInfoService;
 import software.wings.sm.StateType;
+import software.wings.sm.states.APMVerificationState.MetricCollectionInfo;
+import software.wings.sm.states.DatadogState;
 import software.wings.sm.states.DatadogState.Metric;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVTask;
 import software.wings.verification.HeatMapResolution;
+import software.wings.verification.apm.APMCVServiceConfiguration;
+import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
+import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
+import software.wings.verification.datadog.DatadogCVServiceConfiguration;
+import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
+import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
+import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 
+import java.io.IOException;
+import java.net.URL;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -323,5 +344,176 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
     assertThat(cvTaskArgumentCaptor.getValue().getStatus()).isEqualTo(ExecutionStatus.QUEUED);
     assertThat(cvTaskArgumentCaptor.getValue().getAccountId()).isEqualTo(accountId);
     assertThat(cvTaskArgumentCaptor.getValue().getDataCollectionInfo()).isEqualTo(dataCollectionInfo);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetAppdynamicsMetricType() {
+    AppDynamicsCVServiceConfiguration cvConfig = AppDynamicsCVServiceConfiguration.builder()
+                                                     .appDynamicsApplicationId(generateUuid())
+                                                     .tierId(generateUuid())
+                                                     .build();
+    cvConfig.setStateType(StateType.APP_DYNAMICS);
+    assertThat(
+        continuousVerificationService.getMetricType(cvConfig, AppdynamicsTimeSeries.RESPONSE_TIME_95.getMetricName()))
+        .isEqualTo(MetricType.RESP_TIME.name());
+    assertThat(
+        continuousVerificationService.getMetricType(cvConfig, AppdynamicsTimeSeries.CALLS_PER_MINUTE.getMetricName()))
+        .isEqualTo(MetricType.THROUGHPUT.name());
+    assertThat(
+        continuousVerificationService.getMetricType(cvConfig, AppdynamicsTimeSeries.ERRORS_PER_MINUTE.getMetricName()))
+        .isEqualTo(MetricType.ERROR.name());
+    assertThat(continuousVerificationService.getMetricType(cvConfig, AppdynamicsTimeSeries.STALL_COUNT.getMetricName()))
+        .isEqualTo(MetricType.ERROR.name());
+    assertThat(
+        continuousVerificationService.getMetricType(cvConfig, AppdynamicsTimeSeries.AVG_RESPONSE_TIME.getMetricName()))
+        .isEqualTo(MetricType.RESP_TIME.name());
+    assertThat(continuousVerificationService.getMetricType(
+                   cvConfig, AppdynamicsTimeSeries.NUMBER_OF_SLOW_CALLS.getMetricName()))
+        .isEqualTo(MetricType.ERROR.name());
+    assertThat(continuousVerificationService.getMetricType(cvConfig, generateUuid())).isNull();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetNewRelicMetricType() {
+    NewRelicCVServiceConfiguration cvConfig =
+        NewRelicCVServiceConfiguration.builder().applicationId(generateUuid()).build();
+    cvConfig.setStateType(StateType.NEW_RELIC);
+    assertThat(continuousVerificationService.getMetricType(cvConfig, NewRelicMetricValueDefinition.REQUSET_PER_MINUTE))
+        .isEqualTo(MetricType.THROUGHPUT.name());
+    assertThat(
+        continuousVerificationService.getMetricType(cvConfig, NewRelicMetricValueDefinition.AVERAGE_RESPONSE_TIME))
+        .isEqualTo(MetricType.RESP_TIME.name());
+    assertThat(continuousVerificationService.getMetricType(cvConfig, NewRelicMetricValueDefinition.ERROR))
+        .isEqualTo(MetricType.ERROR.name());
+    assertThat(continuousVerificationService.getMetricType(cvConfig, NewRelicMetricValueDefinition.APDEX_SCORE))
+        .isEqualTo(MetricType.APDEX.name());
+    assertThat(continuousVerificationService.getMetricType(cvConfig, generateUuid())).isNull();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetDynatraceMetricType() {
+    DynaTraceCVServiceConfiguration cvConfig =
+        DynaTraceCVServiceConfiguration.builder().serviceMethods(generateUuid()).build();
+    cvConfig.setStateType(StateType.DYNA_TRACE);
+    assertThat(
+        continuousVerificationService.getMetricType(cvConfig, NewRelicMetricValueDefinition.CLIENT_SIDE_FAILURE_RATE))
+        .isEqualTo(MetricType.ERROR.name());
+    assertThat(
+        continuousVerificationService.getMetricType(cvConfig, NewRelicMetricValueDefinition.ERROR_COUNT_HTTP_4XX))
+        .isEqualTo(MetricType.ERROR.name());
+    assertThat(
+        continuousVerificationService.getMetricType(cvConfig, NewRelicMetricValueDefinition.ERROR_COUNT_HTTP_5XX))
+        .isEqualTo(MetricType.ERROR.name());
+    assertThat(continuousVerificationService.getMetricType(cvConfig, NewRelicMetricValueDefinition.REQUEST_PER_MINUTE))
+        .isEqualTo(MetricType.THROUGHPUT.name());
+    assertThat(
+        continuousVerificationService.getMetricType(cvConfig, NewRelicMetricValueDefinition.SERVER_SIDE_FAILURE_RATE))
+        .isEqualTo(MetricType.ERROR.name());
+    assertThat(continuousVerificationService.getMetricType(cvConfig, generateUuid())).isNull();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetPrometheusMetricType() {
+    PrometheusCVServiceConfiguration cvConfig =
+        PrometheusCVServiceConfiguration.builder()
+            .timeSeriesToAnalyze(Lists.newArrayList(TimeSeries.builder()
+                                                        .txnName(generateUuid())
+                                                        .metricName("metric1")
+                                                        .metricType(MetricType.ERROR.name())
+                                                        .url(generateUuid())
+                                                        .build(),
+                TimeSeries.builder()
+                    .txnName(generateUuid())
+                    .metricName("metric2")
+                    .metricType(MetricType.THROUGHPUT.name())
+                    .url(generateUuid())
+                    .build()))
+            .build();
+    cvConfig.setStateType(StateType.PROMETHEUS);
+    assertThat(continuousVerificationService.getMetricType(cvConfig, "metric1")).isEqualTo(MetricType.ERROR.name());
+    assertThat(continuousVerificationService.getMetricType(cvConfig, "metric2"))
+        .isEqualTo(MetricType.THROUGHPUT.name());
+    assertThat(continuousVerificationService.getMetricType(cvConfig, generateUuid())).isNull();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetAPMMetricType() {
+    APMCVServiceConfiguration cvConfig =
+        APMCVServiceConfiguration.builder()
+            .metricCollectionInfos(Lists.newArrayList(
+                MetricCollectionInfo.builder().metricName("metric1").metricType(MetricType.ERROR).build(),
+                MetricCollectionInfo.builder().metricName("metric2").metricType(MetricType.THROUGHPUT).build()))
+            .build();
+    cvConfig.setStateType(StateType.APM_VERIFICATION);
+    assertThat(continuousVerificationService.getMetricType(cvConfig, "metric1")).isEqualTo(MetricType.ERROR.name());
+    assertThat(continuousVerificationService.getMetricType(cvConfig, "metric2"))
+        .isEqualTo(MetricType.THROUGHPUT.name());
+    assertThat(continuousVerificationService.getMetricType(cvConfig, generateUuid())).isNull();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetCloudWatchMetricType() {
+    final Map<AwsNameSpace, List<CloudWatchMetric>> awsNameSpaceMetrics = CloudWatchServiceImpl.fetchMetrics();
+    CloudWatchCVServiceConfiguration cvConfig =
+        CloudWatchCVServiceConfiguration.builder()
+            .ec2Metrics(awsNameSpaceMetrics.get(AwsNameSpace.EC2))
+            .ecsMetrics(Collections.singletonMap(generateUuid(), awsNameSpaceMetrics.get(AwsNameSpace.ECS)))
+            .loadBalancerMetrics(Collections.singletonMap(generateUuid(), awsNameSpaceMetrics.get(AwsNameSpace.ELB)))
+            .lambdaFunctionsMetrics(
+                Collections.singletonMap(generateUuid(), awsNameSpaceMetrics.get(AwsNameSpace.LAMBDA)))
+            .build();
+    cvConfig.setStateType(StateType.CLOUD_WATCH);
+    awsNameSpaceMetrics.forEach(
+        (awsNameSpace, metrics)
+            -> metrics.forEach(cloudWatchMetric
+                -> assertThat(continuousVerificationService.getMetricType(cvConfig, cloudWatchMetric.getMetricName()))
+                       .isEqualTo(cloudWatchMetric.getMetricType())));
+    assertThat(continuousVerificationService.getMetricType(cvConfig, generateUuid())).isNull();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetDatadogetricType() throws IOException {
+    YamlUtils yamlUtils = new YamlUtils();
+    URL url = DatadogState.class.getResource("/apm/datadog_metrics.yml");
+    String yaml = Resources.toString(url, Charsets.UTF_8);
+    Map<String, List<Metric>> metricsMap = yamlUtils.read(yaml, new TypeReference<Map<String, List<Metric>>>() {});
+
+    StringBuilder dockerMetrics = new StringBuilder();
+    metricsMap.get("Docker").forEach(metric -> dockerMetrics.append(metric.getMetricName()).append(","));
+    dockerMetrics.deleteCharAt(dockerMetrics.lastIndexOf(","));
+
+    StringBuilder ecsMetrics = new StringBuilder();
+    metricsMap.get("ECS").forEach(metric -> ecsMetrics.append(metric.getMetricName()).append(","));
+    ecsMetrics.deleteCharAt(ecsMetrics.lastIndexOf(","));
+
+    DatadogCVServiceConfiguration cvConfig =
+        DatadogCVServiceConfiguration.builder()
+            .dockerMetrics(Collections.singletonMap(generateUuid(), dockerMetrics.toString()))
+            .ecsMetrics(Collections.singletonMap(generateUuid(), ecsMetrics.toString()))
+            .customMetrics(Collections.singletonMap(generateUuid(),
+                Sets.newHashSet(
+                    Metric.builder().displayName("metric1").mlMetricType(MetricType.THROUGHPUT.name()).build(),
+                    Metric.builder().displayName("metric2").mlMetricType(MetricType.ERROR.name()).build())))
+            .build();
+
+    cvConfig.setStateType(StateType.DATA_DOG);
+    metricsMap.get("Docker").forEach(metric
+        -> assertThat(continuousVerificationService.getMetricType(cvConfig, metric.getMetricName()))
+               .isEqualTo(MetricType.INFRA.name()));
+    metricsMap.get("ECS").forEach(metric
+        -> assertThat(continuousVerificationService.getMetricType(cvConfig, metric.getMetricName()))
+               .isEqualTo(MetricType.INFRA.name()));
+    assertThat(continuousVerificationService.getMetricType(cvConfig, "metric1"))
+        .isEqualTo(MetricType.THROUGHPUT.name());
+    assertThat(continuousVerificationService.getMetricType(cvConfig, "metric2")).isEqualTo(MetricType.ERROR.name());
+
+    assertThat(continuousVerificationService.getMetricType(cvConfig, generateUuid())).isNull();
   }
 }

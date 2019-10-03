@@ -25,6 +25,7 @@ import static software.wings.sm.StateType.SUMO;
 import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.cloudwatch.model.StandardUnit;
@@ -51,6 +52,10 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.metrics.MetricType;
+import software.wings.metrics.Threshold;
+import software.wings.metrics.ThresholdComparisonType;
+import software.wings.metrics.ThresholdType;
+import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.LogDataRecord;
@@ -58,6 +63,8 @@ import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord.LogMLAnalysisRecordKeys;
 import software.wings.service.impl.analysis.TimeSeries;
+import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
+import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds.TimeSeriesMLTransactionThresholdKeys;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
 import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
@@ -84,6 +91,10 @@ import software.wings.verification.log.StackdriverCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -1728,5 +1739,66 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
         assertThat(cvConfigurations.get(index + 1).getEnvId()).isEqualTo("env" + j + testUuid);
       }
     }
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
+  public void testCustomThresholdsCrud() throws UnsupportedEncodingException {
+    String txnName = URLEncoder.encode("some valid txn / with slash", StandardCharsets.UTF_8.name());
+    String metricName = "some valid metric / with slash";
+    String cvConfigId = generateUuid();
+    final TimeSeriesMetricDefinition timeSeriesMetricDefinition =
+        TimeSeriesMetricDefinition.builder()
+            .metricType(MetricType.THROUGHPUT)
+            .metricName(metricName)
+            .tags(Sets.newHashSet("tag1", "tag2"))
+            .customThresholds(Lists.newArrayList(Threshold.builder()
+                                                     .comparisonType(ThresholdComparisonType.DELTA)
+                                                     .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
+                                                     .ml(10.0)
+                                                     .build(),
+                Threshold.builder()
+                    .comparisonType(ThresholdComparisonType.RATIO)
+                    .thresholdType(ThresholdType.ALERT_WHEN_LOWER)
+                    .ml(5.0)
+                    .build()))
+            .build();
+
+    String url = API_BASE + "/timeseries/threshold?accountId=" + accountId + "&appId=" + appId + "&stateType="
+        + DATA_DOG + "&serviceId=" + serviceId + "&transactionName=" + txnName + "&cvConfigId=" + cvConfigId;
+    logger.info("POST " + url);
+    WebTarget target = client.target(url);
+    RestResponse<Boolean> restResponse = getRequestBuilderWithAuthHeader(target).post(
+        entity(timeSeriesMetricDefinition, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
+    assertThat(restResponse.getResource()).isTrue();
+
+    url = API_BASE + "/timeseries/threshold?accountId=" + accountId + "&appId=" + appId + "&stateType=" + DATA_DOG
+        + "&serviceId=" + serviceId + "&transactionName=" + txnName + "&cvConfigId=" + cvConfigId
+        + "&metricName=" + URLEncoder.encode(metricName, StandardCharsets.UTF_8.name());
+
+    target = client.target(url);
+    RestResponse<TimeSeriesMLTransactionThresholds> getRequestResponse = getRequestBuilderWithAuthHeader(target).get(
+        new GenericType<RestResponse<TimeSeriesMLTransactionThresholds>>() {});
+    TimeSeriesMLTransactionThresholds fetchedObject = getRequestResponse.getResource();
+    assertThat(fetchedObject).isNotNull();
+    assertThat(fetchedObject.getServiceId()).isEqualTo(serviceId);
+    assertThat(fetchedObject.getStateType()).isEqualTo(DATA_DOG);
+    assertThat(fetchedObject.getTransactionName()).isEqualTo(URLDecoder.decode(txnName, StandardCharsets.UTF_8.name()));
+    assertThat(fetchedObject.getMetricName()).isEqualTo(metricName);
+    assertThat(fetchedObject.getCvConfigId()).isEqualTo(cvConfigId);
+    assertThat(fetchedObject.getThresholds()).isEqualTo(timeSeriesMetricDefinition);
+
+    // delete and get
+    target = client.target(url);
+    restResponse = getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse<Boolean>>() {});
+    assertThat(restResponse.getResource()).isTrue();
+
+    getRequestResponse = getRequestBuilderWithAuthHeader(target).get(
+        new GenericType<RestResponse<TimeSeriesMLTransactionThresholds>>() {});
+    assertThat(getRequestResponse.getResource()).isNull();
+    assertThat(wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class, excludeAuthority)
+                   .filter(TimeSeriesMLTransactionThresholdKeys.cvConfigId, cvConfigId)
+                   .get())
+        .isNull();
   }
 }

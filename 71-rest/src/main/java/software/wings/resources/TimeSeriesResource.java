@@ -20,6 +20,7 @@ import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.StateType;
 
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -120,7 +121,7 @@ public class TimeSeriesResource {
       @QueryParam("appId") String appId, @QueryParam("stateType") StateType stateType,
       @QueryParam("serviceId") String serviceId, @QueryParam("groupName") String groupName,
       @QueryParam("transactionName") String transactionName, @QueryParam("metricName") String metricName,
-      @QueryParam("cvConfigId") String cvConfigId) {
+      @QueryParam("cvConfigId") String cvConfigId) throws UnsupportedEncodingException {
     return new RestResponse<>(metricDataAnalysisService.getCustomThreshold(
         appId, stateType, serviceId, cvConfigId, groupName, transactionName, metricName));
   }
@@ -133,7 +134,7 @@ public class TimeSeriesResource {
       @QueryParam("appId") String appId, @QueryParam("stateType") StateType stateType,
       @QueryParam("serviceId") String serviceId, @QueryParam("groupName") String groupName,
       @QueryParam("cvConfigId") String cvConfigId, @QueryParam("transactionName") String transactionName,
-      @QueryParam("metricName") String metricName) {
+      @QueryParam("metricName") String metricName) throws UnsupportedEncodingException {
     return new RestResponse<>(metricDataAnalysisService.deleteCustomThreshold(
         appId, stateType, serviceId, cvConfigId, groupName, transactionName, metricName));
   }

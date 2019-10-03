@@ -36,6 +36,7 @@ import static software.wings.sm.states.AbstractLogAnalysisState.HOST_BATCH_SIZE;
 import static software.wings.sm.states.DatadogState.metricEndpointsInfo;
 import static software.wings.verification.TimeSeriesDataPoint.initializeTimeSeriesDataPointsList;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -929,7 +930,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return metricName;
   }
 
-  private String getMetricType(CVConfiguration cvConfig, String metricName) {
+  @VisibleForTesting
+  String getMetricType(CVConfiguration cvConfig, String metricName) {
     switch (cvConfig.getStateType()) {
       case APP_DYNAMICS:
         return AppDynamicsState.getMetricTypeForMetric(metricName);
@@ -952,7 +954,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .map(x -> x.getMetricType().name())
             .orElse(null);
       case DATA_DOG:
-        return DatadogState.getMetricTypeForMetric(metricName);
+        return DatadogState.getMetricTypeForMetric(metricName, (DatadogCVServiceConfiguration) cvConfig);
       case DYNA_TRACE:
         return DynatraceState.getMetricTypeForMetric(metricName);
       case CLOUD_WATCH:

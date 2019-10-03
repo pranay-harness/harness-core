@@ -53,6 +53,7 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
+import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 
 import java.io.IOException;
 import java.net.URL;
@@ -276,7 +277,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
     this.customMetrics = customMetrics;
   }
 
-  public static String getMetricTypeForMetric(String metricName) {
+  public static String getMetricTypeForMetric(String metricName, DatadogCVServiceConfiguration cvConfig) {
     try {
       YamlUtils yamlUtils = new YamlUtils();
       URL url = DatadogState.class.getResource("/apm/datadog_metrics.yml");
@@ -287,6 +288,17 @@ public class DatadogState extends AbstractMetricAnalysisState {
           metrics.stream().filter(metric -> metric.getMetricName().equals(metricName)).findAny();
       if (matchedMetric.isPresent()) {
         return matchedMetric.get().getMlMetricType();
+      }
+      if (cvConfig != null && isNotEmpty(cvConfig.getCustomMetrics())) {
+        for (Entry<String, Set<Metric>> customMetricEntry : cvConfig.getCustomMetrics().entrySet()) {
+          if (isNotEmpty(customMetricEntry.getValue())) {
+            for (Metric metric : customMetricEntry.getValue()) {
+              if (metricName.equals(metric.getDisplayName())) {
+                return metric.getMlMetricType();
+              }
+            }
+          }
+        }
       }
     } catch (Exception e) {
       logger.error("Exception occurred while calculating metric type for name: {}", metricName, e);
