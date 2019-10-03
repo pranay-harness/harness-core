@@ -12,7 +12,9 @@ import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import lombok.Builder;
 import lombok.Getter;
+import org.slf4j.MDC;
 
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -64,7 +66,7 @@ public class WingsException extends RuntimeException {
 
   private Map<String, Object> params = new HashMap<>();
 
-  private Map<String, String> contextObjects = new HashMap<>();
+  private Map<String, String> contextObjects;
 
   private EnumSet<FailureType> failureTypes = EnumSet.noneOf(FailureType.class);
 
@@ -76,6 +78,7 @@ public class WingsException extends RuntimeException {
     this.level = level == null ? Level.ERROR : level;
     this.reportTargets = reportTargets == null ? USER_SRE : reportTargets;
     this.failureTypes = failureTypes == null ? EnumSet.noneOf(FailureType.class) : failureTypes;
+    contextObjects = MDC.getCopyOfContextMap();
   }
 
   @Deprecated
@@ -154,7 +157,7 @@ public class WingsException extends RuntimeException {
   }
 
   private Map<String, String> getContextObjects() {
-    return contextObjects;
+    return contextObjects != null ? contextObjects : Collections.emptyMap();
   }
 
   public Map<String, String> calcRecursiveContextObjects() {
@@ -172,6 +175,9 @@ public class WingsException extends RuntimeException {
 
   @Deprecated
   public <T> WingsException addContext(Class<?> clz, T object) {
+    if (contextObjects == null) {
+      contextObjects = new HashMap<>();
+    }
     contextObjects.put(clz.getName(), object.toString());
     return this;
   }
