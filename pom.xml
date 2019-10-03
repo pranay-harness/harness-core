@@ -1778,9 +1778,10 @@
                 <artifactId>protobuf-maven-plugin</artifactId>
                 <version>${protobuf.plugin.version}</version>
                 <configuration>
-                    <protocArtifact>com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}</protocArtifact>
                     <pluginId>grpc-java</pluginId>
                     <pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:${os.detected.classifier}</pluginArtifact>
+                    <!-- this is a hack to allow adding arguments to the protoc -->
+                    <protocExecutable>${basedir}/../scripts/protobuf/protoc.sh</protocExecutable>
                 </configuration>
                 <executions>
                     <execution>
