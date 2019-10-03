@@ -560,7 +560,7 @@ public class YamlHelper {
     return infrastructureDefinitionService.getInfraDefByName(applicationId, envId, infraDefinitionName);
   }
 
-  public String getInfraDefinitionNameByAppIdYamlPath(String applicationId, String envId, String yamlFilePath) {
+  public String getInfraDefinitionNameByAppIdYamlPath(String yamlFilePath) {
     String infraDefinitionName =
         extractEntityNameFromYamlPath(YamlType.INFRA_DEFINITION.getPathExpression(), yamlFilePath, PATH_DELIMITER);
     notNullCheck(

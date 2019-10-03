@@ -70,7 +70,7 @@ public class InfrastructureDefinitionGenerator {
   private Environment ensureEnv(Randomizer.Seed seed, Owners owners) {
     Application application = owners.obtainApplication();
     if (application == null) {
-      application = applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST);
+      applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST);
     }
     Environment environment = owners.obtainEnvironment();
     if (environment == null) {

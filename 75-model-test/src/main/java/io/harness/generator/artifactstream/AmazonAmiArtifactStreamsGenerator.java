@@ -53,7 +53,7 @@ public class AmazonAmiArtifactStreamsGenerator implements ArtifactStreamsGenerat
     AmiArtifactStream amiArtifactStream = (AmiArtifactStream) artifactStream;
     final AmiArtifactStreamBuilder amiArtifactStreamBuilder = AmiArtifactStream.builder();
 
-    if (artifactStream != null && artifactStream.getAppId() != null) {
+    if (artifactStream.getAppId() != null) {
       amiArtifactStreamBuilder.appId(amiArtifactStream.getAppId());
     } else {
       throw new UnsupportedOperationException();
