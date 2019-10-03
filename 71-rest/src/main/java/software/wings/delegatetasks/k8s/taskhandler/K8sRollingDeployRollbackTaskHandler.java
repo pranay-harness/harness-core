@@ -206,7 +206,7 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
     executionLogCallback.saveExecutionLog("\nRolling back to release " + previousRollbackEligibleRelease.getNumber());
 
     for (KubernetesResourceIdRevision kubernetesResourceIdRevision : previousManagedWorkloads) {
-      executionLogCallback.saveExecutionLog(format("\nRolling back resource %s in namespace %s to revision %s",
+      executionLogCallback.saveExecutionLog(format("%nRolling back resource %s in namespace %s to revision %s",
           kubernetesResourceIdRevision.getWorkload().kindNameRef(),
           kubernetesResourceIdRevision.getWorkload().getNamespace(), kubernetesResourceIdRevision.getRevision()));
 
@@ -221,7 +221,7 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
 
       if (result.getExitValue() != 0) {
         executionLogCallback.saveExecutionLog(
-            format("\nFailed to rollback resource %s in namespace %s to revision %s. Error %s",
+            format("%nFailed to rollback resource %s in namespace %s to revision %s. Error %s",
                 kubernetesResourceIdRevision.getWorkload().kindNameRef(),
                 kubernetesResourceIdRevision.getWorkload().getNamespace(), kubernetesResourceIdRevision.getRevision(),
                 result.getOutput()));

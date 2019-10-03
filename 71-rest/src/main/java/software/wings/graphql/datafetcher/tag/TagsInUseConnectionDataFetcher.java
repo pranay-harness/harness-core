@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 
 import com.google.common.collect.Sets;
-import com.google.inject.Inject;
 
 import com.mongodb.AggregationOptions;
 import com.mongodb.BasicDBObject;
@@ -19,7 +18,6 @@ import software.wings.beans.HarnessTagLink;
 import software.wings.beans.HarnessTagLink.HarnessTagLinkKeys;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.AbstractConnectionV2DataFetcher;
-import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
 import software.wings.graphql.schema.type.QLPageInfo;
 import software.wings.graphql.schema.type.QLTagsInUse;
@@ -42,8 +40,6 @@ import java.util.stream.Collectors;
 
 public class TagsInUseConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLTagInUseFilter, QLNoOpSortCriteria, QLTagsInUseConnection> {
-  @Inject protected DataFetcherUtils utils;
-
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   protected QLTagsInUseConnection fetchConnection(List<QLTagInUseFilter> filters,

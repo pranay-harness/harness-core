@@ -658,7 +658,6 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     Set<String> envSet = null;
     Set<String> workflowSet = null;
     Set<String> pipelineSet = null;
-    Set<String> triggerSet = null;
 
     if (applyPermissions && appPermissionSummary != null) {
       Map<Action, Set<String>> servicePermissions = appPermissionSummary.getServicePermissions();
@@ -698,7 +697,6 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     Set<String> allowedEnvs = envSet;
     Set<String> allowedWorkflows = workflowSet;
     Set<String> allowedPipelines = pipelineSet;
-    Set<String> allowedTriggers = triggerSet;
 
     //--------------------------------------
     // parallelization using CompletionService (part 2)
