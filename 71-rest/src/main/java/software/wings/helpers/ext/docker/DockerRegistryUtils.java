@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidCredentialsException;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +42,7 @@ public class DockerRegistryUtils {
       Function<Headers, String> getTokenFn, String authHeader, String imageName, List<String> tags, long deadline) {
     Map<Integer, Map<String, String>> labelsMap = new ConcurrentHashMap<>();
     if (EmptyPredicate.isEmpty(tags)) {
-      return null;
+      return Collections.emptyList();
     }
 
     final int size = tags.size();
@@ -90,7 +91,7 @@ public class DockerRegistryUtils {
         }
 
         if (gotException) {
-          throw new Exception("Failed to fetch docker image labels");
+          throw new ArtifactServerException("Failed to fetch docker image labels");
         } else if (timeoutExceeded) {
           // Deadline exceeded, return with the labels for the processed tags.
           break;
@@ -98,11 +99,9 @@ public class DockerRegistryUtils {
         start += MAX_GET_LABELS_CONCURRENCY;
       }
     } catch (Exception e) {
-      // throw new ArtifactServerException("Failed to fetch docker image labels", e, USER);
-
       // Ignore error until we understand why fetching labels is failing sometimes.
       logger.error("Failed to fetch docker image labels", e);
-      return null;
+      return Collections.emptyList();
     }
 
     // The total number of tags that we have processed (collected labels for) might be less than tags.size() as we might
@@ -168,10 +167,9 @@ public class DockerRegistryUtils {
             Arrays.stream(headerParts[1].split(","))
                 .map(token -> token.split("="))
                 .collect(Collectors.toMap(s -> s[0], s -> s[1].substring(1, s[1].length() - 1)));
-        if (tokens.size() == 3 && tokens.get("realm") != null && tokens.get("service") != null
-            && tokens.get("scope") != null) {
-          return tokens;
-        } else if (tokens.size() == 2 && tokens.get("realm") != null && tokens.get("service") != null) {
+        if ((tokens.size() == 3 && tokens.get("realm") != null && tokens.get("service") != null
+                && tokens.get("scope") != null)
+            || (tokens.size() == 2 && tokens.get("realm") != null && tokens.get("service") != null)) {
           return tokens;
         }
       }

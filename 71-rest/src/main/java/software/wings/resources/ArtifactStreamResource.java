@@ -18,7 +18,6 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 
 import java.util.List;
 import java.util.Map;
@@ -47,21 +46,17 @@ import javax.ws.rs.QueryParam;
 @AuthRule(permissionType = SERVICE, skipAuth = true)
 public class ArtifactStreamResource {
   private ArtifactStreamService artifactStreamService;
-  private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   private AppService appService;
 
   /**
    * Instantiates a new Artifact stream resource.
    *
    * @param artifactStreamService               the artifact stream service
-   * @param artifactStreamServiceBindingService the artifact stream service binding service
    * @param appService                          the app service
    */
   @Inject
-  public ArtifactStreamResource(ArtifactStreamService artifactStreamService,
-      ArtifactStreamServiceBindingService artifactStreamServiceBindingService, AppService appService) {
+  public ArtifactStreamResource(ArtifactStreamService artifactStreamService, AppService appService) {
     this.artifactStreamService = artifactStreamService;
-    this.artifactStreamServiceBindingService = artifactStreamServiceBindingService;
     this.appService = appService;
   }
 
@@ -72,16 +67,6 @@ public class ArtifactStreamResource {
    */
   public void setArtifactStreamService(ArtifactStreamService artifactStreamService) {
     this.artifactStreamService = artifactStreamService;
-  }
-
-  /**
-   * Sets artifact stream service binding service.
-   *
-   * @param artifactStreamServiceBindingService the artifact stream service binding service
-   */
-  public void setArtifactStreamServiceBindingService(
-      ArtifactStreamServiceBindingService artifactStreamServiceBindingService) {
-    this.artifactStreamServiceBindingService = artifactStreamServiceBindingService;
   }
 
   /**

@@ -14,6 +14,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -182,6 +183,7 @@ public abstract class ArtifactStream
     }
   }
 
+  @UtilityClass
   public static final class ArtifactStreamKeys {
     // Temporary
     public static final String appId = "appId";

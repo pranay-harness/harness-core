@@ -9,6 +9,7 @@ import io.harness.beans.EmbeddedUser;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -618,6 +619,7 @@ public class ServiceTemplate extends Base {
     }
   }
 
+  @UtilityClass
   public static final class ServiceTemplateKeys {
     // Temporary
     public static final String appId = "appId";

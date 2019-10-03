@@ -77,8 +77,6 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
 
   // Default timeout of 1 minutes.
   private static final long DEFAULT_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
-  // With Labels timeout of 2 minutes.
-  private static final long WITH_LABELS_TIMEOUT = TimeUnit.MINUTES.toMillis(2);
 
   static final List<String> metadataOnlyStreams =
       Collections.unmodifiableList(asList(DOCKER.name(), ECR.name(), GCR.name(), NEXUS.name(), AMI.name(), ACR.name(),
@@ -86,19 +84,8 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
 
   @Override
   public Artifact collectArtifact(String artifactStreamId, BuildDetails buildDetails) {
-    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
-    if (artifactStream == null) {
-      throw new InvalidRequestException("Artifact stream was deleted", USER);
-    }
     // Disable fetching labels for now as it has many issues.
-    //    if (DOCKER.name().equals(artifactStream.getArtifactStreamType())) {
-    //      List<Map<String, String>> labelsMap =
-    //          buildSourceService.getLabels(artifactStream, Collections.singletonList(buildDetails.getNumber()));
-    //      if (isNotEmpty(labelsMap) && isNotEmpty(labelsMap.get(0))) {
-    //        buildDetails.setLabels(labelsMap.get(0));
-    //      }
-    //    }
-    return collectArtifactWithoutLabels(artifactStream, buildDetails);
+    return collectArtifactWithoutLabels(artifactStreamId, buildDetails);
   }
 
   private Artifact collectArtifactWithoutLabels(String artifactStreamId, BuildDetails buildDetails) {
@@ -200,13 +187,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
           artifactCollectionUtils.getBuildSourceParameters(artifactStream, settingAttribute, true, true);
 
       // Set timeout.
-      long timeout = DEFAULT_TIMEOUT;
-      // Disable fetching labels for now as it has many issues.
-      //      if (DOCKER.name().equals(artifactStreamType)) {
-      //        // Update timeout if collecting labels.
-      //        timeout = WITH_LABELS_TIMEOUT;
-      //      }
-      dataBuilder.parameters(new Object[] {buildSourceRequest}).timeout(timeout);
+      dataBuilder.parameters(new Object[] {buildSourceRequest}).timeout(DEFAULT_TIMEOUT);
       delegateTaskBuilder.tags(awsCommandHelper.getAwsConfigTagsFromSettingAttribute(settingAttribute));
     }
 
