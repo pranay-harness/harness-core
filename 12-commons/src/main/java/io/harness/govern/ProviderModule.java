@@ -4,5 +4,7 @@ import com.google.inject.AbstractModule;
 
 public class ProviderModule extends AbstractModule {
   @Override
-  protected void configure() {}
+  protected void configure() {
+    // Nothing to configure
+  }
 }
