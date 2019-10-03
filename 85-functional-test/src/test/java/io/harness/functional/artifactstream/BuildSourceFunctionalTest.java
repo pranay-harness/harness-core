@@ -37,10 +37,10 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
   @Inject private AccountGenerator accountGenerator;
   @Inject private ApplicationGenerator applicationGenerator;
 
-  final Randomizer.Seed seed = new Randomizer.Seed(0);
-  OwnerManager.Owners owners;
-  Application application;
-  Account account;
+  private final Randomizer.Seed seed = new Randomizer.Seed(0);
+  private OwnerManager.Owners owners;
+  private Application application;
+  private Account account;
 
   @Before
   public void setUp() {
@@ -54,6 +54,7 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = AADITI, intermittent = true)
   @Category(FunctionalTests.class)
   public void getJobsForJenkinsAtConnectorLevel() {
     final SettingAttribute settingAttribute =
@@ -73,6 +74,7 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = AADITI, intermittent = true)
   @Category(FunctionalTests.class)
   public void getJobsForBambooAtConnectorLevel() {
     final SettingAttribute settingAttribute =
@@ -92,6 +94,7 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = AADITI, intermittent = true)
   @Category(FunctionalTests.class)
   public void getArtifactPathsForJenkinsAtConnectorLevel() {
     GenericType<RestResponse<Set<String>>> artifactStreamType = new GenericType<RestResponse<Set<String>>>() {
@@ -113,6 +116,7 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = AADITI, intermittent = true)
   @Category(FunctionalTests.class)
   public void getArtifactPathsForBambooAtConnectorLevel() {
     GenericType<RestResponse<Set<String>>> artifactStreamType = new GenericType<RestResponse<Set<String>>>() {
@@ -134,7 +138,7 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = AADITI, resent = false)
+  @Owner(emails = AADITI, intermittent = true)
   @Category(FunctionalTests.class)
   @Ignore("This test is Flaky. Need to debug more by the test owner")
   public void getDockerImagesNamesForArtifactoryAtConnectorLevel() {
@@ -157,6 +161,7 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = AADITI, intermittent = true)
   @Category(FunctionalTests.class)
   public void getRepositoriesForArtifactoryDockerAtConnectorLevel() {
     GenericType<RestResponse<Map<String, String>>> artifactStreamType =
@@ -180,6 +185,7 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = AADITI, intermittent = true)
   @Category(FunctionalTests.class)
   public void getRepositoriesForArtifactoryAnyAtConnectorLevel() {
     GenericType<RestResponse<Map<String, String>>> artifactStreamType =
@@ -226,7 +232,7 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = AADITI)
+  @Owner(emails = AADITI, intermittent = true)
   @Category(FunctionalTests.class)
   @Ignore("TODO - Will be enabled when connector level apis are changed to account for nexus3 support")
   public void getGroupIdsForNexus3() {
@@ -250,6 +256,7 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = AADITI, intermittent = true)
   @Category(FunctionalTests.class)
   public void getPlansForAmazonS3AtConnectorLevel() {
     GenericType<RestResponse<Map<String, String>>> artifactStreamType =
@@ -273,6 +280,7 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = AADITI, intermittent = true)
   @Category(FunctionalTests.class)
   public void getProjectForGCS() {
     GenericType<RestResponse<String>> artifactStreamType = new GenericType<RestResponse<String>>() {
@@ -291,6 +299,7 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = AADITI, intermittent = true)
   @Category(FunctionalTests.class)
   public void getSubscriptionsForACR() {
     GenericType<RestResponse<Map<String, String>>> artifactStreamType =
@@ -312,6 +321,7 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = AADITI, intermittent = true)
   @Category(FunctionalTests.class)
   public void getAWSRegionsForECR() {
     GenericType<RestResponse<List<Object>>> artifactStreamType = new GenericType<RestResponse<List<Object>>>() {

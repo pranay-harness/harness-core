@@ -25,13 +25,16 @@ import io.harness.perpetualtask.k8s.watch.K8sWatchTaskParams;
 import io.harness.perpetualtask.k8s.watch.NodeWatcher;
 import io.harness.perpetualtask.k8s.watch.PodWatcher;
 import io.harness.perpetualtask.k8s.watch.WatcherFactory;
+import io.harness.version.VersionInfoManager;
 import lombok.Builder;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import javax.net.ssl.SSLException;
 
+@Slf4j
 public class PerpetualTaskWorkerModule extends AbstractModule {
   @Value
   @Builder
@@ -71,10 +74,13 @@ public class PerpetualTaskWorkerModule extends AbstractModule {
   @Named("manager-channel")
   @Singleton
   @Provides
-  public Channel managerChannel() throws SSLException {
+  public Channel managerChannel(VersionInfoManager versionInfoManager) throws SSLException {
+    String versionPrefix = "v-" + versionInfoManager.getVersionInfo().getVersion().replace('.', '-') + "-";
+    String versionedAuthority = versionPrefix + config.authority;
+    logger.info("Using versioned authority: {}", versionedAuthority);
     SslContext sslContext = GrpcSslContexts.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
     return NettyChannelBuilder.forTarget(config.target)
-        .overrideAuthority(config.authority)
+        .overrideAuthority(versionedAuthority)
         .sslContext(sslContext)
         .build();
   }
