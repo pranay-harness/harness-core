@@ -20,10 +20,8 @@ import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.spotinst.model.ElastiGroup;
-import io.harness.spotinst.model.SpotInstConstants;
 import lombok.Getter;
 import lombok.Setter;
-import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
@@ -88,7 +86,6 @@ public class SpotInstListenerUpdateState extends State {
   }
 
   protected ExecutionResponse executeInternal(ExecutionContext context) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, SpotInstConstants.PHASE_PARAM);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
 
     Environment env = workflowStandardParams.getEnv();

@@ -75,7 +75,6 @@ public class SpotInstListenerUpdateStateExecutionData
   }
 
   private String getActiveTargetGroups() {
-    final StringBuilder stringBuilder = new StringBuilder(128);
     List<String> tgNames;
     if (isRollback) {
       // If rollback, we are restoring original prodTargetGroups.

@@ -29,12 +29,10 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
-import io.harness.spotinst.model.SpotInstConstants;
 import lombok.Getter;
 import lombok.Setter;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
-import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
@@ -116,8 +114,6 @@ public class SpotInstDeployState extends State {
     if (isRollback() && allPhaseRollbackDone(context)) {
       return ExecutionResponse.builder().executionStatus(ExecutionStatus.SUCCESS).build();
     }
-
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, SpotInstConstants.PHASE_PARAM);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
 
     Application app = appService.get(context.getAppId());
