@@ -71,7 +71,6 @@ public abstract class AbstractConnectionV2DataFetcher<F, S, O> extends BaseDataF
         filters.addAll(finalFilters);
       }
 
-      String parentTypeName = environment.getParentType().getName();
       final String accountId = getAccountId(environment);
       AccountThreadLocal.set(accountId);
       return fetch(filters, pageQueryParameters, sort);

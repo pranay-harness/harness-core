@@ -844,19 +844,17 @@ public class HelmDeployState extends State {
     if (CommandExecutionStatus.SUCCESS.equals(helmCommandResponse.getCommandExecutionStatus())) {
       HelmInstallCommandResponse helmInstallCommandResponse = (HelmInstallCommandResponse) helmCommandResponse;
 
-      if (helmInstallCommandResponse != null) {
-        List<InstanceStatusSummary> instanceStatusSummaries = containerDeploymentHelper.getInstanceStatusSummaries(
-            context, helmInstallCommandResponse.getContainerInfoList());
-        stateExecutionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
+      List<InstanceStatusSummary> instanceStatusSummaries = containerDeploymentHelper.getInstanceStatusSummaries(
+          context, helmInstallCommandResponse.getContainerInfoList());
+      stateExecutionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
 
-        List<InstanceElement> instanceElements =
-            instanceStatusSummaries.stream().map(InstanceStatusSummary::getInstanceElement).collect(toList());
-        InstanceElementListParam instanceElementListParam =
-            InstanceElementListParam.builder().instanceElements(instanceElements).build();
+      List<InstanceElement> instanceElements =
+          instanceStatusSummaries.stream().map(InstanceStatusSummary::getInstanceElement).collect(toList());
+      InstanceElementListParam instanceElementListParam =
+          InstanceElementListParam.builder().instanceElements(instanceElements).build();
 
-        executionResponseBuilder.contextElement(instanceElementListParam);
-        executionResponseBuilder.notifyElement(instanceElementListParam);
-      }
+      executionResponseBuilder.contextElement(instanceElementListParam);
+      executionResponseBuilder.notifyElement(instanceElementListParam);
     } else {
       logger.info("Got helm execution response with status "
           + executionResponse.getHelmCommandResponse().getCommandExecutionStatus().toString() + " with output "
@@ -999,7 +997,6 @@ public class HelmDeployState extends State {
 
   private HelmValuesFetchTaskParameters getHelmValuesFetchTaskParameters(
       ExecutionContext context, String appId, String activityId) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PHASE_PARAM);
     ContainerInfrastructureMapping containerInfraMapping =
         (ContainerInfrastructureMapping) infrastructureMappingService.get(appId, context.fetchInfraMappingId());
 

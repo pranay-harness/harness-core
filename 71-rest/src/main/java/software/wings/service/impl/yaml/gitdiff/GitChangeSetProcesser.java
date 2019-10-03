@@ -7,7 +7,6 @@ import com.google.inject.Singleton;
 
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.audit.AuditHeader;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
 import software.wings.service.impl.yaml.gitdiff.gitaudit.YamlAuditRecordGenerationUtils;
@@ -38,7 +37,8 @@ public class GitChangeSetProcesser {
   }
 
   private void ingestYamlChangeWithAudit(String accountId, GitDiffResult gitDiffResult) {
-    AuditHeader auditHeader = gitChangeAuditRecordHandler.processGitChangesForAudit(accountId, gitDiffResult);
+    // This will create Audit header record for git sync
+    gitChangeAuditRecordHandler.processGitChangesForAudit(accountId, gitDiffResult);
 
     Map<String, ChangeWithErrorMsg> changeWithErrorMsgs = null;
 

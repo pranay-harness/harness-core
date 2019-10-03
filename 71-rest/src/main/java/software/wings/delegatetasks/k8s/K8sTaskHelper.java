@@ -1368,7 +1368,7 @@ public class K8sTaskHelper {
         } catch (Exception ex) {
           logger.info(ExceptionUtils.getMessage(ex));
           throw new InvalidRequestException(
-              format("Failed to read file at path [%s].\nError: %s", filepath, ExceptionUtils.getMessage(ex)));
+              format("Failed to read file at path [%s].%nError: %s", filepath, ExceptionUtils.getMessage(ex)));
         }
 
         manifestFiles.add(ManifestFile.builder()

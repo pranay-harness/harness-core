@@ -14,6 +14,7 @@ import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -45,8 +46,10 @@ import com.google.common.collect.Lists;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutput;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.VariableResolverTracker;
@@ -63,6 +66,8 @@ import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.HelmDeployContextElement;
 import software.wings.api.HelmDeployStateExecutionData;
+import software.wings.api.InstanceElement.Builder;
+import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.app.MainConfiguration;
@@ -76,9 +81,12 @@ import software.wings.beans.GitFileConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
+import software.wings.beans.TaskType;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.ImageDetails;
+import software.wings.beans.yaml.GitCommandExecutionResponse;
+import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.common.InfrastructureConstants;
 import software.wings.common.VariableProcessor;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
@@ -89,7 +97,10 @@ import software.wings.helpers.ext.helm.HelmHelper;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest.HelmCommandType;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
+import software.wings.helpers.ext.helm.response.HelmChartInfo;
+import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
+import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
@@ -110,11 +121,16 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.InstanceStatusSummary;
+import software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.ApplicationManifestUtils;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class HelmDeployStateTest extends WingsBaseTest {
   private static final String HELM_CONTROLLER_NAME = "helm-controller-name";
@@ -420,5 +436,142 @@ public class HelmDeployStateTest extends WingsBaseTest {
         (HelmRollbackCommandRequest) delegateTask.getData().getParameters()[0];
     assertThat(helmRollbackCommandRequest.getCommandFlags()).isEqualTo(COMMAND_FLAGS);
     assertThat(helmRollbackCommandRequest.getReleaseName()).isEqualTo(HELM_RELEASE_NAME_PREFIX);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseForHelmTaskInSuccess() {
+    HelmCommandExecutionResponse helmCommandResponse =
+        HelmCommandExecutionResponse.builder()
+            .helmCommandResponse(HelmInstallCommandResponse.builder()
+                                     .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+                                     .containerInfoList(emptyList())
+                                     .helmChartInfo(HelmChartInfo.builder().build())
+                                     .build())
+            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+            .build();
+
+    Map<String, ResponseData> response = new HashMap<>();
+    response.put("activityId", helmCommandResponse);
+
+    String instanceElementName = "instanceElement";
+    List<InstanceStatusSummary> instanceStatusSummaries = Lists.newArrayList(
+        InstanceStatusSummaryBuilder.anInstanceStatusSummary()
+            .withStatus(ExecutionStatus.SUCCESS)
+            .withInstanceElement(Builder.anInstanceElement().displayName(instanceElementName).build())
+            .build());
+
+    when(containerDeploymentHelper.getInstanceStatusSummaries(any(), any())).thenReturn(instanceStatusSummaries);
+    ExecutionResponse executionResponse = helmDeployState.handleAsyncResponseForHelmTask(context, response);
+
+    verify(activityService).updateStatus("activityId", APP_ID, ExecutionStatus.SUCCESS);
+    verify(containerDeploymentHelper, times(1)).getInstanceStatusSummaries(any(), any());
+    verify(workflowExecutionService, times(1)).getWorkflowExecution(any(), any());
+    assertThat(executionResponse.getContextElements()).isNotEmpty();
+    assertThat(((InstanceElementListParam) executionResponse.getContextElements().get(0))
+                   .getInstanceElements()
+                   .get(0)
+                   .getName())
+        .isEqualTo(instanceElementName);
+
+    assertThat(executionResponse.getNotifyElements()).isNotEmpty();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(executionResponse.getStateExecutionData()).isNotNull();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseForHelmTaskInFailure() {
+    HelmCommandExecutionResponse helmCommandResponse = HelmCommandExecutionResponse.builder()
+                                                           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+                                                           .errorMessage("Failed")
+                                                           .build();
+
+    Map<String, ResponseData> response = new HashMap<>();
+    response.put("activityId", helmCommandResponse);
+
+    ExecutionResponse executionResponse = helmDeployState.handleAsyncResponseForHelmTask(context, response);
+
+    verify(activityService).updateStatus("activityId", APP_ID, ExecutionStatus.FAILED);
+    verify(containerDeploymentHelper, times(0)).getInstanceStatusSummaries(any(), any());
+    verify(workflowExecutionService, times(0)).getWorkflowExecution(any(), any());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(executionResponse.getErrorMessage()).isEqualTo("Failed");
+    assertThat(executionResponse.getStateExecutionData()).isNotNull();
+    assertThat(executionResponse.getNotifyElements()).isEmpty();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseForHelmTaskWithInstallCommandResponseFailure() {
+    HelmCommandExecutionResponse helmCommandResponse =
+        HelmCommandExecutionResponse.builder()
+            .errorMessage("Failed")
+            .helmCommandResponse(HelmInstallCommandResponse.builder()
+                                     .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+                                     .helmChartInfo(HelmChartInfo.builder().build())
+                                     .containerInfoList(emptyList())
+                                     .build())
+            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+            .build();
+
+    Map<String, ResponseData> response = new HashMap<>();
+    response.put("activityId", helmCommandResponse);
+
+    ExecutionResponse executionResponse = helmDeployState.handleAsyncResponseForHelmTask(context, response);
+
+    verify(activityService).updateStatus("activityId", APP_ID, ExecutionStatus.SUCCESS);
+    verify(containerDeploymentHelper, times(0)).getInstanceStatusSummaries(any(), any());
+    verify(workflowExecutionService, times(1)).getWorkflowExecution(any(), any());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(executionResponse.getErrorMessage()).isEqualTo("Failed");
+    assertThat(executionResponse.getStateExecutionData()).isNotNull();
+    assertThat(executionResponse.getNotifyElements()).isEmpty();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseForGitFetchFilesTaskForFailure() throws InterruptedException {
+    GitCommandExecutionResponse gitCommandExecutionResponse =
+        GitCommandExecutionResponse.builder().gitCommandStatus(GitCommandStatus.FAILURE).build();
+
+    HelmDeployStateExecutionData helmStateExecutionData =
+        (HelmDeployStateExecutionData) context.getStateExecutionData();
+
+    String activityId = "activityId";
+    helmStateExecutionData.setActivityId(activityId);
+    helmStateExecutionData.setCurrentTaskType(TaskType.GIT_COMMAND);
+
+    Map<String, ResponseData> response = new HashMap<>();
+    response.put(activityId, gitCommandExecutionResponse);
+
+    ExecutionResponse executionResponse = helmDeployState.handleAsyncInternal(context, response);
+
+    verify(activityService).updateStatus("activityId", APP_ID, ExecutionStatus.FAILED);
+    verify(applicationManifestUtils, times(0)).getValuesFilesFromGitFetchFilesResponse(any());
+
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseForHelmFetchTaskForFailure() throws InterruptedException {
+    HelmValuesFetchTaskResponse helmValuesFetchTaskResponse =
+        HelmValuesFetchTaskResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
+
+    HelmDeployStateExecutionData helmStateExecutionData =
+        (HelmDeployStateExecutionData) context.getStateExecutionData();
+
+    String activityId = "activityId";
+    helmStateExecutionData.setActivityId(activityId);
+    helmStateExecutionData.setCurrentTaskType(TaskType.HELM_VALUES_FETCH);
+
+    Map<String, ResponseData> response = new HashMap<>();
+    response.put(activityId, helmValuesFetchTaskResponse);
+    ExecutionResponse executionResponse = helmDeployState.handleAsyncInternal(context, response);
+
+    verify(activityService).updateStatus("activityId", APP_ID, ExecutionStatus.FAILED);
+    verify(applicationManifestUtils, times(0)).getValuesFilesFromGitFetchFilesResponse(any());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
   }
 }

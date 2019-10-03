@@ -76,7 +76,7 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
 
     for (Entry<String, GitFetchFilesConfig> entry : taskParams.getGitFetchFilesConfigMap().entrySet()) {
       executionLogCallback.saveExecutionLog(
-          color(format("\nFetching %s files from git for %s", getFileTypeMessage(appManifestKind), entry.getKey()),
+          color(format("%nFetching %s files from git for %s", getFileTypeMessage(appManifestKind), entry.getKey()),
               LogColor.White, LogWeight.Bold));
 
       GitFetchFilesConfig gitFetchFileConfig = entry.getValue();
