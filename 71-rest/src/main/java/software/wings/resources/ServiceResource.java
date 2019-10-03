@@ -773,7 +773,7 @@ public class ServiceResource {
   @ExceptionMetered
   public RestResponse<ArtifactStreamBinding> updateArtifactStreamBinding(@QueryParam("appId") String appId,
       @PathParam("serviceId") String serviceId, @PathParam("name") String name,
-      @NotNull ArtifactStreamBinding artifactStreamBinding) {
+      ArtifactStreamBinding artifactStreamBinding) {
     if (name == null || artifactStreamBinding == null) {
       throw new InvalidRequestException("Name or artifact stream bindings not provided in request body", USER);
     }

@@ -55,6 +55,7 @@ import software.wings.utils.RepositoryFormat;
 import software.wings.utils.RepositoryType;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -257,13 +258,13 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     String settingId = artifactStream.getSettingId();
     // Collect labels for only DOCKER.
     if (!DOCKER.name().equals(artifactStream.getArtifactStreamType())) {
-      return null;
+      return Collections.emptyList();
     }
 
     SettingAttribute settingAttribute = settingsService.get(settingId);
     if (settingAttribute == null) {
       logger.warn("Artifact xxxxxxxx [{}] was deleted for artifact stream: [{}]", settingId, artifactStreamId);
-      return null;
+      return Collections.emptyList();
     }
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);

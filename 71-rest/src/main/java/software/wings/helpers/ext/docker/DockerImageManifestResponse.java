@@ -3,7 +3,6 @@ package software.wings.helpers.ext.docker;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.serializer.JsonUtils;
 import lombok.Data;
 
@@ -20,7 +19,6 @@ public class DockerImageManifestResponse {
 
   @Data
   public static class DockerImageManifestHistoryElement {
-    private static TypeReference<Map<String, Object>> typeReference = new TypeReference<Map<String, Object>>() {};
     private String v1Compatibility;
 
     public Map<String, String> getLabels() {

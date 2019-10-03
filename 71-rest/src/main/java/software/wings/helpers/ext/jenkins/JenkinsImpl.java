@@ -35,6 +35,7 @@ import com.offbytwo.jenkins.model.JobWithDetails;
 import com.offbytwo.jenkins.model.QueueItem;
 import com.offbytwo.jenkins.model.QueueReference;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.serializer.JsonUtils;
@@ -385,7 +386,7 @@ public class JenkinsImpl implements Jenkins {
    * @see software.wings.helpers.ext.jenkins.Jenkins#trigger(java.lang.String)
    */
   @Override
-  public QueueReference trigger(String jobname, Map<String, String> parameters) throws RuntimeException, IOException {
+  public QueueReference trigger(String jobname, Map<String, String> parameters) throws IOException {
     JobWithDetails jobWithDetails = getJob(jobname);
     if (jobWithDetails == null) {
       throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "No job [" + jobname + "] found");
@@ -404,9 +405,11 @@ public class JenkinsImpl implements Jenkins {
       return queueReference;
     } catch (HttpResponseException e) {
       if (e.getStatusCode() == 400 && isEmpty(parameters)) {
-        throw new RuntimeException(format(
-            "Failed to trigger job %s with url %s.\nThis might be because the Jenkins job requires parameters but none were provided in the Jenkins step.",
-            jobname, jobWithDetails.getUrl()));
+        throw new InvalidRequestException(
+            format(
+                "Failed to trigger job %s with url %s.%nThis might be because the Jenkins job requires parameters but none were provided in the Jenkins step.",
+                jobname, jobWithDetails.getUrl()),
+            USER);
       }
       throw e;
     } catch (IOException e) {
@@ -522,8 +525,9 @@ public class JenkinsImpl implements Jenkins {
               sleep(ofSeconds(1L));
               continue;
             } else {
-              throw new RuntimeException("Failed to collect environment variables from Jenkins: " + path
-                  + ".\nThis might be because 'Capture environment variables' is enabled in Jenkins step but EnvInject plugin is not installed in the Jenkins instance.");
+              throw new InvalidRequestException("Failed to collect environment variables from Jenkins: " + path
+                      + ".\nThis might be because 'Capture environment variables' is enabled in Jenkins step but EnvInject plugin is not installed in the Jenkins instance.",
+                  USER);
             }
           }
 

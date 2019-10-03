@@ -10,6 +10,11 @@ import java.util.EnumSet;
 public class ArtifactServerException extends WingsException {
   private static final String MESSAGE_ARG = "message";
 
+  public ArtifactServerException(String message) {
+    super(message, null, ARTIFACT_SERVER_ERROR, Level.ERROR, null, null);
+    super.param(MESSAGE_ARG, message);
+  }
+
   public ArtifactServerException(String message, Throwable cause, EnumSet<WingsException.ReportTarget> reportTargets) {
     super(message, cause, ARTIFACT_SERVER_ERROR, Level.ERROR, reportTargets, null);
     super.param(MESSAGE_ARG, message);

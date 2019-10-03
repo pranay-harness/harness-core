@@ -274,7 +274,6 @@ public interface BuildService<T> {
         buildDetails, artifactStreamAttributes.getArtifactStreamType(), artifactStreamAttributes);
 
     // Disable fetching labels for now as it has many issues.
-    //    return wrapBuildDetailsWithLabels(buildDetails, artifactStreamAttributes, config, encryptionDetails);
     return buildDetails;
   }
 
@@ -307,7 +306,7 @@ public interface BuildService<T> {
     List<String> buildNos = buildDetails.stream().map(BuildDetails::getNumber).collect(Collectors.toList());
     List<Map<String, String>> labelsList =
         getLabels(artifactStreamAttributes, buildNos, config, encryptionDetails, deadline);
-    if (labelsList == null) {
+    if (isEmpty(labelsList)) {
       // Return if labels could not be collected properly.
       return buildDetails;
     }
