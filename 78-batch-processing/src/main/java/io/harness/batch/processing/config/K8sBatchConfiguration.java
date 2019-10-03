@@ -2,6 +2,10 @@ package io.harness.batch.processing.config;
 
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
+import io.harness.batch.processing.processor.K8sNodeEventProcessor;
+import io.harness.batch.processing.processor.K8sNodeInfoProcessor;
+import io.harness.batch.processing.processor.K8sPodEventProcessor;
+import io.harness.batch.processing.processor.K8sPodInfoProcessor;
 import io.harness.batch.processing.reader.EventReaderFactory;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.event.grpc.PublishedMessage;
@@ -25,20 +29,12 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class K8sBatchConfiguration {
   private static final int BATCH_SIZE = 10;
-  private static final int RETRY_LIMIT = 1;
-
-  @Autowired @Qualifier("mongoEventReader") private EventReaderFactory eventReaderFactory;
-
-  @Autowired @Qualifier("k8sNodeInfoProcessor") private ItemProcessor k8sNodeInfoProcessor;
-  @Autowired @Qualifier("k8sNodeEventProcessor") private ItemProcessor k8sNodeEventProcessor;
-  @Autowired @Qualifier("k8sPodInfoProcessor") private ItemProcessor k8sPodInfoProcessor;
-  @Autowired @Qualifier("k8sPodEventProcessor") private ItemProcessor k8sPodEventProcessor;
-
-  @Autowired @Qualifier("instanceInfoWriter") private ItemWriter instanceInfoWriter;
-  @Autowired @Qualifier("instanceEventWriter") private ItemWriter instanceEventWriter;
 
   @Autowired private StepBuilderFactory stepBuilderFactory;
-  @Autowired private JobBuilderFactory jobBuilderFactory;
+
+  @Autowired @Qualifier("mongoEventReader") private EventReaderFactory eventReaderFactory;
+  @Autowired @Qualifier("instanceInfoWriter") private ItemWriter instanceInfoWriter;
+  @Autowired @Qualifier("instanceEventWriter") private ItemWriter instanceEventWriter;
 
   @Bean
   @StepScope
@@ -73,8 +69,30 @@ public class K8sBatchConfiguration {
   }
 
   @Bean
+  public ItemProcessor<PublishedMessage, InstanceInfo> k8sNodeInfoProcessor() {
+    return new K8sNodeInfoProcessor();
+  }
+
+  @Bean
+  public ItemProcessor<PublishedMessage, InstanceEvent> k8sNodeEventProcessor() {
+    return new K8sNodeEventProcessor();
+  }
+
+  @Bean
+  public ItemProcessor<PublishedMessage, InstanceInfo> k8sPodInfoProcessor() {
+    return new K8sPodInfoProcessor();
+  }
+
+  @Bean
+  public ItemProcessor<PublishedMessage, InstanceEvent> k8sPodEventProcessor() {
+    return new K8sPodEventProcessor();
+  }
+
+  @Bean
+  @Autowired
   @Qualifier(value = "k8sJob")
-  public Job k8sJob(Step k8sNodeInfoStep, Step k8sNodeEventStep, Step k8sPodInfoStep, Step k8sPodEventStep) {
+  public Job k8sJob(JobBuilderFactory jobBuilderFactory, Step k8sNodeInfoStep, Step k8sNodeEventStep,
+      Step k8sPodInfoStep, Step k8sPodEventStep) {
     return jobBuilderFactory.get("k8sJob")
         .incrementer(new RunIdIncrementer())
         .start(k8sNodeInfoStep)
@@ -89,7 +107,7 @@ public class K8sBatchConfiguration {
     return stepBuilderFactory.get("k8sNodeInfoStep")
         .<PublishedMessage, InstanceInfo>chunk(BATCH_SIZE)
         .reader(k8sNodeInfoMessageReader(null, null))
-        .processor(k8sNodeInfoProcessor)
+        .processor(k8sNodeInfoProcessor())
         .writer(instanceInfoWriter)
         .build();
   }
@@ -99,7 +117,7 @@ public class K8sBatchConfiguration {
     return stepBuilderFactory.get("k8sNodeEventStep")
         .<PublishedMessage, InstanceEvent>chunk(BATCH_SIZE)
         .reader(k8sNodeEventMessageReader(null, null))
-        .processor(k8sNodeEventProcessor)
+        .processor(k8sNodeEventProcessor())
         .writer(instanceEventWriter)
         .build();
   }
@@ -109,7 +127,7 @@ public class K8sBatchConfiguration {
     return stepBuilderFactory.get("k8sPodInfoStep")
         .<PublishedMessage, InstanceInfo>chunk(BATCH_SIZE)
         .reader(k8sPodInfoMessageReader(null, null))
-        .processor(k8sPodInfoProcessor)
+        .processor(k8sPodInfoProcessor())
         .writer(instanceInfoWriter)
         .build();
   }
@@ -119,7 +137,7 @@ public class K8sBatchConfiguration {
     return stepBuilderFactory.get("k8sPodEventStep")
         .<PublishedMessage, InstanceEvent>chunk(BATCH_SIZE)
         .reader(k8sPodEventMessageReader(null, null))
-        .processor(k8sPodEventProcessor)
+        .processor(k8sPodEventProcessor())
         .writer(instanceEventWriter)
         .build();
   }

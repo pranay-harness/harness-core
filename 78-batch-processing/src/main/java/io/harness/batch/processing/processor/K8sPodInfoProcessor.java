@@ -8,12 +8,8 @@ import io.harness.perpetualtask.k8s.watch.PodInfo;
 import io.harness.perpetualtask.k8s.watch.Resource.Quantity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemProcessor;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Service;
 
 @Slf4j
-@Service
-@Qualifier("k8sPodInfoProcessor")
 public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, InstanceInfo> {
   @Override
   public InstanceInfo process(PublishedMessage publishedMessage) {
