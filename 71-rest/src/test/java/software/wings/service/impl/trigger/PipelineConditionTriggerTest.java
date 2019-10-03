@@ -108,10 +108,27 @@ public class PipelineConditionTriggerTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  public void shouldThrowExceptionForSameActionAndCondition() {
+    pipelineTrigger.setAction(
+        PipelineAction.builder().pipelineId("PIPELINE_ID1").triggerArgs(TriggerArgs.builder().build()).build());
+    assertThatExceptionOfType(WingsException.class)
+        .isThrownBy(() -> deploymentTriggerService.save(pipelineTrigger, false));
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void shouldThrowActionPipelineExceptionForNull() {
     pipelineTrigger.setAction(
         PipelineAction.builder().pipelineId(null).triggerArgs(TriggerArgs.builder().build()).build());
     assertThatExceptionOfType(WingsException.class)
         .isThrownBy(() -> deploymentTriggerService.save(pipelineTrigger, false));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldThrowConditionPipelineInvalidException() {
+    pipelineTrigger.setCondition(PipelineCondition.builder().pipelineId("InvalidPipelineId").build());
+    assertThatExceptionOfType(WingsException.class)
+        .isThrownBy(() -> pipelineTriggerProcessor.transformTriggerConditionRead(pipelineTrigger));
   }
 }
