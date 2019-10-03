@@ -46,10 +46,14 @@ public class CustomOrchestrationWorkflow extends OrchestrationWorkflow {
   }
 
   @Override
-  public void onSave() {}
+  public void onSave() {
+    // do nothing
+  }
 
   @Override
-  public void onLoad(boolean infraRefactor, Workflow workflow) {}
+  public void onLoad(boolean infraRefactor, Workflow workflow) {
+    // do nothing
+  }
 
   @Override
   public Set<EntityType> getRequiredEntityTypes() {
@@ -57,7 +61,9 @@ public class CustomOrchestrationWorkflow extends OrchestrationWorkflow {
   }
 
   @Override
-  public void setRequiredEntityTypes(Set<EntityType> requiredEntityTypes) {}
+  public void setRequiredEntityTypes(Set<EntityType> requiredEntityTypes) {
+    // do nothing
+  }
 
   @Override
   public boolean validate() {
@@ -80,7 +86,9 @@ public class CustomOrchestrationWorkflow extends OrchestrationWorkflow {
   }
 
   @Override
-  public void setCloneMetadata(Map<String, String> serviceIdMapping) {}
+  public void setCloneMetadata(Map<String, String> serviceIdMapping) {
+    // do nothing
+  }
 
   @Override
   public List<String> getInfraMappingIds() {
@@ -103,7 +111,9 @@ public class CustomOrchestrationWorkflow extends OrchestrationWorkflow {
   }
 
   @Override
-  public void setNotificationRules(List<NotificationRule> notificationRules) {}
+  public void setNotificationRules(List<NotificationRule> notificationRules) {
+    // do nothing
+  }
 
   @Override
   public boolean equals(Object o) {

@@ -162,7 +162,9 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
   }
 
   @Override
-  public void handleAbortEvent(ExecutionContext context) {}
+  public void handleAbortEvent(ExecutionContext context) {
+    // nothing to handle
+  }
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {

@@ -16,8 +16,12 @@ public class HazelcastListener implements MaintenanceListener {
   }
 
   @Override
-  public void onEnterMaintenance() {}
+  public void onEnterMaintenance() {
+    // do nothing
+  }
 
   @Override
-  public void onLeaveMaintenance() {}
+  public void onLeaveMaintenance() {
+    // do nothing
+  }
 }

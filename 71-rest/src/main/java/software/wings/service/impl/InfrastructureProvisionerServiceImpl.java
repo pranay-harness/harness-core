@@ -6,12 +6,12 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
+import static java.lang.String.join;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.atteo.evo.inflector.English.plural;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -22,6 +22,7 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.context.ContextElementType;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -336,7 +337,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
             plural("Infrastructure "
                     + "Definition",
                 infraDefinitionNames.size()),
-            Joiner.on(", ").join(infraDefinitionNames)));
+            join(", ", infraDefinitionNames)));
       }
     } else {
       List<Key<InfrastructureMapping>> keys =
@@ -381,7 +382,9 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   }
 
   @Override
-  public void pruneDescendingEntities(String appId, String infrastructureProvisionerId) {}
+  public void pruneDescendingEntities(String appId, String infrastructureProvisionerId) {
+    // nothing to prune
+  }
 
   private void prune(String appId, String infraProvisionerId) {
     pruneQueue.send(new PruneEvent(InfrastructureProvisioner.class, appId, infraProvisionerId));
@@ -469,7 +472,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       Object evaluated = null;
       try {
         evaluated = evaluator.evaluate(property.getValue(), contextMap);
-      } catch (Exception ignored) {
+      } catch (Exception ignore) {
+        // ignore this exception, it is based on user input
       }
       if (evaluated == null) {
         if (!infraRefactor || property.getValue().contains(format("${%s.", infrastructureProvisionerTypeKey))) {
@@ -740,7 +744,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   private boolean areKeysMongoCompliant(List<NameValuePair>... variables) {
     Predicate<String> terraformVariableNameCheckFail = value -> value.contains(".") || value.contains("$");
     return Stream.of(variables)
-        .filter(list -> isNotEmpty(list))
+        .filter(EmptyPredicate::isNotEmpty)
         .flatMap(Collection::stream)
         .map(NameValuePair::getName)
         .noneMatch(terraformVariableNameCheckFail);

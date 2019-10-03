@@ -28,8 +28,6 @@ import software.wings.service.impl.instance.InstanceEventListener;
 import software.wings.service.impl.security.KmsTransitionEventListener;
 
 public class ManagerQueueModule extends AbstractModule {
-  public ManagerQueueModule() {}
-
   @Override
   protected void configure() {
     bind(new TypeLiteral<Queue<PruneEvent>>() {}).toInstance(new MongoQueue<>(PruneEvent.class));

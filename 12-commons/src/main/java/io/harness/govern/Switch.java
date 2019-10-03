@@ -1,7 +1,9 @@
 package io.harness.govern;
 
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
+@UtilityClass
 @Slf4j
 public class Switch {
   /**
@@ -16,5 +18,7 @@ public class Switch {
   /**
    * No operation function. Use to indicate intention to do nothing for particular switch case.
    */
-  public static void noop() {}
+  public static void noop() {
+    // Noop method
+  }
 }

@@ -53,9 +53,9 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
 
   protected Scheduler createScheduler(Properties properties) throws SchedulerException {
     StdSchedulerFactory factory = new StdSchedulerFactory(properties);
-    Scheduler scheduler = factory.getScheduler();
+    Scheduler newScheduler = factory.getScheduler();
 
-    // by default scheduler does not create all needed mongo indexes.
+    // by default newScheduler does not create all needed mongo indexes.
     // it is a bit hack but we are going to add them from here
 
     if (schedulerConfig.getJobStoreClass().equals(
@@ -88,8 +88,8 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
       }
     }
 
-    scheduler.setJobFactory(injector.getInstance(InjectorJobFactory.class));
-    return scheduler;
+    newScheduler.setJobFactory(injector.getInstance(InjectorJobFactory.class));
+    return newScheduler;
   }
 
   protected Properties getDefaultProperties() {
@@ -174,11 +174,7 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
       return false;
     }
 
-    if (!StringUtils.equals(jobDetail1.getDescription(), jobDetail1.getDescription())) {
-      return false;
-    }
-
-    return true;
+    return StringUtils.equals(jobDetail1.getDescription(), jobDetail1.getDescription());
   }
 
   static boolean compare(Trigger trigger1, Trigger trigger2) {
@@ -194,11 +190,7 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
       return false;
     }
 
-    if (!StringUtils.equals(trigger1.getDescription(), trigger2.getDescription())) {
-      return false;
-    }
-
-    return true;
+    return StringUtils.equals(trigger1.getDescription(), trigger2.getDescription());
   }
 
   // This method is under construction. If you using it and you make changes to your job or trigger
@@ -301,7 +293,9 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
   }
 
   @Override
-  public void onShutdown() {}
+  public void onShutdown() {
+    // do nothing
+  }
 
   @Override
   public void onEnterMaintenance() {
