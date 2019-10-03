@@ -78,11 +78,8 @@ import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.deployment.DeploymentMetadata;
-import software.wings.beans.template.ReferencedTemplate;
 import software.wings.beans.template.Template;
-import software.wings.beans.template.TemplateReference;
 import software.wings.beans.template.command.ShellScriptTemplate;
-import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.ServiceResourceService;
@@ -451,7 +448,6 @@ public class WorkflowGenerator {
 
     Template multiArtifactCommandTemplate =
         templateGenerator.ensurePredefined(seed, owners, TemplateGenerator.Templates.MULTI_ARTIFACT_COMMAND_TEMPLATE);
-    SshCommandTemplate templateObject = (SshCommandTemplate) multiArtifactCommandTemplate.getTemplateObject();
 
     Service savedService = serviceGenerator.ensurePredefined(seed, owners, Services.MULTI_ARTIFACT_FUNCTIONAL_TEST);
     Environment savedEnvironment = environmentGenerator.ensurePredefined(seed, owners, Environments.FUNCTIONAL_TEST);
@@ -489,24 +485,6 @@ public class WorkflowGenerator {
     commandProperties.put("commandName", "MyCommand");
     commandProperties.put("commandType", "OTHER");
     commandProperties.put("executeOnDelegate", "true");
-    //    commandProperties.put("sshKeyRef", "MyCommand");
-    //    commandProperties.put("commandUnits", ((SshCommandTemplate)
-    //    multiArtifactCommandTemplate.getTemplateObject()).getCommandUnits());
-    List<ReferencedTemplate> referencedTemplates = new ArrayList<>();
-    referencedTemplates.add(ReferencedTemplate.builder()
-                                .templateReference(TemplateReference.builder()
-                                                       .templateUuid(commandTemplate1.getUuid())
-                                                       .templateVersion(commandTemplate1.getVersion())
-                                                       .build())
-                                .variableMapping(variableMap1)
-                                .build());
-    referencedTemplates.add(ReferencedTemplate.builder()
-                                .templateReference(TemplateReference.builder()
-                                                       .templateUuid(commandTemplate2.getUuid())
-                                                       .templateVersion(commandTemplate2.getVersion())
-                                                       .build())
-                                .variableMapping(variableMap2)
-                                .build());
     phaseSteps.add(
         aPhaseStep(DEPLOY_SERVICE, WorkflowServiceHelper.DEPLOY_SERVICE)
             .withPhaseStepType(PhaseStepType.DEPLOY_SERVICE)

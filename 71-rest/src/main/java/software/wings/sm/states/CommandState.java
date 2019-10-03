@@ -40,7 +40,6 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.DeploymentType;
 import software.wings.api.InstanceElement;
-import software.wings.api.PhaseElement;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
@@ -608,8 +607,8 @@ public class CommandState extends State {
     Map<String, ArtifactStreamAttributes> artifactStreamAttributesMap = new HashMap<>();
     Map<String, List<EncryptedDataDetail>> artifactServerEncryptedDataDetailsMap = new HashMap<>();
     if (isNotEmpty(map)) {
-      for (String key : map.keySet()) {
-        Artifact artifact = map.get(key);
+      for (Entry<String, Artifact> entry : map.entrySet()) {
+        Artifact artifact = entry.getValue();
         logger.info("Artifact being used: {} for stateExecutionInstanceId: {}", artifact.getUuid(),
             context.getStateExecutionInstanceId());
         // Observed NPE in alerts
@@ -732,8 +731,6 @@ public class CommandState extends State {
       String serviceTemplateId = instanceElement.getServiceTemplateElement().getUuid();
       serviceTemplate = serviceTemplateService.get(appId, serviceTemplateId);
     }
-
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PHASE_PARAM);
 
     String infrastructureMappingId = context.fetchInfraMappingId();
     InfrastructureMapping infrastructureMapping = null;

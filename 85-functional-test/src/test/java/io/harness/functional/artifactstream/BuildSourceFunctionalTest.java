@@ -187,6 +187,7 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(emails = AADITI, intermittent = true)
   @Category(FunctionalTests.class)
+  @Ignore("This test is Flaky. Need to debug more by the test owner")
   public void getRepositoriesForArtifactoryAnyAtConnectorLevel() {
     GenericType<RestResponse<Map<String, String>>> artifactStreamType =
         new GenericType<RestResponse<Map<String, String>>>() {
