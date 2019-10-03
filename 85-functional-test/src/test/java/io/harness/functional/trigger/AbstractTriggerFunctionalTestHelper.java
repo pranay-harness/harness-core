@@ -36,7 +36,7 @@ import software.wings.service.impl.trigger.DeploymentTriggerServiceImpl;
 
 import javax.ws.rs.core.GenericType;
 
-public class AbstractTriggerFunctionalTest extends AbstractFunctionalTest {
+public class AbstractTriggerFunctionalTestHelper extends AbstractFunctionalTest {
   @Inject protected OwnerManager ownerManager;
   @Inject protected ApplicationGenerator applicationGenerator;
   @Inject protected WorkflowGenerator workflowGenerator;

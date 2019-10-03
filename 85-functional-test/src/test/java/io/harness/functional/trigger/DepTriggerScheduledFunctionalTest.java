@@ -12,7 +12,7 @@ import software.wings.beans.trigger.ScheduledCondition;
 import software.wings.beans.trigger.TriggerArgs;
 import software.wings.beans.trigger.WorkflowAction;
 
-public class DepTriggerScheduledFunctionalTest extends AbstractTriggerFunctionalTest {
+public class DepTriggerScheduledFunctionalTest extends AbstractTriggerFunctionalTestHelper {
   @Test
   @Category(FunctionalTests.class)
   public void shouldCRUDAndExecuteScheduleTriggerForWorkflow() {
