@@ -5,15 +5,10 @@ import io.harness.batch.processing.ccm.InstanceEvent.EventType;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.PodEvent;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemProcessor;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Service;
 
 @Slf4j
-@Service
-@Qualifier("k8sPodEventProcessor")
 public class K8sPodEventProcessor implements ItemProcessor<PublishedMessage, InstanceEvent> {
   @Override
   public InstanceEvent process(PublishedMessage publishedMessage) throws Exception {
