@@ -44,6 +44,8 @@ import java.util.Random;
 public class Constraint {
   private static final int DELAY_FOR_OPTIMISTIC_RETRIES = 10;
 
+  private static final Random random = new Random();
+
   private ConstraintId id;
 
   public enum Strategy {
@@ -72,7 +74,7 @@ public class Constraint {
   }
 
   public static int getUsedPermits(List<Consumer> consumers) {
-    return consumers.stream().filter(item -> item.getState().equals(ACTIVE)).mapToInt(item -> item.getPermits()).sum();
+    return consumers.stream().filter(item -> item.getState().equals(ACTIVE)).mapToInt(Consumer::getPermits).sum();
   }
 
   private boolean enoughPermits(int permits, int usedPermits) {
@@ -110,7 +112,6 @@ public class Constraint {
           "An amount of %d permits cannot be requested from constraint with limit %d.", permits, spec.getLimits()));
     }
 
-    final Random random = new Random();
     do {
       List<Consumer> consumers = registry.loadConsumers(id, unit);
       final int usedPermits = getUsedPermits(consumers);
