@@ -427,8 +427,6 @@ public abstract class ContainerServiceSetup extends State {
   }
 
   protected String getClusterNameFromContextElement(ExecutionContext context) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
-
     Optional<ClusterElement> contextElement =
         context.<ClusterElement>getContextElementList(ContextElementType.CLUSTER)
             .stream()

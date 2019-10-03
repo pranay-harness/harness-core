@@ -203,8 +203,8 @@ public class CapabilityHelper {
               .append(hostName.endsWith("/") ? "" : "/")
               .toString()));
 
-    } else if (settingValue instanceof ExecutionCapabilityDemander) {
-      executionCapabilities.addAll(((ExecutionCapabilityDemander) settingValue).fetchRequiredExecutionCapabilities());
+    } else {
+      executionCapabilities.addAll(settingValue.fetchRequiredExecutionCapabilities());
     }
 
     return executionCapabilities;
