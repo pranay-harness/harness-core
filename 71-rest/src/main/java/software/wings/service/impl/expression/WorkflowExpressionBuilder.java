@@ -58,7 +58,7 @@ public class WorkflowExpressionBuilder extends ExpressionBuilder {
         expressions.addAll(getExpressions(appId, entityId));
         if (serviceId.equalsIgnoreCase("All")) {
           expressions.addAll(serviceExpressionBuilder.getServiceTemplateVariableExpressions(appId, "All", SERVICE));
-          if (workflow != null && workflow.getEnvId() != null) {
+          if (workflow.getEnvId() != null) {
             expressions.addAll(
                 environmentExpressionBuilder.getServiceTemplateVariableExpressions(appId, workflow.getEnvId()));
           }
@@ -76,7 +76,7 @@ public class WorkflowExpressionBuilder extends ExpressionBuilder {
             serviceExpressionBuilder.getServiceTemplateVariableExpressions(appId, serviceId, ENVIRONMENT));
       } else {
         expressions.addAll(serviceExpressionBuilder.getServiceTemplateVariableExpressions(appId, "All", SERVICE));
-        if (workflow != null && workflow.getEnvId() != null) {
+        if (workflow.getEnvId() != null) {
           expressions.addAll(
               environmentExpressionBuilder.getServiceTemplateVariableExpressions(appId, workflow.getEnvId()));
         }

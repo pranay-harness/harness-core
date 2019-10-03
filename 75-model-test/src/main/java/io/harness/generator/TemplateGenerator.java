@@ -180,7 +180,6 @@ public class TemplateGenerator {
             .commandUnits(asList(
                 Command.Builder.aCommand()
                     .withName("MyCommand-1")
-                    //                    .withCommandUnitType(COMMAND)
                     .withTemplateReference(TemplateReference.builder()
                                                .templateUuid(commandTemplate1.getUuid())
                                                .templateVersion(commandTemplate1.getVersion())
@@ -190,7 +189,6 @@ public class TemplateGenerator {
                     .build(),
                 Command.Builder.aCommand()
                     .withName("MyCommand-2")
-                    //                    .withCommandUnitType(COMMAND)
                     .withTemplateReference(TemplateReference.builder()
                                                .templateUuid(commandTemplate2.getUuid())
                                                .templateVersion(commandTemplate2.getVersion())
