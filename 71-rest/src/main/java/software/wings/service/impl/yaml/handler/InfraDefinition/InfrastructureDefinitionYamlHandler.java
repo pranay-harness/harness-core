@@ -79,7 +79,7 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
 
     InfrastructureDefinition current = InfrastructureDefinition.builder().build();
     toBean(current, changeContext, changeSetContext, appId, envId);
-    return upsertInfraDefinition(current, previous, changeContext.getChange().isSyncFromGit());
+    return upsertInfraDefinition(current, previous);
   }
 
   private void toBean(InfrastructureDefinition bean, ChangeContext<Yaml> changeContext,
@@ -96,7 +96,7 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
     for (String serviceName : CollectionUtils.emptyIfNull(yaml.getScopedServices())) {
       scopedToServicesId.add(getServiceId(appId, serviceName));
     }
-    String infraDefinitionName = yamlHelper.getInfraDefinitionNameByAppIdYamlPath(appId, envId, yamlFilePath);
+    String infraDefinitionName = yamlHelper.getInfraDefinitionNameByAppIdYamlPath(yamlFilePath);
 
     // name is set for the case when infra definition is created on the git side since yaml does
     // not have a name field
@@ -117,7 +117,7 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
   }
 
   private InfrastructureDefinition upsertInfraDefinition(
-      InfrastructureDefinition current, InfrastructureDefinition previous, boolean syncFromGit) {
+      InfrastructureDefinition current, InfrastructureDefinition previous) {
     if (previous != null) {
       current.setUuid(previous.getUuid());
       return infrastructureDefinitionService.update(current);

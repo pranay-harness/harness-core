@@ -25,8 +25,6 @@ import java.util.Optional;
 public final class TerraformConfigInspectClientImpl implements TerraformConfigInspectClient {
   private static final String jsonArg = "--json";
 
-  private final Joiner pathJoiner = Joiner.on("/");
-
   @Override
   public List<String> parseFieldsUnderBlock(String directory, String category) {
     try {

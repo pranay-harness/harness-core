@@ -79,18 +79,18 @@ public class InfrastructureDefinitionRestUtils {
     return restResponse.getResource();
   }
 
-  public static void delete(
+  public static RestResponse delete(
       String bearerToken, String accountId, String appId, String envId, String infraDefinitionId) {
     GenericType<RestResponse> restResponseGenericType = new GenericType<RestResponse>() {};
-    RestResponse restResponse = Setup.portal()
-                                    .auth()
-                                    .oauth2(bearerToken)
-                                    .contentType(ContentType.JSON)
-                                    .queryParam("appId", appId)
-                                    .queryParam("envId", envId)
-                                    .queryParam("routingId", accountId)
-                                    .delete("/infrastructure-definitions/" + infraDefinitionId)
-                                    .as(restResponseGenericType.getType());
+    return Setup.portal()
+        .auth()
+        .oauth2(bearerToken)
+        .contentType(ContentType.JSON)
+        .queryParam("appId", appId)
+        .queryParam("envId", envId)
+        .queryParam("routingId", accountId)
+        .delete("/infrastructure-definitions/" + infraDefinitionId)
+        .as(restResponseGenericType.getType());
   }
 
   public static List<String> listHosts(String bearerToken, String appId, String envId, String infraDefinitionId) {
