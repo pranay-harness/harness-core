@@ -382,6 +382,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     stackdriverCVConfiguration.setAlertEnabled(false);
     stackdriverCVConfiguration.setAlertThreshold(0.1);
     stackdriverCVConfiguration.setStateType(STACK_DRIVER_LOG);
+    stackdriverCVConfiguration.setHostnameField(generateUuid());
+    stackdriverCVConfiguration.setMessageField(generateUuid());
   }
 
   private void createSplunkCVConfig(boolean enabled24x7) {

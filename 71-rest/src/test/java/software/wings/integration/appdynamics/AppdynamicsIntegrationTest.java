@@ -116,6 +116,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     RestResponse<List<NewRelicApplication>> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicApplication>>>() {});
 
+    int maxAppToTest = 0;
     for (NewRelicApplication application : restResponse.getResource()) {
       WebTarget btTarget = client.target(API_BASE + "/appdynamics/tiers?settingId=" + appdynamicsSettingId
           + "&accountId=" + accountId + "&appdynamicsAppId=" + application.getId());
@@ -129,6 +130,10 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
         assertThat(isBlank(tier.getType())).isFalse();
         assertThat(isBlank(tier.getAgentType())).isFalse();
         assertThat(tier.getName().isEmpty()).isFalse();
+      }
+
+      if (++maxAppToTest >= 5) {
+        break;
       }
     }
   }
@@ -184,6 +189,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     RestResponse<List<NewRelicApplication>> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicApplication>>>() {});
 
+    int maxAppToTest = 0;
     for (NewRelicApplication application : restResponse.getResource()) {
       WebTarget btTarget = client.target(API_BASE + "/appdynamics/tiers?settingId=" + appdynamicsSettingId
           + "&accountId=" + accountId + "&appdynamicsAppId=" + application.getId());
@@ -205,6 +211,9 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
             getRequestBuilderWithAuthHeader(dependentTarget).get(new GenericType<RestResponse<Set<AppdynamicsTier>>>() {
             });
         logger.info("" + dependentTierResponse.getResource());
+      }
+      if (++maxAppToTest >= 5) {
+        break;
       }
     }
   }
