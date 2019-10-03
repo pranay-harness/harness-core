@@ -199,6 +199,7 @@ public class DelegateServiceImpl implements DelegateService {
   private static final int KEEP_ALIVE_INTERVAL = 23000;
   private static final int CLIENT_TOOL_RETRIES = 10;
   private static final String TOKEN = "[TOKEN]";
+  private static final String SEQ = "[SEQ]";
 
   private static String hostName;
   private static String delegateId;
@@ -1279,7 +1280,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void updateTokenAndSeqNumFromPollingResponse(Delegate delegate) {
     if (isEcsDelegate()) {
-      handleEcsDelegateSpecificMessage(TOKEN + delegate.getDelegateRandomToken() + "[SEQ]" + delegate.getSequenceNum());
+      handleEcsDelegateSpecificMessage(TOKEN + delegate.getDelegateRandomToken() + SEQ + delegate.getSequenceNum());
     }
   }
 
@@ -1680,7 +1681,7 @@ public class DelegateServiceImpl implements DelegateService {
   private void handleEcsDelegateSpecificMessage(String message) {
     if (isEcsDelegate()) {
       int indexForToken = message.lastIndexOf(TOKEN);
-      int indexForSeqNum = message.lastIndexOf("[SEQ]");
+      int indexForSeqNum = message.lastIndexOf(SEQ);
       String token = message.substring(indexForToken + 7, indexForSeqNum);
       String sequenceNum = message.substring(indexForSeqNum + 5);
 
@@ -1691,7 +1692,7 @@ public class DelegateServiceImpl implements DelegateService {
 
       try {
         FileIo.writeWithExclusiveLockAcrossProcesses(
-            TOKEN + token + "[SEQ]" + sequenceNum, DELEGATE_SEQUENCE_CONFIG_FILE, StandardOpenOption.TRUNCATE_EXISTING);
+            TOKEN + token + SEQ + sequenceNum, DELEGATE_SEQUENCE_CONFIG_FILE, StandardOpenOption.TRUNCATE_EXISTING);
         logger.info("Token Received From Manager : {}, SeqNum Received From Manager: {}", token, sequenceNum);
       } catch (Exception e) {
         logger.error("Failed to write registration response into delegate_sequence file");
@@ -1743,7 +1744,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (isEcsDelegate()) {
       content = getSequenceConfigData();
       if (isNotBlank(content)) {
-        int indexForSeqNum = content.lastIndexOf("[SEQ]");
+        int indexForSeqNum = content.lastIndexOf(SEQ);
         seqNum = content.substring(indexForSeqNum + 5);
         if (isBlank(seqNum)) {
           seqNum = null;
@@ -1776,7 +1777,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (isEcsDelegate()) {
       content = getSequenceConfigData();
       if (isNotBlank(content)) {
-        int indexForSeqNum = content.lastIndexOf("[SEQ]");
+        int indexForSeqNum = content.lastIndexOf(SEQ);
         token = content.substring(7, indexForSeqNum);
         if (isBlank(token)) {
           token = null;
@@ -1790,8 +1791,8 @@ public class DelegateServiceImpl implements DelegateService {
     if (isEcsDelegate()) {
       try {
         FileIo.writeWithExclusiveLockAcrossProcesses(
-            TOKEN + delegate.getDelegateRandomToken() + "[SEQ]" + delegate.getSequenceNum(),
-            DELEGATE_SEQUENCE_CONFIG_FILE, StandardOpenOption.TRUNCATE_EXISTING);
+            TOKEN + delegate.getDelegateRandomToken() + SEQ + delegate.getSequenceNum(), DELEGATE_SEQUENCE_CONFIG_FILE,
+            StandardOpenOption.TRUNCATE_EXISTING);
       } catch (Exception e) {
         logger.error("Failed to write registration response into delegate_sequence file");
       }
@@ -1807,7 +1808,7 @@ public class DelegateServiceImpl implements DelegateService {
       FileUtils.touch(new File(DELEGATE_SEQUENCE_CONFIG_FILE));
       String randomToken = UUIDGenerator.generateUuid();
       FileIo.writeWithExclusiveLockAcrossProcesses(
-          TOKEN + randomToken + "[SEQ]", DELEGATE_SEQUENCE_CONFIG_FILE, StandardOpenOption.TRUNCATE_EXISTING);
+          TOKEN + randomToken + SEQ, DELEGATE_SEQUENCE_CONFIG_FILE, StandardOpenOption.TRUNCATE_EXISTING);
     } catch (IOException e) {
       logger.warn("Failed to create DelegateSequenceConfigFile");
     }

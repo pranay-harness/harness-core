@@ -50,7 +50,6 @@ import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -89,6 +88,7 @@ import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.CriticalExpressionEvaluationException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.FailureType;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
@@ -110,6 +110,7 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.mongodb.morphia.query.Query;
@@ -195,6 +196,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 import javax.validation.executable.ValidateOnExecution;
@@ -207,10 +209,11 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   /**
    * The constant DELEGATE_DIR.
    */
-  public static final String DELEGATE_DIR = "harness-delegate";
-  public static final String DOCKER_DELEGATE = "harness-delegate-docker";
-  public static final String KUBERNETES_DELEGATE = "harness-delegate-kubernetes";
-  public static final String ECS_DELEGATE = "harness-delegate-ecs";
+  public static final String HARNESS_DELEGATE = "harness-delegate";
+  public static final String DELEGATE_DIR = HARNESS_DELEGATE;
+  public static final String DOCKER_DELEGATE = HARNESS_DELEGATE + "-docker";
+  public static final String KUBERNETES_DELEGATE = HARNESS_DELEGATE + "-kubernetes";
+  public static final String ECS_DELEGATE = HARNESS_DELEGATE + "-ecs";
   private static final Configuration cfg = new Configuration(VERSION_2_3_23);
   private static final int MAX_DELEGATE_META_INFO_ENTRIES = 10000;
   private static final Set<DelegateTask.Status> TASK_COMPLETED_STATUSES = ImmutableSet.of(FINISHED, ABORTED, ERROR);
@@ -218,7 +221,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   private static final String DELIMITER = "_";
   public static final String ECS = "ECS";
 
-  public static final String HARNESS_DELEGATE_VALUES_YAML = "harness-delegate-values";
+  public static final String HARNESS_DELEGATE_VALUES_YAML = HARNESS_DELEGATE + "-values";
+  private static final String YAML = ".yaml";
+  private static final String UPGRADE_VERSION = "upgradeVersion";
+  private static final String ASYNC = "async";
+  private static final String SYNC = "sync";
+  private static final String MESSAGE = "message";
 
   static {
     cfg.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
@@ -253,7 +261,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Inject private DelegateTaskBroadcastHelper broadcastHelper;
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
 
-  private final Map<String, Object> syncTaskWaitMap = new ConcurrentHashMap<>();
+  private final Map<String, AtomicBoolean> syncTaskWaitMap = new ConcurrentHashMap<>();
 
   private LoadingCache<String, String> delegateVersionCache = CacheBuilder.newBuilder()
                                                                   .maximumSize(10000)
@@ -298,19 +306,14 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         for (String taskId : completedSyncTasks) {
           if (syncTaskWaitMap.get(taskId) != null) {
             synchronized (syncTaskWaitMap.get(taskId)) {
+              syncTaskWaitMap.get(taskId).set(false);
               syncTaskWaitMap.get(taskId).notifyAll();
             }
           }
         }
       }
-    } catch (Throwable exception) {
-      logger.error("Exception happened in run.", exception);
-      if (exception instanceof Exception) {
-        logger.warn("Exception is type of Exception. Ignoring.");
-      } else {
-        // Error class. Let it propagate.
-        throw exception;
-      }
+    } catch (Exception exception) {
+      logger.warn("Exception is of type Exception. Ignoring.", exception);
     }
   }
 
@@ -590,9 +593,9 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     DelegateScripts delegateScripts = DelegateScripts.builder().version(version).doUpgrade(false).build();
     if (isNotEmpty(scriptParams)) {
-      logger.info("Upgrading delegate to version: {}", scriptParams.get("upgradeVersion"));
+      logger.info("Upgrading delegate to version: {}", scriptParams.get(UPGRADE_VERSION));
       delegateScripts.setDoUpgrade(true);
-      delegateScripts.setVersion(scriptParams.get("upgradeVersion"));
+      delegateScripts.setVersion(scriptParams.get(UPGRADE_VERSION));
 
       try (StringWriter stringWriter = new StringWriter()) {
         cfg.getTemplate("start.sh.ftl").process(scriptParams, stringWriter);
@@ -662,7 +665,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
         logger.info("Multi-Version is enabled");
         latestVersion = version;
-        String minorVersion = getMinorVersion(version).toString();
+        String minorVersion = Optional.ofNullable(getMinorVersion(version)).orElse(0).toString();
         delegateJarDownloadUrl = infraDownloadService.getDownloadUrlForDelegate(minorVersion);
         versionChanged = true;
       } else {
@@ -710,7 +713,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                                         .put("accountId", accountId)
                                                         .put("accountSecret", account.getAccountKey())
                                                         .put("hexkey", hexkey)
-                                                        .put("upgradeVersion", latestVersion)
+                                                        .put(UPGRADE_VERSION, latestVersion)
                                                         .put("managerHostAndPort", managerHost)
                                                         .put("verificationHostAndPort", verificationHost)
                                                         .put("watcherStorageUrl", watcherStorageUrl)
@@ -738,7 +741,9 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       return params.build();
     }
 
-    logger.info("returning null paramMap");
+    String msg = "Failed to get jar and script runtime params. versionChanged: " + versionChanged
+        + ", jarFileExists: " + jarFileExists;
+    logger.warn(msg);
     return null;
   }
 
@@ -773,6 +778,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
       ImmutableMap<String, String> scriptParams =
           getJarAndScriptRunTimeParamMap(accountId, version, managerHost, verificationUrl);
+
+      if (isEmpty(scriptParams)) {
+        throw new InvalidArgumentsException(Pair.of("scriptParams", "Failed to get jar and script runtime params."));
+      }
 
       File start = File.createTempFile("start", ".sh");
       try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(start), UTF_8)) {
@@ -880,13 +889,17 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       ImmutableMap<String, String> scriptParams =
           getJarAndScriptRunTimeParamMap(accountId, version, managerHost, verificationUrl);
 
-      File launch = File.createTempFile("launch-harness-delegate", ".sh");
+      if (isEmpty(scriptParams)) {
+        throw new InvalidArgumentsException(Pair.of("scriptParams", "Failed to get jar and script runtime params."));
+      }
+
+      File launch = File.createTempFile("launch-" + HARNESS_DELEGATE, ".sh");
       try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(launch), UTF_8)) {
-        cfg.getTemplate("launch-harness-delegate.sh.ftl").process(scriptParams, fileWriter);
+        cfg.getTemplate("launch-" + HARNESS_DELEGATE + ".sh.ftl").process(scriptParams, fileWriter);
       }
       launch = new File(launch.getAbsolutePath());
       TarArchiveEntry launchTarArchiveEntry =
-          new TarArchiveEntry(launch, DOCKER_DELEGATE + "/launch-harness-delegate.sh");
+          new TarArchiveEntry(launch, DOCKER_DELEGATE + "/launch-" + HARNESS_DELEGATE + ".sh");
       launchTarArchiveEntry.setMode(0755);
       out.putArchiveEntry(launchTarArchiveEntry);
       try (FileInputStream fis = new FileInputStream(launch)) {
@@ -935,12 +948,13 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(accountId, version, managerHost,
           verificationUrl, delegateName, delegateProfile == null ? "" : delegateProfile);
 
-      File yaml = File.createTempFile("harness-delegate", ".yaml");
+      File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
       try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(yaml), UTF_8)) {
-        cfg.getTemplate("harness-delegate.yaml.ftl").process(scriptParams, fileWriter);
+        cfg.getTemplate(HARNESS_DELEGATE + ".yaml.ftl").process(scriptParams, fileWriter);
       }
       yaml = new File(yaml.getAbsolutePath());
-      TarArchiveEntry yamlTarArchiveEntry = new TarArchiveEntry(yaml, KUBERNETES_DELEGATE + "/harness-delegate.yaml");
+      TarArchiveEntry yamlTarArchiveEntry =
+          new TarArchiveEntry(yaml, KUBERNETES_DELEGATE + "/" + HARNESS_DELEGATE + YAML);
       out.putArchiveEntry(yamlTarArchiveEntry);
       try (FileInputStream fis = new FileInputStream(yaml)) {
         IOUtils.copy(fis, out);
@@ -984,7 +998,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     ImmutableMap<String, String> params = getJarAndScriptRunTimeParamMap(
         accountId, version, managerHost, verificationUrl, delegateName, delegateProfile == null ? "" : delegateProfile);
 
-    File yaml = File.createTempFile(HARNESS_DELEGATE_VALUES_YAML, ".yaml");
+    File yaml = File.createTempFile(HARNESS_DELEGATE_VALUES_YAML, YAML);
     try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(yaml), UTF_8)) {
       cfg.getTemplate("delegate-helm-values.yaml.ftl").process(params, fileWriter);
     }
@@ -1379,7 +1393,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       return new String(os.toByteArray(), UTF_8);
     } catch (Exception e) {
       throw new WingsException(GENERAL_ERROR, e)
-          .addParam("message", "Profile execution log temporarily unavailable. Try again in a few moments.");
+          .addParam(MESSAGE, "Profile execution log temporarily unavailable. Try again in a few moments.");
     }
   }
 
@@ -1445,9 +1459,11 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       try {
         logger.info("Executing sync task");
         broadcastHelper.broadcastNewDelegateTask(delegateTask);
-        syncTaskWaitMap.put(delegateTask.getUuid(), new Object());
+        syncTaskWaitMap.put(delegateTask.getUuid(), new AtomicBoolean(true));
         synchronized (syncTaskWaitMap.get(delegateTask.getUuid())) {
-          syncTaskWaitMap.get(delegateTask.getUuid()).wait(task.getData().getTimeout());
+          while (syncTaskWaitMap.get(delegateTask.getUuid()).get()) {
+            syncTaskWaitMap.get(delegateTask.getUuid()).wait(task.getData().getTimeout());
+          }
         }
         completedTask = wingsPersistence.get(DelegateTask.class, task.getUuid());
       } catch (Exception e) {
@@ -1482,8 +1498,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     task.setStatus(QUEUED);
     task.setAsync(async);
     task.setVersion(getVersion());
-    // For SYNC task, we per form broadcast immediately, so set count to 1.
-    // task.setBroadcastCount(async ? 0 : 1);
     task.setLastBroadcastAt(clock.millis());
     generateCapabilitiesForTaskIfFeatureEnabled(task);
 
@@ -1507,7 +1521,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     addMergedParamsForCapabilityCheck(task);
 
-    DelegatePackage delegatePackage = getDelegatePackageWithEncryptionConfig(task, task.getDelegateId());
+    DelegatePackage delegatePackage = getDelegatePackageWithEncryptionConfig(task);
     CapabilityHelper.embedCapabilitiesInDelegateTask(task,
         delegatePackage == null || isEmpty(delegatePackage.getEncryptionConfigs())
             ? Collections.emptyList()
@@ -1629,7 +1643,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
              TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
-      logger.info("Delegate completed validating {} task", delegateTask.isAsync() ? "async" : "sync");
+      logger.info("Delegate completed validating {} task", delegateTask.isAsync() ? ASYNC : SYNC);
 
       UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
                                                             .addToSet("validationCompleteDelegateIds", delegateId);
@@ -1696,7 +1710,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     String capabilities;
     List<ExecutionCapability> executionCapabilities = delegateTask.getExecutionCapabilities();
     if (isNotEmpty(executionCapabilities)) {
-      capabilities = Joiner.on(", ").join(
+      capabilities = join(", ",
           (executionCapabilities.size() > 4 ? executionCapabilities.subList(0, 4) : executionCapabilities)
               .stream()
               .map(ExecutionCapability::fetchCapabilityBasis)
@@ -1705,19 +1719,20 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         capabilities += ", and " + (executionCapabilities.size() - 4) + " more...";
       }
     } else {
-      capabilities = Joiner.on(", ").join(
-          TaskType.valueOf(delegateTask.getData().getTaskType()).getCriteria(delegateTask, injector));
+      capabilities =
+          join(", ", TaskType.valueOf(delegateTask.getData().getTaskType()).getCriteria(delegateTask, injector));
     }
 
     String delegates;
     Set<String> validationCompleteDelegateIds = delegateTask.getValidationCompleteDelegateIds();
     if (isNotEmpty(validationCompleteDelegateIds)) {
-      delegates = Joiner.on(", ").join(validationCompleteDelegateIds.stream()
-                                           .map(delegateId -> {
-                                             Delegate delegate = get(delegateTask.getAccountId(), delegateId, false);
-                                             return delegate == null ? delegateId : delegate.getHostName();
-                                           })
-                                           .collect(toList()));
+      delegates = join(", ",
+          validationCompleteDelegateIds.stream()
+              .map(delegateId -> {
+                Delegate delegate = get(delegateTask.getAccountId(), delegateId, false);
+                return delegate == null ? delegateId : delegate.getHostName();
+              })
+              .collect(toList()));
     } else {
       delegates = "no delegates";
     }
@@ -1728,7 +1743,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   private void setValidationStarted(String delegateId, DelegateTask delegateTask) {
-    logger.info("Delegate to validate {} task", delegateTask.isAsync() ? "async" : "sync");
+    logger.info("Delegate to validate {} task", delegateTask.isAsync() ? ASYNC : SYNC);
     UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
                                                           .addToSet(DelegateTaskKeys.validatingDelegateIds, delegateId);
     Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
@@ -1842,7 +1857,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     }
   }
 
-  private DelegatePackage getDelegatePackageWithEncryptionConfig(DelegateTask delegateTask, String delegateId) {
+  private DelegatePackage getDelegatePackageWithEncryptionConfig(DelegateTask delegateTask) {
     try {
       if (CapabilityHelper.isTaskParameterType(delegateTask.getData())) {
         return resolvePreAssignmentExpressions(delegateTask);
@@ -1892,7 +1907,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     // Clear pending validations. No longer need to track since we're assigning.
     clearFromValidationCache(delegateTask);
 
-    logger.info("Assigning {} task to delegate", delegateTask.isAsync() ? "async" : "sync");
+    logger.info("Assigning {} task to delegate", delegateTask.isAsync() ? ASYNC : SYNC);
     Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
                                     .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
                                     .filter(DelegateTaskKeys.status, QUEUED)
@@ -2209,7 +2224,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     // can not proceed unless we receive valid token
     if (isBlank(delegate.getDelegateRandomToken()) || "null".equalsIgnoreCase(delegate.getDelegateRandomToken())) {
       throw new WingsException(GENERAL_ERROR, "Received invalid token from ECS delegate", USER_SRE)
-          .addParam("message", "Received invalid token from ECS delegate");
+          .addParam(MESSAGE, "Received invalid token from ECS delegate");
     }
 
     // SCENARIO 2: Delegate passed sequenceNum & delegateToken but not UUID.
@@ -2393,7 +2408,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     // All 3 attempts of sequenceNum generation for delegate failed. Registration can not be completed.
     // Delegate will need to send request again
     throw new WingsException(GENERAL_ERROR, "Failed to generate sequence number for Delegate", USER_SRE)
-        .addParam("message", "Failed to generate sequence number for Delegate");
+        .addParam(MESSAGE, "Failed to generate sequence number for Delegate");
   }
 
   /**

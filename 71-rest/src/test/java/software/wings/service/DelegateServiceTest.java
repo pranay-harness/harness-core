@@ -155,13 +155,11 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Inject private WingsPersistence wingsPersistence;
 
-  private String verificationServiceSecret;
   private Account account =
       anAccount().withLicenseInfo(LicenseInfo.builder().accountStatus(AccountStatus.ACTIVE).build()).build();
 
   @Before
-  public void setUp() throws IllegalAccessException {
-    verificationServiceSecret = generateUuid();
+  public void setUp() {
     when(mainConfiguration.getDelegateMetadataUrl()).thenReturn("http://localhost:8888/delegateci.txt");
     when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.KUBERNETES);
     when(mainConfiguration.getKubectlVersion()).thenReturn("v1.12.2");
