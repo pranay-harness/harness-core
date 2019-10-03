@@ -1,6 +1,5 @@
 package io.harness.event;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -111,7 +110,7 @@ public class UsageMetricsServiceTest extends WingsBaseTest {
     assertThat(taskCaptorValue.getValue().intValue()).isEqualTo(1);
 
     List<QueableEvent> events = wingsPersistence.createQuery(QueableEvent.class, excludeAuthority).asList();
-    assertThat(isEmpty(events)).isTrue();
+    assertThat(events).isEmpty();
   }
 
   @Test
