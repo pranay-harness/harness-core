@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.api.DeploymentType.KUBERNETES;
 
@@ -16,6 +17,7 @@ import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.apm.APMMetricInfo;
 import software.wings.sm.states.DatadogState.Metric;
+import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -274,5 +276,21 @@ public class DatadogStateTest extends WingsBaseTest {
     Map<String, String> validateFields = state.validateFields();
     assertThat(validateFields).hasSize(1);
     assertThat(validateFields.containsKey("trace.servlet.request.errors")).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCustomMetricMetricType() {
+    Map<String, Set<Metric>> customMetrics = new HashMap<>();
+    customMetrics.put(generateUuid(),
+        Sets.newHashSet(Metric.builder().mlMetricType(MetricType.INFRA.name()).displayName("metric1").build(),
+            Metric.builder().mlMetricType(MetricType.ERROR.name()).displayName("metric2").build()));
+    DatadogCVServiceConfiguration datadogCVServiceConfiguration =
+        DatadogCVServiceConfiguration.builder().customMetrics(customMetrics).build();
+
+    assertThat(MetricType.INFRA.name())
+        .isEqualTo(DatadogState.getMetricTypeForMetric("metric1", datadogCVServiceConfiguration));
+    assertThat(MetricType.ERROR.name())
+        .isEqualTo(DatadogState.getMetricTypeForMetric("metric2", datadogCVServiceConfiguration));
   }
 }

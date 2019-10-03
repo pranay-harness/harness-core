@@ -9,6 +9,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
 import software.wings.sm.StateType;
 
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -54,13 +55,14 @@ public interface MetricDataAnalysisService {
       String appId, String stateExecutionId, String workflowExecutionId);
 
   TimeSeriesMLTransactionThresholds getCustomThreshold(String appId, StateType stateType, String serviceId,
-      String cvConfigId, String groupName, String transactionName, String metricName);
+      String cvConfigId, String groupName, String transactionName, String metricName)
+      throws UnsupportedEncodingException;
 
   boolean saveCustomThreshold(String appId, StateType stateType, String serviceId, String cvConfigId,
       String transactionName, String groupName, TimeSeriesMetricDefinition metricDefinition);
 
   boolean deleteCustomThreshold(String appId, StateType stateType, String serviceId, String cvConfigId,
-      String groupName, String transactionName, String metricName);
+      String groupName, String transactionName, String metricName) throws UnsupportedEncodingException;
 
   void saveRawDataToGoogleDataStore(
       String accountId, String stateExecutionId, ExecutionStatus executionStatus, String serviceId);

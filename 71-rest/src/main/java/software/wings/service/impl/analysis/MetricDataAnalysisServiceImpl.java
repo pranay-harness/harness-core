@@ -43,6 +43,7 @@ import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData.ContinuousVerificationExecutionMetaDataKeys;
 import software.wings.service.impl.analysis.MetricAnalysisRecord.MetricAnalysisRecordKeys;
 import software.wings.service.impl.analysis.TimeSeriesMLScores.TimeSeriesMLScoresKeys;
+import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds.TimeSeriesMLTransactionThresholdKeys;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates.TimeSeriesMetricTemplatesKeys;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
@@ -65,6 +66,9 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -248,15 +252,16 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
 
   @Override
   public TimeSeriesMLTransactionThresholds getCustomThreshold(String appId, StateType stateType, String serviceId,
-      String cvConfigId, String groupName, String transactionName, String metricName) {
-    return wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
-        .filter("appId", appId)
-        .filter("stateType", stateType)
-        .filter("serviceId", serviceId)
-        .filter("groupName", groupName)
-        .filter("transactionName", transactionName)
-        .filter("metricName", metricName)
-        .filter("cvConfigId", cvConfigId)
+      String cvConfigId, String groupName, String transactionName, String metricName)
+      throws UnsupportedEncodingException {
+    return wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class, excludeAuthority)
+        .filter(TimeSeriesMLTransactionThresholdKeys.stateType, stateType)
+        .filter(TimeSeriesMLTransactionThresholdKeys.serviceId, serviceId)
+        .filter(TimeSeriesMLTransactionThresholdKeys.groupName, groupName)
+        .filter(TimeSeriesMLTransactionThresholdKeys.transactionName, transactionName)
+        .filter(TimeSeriesMLTransactionThresholdKeys.metricName,
+            URLDecoder.decode(metricName, StandardCharsets.UTF_8.name()))
+        .filter(TimeSeriesMLTransactionThresholdKeys.cvConfigId, cvConfigId)
         .get();
   }
 
@@ -266,17 +271,17 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     final Query<TimeSeriesMLTransactionThresholds> query =
         wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
             .filter("appId", appId)
-            .filter("serviceId", serviceId)
-            .filter("stateType", stateType)
-            .filter("groupName", groupName)
-            .filter("transactionName", transactionName)
-            .filter("metricName", metricDefinition.getMetricName())
-            .filter("cvConfigId", cvConfigId);
+            .filter(TimeSeriesMLTransactionThresholdKeys.serviceId, serviceId)
+            .filter(TimeSeriesMLTransactionThresholdKeys.stateType, stateType)
+            .filter(TimeSeriesMLTransactionThresholdKeys.groupName, groupName)
+            .filter(TimeSeriesMLTransactionThresholdKeys.transactionName, transactionName)
+            .filter(TimeSeriesMLTransactionThresholdKeys.metricName, metricDefinition.getMetricName())
+            .filter(TimeSeriesMLTransactionThresholdKeys.cvConfigId, cvConfigId);
 
     UpdateOperations<TimeSeriesMLTransactionThresholds> updateOperations =
         wingsPersistence.createUpdateOperations(TimeSeriesMLTransactionThresholds.class)
-            .set("thresholds", metricDefinition)
-            .inc("version");
+            .set(TimeSeriesMLTransactionThresholdKeys.thresholds, metricDefinition)
+            .inc(TimeSeriesMLTransactionThresholdKeys.version);
 
     final TimeSeriesMLTransactionThresholds savedThreshold =
         wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions());
@@ -300,15 +305,16 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
 
   @Override
   public boolean deleteCustomThreshold(String appId, StateType stateType, String serviceId, String cvConfigId,
-      String groupName, String transactionName, String metricName) {
+      String groupName, String transactionName, String metricName) throws UnsupportedEncodingException {
     return wingsPersistence.delete(wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
                                        .filter("appId", appId)
-                                       .filter("serviceId", serviceId)
-                                       .filter("stateType", stateType)
-                                       .filter("groupName", groupName)
-                                       .filter("transactionName", transactionName)
-                                       .filter("metricName", metricName)
-                                       .filter("cvConfigId", cvConfigId));
+                                       .filter(TimeSeriesMLTransactionThresholdKeys.serviceId, serviceId)
+                                       .filter(TimeSeriesMLTransactionThresholdKeys.stateType, stateType)
+                                       .filter(TimeSeriesMLTransactionThresholdKeys.groupName, groupName)
+                                       .filter(TimeSeriesMLTransactionThresholdKeys.transactionName, transactionName)
+                                       .filter(TimeSeriesMLTransactionThresholdKeys.metricName,
+                                           URLDecoder.decode(metricName, StandardCharsets.UTF_8.name()))
+                                       .filter(TimeSeriesMLTransactionThresholdKeys.cvConfigId, cvConfigId));
   }
 
   @Override
