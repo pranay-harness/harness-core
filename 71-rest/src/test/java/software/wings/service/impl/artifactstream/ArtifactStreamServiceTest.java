@@ -145,12 +145,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
     Map<String, String> supportedBuildSourceTypes =
         artifactStreamService.getSupportedBuildSourceTypes(APP_ID, SERVICE_ID);
-    assertThat(supportedBuildSourceTypes.containsKey(CUSTOM));
-    assertThat(supportedBuildSourceTypes.containsValue(CUSTOM));
-
-    supportedBuildSourceTypes = artifactStreamService.getSupportedBuildSourceTypes(APP_ID, SERVICE_ID);
-    assertThat(supportedBuildSourceTypes.containsKey(CUSTOM));
-    assertThat(supportedBuildSourceTypes.containsValue(CUSTOM));
+    assertThat(supportedBuildSourceTypes.containsKey(CUSTOM.name())).isTrue();
+    assertThat(supportedBuildSourceTypes.containsValue(CUSTOM.name())).isTrue();
   }
 
   @Test
