@@ -190,7 +190,8 @@ public class SpotInstServiceSetup extends State {
             .envId(stateExecutionData.getEnvId())
             .newElastiGroupOriginalConfig(stateExecutionData.getElastiGroupOriginalConfig())
             .elstiGroupNamePrefix(Misc.normalizeExpression(context.renderExpression(elastiGroupNamePrefix)))
-            .lbDetailsForBGDeployment(spotInstSetupTaskResponse.getLbDetailsForBGDeployments())
+            .lbDetailsForBGDeployment(
+                spotInstSetupTaskResponse != null ? spotInstSetupTaskResponse.getLbDetailsForBGDeployments() : null)
             .build();
 
     // Add these details only if spotInstSetupTaskResponse is not NULL

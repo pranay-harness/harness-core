@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ElastiGroup {
+public class ElastiGroup implements Cloneable {
   private String id;
   private String name;
   private ElastiGroupCapacity capacity;
