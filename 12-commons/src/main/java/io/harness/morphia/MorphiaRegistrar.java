@@ -4,8 +4,8 @@ import java.util.Map;
 import java.util.Set;
 
 public interface MorphiaRegistrar {
-  String pkgWings = "software.wings.";
-  String pkgHarness = "io.harness.";
+  String PKG_WINGS = "software.wings.";
+  String PKG_HARNESS = "io.harness.";
 
   interface HelperPut {
     void put(String path, Class clazz);

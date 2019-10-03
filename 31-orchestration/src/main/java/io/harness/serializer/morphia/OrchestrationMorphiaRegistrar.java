@@ -31,7 +31,7 @@ public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerImplementationClasses(Map<String, Class> map) {
     final HelperPut h = (name, clazz) -> {
-      map.put(pkgHarness + name, clazz);
+      map.put(PKG_HARNESS + name, clazz);
     };
 
     h.put("waiter.ListNotifyResponseData", ListNotifyResponseData.class);
