@@ -7,11 +7,15 @@
     </Match>
     -->
     <Match>
-        <Class name="software.wings.beans.command.CommandUnitType" />
         <Bug pattern="SE_BAD_FIELD" />
     </Match>
     <Match>
-        <Package name="software.wings.service.impl.verification.generated" />
+        <Method name="maybeForceBuilderInitialization" />
+        <Bug pattern="UCF_USELESS_CONTROL_FLOW" />
+    </Match>
+    <Match>
+        <Method name="tryRead" />
+        <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE" />
     </Match>
 </FindBugsFilter>
 
