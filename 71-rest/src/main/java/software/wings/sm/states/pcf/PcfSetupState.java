@@ -576,9 +576,6 @@ public class PcfSetupState extends State {
       return ExecutionResponse.builder().executionStatus(executionStatus).build();
     }
 
-    PcfSetupStateExecutionData pcfSetupStateExecutionData =
-        (PcfSetupStateExecutionData) context.getStateExecutionData();
-
     return executePcfTask(context, activityId);
   }
 

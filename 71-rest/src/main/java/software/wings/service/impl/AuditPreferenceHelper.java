@@ -152,9 +152,7 @@ public class AuditPreferenceHelper {
       // i.e. fetch all auditRecords for Services and Workflows under applications app1 and app2.
 
       List<String> resourceTypes = applicationAuditFilter.getResourceTypes();
-      String[] resourceTypesArr = resourceTypes.toArray(new String[resourceTypes.size()]);
       List<String> appIds = applicationAuditFilter.getAppIds();
-      String[] appIdsArr = appIds.toArray(new String[appIds.size()]);
 
       searchFilter = generateElementMatchFilterWithOperationType(auditPreference,
           Arrays.asList(SearchFilter.builder()
