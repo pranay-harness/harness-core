@@ -679,7 +679,10 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     applicationManifestService.upsertApplicationManifestFile(manifestFile, appManifest, true);
 
     manifestFile = getManifestFileWithName(fileName2);
-    applicationManifestService.upsertApplicationManifestFile(manifestFile, appManifest, true);
+    ManifestFile savedManifestFile =
+        applicationManifestService.upsertApplicationManifestFile(manifestFile, appManifest, true);
+
+    assertThat(manifestFile.getFileContent()).isEqualTo(savedManifestFile.getFileContent());
   }
 
   @Test

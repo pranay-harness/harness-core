@@ -11,7 +11,6 @@ import software.wings.service.intfc.HarnessTagService;
 import java.util.List;
 
 public class HarnessTagYamlHandler extends BaseYamlHandler<Yaml, List<HarnessTag>> {
-  @Inject private HarnessTagYamlHelper harnessTagYamlHelper;
   @Inject private HarnessTagService harnessTagService;
 
   @Override
