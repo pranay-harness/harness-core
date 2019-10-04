@@ -19,16 +19,23 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.alerts.AlertCategory;
 import software.wings.alerts.AlertStatus;
+import software.wings.beans.Environment;
+import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute.Builder;
+import software.wings.beans.SumoConfig;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
+import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
 
+import java.util.Collections;
 import java.util.List;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
@@ -44,12 +51,20 @@ public class ServiceGuardAlertTest extends VerificationBaseIntegrationTest {
   @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testLogsConfigurationResetBaseline() {
     final String appId = wingsPersistence.save(anApplication().accountId(accountId).name(generateUuid()).build());
+    final String connectorId = wingsPersistence.save(Builder.aSettingAttribute()
+                                                         .withName(generateUuid())
+                                                         .withValue(SumoConfig.builder().accountId(accountId).build())
+                                                         .withAccountId(accountId)
+                                                         .build());
+    final String serviceId = wingsPersistence.save(Service.builder().name(generateUuid()).appId(appId).build());
+    final String envId =
+        wingsPersistence.save(Environment.Builder.anEnvironment().name(generateUuid()).appId(appId).build());
     LogsCVConfiguration logsCVConfiguration = new LogsCVConfiguration();
     logsCVConfiguration.setName("Config 1");
     logsCVConfiguration.setAppId(appId);
-    logsCVConfiguration.setEnvId(generateUuid());
-    logsCVConfiguration.setServiceId(generateUuid());
-    logsCVConfiguration.setConnectorId(generateUuid());
+    logsCVConfiguration.setEnvId(envId);
+    logsCVConfiguration.setServiceId(serviceId);
+    logsCVConfiguration.setConnectorId(connectorId);
     logsCVConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
     logsCVConfiguration.setAlertEnabled(true);
     logsCVConfiguration.setAlertThreshold(0.5);
@@ -64,10 +79,11 @@ public class ServiceGuardAlertTest extends VerificationBaseIntegrationTest {
         entity(logsCVConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
     String savedObjectUuid = restResponse.getResource();
 
+    final String taskId = wingsPersistence.save(LearningEngineAnalysisTask.builder().cluster_level(1).build());
     url = VERIFICATION_API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS
         + LogAnalysisResource.ANALYSIS_SAVE_24X7_ANALYSIS_RECORDS_URL + "?cvConfigId=" + savedObjectUuid
         + "&appId=" + appId + "&analysisMinute=100"
-        + "&taskId=" + generateUuid();
+        + "&taskId=" + taskId;
     target = client.target(url);
     getRequestBuilderWithLearningAuthHeader(target).post(
         entity(LogMLAnalysisRecord.builder().score(0.4).build(), APPLICATION_JSON),
@@ -79,11 +95,18 @@ public class ServiceGuardAlertTest extends VerificationBaseIntegrationTest {
     url = VERIFICATION_API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS
         + LogAnalysisResource.ANALYSIS_SAVE_24X7_ANALYSIS_RECORDS_URL + "?cvConfigId=" + savedObjectUuid
         + "&appId=" + appId + "&analysisMinute=105"
-        + "&taskId=" + generateUuid();
+        + "&taskId=" + taskId;
     target = client.target(url);
+    SplunkAnalysisCluster splunkAnalysisCluster = new SplunkAnalysisCluster();
+    splunkAnalysisCluster.setText(generateUuid());
+    final LogMLAnalysisRecord logMLAnalysisRecord =
+        LogMLAnalysisRecord.builder()
+            .score(0.6)
+            .unknown_clusters(Collections.singletonMap(
+                generateUuid(), Collections.singletonMap(generateUuid(), splunkAnalysisCluster)))
+            .build();
     getRequestBuilderWithLearningAuthHeader(target).post(
-        entity(LogMLAnalysisRecord.builder().score(0.6).build(), APPLICATION_JSON),
-        new GenericType<RestResponse<String>>() {});
+        entity(logMLAnalysisRecord, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
 
     sleep(ofMillis(5000));
     alerts = wingsPersistence.createQuery(Alert.class).filter(AlertKeys.appId, appId).asList();
@@ -95,17 +118,16 @@ public class ServiceGuardAlertTest extends VerificationBaseIntegrationTest {
     assertThat(alert.getCategory()).isEqualTo(AlertCategory.ContinuousVerification);
     ContinuousVerificationAlertData alertData = (ContinuousVerificationAlertData) alert.getAlertData();
     assertThat(alertData.getCvConfiguration().getUuid()).isEqualTo(savedObjectUuid);
-    assertThat(alertData.getRiskScore()).isEqualTo(0.6);
+    assertThat(alertData.getRiskScore()).isEqualTo(1.0);
 
     // send another alert
     url = VERIFICATION_API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS
         + LogAnalysisResource.ANALYSIS_SAVE_24X7_ANALYSIS_RECORDS_URL + "?cvConfigId=" + savedObjectUuid
         + "&appId=" + appId + "&analysisMinute=120"
-        + "&taskId=" + generateUuid();
+        + "&taskId=" + taskId;
     target = client.target(url);
     getRequestBuilderWithLearningAuthHeader(target).post(
-        entity(LogMLAnalysisRecord.builder().score(0.6).build(), APPLICATION_JSON),
-        new GenericType<RestResponse<String>>() {});
+        entity(logMLAnalysisRecord, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
 
     sleep(ofMillis(5000));
     alerts = wingsPersistence.createQuery(Alert.class).filter(AlertKeys.appId, appId).asList();
@@ -119,11 +141,10 @@ public class ServiceGuardAlertTest extends VerificationBaseIntegrationTest {
     url = VERIFICATION_API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS
         + LogAnalysisResource.ANALYSIS_SAVE_24X7_ANALYSIS_RECORDS_URL + "?cvConfigId=" + savedObjectUuid
         + "&appId=" + appId + "&analysisMinute=135"
-        + "&taskId=" + generateUuid();
+        + "&taskId=" + taskId;
     target = client.target(url);
     getRequestBuilderWithLearningAuthHeader(target).post(
-        entity(LogMLAnalysisRecord.builder().score(0.6).build(), APPLICATION_JSON),
-        new GenericType<RestResponse<String>>() {});
+        entity(logMLAnalysisRecord, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
 
     sleep(ofMillis(5000));
     alerts = wingsPersistence.createQuery(Alert.class).filter(AlertKeys.appId, appId).asList();
