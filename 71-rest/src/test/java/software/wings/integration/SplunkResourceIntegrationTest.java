@@ -21,6 +21,7 @@ import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import software.wings.api.ServiceElement;
 import software.wings.beans.SettingAttribute.Builder;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.WorkflowExecution;
@@ -114,7 +115,12 @@ public class SplunkResourceIntegrationTest extends BaseIntegrationTest {
                           .publicDns(null)
                           .ec2Instance(null)
                           .build())
-                .serviceTemplateElement(aServiceTemplateElement().withUuid("8cec1e1b0d16").withName(null).build())
+                .serviceTemplateElement(
+                    aServiceTemplateElement()
+                        .withUuid("8cec1e1b0d16")
+                        .withName(null)
+                        .withServiceElement(ServiceElement.builder().uuid(generateUuid()).name(generateUuid()).build())
+                        .build())
                 .podName("testHost")
                 .workloadName("testHost")
                 .build())

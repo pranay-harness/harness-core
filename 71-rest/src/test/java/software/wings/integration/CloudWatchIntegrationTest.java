@@ -250,6 +250,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
                                    .dimension("InstanceId")
                                    .dimensionDisplay("Host name expression")
                                    .metricType("VALUE")
+                                   .statistics("Average")
                                    .enabledDefault(true)
                                    .build();
     ec2Metrics.add(metric1);
@@ -260,6 +261,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
                                    .dimension("InstanceId")
                                    .dimensionDisplay("Host name expression")
                                    .metricType("VALUE")
+                                   .statistics("Average")
                                    .enabledDefault(true)
                                    .build();
     ec2Metrics.add(metric2);
@@ -274,6 +276,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
                                    .dimension("LoadBalancerName")
                                    .dimensionDisplay("Load balancer name")
                                    .metricType("ERROR")
+                                   .statistics("Average")
                                    .enabledDefault(true)
                                    .build();
     List<CloudWatchMetric> metrics = new ArrayList<>();
@@ -290,6 +293,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
                                    .dimension("ClusterName")
                                    .dimensionDisplay("Cluster Name")
                                    .metricType("VALUE")
+                                   .statistics("Average")
                                    .enabledDefault(true)
                                    .build();
     List<CloudWatchMetric> metrics = new ArrayList<>();
