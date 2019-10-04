@@ -81,6 +81,7 @@ public class Notifier implements Runnable {
 
     if (isEmpty(notifyResponses)) {
       logger.debug("There are no NotifyResponse entries to process");
+      skip = 0;
       return;
     }
 
