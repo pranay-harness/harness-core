@@ -4,6 +4,7 @@ import static io.harness.pcf.model.PcfConstants.CF_HOME;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
 import static java.util.stream.Collectors.toList;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.inject.Singleton;
 
@@ -20,12 +21,10 @@ import org.cloudfoundry.operations.applications.ApplicationManifest.Builder;
 import org.cloudfoundry.operations.applications.ApplicationManifestUtils;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.DeleteApplicationRequest;
-import org.cloudfoundry.operations.applications.GetApplicationManifestRequest;
 import org.cloudfoundry.operations.applications.GetApplicationRequest;
 import org.cloudfoundry.operations.applications.ListApplicationTasksRequest;
 import org.cloudfoundry.operations.applications.PushApplicationManifestRequest;
 import org.cloudfoundry.operations.applications.ScaleApplicationRequest;
-import org.cloudfoundry.operations.applications.SetEnvironmentVariableApplicationRequest;
 import org.cloudfoundry.operations.applications.StartApplicationRequest;
 import org.cloudfoundry.operations.applications.StopApplicationRequest;
 import org.cloudfoundry.operations.applications.Task;
@@ -537,42 +536,6 @@ public class PcfClientImpl implements PcfClient {
     }
   }
 
-  public ApplicationManifest getApplicationManifest(PcfRequestConfig pcfRequestConfig)
-      throws PivotalClientApiException, InterruptedException {
-    logger.info(new StringBuilder()
-                    .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
-                    .append("Getting Manifest for Application : ")
-                    .append(pcfRequestConfig.getApplicationName())
-                    .toString());
-
-    CountDownLatch latch = new CountDownLatch(1);
-    AtomicBoolean exceptionOccured = new AtomicBoolean(false);
-    List<ApplicationManifest> applicationManifests = new ArrayList<>();
-    StringBuilder errorBuilder = new StringBuilder();
-    try (CloudFoundryOperationsWrapper operationsWrapper = getCloudFoundryOperationsWrapper(pcfRequestConfig)) {
-      operationsWrapper.getCloudFoundryOperations()
-          .applications()
-          .getApplicationManifest(
-              GetApplicationManifestRequest.builder().name(pcfRequestConfig.getApplicationName()).build())
-          .subscribe(applicationManifests::add, throwable -> {
-            exceptionOccured.set(true);
-            handleException(throwable, "fetApplicationManifest", errorBuilder);
-            latch.countDown();
-          }, latch::countDown);
-
-      waitTillCompletion(latch, pcfRequestConfig.getTimeOutIntervalInMins());
-      if (exceptionOccured.get()) {
-        throw new PivotalClientApiException(new StringBuilder()
-                                                .append("Exception occuered while fetching application manifest: ")
-                                                .append(pcfRequestConfig.getApplicationName())
-                                                .append(", Error: " + errorBuilder.toString())
-                                                .toString());
-      }
-
-      return applicationManifests.get(0);
-    }
-  }
-
   public ApplicationDetail getApplicationByName(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
     logger.info(new StringBuilder()
@@ -640,40 +603,6 @@ public class PcfClientImpl implements PcfClient {
                                                 .append(", Error: " + errorBuilder.toString())
                                                 .toString());
       }
-    }
-  }
-
-  private void setEnvironmentVariable(CloudFoundryOperations cloudFoundryOperations, PcfRequestConfig pcfRequestConfig,
-      String key, String value) throws PivotalClientApiException, InterruptedException {
-    logger.info(new StringBuilder()
-                    .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
-                    .append("Setting Env Variables for application: ")
-                    .append(pcfRequestConfig.getApplicationName())
-                    .toString());
-
-    CountDownLatch latch = new CountDownLatch(1);
-    AtomicBoolean exceptionOccured = new AtomicBoolean(false);
-    StringBuilder errorBuilder = new StringBuilder();
-    cloudFoundryOperations.applications()
-        .setEnvironmentVariable(SetEnvironmentVariableApplicationRequest.builder()
-                                    .name(pcfRequestConfig.getApplicationName())
-                                    .variableName(key)
-                                    .variableValue(value)
-                                    .build())
-        .subscribe(null, throwable -> {
-          exceptionOccured.set(true);
-          handleException(throwable, "setEnvironmentVariable", errorBuilder);
-          latch.countDown();
-        }, latch::countDown);
-
-    waitTillCompletion(latch, pcfRequestConfig.getTimeOutIntervalInMins());
-
-    if (exceptionOccured.get()) {
-      throw new PivotalClientApiException(new StringBuilder()
-                                              .append("Exception Occured while setting Env Variables for application: ")
-                                              .append(pcfRequestConfig.getApplicationName())
-                                              .append(", Error: " + errorBuilder.toString())
-                                              .toString());
     }
   }
 
@@ -917,11 +846,12 @@ public class PcfClientImpl implements PcfClient {
     }
   }
 
-  private String getPathFromRouteMap(Route route) {
+  @VisibleForTesting
+  String getPathFromRouteMap(Route route) {
     return new StringBuilder()
         .append(StringUtils.isBlank(route.getHost()) ? StringUtils.EMPTY : route.getHost() + ".")
         .append(route.getDomain())
-        .append(StringUtils.isBlank(route.getPath()) ? StringUtils.EMPTY : route.getPath())
+        .append(StringUtils.isBlank(route.getPath()) ? StringUtils.EMPTY : "/" + route.getPath())
         .append(StringUtils.isBlank(route.getPort()) ? StringUtils.EMPTY : ":" + Integer.parseInt(route.getPort()))
         .toString();
   }
@@ -1033,10 +963,11 @@ public class PcfClientImpl implements PcfClient {
     errorBuilder.append(t.getMessage());
   }
 
-  private void waitTillCompletion(CountDownLatch latch, int time) throws InterruptedException {
+  private void waitTillCompletion(CountDownLatch latch, int time)
+      throws InterruptedException, PivotalClientApiException {
     boolean check = latch.await(time, TimeUnit.MINUTES);
     if (!check) {
-      throw new RuntimeException(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "PCF operation times out");
+      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "PCF operation times out");
     }
   }
 }
