@@ -195,7 +195,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
         .isInstanceOf(SettingAttribute.class)
         .extracting("value")
         .extracting("dockerRegistryUrl", "username", "password", "accountId")
-        .contains(tuple(DOCKER_REGISTRY_URL, DOCKER_USERNAME, null, accountId));
+        .contains(DOCKER_REGISTRY_URL, DOCKER_USERNAME, null, accountId);
   }
 
   private WebTarget getListWebTarget(String accountId) {
