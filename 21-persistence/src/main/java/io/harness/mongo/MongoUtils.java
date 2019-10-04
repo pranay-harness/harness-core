@@ -3,15 +3,14 @@ package io.harness.mongo;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.beans.PageRequest;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
-/**
- * The Class MongoUtils.
- */
+@UtilityClass
 @Slf4j
 public class MongoUtils {
   /**

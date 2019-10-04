@@ -4,11 +4,13 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.beans.Encryptable;
 import io.harness.reflection.ReflectionUtils;
+import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
 
 import java.lang.reflect.Field;
 import java.util.List;
 
+@UtilityClass
 public class EncryptionReflectUtils {
   public static List<Field> getEncryptedFields(Class<?> clazz) {
     return ReflectionUtils.getDeclaredAndInheritedFields(clazz, f -> {

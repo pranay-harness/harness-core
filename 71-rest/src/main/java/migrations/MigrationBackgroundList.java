@@ -2,6 +2,7 @@ package migrations;
 
 import com.google.common.collect.ImmutableList;
 
+import lombok.experimental.UtilityClass;
 import migrations.all.AddAccountToCVFeedbackRecordMigration;
 import migrations.all.AddAnalysisStatusMigration;
 import migrations.all.AddInfraMappingNameToInstanceData;
@@ -44,6 +45,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 
+@UtilityClass
 public class MigrationBackgroundList {
   /**
    * Add your background migrations to the end of the list with the next sequence number.

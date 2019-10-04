@@ -2,10 +2,13 @@ package io.harness.data.structure;
 
 import static java.util.stream.Collectors.toList;
 
+import lombok.experimental.UtilityClass;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+@UtilityClass
 public class ListUtils {
   public static List<String> trimStrings(List<String> strings) {
     if (strings == null) {

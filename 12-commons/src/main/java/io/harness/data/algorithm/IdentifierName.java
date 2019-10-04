@@ -1,9 +1,11 @@
 package io.harness.data.algorithm;
 
+import lombok.experimental.UtilityClass;
 import org.apache.commons.codec.binary.Base32;
 
 import java.util.Random;
 
+@UtilityClass
 public class IdentifierName {
   private static Base32 base32 = new Base32();
   private static Random random = new Random();

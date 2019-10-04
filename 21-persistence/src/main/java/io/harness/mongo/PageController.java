@@ -26,6 +26,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.mongo.SampleEntity.SampleEntityKeys;
 import io.harness.persistence.HQuery;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.mapping.MappedClass;
@@ -38,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+@UtilityClass
 @Slf4j
 public class PageController {
   /**
@@ -134,7 +136,7 @@ public class PageController {
 
   private static <T> Query<T> applySearchFilters(
       Datastore datastore, Query<T> query, List<SearchFilter> filters, Class<T> cls, Mapper mapper) {
-    if (filters == null || filters.size() == 0) {
+    if (isEmpty(filters)) {
       return query;
     }
     for (SearchFilter filter : filters) {
@@ -168,7 +170,7 @@ public class PageController {
             query.and(criteria.toArray(new Criteria[0]));
           }
           break;
-        case ELEMENT_MATCH: {
+        case ELEMENT_MATCH:
           assertOne(filter.getFieldValues());
 
           final PageRequest request = (PageRequest) filter.getFieldValues()[0];
@@ -177,13 +179,12 @@ public class PageController {
 
           query.field(filter.getFieldName()).elemMatch(elementMatchQuery);
           break;
-        }
+
         default:
           FieldEnd<? extends Query<T>> fieldEnd = query.field(filter.getFieldName());
           query = applyOperator(fieldEnd, filter);
           break;
       }
-      query = query;
     }
     return query;
   }

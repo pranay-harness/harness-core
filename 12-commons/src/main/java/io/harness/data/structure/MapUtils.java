@@ -2,9 +2,12 @@ package io.harness.data.structure;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import lombok.experimental.UtilityClass;
+
 import java.util.HashMap;
 import java.util.Map;
 
+@UtilityClass
 public class MapUtils {
   public static <K> void putIfNotEmpty(K key, String value, Map<K, String> map) {
     if (isNotEmpty(value)) {
