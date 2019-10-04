@@ -62,6 +62,7 @@ import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.artifact.AmiArtifactStream;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.BambooArtifactStream;
@@ -418,7 +419,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldAddNexusArtifactStream() {
-    ArtifactStream savedArtifactSteam = createNexusArtifactStream();
+    ArtifactStream savedArtifactSteam = createNexusArtifactStream("nexus1");
     validateNexusArtifactStream(savedArtifactSteam, APP_ID);
     NexusArtifactStream savedNexusArtifactStream = (NexusArtifactStream) savedArtifactSteam;
     assertThat(savedNexusArtifactStream.getJobname()).isEqualTo("releases");
@@ -489,7 +490,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedNexusArtifactStream.getRepositoryFormat()).isEqualTo(RepositoryFormat.maven.name());
   }
 
-  private ArtifactStream createNexusArtifactStream() {
+  private ArtifactStream createNexusArtifactStream(String name) {
     NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
                                                   .accountId(ACCOUNT_ID)
                                                   .appId(APP_ID)
@@ -497,8 +498,9 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                   .jobname("releases")
                                                   .groupId("io.harness.test")
                                                   .artifactPaths(asList("todolist"))
-                                                  .autoPopulate(true)
+                                                  .autoPopulate(false)
                                                   .serviceId(SERVICE_ID)
+                                                  .name(name)
                                                   .build();
     ArtifactStream savedArtifactSteam = createArtifactStream(nexusArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
@@ -565,7 +567,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldUpdateNexusArtifactStream() {
-    ArtifactStream savedArtifactSteam = createNexusArtifactStream();
+    ArtifactStream savedArtifactSteam = createNexusArtifactStream("nexus1");
     updateNexusArtifactStreamAndValidate((NexusArtifactStream) savedArtifactSteam, APP_ID, null, null);
   }
 
@@ -2673,5 +2675,14 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     customArtifactStream.setTemplateVariables(
         asList(aVariable().name("var1").value("overridden value").type(TEXT).build()));
     return customArtifactStream;
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testListArtifactStreamSummary() {
+    createNexusArtifactStream("nexus1");
+    createNexusArtifactStream("nexus2");
+    List<ArtifactStreamSummary> artifactStreamSummary = artifactStreamService.listArtifactStreamSummary(APP_ID);
+    assertThat(artifactStreamSummary).isEmpty();
   }
 }
