@@ -1161,10 +1161,6 @@ public class PipelineServiceImpl implements PipelineService {
           }
 
           OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-          if (orchestrationWorkflow == null) {
-            continue;
-          }
-
           DeploymentMetadata deploymentMetadata = workflowService.fetchDeploymentMetadata(
               appId, workflow, pse.getWorkflowVariables(), null, null, includeList);
           if (deploymentMetadata == null) {
@@ -1183,19 +1179,6 @@ public class PipelineServiceImpl implements PipelineService {
                 isEmpty(includeList) ? Arrays.stream(Include.values()) : Arrays.stream(includeList);
             includeList =
                 includeStream.filter(include -> !Include.ARTIFACT_SERVICE.equals(include)).toArray(Include[] ::new);
-          }
-
-          if (finalDeploymentMetadata == null) {
-            if (isNotEmpty(deploymentMetadata.getArtifactVariables())) {
-              for (ArtifactVariable artifactVariable : deploymentMetadata.getArtifactVariables()) {
-                List<String> workflowIds = new ArrayList<>();
-                workflowIds.add(workflow.getUuid());
-                artifactVariable.setWorkflowIds(workflowIds);
-              }
-            }
-
-            finalDeploymentMetadata = deploymentMetadata;
-            continue;
           }
 
           mergeLists(finalDeploymentMetadata.getArtifactRequiredServiceIds(),
@@ -1236,9 +1219,10 @@ public class PipelineServiceImpl implements PipelineService {
       String duplicateServiceId = duplicateArtifactVariable.fetchAssociatedService();
       if (duplicateServiceId != null) {
         String serviceId = artifactVariable.fetchAssociatedService();
-        if (serviceId != null && serviceId.equals(duplicateServiceId)
-            && !duplicateArtifactVariable.getWorkflowIds().contains(workflowId)) {
-          duplicateArtifactVariable.getWorkflowIds().add(workflowId);
+        if (serviceId != null && serviceId.equals(duplicateServiceId)) {
+          if (!duplicateArtifactVariable.getWorkflowIds().contains(workflowId)) {
+            duplicateArtifactVariable.getWorkflowIds().add(workflowId);
+          }
           merged = true;
           break;
         }

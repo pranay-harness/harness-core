@@ -18,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -38,14 +39,17 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 import static software.wings.sm.StateType.EMAIL;
 import static software.wings.sm.StateType.ENV_STATE;
+import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.COMPANY_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.common.collect.ImmutableMap;
@@ -62,7 +66,9 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.JsonUtils;
@@ -92,6 +98,7 @@ import software.wings.beans.Environment.Builder;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionStrategy;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Graph;
 import software.wings.beans.GraphNode;
 import software.wings.beans.HostConnectionAttributes.AccessType;
@@ -122,6 +129,7 @@ import software.wings.rules.Listeners;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
@@ -136,10 +144,14 @@ import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Function;
 
 /**
  * The type Workflow service impl test.
@@ -160,6 +172,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Inject private InfrastructureMappingService infrastructureMappingService;
 
   @Mock private ArtifactService artifactService;
+  @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Mock private MultiArtifactWorkflowExecutionServiceHelper multiArtifactWorkflowExecutionServiceHelper;
 
   @Mock private StaticConfiguration staticConfiguration;
   @Inject private ServiceInstanceService serviceInstanceService;
@@ -1992,5 +2006,90 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     assertThat(workflowExecutionService.fetchWorkflowExecutionStartTs(execution.getAppId(), execution.getUuid()))
         .isNotNull();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldPopulateArtifactsAndServices() {
+    String serviceId1 = SERVICE_ID + "_1";
+    String artifactId1 = ARTIFACT_ID + "_1";
+    String artifactStreamId1 = ARTIFACT_STREAM_ID + "_1";
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setArtifacts(
+        asList(anArtifact().withUuid(ARTIFACT_ID).build(), anArtifact().withUuid(artifactId1).build()));
+    when(artifactService.listByIds(any(), any()))
+        .thenReturn(asList(
+            anArtifact().withUuid(ARTIFACT_ID).withArtifactStreamId(ARTIFACT_STREAM_ID).withDisplayName("art").build(),
+            anArtifact()
+                .withUuid(artifactId1)
+                .withArtifactStreamId(artifactStreamId1)
+                .withDisplayName("art1")
+                .build()));
+
+    WorkflowExecution workflowExecution =
+        WorkflowExecution.builder().serviceIds(asList(SERVICE_ID, serviceId1)).build();
+    when(artifactStreamServiceBindingService.listArtifactStreamIds(SERVICE_ID))
+        .thenReturn(singletonList(ARTIFACT_STREAM_ID));
+    when(artifactStreamServiceBindingService.listArtifactStreamIds(serviceId1))
+        .thenReturn(singletonList(artifactStreamId1));
+    when(artifactStreamServiceBindingService.listServices(ARTIFACT_STREAM_ID))
+        .thenReturn(singletonList(Service.builder().uuid(SERVICE_ID).name("s").build()));
+    when(artifactStreamServiceBindingService.listServices(artifactStreamId1))
+        .thenReturn(singletonList(Service.builder().uuid(serviceId1).name("s1").build()));
+
+    WorkflowStandardParams stdParams = aWorkflowStandardParams().build();
+    Set<String> keywords = new HashSet<>();
+    ((WorkflowExecutionServiceImpl) workflowExecutionService)
+        .populateArtifactsAndServices(workflowExecution, stdParams, keywords, executionArgs, ACCOUNT_ID);
+
+    Function<List<Artifact>, Boolean> checkArtifacts = artifacts
+        -> EmptyPredicate.isNotEmpty(artifacts) && artifacts.size() == 2
+        && artifacts.get(0).getUuid().equals(ARTIFACT_ID) && artifacts.get(1).getUuid().equals(artifactId1);
+    assertThat(checkArtifacts.apply(workflowExecution.getArtifacts())).isTrue();
+    assertThat(checkArtifacts.apply(executionArgs.getArtifacts())).isTrue();
+    assertThat(keywords).contains("s", "s1");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldPopulateArtifactsAndServicesNoArtifactIds() {
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setArtifacts(Collections.singletonList(anArtifact().build()));
+    WorkflowExecution workflowExecution = WorkflowExecution.builder().build();
+    WorkflowStandardParams stdParams = aWorkflowStandardParams().build();
+    Set<String> keywords = new HashSet<>();
+    ((WorkflowExecutionServiceImpl) workflowExecutionService)
+        .populateArtifactsAndServices(workflowExecution, stdParams, keywords, executionArgs, ACCOUNT_ID);
+    assertThat(workflowExecution.getArtifacts()).isNullOrEmpty();
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
+  public void shouldNotPopulateArtifactsAndServicesWithInvalidArtifacts() {
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setArtifacts(Collections.singletonList(anArtifact().withUuid(ARTIFACT_ID).build()));
+    when(artifactService.listByIds(any(), any())).thenReturn(Collections.emptyList());
+    WorkflowExecution workflowExecution = WorkflowExecution.builder().build();
+    WorkflowStandardParams stdParams = aWorkflowStandardParams().build();
+    Set<String> keywords = new HashSet<>();
+    ((WorkflowExecutionServiceImpl) workflowExecutionService)
+        .populateArtifactsAndServices(workflowExecution, stdParams, keywords, executionArgs, ACCOUNT_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldPopulateArtifactsAndServicesWithArtifactStreamRefactorBasic() {
+    // This is just to test that populateArtifacts function is called for feature-flag on.
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(true);
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setArtifactVariables(Collections.emptyList());
+    WorkflowExecution workflowExecution = WorkflowExecution.builder().build();
+    WorkflowStandardParams stdParams = aWorkflowStandardParams().build();
+    Set<String> keywords = new HashSet<>();
+    ((WorkflowExecutionServiceImpl) workflowExecutionService)
+        .populateArtifactsAndServices(workflowExecution, stdParams, keywords, executionArgs, ACCOUNT_ID);
+    verify(multiArtifactWorkflowExecutionServiceHelper).filterArtifactsForExecution(any(), any(), any());
+    assertThat(workflowExecution.getArtifacts()).isNullOrEmpty();
   }
 }
