@@ -1,9 +1,11 @@
 package io.harness.threading;
 
 import io.harness.exception.InterruptedRuntimeException;
+import lombok.experimental.UtilityClass;
 
 import java.time.Duration;
 
+@UtilityClass
 public class Morpheus {
   /**
    * sleep without throwing InterruptedException.

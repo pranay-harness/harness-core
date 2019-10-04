@@ -4,9 +4,11 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.migration.MigrationJob.Metadata;
 import io.harness.persistence.HPersistence;
+import lombok.experimental.UtilityClass;
 
 import java.util.Map;
 
+@UtilityClass
 public class MigrationList {
   public static final Map<Integer, MigrationJob> jobs =
       ImmutableMap.<Integer, MigrationJob>builder()

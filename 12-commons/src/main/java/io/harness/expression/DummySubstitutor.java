@@ -1,8 +1,10 @@
 package io.harness.expression;
 
+import lombok.experimental.UtilityClass;
 import org.apache.commons.text.StrLookup;
 import org.apache.commons.text.StrSubstitutor;
 
+@UtilityClass
 public class DummySubstitutor {
   static class DummyStrLookup extends StrLookup {
     @Override

@@ -1,10 +1,13 @@
 package io.harness.time;
 
+import lombok.experimental.UtilityClass;
+
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 
+@UtilityClass
 public class EpochUtils {
   public static final String PST_ZONE_ID = "America/Los_Angeles";
 

@@ -5,11 +5,13 @@ import static java.util.stream.Collectors.joining;
 
 import io.harness.eraro.ResponseMessage;
 import io.harness.logging.ExceptionLogger;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.EnumSet;
 import javax.validation.ConstraintViolationException;
 
+@UtilityClass
 @Slf4j
 public class ExceptionUtils {
   public static <T> T cause(Class<T> clazz, Throwable exception) {
@@ -22,9 +24,10 @@ public class ExceptionUtils {
     return null;
   }
 
-  public static EnumSet<FailureType> getFailureTypes(Throwable t) {
+  public static EnumSet<FailureType> getFailureTypes(Throwable throwable) {
     EnumSet<FailureType> failureTypes = EnumSet.noneOf(FailureType.class);
 
+    Throwable t = throwable;
     while (t != null) {
       if (t instanceof WingsException) {
         failureTypes.addAll(((WingsException) t).getFailureTypes());
@@ -34,7 +37,7 @@ public class ExceptionUtils {
     }
 
     if (failureTypes.isEmpty()) {
-      logger.error("While determining the failureTypes, none was discovered for the following exception", t);
+      logger.error("While determining the failureTypes, none was discovered for the following exception", throwable);
     }
 
     return failureTypes;

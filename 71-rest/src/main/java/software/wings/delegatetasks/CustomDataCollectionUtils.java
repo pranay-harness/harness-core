@@ -2,6 +2,7 @@ package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import java.text.DateFormat;
@@ -12,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
+@UtilityClass
 @Slf4j
 public class CustomDataCollectionUtils {
   private static final String ISO_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";

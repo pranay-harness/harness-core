@@ -2,11 +2,14 @@ package io.harness.reflection;
 
 import static java.lang.String.format;
 
+import lombok.experimental.UtilityClass;
+
 import java.net.URL;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
 import java.util.Set;
 
+@UtilityClass
 public class CodeUtils {
   public static String location(Class clazz) {
     final ProtectionDomain protectionDomain = clazz.getProtectionDomain();

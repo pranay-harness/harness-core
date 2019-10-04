@@ -15,6 +15,7 @@ import io.harness.eraro.ResponseMessage;
 import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ExecutionContext;
 import io.harness.exception.WingsException.ReportTarget;
+import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
@@ -22,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
+@UtilityClass
 public class ExceptionLogger {
   protected static String calculateResponseMessage(List<ResponseMessage> responseMessages) {
     return "Response message: "
@@ -70,7 +72,7 @@ public class ExceptionLogger {
   public static void logProcessedMessages(WingsException exception, ExecutionContext context, Logger logger) {
     Exception processedException = null;
     try (AutoLogContext ignore = new AutoLogContext(exception.calcRecursiveContextObjects(), OVERRIDE_ERROR)) {
-      ReportTarget target = LOG_SYSTEM;
+      ReportTarget target = UNIVERSAL;
 
       switch (context) {
         case MANAGER:
@@ -85,11 +87,15 @@ public class ExceptionLogger {
 
       List<ResponseMessage> responseMessages = getResponseMessageList(exception, target);
       if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == ERROR)) {
-        logger.error(calculateErrorMessage(exception, responseMessages), exception);
+        if (logger.isErrorEnabled()) {
+          logger.error(calculateErrorMessage(exception, responseMessages), exception);
+        }
       } else {
         responseMessages = getResponseMessageList(exception, UNIVERSAL);
-        logger.info(calculateInfoMessage(responseMessages));
-        logger.info(calculateDebugMessage(exception), exception);
+        if (logger.isInfoEnabled()) {
+          logger.info(calculateInfoMessage(responseMessages));
+          logger.info(calculateDebugMessage(exception), exception);
+        }
       }
     } catch (Exception e) {
       processedException = e;

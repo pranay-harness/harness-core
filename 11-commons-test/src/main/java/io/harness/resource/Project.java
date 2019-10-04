@@ -1,11 +1,13 @@
 package io.harness.resource;
 
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
 
+@UtilityClass
 @Slf4j
 public class Project {
   public static String moduleDirectory(Class clazz) {

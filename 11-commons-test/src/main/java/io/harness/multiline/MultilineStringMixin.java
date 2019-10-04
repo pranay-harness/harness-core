@@ -1,6 +1,8 @@
 package io.harness.multiline;
 
+import io.harness.exception.LoadSourceCodeException;
 import io.harness.resource.Project;
+import lombok.experimental.UtilityClass;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -11,6 +13,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
 public interface MultilineStringMixin {
+  @UtilityClass
   class $ {
     private static final String OPEN_ML_COMMENT = "/*";
     private static final String CLOSE_ML_COMMENT = "*/";
@@ -41,7 +44,7 @@ public interface MultilineStringMixin {
           }
         }
       } catch (IOException e) {
-        throw new RuntimeException("", e);
+        throw new LoadSourceCodeException(e);
       }
 
       String commentArea = sb.toString();

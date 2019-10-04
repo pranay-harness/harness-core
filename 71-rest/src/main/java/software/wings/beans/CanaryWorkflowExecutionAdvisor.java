@@ -53,10 +53,10 @@ import software.wings.sm.StateType;
 import software.wings.sm.states.PhaseStepSubWorkflow;
 import software.wings.sm.states.PhaseSubWorkflow;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * Created by rishi on 1/24/17.
@@ -569,7 +569,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   }
 
   public static FailureStrategy selectTopMatchingStrategy(
-      List<FailureStrategy> failureStrategies, Set<FailureType> failureTypes, String stateName) {
+      List<FailureStrategy> failureStrategies, EnumSet<FailureType> failureTypes, String stateName) {
     final FailureStrategy failureStrategy =
         selectTopMatchingStrategyInternal(failureStrategies, failureTypes, stateName);
 
@@ -583,7 +583,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   }
 
   private static FailureStrategy selectTopMatchingStrategyInternal(
-      List<FailureStrategy> failureStrategies, Set<FailureType> failureTypes, String stateName) {
+      List<FailureStrategy> failureStrategies, EnumSet<FailureType> failureTypes, String stateName) {
     if (isEmpty(failureStrategies)) {
       return null;
     }

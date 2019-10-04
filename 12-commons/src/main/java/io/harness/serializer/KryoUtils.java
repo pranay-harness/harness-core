@@ -10,6 +10,7 @@ import com.esotericsoftware.kryo.pool.KryoPool;
 import com.esotericsoftware.kryo.util.IntMap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.reflection.CodeUtils;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.reflections.Reflections;
@@ -21,6 +22,7 @@ import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
 @SuppressFBWarnings("DM_EXIT")
+@UtilityClass
 @Slf4j
 public class KryoUtils {
   private static synchronized Kryo kryo() {
