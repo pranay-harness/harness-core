@@ -48,11 +48,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Matchers;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureContainerRegistry;
 import software.wings.beans.DockerConfig;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.Service;
@@ -83,6 +85,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.AzureResourceService;
 import software.wings.service.intfc.BuildSourceService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
@@ -113,6 +116,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @InjectMocks @Inject private ArtifactStreamService artifactStreamService;
   @Mock private AzureResourceService azureResourceService;
   @Mock private TemplateService templateService;
+  @Mock private FeatureFlagService featureFlagService;
 
   @Before
   public void setUp() {
@@ -481,7 +485,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldAddNexusArtifactStreamAtConnectorLevel() {
-    ArtifactStream savedArtifactSteam = createNexusArtifactStreamAtConnectorLevel();
+    ArtifactStream savedArtifactSteam = createNexusArtifactStreamAtConnectorLevel("conn-nexus1");
     validateNexusArtifactStream(savedArtifactSteam, GLOBAL_APP_ID);
     NexusArtifactStream savedNexusArtifactStream = (NexusArtifactStream) savedArtifactSteam;
     assertThat(savedNexusArtifactStream.getJobname()).isEqualTo("releases");
@@ -509,7 +513,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     return savedArtifactSteam;
   }
 
-  private ArtifactStream createNexusArtifactStreamAtConnectorLevel() {
+  private ArtifactStream createNexusArtifactStreamAtConnectorLevel(String name) {
     NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
                                                   .accountId(ACCOUNT_ID)
                                                   .appId(GLOBAL_APP_ID)
@@ -517,8 +521,9 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                   .jobname("releases")
                                                   .groupId("io.harness.test")
                                                   .artifactPaths(asList("todolist"))
-                                                  .autoPopulate(true)
+                                                  .autoPopulate(false)
                                                   .repositoryType("maven")
+                                                  .name(name)
                                                   .build();
     ArtifactStream savedArtifactSteam = artifactStreamService.create(nexusArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
@@ -581,14 +586,15 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldUpdateNexusArtifactStreamAtConnectorLevel() {
-    ArtifactStream savedArtifactSteam = createNexusArtifactStreamAtConnectorLevel();
+    ArtifactStream savedArtifactSteam = createNexusArtifactStreamAtConnectorLevel("conn-nexus2");
     updateNexusArtifactStreamAndValidate((NexusArtifactStream) savedArtifactSteam, GLOBAL_APP_ID, null, null);
   }
 
   @Test(expected = InvalidRequestException.class)
   @Category(UnitTests.class)
   public void shouldNotUpdateNexusArtifactStreamWithDifferentRepositoryFormat() {
-    NexusArtifactStream savedNexusArtifactStream = (NexusArtifactStream) createNexusArtifactStreamAtConnectorLevel();
+    NexusArtifactStream savedNexusArtifactStream =
+        (NexusArtifactStream) createNexusArtifactStreamAtConnectorLevel("conn-nexus3");
     assertThat(savedNexusArtifactStream.getJobname()).isEqualTo("releases");
     assertThat(savedNexusArtifactStream.getArtifactPaths()).contains("todolist");
     assertThat(savedNexusArtifactStream.getRepositoryFormat()).isEqualTo(RepositoryFormat.maven.name());
@@ -2679,9 +2685,19 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testListArtifactStreamSummary() {
+  public void testListArtifactStreamSummaryWithFeatureFlagDisabled() {
     createNexusArtifactStream("nexus1");
     createNexusArtifactStream("nexus2");
+    List<ArtifactStreamSummary> artifactStreamSummary = artifactStreamService.listArtifactStreamSummary(APP_ID);
+    assertThat(artifactStreamSummary).isEmpty();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testListArtifactStreamSummaryWithFeatureFlagEnabled() {
+    when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(true);
+    createNexusArtifactStreamAtConnectorLevel("nexus1");
+    createNexusArtifactStreamAtConnectorLevel("nexus2");
     List<ArtifactStreamSummary> artifactStreamSummary = artifactStreamService.listArtifactStreamSummary(APP_ID);
     assertThat(artifactStreamSummary).isEmpty();
   }
