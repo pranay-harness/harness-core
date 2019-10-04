@@ -138,25 +138,25 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class HelmDeployState extends State {
-  @Inject private transient AppService appService;
-  @Inject private transient ServiceResourceService serviceResourceService;
-  @Inject private transient InfrastructureMappingService infrastructureMappingService;
-  @Inject private transient DelegateService delegateService;
-  @Inject private transient ServiceTemplateService serviceTemplateService;
-  @Inject private transient ActivityService activityService;
-  @Inject private transient ContainerDeploymentManagerHelper containerDeploymentHelper;
-  @Inject private transient SettingsService settingsService;
-  @Inject private transient SecretManager secretManager;
-  @Inject private transient ArtifactCollectionUtils artifactCollectionUtils;
-  @Inject private transient TemplateExpressionProcessor templateExpressionProcessor;
-  @Inject private transient GitConfigHelperService gitConfigHelperService;
-  @Inject private transient ApplicationManifestService applicationManifestService;
-  @Inject private transient ApplicationManifestUtils applicationManifestUtils;
-  @Inject private transient HelmChartConfigHelperService helmChartConfigHelperService;
-  @Inject private transient ServiceTemplateHelper serviceTemplateHelper;
-  @Inject private transient K8sStateHelper k8sStateHelper;
-  @Inject private transient WorkflowExecutionService workflowExecutionService;
-  @Inject private transient HelmHelper helmHelper;
+  @Inject private AppService appService;
+  @Inject private ServiceResourceService serviceResourceService;
+  @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private DelegateService delegateService;
+  @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private ActivityService activityService;
+  @Inject private ContainerDeploymentManagerHelper containerDeploymentHelper;
+  @Inject private SettingsService settingsService;
+  @Inject private SecretManager secretManager;
+  @Inject private ArtifactCollectionUtils artifactCollectionUtils;
+  @Inject private TemplateExpressionProcessor templateExpressionProcessor;
+  @Inject private GitConfigHelperService gitConfigHelperService;
+  @Inject private ApplicationManifestService applicationManifestService;
+  @Inject private ApplicationManifestUtils applicationManifestUtils;
+  @Inject private HelmChartConfigHelperService helmChartConfigHelperService;
+  @Inject private ServiceTemplateHelper serviceTemplateHelper;
+  @Inject private K8sStateHelper k8sStateHelper;
+  @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private HelmHelper helmHelper;
 
   @DefaultValue("10") private int steadyStateTimeout; // Minutes
 
@@ -534,13 +534,13 @@ public class HelmDeployState extends State {
 
   private String obtainCommandFlags(ExecutionContext context) {
     if (getStateType().equals(HELM_DEPLOY.name())) {
-      String commandFlags = getCommandFlags();
+      String cmdFlags = getCommandFlags();
 
-      if (isNotBlank(commandFlags)) {
-        commandFlags = context.renderExpression(commandFlags);
+      if (isNotBlank(cmdFlags)) {
+        cmdFlags = context.renderExpression(cmdFlags);
       }
 
-      return commandFlags;
+      return cmdFlags;
     } else {
       HelmDeployContextElement contextElement = context.getContextElement(ContextElementType.HELM_DEPLOY);
       if (contextElement == null) {
@@ -635,7 +635,7 @@ public class HelmDeployState extends State {
     String releaseName = obtainHelmReleaseNamePrefix(context);
     updateHelmReleaseNameInInfraMappingElement(context, releaseName);
 
-    String commandFlags = obtainCommandFlags(context);
+    String cmdFlags = obtainCommandFlags(context);
 
     ContainerServiceParams containerServiceParams =
         containerDeploymentHelper.getContainerServiceParams(containerInfraMapping, releaseName, context);
@@ -697,7 +697,7 @@ public class HelmDeployState extends State {
                                                           .activityId(activityId)
                                                           .releaseName(releaseName)
                                                           .namespace(containerServiceParams.getNamespace())
-                                                          .commandFlags(commandFlags)
+                                                          .commandFlags(cmdFlags)
                                                           .currentTaskType(HELM_COMMAND_TASK)
                                                           .build();
 
@@ -739,10 +739,10 @@ public class HelmDeployState extends State {
     }
 
     setNewAndPrevReleaseVersion(context, app, releaseName, containerServiceParams, stateExecutionData, gitConfig,
-        encryptedDataDetails, commandFlags);
+        encryptedDataDetails, cmdFlags);
     HelmCommandRequest commandRequest = getHelmCommandRequest(context, helmChartSpecification, containerServiceParams,
         releaseName, app.getAccountId(), app.getUuid(), activityId, imageDetails, containerInfraMapping, repoName,
-        gitConfig, encryptedDataDetails, commandFlags, repoConfig, appManifestMap);
+        gitConfig, encryptedDataDetails, cmdFlags, repoConfig, appManifestMap);
 
     delegateService.queueTask(DelegateTask.builder()
                                   .async(true)
