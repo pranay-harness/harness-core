@@ -441,10 +441,8 @@ public class WorkflowGenerator {
   }
 
   private Workflow ensureBasicSimpleMultiArtifact(Randomizer.Seed seed, Owners owners) {
-    Template commandTemplate1 =
-        templateGenerator.ensureServiceCommandTemplate(seed, owners, TemplateGenerator.Templates.SERVICE_COMMAND_1);
-    Template commandTemplate2 =
-        templateGenerator.ensureServiceCommandTemplate(seed, owners, TemplateGenerator.Templates.SERVICE_COMMAND_2);
+    templateGenerator.ensureServiceCommandTemplate(seed, owners, TemplateGenerator.Templates.SERVICE_COMMAND_1);
+    templateGenerator.ensureServiceCommandTemplate(seed, owners, TemplateGenerator.Templates.SERVICE_COMMAND_2);
 
     Template multiArtifactCommandTemplate =
         templateGenerator.ensurePredefined(seed, owners, TemplateGenerator.Templates.MULTI_ARTIFACT_COMMAND_TEMPLATE);

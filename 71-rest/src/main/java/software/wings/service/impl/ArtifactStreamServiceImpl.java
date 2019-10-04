@@ -1098,9 +1098,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   private Map<String, ArtifactStream> getArtifactStreamMap(String appId) {
     String accountId = appService.getAccountIdByAppId(appId);
-    if (accountId == null) {
-      throw new InvalidRequestException("App does not exist", USER);
-    }
 
     Map<String, ArtifactStream> artifactStreamMap = new HashMap<>();
     try (HIterator<ArtifactStream> artifactStreamHIterator =

@@ -132,7 +132,6 @@ public class CommandState extends State {
   public static final String BACKUP_PATH = "BACKUP_PATH";
   public static final String STAGING_PATH = "STAGING_PATH";
   public static final String WINDOWS_RUNTIME_PATH = "WINDOWS_RUNTIME_PATH";
-  private static final String PHASE_PARAM = "PHASE_PARAM";
 
   @Inject @Transient @SchemaIgnore private transient ExecutorService executorService;
   @Inject @Transient private transient ActivityHelperService activityHelperService;
