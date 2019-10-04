@@ -8,7 +8,6 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.common.Constants.MAX_DELEGATE_LAST_HEARTBEAT;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -58,6 +57,8 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 @Slf4j
 public class AssignDelegateServiceImpl implements AssignDelegateService {
+  public static final long MAX_DELEGATE_LAST_HEARTBEAT = (5 * 60 * 1000L) + (15 * 1000L); // 5 minutes 15 seconds
+
   private static final long WHITELIST_TTL = TimeUnit.HOURS.toMillis(6);
   private static final long BLACKLIST_TTL = TimeUnit.MINUTES.toMillis(5);
   private static final long WHITELIST_REFRESH_INTERVAL = TimeUnit.MINUTES.toMillis(10);
