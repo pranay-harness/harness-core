@@ -43,6 +43,8 @@ public class Notifier implements Runnable {
   @Inject private Queue<NotifyEvent> notifyQueue;
   @Inject private QueueController queueController;
 
+  private int skip;
+
   @Override
   public void run() {
     if (getMaintenanceFilename() || queueController.isNotPrimary()) {
@@ -75,14 +77,18 @@ public class Notifier implements Runnable {
     final List<NotifyResponse> notifyResponses = persistence.createQuery(NotifyResponse.class, excludeAuthority)
                                                      .project(NotifyResponseKeys.uuid, true)
                                                      .project(NotifyResponseKeys.createdAt, true)
-                                                     .asList(new FindOptions().limit(1000));
+                                                     .asList(new FindOptions().skip(skip).limit(1000));
 
     if (isEmpty(notifyResponses)) {
       logger.debug("There are no NotifyResponse entries to process");
       return;
     }
 
-    logger.info("Notifier responses {}", notifyResponses.size());
+    logger.info("Notifier responses {} with skip {}", notifyResponses.size(), skip);
+
+    // if we accumulated 1000 responses, they might be all partial. Lets skip some and give chance to the newer to be
+    // processed.
+    skip = notifyResponses.size() < 1000 ? 0 : skip + 250;
 
     Set<String> correlationIds = notifyResponses.stream().map(NotifyResponse::getUuid).collect(toSet());
     Map<String, List<String>> waitInstances = new HashMap<>();
