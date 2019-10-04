@@ -44,7 +44,7 @@ import static software.wings.beans.FeatureName.CCM_EVENT_COLLECTION;
 import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK;
 import static software.wings.beans.TaskType.HOST_VALIDATION;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
-import static software.wings.common.Constants.MAX_DELEGATE_LAST_HEARTBEAT;
+import static software.wings.service.impl.AssignDelegateServiceImpl.MAX_DELEGATE_LAST_HEARTBEAT;
 import static software.wings.service.impl.DelegateGrpcConfigExtractor.extractTarget;
 import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
 
@@ -81,6 +81,7 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.CapabilityUtils;
+import io.harness.delegate.task.DelegateLogContext;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
@@ -200,7 +201,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 import javax.validation.executable.ValidateOnExecution;
-import javax.ws.rs.NotFoundException;
 
 @Singleton
 @ValidateOnExecution
@@ -209,7 +209,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   /**
    * The constant DELEGATE_DIR.
    */
-  public static final String HARNESS_DELEGATE = "harness-delegate";
+  private static final String HARNESS_DELEGATE = "harness-delegate";
   public static final String DELEGATE_DIR = HARNESS_DELEGATE;
   public static final String DOCKER_DELEGATE = HARNESS_DELEGATE + "-docker";
   public static final String KUBERNETES_DELEGATE = HARNESS_DELEGATE + "-kubernetes";
@@ -227,6 +227,11 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   private static final String ASYNC = "async";
   private static final String SYNC = "sync";
   private static final String MESSAGE = "message";
+  private static final String STREAM_DELEGATE = "/stream/delegate/";
+  private static final String TAR_GZ = ".tar.gz";
+  private static final String README = "README";
+  private static final String README_TXT = "/README.txt";
+  private static final String EMPTY_VERSION = "0.0.0";
 
   static {
     cfg.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
@@ -279,7 +284,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
           .expireAfterWrite(1, TimeUnit.MINUTES)
           .build(new CacheLoader<String, Optional<Delegate>>() {
             @Override
-            public Optional<Delegate> load(String delegateId) throws NotFoundException {
+            public Optional<Delegate> load(String delegateId) {
               return Optional.ofNullable(
                   wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.uuid, delegateId).get());
             }
@@ -442,7 +447,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     if (updateEntireEcsCluster) {
       return updateAllDelegatesIfECSType(delegate, updateOperations, "ALL");
     } else {
-      logger.info("Updating delegate : {}", delegate.getUuid());
+      logger.info("Updating ECS delegate : {}", delegate.getUuid());
       if (isDelegateWithoutPollingEnabled(delegate)) {
         // This updates delegates, as well as delegateConnection and taksBeingExecuted on delegate
         return updateDelegate(delegate, updateOperations);
@@ -467,7 +472,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
   @Override
   public Delegate updateDescription(String accountId, String delegateId, String newDescription) {
-    logger.info("Updating delegate : {} with new description", delegateId);
+    logger.info("Updating delegate description", delegateId);
     wingsPersistence.update(wingsPersistence.createQuery(Delegate.class)
                                 .filter(DelegateKeys.accountId, accountId)
                                 .filter(DelegateKeys.uuid, delegateId),
@@ -773,7 +778,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         List<String> delegateVersions = accountService.getDelegateConfiguration(accountId).getDelegateVersions();
         version = delegateVersions.get(delegateVersions.size() - 1);
       } else {
-        version = "0.0.0";
+        version = EMPTY_VERSION;
       }
 
       ImmutableMap<String, String> scriptParams =
@@ -835,12 +840,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       }
       out.closeArchiveEntry();
 
-      File readme = File.createTempFile("README", ".txt");
+      File readme = File.createTempFile(README, ".txt");
       try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(readme), UTF_8)) {
         cfg.getTemplate("readme.txt.ftl").process(emptyMap(), fileWriter);
       }
       readme = new File(readme.getAbsolutePath());
-      TarArchiveEntry readmeTarArchiveEntry = new TarArchiveEntry(readme, DELEGATE_DIR + "/README.txt");
+      TarArchiveEntry readmeTarArchiveEntry = new TarArchiveEntry(readme, DELEGATE_DIR + README_TXT);
       out.putArchiveEntry(readmeTarArchiveEntry);
       try (FileInputStream fis = new FileInputStream(readme)) {
         IOUtils.copy(fis, out);
@@ -851,7 +856,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       out.finish();
     }
 
-    File gzipDelegateFile = File.createTempFile(DELEGATE_DIR, ".tar.gz");
+    File gzipDelegateFile = File.createTempFile(DELEGATE_DIR, TAR_GZ);
     compressGzipFile(delegateFile, gzipDelegateFile);
     return gzipDelegateFile;
   }
@@ -883,7 +888,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         List<String> delegateVersions = accountService.getDelegateConfiguration(accountId).getDelegateVersions();
         version = delegateVersions.get(delegateVersions.size() - 1);
       } else {
-        version = "0.0.0";
+        version = EMPTY_VERSION;
       }
 
       ImmutableMap<String, String> scriptParams =
@@ -907,12 +912,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       }
       out.closeArchiveEntry();
 
-      File readme = File.createTempFile("README", ".txt");
+      File readme = File.createTempFile(README, ".txt");
       try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(readme), UTF_8)) {
         cfg.getTemplate("readme-docker.txt.ftl").process(emptyMap(), fileWriter);
       }
       readme = new File(readme.getAbsolutePath());
-      TarArchiveEntry readmeTarArchiveEntry = new TarArchiveEntry(readme, DOCKER_DELEGATE + "/README.txt");
+      TarArchiveEntry readmeTarArchiveEntry = new TarArchiveEntry(readme, DOCKER_DELEGATE + README_TXT);
       out.putArchiveEntry(readmeTarArchiveEntry);
       try (FileInputStream fis = new FileInputStream(readme)) {
         IOUtils.copy(fis, out);
@@ -923,7 +928,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       out.finish();
     }
 
-    File gzipDockerDelegateFile = File.createTempFile(DELEGATE_DIR, ".tar.gz");
+    File gzipDockerDelegateFile = File.createTempFile(DELEGATE_DIR, TAR_GZ);
     compressGzipFile(dockerDelegateFile, gzipDockerDelegateFile);
     return gzipDockerDelegateFile;
   }
@@ -942,7 +947,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         List<String> delegateVersions = accountService.getDelegateConfiguration(accountId).getDelegateVersions();
         version = delegateVersions.get(delegateVersions.size() - 1);
       } else {
-        version = "0.0.0";
+        version = EMPTY_VERSION;
       }
 
       ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(accountId, version, managerHost,
@@ -961,12 +966,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       }
       out.closeArchiveEntry();
 
-      File readme = File.createTempFile("README", ".txt");
+      File readme = File.createTempFile(README, ".txt");
       try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(readme), UTF_8)) {
         cfg.getTemplate("readme-kubernetes.txt.ftl").process(emptyMap(), fileWriter);
       }
       readme = new File(readme.getAbsolutePath());
-      TarArchiveEntry readmeTarArchiveEntry = new TarArchiveEntry(readme, KUBERNETES_DELEGATE + "/README.txt");
+      TarArchiveEntry readmeTarArchiveEntry = new TarArchiveEntry(readme, KUBERNETES_DELEGATE + README_TXT);
       out.putArchiveEntry(readmeTarArchiveEntry);
       try (FileInputStream fis = new FileInputStream(readme)) {
         IOUtils.copy(fis, out);
@@ -977,7 +982,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       out.finish();
     }
 
-    File gzipKubernetesDelegateFile = File.createTempFile(DELEGATE_DIR, ".tar.gz");
+    File gzipKubernetesDelegateFile = File.createTempFile(DELEGATE_DIR, TAR_GZ);
     compressGzipFile(kubernetesDelegateFile, gzipKubernetesDelegateFile);
 
     return gzipKubernetesDelegateFile;
@@ -992,7 +997,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       List<String> delegateVersions = accountService.getDelegateConfiguration(accountId).getDelegateVersions();
       version = delegateVersions.get(delegateVersions.size() - 1);
     } else {
-      version = "0.0.0";
+      version = EMPTY_VERSION;
     }
 
     ImmutableMap<String, String> params = getJarAndScriptRunTimeParamMap(
@@ -1020,7 +1025,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         List<String> delegateVersions = accountService.getDelegateConfiguration(accountId).getDelegateVersions();
         version = delegateVersions.get(delegateVersions.size() - 1);
       } else {
-        version = "0.0.0";
+        version = EMPTY_VERSION;
       }
 
       ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(accountId, version, managerHost,
@@ -1055,12 +1060,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       out.closeArchiveEntry();
 
       // Add Readme file
-      File readme = File.createTempFile("README", ".txt");
+      File readme = File.createTempFile(README, ".txt");
       try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(readme), UTF_8)) {
         cfg.getTemplate("readme-ecs.txt.ftl").process(emptyMap(), fileWriter);
       }
       readme = new File(readme.getAbsolutePath());
-      TarArchiveEntry readmeTarArchiveEntry = new TarArchiveEntry(readme, ECS_DELEGATE + "/README.txt");
+      TarArchiveEntry readmeTarArchiveEntry = new TarArchiveEntry(readme, ECS_DELEGATE + README_TXT);
       out.putArchiveEntry(readmeTarArchiveEntry);
       try (FileInputStream fis = new FileInputStream(readme)) {
         IOUtils.copy(fis, out);
@@ -1071,7 +1076,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       out.finish();
     }
 
-    File gzipEcsDelegateFile = File.createTempFile(DELEGATE_DIR, ".tar.gz");
+    File gzipEcsDelegateFile = File.createTempFile(DELEGATE_DIR, TAR_GZ);
     compressGzipFile(ecsDelegateFile, gzipEcsDelegateFile);
 
     return gzipEcsDelegateFile;
@@ -1190,13 +1195,13 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Override
   public Delegate register(Delegate delegate) {
     if (licenseService.isAccountDeleted(delegate.getAccountId())) {
-      broadcasterFactory.lookup("/stream/delegate/" + delegate.getAccountId(), true).broadcast(SELF_DESTRUCT);
+      broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(SELF_DESTRUCT);
       return Delegate.builder().uuid(SELF_DESTRUCT).build();
     }
 
     if (accountService.isAccountMigrated(delegate.getAccountId())) {
       String migrateMsg = MIGRATE + accountService.get(delegate.getAccountId()).getMigratedToClusterUrl();
-      broadcasterFactory.lookup("/stream/delegate/" + delegate.getAccountId(), true).broadcast(migrateMsg);
+      broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(migrateMsg);
       return Delegate.builder().uuid(migrateMsg).build();
     }
 
@@ -1212,7 +1217,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     Delegate existingDelegate =
         delegateQuery.project(DelegateKeys.status, true).project(DelegateKeys.delegateProfileId, true).get();
     if (existingDelegate != null && existingDelegate.getStatus() == Status.DELETED) {
-      broadcasterFactory.lookup("/stream/delegate/" + delegate.getAccountId(), true)
+      broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true)
           .broadcast(SELF_DESTRUCT + existingDelegate.getUuid());
 
       return Delegate.builder().uuid(SELF_DESTRUCT).build();
@@ -1259,7 +1264,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       // Broadcast Message containing, DelegateId and SeqNum (if applicable)
       StringBuilder message = new StringBuilder(128).append("[X]").append(delegate.getUuid());
       updateBroadcastMessageIfEcsDelegate(message, delegate, registeredDelegate);
-      broadcasterFactory.lookup("/stream/delegate/" + delegate.getAccountId(), true).broadcast(message.toString());
+      broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(message.toString());
 
       alertService.activeDelegateUpdated(registeredDelegate.getAccountId(), registeredDelegate.getUuid());
     }
@@ -1431,14 +1436,14 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   @Override
   public String queueTask(DelegateTask task) {
-    DelegateTask savedTask = saveDelegateTask(task, true);
-    try (AutoLogContext ignore1 = new TaskLogContext(savedTask.getUuid(), savedTask.getData().getTaskType(),
-             TaskType.valueOf(savedTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_NESTS);
-         AutoLogContext ignore2 = new AccountLogContext(savedTask.getAccountId(), OVERRIDE_ERROR)) {
+    saveDelegateTask(task, true);
+    try (AutoLogContext ignore1 = new TaskLogContext(task.getUuid(), task.getData().getTaskType(),
+             TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_NESTS);
+         AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
       logger.info("Queueing async task");
-      broadcastHelper.broadcastNewDelegateTaskAsync(savedTask);
+      broadcastHelper.broadcastNewDelegateTaskAsync(task);
     }
-    return savedTask.getUuid();
+    return task.getUuid();
   }
 
   @Override
@@ -1447,10 +1452,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     // Wait for task to complete
     DelegateTask completedTask;
     ResponseData responseData;
-    DelegateTask delegateTask = saveDelegateTask(task, false);
-    try (AutoLogContext ignore1 = new TaskLogContext(delegateTask.getUuid(), delegateTask.getData().getTaskType(),
-             TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_NESTS);
-         AutoLogContext ignore2 = new AccountLogContext(delegateTask.getAccountId(), OVERRIDE_ERROR)) {
+    saveDelegateTask(task, false);
+    try (AutoLogContext ignore1 = new TaskLogContext(task.getUuid(), task.getData().getTaskType(),
+             TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_NESTS);
+         AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
       List<String> eligibleDelegateIds = ensureDelegateAvailableToExecuteTask(task);
       if (isEmpty(eligibleDelegateIds)) {
         throw new WingsException(UNAVAILABLE_DELEGATES, USER_ADMIN);
@@ -1458,22 +1463,22 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
       try {
         logger.info("Executing sync task");
-        broadcastHelper.broadcastNewDelegateTask(delegateTask);
-        syncTaskWaitMap.put(delegateTask.getUuid(), new AtomicBoolean(true));
-        synchronized (syncTaskWaitMap.get(delegateTask.getUuid())) {
-          while (syncTaskWaitMap.get(delegateTask.getUuid()).get()) {
-            syncTaskWaitMap.get(delegateTask.getUuid()).wait(task.getData().getTimeout());
+        broadcastHelper.broadcastNewDelegateTask(task);
+        syncTaskWaitMap.put(task.getUuid(), new AtomicBoolean(true));
+        synchronized (syncTaskWaitMap.get(task.getUuid())) {
+          while (syncTaskWaitMap.get(task.getUuid()).get()) {
+            syncTaskWaitMap.get(task.getUuid()).wait(task.getData().getTimeout());
           }
         }
         completedTask = wingsPersistence.get(DelegateTask.class, task.getUuid());
       } catch (Exception e) {
-        logger.error("Exception", e);
+        logger.error("Error while waiting for sync task", e);
         throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", "Error while waiting for completion");
       } finally {
-        syncTaskWaitMap.remove(delegateTask.getUuid());
+        syncTaskWaitMap.remove(task.getUuid());
         wingsPersistence.delete(wingsPersistence.createQuery(DelegateTask.class)
-                                    .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
-                                    .filter(ID_KEY, delegateTask.getUuid()));
+                                    .filter(DelegateTaskKeys.accountId, task.getAccountId())
+                                    .filter(ID_KEY, task.getUuid()));
       }
 
       if (completedTask == null) {
@@ -1494,7 +1499,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @VisibleForTesting
-  DelegateTask saveDelegateTask(DelegateTask task, boolean async) {
+  void saveDelegateTask(DelegateTask task, boolean async) {
     task.setStatus(QUEUED);
     task.setAsync(async);
     task.setVersion(getVersion());
@@ -1506,9 +1511,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       task.setNextBroadast(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(5));
     }
 
-    String id = wingsPersistence.save(task);
-    task.setUuid(id);
-    return task;
+    wingsPersistence.save(task);
   }
 
   // TODO: Required right now, as at delegateSide based on capabilities are present or not,
@@ -2074,7 +2077,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     wingsPersistence.update(delegateTaskQuery,
         wingsPersistence.createUpdateOperations(DelegateTask.class).set(DelegateTaskKeys.status, error));
 
-    broadcasterFactory.lookup("/stream/delegate/" + accountId, true)
+    broadcasterFactory.lookup(STREAM_DELEGATE + accountId, true)
         .broadcast(aDelegateTaskAbortEvent().withAccountId(accountId).withDelegateTaskId(delegateTaskId).build());
   }
 
@@ -2552,25 +2555,26 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       return null;
     }
 
-    delegates.forEach(delegateToBeUpdated -> {
-      // LOGGING logic
-      if ("SCOPES".equals(fieldBeingUpdate)) {
-        logger.info("Updating delegate scopes : Delegate:{} includeScopes:{} excludeScopes:{}",
-            delegateToBeUpdated.getUuid(), delegate.getIncludeScopes(), delegate.getExcludeScopes());
-      } else if ("TAGS".equals(fieldBeingUpdate)) {
-        logger.info("Updating delegate tags : Delegate:{} tags:{}", delegateToBeUpdated.getUuid(), delegate.getTags());
-      } else {
-        logger.info("Updating delegate : {}", delegateToBeUpdated.getUuid());
-      }
+    for (Delegate delegateToBeUpdated : delegates) {
+      try (AutoLogContext ignore = new DelegateLogContext(delegateToBeUpdated.getUuid(), OVERRIDE_ERROR)) {
+        if ("SCOPES".equals(fieldBeingUpdate)) {
+          logger.info("Updating delegate scopes: includeScopes:{} excludeScopes:{}", delegate.getIncludeScopes(),
+              delegate.getExcludeScopes());
+        } else if ("TAGS".equals(fieldBeingUpdate)) {
+          logger.info("Updating delegate tags : tags:{}", delegate.getTags());
+        } else {
+          logger.info("Updating ECS delegate");
+        }
 
-      Delegate updatedDelegate = updateDelegate(delegateToBeUpdated, updateOperations);
-      if (updatedDelegate.getUuid().equals(delegate.getUuid())) {
-        retVal.add(updatedDelegate);
+        Delegate updatedDelegate = updateDelegate(delegateToBeUpdated, updateOperations);
+        if (updatedDelegate.getUuid().equals(delegate.getUuid())) {
+          retVal.add(updatedDelegate);
+        }
+        if (System.currentTimeMillis() - updatedDelegate.getLastHeartBeat() < Duration.ofMinutes(2).toMillis()) {
+          alertService.activeDelegateUpdated(updatedDelegate.getAccountId(), updatedDelegate.getUuid());
+        }
       }
-      if (System.currentTimeMillis() - updatedDelegate.getLastHeartBeat() < Duration.ofMinutes(2).toMillis()) {
-        alertService.activeDelegateUpdated(updatedDelegate.getAccountId(), updatedDelegate.getUuid());
-      }
-    });
+    }
 
     if (isNotEmpty(retVal)) {
       return retVal.get(0);

@@ -101,11 +101,6 @@ public interface Constants {
   String PROVISION_SHELL_SCRIPT = "Shell Script Provision";
 
   /**
-   * The constant MAX_DELEGATE_LAST_HEARTBEAT.
-   */
-  long MAX_DELEGATE_LAST_HEARTBEAT = (5 * 60 * 1000L) + (15 * 1000L); // 5 minutes 15 seconds
-
-  /**
    * The constant DEFAULT_STEADY_STATE_TIMEOUT.
    */
   int DEFAULT_STEADY_STATE_TIMEOUT = 10;

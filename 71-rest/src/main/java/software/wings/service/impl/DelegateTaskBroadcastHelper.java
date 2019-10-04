@@ -98,7 +98,9 @@ public class DelegateTaskBroadcastHelper {
   }
 
   public void rebroadcastDelegateTask(DelegateTask delegateTask) {
-    broadcasterFactory.lookup(STREAM_DELEGATE_PATH + delegateTask.getAccountId(), true).broadcast(delegateTask);
+    if (delegateTask != null) {
+      broadcasterFactory.lookup(STREAM_DELEGATE_PATH + delegateTask.getAccountId(), true).broadcast(delegateTask);
+    }
   }
 
   public long findNextBroadcastTimeForTask(DelegateTask delegateTask) {
