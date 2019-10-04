@@ -22,17 +22,22 @@ public class K8sResourceUtils {
     // get the resource for each container
     io.harness.perpetualtask.k8s.watch.Resource.Builder resourceBuilder =
         Resource.newBuilder()
-            .putLimits(K8S_CPU_RESOURCE, getCpuLimit(k8sContainer))
-            .putLimits(K8S_MEMORY_RESOURCE, getMemLimit(k8sContainer))
             .putRequests(K8S_CPU_RESOURCE, getCpuRequest(k8sContainer))
-            .putRequests(K8S_MEMORY_RESOURCE, getMemRequest(k8sContainer));
+            .putRequests(K8S_MEMORY_RESOURCE, getMemRequest(k8sContainer))
+            .putLimits(K8S_CPU_RESOURCE, getCpuLimit(k8sContainer))
+            .putLimits(K8S_MEMORY_RESOURCE, getMemLimit(k8sContainer));
     return resourceBuilder.build();
   }
 
   public static Resource.Quantity getCpuRequest(io.fabric8.kubernetes.api.model.Container k8sContainer) {
+    Builder cpuRequestBuilder = Resource.Quantity.newBuilder();
+    if (isNull(k8sContainer.getResources())) {
+      logger.warn("This k8s container is missing resource.");
+      return cpuRequestBuilder.build();
+    }
+
     Map<String, io.fabric8.kubernetes.api.model.Quantity> resourceRequestsMap =
         k8sContainer.getResources().getRequests();
-    Builder cpuRequestBuilder = Resource.Quantity.newBuilder();
     if (resourceRequestsMap != null && resourceRequestsMap.get(K8S_CPU_RESOURCE) != null) {
       String cpuRequestAmount = resourceRequestsMap.get(K8S_CPU_RESOURCE).getAmount();
       if (!StringUtils.isBlank(cpuRequestAmount)) {
@@ -47,10 +52,14 @@ public class K8sResourceUtils {
   }
 
   public static Resource.Quantity getMemRequest(io.fabric8.kubernetes.api.model.Container k8sContainer) {
+    Builder memRequestBuilder = Resource.Quantity.newBuilder();
+    if (isNull(k8sContainer.getResources())) {
+      logger.warn("This k8s container is missing resource.");
+      return memRequestBuilder.build();
+    }
+
     Map<String, io.fabric8.kubernetes.api.model.Quantity> resourceRequestsMap =
         k8sContainer.getResources().getRequests();
-    Builder memRequestBuilder = Resource.Quantity.newBuilder();
-
     if (resourceRequestsMap != null && resourceRequestsMap.get(K8S_MEMORY_RESOURCE) != null) {
       String memRequestAmount = resourceRequestsMap.get(K8S_MEMORY_RESOURCE).getAmount();
       if (!StringUtils.isBlank(memRequestAmount)) {
@@ -65,8 +74,13 @@ public class K8sResourceUtils {
   }
 
   public static Resource.Quantity getCpuLimit(io.fabric8.kubernetes.api.model.Container k8sContainer) {
-    Map<String, io.fabric8.kubernetes.api.model.Quantity> resourceLimitsMap = k8sContainer.getResources().getLimits();
     Builder cpuLimitBuilder = Resource.Quantity.newBuilder();
+    if (isNull(k8sContainer.getResources())) {
+      logger.warn("This k8s container is missing resource.");
+      return cpuLimitBuilder.build();
+    }
+
+    Map<String, io.fabric8.kubernetes.api.model.Quantity> resourceLimitsMap = k8sContainer.getResources().getLimits();
     if (resourceLimitsMap != null && resourceLimitsMap.get(K8S_CPU_RESOURCE) != null) {
       String cpuLimitAmount = resourceLimitsMap.get(K8S_CPU_RESOURCE).getAmount();
       if (!StringUtils.isBlank(cpuLimitAmount)) {
@@ -81,8 +95,13 @@ public class K8sResourceUtils {
   }
 
   public static Resource.Quantity getMemLimit(io.fabric8.kubernetes.api.model.Container k8sContainer) {
-    Map<String, io.fabric8.kubernetes.api.model.Quantity> resourceLimitsMap = k8sContainer.getResources().getLimits();
     Builder memLimitBuilder = Resource.Quantity.newBuilder();
+    if (isNull(k8sContainer.getResources())) {
+      logger.warn("This k8s container is missing resource.");
+      return memLimitBuilder.build();
+    }
+
+    Map<String, io.fabric8.kubernetes.api.model.Quantity> resourceLimitsMap = k8sContainer.getResources().getLimits();
     if (resourceLimitsMap != null && resourceLimitsMap.get(K8S_MEMORY_RESOURCE) != null) {
       String memLimitAmount = resourceLimitsMap.get(K8S_MEMORY_RESOURCE).getAmount();
       if (!StringUtils.isBlank(memLimitAmount)) {
