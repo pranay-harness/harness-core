@@ -10,7 +10,6 @@ import static software.wings.beans.trigger.Condition.Type.WEBHOOK;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 
-import io.harness.exception.TriggerException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.logging.ExceptionLogger;
@@ -22,7 +21,6 @@ import software.wings.beans.Variable;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.trigger.DeploymentTrigger;
-import software.wings.beans.trigger.PayloadSource.Type;
 import software.wings.beans.trigger.PipelineAction;
 import software.wings.beans.trigger.TriggerArtifactSelectionLastCollected;
 import software.wings.beans.trigger.TriggerArtifactSelectionLastDeployed;
@@ -47,8 +45,6 @@ public class WebhookConditionTriggerProcessor implements TriggerProcessor {
   private static String placeholder = "_placeholder";
   @Override
   public void validateTriggerConditionSetup(DeploymentTrigger deploymentTrigger, DeploymentTrigger existingTrigger) {
-    WebhookCondition webhookCondition = (WebhookCondition) deploymentTrigger.getCondition();
-    validatePayloadSource(webhookCondition);
     updateWebhookToken(deploymentTrigger, existingTrigger);
   }
 
@@ -92,14 +88,6 @@ public class WebhookConditionTriggerProcessor implements TriggerProcessor {
                                        .payloadSource(webhookCondition.getPayloadSource())
                                        .build());
     deploymentTrigger.setWebHookToken(webHookToken.getWebHookToken());
-  }
-
-  private void validatePayloadSource(WebhookCondition webhookCondition) {
-    Type type = webhookCondition.getPayloadSource().getType();
-    if (!((type.equals(Type.BITBUCKET) || type.equals(Type.CUSTOM) || type.equals(Type.GITHUB)
-            || type.equals(Type.GITLAB)))) {
-      throw new TriggerException("Invalid Payload type " + type, null);
-    }
   }
 
   private WebHookToken generateWebhookToken(WebHookToken existingToken, DeploymentTrigger deploymentTrigger) {

@@ -48,8 +48,10 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.COMPANY_NAME;
+import static software.wings.utils.WingsTestConstants.ENTITY_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.VARIABLE_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.common.collect.ImmutableMap;
@@ -92,6 +94,7 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.Application;
+import software.wings.beans.ArtifactVariable;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
@@ -116,6 +119,7 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
+import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
@@ -406,6 +410,32 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Pipeline pipeline = constructPipeline(service);
 
     triggerPipeline(app.getUuid(), pipeline);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldTriggerPipelineWithDeploymentMetaDataFFOn() {
+    Service service = addService("svc1");
+
+    Pipeline pipeline = constructPipeline(service);
+    when(featureFlagService.isEnabled(FeatureName.DEPLOYMENT_MODAL_REFACTOR, pipeline.getAccountId())).thenReturn(true);
+
+    Artifact artifact =
+        Artifact.Builder.anArtifact().withAccountId(ACCOUNT_ID).withAppId(APP_ID).withUuid(ARTIFACT_ID).build();
+    List<ArtifactVariable> variables = singletonList(ArtifactVariable.builder()
+                                                         .name(VARIABLE_NAME)
+                                                         .entityId(ENTITY_ID)
+                                                         .type(VariableType.ARTIFACT)
+                                                         .value(artifact.getUuid())
+                                                         .build());
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setArtifactVariables(variables);
+    executionArgs.setWorkflowType(WorkflowType.PIPELINE);
+    executionArgs.setPipelineId(pipeline.getUuid());
+    WorkflowExecution workflowExecution =
+        workflowExecutionService.triggerEnvExecution(pipeline.getAppId(), null, executionArgs, null);
+
+    assertThat(workflowExecution.getExecutionArgs().getArtifactVariables()).isNotNull();
   }
 
   private Pipeline constructPipeline(Service service) {
