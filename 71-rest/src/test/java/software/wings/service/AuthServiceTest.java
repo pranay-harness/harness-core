@@ -4,7 +4,11 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -26,9 +30,12 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
+import io.harness.event.handler.impl.segment.SegmentHandler;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.TokenGenerator;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
@@ -59,7 +66,9 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.CacheManager;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import javax.cache.Cache;
@@ -81,6 +90,7 @@ public class AuthServiceTest extends WingsBaseTest {
 
   @Mock private AccountService accountService;
   @Mock private UserService userService;
+  @Mock private SegmentHandler segmentHandler;
   @Mock FeatureFlagService featureFlagService;
   @Mock PortalConfig portalConfig;
   @Inject @InjectMocks MainConfiguration mainConfiguration;
@@ -311,5 +321,25 @@ public class AuthServiceTest extends WingsBaseTest {
     when(cache.get(Matchers.any(), Matchers.matches(authTokenUuid))).thenReturn(authToken);
     assertThat(user.getToken().length() > 32);
     authService.validateToken(user.getToken());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldSendSegmentTrackEvent() throws IllegalAccessException {
+    when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(false);
+    Account mockAccount = Account.Builder.anAccount().withAccountKey("TestAccount").withUuid(ACCOUNT_ID).build();
+    User mockUser =
+        Builder.anUser().withUuid(USER_ID).withEmail("admin@abcd.io").withAccounts(Arrays.asList(mockAccount)).build();
+    mockUser.setLastAccountId(ACCOUNT_ID);
+    when(userCache.get(USER_ID)).thenReturn(mockUser);
+
+    FieldUtils.writeField(authService, "segmentHandler", segmentHandler, true);
+    authService.generateBearerTokenForUser(mockUser);
+    try {
+      Thread.sleep(10000);
+      verify(segmentHandler, times(1)).reportTrackEvent(any(Account.class), anyString(), any(User.class), anyMap());
+    } catch (InterruptedException | IOException | URISyntaxException e) {
+      throw new InvalidRequestException(e.getMessage());
+    }
   }
 }
