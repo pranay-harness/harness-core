@@ -147,10 +147,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   public void testDomainNotAllowed() {
     WebTarget target = client.target(API_BASE + "/users/verify-email?email=xyz@some-domain.io");
     RestResponse<Boolean> restResponse = getRequestBuilder(target).get(new GenericType<RestResponse<Boolean>>() {});
-    assertThat(restResponse.getResponseMessages()).hasSize(1);
-    final ResponseMessage responseMessage = restResponse.getResponseMessages().get(0);
-    assertThat(responseMessage.getCode()).isEqualTo(ErrorCode.USER_DOMAIN_NOT_ALLOWED);
-    assertThat(restResponse.getResource()).isFalse();
+    assertThat(restResponse.getResponseMessages()).hasSize(0);
   }
 
   @Test
@@ -255,7 +252,8 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     assertThat(response.getResponseMessages()).isEmpty();
     User user = response.getResource();
     assertThat(user).isNotNull();
-    assertThat(user.getToken()).isNotNull();
+    // Identity service based login will wipe out manager generated token.
+    assertThat(user.getToken()).isNull();
     assertThat(user.getAccounts()).isNotNull();
     assertThat(user.getAccounts().size() > 0).isTrue();
     assertThat(user.getSupportAccounts().size() > 0).isTrue();
