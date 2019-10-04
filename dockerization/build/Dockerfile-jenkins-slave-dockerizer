@@ -26,3 +26,7 @@ RUN apt-get update && \
     curl -L https://github.com/docker/compose/releases/download/${DC_VERSION}/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose && \
     chmod +x /usr/local/bin/docker-compose && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN curl -o gsutil.tar.gz https://storage.googleapis.com/pub/gsutil.tar.gz
+RUN tar -xzf gsutil.tar.gz -C /opt
+ENV PATH ${PATH}:/opt/gsutil
