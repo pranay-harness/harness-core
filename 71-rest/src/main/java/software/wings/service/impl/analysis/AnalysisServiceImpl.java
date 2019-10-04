@@ -10,7 +10,6 @@ import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.common.VerificationConstants.DEMO_APPLICAITON_ID;
 import static software.wings.common.VerificationConstants.DEMO_FAILURE_LOG_STATE_EXECUTION_ID;
 import static software.wings.common.VerificationConstants.DEMO_SUCCESS_LOG_STATE_EXECUTION_ID;
 import static software.wings.common.VerificationConstants.IGNORED_ERRORS_METRIC_NAME;
@@ -216,11 +215,9 @@ public class AnalysisServiceImpl implements AnalysisService {
     if (settingAttribute.getName().toLowerCase().endsWith("dev")
         || settingAttribute.getName().toLowerCase().endsWith("prod")) {
       if (stateExecutionInstance.getStatus() == ExecutionStatus.SUCCESS) {
-        return getAnalysisSummary(
-            DEMO_SUCCESS_LOG_STATE_EXECUTION_ID + stateType.getName(), DEMO_APPLICAITON_ID, stateType);
+        return getAnalysisSummary(DEMO_SUCCESS_LOG_STATE_EXECUTION_ID + stateType.getName(), applicationId, stateType);
       } else {
-        return getAnalysisSummary(
-            DEMO_FAILURE_LOG_STATE_EXECUTION_ID + stateType.getName(), DEMO_APPLICAITON_ID, stateType);
+        return getAnalysisSummary(DEMO_FAILURE_LOG_STATE_EXECUTION_ID + stateType.getName(), applicationId, stateType);
       }
     }
     return getAnalysisSummary(stateExecutionId, applicationId, stateType);

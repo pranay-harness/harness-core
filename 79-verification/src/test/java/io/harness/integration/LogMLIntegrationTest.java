@@ -11,6 +11,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.common.VerificationConstants.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.Lists;
@@ -50,6 +51,7 @@ import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
+import software.wings.beans.SplunkConfig;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.AppServiceImpl;
@@ -219,6 +221,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     record.setUnknown_clusters(clusters.get(2));
     record.setIgnore_clusters(clusters.get(3));
 
+    final String connectorId = wingsPersistence.save(
+        aSettingAttribute().withName(generateUuid()).withValue(SplunkConfig.builder().build()).build());
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setUuid(stateExecutionId);
     stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
@@ -231,7 +235,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
                                                                 .build();
     learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
     Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
-    stateExecutionMap.put("log", VerificationStateAnalysisExecutionData.builder().build());
+    stateExecutionMap.put("log", VerificationStateAnalysisExecutionData.builder().serverConfigId(connectorId).build());
     stateExecutionInstance.setStateExecutionMap(stateExecutionMap);
 
     wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
@@ -267,8 +271,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   public void testFeatureflagDemoSuccess() {
     loginAdminUser();
     initDemoSetup("elk_prod");
-    String serverConfigId = wingsPersistence.save(
-        SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withName("elk_prod").build());
+    String serverConfigId =
+        wingsPersistence.save(aSettingAttribute().withAccountId(accountId).withName("elk_prod").build());
 
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setUuid(stateExecutionId);
@@ -330,8 +334,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     loginAdminUser();
     initDemoSetup("elk_dev");
 
-    String serverConfigId = wingsPersistence.save(
-        SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withName("elk_dev").build());
+    String serverConfigId =
+        wingsPersistence.save(aSettingAttribute().withAccountId(accountId).withName("elk_dev").build());
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setUuid(stateExecutionId);
     stateExecutionInstance.setStatus(ExecutionStatus.FAILED);
@@ -1117,7 +1121,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     String workflow2 = addWorkflowDataForLogs(false, query);
     final String lastWorkflowExecutionId = analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
         StateType.SPLUNKV2, appId, serviceId, workflowId, query);
-    assertThat(lastWorkflowExecutionId).isEqualTo("The baseline workflow should be first one", workflow1);
+    assertThat(lastWorkflowExecutionId).isEqualTo(workflow1, "The baseline workflow should be first one");
   }
 
   @Test
@@ -1128,7 +1132,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     String workflow2 = addWorkflowDataForLogs(true, query);
     final String lastWorkflowExecutionId = analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
         StateType.SPLUNKV2, appId, serviceId, workflowId, query);
-    assertThat(lastWorkflowExecutionId).isEqualTo("The baseline workflow should be second one", workflow2);
+    assertThat(lastWorkflowExecutionId).isEqualTo(workflow2, "The baseline workflow should be second one");
   }
 
   @Test
@@ -1137,7 +1141,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     final String query = UUID.randomUUID().toString();
     final String lastWorkflowExecutionId = analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
         StateType.SPLUNKV2, appId, serviceId, workflowId, query);
-    assertThat(lastWorkflowExecutionId).isEqualTo("The baseline workflow should be null");
+    assertThat(lastWorkflowExecutionId).isNull();
   }
 
   @Test
@@ -1148,7 +1152,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     String workflow2 = addWorkflowDataForLogs(false, query);
     final String lastWorkflowExecutionId = analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
         StateType.SPLUNKV2, appId, serviceId, workflowId, query);
-    assertThat(lastWorkflowExecutionId).isEqualTo("The baseline workflow should be workflow2", workflow2);
+    assertThat(lastWorkflowExecutionId).isEqualTo(workflow2, "The baseline workflow should be workflow2");
   }
 
   private String addWorkflowDataForLogs(boolean withLogData, String query) {
