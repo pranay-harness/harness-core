@@ -205,6 +205,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.FailureCriteria;
 import software.wings.beans.FailureStrategy;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Graph;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
@@ -245,6 +246,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
@@ -308,6 +310,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Mock @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Mock private TemplateService templateService;
   @Mock private UserGroupService userGroupService;
+  @Mock FeatureFlagService featureFlagService;
 
   @InjectMocks @Inject private WorkflowServiceHelper workflowServiceHelper;
   @InjectMocks @Inject private WorkflowServiceTemplateHelper workflowServiceTemplateHelper;
@@ -3408,6 +3411,17 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowService.fetchDeploymentMetadata(APP_ID, workflow, null, null, null)
                    .getArtifactRequiredServiceIds()
                    .contains(SERVICE_ID));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetDeploymentMetadataWithDeploymentFFTurnOn() {
+    Workflow workflow = createLinkedWorkflow(TemplateType.SSH);
+    when(appService.get(APP_ID)).thenReturn(application);
+    when(accountService.get(anyString())).thenReturn(account);
+    when(featureFlagService.isEnabled(FeatureName.DEPLOYMENT_MODAL_REFACTOR, null)).thenReturn(true);
+    assertThat(workflowService.fetchDeploymentMetadata(APP_ID, workflow, null, null, null).getArtifactVariables())
+        .isNotNull();
   }
 
   private Workflow createLinkedWorkflow(TemplateType templateType) {
