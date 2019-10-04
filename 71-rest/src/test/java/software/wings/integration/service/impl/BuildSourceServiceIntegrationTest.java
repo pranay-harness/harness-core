@@ -1,5 +1,6 @@
 package software.wings.integration.service.impl;
 
+import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -271,22 +272,22 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
         break;
       case AMAZON_S3:
         when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(amazonS3BuildService);
-
-        //        settingAttribute = settingGenerator.ensureAwsTest(seed, owners);
-        //        final Service s3Service = serviceGenerator.ensureService(
-        //            seed, owners, builder().name("S3 Service").artifactType(ArtifactType.WAR).build());
-        //        artifactStream = artifactStreamGenerator.ensureArtifactStream(seed,
-        AmazonS3ArtifactStream.builder()
-            .appId(application.getAppId())
-            //                .serviceId(s3Service.getUuid())
-            .name("harness-example_todolist-war")
-            .sourceName(settingAttribute.getName())
-            .jobname("harness-example")
-            .artifactPaths(asList("todolist.war"))
-            .settingId(settingAttribute.getUuid())
-            .build();
-        //        artifactStream.setServiceId(s3Service.getUuid());
-        artifactStream.setAppId(application.getAppId());
+        settingAttribute =
+            aSettingAttribute()
+                .withName("AWS")
+                .withCategory(CONNECTOR)
+                .withAccountId(accountId)
+                .withValue(AwsConfig.builder()
+                               .accountId(accountId)
+                               .accessKey(scmSecret.decryptToString(new SecretName("ecr_connector_access_key")))
+                               .secretKey(scmSecret.decryptToCharArray(new SecretName("ecr_connector_secret_key")))
+                               .build())
+                .build();
+        artifactStream = new AmazonS3ArtifactStream();
+        ((AmazonS3ArtifactStream) artifactStream).setArtifactPaths(asList("todolist.war"));
+        ((AmazonS3ArtifactStream) artifactStream).setJobname("harness-example");
+        artifactStream.setServiceId(SERVICE_ID);
+        artifactStream.setAppId(appId);
         break;
       default:
         throw new IllegalArgumentException("Invalid type: " + type);
@@ -481,6 +482,27 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
         break;
       case ECR:
         return;
+      default:
+        throw new IllegalArgumentException("invalid type: " + type);
+    }
+  }
+
+  @Test
+  @Owner(emails = GARVIT)
+  @Category(IntegrationTests.class)
+  public void getLabels() {
+    switch (type) {
+      case JENKINS:
+      case BAMBOO:
+      case NEXUS:
+      case ARTIFACTORY:
+      case ECR:
+      case AMAZON_S3:
+        List<Map<String, String>> labels = buildSourceService.getLabels(artifactStream, asList("1"));
+        assertThat(labels).isEmpty();
+        break;
+      case DOCKER:
+        break;
       default:
         throw new IllegalArgumentException("invalid type: " + type);
     }
