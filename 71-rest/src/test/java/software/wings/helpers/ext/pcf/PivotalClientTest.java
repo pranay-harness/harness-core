@@ -2,6 +2,7 @@ package software.wings.helpers.ext.pcf;
 
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -46,12 +47,12 @@ public class PivotalClientTest extends WingsBaseTest {
   @Mock Applications applications;
   @Mock Routes routes;
   @Spy PcfClientImpl client;
+  @Spy PcfClientImpl mockedClient;
 
   @Before
   public void setupMocks() throws Exception {
     when(wrapper.getCloudFoundryOperations()).thenReturn(operations);
     doNothing().when(wrapper).close();
-    when(operations.organizations()).thenReturn(organizations);
     when(operations.applications()).thenReturn(applications);
     when(operations.routes()).thenReturn(routes);
     doReturn(wrapper).when(client).getCloudFoundryOperationsWrapper(any());
@@ -88,6 +89,8 @@ public class PivotalClientTest extends WingsBaseTest {
       sink.next(summary2);
       sink.complete();
     });
+
+    when(operations.organizations()).thenReturn(organizations);
     when(organizations.list()).thenReturn(result);
 
     List<OrganizationSummary> organizationSummaries = client.getOrganizations(getPcfRequestConfig());
@@ -115,6 +118,7 @@ public class PivotalClientTest extends WingsBaseTest {
                                              .totalServiceInstances(1)
                                              .build())
                                   .build()));
+    when(operations.organizations()).thenReturn(organizations);
 
     List<String> spaceResult = client.getSpacesForOrganization(getPcfRequestConfig());
 
@@ -257,5 +261,258 @@ public class PivotalClientTest extends WingsBaseTest {
 
   private PcfRequestConfig getPcfRequestConfig() {
     return PcfRequestConfig.builder().timeOutIntervalInMins(1).orgName("org").applicationName("app").build();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetCloudFoundryOperationsWrapper() throws Exception {
+    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    pcfRequestConfig.setUserName("username");
+    pcfRequestConfig.setPassword("password");
+    pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
+
+    CloudFoundryOperationsWrapper cloudFoundryOperationsWrapper =
+        mockedClient.getCloudFoundryOperationsWrapper(pcfRequestConfig);
+
+    assertThat(cloudFoundryOperationsWrapper).isNotNull();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetCFOperationsWrapperForConnectionContextException() {
+    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+
+    try {
+      mockedClient.getCloudFoundryOperationsWrapper(pcfRequestConfig);
+      fail("Should not reach here.");
+    } catch (PivotalClientApiException e) {
+      assertThat(e.getMessage())
+          .isEqualTo("Exception while creating CloudFoundryOperations: NullPointerException: apiHost");
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetCFOperationsWrapperForTokenProviderException() {
+    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    pcfRequestConfig.setUserName("username");
+    pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
+
+    try {
+      mockedClient.getCloudFoundryOperationsWrapper(pcfRequestConfig);
+      fail("Should not reach here.");
+    } catch (PivotalClientApiException e) {
+      assertThat(e.getMessage())
+          .isEqualTo("Exception while creating CloudFoundryOperations: NullPointerException: password");
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetOrganizationsException() {
+    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    pcfRequestConfig.setUserName("username");
+    pcfRequestConfig.setPassword("password");
+    pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
+
+    try {
+      mockedClient.getOrganizations(pcfRequestConfig);
+      fail("Should not reach here.");
+    } catch (Exception e) {
+      assertThat(e.getMessage())
+          .isEqualTo("Exception occurred while fetching Organizations, Error: unauthorized: Bad credentials");
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetApplicationByNameException() {
+    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    pcfRequestConfig.setUserName("username");
+    pcfRequestConfig.setPassword("password");
+    pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
+
+    try {
+      mockedClient.getApplicationByName(pcfRequestConfig);
+      fail("Should not reach here.");
+    } catch (Exception e) {
+      assertThat(e.getMessage())
+          .isEqualTo("Exception occurred while  getting application: app, Error: No space targeted");
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetRouteMapException() {
+    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    pcfRequestConfig.setUserName("username");
+    pcfRequestConfig.setPassword("password");
+    pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
+
+    try {
+      mockedClient.getRouteMap(pcfRequestConfig, "qa.harness.io/api");
+      fail("Should not reach here.");
+    } catch (Exception e) {
+      assertThat(e.getMessage())
+          .isEqualTo(
+              "Exception occurred while getting routeMaps for Application: app, Error: unauthorized: Bad credentials");
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetApplicationsException() {
+    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    pcfRequestConfig.setUserName("username");
+    pcfRequestConfig.setPassword("password");
+    pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
+
+    try {
+      mockedClient.getApplications(pcfRequestConfig);
+      fail("Should not reach here.");
+    } catch (Exception e) {
+      assertThat(e.getMessage()).isEqualTo("Exception occurred while fetching Applications , Error: No space targeted");
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetSpacesForOrganizationException() {
+    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    pcfRequestConfig.setUserName("username");
+    pcfRequestConfig.setPassword("password");
+    pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
+
+    try {
+      mockedClient.getSpacesForOrganization(pcfRequestConfig);
+      fail("Should not reach here.");
+    } catch (Exception e) {
+      assertThat(e.getMessage())
+          .isEqualTo("Exception occurred while fetching Spaces, Error: unauthorized: Bad credentials");
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testDeleteApplicationException() {
+    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    pcfRequestConfig.setUserName("username");
+    pcfRequestConfig.setPassword("password");
+    pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
+
+    try {
+      mockedClient.deleteApplication(pcfRequestConfig);
+      fail("Should not reach here.");
+    } catch (Exception e) {
+      assertThat(e.getMessage())
+          .isEqualTo("Exception occurred while deleting application: app, Error: No space targeted");
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testStopApplicationException() {
+    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    pcfRequestConfig.setUserName("username");
+    pcfRequestConfig.setPassword("password");
+    pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
+
+    try {
+      mockedClient.stopApplication(pcfRequestConfig);
+      fail("Should not reach here.");
+    } catch (Exception e) {
+      assertThat(e.getMessage())
+          .isEqualTo("Exception occurred while stopping Application: app, Error: No space targeted");
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetTasksException() {
+    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    pcfRequestConfig.setUserName("username");
+    pcfRequestConfig.setPassword("password");
+    pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
+
+    try {
+      mockedClient.getTasks(pcfRequestConfig);
+      fail("Should not reach here.");
+    } catch (Exception e) {
+      assertThat(e.getMessage())
+          .isEqualTo("Exception occurred while getting Tasks for Application: app, Error: No space targeted");
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testScaleApplicationsException() {
+    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    pcfRequestConfig.setUserName("username");
+    pcfRequestConfig.setPassword("password");
+    pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
+
+    try {
+      mockedClient.scaleApplications(pcfRequestConfig);
+      fail("Should not reach here.");
+    } catch (Exception e) {
+      assertThat(e.getMessage())
+          .isEqualTo("Exception occurred Scaling Applications: app, to count: 0, Error: No space targeted");
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testStartApplicationException() {
+    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    pcfRequestConfig.setUserName("username");
+    pcfRequestConfig.setPassword("password");
+    pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
+
+    try {
+      mockedClient.startApplication(pcfRequestConfig);
+      fail("Should not reach here.");
+    } catch (Exception e) {
+      assertThat(e.getMessage())
+          .isEqualTo("Exception occurred while starting application: app, Error: No space targeted");
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testUnmapRouteMapForAppException() {
+    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    pcfRequestConfig.setUserName("username");
+    pcfRequestConfig.setPassword("password");
+    pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
+
+    Route route = Route.builder().application("app").host("stage").domain("harness.io").id("1").space("space").build();
+
+    try {
+      mockedClient.unmapRouteMapForApp(pcfRequestConfig, route);
+      fail("Should not reach here.");
+    } catch (Exception e) {
+      assertThat(e.getMessage())
+          .isEqualTo("Exception occurred while unmapping routeMap for Application: app, Error: No space targeted");
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testMapRouteMapForAppException() {
+    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    pcfRequestConfig.setUserName("username");
+    pcfRequestConfig.setPassword("password");
+    pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
+
+    Route route = Route.builder().application("app").host("stage").domain("harness.io").id("1").space("space").build();
+
+    try {
+      mockedClient.mapRouteMapForApp(pcfRequestConfig, route);
+      fail("Should not reach here.");
+    } catch (Exception e) {
+      assertThat(e.getMessage())
+          .isEqualTo(
+              "Exception occurred while mapping routeMap: Route{applications=[app], domain=harness.io, host=stage, id=1, path=null, port=null, service=null, space=space, type=null}, AppName: app, Error: No space targeted");
+    }
   }
 }

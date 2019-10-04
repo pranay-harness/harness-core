@@ -9,6 +9,7 @@ import com.google.common.base.Charsets;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.ExceptionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -85,20 +86,16 @@ public class PcfClientImpl implements PcfClient {
           .connectionContext(connectionContext)
           .build();
     } catch (Exception e) {
-      throw new PivotalClientApiException("Exception while creating CloudFoundryOperations: ", e);
+      throw new PivotalClientApiException("Exception while creating CloudFoundryOperations: " + e.getMessage(), e);
     }
   }
 
   public CloudFoundryClient getCloudFoundryClient(
       PcfRequestConfig pcfRequestConfig, ConnectionContext connectionContext) throws PivotalClientApiException {
-    try {
-      return ReactorCloudFoundryClient.builder()
-          .connectionContext(connectionContext)
-          .tokenProvider(getTokenProvider(pcfRequestConfig.getUserName(), pcfRequestConfig.getPassword()))
-          .build();
-    } catch (Exception e) {
-      throw new PivotalClientApiException("Exception while creating CloudFoundryOperations: ", e);
-    }
+    return ReactorCloudFoundryClient.builder()
+        .connectionContext(connectionContext)
+        .tokenProvider(getTokenProvider(pcfRequestConfig.getUserName(), pcfRequestConfig.getPassword()))
+        .build();
   }
 
   // Start Org apis
@@ -123,7 +120,7 @@ public class PcfClientImpl implements PcfClient {
       waitTillCompletion(latch, pcfRequestConfig.getTimeOutIntervalInMins());
       if (exceptionOccured.get()) {
         throw new PivotalClientApiException(new StringBuilder()
-                                                .append("Exception occured while fetching Organizations")
+                                                .append("Exception occurred while fetching Organizations")
                                                 .append(", Error: " + errorBuilder.toString())
                                                 .toString());
       }
@@ -154,8 +151,8 @@ public class PcfClientImpl implements PcfClient {
       waitTillCompletion(latch, pcfRequestConfig.getTimeOutIntervalInMins());
 
       if (exceptionOccured.get()) {
-        throw new PivotalClientApiException(new StringBuilder(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
-                                                .append("Exception occured while fetching Spaces")
+        throw new PivotalClientApiException(new StringBuilder()
+                                                .append("Exception occurred while fetching Spaces")
                                                 .append(", Error: " + errorBuilder.toString())
                                                 .toString());
       }
@@ -193,7 +190,7 @@ public class PcfClientImpl implements PcfClient {
 
       if (exceptionOccured.get()) {
         throw new PivotalClientApiException(new StringBuilder()
-                                                .append("Exception occured while fetching Applications ")
+                                                .append("Exception occurred while fetching Applications ")
                                                 .append(", Error: " + errorBuilder.toString())
                                                 .toString());
       }
@@ -232,7 +229,7 @@ public class PcfClientImpl implements PcfClient {
 
       if (exceptionOccured.get()) {
         throw new PivotalClientApiException(new StringBuilder()
-                                                .append("Exception Occured Scaling Applications: ")
+                                                .append("Exception occurred Scaling Applications: ")
                                                 .append(pcfRequestConfig.getApplicationName())
                                                 .append(", to count: ")
                                                 .append(pcfRequestConfig.getDesiredCount())
@@ -269,7 +266,7 @@ public class PcfClientImpl implements PcfClient {
 
       if (exceptionOccured.get()) {
         throw new PivotalClientApiException(new StringBuilder()
-                                                .append("Exception Occured while getting Tasks for Application: ")
+                                                .append("Exception occurred while getting Tasks for Application: ")
                                                 .append(pcfRequestConfig.getApplicationName())
                                                 .append(", Error: " + errorBuilder.toString())
                                                 .toString());
@@ -528,7 +525,7 @@ public class PcfClientImpl implements PcfClient {
       waitTillCompletion(latch, pcfRequestConfig.getTimeOutIntervalInMins());
       if (exceptionOccured.get()) {
         throw new PivotalClientApiException(new StringBuilder()
-                                                .append("Exception occuered while stopping Application: ")
+                                                .append("Exception occurred while stopping Application: ")
                                                 .append(pcfRequestConfig.getApplicationName())
                                                 .append(", Error: " + errorBuilder.toString())
                                                 .toString());
@@ -561,7 +558,7 @@ public class PcfClientImpl implements PcfClient {
       waitTillCompletion(latch, pcfRequestConfig.getTimeOutIntervalInMins());
       if (exceptionOccured.get()) {
         throw new PivotalClientApiException(new StringBuilder()
-                                                .append("Exception occuered while  getting application: ")
+                                                .append("Exception occurred while  getting application: ")
                                                 .append(pcfRequestConfig.getApplicationName())
                                                 .append(", Error: " + errorBuilder.toString())
                                                 .toString());
@@ -598,7 +595,7 @@ public class PcfClientImpl implements PcfClient {
       waitTillCompletion(latch, pcfRequestConfig.getTimeOutIntervalInMins());
       if (exceptionOccured.get()) {
         throw new PivotalClientApiException(new StringBuilder()
-                                                .append("Exception occured while deleting application: ")
+                                                .append("Exception occurred while deleting application: ")
                                                 .append(pcfRequestConfig.getApplicationName())
                                                 .append(", Error: " + errorBuilder.toString())
                                                 .toString());
@@ -631,7 +628,7 @@ public class PcfClientImpl implements PcfClient {
       waitTillCompletion(latch, pcfRequestConfig.getTimeOutIntervalInMins());
       if (exceptionOccured.get()) {
         throw new PivotalClientApiException(new StringBuilder()
-                                                .append("Exception Occured while starting application: ")
+                                                .append("Exception occurred while starting application: ")
                                                 .append(pcfRequestConfig.getApplicationName())
                                                 .append(", Error: " + errorBuilder.toString())
                                                 .toString());
@@ -696,7 +693,7 @@ public class PcfClientImpl implements PcfClient {
       waitTillCompletion(latch, pcfRequestConfig.getTimeOutIntervalInMins());
       if (exceptionOccured.get()) {
         throw new PivotalClientApiException(new StringBuilder()
-                                                .append("Exception occuered while getting routeMaps for Application: ")
+                                                .append("Exception occurred while getting routeMaps for Application: ")
                                                 .append(pcfRequestConfig.getApplicationName())
                                                 .append(", Error: " + errorBuilder.toString())
                                                 .toString());
@@ -930,7 +927,7 @@ public class PcfClientImpl implements PcfClient {
 
       if (exceptionOccured.get()) {
         throw new PivotalClientApiException(new StringBuilder()
-                                                .append("Exception occuered while mapping routeMap: ")
+                                                .append("Exception occurred while mapping routeMap: ")
                                                 .append(route)
                                                 .append(", AppName: ")
                                                 .append(pcfRequestConfig.getApplicationName())
@@ -946,7 +943,7 @@ public class PcfClientImpl implements PcfClient {
     try {
       return PasswordGrantTokenProvider.builder().username(username).password(password).build();
     } catch (Exception t) {
-      throw new PivotalClientApiException(t.getMessage());
+      throw new PivotalClientApiException(ExceptionUtils.getMessage(t));
     }
   }
 
@@ -954,7 +951,7 @@ public class PcfClientImpl implements PcfClient {
     try {
       return DefaultConnectionContext.builder().apiHost(endPointUrl).skipSslValidation(false).build();
     } catch (Exception t) {
-      throw new PivotalClientApiException(t.getMessage());
+      throw new PivotalClientApiException(ExceptionUtils.getMessage(t));
     }
   }
 
