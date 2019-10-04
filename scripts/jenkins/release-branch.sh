@@ -29,7 +29,6 @@ export SHA=`git rev-parse HEAD`
 scripts/jenkins/release-branch-update-jiras.sh
 
 # Prepare new release commit
-git checkout -b release/${VERSION}
 git checkout ${BRANCH}
 
 sed -i "s:build.number=${VERSION}00:build.number=${NEW_VERSION}00:g" ${VERSION_FILE}
