@@ -1488,7 +1488,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
   }
 
-  private void populateArtifactsAndServices(WorkflowExecution workflowExecution, WorkflowStandardParams stdParams,
+  public void populateArtifactsAndServices(WorkflowExecution workflowExecution, WorkflowStandardParams stdParams,
       Set<String> keywords, ExecutionArgs executionArgs, String accountId) {
     if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
       populateArtifacts(workflowExecution, stdParams, keywords, executionArgs, accountId);
@@ -1499,8 +1499,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       return;
     }
 
-    List<String> artifactIds =
-        executionArgs.getArtifacts().stream().map(Artifact::getUuid).distinct().collect(toList());
+    List<String> artifactIds = executionArgs.getArtifacts()
+                                   .stream()
+                                   .map(Artifact::getUuid)
+                                   .filter(Objects::nonNull)
+                                   .distinct()
+                                   .collect(toList());
     if (isEmpty(artifactIds)) {
       return;
     }

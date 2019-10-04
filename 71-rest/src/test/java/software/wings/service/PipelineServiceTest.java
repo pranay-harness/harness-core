@@ -12,6 +12,7 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.anyVararg;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
@@ -34,6 +35,7 @@ import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
+import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
@@ -52,6 +54,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
@@ -81,6 +84,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
+import software.wings.beans.ArtifactVariable;
 import software.wings.beans.EntityType;
 import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment.EnvironmentType;
@@ -113,6 +117,7 @@ import software.wings.utils.WingsTestConstants.MockChecker;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -240,7 +245,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_PIPELINE));
 
-    PipelineStage pipelineStage = prepareStage1();
+    PipelineStage pipelineStage = prepareStageSimple();
 
     FailureStrategy failureStrategy =
         FailureStrategy.builder().repairActionCode(RepairActionCode.MANUAL_INTERVENTION).build();
@@ -273,7 +278,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldUpdatePipeline() {
-    PipelineStage pipelineStage = prepareStage1();
+    PipelineStage pipelineStage = prepareStageSimple();
 
     FailureStrategy failureStrategy =
         FailureStrategy.builder().repairActionCode(RepairActionCode.MANUAL_INTERVENTION).build();
@@ -306,16 +311,6 @@ public class PipelineServiceTest extends WingsBaseTest {
     verify(wingsPersistence).createQuery(Pipeline.class);
     verify(pipelineQuery, times(2)).filter(any(), any());
     verify(wingsPersistence).createUpdateOperations(Pipeline.class);
-  }
-
-  private PipelineStage prepareStage1() {
-    Map<String, Object> properties = new HashMap<>();
-    properties.put("envId", ENV_ID);
-    properties.put("workflowId", WORKFLOW_ID);
-    return PipelineStage.builder()
-        .pipelineStageElements(
-            asList(PipelineStageElement.builder().name("STAGE1").type(ENV_STATE.name()).properties(properties).build()))
-        .build();
   }
 
   @Test
@@ -960,7 +955,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldListPipelinesWithDetailsWithSshInfraMapping() {
-    PipelineStage pipelineStage = prepareStage1();
+    PipelineStage pipelineStage = prepareStageSimple();
 
     Pipeline pipeline = Pipeline.builder()
                             .name("pipeline1")
@@ -1050,7 +1045,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
         .thenReturn(new MockChecker(false, ActionType.CREATE_PIPELINE));
 
-    PipelineStage pipelineStage = prepareStage1();
+    PipelineStage pipelineStage = prepareStageSimple();
 
     FailureStrategy failureStrategy =
         FailureStrategy.builder().repairActionCode(RepairActionCode.MANUAL_INTERVENTION).build();
@@ -1177,5 +1172,193 @@ public class PipelineServiceTest extends WingsBaseTest {
     } catch (InvalidRequestException exception) {
       assertThat(exception.getParams().get("message")).isEqualTo("Duplicate name pipeline");
     }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldFetchDeploymentMetadata() {
+    String workflowId1 = WORKFLOW_ID + "_1";
+    String workflowId2 = WORKFLOW_ID + "_2";
+    String workflowId3 = WORKFLOW_ID + "_3";
+    Pipeline pipeline = preparePipeline(prepareStageSimple(), prepareStageSimple(ENV_ID, workflowId1),
+        prepareStageSimple(), prepareStageDisabled(), prepareStageApproval(), prepareStageSimple(ENV_ID, workflowId2),
+        prepareStageSimple(ENV_ID, workflowId3));
+    List<String> artifactNeededServiceIds = new ArrayList<>();
+    List<String> envIds = new ArrayList<>();
+
+    Workflow workflow =
+        aWorkflow().uuid(WORKFLOW_ID).name("w").orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build();
+    when(workflowService.readWorkflowWithoutServices(eq(APP_ID), eq(WORKFLOW_ID), anyBoolean())).thenReturn(workflow);
+
+    Workflow workflow1 =
+        aWorkflow().uuid(workflowId1).name("w1").orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build();
+    when(workflowService.readWorkflowWithoutServices(eq(APP_ID), eq(workflowId1), anyBoolean())).thenReturn(workflow1);
+
+    Workflow workflow2 =
+        aWorkflow().uuid(workflowId2).name("w2").orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build();
+    when(workflowService.readWorkflowWithoutServices(eq(APP_ID), eq(workflowId2), anyBoolean())).thenReturn(workflow2);
+
+    Workflow workflow3 =
+        aWorkflow().uuid(workflowId3).name("w3").orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build();
+    when(workflowService.readWorkflowWithoutServices(eq(APP_ID), eq(workflowId3), anyBoolean())).thenReturn(workflow3);
+
+    when(workflowService.fetchDeploymentMetadata(any(), any(Workflow.class), anyMap(), any(), any(), anyVararg()))
+        .thenAnswer(invocation -> {
+          Workflow argument = (Workflow) invocation.getArguments()[1];
+          switch (argument.getName()) {
+            case "w":
+              return DeploymentMetadata.builder()
+                  .artifactRequiredServiceIds(Collections.singletonList("s1"))
+                  .artifactVariables(Collections.singletonList(prepareArtifactVariable("artifact", "s1")))
+                  .build();
+            case "w1":
+              return DeploymentMetadata.builder().build();
+            case "w2":
+              return DeploymentMetadata.builder()
+                  .artifactRequiredServiceIds(asList("s1", "s2"))
+                  .artifactVariables(asList(prepareArtifactVariable("artifact", "s1"),
+                      prepareArtifactVariable("artifact", "s2"), prepareArtifactVariable("artifact_tmp", "s2"), null))
+                  .build();
+            default:
+              return null;
+          }
+        });
+
+    DeploymentMetadata deploymentMetadata =
+        pipelineService.fetchDeploymentMetadata(APP_ID, pipeline, artifactNeededServiceIds, envIds);
+    assertThat(deploymentMetadata).isNotNull();
+
+    List<String> serviceIds = deploymentMetadata.getArtifactRequiredServiceIds();
+    assertThat(serviceIds).isNotNull();
+    assertThat(serviceIds.size()).isEqualTo(2);
+    assertThat(serviceIds).contains("s1", "s2");
+
+    List<ArtifactVariable> artifactVariables = deploymentMetadata.getArtifactVariables();
+    assertThat(artifactVariables).isNotNull();
+    assertThat(artifactVariables.size()).isEqualTo(3);
+
+    ArtifactVariable artifactVariable1 =
+        artifactVariables.stream()
+            .filter(artifactVariable
+                -> artifactVariable.getName().equals("artifact") && artifactVariable.getEntityId().equals("s1"))
+            .findFirst()
+            .orElse(null);
+    assertThat(artifactVariable1).isNotNull();
+    assertThat(artifactVariable1.getWorkflowIds()).isNotNull();
+    assertThat(artifactVariable1.getWorkflowIds().size()).isEqualTo(2);
+    assertThat(artifactVariable1.getWorkflowIds()).contains(WORKFLOW_ID, workflowId2);
+
+    ArtifactVariable artifactVariable2 =
+        artifactVariables.stream()
+            .filter(artifactVariable
+                -> artifactVariable.getName().equals("artifact") && artifactVariable.getEntityId().equals("s2"))
+            .findFirst()
+            .orElse(null);
+    assertThat(artifactVariable2).isNotNull();
+    assertThat(artifactVariable2.getWorkflowIds()).isNotNull();
+    assertThat(artifactVariable2.getWorkflowIds().size()).isEqualTo(1);
+    assertThat(artifactVariable2.getWorkflowIds()).contains(workflowId2);
+
+    ArtifactVariable artifactVariable3 =
+        artifactVariables.stream()
+            .filter(artifactVariable -> artifactVariable.getName().equals("artifact_tmp"))
+            .findFirst()
+            .orElse(null);
+    assertThat(artifactVariable3).isNotNull();
+    assertThat(artifactVariable3.getWorkflowIds()).isNotNull();
+    assertThat(artifactVariable3.getWorkflowIds().size()).isEqualTo(1);
+    assertThat(artifactVariable3.getWorkflowIds()).contains(workflowId2);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldFetchDeploymentMetadataForBuildPipeline() {
+    String workflowId0 = WORKFLOW_ID + "_0";
+    String workflowId1 = WORKFLOW_ID + "_1";
+    Pipeline pipeline = preparePipeline(
+        prepareStageSimple(ENV_ID, workflowId0), prepareStageSimple(), prepareStageSimple(ENV_ID, workflowId1));
+
+    Workflow workflow0 =
+        aWorkflow().uuid(workflowId1).name("w0").orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build();
+    when(workflowService.readWorkflowWithoutServices(eq(APP_ID), eq(workflowId0), anyBoolean())).thenReturn(workflow0);
+
+    Workflow workflow =
+        aWorkflow()
+            .uuid(WORKFLOW_ID)
+            .name("w")
+            .orchestrationWorkflow(
+                aCanaryOrchestrationWorkflow().withOrchestrationWorkflowType(OrchestrationWorkflowType.BUILD).build())
+            .build();
+    when(workflowService.readWorkflowWithoutServices(eq(APP_ID), eq(WORKFLOW_ID), anyBoolean())).thenReturn(workflow);
+
+    Workflow workflow1 =
+        aWorkflow().uuid(workflowId1).name("w1").orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build();
+    when(workflowService.readWorkflowWithoutServices(eq(APP_ID), eq(workflowId1), anyBoolean())).thenReturn(workflow1);
+
+    when(workflowService.fetchDeploymentMetadata(any(), any(Workflow.class), anyMap(), any(), any(), anyVararg()))
+        .thenAnswer(invocation -> {
+          Workflow argument = (Workflow) invocation.getArguments()[1];
+          switch (argument.getName()) {
+            case "w":
+            case "w1":
+              return DeploymentMetadata.builder().build();
+            case "w0":
+              return DeploymentMetadata.builder()
+                  .artifactRequiredServiceIds(asList("s1", "s2"))
+                  .artifactVariables(
+                      asList(prepareArtifactVariable("artifact", "s1"), prepareArtifactVariable("artifact", "s2")))
+                  .build();
+            default:
+              return null;
+          }
+        });
+
+    DeploymentMetadata deploymentMetadata = pipelineService.fetchDeploymentMetadata(APP_ID, pipeline, null, null);
+    assertThat(deploymentMetadata).isNotNull();
+    assertThat(deploymentMetadata.getArtifactVariables()).isEmpty();
+  }
+
+  private ArtifactVariable prepareArtifactVariable(String name, String serviceId) {
+    return ArtifactVariable.builder().name(name).entityType(SERVICE).entityId(serviceId).build();
+  }
+
+  private Pipeline preparePipeline(PipelineStage... pipelineStages) {
+    FailureStrategy failureStrategy =
+        FailureStrategy.builder().repairActionCode(RepairActionCode.MANUAL_INTERVENTION).build();
+    return Pipeline.builder()
+        .name("pipeline")
+        .appId(APP_ID)
+        .uuid(PIPELINE_ID)
+        .pipelineStages(asList(pipelineStages))
+        .failureStrategies(Collections.singletonList(failureStrategy))
+        .build();
+  }
+
+  private PipelineStage prepareStageSimple() {
+    return prepareStageSimple(ENV_ID, WORKFLOW_ID);
+  }
+
+  private PipelineStage prepareStageSimple(String envId, String workflowId) {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("envId", envId);
+    properties.put("workflowId", workflowId);
+    return PipelineStage.builder()
+        .pipelineStageElements(Collections.singletonList(
+            PipelineStageElement.builder().name("STAGE1").type(ENV_STATE.name()).properties(properties).build()))
+        .build();
+  }
+
+  private PipelineStage prepareStageDisabled() {
+    return PipelineStage.builder()
+        .pipelineStageElements(Collections.singletonList(
+            PipelineStageElement.builder().name("STAGE1").type(ENV_STATE.name()).disable(true).build()))
+        .build();
+  }
+
+  private PipelineStage prepareStageApproval() {
+    return PipelineStage.builder()
+        .pipelineStageElements(Collections.singletonList(
+            PipelineStageElement.builder().name("STAGE1").type(APPROVAL.name()).disable(true).build()))
+        .build();
   }
 }
