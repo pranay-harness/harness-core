@@ -65,6 +65,8 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTest {
   @Category(UnitTests.class)
   public void shouldLoadDefaultTemplates() {
     templateService.loadDefaultTemplates(TemplateType.SHELL_SCRIPT, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    Template template = templateService.fetchTemplateByKeyword(GLOBAL_ACCOUNT_ID, "shellscript");
+    assertThat(template).isNull();
   }
 
   @Test

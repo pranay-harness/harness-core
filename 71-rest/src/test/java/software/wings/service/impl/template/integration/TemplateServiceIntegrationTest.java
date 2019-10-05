@@ -12,6 +12,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.template.TemplateType.SSH;
+import static software.wings.common.TemplateConstants.GENERIC_COMMANDS;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
 import static software.wings.common.TemplateConstants.TOMCAT_WAR_INSTALL_PATH;
@@ -31,6 +32,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
+import software.wings.beans.command.CommandUnit;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.Template.TemplateKeys;
 import software.wings.beans.template.TemplateFolder;
@@ -38,6 +40,7 @@ import software.wings.beans.template.TemplateFolder.TemplateFolderKeys;
 import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.HttpTemplate;
+import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.rules.Integration;
@@ -72,6 +75,8 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldMigrateGallery() {
     migration.migrate();
+    TemplateGallery templateGallery = templateGalleryService.get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    assertThat(templateGallery).isNotNull();
   }
 
   @Test
@@ -79,7 +84,11 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldMigrateIISTemplateGallery() {
+    Template existingTemplate = templateService.fetchTemplateByKeyword(GLOBAL_ACCOUNT_ID, "iis");
+    long version = existingTemplate.getVersion();
     globalAccountMigration.migrate();
+    existingTemplate = templateService.fetchTemplateByKeyword(GLOBAL_ACCOUNT_ID, "iis");
+    assertThat(existingTemplate.getVersion()).isEqualTo(version + 1);
   }
 
   @Test
@@ -90,6 +99,9 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
     wingsPersistence.delete(
         wingsPersistence.createQuery(TemplateFolder.class).filter(ACCOUNT_ID_KEY, GLOBAL_ACCOUNT_ID));
     templateFolderService.loadDefaultTemplateFolders();
+    TemplateFolder templateFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY + "/" + GENERIC_COMMANDS);
+    assertThat(templateFolder).isNotNull();
   }
 
   @Test
@@ -97,7 +109,11 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldUpdate() throws IOException {
+    Template existingTemplate = templateService.fetchTemplateByKeyword(GLOBAL_ACCOUNT_ID, "iis");
+    long version = existingTemplate.getVersion();
     globalAccountMigration.updateExistingInstallCommand();
+    existingTemplate = templateService.fetchTemplateByKeyword(GLOBAL_ACCOUNT_ID, "iis");
+    assertThat(existingTemplate.getVersion()).isEqualTo(version + 1);
   }
 
   @Test
@@ -162,6 +178,8 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldLoadDefaultCommandTemplates() {
     templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    Template template = templateService.fetchTemplateByKeyword(GLOBAL_ACCOUNT_ID, "install");
+    assertThat(template).isNotNull();
   }
 
   @Test
@@ -174,6 +192,8 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
       wingsPersistence.delete(
           wingsPersistence.createQuery(Template.class).filter(TemplateKeys.accountId, account.getUuid()));
       templateService.loadDefaultTemplates(SSH, account.getUuid(), account.getAccountName());
+      Template template = templateService.fetchTemplateByKeyword(GLOBAL_ACCOUNT_ID, "install");
+      assertThat(template).isNotNull();
     });
   }
 
@@ -182,25 +202,15 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldLoadTomcatStandardInstallCommand() {
-    templateService.loadYaml(SSH, TOMCAT_WAR_INSTALL_PATH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
-  }
-
-  @Test
-  @Owner(emails = SRINIVAS)
-  @Category(UnitTests.class)
-  @Ignore("TODO: please provide clear motivation why this test is ignored")
-  public void shouldUpdateLinkedEntities() {
-    Template template = templateService.get("EtnnNloDR5i3cZoQ1LUW0Q");
-    templateService.update(template);
-  }
-
-  @Test
-  @Owner(emails = SRINIVAS)
-  @Category(UnitTests.class)
-  @Ignore("TODO: please provide clear motivation why this test is ignored")
-  public void shouldUpdateLinkedServiceCommandEntities() {
-    Template template = templateService.get("EtnnNloDR5i3cZoQ1LUW0Q");
-    templateService.update(template);
+    Template template = templateService.loadYaml(SSH, TOMCAT_WAR_INSTALL_PATH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    assertThat(template).isNotNull();
+    assertThat(template.getName()).isEqualTo("Install1");
+    assertThat(template.getVersion()).isEqualTo(1);
+    assertThat(template.getVariables()).extracting("name").contains("TomcatBinaryName");
+    SshCommandTemplate savedSshCommandTemplate = (SshCommandTemplate) template.getTemplateObject();
+    assertThat(savedSshCommandTemplate).isNotNull();
+    assertThat(savedSshCommandTemplate.getCommandUnits()).isNotEmpty();
+    assertThat(savedSshCommandTemplate.getCommandUnits()).extracting(CommandUnit::getName).contains("Copy Artifact");
   }
 
   @Test

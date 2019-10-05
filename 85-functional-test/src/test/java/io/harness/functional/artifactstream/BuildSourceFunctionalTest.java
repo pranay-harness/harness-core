@@ -70,7 +70,7 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
                                 .getJsonObject("resource.jobName");
     assertThat(response).isNotNull();
     assertThat(response.size()).isGreaterThan(0);
-    assertThat(response.contains("todolist-war"));
+    assertThat(response).contains("todolist-war");
   }
 
   @Test
@@ -90,7 +90,7 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
                                 .getJsonObject("resource.jobName");
     assertThat(response).isNotNull();
     assertThat(response.size()).isGreaterThan(0);
-    assertThat(response.contains("TOD-TOD"));
+    assertThat(response).contains("TOD-TOD");
   }
 
   @Test
@@ -112,7 +112,7 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
                                                  .get("/settings/build-sources/jobs/{jobName}/paths")
                                                  .as(artifactStreamType.getType());
     assertThat(restResponse.getResource()).isNotNull();
-    assertThat(restResponse.getResource().contains("target/todolist.war"));
+    assertThat(restResponse.getResource()).contains("target/todolist.war");
   }
 
   @Test
@@ -181,7 +181,7 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
                                                          .as(artifactStreamType.getType());
     assertThat(restResponse.getResource()).isNotNull();
     assertThat(restResponse.getResource().size()).isGreaterThan(0);
-    assertThat(restResponse.getResource().containsKey("docker"));
+    assertThat(restResponse.getResource()).containsKey("docker");
   }
 
   @Test
@@ -206,7 +206,7 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
                                                          .as(artifactStreamType.getType());
     assertThat(restResponse.getResource()).withFailMessage(restResponse.toString()).isNotNull();
     assertThat(restResponse.getResource().size()).isGreaterThan(0);
-    assertThat(restResponse.getResource().containsKey("harness-maven"));
+    assertThat(restResponse.getResource()).containsKey("harness-maven");
   }
 
   @Test
@@ -277,7 +277,7 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
                                                          .as(artifactStreamType.getType());
     assertThat(restResponse.getResource()).isNotNull();
     assertThat(restResponse.getResource().size()).isGreaterThan(0);
-    assertThat(restResponse.getResource().containsKey("harness-example"));
+    assertThat(restResponse.getResource()).containsKey("harness-example");
   }
 
   @Test

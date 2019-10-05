@@ -75,19 +75,40 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldLoadTomcatStandardCommands() {
-    templateService.loadYaml(SSH, TOMCAT_WAR_STOP_PATH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    Template template = templateService.loadYaml(SSH, TOMCAT_WAR_STOP_PATH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    assertThat(template).isNotNull();
+    assertThat(template.getName()).isEqualTo("Stop");
+    assertThat(template.getVersion()).isEqualTo(1);
+    assertThat(template.getVariables()).extracting("name").contains("RuntimePath");
+    SshCommandTemplate savedSshCommandTemplate = (SshCommandTemplate) template.getTemplateObject();
+    assertThat(savedSshCommandTemplate).isNotNull();
+    assertThat(savedSshCommandTemplate.getCommandUnits()).isNotEmpty();
+    assertThat(savedSshCommandTemplate.getCommandUnits()).extracting(CommandUnit::getName).contains("Process Stopped");
   }
 
   @Test
   @Category(UnitTests.class)
   public void shouldLoadDefaultCommandTemplates() {
     templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    Template template = templateService.fetchTemplateByKeyword(GLOBAL_ACCOUNT_ID, "install");
+    assertThat(template).isNotNull();
   }
 
   @Test
   @Category(UnitTests.class)
   public void shouldLoadIISCommands() {
-    templateService.loadYaml(SSH, POWER_SHELL_IIS_APP_INSTALL_PATH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    Template template =
+        templateService.loadYaml(SSH, POWER_SHELL_IIS_APP_INSTALL_PATH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    assertThat(template).isNotNull();
+    assertThat(template.getName()).isEqualTo("Install IIS Application");
+    assertThat(template.getVersion()).isEqualTo(1);
+    assertThat(template.getVariables()).extracting("name").contains("AppPoolName");
+    SshCommandTemplate savedSshCommandTemplate = (SshCommandTemplate) template.getTemplateObject();
+    assertThat(savedSshCommandTemplate).isNotNull();
+    assertThat(savedSshCommandTemplate.getCommandUnits()).isNotEmpty();
+    assertThat(savedSshCommandTemplate.getCommandUnits())
+        .extracting(CommandUnit::getName)
+        .contains("Download Artifact");
   }
 
   @Test
@@ -251,13 +272,11 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
     SshCommandTemplate savedSshCommandTemplate = (SshCommandTemplate) installCommand.getTemplateObject();
     assertThat(savedSshCommandTemplate.getCommandUnits().size()).isEqualTo(4);
     assertThat(savedSshCommandTemplate.getReferencedTemplateList().size()).isEqualTo(4);
-    assertThat(
-        savedSshCommandTemplate.getReferencedTemplateList().get(0).getTemplateReference().getTemplateUuid().equals(
-            myStop.getUuid()));
-    assertThat(
-        savedSshCommandTemplate.getReferencedTemplateList().get(0).getTemplateReference().getTemplateVersion().equals(
-            myStop.getVersion()));
-    assertThat(savedSshCommandTemplate.getReferencedTemplateList().get(0).getVariableMapping().containsKey("V3"));
+    assertThat(savedSshCommandTemplate.getReferencedTemplateList().get(0).getTemplateReference().getTemplateUuid())
+        .isEqualTo(myStop.getUuid());
+    assertThat(savedSshCommandTemplate.getReferencedTemplateList().get(0).getTemplateReference().getTemplateVersion())
+        .isEqualTo(myStop.getVersion());
+    assertThat(savedSshCommandTemplate.getReferencedTemplateList().get(0).getVariableMapping()).containsKey("V3");
     assertThat(savedSshCommandTemplate.getReferencedTemplateList().get(0).getVariableMapping().get("V3").getValue())
         .isEqualTo("hello3");
 
@@ -269,13 +288,11 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
     SshCommandTemplate updatedSshCommandTemplate = (SshCommandTemplate) updatedTemplate.getTemplateObject();
     assertThat(updatedSshCommandTemplate.getCommandUnits().size()).isEqualTo(4);
     assertThat(updatedSshCommandTemplate.getReferencedTemplateList().size()).isEqualTo(4);
-    assertThat(
-        updatedSshCommandTemplate.getReferencedTemplateList().get(0).getTemplateReference().getTemplateUuid().equals(
-            myStop.getUuid()));
-    assertThat(
-        updatedSshCommandTemplate.getReferencedTemplateList().get(0).getTemplateReference().getTemplateVersion().equals(
-            myStop.getVersion()));
-    assertThat(updatedSshCommandTemplate.getReferencedTemplateList().get(0).getVariableMapping().containsKey("V3"));
+    assertThat(updatedSshCommandTemplate.getReferencedTemplateList().get(0).getTemplateReference().getTemplateUuid())
+        .isEqualTo(myStop.getUuid());
+    assertThat(updatedSshCommandTemplate.getReferencedTemplateList().get(0).getTemplateReference().getTemplateVersion())
+        .isEqualTo(myStop.getVersion());
+    assertThat(updatedSshCommandTemplate.getReferencedTemplateList().get(0).getVariableMapping()).containsKey("V3");
     assertThat(updatedSshCommandTemplate.getReferencedTemplateList().get(0).getVariableMapping().get("V3").getValue())
         .isEqualTo("hello3-updated");
     assertThat(updatedTemplate.getVariables().size()).isEqualTo(4);

@@ -113,9 +113,8 @@ public class ShellScriptStateTest extends CategoryTest {
     assertThat(
         ((ScriptStateExecutionData) (executionResponse.getStateExecutionData())).getSweepingOutputEnvVariables().size())
         .isEqualTo(1);
-    assertThat(((ScriptStateExecutionData) (executionResponse.getStateExecutionData()))
-                   .getSweepingOutputEnvVariables()
-                   .containsKey("A"));
+    assertThat(((ScriptStateExecutionData) (executionResponse.getStateExecutionData())).getSweepingOutputEnvVariables())
+        .containsKey("A");
   }
 
   @Test
