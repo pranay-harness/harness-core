@@ -466,6 +466,7 @@ public class NexusThreeServiceImpl {
     return null;
   }
 
+  @SuppressWarnings({"squid:S3510"})
   private void downloadArtifactByUrl(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       String delegateId, String taskId, String accountId, ListNotifyResponseData notifyResponseData,
       String artifactName, String artifactUrl) {

@@ -34,8 +34,8 @@ public class CustomArtifactSourceTemplateTest extends TemplateBaseTest {
     assertThat(savedCustomArtifactStreamTemplate).isNotNull();
     CustomArtifactSourceTemplate customArtifactSourceTemplate1 =
         (CustomArtifactSourceTemplate) savedCustomArtifactStreamTemplate.getArtifactSource();
-    assertThat(customArtifactSourceTemplate1.getScript().equals("echo \"hello world\""));
-    assertThat(customArtifactSourceTemplate1.getTimeoutSeconds().equals("60"));
+    assertThat(customArtifactSourceTemplate1.getScript()).isEqualTo("echo \"hello world\"");
+    assertThat(customArtifactSourceTemplate1.getTimeoutSeconds()).isEqualTo("60");
     assertThat(customArtifactSourceTemplate1.getCustomRepositoryMapping()).isNotNull();
   }
 

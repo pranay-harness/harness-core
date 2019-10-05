@@ -919,8 +919,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, workflow).contains(EntityType.ARTIFACT)).isTrue();
     assertThat(workflowService.fetchDeploymentMetadata(APP_ID, savedWorkflow, null, null, null)
-                   .getArtifactRequiredServiceIds()
-                   .contains(SERVICE_ID));
+                   .getArtifactRequiredServiceIds())
+        .contains(SERVICE_ID);
   }
 
   @Test
@@ -1011,8 +1011,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, workflow)).contains(EntityType.ARTIFACT);
     assertThat(workflowService.fetchDeploymentMetadata(APP_ID, savedWorkflow, null, null, null)
-                   .getArtifactRequiredServiceIds()
-                   .contains(SERVICE_ID));
+                   .getArtifactRequiredServiceIds())
+        .contains(SERVICE_ID);
   }
 
   @Test
@@ -3390,27 +3390,27 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetDeploymentMetadataForLinkedHttpWorkflow() {
     Workflow workflow = createLinkedWorkflow(TemplateType.HTTP);
-    assertThat(workflowService.fetchDeploymentMetadata(APP_ID, workflow, null, null, null)
-                   .getArtifactRequiredServiceIds()
-                   .contains(SERVICE_ID));
+    assertThat(
+        workflowService.fetchDeploymentMetadata(APP_ID, workflow, null, null, null).getArtifactRequiredServiceIds())
+        .contains(SERVICE_ID);
   }
 
   @Test
   @Category(UnitTests.class)
   public void shouldGetDeploymentMetadataForLinkedShellScriptWorkflow() {
     Workflow workflow = createLinkedWorkflow(TemplateType.SHELL_SCRIPT);
-    assertThat(workflowService.fetchDeploymentMetadata(APP_ID, workflow, null, null, null)
-                   .getArtifactRequiredServiceIds()
-                   .contains(SERVICE_ID));
+    assertThat(
+        workflowService.fetchDeploymentMetadata(APP_ID, workflow, null, null, null).getArtifactRequiredServiceIds())
+        .contains(SERVICE_ID);
   }
 
   @Test
   @Category(UnitTests.class)
   public void shouldGetDeploymentMetadataForLinkedCommandWorkflow() {
     Workflow workflow = createLinkedWorkflow(TemplateType.SSH);
-    assertThat(workflowService.fetchDeploymentMetadata(APP_ID, workflow, null, null, null)
-                   .getArtifactRequiredServiceIds()
-                   .contains(SERVICE_ID));
+    assertThat(
+        workflowService.fetchDeploymentMetadata(APP_ID, workflow, null, null, null).getArtifactRequiredServiceIds())
+        .contains(SERVICE_ID);
   }
 
   @Test

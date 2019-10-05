@@ -341,7 +341,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
             .withInlineSshCommand(true)
             .build());
     verify(scriptSshExecutor).executeCommandString("mkdir -p /tmp/ACTIVITY_ID", false);
-    assertThat(((ExecCommandUnit) command.getCommandUnits().get(1)).getPreparedCommand().contains("ls"));
+    assertThat(((ExecCommandUnit) command.getCommandUnits().get(1)).getPreparedCommand()).contains("ls");
   }
 
   /**
@@ -434,10 +434,10 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
             .withInlineSshCommand(true)
             .build());
 
-    assertThat(((ExecCommandUnit) command.getCommandUnits().get(1)).getPreparedCommand().contains("ls"));
-    assertThat(((ExecCommandUnit) ((Command) command.getCommandUnits().get(2)).getCommandUnits().get(0))
-                   .getPreparedCommand()
-                   .contains("start.sh"));
+    assertThat(((ExecCommandUnit) command.getCommandUnits().get(1)).getPreparedCommand()).contains("ls");
+    assertThat(
+        ((ExecCommandUnit) ((Command) command.getCommandUnits().get(2)).getCommandUnits().get(0)).getPreparedCommand())
+        .contains("start.sh");
 
     verify(scriptSshExecutor).executeCommandString("mkdir -p /tmp/ACTIVITY_ID", false);
   }
