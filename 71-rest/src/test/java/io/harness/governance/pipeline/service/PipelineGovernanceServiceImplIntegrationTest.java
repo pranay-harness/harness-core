@@ -11,6 +11,8 @@ import io.harness.category.element.IntegrationTests;
 import io.harness.governance.pipeline.model.MatchType;
 import io.harness.governance.pipeline.model.PipelineGovernanceConfig;
 import io.harness.governance.pipeline.model.PipelineGovernanceRule;
+import io.harness.governance.pipeline.model.Restriction;
+import io.harness.governance.pipeline.model.Restriction.RestrictionType;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -22,6 +24,7 @@ import software.wings.integration.BaseIntegrationTest;
 import software.wings.integration.IntegrationTestUtils;
 import software.wings.service.intfc.AccountService;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -83,10 +86,13 @@ public class PipelineGovernanceServiceImplIntegrationTest extends BaseIntegratio
 
     PipelineGovernanceConfig addedConfig = pipelineGovernanceService.add(SOME_ACCOUNT_ID, config);
 
+    List<Restriction> restrictions = Arrays.asList(
+        new Restriction(RestrictionType.APP_BASED, Collections.singletonList("test-app-id"), Collections.emptyList()));
+
     PipelineGovernanceConfig newConfig =
         new PipelineGovernanceConfig(null, SOME_ACCOUNT_ID, "name-new", "description-new",
             Collections.singletonList(new PipelineGovernanceRule(Collections.emptyList(), MatchType.ALL, 10, "")),
-            Collections.emptyList());
+            restrictions);
     PipelineGovernanceConfig newlyAdded =
         pipelineGovernanceService.update(SOME_ACCOUNT_ID, addedConfig.getUuid(), newConfig);
 
