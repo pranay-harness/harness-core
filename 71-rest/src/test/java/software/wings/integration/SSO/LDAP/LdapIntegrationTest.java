@@ -80,7 +80,9 @@ public class LdapIntegrationTest extends BaseIntegrationTest implements WingsInt
   }
 
   @Test
+  @Owner(emails = "aman@harness.io")
   @Category(IntegrationTests.class)
+  @Ignore("TODO: Aman to investigate and fix")
   public void testLdapConnectionSettings() {
     loginAdminUser();
     assertThat(userToken).isNotEqualTo(INVALID_TOKEN);
