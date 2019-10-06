@@ -49,9 +49,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Created by rishi on 12/21/16.
- */
 @JsonTypeName("CANARY")
 @Slf4j
 public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
