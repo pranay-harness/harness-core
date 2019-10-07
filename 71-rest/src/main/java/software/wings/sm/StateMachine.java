@@ -798,7 +798,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
 
     for (String stateName : stateNamesInOrder) {
       State state = getState(stateName);
-      if (state instanceof RepeatState) {
+      if (state == null || state instanceof RepeatState) {
         continue;
       }
       ContextElementType requiredContextElementType = getRequiredContextElementType(state);

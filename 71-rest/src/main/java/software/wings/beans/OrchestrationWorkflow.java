@@ -228,6 +228,9 @@ public abstract class OrchestrationWorkflow {
         // Set the description
         variable = variableBuilder.build();
         setVariableDescription(variable, name);
+        if (getUserVariables() == null) {
+          return;
+        }
         getUserVariables().add(variable);
       } else {
         Map<String, Object> variableMetadata = variable.getMetadata();
@@ -277,7 +280,7 @@ public abstract class OrchestrationWorkflow {
   }
 
   private String getTemplateExpressionName(String templateVariable, EntityType entityType) {
-    return WorkflowServiceTemplateHelper.validatetAndGetVariable(templateVariable, entityType);
+    return WorkflowServiceTemplateHelper.validateAndGetVariable(templateVariable, entityType);
   }
 
   /**
