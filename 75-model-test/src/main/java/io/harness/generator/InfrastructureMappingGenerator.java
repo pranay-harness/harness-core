@@ -497,7 +497,6 @@ public class InfrastructureMappingGenerator {
         if (infrastructureMapping.getServiceTemplateId() != null) {
           builder.withServiceTemplateId(infrastructureMapping.getServiceTemplateId());
         } else {
-          Service service = owners.obtainService();
           ServiceTemplate serviceTemplate = owners.obtainServiceTemplate();
           builder.withServiceTemplateId(serviceTemplate.getUuid());
         }
@@ -612,7 +611,6 @@ public class InfrastructureMappingGenerator {
         if (infrastructureMapping.getServiceTemplateId() != null) {
           azureInfraMappingBuilder.withServiceTemplateId(infrastructureMapping.getServiceTemplateId());
         } else {
-          Service service = owners.obtainService();
           ServiceTemplate serviceTemplate = owners.obtainServiceTemplate();
           azureInfraMappingBuilder.withServiceTemplateId(serviceTemplate.getUuid());
         }
@@ -716,7 +714,6 @@ public class InfrastructureMappingGenerator {
         if (infrastructureMapping.getServiceTemplateId() != null) {
           phyWinRmbuilder.withServiceTemplateId(infrastructureMapping.getServiceTemplateId());
         } else {
-          Service service = owners.obtainService();
           ServiceTemplate serviceTemplate = owners.obtainServiceTemplate();
           phyWinRmbuilder.withServiceTemplateId(serviceTemplate.getUuid());
         }

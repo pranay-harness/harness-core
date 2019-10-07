@@ -4,13 +4,13 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
+import static java.lang.String.join;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -190,7 +190,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
         });
     if (isNotEmpty(inUse)) {
       throw new InvalidRequestException(format("'%s' is in use by %d workflow%s: '%s'", notificationGroup.getName(),
-          inUse.size(), plural("workflow", inUse.size()), Joiner.on("', '").join(inUse)));
+          inUse.size(), plural("workflow", inUse.size()), join("', '", inUse)));
     }
 
     yamlPushService.pushYamlChangeSet(accountId, notificationGroup, null, Type.DELETE, syncFromGit, false);

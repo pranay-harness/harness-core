@@ -8,7 +8,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.PageRequest;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import software.wings.beans.Application;
@@ -28,7 +27,6 @@ public class SetRollbackFlagToWorkflows implements Migration {
 
   @Override
   public void migrate() {
-    PageRequest<Application> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
     logger.info("Retrieving applications");
     List<Application> apps = wingsPersistence.createQuery(Application.class, excludeAuthority).asList();
     if (isEmpty(apps)) {
@@ -62,7 +60,7 @@ public class SetRollbackFlagToWorkflows implements Migration {
 
     CanaryOrchestrationWorkflow coWorkflow = (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
     if (coWorkflow.getPreDeploymentSteps() != null) {
-      modified = modified || coWorkflow.getPreDeploymentSteps().isRollback()
+      modified = /* modified ||*/ coWorkflow.getPreDeploymentSteps().isRollback()
           || coWorkflow.getPreDeploymentSteps().getSteps().stream().anyMatch(GraphNode::isRollback);
 
       coWorkflow.getPreDeploymentSteps().setRollback(false);

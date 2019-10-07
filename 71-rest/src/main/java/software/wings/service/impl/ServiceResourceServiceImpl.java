@@ -11,6 +11,7 @@ import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.pcf.model.PcfConstants.MANIFEST_YML;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
+import static java.lang.String.join;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -42,8 +43,6 @@ import static software.wings.utils.Validator.duplicateCheck;
 import static software.wings.utils.Validator.notNullCheck;
 import static software.wings.yaml.YamlHelper.trimYaml;
 
-import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -185,6 +184,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -221,19 +221,19 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   static {
     try {
       URL url = ServiceResourceServiceImpl.class.getClassLoader().getResource("default-k8s-manifests/deployment.yaml");
-      default_k8s_deployment_yaml = Resources.toString(url, Charsets.UTF_8);
+      default_k8s_deployment_yaml = Resources.toString(url, StandardCharsets.UTF_8);
 
       url = ServiceResourceServiceImpl.class.getClassLoader().getResource("default-k8s-manifests/namespace.yaml");
-      default_k8s_namespace_yaml = Resources.toString(url, Charsets.UTF_8);
+      default_k8s_namespace_yaml = Resources.toString(url, StandardCharsets.UTF_8);
 
       url = ServiceResourceServiceImpl.class.getClassLoader().getResource("default-k8s-manifests/service.yaml");
-      default_k8s_service_yaml = Resources.toString(url, Charsets.UTF_8);
+      default_k8s_service_yaml = Resources.toString(url, StandardCharsets.UTF_8);
 
       url = ServiceResourceServiceImpl.class.getClassLoader().getResource("default-k8s-manifests/values.yaml");
-      default_k8s_values_yaml = Resources.toString(url, Charsets.UTF_8);
+      default_k8s_values_yaml = Resources.toString(url, StandardCharsets.UTF_8);
 
       url = ServiceResourceServiceImpl.class.getClassLoader().getResource("default-pcf-manifests/manifest.yaml");
-      default_pcf_manifest_yaml = Resources.toString(url, Charsets.UTF_8);
+      default_pcf_manifest_yaml = Resources.toString(url, StandardCharsets.UTF_8);
     } catch (IOException e) {
       throw new RuntimeException("Failed to read default manifests", e);
     }
@@ -884,7 +884,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         throw new InvalidRequestException(
             format("Service %s is referenced by %s %s [%s].", service.getName(), referencingInfraDefinitionNames.size(),
                 plural("Infrastructure Definition", referencingInfraDefinitionNames.size()),
-                Joiner.on(", ").join(referencingInfraDefinitionNames)),
+                join(", ", referencingInfraDefinitionNames)),
             USER);
       }
     }
@@ -895,7 +895,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (isNotEmpty(referencingWorkflowNames)) {
       throw new InvalidRequestException(
           format("Service %s is referenced by %s %s [%s].", service.getUuid(), referencingWorkflowNames.size(),
-              plural("workflow", referencingWorkflowNames.size()), Joiner.on(", ").join(referencingWorkflowNames)),
+              plural("workflow", referencingWorkflowNames.size()), join(", ", referencingWorkflowNames)),
           USER);
     }
 
@@ -920,7 +920,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (isNotEmpty(refPipelines)) {
       throw new InvalidRequestException(
           format("Service is referenced by %d %s [%s] as a workflow variable.", refPipelines.size(),
-              plural("pipeline", refPipelines.size()), Joiner.on(", ").join(refPipelines)),
+              plural("pipeline", refPipelines.size()), join(", ", refPipelines)),
           USER);
     }
 
@@ -929,7 +929,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (isNotEmpty(refTriggers)) {
       throw new InvalidRequestException(
           format("Service is referenced by %d %s [%s] as a workflow variable.", refTriggers.size(),
-              plural("trigger", refTriggers.size()), Joiner.on(", ").join(refTriggers)),
+              plural("trigger", refTriggers.size()), join(", ", refTriggers)),
           USER);
     }
   }
@@ -1887,8 +1887,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     List<String> duplicateFunctionName =
         getFunctionAttributeDuplicateValues(lambdaSpecification, FunctionSpecification::getFunctionName);
     if (isNotEmpty(duplicateFunctionName)) {
-      throw new InvalidRequestException("Function name should be unique. Duplicate function names: ["
-          + Joiner.on(",").join(duplicateFunctionName) + "]");
+      throw new InvalidRequestException(
+          "Function name should be unique. Duplicate function names: [" + join(",", duplicateFunctionName) + "]");
     }
 
     /** Removed validation to check for duplicate handler names as part of HAR-3209 */

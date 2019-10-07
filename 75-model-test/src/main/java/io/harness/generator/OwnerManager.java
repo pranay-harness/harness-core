@@ -176,6 +176,7 @@ public class OwnerManager {
     }
 
     public ServiceTemplate obtainServiceTemplate() {
+      obtainService();
       ServiceTemplate serviceTemplate = objects.stream()
                                             .filter(obj -> obj instanceof ServiceTemplate)
                                             .findFirst()

@@ -3,6 +3,7 @@ package io.harness.delegate.message;
 import static io.harness.filesystem.FileIo.acquireLock;
 import static io.harness.filesystem.FileIo.releaseLock;
 import static java.lang.String.format;
+import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
@@ -11,7 +12,6 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.io.filefilter.FileFileFilter.FILE;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -82,7 +82,7 @@ public class MessageServiceImpl implements MessageService {
       MessengerType targetType, String targetProcessId, String message, String... params) {
     boolean isOutput = messengerType == targetType && processId.equals(targetProcessId);
     String output = isOutput ? "Writing message" : "Sending message to " + targetType + " " + targetProcessId;
-    String paramStr = params != null ? Joiner.on(", ").join(params) : "";
+    String paramStr = params != null ? join(", ", params) : "";
     logger.info("{}: {}({})", output, message, paramStr);
     try {
       File channel = getMessageChannel(targetType, targetProcessId);
@@ -93,12 +93,12 @@ public class MessageServiceImpl implements MessageService {
       messageContent.add(processId);
       messageContent.add(message);
       if (params != null) {
-        messageContent.add(Joiner.on(SECONDARY_DELIMITER).join(params));
+        messageContent.add(join(SECONDARY_DELIMITER, params));
       }
       if (acquireLock(channel, ofSeconds(5))) {
         try {
           FileUtils.touch(channel);
-          FileUtils.writeLines(channel, singletonList(Joiner.on(PRIMARY_DELIMITER).join(messageContent)), true);
+          FileUtils.writeLines(channel, singletonList(join(PRIMARY_DELIMITER, messageContent)), true);
         } finally {
           if (!releaseLock(channel)) {
             logger.error("Failed to release lock {}", channel.getPath());

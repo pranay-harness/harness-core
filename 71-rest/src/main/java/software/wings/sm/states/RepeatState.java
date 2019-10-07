@@ -2,10 +2,10 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.join;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.abbreviate;
 
-import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -56,7 +56,7 @@ public class RepeatState extends State {
 
   @SchemaIgnore private String repeatTransitionStateName;
 
-  @Transient @Inject private transient WorkflowExecutionService workflowExecutionService;
+  @Transient @Inject private WorkflowExecutionService workflowExecutionService;
 
   /**
    * Instantiates a new repeat state.
@@ -152,7 +152,7 @@ public class RepeatState extends State {
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
-    for (Object status : response.values()) {
+    for (ResponseData status : response.values()) {
       ExecutionStatus responseStatus = ((ElementNotifyResponseData) status).getExecutionStatus();
       if (responseStatus != ExecutionStatus.SUCCESS) {
         executionStatus = responseStatus;
@@ -198,7 +198,9 @@ public class RepeatState extends State {
    * @param context the context
    */
   @Override
-  public void handleAbortEvent(ExecutionContext context) {}
+  public void handleAbortEvent(ExecutionContext context) {
+    // nothing to handle
+  }
 
   /**
    * {@inheritDoc}
@@ -425,11 +427,7 @@ public class RepeatState extends State {
      * @return true, if successful
      */
     boolean indexReachedMax() {
-      if (repeatElements != null && repeatElementIndex != null && repeatElementIndex == (repeatElements.size() - 1)) {
-        return true;
-      } else {
-        return false;
-      }
+      return repeatElements != null && repeatElementIndex != null && repeatElementIndex == (repeatElements.size() - 1);
     }
 
     /**
@@ -441,7 +439,7 @@ public class RepeatState extends State {
       putNotNull(executionDetails, "repeatElements",
           ExecutionDataValue.builder()
               .displayName("Repeating Over")
-              .value(Joiner.on(", ").join(repeatElements.stream().map(ContextElement::getName).collect(toList())))
+              .value(join(", ", repeatElements.stream().map(ContextElement::getName).collect(toList())))
               .build());
       putNotNull(executionDetails, "executionStrategy",
           ExecutionDataValue.builder().displayName("Execution Strategy").value(executionStrategy).build());
@@ -454,8 +452,7 @@ public class RepeatState extends State {
       putNotNull(executionDetails, "repeatElements",
           ExecutionDataValue.builder()
               .displayName("Repeating Over")
-              .value(abbreviate(
-                  Joiner.on(", ").join(repeatElements.stream().map(ContextElement::getName).collect(toList())),
+              .value(abbreviate(join(", ", repeatElements.stream().map(ContextElement::getName).collect(toList())),
                   StateExecutionData.SUMMARY_PAYLOAD_LIMIT))
               .build());
       putNotNull(executionDetails, "executionStrategy",

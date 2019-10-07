@@ -184,7 +184,6 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
     fieldsToRemove.forEach(fieldToRemove -> {
       if (encryptable) {
         EncryptableSetting object = (EncryptableSetting) savedObject;
-        String accountId = object.getAccountId();
         Field f = ReflectionUtils.getFieldByName(savedObject.getClass(), fieldToRemove);
         Preconditions.checkNotNull(f, "Can't find " + fieldToRemove + " in class " + cls);
         if (f.getAnnotation(Encrypted.class) != null) {
@@ -205,15 +204,12 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
     update(query, operations);
   }
 
-  private boolean shouldEncryptWhileUpdating(Field f, EncryptableSetting object, Map<String, Object> keyValuePairs,
-      String entityId) throws IllegalAccessException {
+  private boolean shouldEncryptWhileUpdating(
+      Field f, EncryptableSetting object, Map<String, Object> keyValuePairs, String entityId) {
     List<Field> encryptedFields = object.getEncryptedFields();
     if (object.getClass().equals(ServiceVariable.class)) {
       deleteEncryptionReference(object, Collections.singleton(f.getName()), entityId);
-      if (keyValuePairs.get("type") == Type.ENCRYPTED_TEXT) {
-        return true;
-      }
-      return false;
+      return keyValuePairs.get("type") == Type.ENCRYPTED_TEXT;
     }
     return encryptedFields.contains(f);
   }
@@ -221,7 +217,6 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   @Override
   public <T extends PersistentEntity> boolean delete(Class<T> cls, String uuid) {
     if (cls.equals(SettingAttribute.class) || EncryptableSetting.class.isAssignableFrom(cls)) {
-      final AdvancedDatastore datastore = getDatastore(cls);
       Query<T> query = createQuery(cls, excludeAuthority).filter(ID_KEY, uuid);
       return delete(query);
     }
@@ -405,7 +400,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
     throw new WingsException(getExceptionMsgWithUserContext(), USER);
   }
 
-  private String getExceptionMsgWithUserContext() throws WingsException {
+  private String getExceptionMsgWithUserContext() {
     User user = UserThreadLocal.get();
     StringBuilder buffer = new StringBuilder(
         "AuthFilter could not be applied since the user is not assigned to any apps / no app exists in the account.");
