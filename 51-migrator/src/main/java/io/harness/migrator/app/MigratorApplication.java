@@ -1,10 +1,7 @@
 package io.harness.migrator.app;
 
-import static com.google.common.base.Charsets.UTF_8;
-
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -16,11 +13,11 @@ import io.harness.serializer.YamlUtils;
 import io.harness.threading.ExecutorModule;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.io.File;
 import java.lang.management.ManagementFactory;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -41,20 +38,16 @@ public class MigratorApplication {
     // Set logging level
     java.util.logging.LogManager.getLogManager().getLogger("").setLevel(Level.INFO);
     File configFile = new File(args[0]);
-    boolean upgrade = false;
-    if (args.length > 1 && StringUtils.equals(args[1], "upgrade")) {
-      upgrade = true;
-    }
 
     logger.info("Starting migrator");
     logger.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
     MigratorApplication migratorApplication = new MigratorApplication();
-    final MigratorConfiguration configuration =
-        new YamlUtils().read(FileUtils.readFileToString(configFile, UTF_8), MigratorConfiguration.class);
+    final MigratorConfiguration configuration = new YamlUtils().read(
+        FileUtils.readFileToString(configFile, StandardCharsets.UTF_8), MigratorConfiguration.class);
     migratorApplication.run(configuration);
   }
 
-  private void run(MigratorConfiguration configuration) throws Exception {
+  private void run(MigratorConfiguration configuration) {
     int cores = Runtime.getRuntime().availableProcessors();
     int corePoolSize = 2 * cores;
     int maximumPoolSize = Math.max(corePoolSize, 200);
@@ -75,6 +68,6 @@ public class MigratorApplication {
     modules.add(new MongoModule());
     modules.addAll(new MigratorModule().cumulativeDependencies());
 
-    Injector injector = Guice.createInjector(modules);
+    Guice.createInjector(modules);
   }
 }

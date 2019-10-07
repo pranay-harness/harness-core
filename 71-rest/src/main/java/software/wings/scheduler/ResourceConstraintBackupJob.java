@@ -2,8 +2,8 @@ package software.wings.scheduler;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static java.lang.String.join;
 
-import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 
 import io.fabric8.utils.Strings;
@@ -57,7 +57,7 @@ public class ResourceConstraintBackupJob implements Job {
       Set<String> constraintIds = resourceConstraintService.updateActiveConstraints(null, null);
       constraintIds.addAll(completelyBlocked);
 
-      logger.info("The following resource constrained need to be unblocked: {}", Joiner.on(", ").join(constraintIds));
+      logger.info("The following resource constrained need to be unblocked: {}", join(", ", constraintIds));
 
       // Unblock the constraints that can be unblocked
       resourceConstraintService.updateBlockedConstraints(constraintIds);

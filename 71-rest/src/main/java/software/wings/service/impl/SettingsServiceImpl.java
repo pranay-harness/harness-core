@@ -9,6 +9,7 @@ import static io.harness.eraro.ErrorCode.USAGE_LIMITS_EXCEEDED;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeValidate;
 import static java.lang.String.format;
+import static java.lang.String.join;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -40,7 +41,6 @@ import static software.wings.utils.Validator.duplicateCheck;
 import static software.wings.utils.Validator.equalCheck;
 import static software.wings.utils.Validator.notNullCheck;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -819,7 +819,7 @@ public class SettingsServiceImpl implements SettingsService {
             plural("Infrastructure "
                     + "Definition",
                 infraDefinitionNames.size()),
-            Joiner.on(", ").join(infraDefinitionNames)));
+            join(", ", infraDefinitionNames)));
       }
     }
     // TODO:: workflow scan for finding out usage in Steps/expression ???
@@ -841,7 +841,7 @@ public class SettingsServiceImpl implements SettingsService {
       if (!infraMappingNames.isEmpty()) {
         throw new InvalidRequestException(format("Connector [%s] is referenced by %d Service %s [%s].",
             connectorSetting.getName(), infraMappingNames.size(), plural("Infrastructure", infraMappingNames.size()),
-            Joiner.on(", ").join(infraMappingNames)));
+            join(", ", infraMappingNames)));
       }
     } else {
       if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, connectorSetting.getAccountId())) {
@@ -854,7 +854,7 @@ public class SettingsServiceImpl implements SettingsService {
           throw new InvalidRequestException(
               format("Connector [%s] is referenced by %d Artifact %s [%s].", connectorSetting.getName(),
                   artifactStreamNames.size(), plural("Source", artifactStreamNames.size()),
-                  Joiner.on(", ").join(artifactStreamNames)),
+                  join(", ", artifactStreamNames)),
               USER);
         }
 
@@ -862,8 +862,7 @@ public class SettingsServiceImpl implements SettingsService {
             SettingsServiceManipulationObxxxxxxxx:settingsServiceDeleting, connectorSetting);
         if (isNotEmpty(rejections)) {
           throw new InvalidRequestException(
-              format("[%s]", Joiner.on("\n").join(rejections.stream().map(Rejection::message).collect(toList()))),
-              USER);
+              format("[%s]", join("\n", rejections.stream().map(Rejection::message).collect(toList()))), USER);
         }
       }
     }
@@ -880,7 +879,7 @@ public class SettingsServiceImpl implements SettingsService {
         throw new InvalidRequestException(
             format("Cloud provider [%s] is referenced by %d Infrastructure  %s [%s].", cloudProviderSetting.getName(),
                 infraDefinitionNames.size(), plural("Definition", infraDefinitionNames.size()),
-                Joiner.on(", ").join(infraDefinitionNames)),
+                join(", ", infraDefinitionNames)),
             USER);
       }
     } else {
@@ -893,7 +892,7 @@ public class SettingsServiceImpl implements SettingsService {
         throw new InvalidRequestException(
             format("Cloud provider [%s] is referenced by %d Service %s [%s].", cloudProviderSetting.getName(),
                 infraMappingNames.size(), plural("Infrastructure", infraMappingNames.size()),
-                Joiner.on(", ").join(infraMappingNames)),
+                join(", ", infraMappingNames)),
             USER);
       }
     }
@@ -905,7 +904,7 @@ public class SettingsServiceImpl implements SettingsService {
         throw new InvalidRequestException(
             format("Cloud provider [%s] is referenced by %d Artifact %s [%s].", cloudProviderSetting.getName(),
                 artifactStreamNames.size(), plural("Source", artifactStreamNames.size()),
-                Joiner.on(", ").join(artifactStreamNames)),
+                join(", ", artifactStreamNames)),
             USER);
       }
     }
@@ -1181,7 +1180,7 @@ public class SettingsServiceImpl implements SettingsService {
             List<String> allowedValuesList = CsvParser.parse(allowedValues);
             allowedValuesList.remove(artifactStream.getUuid());
             // TODO: remove artifact variable if allowedList is empty
-            userVariable.setAllowedValues(String.join(",", allowedValuesList));
+            userVariable.setAllowedValues(join(",", allowedValuesList));
             updatedUserVariables.add(userVariable);
           }
 

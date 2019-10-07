@@ -13,6 +13,7 @@ import static io.harness.eraro.ErrorCode.PIPELINE_EXECUTION_IN_PROGRESS;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static java.lang.String.format;
+import static java.lang.String.join;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -32,7 +33,6 @@ import static software.wings.expression.ManagerExpressionEvaluator.matchesVariab
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.Validator.notNullCheck;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -331,7 +331,7 @@ public class PipelineServiceImpl implements PipelineService {
         triggerNames = triggers.stream().map(Trigger::getName).collect(toList());
       }
       throw new InvalidRequestException(
-          format("Pipeline associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)), USER);
+          format("Pipeline associated as a trigger action to triggers [%s]", join(", ", triggerNames)), USER);
     }
     throw new WingsException(PIPELINE_EXECUTION_IN_PROGRESS, USER)
         .addParam("message", format("Pipeline:[%s] couldn't be deleted", pipeline.getName()));
@@ -980,11 +980,11 @@ public class PipelineServiceImpl implements PipelineService {
       Map<String, String> pseWorkflowVariables, Variable pipelineVariable) {
     if (infraRefator) {
       pipelineVariable.getMetadata().put(
-          "relatedField", Joiner.on(",").join(getInfraDefVariables(workflowVariables, pseWorkflowVariables)));
+          "relatedField", join(",", getInfraDefVariables(workflowVariables, pseWorkflowVariables)));
 
     } else {
       pipelineVariable.getMetadata().put(
-          "relatedField", Joiner.on(",").join(getInfraVariables(workflowVariables, pseWorkflowVariables)));
+          "relatedField", join(",", getInfraVariables(workflowVariables, pseWorkflowVariables)));
     }
   }
 

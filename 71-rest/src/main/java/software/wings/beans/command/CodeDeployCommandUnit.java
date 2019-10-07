@@ -1,9 +1,9 @@
 package software.wings.beans.command;
 
 import static java.lang.String.format;
+import static java.lang.String.join;
 import static software.wings.beans.command.CodeDeployCommandExecutionData.Builder.aCodeDeployCommandExecutionData;
 
-import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.codedeploy.model.AutoRollbackConfiguration;
@@ -83,8 +83,7 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
       executionLogCallback.saveExecutionLog(format("Enable Auto Rollback: [%s]", enableAutoRollback), LogLevel.INFO);
       if (enableAutoRollback) {
         executionLogCallback.saveExecutionLog(
-            format("Auto Rollback Configurations: [%s]", Joiner.on(",").join(autoRollbackConfigurations)),
-            LogLevel.INFO);
+            format("Auto Rollback Configurations: [%s]", join(",", autoRollbackConfigurations)), LogLevel.INFO);
       }
       executionLogCallback.saveExecutionLog(
           format("Ignore ApplicationStop lifecycle event failure: [%s]", ignoreApplicationStopFailures), LogLevel.INFO);

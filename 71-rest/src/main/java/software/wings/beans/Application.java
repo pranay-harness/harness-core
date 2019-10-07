@@ -13,6 +13,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -464,9 +465,9 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
 
   @Override
   public Set<String> generateKeywords() {
-    Set<String> keywords = KeywordsAware.super.generateKeywords();
-    keywords.addAll(asList(name, description));
-    return keywords;
+    Set<String> kw = KeywordsAware.super.generateKeywords();
+    kw.addAll(asList(name, description));
+    return kw;
   }
 
   @Data
@@ -482,6 +483,7 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
     }
   }
 
+  @UtilityClass
   public static final class ApplicationKeys {
     // Temporary
     public static final String appId = "appId";
