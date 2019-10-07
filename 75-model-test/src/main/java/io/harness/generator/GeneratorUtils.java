@@ -1,6 +1,7 @@
 package io.harness.generator;
 
 import com.mongodb.DuplicateKeyException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 
 public class GeneratorUtils {
@@ -17,6 +18,14 @@ public class GeneratorUtils {
           return entity;
         }
       }
+
+      if (exception instanceof InvalidRequestException || exception.getCause() instanceof InvalidRequestException) {
+        T entity = persistenceOut.obtain();
+        if (entity != null) {
+          return entity;
+        }
+      }
+
       throw exception;
     }
   }
