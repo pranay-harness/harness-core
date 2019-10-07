@@ -190,6 +190,12 @@ if ! `grep pollForTasks config-delegate.yml > /dev/null`; then
       echo "pollForTasks: false" >> config-delegate.yml
   fi
 fi
+if ! `grep managerTarget config-delegate.yml > /dev/null`; then
+  echo "managerTarget : localhost:9090" >> config-delegate.yml
+fi
+if ! `grep managerAuthority config-delegate.yml > /dev/null`; then
+  echo "managerAuthority  : manager-grpc-localhost:9090" >> config-delegate.yml
+fi
 
 export KUBECTL_VERSION=v1.12.2
 

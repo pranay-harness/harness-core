@@ -45,6 +45,7 @@ import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK;
 import static software.wings.beans.TaskType.HOST_VALIDATION;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.service.impl.AssignDelegateServiceImpl.MAX_DELEGATE_LAST_HEARTBEAT;
+import static software.wings.service.impl.DelegateGrpcConfigExtractor.extractAuthority;
 import static software.wings.service.impl.DelegateGrpcConfigExtractor.extractTarget;
 import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
 
@@ -734,13 +735,13 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       if (delegateProfile != null) {
         params.put("delegateProfile", delegateProfile);
       }
+      params.put("managerTarget", extractTarget(managerHost));
+      params.put("managerAuthority", extractAuthority(managerHost, "manager"));
       if (featureFlagService.isEnabled(CCM_EVENT_COLLECTION, accountId)) {
         params.put("CCM_EVENT_COLLECTION", "enabled");
         params.put("publishTarget", extractTarget(managerHost));
-        params.put("publishAuthority", DelegateGrpcConfigExtractor.extractAuthority(managerHost, "events"));
+        params.put("publishAuthority", extractAuthority(managerHost, "events"));
         params.put("queueFilePath", mainConfiguration.getDelegateConfigParams().getQueueFilePath());
-        params.put("managerTarget", extractTarget(managerHost));
-        params.put("managerAuthority", DelegateGrpcConfigExtractor.extractAuthority(managerHost, "manager"));
         params.put("enablePerpetualTasks", "true");
       }
       return params.build();

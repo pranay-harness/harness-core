@@ -24,7 +24,7 @@ public class PerpetualTaskWorkerTest {
   @Before
   public void setUp() throws Exception {
     // TODO: test the map of factory
-    Injector injector = Guice.createInjector(new PerpetualTaskWorkerModule(null), new KubernetesClientFactoryModule());
+    Injector injector = Guice.createInjector(new PerpetualTaskWorkerModule(), new KubernetesClientFactoryModule());
     worker = injector.getInstance(PerpetualTaskWorker.class);
   }
 

@@ -12,6 +12,7 @@ import com.google.inject.multibindings.Multibinder;
 import io.grpc.BindableService;
 import io.grpc.ServerInterceptor;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
+import io.harness.grpc.pingpong.PingPongService;
 import io.harness.grpc.server.GrpcServerModule;
 import io.harness.perpetualtask.grpc.PerpetualTaskServiceGrpc;
 import io.harness.security.KeySource;
@@ -31,6 +32,7 @@ public class GrpcServiceConfigurationModule extends AbstractModule {
     bind(KeySource.class).to(AccountKeySource.class).in(Singleton.class);
     Multibinder<BindableService> bindableServiceMultibinder = Multibinder.newSetBinder(binder(), BindableService.class);
     bindableServiceMultibinder.addBinding().to(PerpetualTaskServiceGrpc.class);
+    bindableServiceMultibinder.addBinding().to(PingPongService.class);
 
     Multibinder<ServerInterceptor> serverInterceptorMultibinder =
         Multibinder.newSetBinder(binder(), ServerInterceptor.class);

@@ -86,6 +86,10 @@ spec:
           value: ${delegateName}
         - name: DELEGATE_PROFILE
           value: "${delegateProfile}"
+        - name: MANAGER_TARGET
+          value: "${managerTarget}"
+        - name: MANAGER_AUTHORITY
+          value: "${managerAuthority}"
 <#if CCM_EVENT_COLLECTION??>
         - name: PUBLISH_TARGET
           value: "${publishTarget}"
@@ -93,10 +97,6 @@ spec:
           value: "${publishAuthority}"
         - name: QUEUE_FILE_PATH
           value: "${queueFilePath}"
-        - name: MANAGER_TARGET
-          value: "${managerTarget}"
-        - name: MANAGER_AUTHORITY
-          value: "${managerAuthority}"
         - name: ENABLE_PERPETUAL_TASKS
           value: "${enablePerpetualTasks}"
 </#if>

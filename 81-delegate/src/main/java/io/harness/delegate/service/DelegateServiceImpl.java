@@ -201,10 +201,11 @@ public class DelegateServiceImpl implements DelegateService {
   private static final String TOKEN = "[TOKEN]";
   private static final String SEQ = "[SEQ]";
 
-  private static String hostName;
-  private static String delegateId;
-  private static String delegateType;
-  private static String delegateGroupName;
+  private static final String HOST_NAME = getLocalHostName();
+  private static final String DELEGATE_TYPE = System.getenv().get("DELEGATE_TYPE");
+  private static final String DELEGATE_GROUP_NAME = System.getenv().get("DELEGATE_GROUP_NAME");
+
+  private static volatile String delegateId;
 
   @Inject private DelegateConfiguration delegateConfiguration;
   @Inject private ManagerClient managerClient;
@@ -269,7 +270,7 @@ public class DelegateServiceImpl implements DelegateService {
       || TRUE.toString().equals(System.getenv().get("MULTI_VERSION"));
 
   public static String getHostName() {
-    return hostName;
+    return HOST_NAME;
   }
 
   public static String getDelegateId() {
@@ -281,7 +282,6 @@ public class DelegateServiceImpl implements DelegateService {
   @SuppressWarnings("unchecked")
   public void run(boolean watched) {
     try {
-      hostName = getLocalHostName();
       accountId = delegateConfiguration.getAccountId();
       startTime = clock.millis();
 
@@ -332,26 +332,24 @@ public class DelegateServiceImpl implements DelegateService {
         delegateProfile = "";
       }
 
-      delegateType = System.getenv().get("DELEGATE_TYPE");
       boolean isSample = "true".equals(System.getenv().get("SAMPLE_DELEGATE"));
 
-      logger.info("DELEGATE_TYPE is: " + delegateType);
-      if (isNotBlank(delegateType)) {
-        delegateGroupName = System.getenv().get("DELEGATE_GROUP_NAME");
+      logger.info("DELEGATE_TYPE is: " + DELEGATE_TYPE);
+      if (isNotBlank(DELEGATE_TYPE)) {
         logger.info(
-            "Registering delegate with delegate Type: {}, DelegateGroupName: {}", delegateType, delegateGroupName);
+            "Registering delegate with delegate Type: {}, DelegateGroupName: {}", DELEGATE_TYPE, DELEGATE_GROUP_NAME);
       }
 
       DelegateBuilder builder = Delegate.builder()
                                     .ip(getLocalHostAddress())
                                     .accountId(accountId)
-                                    .hostName(hostName)
+                                    .hostName(HOST_NAME)
                                     .delegateName(delegateName)
-                                    .delegateGroupName(delegateGroupName)
+                                    .delegateGroupName(DELEGATE_GROUP_NAME)
                                     .delegateProfileId(delegateProfile)
                                     .description(description)
                                     .version(getVersion())
-                                    .delegateType(delegateType)
+                                    .delegateType(DELEGATE_TYPE)
                                     .sampleDelegate(isSample);
 
       delegateId = registerDelegate(builder);
@@ -373,7 +371,7 @@ public class DelegateServiceImpl implements DelegateService {
                 .uri(delegateConfiguration.getManagerUrl().replace("/api/", "/stream/") + "delegate/" + accountId)
                 .queryString("delegateId", delegateId)
                 .queryString("delegateConnectionId", delegateConnectionId)
-                .queryString("token", tokenGenerator.getToken("https", "localhost", 9090, hostName))
+                .queryString("token", tokenGenerator.getToken("https", "localhost", 9090, HOST_NAME))
                 .queryString("sequenceNum", getSequenceNumForEcsDelegate())
                 .queryString("delegateToken", getRandomTokenForEcsDelegate())
                 .header("Version", getVersion());
@@ -1179,7 +1177,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (socket.status() == STATUS.OPEN || socket.status() == STATUS.REOPENED) {
       logger.info("Sending heartbeat...");
 
-      // This will Add ECS delegate specific fields if delegateType = "ECS"
+      // This will Add ECS delegate specific fields if DELEGATE_TYPE = "ECS"
       updateBuilderIfEcsDelegate(builder);
       Delegate delegate = builder.build();
       delegate.setLastHeartBeat(clock.millis());
@@ -1439,7 +1437,7 @@ public class DelegateServiceImpl implements DelegateService {
                 getPostExecutionFunction(delegateTask.getUuid(), sanitizer.orElse(null)),
                 getPreExecutionFunction(delegateTask, sanitizer.orElse(null)));
     if (delegateRunnableTask instanceof AbstractDelegateRunnableTask) {
-      ((AbstractDelegateRunnableTask) delegateRunnableTask).setDelegateHostname(hostName);
+      ((AbstractDelegateRunnableTask) delegateRunnableTask).setDelegateHostname(HOST_NAME);
     }
     injector.injectMembers(delegateRunnableTask);
     ExecutorService executorService = delegateTask.isAsync()
@@ -1709,7 +1707,7 @@ public class DelegateServiceImpl implements DelegateService {
       return;
     }
 
-    builder.delegateGroupName(delegateGroupName);
+    builder.delegateGroupName(DELEGATE_GROUP_NAME);
 
     try {
       if (!FileIo.checkIfFileExist(DELEGATE_SEQUENCE_CONFIG_FILE)) {
@@ -1800,7 +1798,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private boolean isEcsDelegate() {
-    return "ECS".equals(delegateType);
+    return "ECS".equals(DELEGATE_TYPE);
   }
 
   private void generateEcsDelegateSequenceConfigFile() {

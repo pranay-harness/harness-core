@@ -6,7 +6,6 @@ option java_multiple_files = true;
 
 import "google/protobuf/timestamp.proto";
 
-
 message Resource {
   message Quantity {
     string amount = 1;
@@ -16,7 +15,6 @@ message Resource {
   map<string, Quantity> requests = 1;
   map<string, Quantity> limits = 2;
 }
-
 
 message Container {
   string name = 1;
