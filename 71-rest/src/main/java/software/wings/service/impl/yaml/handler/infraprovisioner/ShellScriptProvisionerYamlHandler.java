@@ -3,7 +3,6 @@ package software.wings.service.impl.yaml.handler.infraprovisioner;
 import static io.harness.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
-import io.harness.exception.HarnessException;
 import software.wings.beans.InfrastructureProvisionerType;
 import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
 import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner.Yaml;
@@ -25,7 +24,7 @@ public class ShellScriptProvisionerYamlHandler
 
   @Override
   public ShellScriptInfrastructureProvisioner upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
+      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
