@@ -19,6 +19,7 @@ import java.util.Map;
 public class ServiceElement implements ContextElement {
   private String uuid;
   private String name;
+  private String description;
 
   @Override
   public ContextElementType getElementType() {
@@ -27,7 +28,7 @@ public class ServiceElement implements ContextElement {
 
   @Override
   public ContextElement cloneMin() {
-    return ServiceElement.builder().uuid(uuid).name(name).build();
+    return ServiceElement.builder().uuid(uuid).name(name).description(description).build();
   }
 
   @Override
