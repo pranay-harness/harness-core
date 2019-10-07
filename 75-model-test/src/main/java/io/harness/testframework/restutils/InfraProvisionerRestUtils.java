@@ -16,8 +16,8 @@ import javax.ws.rs.core.GenericType;
 
 @Singleton
 public class InfraProvisionerRestUtils {
-  public static InfrastructureProvisioner saveProvisioner(
-      String appId, String bearerToken, InfrastructureProvisioner infrastructureProvisioner) throws Exception {
+  public static InfrastructureProvisioner saveProvisioner(String appId, String bearerToken,
+      InfrastructureProvisioner infrastructureProvisioner) throws EmptyRestResponseException {
     GenericType<RestResponse<InfrastructureProvisioner>> provisioner =
         new GenericType<RestResponse<InfrastructureProvisioner>>() {};
 
@@ -36,7 +36,8 @@ public class InfraProvisionerRestUtils {
     return response.getResource();
   }
 
-  public static void deleteProvisioner(String appId, String bearerToken, String provisionerId) throws Exception {
+  public static void deleteProvisioner(String appId, String bearerToken, String provisionerId)
+      throws EmptyRestResponseException {
     RestResponse response = Setup.portal()
                                 .auth()
                                 .oauth2(bearerToken)
@@ -51,7 +52,7 @@ public class InfraProvisionerRestUtils {
   }
 
   public static InfrastructureProvisioner getProvisioner(String appId, String bearerToken, String provisionerId)
-      throws Exception {
+      throws EmptyRestResponseException {
     GenericType<RestResponse<InfrastructureProvisioner>> provisioner =
         new GenericType<RestResponse<InfrastructureProvisioner>>() {};
 
@@ -70,7 +71,7 @@ public class InfraProvisionerRestUtils {
   }
 
   public static InfrastructureProvisioner updateProvisioner(String appId, String bearerToken,
-      InfrastructureProvisioner infrastructureProvisioner, String provisionerId) throws Exception {
+      InfrastructureProvisioner infrastructureProvisioner, String provisionerId) throws EmptyRestResponseException {
     GenericType<RestResponse<InfrastructureProvisioner>> provisioner =
         new GenericType<RestResponse<InfrastructureProvisioner>>() {};
     RestResponse<InfrastructureProvisioner> response = Setup.portal()
@@ -89,7 +90,7 @@ public class InfraProvisionerRestUtils {
   }
 
   public static List<String> getTerraformTargets(
-      String accountId, String appId, String bearerToken, String provisionerid) throws Exception {
+      String accountId, String appId, String bearerToken, String provisionerid) throws EmptyRestResponseException {
     GenericType<RestResponse<List<String>>> provisioner = new GenericType<RestResponse<List<String>>>() {};
     RestResponse<List<String>> response = Setup.portal()
                                               .auth()
@@ -108,7 +109,7 @@ public class InfraProvisionerRestUtils {
   }
 
   public static List<NameValuePair> getTerraformVariables(String accountId, String appId, String bearerToken,
-      String scmSettingId, String branch, String path) throws Exception {
+      String scmSettingId, String branch, String path) throws EmptyRestResponseException {
     GenericType<RestResponse<List<NameValuePair>>> provisioner =
         new GenericType<RestResponse<List<NameValuePair>>>() {};
     RestResponse<List<NameValuePair>> response = Setup.portal()
