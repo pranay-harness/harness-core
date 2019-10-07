@@ -46,6 +46,7 @@ public class ExperimentalMetricRecord {
     private String displayName;
     private String fullMetricName;
     private String tag;
+    private boolean mismatch;
   }
 
   @Data
@@ -59,6 +60,7 @@ public class ExperimentalMetricRecord {
     private double testValue;
     private double controlValue;
     private List<ExperimentalMetricHostAnalysisValue> hostAnalysisValues;
+    private boolean mismatch;
   }
 
   @Data
@@ -72,5 +74,6 @@ public class ExperimentalMetricRecord {
     private List<Double> controlValues;
     private List<Integer> anomalies;
     int testStartIndex;
+    private boolean mismatch;
   }
 }

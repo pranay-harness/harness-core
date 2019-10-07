@@ -4,9 +4,6 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static software.wings.metrics.RiskLevel.HIGH;
-import static software.wings.metrics.RiskLevel.LOW;
-import static software.wings.metrics.RiskLevel.MEDIUM;
 import static software.wings.metrics.RiskLevel.NA;
 import static software.wings.metrics.RiskLevel.getRiskLevel;
 
@@ -18,10 +15,11 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder;
-import io.harness.exception.WingsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Sort;
+import software.wings.beans.Base.BaseKeys;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
@@ -35,17 +33,19 @@ import software.wings.service.impl.splunk.LogMLClusterScores;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ExperimentalAnalysisService;
+import software.wings.service.intfc.analysis.ExperimentalMetricAnalysisRecordService;
+import software.wings.service.intfc.analysis.TimeSeriesMLAnalysisRecordService;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfiguration.CVConfigurationKeys;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -60,6 +60,10 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
   @Inject private AnalysisService analysisService;
 
   @Inject private DataStoreService dataStoreService;
+
+  @Inject private ExperimentalMetricAnalysisRecordService experimentalMetricAnalysisRecordService;
+
+  @Inject private TimeSeriesMLAnalysisRecordService timeSeriesMLAnalysisRecordService;
 
   @Override
   public ExperimentPerformance getMetricExpAnalysisPerformance(
@@ -96,15 +100,16 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
     List<ExpAnalysisInfo> result = new ArrayList<>();
     Set<String> stateExecutionIds = new HashSet<>();
 
-    pageRequest.addOrder(MetricAnalysisRecord.BaseKeys.createdAt, SortOrder.OrderType.DESC)
+    pageRequest.addOrder(BaseKeys.createdAt, SortOrder.OrderType.DESC)
         .addFieldsIncluded(MetricAnalysisRecordKeys.stateExecutionId)
-        .addFieldsIncluded(MetricAnalysisRecord.BaseKeys.appId)
+        .addFieldsIncluded(BaseKeys.appId)
         .addFieldsIncluded(MetricAnalysisRecordKeys.stateType)
         .addFieldsIncluded(ExperimentalMetricAnalysisRecordKeys.experimentName)
         .addFieldsIncluded(ExperimentalMetricAnalysisRecordKeys.envId)
         .addFieldsIncluded(MetricAnalysisRecordKeys.workflowExecutionId)
-        .addFieldsIncluded(MetricAnalysisRecord.BaseKeys.createdAt)
-        .addFilter(MetricAnalysisRecordKeys.analysisMinute, SearchFilter.Operator.EQ, 0);
+        .addFieldsIncluded(BaseKeys.createdAt)
+        .addFilter(MetricAnalysisRecordKeys.analysisMinute, EQ, 0)
+        .addFilter(ExperimentalMetricAnalysisRecordKeys.mismatched, EQ, true);
 
     PageResponse<ExperimentalMetricAnalysisRecord> analysisRecords =
         wingsPersistence.query(ExperimentalMetricAnalysisRecord.class, pageRequest, excludeAuthority);
@@ -178,16 +183,9 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
   public ExperimentalMetricRecord getExperimentalMetricAnalysisSummary(
       String stateExecutionId, StateType stateType, String expName) {
     ExperimentalMetricAnalysisRecord experimentalAnalysisRecord =
-        wingsPersistence.createQuery(ExperimentalMetricAnalysisRecord.class, excludeAuthority)
-            .filter(MetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
-            .order(Sort.descending(MetricAnalysisRecordKeys.analysisMinute))
-            .filter(ExperimentalMetricAnalysisRecordKeys.experimentName, expName)
-            .get();
+        experimentalMetricAnalysisRecordService.getLastAnalysisRecord(stateExecutionId, expName);
     TimeSeriesMLAnalysisRecord analysisRecord =
-        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
-            .filter(MetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
-            .order(Sort.descending(MetricAnalysisRecordKeys.analysisMinute))
-            .get();
+        timeSeriesMLAnalysisRecordService.getLastAnalysisRecord(stateExecutionId);
 
     return getExperimentalMetricAnalysisSummary(
         stateExecutionId, stateType, experimentalAnalysisRecord, analysisRecord);
@@ -195,176 +193,88 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
 
   @Override
   public void updateMismatchStatusForExperimentalRecord(String stateExecutionId, Integer analysisMinute) {
-    try {
-      if (stateExecutionId == null || analysisMinute == null) {
-        logger.info("Cannot update experimental status for state execution id null");
-        return;
-      }
-      ExperimentalMetricAnalysisRecord experimentalRecord =
-          wingsPersistence.createQuery(ExperimentalMetricAnalysisRecord.class)
-              .filter(MetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
-              .filter(MetricAnalysisRecordKeys.analysisMinute, analysisMinute)
-              .get();
-      TimeSeriesMLAnalysisRecord analysisRecord =
-          wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-              .filter(MetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
-              .filter(MetricAnalysisRecordKeys.analysisMinute, analysisMinute)
-              .get();
-
-      if (analysisRecord == null || experimentalRecord == null) {
-        return;
-      }
-
-      ExperimentalMetricRecord experimentalMetricRecord = getExperimentalMetricAnalysisSummary(
-          stateExecutionId, analysisRecord.getStateType(), experimentalRecord, analysisRecord);
-
-      boolean matched =
-          experimentalMetricRecord.getRiskLevel().equals(experimentalMetricRecord.getExperimentalRiskLevel());
-
-      if (matched) {
-        for (ExperimentalMetricRecord.ExperimentalMetricAnalysis metricAnalysis :
-            experimentalMetricRecord.getMetricAnalysis()) {
-          matched = metricAnalysis.getExperimentalRiskLevel().equals(metricAnalysis.getRiskLevel());
-          if (!matched) {
-            break;
-          }
-
-          for (ExperimentalMetricRecord.ExperimentalMetricAnalysisValue value : metricAnalysis.getMetricValues()) {
-            matched = value.getRiskLevel().equals(value.getExperimentalRiskLevel());
-            if (!matched) {
-              break;
-            }
-          }
-
-          if (!matched) {
-            break;
-          }
-        }
-      }
-
-      experimentalRecord.setMismatched(!matched);
-      wingsPersistence.save(experimentalRecord);
-    } catch (Exception e) {
-      logger.info("Exception while saving mismatched status for experiment {}", stateExecutionId, e);
+    if (stateExecutionId == null || analysisMinute == null) {
+      logger.info("Cannot update experimental status for state execution id null");
+      return;
     }
+    ExperimentalMetricAnalysisRecord experimentalMetricAnalysisRecord =
+        experimentalMetricAnalysisRecordService.getAnalysisRecordForMinute(stateExecutionId, analysisMinute);
+    TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
+        timeSeriesMLAnalysisRecordService.getAnalysisRecordForMinute(stateExecutionId, analysisMinute);
+
+    if (timeSeriesMLAnalysisRecord == null || experimentalMetricAnalysisRecord == null
+        || experimentalMetricAnalysisRecord.isMismatched()) {
+      return;
+    }
+
+    ExperimentalMetricRecord experimentalMetricRecord = getExperimentalMetricAnalysisSummary(stateExecutionId,
+        timeSeriesMLAnalysisRecord.getStateType(), experimentalMetricAnalysisRecord, timeSeriesMLAnalysisRecord);
+
+    experimentalMetricAnalysisRecord.setMismatched(experimentalMetricRecord.isMismatch());
+
+    wingsPersistence.save(experimentalMetricAnalysisRecord);
   }
 
-  private ExperimentalMetricRecord getExperimentalMetricAnalysisSummary(String stateExecutionId, StateType stateType,
-      ExperimentalMetricAnalysisRecord experimentalAnalysisRecord, TimeSeriesMLAnalysisRecord analysisRecord) {
-    experimentalAnalysisRecord.decompressTransactions();
-
+  private void validateActualAndExperimentalRecords(ExperimentalMetricAnalysisRecord experimentalAnalysisRecord,
+      TimeSeriesMLAnalysisRecord analysisRecord, String stateExecutionId) {
     if (analysisRecord == null) {
-      logger.error("Actual analysis not done for this state execution id: {}", stateExecutionId);
-      throw new WingsException("Actual analysis not done for this state execution id");
+      logger.info("Actual analysis not done for this state execution id: {}", stateExecutionId);
+      throw new InvalidRequestException("Actual analysis not done for this state execution id");
+    }
+
+    if (experimentalAnalysisRecord == null) {
+      logger.info("Experimental analysis not done for this state execution id: {}", stateExecutionId);
+      throw new InvalidRequestException("Experimental analysis not done for this state execution id");
     }
 
     analysisRecord.decompressTransactions();
+    experimentalAnalysisRecord.decompressTransactions();
 
-    ExperimentalMetricRecord metricRecord = ExperimentalMetricRecord.builder()
-                                                .workflowExecutionId(analysisRecord.getWorkflowExecutionId())
-                                                .stateExecutionId(stateExecutionId)
-                                                .cvConfigId(analysisRecord.getCvConfigId())
-                                                .analysisMinute(analysisRecord.getAnalysisMinute())
-                                                .stateType(stateType)
-                                                .mlAnalysisType(TimeSeriesMlAnalysisType.COMPARATIVE)
-                                                .baseLineExecutionId(analysisRecord.getBaseLineExecutionId())
-                                                .mismatch(experimentalAnalysisRecord.isMismatched())
-                                                .experimentStatus(experimentalAnalysisRecord.getExperimentStatus())
-                                                .build();
-
-    List<ExperimentalMetricRecord.ExperimentalMetricAnalysis> metricAnalysis = new ArrayList<>();
-
-    if (isNotEmpty(analysisRecord.getTransactions())) {
-      if (isEmpty(experimentalAnalysisRecord.getTransactions())) {
-        logger.error("Experimental transactions not found: {}", stateExecutionId);
-        experimentalAnalysisRecord.setTransactions(new HashMap<>());
-      }
-
-      for (Map.Entry<String, TimeSeriesMLTxnSummary> txnSummaryEntry : analysisRecord.getTransactions().entrySet()) {
-        TimeSeriesMLTxnSummary txnSummary = txnSummaryEntry.getValue();
-        TimeSeriesMLTxnSummary experimentalTxnSummary =
-            experimentalAnalysisRecord.getTransactions().get(txnSummaryEntry.getKey());
-
-        RiskLevel globalRisk = RiskLevel.NA;
-        RiskLevel globalExperimentalRisk = RiskLevel.NA;
-
-        List<ExperimentalMetricRecord.ExperimentalMetricAnalysisValue> metricValues = new ArrayList<>();
-
-        for (Map.Entry<String, TimeSeriesMLMetricSummary> metricSummaryEntry : txnSummary.getMetrics().entrySet()) {
-          TimeSeriesMLMetricSummary metricSummary = metricSummaryEntry.getValue();
-          TimeSeriesMLMetricSummary experimentalMetricSummary =
-              experimentalTxnSummary == null || isEmpty(experimentalTxnSummary.getMetrics())
-              ? null
-              : experimentalTxnSummary.getMetrics().get(metricSummaryEntry.getKey());
-
-          RiskLevel riskLevel = getRiskLevel(metricSummary.getMax_risk());
-          RiskLevel experimentalRiskLevel =
-              experimentalMetricSummary == null ? NA : getRiskLevel(experimentalMetricSummary.getMax_risk());
-
-          if (riskLevel.compareTo(globalRisk) < 0) {
-            globalRisk = riskLevel;
-          }
-
-          if (experimentalRiskLevel.compareTo(globalExperimentalRisk) < 0) {
-            globalRisk = riskLevel;
-          }
-
-          metricValues.add(ExperimentalMetricRecord.ExperimentalMetricAnalysisValue.builder()
-                               .name(metricSummary.getMetric_name())
-                               .type(metricSummary.getMetric_type())
-                               .alertType(metricSummary.getAlert_type())
-                               .riskLevel(riskLevel)
-                               .experimentalRiskLevel(experimentalRiskLevel)
-                               .controlValue(metricSummary.getControl_avg())
-                               .testValue(metricSummary.getTest_avg())
-                               .build());
-        }
-
-        metricAnalysis.add(ExperimentalMetricRecord.ExperimentalMetricAnalysis.builder()
-                               .metricName(txnSummary.getTxn_name())
-                               .tag(txnSummary.getTxn_tag())
-                               .metricValues(metricValues)
-                               .riskLevel(globalRisk)
-                               .experimentalRiskLevel(globalExperimentalRisk)
-                               .build());
-      }
+    if (isEmpty(analysisRecord.getTransactions())) {
+      logger.info("No transactions recorded for actual analysis of state execution id: {}", stateExecutionId);
+      throw new InvalidRequestException("No transactions recorded for actual analysis");
     }
 
-    metricRecord.setMetricAnalysis(metricAnalysis);
+    if (isEmpty(experimentalAnalysisRecord.getTransactions())) {
+      logger.info("Experimental transactions not found: {}", stateExecutionId);
+      throw new InvalidRequestException("No transactions recorded for experimental analysis");
+    }
+  }
+
+  private void setGlobalRiskForExperimentalRecord(
+      List<ExperimentalMetricRecord.ExperimentalMetricAnalysis> metricAnalysis, ExperimentalMetricRecord metricRecord) {
+    RiskLevel riskLevel = NA;
+    RiskLevel experimentalRiskLevel = NA;
 
     if (isNotEmpty(metricAnalysis)) {
-      Optional<ExperimentalMetricRecord.ExperimentalMetricAnalysis> highRisk =
-          metricAnalysis.stream().filter(analysis -> analysis.getRiskLevel().equals(HIGH)).findAny();
-      if (highRisk.isPresent()) {
-        metricRecord.setRiskLevel(HIGH);
-      } else {
-        Optional<ExperimentalMetricRecord.ExperimentalMetricAnalysis> mediumRisk =
-            metricAnalysis.stream().filter(analysis -> analysis.getRiskLevel().equals(MEDIUM)).findAny();
-        if (mediumRisk.isPresent()) {
-          metricRecord.setRiskLevel(MEDIUM);
-        } else {
-          metricRecord.setRiskLevel(LOW);
-        }
-      }
+      riskLevel =
+          Collections.max(metricAnalysis, Comparator.comparingInt(analysis -> analysis.getRiskLevel().getRisk()))
+              .getRiskLevel();
 
-      highRisk = metricAnalysis.stream().filter(analysis -> analysis.getExperimentalRiskLevel().equals(HIGH)).findAny();
-      if (highRisk.isPresent()) {
-        metricRecord.setExperimentalRiskLevel(HIGH);
+      ExperimentalMetricRecord.ExperimentalMetricAnalysis highestExperimentalRiskRecord = Collections.max(
+          metricAnalysis, Comparator.comparingInt(analysis -> analysis.getExperimentalRiskLevel().getRisk()));
+      if (highestExperimentalRiskRecord.getExperimentalRiskLevel().equals(NA)
+          && metricAnalysis.stream().noneMatch(
+                 analysis -> analysis.getExperimentalRiskLevel().equals(NA) && analysis.isMismatch())) {
+        experimentalRiskLevel = riskLevel;
       } else {
-        Optional<ExperimentalMetricRecord.ExperimentalMetricAnalysis> mediumRisk =
-            metricAnalysis.stream().filter(analysis -> analysis.getExperimentalRiskLevel().equals(MEDIUM)).findAny();
-        if (mediumRisk.isPresent()) {
-          metricRecord.setExperimentalRiskLevel(MEDIUM);
-        } else {
-          metricRecord.setExperimentalRiskLevel(LOW);
-        }
+        experimentalRiskLevel = highestExperimentalRiskRecord.getExperimentalRiskLevel();
       }
-
-    } else {
-      metricRecord.setRiskLevel(RiskLevel.NA);
-      metricRecord.setExperimentalRiskLevel(RiskLevel.NA);
     }
 
+    boolean mismatch = true;
+    if (experimentalRiskLevel.equals(riskLevel)) {
+      mismatch = false;
+      experimentalRiskLevel = NA;
+    }
+
+    metricRecord.setRiskLevel(riskLevel);
+    metricRecord.setExperimentalRiskLevel(experimentalRiskLevel);
+    metricRecord.setMismatch(mismatch);
+  }
+
+  private void updateMetricNameForDynatrace(
+      List<ExperimentalMetricRecord.ExperimentalMetricAnalysis> metricAnalysis, ExperimentalMetricRecord metricRecord) {
     if (metricRecord.getStateType() == StateType.DYNA_TRACE && !isEmpty(metricAnalysis)) {
       for (ExperimentalMetricRecord.ExperimentalMetricAnalysis analysis : metricAnalysis) {
         String metricName = analysis.getMetricName();
@@ -380,6 +290,97 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
         analysis.setFullMetricName(fullBTName);
       }
     }
+  }
+
+  private ExperimentalMetricRecord.ExperimentalMetricAnalysis getExperimentalMetricAnalysisForTxn(
+      TimeSeriesMLTxnSummary txnSummary, TimeSeriesMLTxnSummary experimentalTxnSummary) {
+    RiskLevel globalRisk = RiskLevel.NA;
+    RiskLevel globalExperimentalRisk = RiskLevel.NA;
+
+    List<ExperimentalMetricRecord.ExperimentalMetricAnalysisValue> metricValues = new ArrayList<>();
+
+    for (Map.Entry<String, TimeSeriesMLMetricSummary> metricSummaryEntry : txnSummary.getMetrics().entrySet()) {
+      TimeSeriesMLMetricSummary metricSummary = metricSummaryEntry.getValue();
+      TimeSeriesMLMetricSummary experimentalMetricSummary =
+          experimentalTxnSummary == null || isEmpty(experimentalTxnSummary.getMetrics())
+          ? null
+          : experimentalTxnSummary.getMetrics().get(metricSummaryEntry.getKey());
+
+      RiskLevel riskLevel = getRiskLevel(metricSummary.getMax_risk());
+      RiskLevel experimentalRiskLevel =
+          experimentalMetricSummary == null ? NA : getRiskLevel(experimentalMetricSummary.getMax_risk());
+
+      if (riskLevel.compareTo(globalRisk) < 0) {
+        globalRisk = riskLevel;
+      }
+
+      if (experimentalRiskLevel.compareTo(globalExperimentalRisk) < 0) {
+        globalExperimentalRisk = experimentalRiskLevel;
+      }
+
+      boolean mismatch = true;
+      if (experimentalRiskLevel.equals(riskLevel)) {
+        mismatch = false;
+        experimentalRiskLevel = NA;
+      }
+      metricValues.add(ExperimentalMetricRecord.ExperimentalMetricAnalysisValue.builder()
+                           .name(metricSummary.getMetric_name())
+                           .type(metricSummary.getMetric_type())
+                           .alertType(metricSummary.getAlert_type())
+                           .riskLevel(riskLevel)
+                           .experimentalRiskLevel(experimentalRiskLevel)
+                           .controlValue(metricSummary.getControl_avg())
+                           .testValue(metricSummary.getTest_avg())
+                           .mismatch(mismatch)
+                           .build());
+    }
+
+    boolean mismatch = true;
+    if (globalExperimentalRisk.equals(globalRisk)) {
+      mismatch = false;
+      globalExperimentalRisk = NA;
+    }
+
+    return ExperimentalMetricRecord.ExperimentalMetricAnalysis.builder()
+        .metricName(txnSummary.getTxn_name())
+        .tag(txnSummary.getTxn_tag())
+        .metricValues(metricValues)
+        .riskLevel(globalRisk)
+        .experimentalRiskLevel(globalExperimentalRisk)
+        .mismatch(mismatch)
+        .build();
+  }
+
+  private ExperimentalMetricRecord getExperimentalMetricAnalysisSummary(String stateExecutionId, StateType stateType,
+      ExperimentalMetricAnalysisRecord experimentalAnalysisRecord, TimeSeriesMLAnalysisRecord analysisRecord) {
+    validateActualAndExperimentalRecords(experimentalAnalysisRecord, analysisRecord, stateExecutionId);
+
+    ExperimentalMetricRecord metricRecord = ExperimentalMetricRecord.builder()
+                                                .workflowExecutionId(analysisRecord.getWorkflowExecutionId())
+                                                .stateExecutionId(stateExecutionId)
+                                                .cvConfigId(analysisRecord.getCvConfigId())
+                                                .analysisMinute(analysisRecord.getAnalysisMinute())
+                                                .stateType(stateType)
+                                                .mlAnalysisType(TimeSeriesMlAnalysisType.COMPARATIVE)
+                                                .baseLineExecutionId(analysisRecord.getBaseLineExecutionId())
+                                                .mismatch(experimentalAnalysisRecord.isMismatched())
+                                                .experimentStatus(experimentalAnalysisRecord.getExperimentStatus())
+                                                .build();
+
+    List<ExperimentalMetricRecord.ExperimentalMetricAnalysis> metricAnalysis = new ArrayList<>();
+
+    for (Map.Entry<String, TimeSeriesMLTxnSummary> txnSummaryEntry : analysisRecord.getTransactions().entrySet()) {
+      TimeSeriesMLTxnSummary txnSummary = txnSummaryEntry.getValue();
+      TimeSeriesMLTxnSummary experimentalTxnSummary =
+          experimentalAnalysisRecord.getTransactions().get(txnSummaryEntry.getKey());
+
+      metricAnalysis.add(getExperimentalMetricAnalysisForTxn(txnSummary, experimentalTxnSummary));
+    }
+
+    metricRecord.setMetricAnalysis(metricAnalysis);
+    setGlobalRiskForExperimentalRecord(metricAnalysis, metricRecord);
+
+    updateMetricNameForDynatrace(metricAnalysis, metricRecord);
 
     return metricRecord;
   }
