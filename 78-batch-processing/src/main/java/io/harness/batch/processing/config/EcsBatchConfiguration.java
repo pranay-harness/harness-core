@@ -19,8 +19,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@Configuration
 @Slf4j
+@Configuration
 public class EcsBatchConfiguration {
   private static final int BATCH_SIZE = 10;
   private static final int SKIP_BATCH_SIZE = 5;
