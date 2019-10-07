@@ -2,11 +2,11 @@ package software.wings.service.impl.notifications;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.common.Constants.ABORTED_COLOR;
-import static software.wings.common.Constants.COMPLETED_COLOR;
-import static software.wings.common.Constants.FAILED_COLOR;
-import static software.wings.common.Constants.PAUSED_COLOR;
-import static software.wings.common.Constants.RESUMED_COLOR;
+import static software.wings.common.NotificationConstants.ABORTED_COLOR;
+import static software.wings.common.NotificationConstants.COMPLETED_COLOR;
+import static software.wings.common.NotificationConstants.FAILED_COLOR;
+import static software.wings.common.NotificationConstants.PAUSED_COLOR;
+import static software.wings.common.NotificationConstants.RESUMED_COLOR;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 
 import com.google.inject.Inject;

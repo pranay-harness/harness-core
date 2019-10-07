@@ -255,9 +255,11 @@ import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.impl.analysis.ContinuousVerificationServiceImpl;
 import software.wings.service.impl.analysis.ExperimentalAnalysisServiceImpl;
+import software.wings.service.impl.analysis.ExperimentalMetricAnalysisRecordServiceImpl;
 import software.wings.service.impl.analysis.LearningEngineAnalysisServiceImpl;
 import software.wings.service.impl.analysis.LogLabelingServiceImpl;
 import software.wings.service.impl.analysis.MetricDataAnalysisServiceImpl;
+import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecordServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsServiceImpl;
 import software.wings.service.impl.artifact.ArtifactCleanupServiceAsyncImpl;
 import software.wings.service.impl.artifact.ArtifactCollectionServiceAsyncImpl;
@@ -446,9 +448,11 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.alert.NotificationRulesStatusService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ExperimentalAnalysisService;
+import software.wings.service.intfc.analysis.ExperimentalMetricAnalysisRecordService;
 import software.wings.service.intfc.analysis.LogLabelingService;
 import software.wings.service.intfc.analysis.LogVerificationService;
 import software.wings.service.intfc.analysis.LogVerificationServiceImpl;
+import software.wings.service.intfc.analysis.TimeSeriesMLAnalysisRecordService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.service.intfc.artifact.CustomBuildSourceService;
 import software.wings.service.intfc.aws.delegate.AwsEcrHelperServiceDelegate;
@@ -739,6 +743,8 @@ public class WingsModule extends DependencyModule {
     bind(InstanceLimitProvider.class).to(InstanceLimitProviderImpl.class);
 
     bind(NotificationRulesStatusService.class).to(NotificationRulesStatusServiceImpl.class);
+    bind(TimeSeriesMLAnalysisRecordService.class).to(TimeSeriesMLAnalysisRecordServiceImpl.class);
+    bind(ExperimentalMetricAnalysisRecordService.class).to(ExperimentalMetricAnalysisRecordServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
