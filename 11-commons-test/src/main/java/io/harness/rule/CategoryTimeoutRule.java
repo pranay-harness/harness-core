@@ -2,6 +2,7 @@ package io.harness.rule;
 
 import static java.util.Arrays.asList;
 
+import io.harness.category.element.CliFunctionalTests;
 import io.harness.category.element.E2ETests;
 import io.harness.category.element.FunctionalTests;
 import io.harness.category.element.IntegrationTests;
@@ -29,7 +30,8 @@ public class CategoryTimeoutRule extends Timeout {
   }
 
   public static Class fetchCategoryElement(Category category) {
-    List<Class> classes = asList(UnitTests.class, IntegrationTests.class, FunctionalTests.class, E2ETests.class);
+    List<Class> classes = asList(
+        UnitTests.class, IntegrationTests.class, FunctionalTests.class, CliFunctionalTests.class, E2ETests.class);
 
     Class element = null;
     for (Class clz : classes) {
@@ -95,6 +97,12 @@ public class CategoryTimeoutRule extends Timeout {
         timeoutMS = TimeUnit.MINUTES.toMillis(5);
       }
     } else if (categoryElement == FunctionalTests.class) {
+      if (fast) {
+        timeoutMS = TimeUnit.MINUTES.toMillis(1);
+      } else if (slow) {
+        timeoutMS = TimeUnit.MINUTES.toMillis(15);
+      }
+    } else if (categoryElement == CliFunctionalTests.class) {
       if (fast) {
         timeoutMS = TimeUnit.MINUTES.toMillis(1);
       } else if (slow) {
