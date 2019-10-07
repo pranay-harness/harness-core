@@ -18,6 +18,7 @@ import software.wings.settings.UsageRestrictions;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -159,6 +160,11 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
+  public List<String> importSecretsViaFile(String accountId, InputStream uploadStream) {
+    return null;
+  }
+
+  @Override
   public boolean updateSecret(
       String accountId, String uuId, String name, String value, String path, UsageRestrictions usageRestrictions) {
     throw new UnsupportedOperationException();
@@ -181,8 +187,8 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public String saveFile(
-      String accountId, String name, UsageRestrictions usageRestrictions, BoundedInputStream inputStream) {
+  public String saveFile(String accountId, String name, long fileSize, UsageRestrictions usageRestrictions,
+      BoundedInputStream inputStream) {
     throw new UnsupportedOperationException();
   }
 
@@ -197,8 +203,8 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public boolean updateFile(
-      String accountId, String name, String uuid, UsageRestrictions usageRestrictions, BoundedInputStream inputStream) {
+  public boolean updateFile(String accountId, String name, String uuid, long fileSize,
+      UsageRestrictions usageRestrictions, BoundedInputStream inputStream) {
     throw new UnsupportedOperationException();
   }
 

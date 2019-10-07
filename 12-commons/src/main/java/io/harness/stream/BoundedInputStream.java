@@ -65,4 +65,8 @@ public class BoundedInputStream extends InputStream {
   public long getTotalBytesRead() {
     return totalBytesRead;
   }
+
+  public long getSize() {
+    return size;
+  }
 }

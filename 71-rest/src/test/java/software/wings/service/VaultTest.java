@@ -1267,8 +1267,8 @@ public class VaultTest extends WingsBaseTest {
 
     String secretName = UUID.randomUUID().toString();
     File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
-    String secretFileId =
-        secretManager.saveFile(accountId, secretName, null, new BoundedInputStream(new FileInputStream(fileToSave)));
+    String secretFileId = secretManager.saveFile(
+        accountId, secretName, fileToSave.length(), null, new BoundedInputStream(new FileInputStream(fileToSave)));
 
     String encryptedUuid = wingsPersistence.createQuery(EncryptedData.class)
                                .filter(EncryptedDataKeys.type, CONFIG_FILE)
@@ -1324,8 +1324,8 @@ public class VaultTest extends WingsBaseTest {
     // test update
     String newSecretName = UUID.randomUUID().toString();
     File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
-    secretManager.updateFile(
-        accountId, newSecretName, encryptedUuid, null, new BoundedInputStream(new FileInputStream(fileToUpdate)));
+    secretManager.updateFile(accountId, newSecretName, encryptedUuid, fileToUpdate.length(), null,
+        new BoundedInputStream(new FileInputStream(fileToUpdate)));
 
     download = configService.download(appId, configFileId);
     assertThat(FileUtils.readFileToString(download, Charset.defaultCharset()))

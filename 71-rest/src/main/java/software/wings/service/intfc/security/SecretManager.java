@@ -20,6 +20,7 @@ import software.wings.settings.UsageRestrictions;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -91,6 +92,8 @@ public interface SecretManager extends OwnedByAccount {
 
   List<String> importSecrets(String accountId, List<SecretText> secretTexts);
 
+  List<String> importSecretsViaFile(String accountId, InputStream uploadStream);
+
   boolean updateSecret(
       String accountId, String uuId, String name, String value, String path, UsageRestrictions usageRestrictions);
 
@@ -104,14 +107,15 @@ public interface SecretManager extends OwnedByAccount {
 
   boolean deleteSecretUsingUuid(String uuId);
 
-  String saveFile(String accountId, String name, UsageRestrictions usageRestrictions, BoundedInputStream inputStream);
+  String saveFile(String accountId, String name, long fileSize, UsageRestrictions usageRestrictions,
+      BoundedInputStream inputStream);
 
   File getFile(String accountId, String uuId, File readInto);
 
   byte[] getFileContents(String accountId, String uuId);
 
-  boolean updateFile(
-      String accountId, String name, String uuid, UsageRestrictions usageRestrictions, BoundedInputStream inputStream);
+  boolean updateFile(String accountId, String name, String uuid, long fileSize, UsageRestrictions usageRestrictions,
+      BoundedInputStream inputStream);
 
   boolean deleteFile(String accountId, String uuId);
 

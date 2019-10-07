@@ -2,7 +2,6 @@ package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
-import static org.apache.commons.lang3.StringUtils.trim;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -35,15 +34,11 @@ import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -53,6 +48,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 /**
@@ -129,35 +125,7 @@ public class SecretManagementResource {
   @ExceptionMetered
   public RestResponse<List<String>> importSecrets(
       @QueryParam("accountId") final String accountId, @FormDataParam("file") final InputStream uploadInputStream) {
-    List<SecretText> secretTexts = new ArrayList<>();
-    InputStreamReader inputStreamReader = null;
-    BufferedReader reader = null;
-    try {
-      inputStreamReader = new InputStreamReader(uploadInputStream, Charset.defaultCharset());
-      reader = new BufferedReader(inputStreamReader);
-      String line;
-      while ((line = reader.readLine()) != null) {
-        String[] parts = line.split(",");
-        String path = parts.length > 2 ? trim(parts[2]) : null;
-        SecretText secretText = SecretText.builder().name(trim(parts[0])).value(trim(parts[1])).path(path).build();
-        secretTexts.add(secretText);
-      }
-    } catch (IOException e) {
-      throw new WingsException(e);
-    } finally {
-      try {
-        if (reader != null) {
-          reader.close();
-        }
-        if (inputStreamReader != null) {
-          inputStreamReader.close();
-        }
-      } catch (IOException e) {
-        // Ignore.
-      }
-    }
-
-    return new RestResponse<>(secretManager.importSecrets(accountId, secretTexts));
+    return new RestResponse<>(secretManager.importSecretsViaFile(accountId, uploadInputStream));
   }
 
   @POST
@@ -203,12 +171,13 @@ public class SecretManagementResource {
   @Timed
   @Consumes(MULTIPART_FORM_DATA)
   @ExceptionMetered
-  public RestResponse<String> saveFile(@QueryParam("accountId") final String accountId,
-      @FormDataParam("name") final String name, @FormDataParam("file") InputStream uploadedInputStream,
+  public RestResponse<String> saveFile(@Context HttpServletRequest request,
+      @QueryParam("accountId") final String accountId, @FormDataParam("name") final String name,
+      @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("usageRestrictions") final String usageRestrictionsString) {
-    return new RestResponse<>(secretManager.saveFile(accountId, name,
+    return new RestResponse<>(secretManager.saveFile(accountId, name, request.getContentLengthLong(),
         usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString),
-        new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getConfigFileLimit())));
+        new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getEncryptedFileLimit())));
   }
 
   @POST
@@ -216,8 +185,8 @@ public class SecretManagementResource {
   @Timed
   @Consumes(MULTIPART_FORM_DATA)
   @ExceptionMetered
-  public RestResponse<Boolean> updateFile(@QueryParam("accountId") final String accountId,
-      @FormDataParam("name") final String name,
+  public RestResponse<Boolean> updateFile(@Context HttpServletRequest request,
+      @QueryParam("accountId") final String accountId, @FormDataParam("name") final String name,
       @FormDataParam("usageRestrictions") final String usageRestrictionsString,
       @FormDataParam("uuid") final String fileId, @FormDataParam("file") InputStream uploadedInputStream) {
     // HAR-9736: If the user doesn't make any change in the secret file update, null is expected for now.
@@ -225,9 +194,9 @@ public class SecretManagementResource {
       // fill in with an empty input stream
       uploadedInputStream = new ByteArrayInputStream(new byte[0]);
     }
-    return new RestResponse<>(secretManager.updateFile(accountId, name, fileId,
+    return new RestResponse<>(secretManager.updateFile(accountId, name, fileId, request.getContentLengthLong(),
         usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString),
-        new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getConfigFileLimit())));
+        new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getEncryptedFileLimit())));
   }
 
   @DELETE
