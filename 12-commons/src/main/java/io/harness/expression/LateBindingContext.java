@@ -5,13 +5,13 @@ import org.apache.commons.jexl3.JexlContext;
 import org.apache.commons.jexl3.JexlException;
 
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 
 @Builder
 public class LateBindingContext implements JexlContext {
   private ExpressionEvaluator expressionEvaluator;
   private List<String> prefixes;
-  private Map<String, Object> map;
+  private ConcurrentMap<String, Object> map;
 
   private boolean recursive;
 
@@ -43,13 +43,9 @@ public class LateBindingContext implements JexlContext {
     }
 
     if (object instanceof LateBindingValue) {
-      synchronized (this) {
-        map.remove((String) key);
-      }
+      map.remove((String) key);
       object = ((LateBindingValue) object).bind();
-      synchronized (map) {
-        map.put((String) key, object);
-      }
+      map.put((String) key, object);
     }
 
     return object;
