@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import com.google.common.collect.ImmutableList;
 
+import io.harness.category.element.CliFunctionalTests;
 import io.harness.category.element.FunctionalTests;
 import io.harness.category.element.IntegrationTests;
 import io.harness.category.element.UnitTests;
@@ -158,6 +159,8 @@ public class OwnerRule extends RepeatRule {
     } else if (categoryElement == IntegrationTests.class) {
       repeatCount = 10;
     } else if (categoryElement == FunctionalTests.class) {
+      repeatCount = 5;
+    } else if (categoryElement == CliFunctionalTests.class) {
       repeatCount = 5;
     }
 
