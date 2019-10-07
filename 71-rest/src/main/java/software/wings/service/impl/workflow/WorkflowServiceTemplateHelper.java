@@ -537,10 +537,11 @@ public class WorkflowServiceTemplateHelper {
   }
 
   public static String getName(String expression, EntityType entityType) {
-    return validatetAndGetVariable(ManagerExpressionEvaluator.getName(expression), entityType);
+    String variable = ManagerExpressionEvaluator.getName(expression);
+    return variable == null ? null : validateAndGetVariable(variable, entityType);
   }
 
-  public static String validatetAndGetVariable(String variable, EntityType entityType) {
+  public static String validateAndGetVariable(String variable, EntityType entityType) {
     if (variable.startsWith("workflow.variables.")) {
       variable = variable.replace("workflow.variables.", "");
     }
