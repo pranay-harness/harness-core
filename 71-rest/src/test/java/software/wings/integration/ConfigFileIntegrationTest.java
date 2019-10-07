@@ -244,7 +244,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
     String secretName = UUID.randomUUID().toString();
     InputStream inputStream = IOUtils.toInputStream(INPUT_TEXT, "ISO-8859-1");
     String secretFileId = secretManager.saveFile(
-        accountId, secretName, null, new BoundedInputStream(new BoundedInputStream(inputStream)));
+        accountId, secretName, configFile.getSize(), null, new BoundedInputStream(new BoundedInputStream(inputStream)));
 
     configFile.setAppId(service.getAppId());
     configFile.setName(fileName);
@@ -284,7 +284,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
     String secretName = UUID.randomUUID().toString();
     InputStream inputStream = IOUtils.toInputStream(INPUT_TEXT, "ISO-8859-1");
     String secretFileId = secretManager.saveFile(
-        accountId, secretName, null, new BoundedInputStream(new BoundedInputStream(inputStream)));
+        accountId, secretName, configFile.getSize(), null, new BoundedInputStream(new BoundedInputStream(inputStream)));
 
     ConfigFile appConfigFile = getConfigFile();
     appConfigFile.setTemplateId(DEFAULT_TEMPLATE_ID);

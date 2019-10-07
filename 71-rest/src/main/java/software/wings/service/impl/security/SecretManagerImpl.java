@@ -26,6 +26,7 @@ import static io.harness.security.encryption.EncryptionType.LOCAL;
 import static io.harness.security.encryption.EncryptionType.VAULT;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.trim;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Projection.projection;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
@@ -56,6 +57,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.UuidAware;
@@ -139,10 +141,14 @@ import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 import software.wings.utils.Validator;
 import software.wings.utils.WingsReflectionUtils;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -165,6 +171,8 @@ public class SecretManagerImpl implements SecretManager {
   private static final String URL_ROOT_PREFIX = "//";
   // Prefix YAML ingestion generated secret names with this prefix
   private static final String YAML_PREFIX = "YAML_";
+
+  private static final long MAX_IMPORT_FILE_SIZE = 10 * 1024 * 1024L;
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private KmsService kmsService;
@@ -1164,6 +1172,39 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
+  public List<String> importSecretsViaFile(String accountId, InputStream uploadStream) {
+    List<SecretText> secretTexts = new ArrayList<>();
+
+    InputStreamReader inputStreamReader = null;
+    BufferedReader reader = null;
+    try {
+      inputStreamReader = new InputStreamReader(uploadStream, Charset.defaultCharset());
+      reader = new BufferedReader(inputStreamReader);
+      String line;
+      while ((line = reader.readLine()) != null) {
+        String[] parts = line.split(",");
+        String path = parts.length > 2 ? trim(parts[2]) : null;
+        SecretText secretText = SecretText.builder().name(trim(parts[0])).value(trim(parts[1])).path(path).build();
+        secretTexts.add(secretText);
+      }
+    } catch (IOException e) {
+      throw new WingsException(e);
+    } finally {
+      try {
+        if (reader != null) {
+          reader.close();
+        }
+        if (inputStreamReader != null) {
+          inputStreamReader.close();
+        }
+      } catch (IOException e) {
+        // Ignore.
+      }
+    }
+    return importSecrets(accountId, secretTexts);
+  }
+
+  @Override
   public List<String> importSecrets(String accountId, List<SecretText> secretTexts) {
     List<String> secretIds = new ArrayList<>();
     for (SecretText secretText : secretTexts) {
@@ -1546,9 +1587,9 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public String saveFile(
-      String accountId, String name, UsageRestrictions usageRestrictions, BoundedInputStream inputStream) {
-    return upsertFileInternal(accountId, name, null, usageRestrictions, inputStream);
+  public String saveFile(String accountId, String name, long fileSize, UsageRestrictions usageRestrictions,
+      BoundedInputStream inputStream) {
+    return upsertFileInternal(accountId, name, null, fileSize, usageRestrictions, inputStream);
   }
 
   @Override
@@ -1640,9 +1681,9 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public boolean updateFile(
-      String accountId, String name, String uuid, UsageRestrictions usageRestrictions, BoundedInputStream inputStream) {
-    String recordId = upsertFileInternal(accountId, name, uuid, usageRestrictions, inputStream);
+  public boolean updateFile(String accountId, String name, String uuid, long fileSize,
+      UsageRestrictions usageRestrictions, BoundedInputStream inputStream) {
+    String recordId = upsertFileInternal(accountId, name, uuid, fileSize, usageRestrictions, inputStream);
     return isNotEmpty(recordId);
   }
 
@@ -1652,8 +1693,19 @@ public class SecretManagerImpl implements SecretManager {
    * use case in which we would like to preserve the 'uuid' field while importing the exported encrypted keys from other
    * system.
    */
-  private String upsertFileInternal(
-      String accountId, String name, String uuid, UsageRestrictions usageRestrictions, BoundedInputStream inputStream) {
+  private String upsertFileInternal(String accountId, String name, String uuid, long fileSize,
+      UsageRestrictions usageRestrictions, BoundedInputStream inputStream) {
+    if (isEmpty(name)) {
+      throw new SecretManagementException(ErrorCode.FILE_INTEGRITY_CHECK_FAILED, null, USER, null);
+    }
+
+    if (inputStream.getSize() > 0 && fileSize > inputStream.getSize()) {
+      final Map<String, String> params = new HashMap<>();
+      params.put("size", inputStream.getSize() / (1024 * 1024) + " MB");
+      throw new SecretManagementException(
+          ErrorCode.FILE_SIZE_EXCEEDS_LIMIT, null, USER, Collections.unmodifiableMap(params));
+    }
+
     boolean update = false;
     String oldName = null;
     String savedFileId = null;

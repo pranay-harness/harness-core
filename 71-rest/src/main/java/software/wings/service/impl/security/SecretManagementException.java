@@ -1,10 +1,12 @@
 package software.wings.service.impl.security;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.WingsException;
 
 import java.util.EnumSet;
+import java.util.Map;
 
 /**
  * @author marklu on 9/19/19
@@ -33,5 +35,13 @@ public class SecretManagementException extends WingsException {
       ErrorCode errorCode, String message, Throwable cause, EnumSet<ReportTarget> reportTargets) {
     super(null, cause, errorCode, Level.ERROR, reportTargets, null);
     param(MESSAGE_KEY, message);
+  }
+
+  public SecretManagementException(
+      ErrorCode errorCode, Throwable cause, EnumSet<ReportTarget> reportTargets, Map<String, String> params) {
+    super(null, cause, errorCode, Level.ERROR, reportTargets, null);
+    if (EmptyPredicate.isNotEmpty(params)) {
+      params.forEach(this ::param);
+    }
   }
 }

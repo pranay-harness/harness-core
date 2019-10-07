@@ -1,6 +1,7 @@
 package software.wings.service.impl.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyMap;
@@ -64,6 +65,8 @@ import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.RestrictionsAndAppEnvMap;
 import software.wings.settings.UsageRestrictions;
 
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -349,5 +352,39 @@ public class SecretManagerTest extends CategoryTest {
         .withLimit(String.valueOf(pageSize))
         .withOffset(String.valueOf(offset))
         .build();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testImportSecretsViaFile() {
+    try {
+      InputStream inputStream =
+          new FileInputStream(getClass().getClassLoader().getResource("testProxyconfig.properties").getFile());
+      String file = getClass().getClassLoader().getResource("encryption/secrets.csv").getFile();
+      inputStream = new FileInputStream(file);
+
+      EncryptedData encryptedData = mock(EncryptedData.class);
+      when(secretManagerConfigService.getEncryptionType(anyString())).thenReturn(EncryptionType.LOCAL);
+
+      when(localEncryptionService.encrypt(any(char[].class), anyString(), any(LocalEncryptionConfig.class)))
+          .thenReturn(encryptedData);
+
+      when(localEncryptionService.getEncryptionConfig(anyString())).thenReturn(mock(LocalEncryptionConfig.class));
+      when(wingsPersistence.save(any(EncryptedData.class))).thenReturn("TEST");
+      when(wingsPersistence.get(any(Class.class), anyString())).thenReturn(mock(EncryptedData.class));
+
+      try {
+        List<String> secrets = secretManager.importSecretsViaFile(ACCOUNT_ID, inputStream);
+        assertThat(secrets.size()).isEqualTo(3);
+        assertThat(secrets.get(0)).isEqualTo("TEST");
+        assertThat(secrets.get(1)).isEqualTo("TEST");
+        assertThat(secrets.get(2)).isEqualTo("TEST");
+      } catch (SecretManagementException e) {
+        fail(e.getMessage());
+      }
+
+    } catch (Exception e) {
+      fail(e.getMessage());
+    }
   }
 }

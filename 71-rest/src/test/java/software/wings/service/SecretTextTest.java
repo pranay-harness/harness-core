@@ -13,6 +13,7 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -107,6 +108,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Created by rsingh on 11/3/17.
@@ -1052,11 +1054,15 @@ public class SecretTextTest extends WingsBaseTest {
     final long seed = System.currentTimeMillis();
     logger.info("seed: " + seed);
     Random r = new Random(seed);
+    HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
 
     String secretName = generateUuid();
     File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+    when(httpServletRequest.getContentLengthLong()).thenReturn(fileToSave.length());
     String secretFileId =
-        secretManagementResource.saveFile(accountId, secretName, new FileInputStream(fileToSave), null).getResource();
+        secretManagementResource
+            .saveFile(httpServletRequest, accountId, secretName, new FileInputStream(fileToSave), null)
+            .getResource();
 
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
                                      .filter(EncryptedDataKeys.type, CONFIG_FILE)
@@ -1111,8 +1117,10 @@ public class SecretTextTest extends WingsBaseTest {
 
     String newSecretName = generateUuid();
     File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
+    when(httpServletRequest.getContentLengthLong()).thenReturn(fileToUpdate.length());
+
     secretManagementResource.updateFile(
-        accountId, newSecretName, null, encryptedUuid, new FileInputStream(fileToUpdate));
+        httpServletRequest, accountId, newSecretName, null, encryptedUuid, new FileInputStream(fileToUpdate));
 
     query = wingsPersistence.createQuery(EncryptedData.class)
                 .filter(EncryptedDataKeys.type, CONFIG_FILE)
@@ -1146,8 +1154,12 @@ public class SecretTextTest extends WingsBaseTest {
 
     File newFileToSave =
         new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+    when(httpServletRequest.getContentLengthLong()).thenReturn(newFileToSave.length());
+
     String newSecretFileId =
-        secretManagementResource.saveFile(accountId, secretName, new FileInputStream(fileToSave), null).getResource();
+        secretManagementResource
+            .saveFile(httpServletRequest, accountId, secretName, new FileInputStream(fileToSave), null)
+            .getResource();
     configFile.setEncryptedFileId(newSecretFileId);
     configService.update(configFile, null);
 
@@ -1166,8 +1178,9 @@ public class SecretTextTest extends WingsBaseTest {
 
     String secretName = generateUuid();
     File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
-    String secretFileId =
-        secretManager.saveFile(accountId, secretName, null, new BoundedInputStream(new FileInputStream(fileToSave)));
+
+    String secretFileId = secretManager.saveFile(
+        accountId, secretName, fileToSave.length(), null, new BoundedInputStream(new FileInputStream(fileToSave)));
 
     Query<EncryptedData> dataQuery = wingsPersistence.createQuery(EncryptedData.class)
                                          .filter(EncryptedDataKeys.type, CONFIG_FILE)
@@ -1260,8 +1273,8 @@ public class SecretTextTest extends WingsBaseTest {
 
     String secretName = generateUuid();
     File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
-    String secretFileId =
-        secretManager.saveFile(accountId, secretName, null, new BoundedInputStream(new FileInputStream(fileToSave)));
+    String secretFileId = secretManager.saveFile(
+        accountId, secretName, fileToSave.length(), null, new BoundedInputStream(new FileInputStream(fileToSave)));
 
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
                                      .filter(EncryptedDataKeys.type, CONFIG_FILE)
@@ -1348,8 +1361,8 @@ public class SecretTextTest extends WingsBaseTest {
 
     String secretName = generateUuid();
     File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
-    String secretFileId =
-        secretManager.saveFile(accountId, secretName, null, new BoundedInputStream(new FileInputStream(fileToSave)));
+    String secretFileId = secretManager.saveFile(
+        accountId, secretName, fileToSave.length(), null, new BoundedInputStream(new FileInputStream(fileToSave)));
 
     Query<EncryptedData> encrDataQuery = wingsPersistence.createQuery(EncryptedData.class)
                                              .filter(EncryptedDataKeys.type, CONFIG_FILE)
