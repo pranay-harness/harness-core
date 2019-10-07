@@ -26,6 +26,8 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionType;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,6 +39,8 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.QueryImpl;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.EntityType;
+import software.wings.beans.FeatureName;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.SecretManagerConfig;
@@ -48,8 +52,10 @@ import software.wings.dl.WingsPersistence;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.AuditServiceHelper;
+import software.wings.service.impl.security.kms.KmsEncryptDecryptClient;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.security.LocalEncryptionService;
@@ -60,6 +66,7 @@ import software.wings.settings.UsageRestrictions;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class SecretManagerTest extends CategoryTest {
   @Mock private WingsPersistence wingsPersistence;
@@ -71,6 +78,8 @@ public class SecretManagerTest extends CategoryTest {
   @Mock private AuditServiceHelper auditServiceHelper;
   @Mock private SecretManagerConfigService secretManagerConfigService;
   @Mock private LocalEncryptionService localEncryptionService;
+  @Mock private FeatureFlagService featureFlagService;
+  @Mock private KmsEncryptDecryptClient kmsEncryptDecryptClient;
   @Inject @InjectMocks private SecretManagerImpl secretManager;
 
   @Before
@@ -266,11 +275,11 @@ public class SecretManagerTest extends CategoryTest {
         .thenReturn(LocalEncryptionConfig.builder().uuid(ACCOUNT_ID).build());
 
     // The following 2 cases getSecretManager() call should return LOCAL encryption config
-    SecretManagerConfig secretManagerConfig = secretManager.getSecretManager(ACCOUNT_ID, null);
+    SecretManagerConfig secretManagerConfig = secretManager.getSecretManager(ACCOUNT_ID, null, EncryptionType.LOCAL);
     assertThat(secretManagerConfig).isNotNull();
     assertThat(secretManagerConfig.getEncryptionType()).isEqualTo(EncryptionType.LOCAL);
 
-    secretManagerConfig = secretManager.getSecretManager(ACCOUNT_ID, ACCOUNT_ID);
+    secretManagerConfig = secretManager.getSecretManager(ACCOUNT_ID, ACCOUNT_ID, EncryptionType.LOCAL);
     assertThat(secretManagerConfig).isNotNull();
     assertThat(secretManagerConfig.getEncryptionType()).isEqualTo(EncryptionType.LOCAL);
 
@@ -281,13 +290,50 @@ public class SecretManagerTest extends CategoryTest {
         .thenReturn(KmsConfig.builder().build());
 
     // The following 2 cases getSecretManager() call should return KMS encryption config
-    secretManagerConfig = secretManager.getSecretManager(ACCOUNT_ID, null);
+    secretManagerConfig = secretManager.getSecretManager(ACCOUNT_ID, null, EncryptionType.KMS);
     assertThat(secretManagerConfig).isNotNull();
     assertThat(secretManagerConfig.getEncryptionType()).isEqualTo(EncryptionType.KMS);
 
-    secretManagerConfig = secretManager.getSecretManager(ACCOUNT_ID, kmsId);
+    secretManagerConfig = secretManager.getSecretManager(ACCOUNT_ID, kmsId, EncryptionType.KMS);
     assertThat(secretManagerConfig).isNotNull();
     assertThat(secretManagerConfig.getEncryptionType()).isEqualTo(EncryptionType.KMS);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void getGetEncryptedDataDetails() {
+    when(featureFlagService.isEnabled(FeatureName.GLOBAL_KMS_PRE_PROCESSING, ACCOUNT_ID)).thenReturn(true);
+    JenkinsConfig jenkinsConfig = getJenkinsConfig(ACCOUNT_ID);
+    EncryptedRecordData mockEncryptedRecordData = mock(EncryptedRecordData.class);
+    EncryptedData mockEncryptedData = mock(EncryptedData.class);
+    when(mockEncryptedData.getEncryptionType()).thenReturn(EncryptionType.KMS);
+    String kmsId = UUIDGenerator.generateUuid();
+    when(mockEncryptedData.getKmsId()).thenReturn(kmsId);
+    KmsConfig kmsConfig = mock(KmsConfig.class);
+    when(kmsConfig.isGlobalKms()).thenReturn(true);
+    when(secretManagerConfigService.getSecretManager(ACCOUNT_ID, kmsId)).thenReturn(kmsConfig);
+    when(wingsPersistence.get(EncryptedData.class, jenkinsConfig.getEncryptedPassword())).thenReturn(mockEncryptedData);
+    when(kmsEncryptDecryptClient.convertEncryptedRecordToLocallyEncrypted(
+             any(EncryptedData.class), any(KmsConfig.class)))
+        .thenReturn(mockEncryptedRecordData);
+    when(localEncryptionService.getEncryptionConfig(ACCOUNT_ID))
+        .thenReturn(LocalEncryptionConfig.builder().uuid(ACCOUNT_ID).build());
+    when(secretManagerConfigService.getDefaultSecretManager(ACCOUNT_ID)).thenReturn(mock(KmsConfig.class));
+
+    List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(jenkinsConfig);
+    assertThat(encryptedDataDetails.size()).isEqualTo(1);
+    assertThat(encryptedDataDetails.get(0).getEncryptedData()).isEqualTo(mockEncryptedRecordData);
+    assertThat(encryptedDataDetails.get(0).getEncryptionConfig().getEncryptionType()).isEqualTo(EncryptionType.LOCAL);
+  }
+
+  private JenkinsConfig getJenkinsConfig(String accountId) {
+    return JenkinsConfig.builder()
+        .accountId(accountId)
+        .jenkinsUrl(UUID.randomUUID().toString())
+        .username(UUID.randomUUID().toString())
+        .encryptedPassword(UUID.randomUUID().toString())
+        .authMechanism(JenkinsConfig.USERNAME_DEFAULT_TEXT)
+        .build();
   }
 
   private List<EncryptedData> getSecretList(int num) {

@@ -71,4 +71,8 @@ public class KmsConfig extends SecretManagerConfig implements ExecutionCapabilit
     this.secretKey = SECRET_MASK;
     this.kmsArn = SECRET_MASK;
   }
+
+  public boolean isGlobalKms() {
+    return Account.GLOBAL_ACCOUNT_ID.equals(getAccountId());
+  }
 }

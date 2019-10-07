@@ -61,7 +61,7 @@ public interface SecretManager extends OwnedByAccount {
   List<EncryptedDataDetail> getEncryptionDetails(EncryptableSetting object);
   List<EncryptedDataDetail> getEncryptionDetails(EncryptableSetting object, String appId, String workflowExecutionId);
 
-  SecretManagerConfig getSecretManager(String accountId, String entityId);
+  SecretManagerConfig getSecretManager(String accountId, String entityId, EncryptionType encryptionType);
 
   Collection<SettingAttribute> listEncryptedSettingAttributes(String accountId);
 

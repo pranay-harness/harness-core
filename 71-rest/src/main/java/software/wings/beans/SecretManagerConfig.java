@@ -65,4 +65,8 @@ public abstract class SecretManagerConfig implements EncryptionConfig, Persisten
   @SchemaIgnore @NotNull private long lastUpdatedAt;
 
   public abstract void maskSecrets();
+
+  public boolean isGlobalKms() {
+    return false;
+  }
 }
