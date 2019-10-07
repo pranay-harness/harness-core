@@ -83,7 +83,9 @@ public class AzureInfrastructureMapping extends InfrastructureMapping {
   }
   @Override
   public void applyProvisionerVariables(
-      Map<String, Object> map, NodeFilteringType nodeFilteringType, boolean featureFlagEnabled) {}
+      Map<String, Object> map, NodeFilteringType nodeFilteringType, boolean featureFlagEnabled) {
+    throw new UnsupportedOperationException();
+  }
 
   public static final class Builder {
     public transient String entityYamlPath;
