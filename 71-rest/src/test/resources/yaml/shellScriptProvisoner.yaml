@@ -1,0 +1,38 @@
+harnessApiVersion: '1.0'
+type: SHELL_SCRIPT
+description: This is for documentation
+mappingBlueprints:
+- cloudProviderType: PHYSICAL_DATA_CENTER
+  deploymentType: SSH
+  properties:
+  - fields:
+    - name: Hostname
+      value: PublicDnsName
+    name: hostArrayPath
+    value: Reservations[0].Instances
+  serviceName: Test
+- cloudProviderType: AWS
+  deploymentType: ECS
+  nodeFilteringType: AWS_ECS_EC2
+  properties:
+  - name: region
+    value: region
+  - name: ecsCluster
+    value: clusterName
+  - name: ecsSubnets
+    value: SubnetId
+  - name: ecsVpc
+    value: VpcId
+  - name: ecsSgs
+    value: SecurityGroupIds
+  serviceName: Test
+- cloudProviderType: GCP
+  deploymentType: KUBERNETES
+  properties:
+  - name: clusterName
+    value: Collection[0].clusters.clusterName
+  - name: namespace
+    value: Collection[0].clusters.namespace
+  serviceName: Test
+name: Shell Script Provisioner
+scriptBody: aws configure set default.region us-west-1

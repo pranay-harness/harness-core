@@ -271,6 +271,12 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
     verify(infrastructureDefinitionService).save(captor.capture(), any(boolean.class));
     InfrastructureDefinition savedDefinition = captor.getValue();
 
+    doReturn(savedDefinition)
+        .when(mockYamlHelper)
+        .getInfraDefinitionIdByAppIdYamlPath(anyString(), anyString(), anyString());
+
+    handler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
+
     assertThat(savedDefinition).isNotNull();
     assertThat(cloudProviderType).isEqualTo(savedDefinition.getCloudProviderType());
     assertThat(deploymentType).isEqualTo(savedDefinition.getDeploymentType());
