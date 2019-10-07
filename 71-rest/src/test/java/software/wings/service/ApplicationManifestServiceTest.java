@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -902,10 +903,13 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testDoFileSizeValidation() {
+  public void shouldThrowExceptionForLargeFiles() {
     String content = "abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabc";
     ManifestFile manifestFile = ManifestFile.builder().fileContent(content).build();
-    applicationManifestServiceImpl.doFileSizeValidation(manifestFile);
+    assertThatThrownBy(() -> applicationManifestServiceImpl.doFileSizeValidation(manifestFile, 1))
+        .isInstanceOf(InvalidRequestException.class);
+
+    applicationManifestServiceImpl.doFileSizeValidation(manifestFile, 100);
   }
 
   @Test

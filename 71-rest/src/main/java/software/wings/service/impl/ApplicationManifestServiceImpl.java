@@ -25,7 +25,6 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -809,11 +808,11 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   }
 
   private void doFileValidations(ManifestFile manifestFile) {
-    doFileSizeValidation(manifestFile);
+    doFileSizeValidation(manifestFile, 16 * 1024);
   }
 
   @VisibleForTesting
-  public void doFileSizeValidation(ManifestFile manifestFile) {
+  public void doFileSizeValidation(ManifestFile manifestFile, int allowedSizeInBytes) {
     if (isEmpty(manifestFile.getFileContent())) {
       return;
     }
@@ -821,9 +820,9 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     try {
       bytes = manifestFile.getFileContent().getBytes("UTF-8");
     } catch (UnsupportedEncodingException e) {
-      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
+      throw new InvalidRequestException("Unable to read manifest file", e, USER);
     }
-    if (bytes.length > 16 * 1024) {
+    if (bytes.length > allowedSizeInBytes) {
       throw new InvalidRequestException(format("File size: %s bytes exceeded the limit", bytes.length), USER);
     }
   }
