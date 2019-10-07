@@ -11,10 +11,6 @@ import com.google.inject.name.Names;
 
 import io.grpc.CallCredentials;
 import io.grpc.Channel;
-import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
-import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
-import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
-import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.harness.perpetualtask.PerpetualTaskServiceGrpc.PerpetualTaskServiceBlockingStub;
 import io.harness.perpetualtask.ecs.EcsPerpetualTaskExecutor;
 import io.harness.perpetualtask.ecs.EcsPerpetualTaskParams;
@@ -25,29 +21,14 @@ import io.harness.perpetualtask.k8s.watch.K8sWatchTaskParams;
 import io.harness.perpetualtask.k8s.watch.NodeWatcher;
 import io.harness.perpetualtask.k8s.watch.PodWatcher;
 import io.harness.perpetualtask.k8s.watch.WatcherFactory;
-import io.harness.version.VersionInfoManager;
-import lombok.Builder;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import javax.net.ssl.SSLException;
 
 @Slf4j
 public class PerpetualTaskWorkerModule extends AbstractModule {
-  @Value
-  @Builder
-  public static class Config {
-    String target;
-    String authority;
-  }
-
-  private final Config config;
-
-  public PerpetualTaskWorkerModule(Config config) {
-    this.config = config;
-  }
+  public PerpetualTaskWorkerModule() {}
 
   @Override
   protected void configure() {
@@ -69,20 +50,6 @@ public class PerpetualTaskWorkerModule extends AbstractModule {
                 .setNameFormat("perpetual-task-worker")
                 .setPriority(Thread.NORM_PRIORITY)
                 .build()));
-  }
-
-  @Named("manager-channel")
-  @Singleton
-  @Provides
-  public Channel managerChannel(VersionInfoManager versionInfoManager) throws SSLException {
-    String versionPrefix = "v-" + versionInfoManager.getVersionInfo().getVersion().replace('.', '-') + "-";
-    String versionedAuthority = versionPrefix + config.authority;
-    logger.info("Using versioned authority: {}", versionedAuthority);
-    SslContext sslContext = GrpcSslContexts.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
-    return NettyChannelBuilder.forTarget(config.target)
-        .overrideAuthority(versionedAuthority)
-        .sslContext(sslContext)
-        .build();
   }
 
   @Provides

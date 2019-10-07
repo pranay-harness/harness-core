@@ -27,6 +27,9 @@ import io.harness.delegate.message.MessageService;
 import io.harness.delegate.service.DelegateService;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.client.PublisherModule;
+import io.harness.grpc.ManagerGrpcClientModule;
+import io.harness.grpc.pingpong.PingPongClient;
+import io.harness.grpc.pingpong.PingPongModule;
 import io.harness.managerclient.ManagerClientModule;
 import io.harness.perpetualtask.PerpetualTaskWorkerModule;
 import io.harness.serializer.KryoModule;
@@ -118,11 +121,13 @@ public class DelegateApplication {
     });
     modules.add(new ManagerClientModule(configuration.getManagerUrl(), configuration.getVerificationServiceUrl(),
         configuration.getAccountId(), configuration.getAccountSecret()));
+    modules.add(new ManagerGrpcClientModule(ManagerGrpcClientModule.Config.builder()
+                                                .target(configuration.getManagerTarget())
+                                                .authority(configuration.getManagerAuthority())
+                                                .build()));
+    modules.add(new PingPongModule());
     if (configuration.isEnablePerpetualTasks()) {
-      modules.add(new PerpetualTaskWorkerModule(PerpetualTaskWorkerModule.Config.builder()
-                                                    .target(configuration.getManagerTarget())
-                                                    .authority(configuration.getManagerAuthority())
-                                                    .build()));
+      modules.add(new PerpetualTaskWorkerModule());
     }
     modules.add(new KubernetesClientFactoryModule());
     modules.add(new PublisherModule(PublisherModule.Config.builder()
@@ -149,6 +154,8 @@ public class DelegateApplication {
       watcherData.put(WATCHER_PROCESS, watcherProcess);
       messageService.putAllData(WATCHER_DATA, watcherData);
     }
+    injector.getInstance(PingPongClient.class).startAsync();
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> injector.getInstance(PingPongClient.class).stopAsync()));
     DelegateService delegateService = injector.getInstance(DelegateService.class);
     delegateService.run(watched);
 

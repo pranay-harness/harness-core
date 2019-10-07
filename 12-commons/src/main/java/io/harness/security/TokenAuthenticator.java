@@ -64,7 +64,7 @@ public class TokenAuthenticator {
   }
 
   private String fetchKey(String accountId) {
-    logger.info("Fetching key for accountId: {}", accountId);
+    logger.debug("Fetching key for accountId: {}", accountId);
     String accountKey = keyFetcher.fetchKey(accountId);
     if (accountKey == null) {
       logger.error("Key not found for accountId: {}", accountId);

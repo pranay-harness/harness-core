@@ -146,6 +146,12 @@ if ! `grep pollForTasks config-delegate.yml > /dev/null`; then
       echo "pollForTasks: false" >> config-delegate.yml
   fi
 fi
+if ! `grep managerTarget config-delegate.yml > /dev/null`; then
+  echo "managerTarget : ${managerTarget}" >> config-delegate.yml
+fi
+if ! `grep managerAuthority config-delegate.yml > /dev/null`; then
+  echo "managerAuthority  : ${managerAuthority}" >> config-delegate.yml
+fi
 <#if CCM_EVENT_COLLECTION??>
 if ! `grep publishTarget config-delegate.yml > /dev/null`; then
   echo "publishTarget : ${publishTarget}" >> config-delegate.yml
@@ -155,12 +161,6 @@ if ! `grep publishAuthority config-delegate.yml > /dev/null`; then
 fi
 if ! `grep queueFilePath config-delegate.yml > /dev/null`; then
   echo "queueFilePath : ${queueFilePath}" >> config-delegate.yml
-fi
-if ! `grep managerTarget config-delegate.yml > /dev/null`; then
-  echo "managerTarget : ${managerTarget}" >> config-delegate.yml
-fi
-if ! `grep managerAuthority config-delegate.yml > /dev/null`; then
-  echo "managerAuthority  : ${managerAuthority}" >> config-delegate.yml
 fi
 if ! `grep enablePerpetualTasks config-delegate.yml > /dev/null`; then
   echo "enablePerpetualTasks  : ${enablePerpetualTasks}" >> config-delegate.yml
