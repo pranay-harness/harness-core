@@ -13,9 +13,9 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @Qualifier("mongoEventReader")
-@Slf4j
 public class MongoEventReaderFactory implements EventReaderFactory {
   int READER_BATCH_SIZE = 10;
   @Autowired private MongoTemplate mongoTemplate;
