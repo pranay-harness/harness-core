@@ -43,7 +43,9 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
 
   @Override
   public void applyProvisionerVariables(
-      Map<String, Object> map, NodeFilteringType nodeFilteringType, boolean featureFlagEnabled) {}
+      Map<String, Object> map, NodeFilteringType nodeFilteringType, boolean featureFlagEnabled) {
+    throw new UnsupportedOperationException();
+  }
 
   @Data
   @NoArgsConstructor
