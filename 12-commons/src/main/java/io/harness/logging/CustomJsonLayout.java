@@ -7,13 +7,16 @@ import ch.qos.logback.classic.pattern.ThrowableHandlingConverter;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.contrib.jackson.JacksonJsonFormatter;
 import ch.qos.logback.contrib.json.JsonLayoutBase;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * See {@link ch.qos.logback.contrib.json.classic.JsonLayout}
  */
+@Slf4j
 public class CustomJsonLayout extends JsonLayoutBase<ILoggingEvent> {
   private static final String TIMESTAMP = "timestamp";
   private static final String SEVERITY = "severity";
@@ -51,14 +54,25 @@ public class CustomJsonLayout extends JsonLayoutBase<ILoggingEvent> {
   protected Map toJsonMap(ILoggingEvent event) {
     Map<String, Object> map = new HashMap<>();
 
+    final String formattedMessage = event.getFormattedMessage();
+
     addTimestamp(TIMESTAMP, true, event.getTimeStamp(), map);
     add(SEVERITY, true, String.valueOf(event.getLevel()), map);
     add(VERSION, true, System.getenv(VERSION_ENV_VAR), map);
     add(THREAD, true, event.getThreadName(), map);
     add(LOGGER, true, event.getLoggerName(), map);
-    add(MESSAGE, true, event.getFormattedMessage(), map);
+    add(MESSAGE, true, formattedMessage, map);
     addMap(HARNESS, true, event.getMDCPropertyMap(), map);
     addThrowableInfo(event, map);
+
+    if (logger.isDebugEnabled()) {
+      for (Entry<String, String> entry : event.getMDCPropertyMap().entrySet()) {
+        if (formattedMessage.contains(entry.getValue())) {
+          logger.debug("Logging message '{}' incorporates variable {} that is already in the MDC table with key {}",
+              event.getMessage(), entry.getValue(), entry.getKey());
+        }
+      }
+    }
 
     return map;
   }
