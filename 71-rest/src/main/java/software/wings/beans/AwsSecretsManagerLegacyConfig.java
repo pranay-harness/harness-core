@@ -74,4 +74,9 @@ public class AwsSecretsManagerLegacyConfig extends Base implements EncryptionCon
   public String getValidationCriteria() {
     return EncryptionType.AWS_SECRETS_MANAGER + "-" + getName() + "-" + getUuid();
   }
+
+  @Override
+  public boolean isGlobalKms() {
+    return false;
+  }
 }

@@ -238,10 +238,10 @@ public class KmsEncryptDecryptClient {
       throws Exception {
     KmsEncryptionKeyCacheKey cacheKey = new KmsEncryptionKeyCacheKey(data.getUuid(), data.getEncryptionKey());
     byte[] plainTextKey = decryptPlainTextKey(encryptedPlainTextKey, cacheKey.uuid);
-    char[] decryptedSecret = decrypt(data.getEncryptedValue(), new SecretKeySpec(plainTextKey, "AES")).toCharArray();
+    String decrypted = decrypt(data.getEncryptedValue(), new SecretKeySpec(plainTextKey, "AES"));
 
     logger.info("Finished decrypting secret {} in {} ms.", data.getUuid(), System.currentTimeMillis() - startTime);
-    return decryptedSecret;
+    return decrypted == null ? null : decrypted.toCharArray();
   }
 
   public static char[] encrypt(String src, Key key) throws NoSuchAlgorithmException, NoSuchPaddingException,

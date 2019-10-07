@@ -18,8 +18,12 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeCount;
+import static io.harness.security.encryption.EncryptionType.AWS_SECRETS_MANAGER;
+import static io.harness.security.encryption.EncryptionType.AZURE_VAULT;
+import static io.harness.security.encryption.EncryptionType.CYBERARK;
 import static io.harness.security.encryption.EncryptionType.KMS;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
+import static io.harness.security.encryption.EncryptionType.VAULT;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mongodb.morphia.aggregation.Group.grouping;
@@ -236,13 +240,13 @@ public class SecretManagerImpl implements SecretManager {
         break;
 
       case KMS:
-        final KmsConfig kmsConfig = (KmsConfig) getSecretManager(accountId, kmsId);
+        final KmsConfig kmsConfig = (KmsConfig) getSecretManager(accountId, kmsId, KMS);
         rv = kmsService.encrypt(secret, accountId, kmsConfig);
         rv.setKmsId(kmsConfig.getUuid());
         break;
 
       case VAULT:
-        final VaultConfig vaultConfig = (VaultConfig) getSecretManager(accountId, kmsId);
+        final VaultConfig vaultConfig = (VaultConfig) getSecretManager(accountId, kmsId, VAULT);
         encryptedData.setKmsId(vaultConfig.getUuid());
         rv = vaultService.encrypt(secretName, toEncrypt, accountId, settingType, vaultConfig, encryptedData);
         rv.setKmsId(vaultConfig.getUuid());
@@ -250,7 +254,7 @@ public class SecretManagerImpl implements SecretManager {
 
       case AWS_SECRETS_MANAGER:
         final AwsSecretsManagerConfig secretsManagerConfig =
-            (AwsSecretsManagerConfig) getSecretManager(accountId, kmsId);
+            (AwsSecretsManagerConfig) getSecretManager(accountId, kmsId, AWS_SECRETS_MANAGER);
         encryptedData.setKmsId(secretsManagerConfig.getUuid());
         rv = secretsManagerService.encrypt(
             secretName, toEncrypt, accountId, settingType, secretsManagerConfig, encryptedData);
@@ -258,14 +262,14 @@ public class SecretManagerImpl implements SecretManager {
         break;
 
       case AZURE_VAULT:
-        final AzureVaultConfig azureConfig = (AzureVaultConfig) getSecretManager(accountId, kmsId);
+        final AzureVaultConfig azureConfig = (AzureVaultConfig) getSecretManager(accountId, kmsId, AZURE_VAULT);
         encryptedData.setKmsId(azureConfig.getUuid());
         rv = azureVaultService.encrypt(secretName, toEncrypt, accountId, settingType, azureConfig, encryptedData);
         rv.setKmsId(azureConfig.getUuid());
         break;
 
       case CYBERARK:
-        final CyberArkConfig cyberArkConfig = (CyberArkConfig) getSecretManager(accountId, kmsId);
+        final CyberArkConfig cyberArkConfig = (CyberArkConfig) getSecretManager(accountId, kmsId, CYBERARK);
         encryptedData.setKmsId(cyberArkConfig.getUuid());
         if (isNotEmpty(encryptedData.getPath())) {
           // CyberArk encrypt need to use decrypt of the secret reference as a way of validating the reference is valid.
@@ -305,21 +309,13 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public SecretManagerConfig getSecretManager(String accountId, String kmsId) {
-    SecretManagerConfig secretManagerConfig;
-    if (isEmpty(kmsId)) {
-      secretManagerConfig = secretManagerConfigService.getDefaultSecretManager(accountId);
-      // PL-3301: Should return LocalEncryptionConfig if no default secret manager is present for this account
-      if (secretManagerConfig == null) {
-        secretManagerConfig = localEncryptionService.getEncryptionConfig(accountId);
-      }
-    } else if (Objects.equals(kmsId, accountId)) {
-      // PL-3301: Only LOCAL encryption's KMS id is the accountId!
-      secretManagerConfig = localEncryptionService.getEncryptionConfig(accountId);
+  public SecretManagerConfig getSecretManager(String accountId, String kmsId, EncryptionType encryptionType) {
+    if (encryptionType == LOCAL) {
+      return localEncryptionService.getEncryptionConfig(accountId);
     } else {
-      secretManagerConfig = secretManagerConfigService.getSecretManager(accountId, kmsId);
+      return isEmpty(kmsId) ? secretManagerConfigService.getDefaultSecretManager(accountId)
+                            : secretManagerConfigService.getSecretManager(accountId, kmsId);
     }
-    return secretManagerConfig;
   }
 
   public String encrypt(String accountId, String secret, UsageRestrictions usageRestrictions) {
@@ -336,7 +332,8 @@ public class SecretManagerImpl implements SecretManager {
       logger.info("No encrypted record set for field {} for id: {}", fieldName, refId);
       return Optional.empty();
     }
-    EncryptionConfig encryptionConfig = getSecretManager(accountId, encryptedData.getKmsId());
+    EncryptionConfig encryptionConfig =
+        getSecretManager(accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
 
     return Optional.of(EncryptedDataDetail.builder()
                            .encryptedData(SecretManager.buildRecordData(encryptedData))
@@ -392,17 +389,19 @@ public class SecretManagerImpl implements SecretManager {
           }
 
           String accountId = object.getAccountId();
-          EncryptionConfig encryptionConfig = getSecretManager(accountId, encryptedData.getKmsId());
+          EncryptionConfig encryptionConfig =
+              getSecretManager(accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
 
           // PL-1836: Need to preprocess global KMS and turn the KMS encryption into a LOCAL encryption.
           final EncryptedRecordData encryptedRecordData;
-          if (encryptionConfig instanceof KmsConfig && encryptionConfig.getAccountId().equals(GLOBAL_ACCOUNT_ID)
+          if (encryptionConfig.isGlobalKms()
               && featureFlagService.isEnabled(FeatureName.GLOBAL_KMS_PRE_PROCESSING, object.getAccountId())) {
             logger.info("Pre-processing the encrypted secret by global KMS secret manager for secret {} in account {}",
                 encryptedData, accountId);
 
             encryptedRecordData = kmsEncryptDecryptClient.convertEncryptedRecordToLocallyEncrypted(
                 encryptedData, (KmsConfig) encryptionConfig);
+
             encryptionConfig = localEncryptionService.getEncryptionConfig(accountId);
             logger.info("Replaced it with LOCAL encryption for secret {} in account {}", encryptedData, accountId);
           } else {
@@ -543,7 +542,8 @@ public class SecretManagerImpl implements SecretManager {
     if (variableType == SettingVariableTypes.SECRET_TEXT && encryptedData != null) {
       EncryptionType encryptionType = encryptedData.getEncryptionType();
       if (encryptionType == EncryptionType.VAULT && isNotEmpty(encryptedData.getPath())) {
-        VaultConfig vaultConfig = (VaultConfig) getSecretManager(accountId, encryptedData.getKmsId());
+        VaultConfig vaultConfig =
+            (VaultConfig) getSecretManager(accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
         secretChangeLogs.addAll(vaultService.getVaultSecretChangeLogs(encryptedData, vaultConfig));
         // Sort the change log by change time in descending order.
         secretChangeLogs.sort(
@@ -894,10 +894,10 @@ public class SecretManagerImpl implements SecretManager {
     checkNotNull(encryptedData, "No encrypted data with id " + entityId);
     checkState(encryptedData.getEncryptionType() == fromEncryptionType,
         "mismatch between saved encrypted type and from encryption type");
-    EncryptionConfig fromConfig = getSecretManager(accountId, fromKmsId);
+    EncryptionConfig fromConfig = getSecretManager(accountId, fromKmsId, fromEncryptionType);
     checkNotNull(
         fromConfig, "No kms found for account " + accountId + " with id " + entityId + " type: " + fromEncryptionType);
-    EncryptionConfig toConfig = getSecretManager(accountId, toKmsId);
+    EncryptionConfig toConfig = getSecretManager(accountId, toKmsId, toEncryptionType);
     checkNotNull(
         toConfig, "No kms found for account " + accountId + " with id " + entityId + " type: " + fromEncryptionType);
 
@@ -1260,10 +1260,10 @@ public class SecretManagerImpl implements SecretManager {
 
   /**
    * This API is to combine multiple secret operations such as INSERT/UPDATE/UPSERT.
-   *
+   * <p>
    * If 'uuid' passed in is null, this is an INSERT operation. If 'upsert' flag is true, it's an UPSERT operation it
    * will UPDATE if the record already exists, and INSERT if it doesn't exists.
-   *
+   * <p>
    * It will return the generated UUID in a INSERT operation, and return null in the UPDATE operation if the record
    * doesn't exist.
    */
@@ -1718,7 +1718,7 @@ public class SecretManagerImpl implements SecretManager {
           break;
 
         case KMS:
-          encryptionConfig = getSecretManager(accountId, kmsId);
+          encryptionConfig = getSecretManager(accountId, kmsId, KMS);
           KmsConfig kmsConfig = (KmsConfig) encryptionConfig;
           newEncryptedFile = kmsService.encryptFile(accountId, kmsConfig, name, inputBytes);
           newEncryptedFile.setKmsId(kmsConfig.getUuid());
@@ -1728,14 +1728,14 @@ public class SecretManagerImpl implements SecretManager {
           break;
 
         case VAULT:
-          encryptionConfig = getSecretManager(accountId, kmsId);
+          encryptionConfig = getSecretManager(accountId, kmsId, VAULT);
           VaultConfig vaultConfig = (VaultConfig) encryptionConfig;
           newEncryptedFile = vaultService.encryptFile(accountId, vaultConfig, name, inputBytes, encryptedData);
           newEncryptedFile.setKmsId(vaultConfig.getUuid());
           break;
 
         case AWS_SECRETS_MANAGER:
-          encryptionConfig = getSecretManager(accountId, kmsId);
+          encryptionConfig = getSecretManager(accountId, kmsId, AWS_SECRETS_MANAGER);
           AwsSecretsManagerConfig secretsManagerConfig = (AwsSecretsManagerConfig) encryptionConfig;
           newEncryptedFile =
               secretsManagerService.encryptFile(accountId, secretsManagerConfig, name, inputBytes, encryptedData);
@@ -1745,7 +1745,7 @@ public class SecretManagerImpl implements SecretManager {
         case AZURE_VAULT:
           // if it's an update call, we need to update the secret value in the same secret store.
           // Otherwise it should be saved in the default secret store of the account.
-          encryptionConfig = getSecretManager(accountId, kmsId);
+          encryptionConfig = getSecretManager(accountId, kmsId, AZURE_VAULT);
           AzureVaultConfig azureConfig = (AzureVaultConfig) encryptionConfig;
           logger.info("Creating file in azure vault with secret name: {}, in vault: {}, in accountName: {}", name,
               azureConfig.getName(), accountId);
@@ -2004,9 +2004,9 @@ public class SecretManagerImpl implements SecretManager {
    * Filter the retrieved encrypted data list based on usage restrictions. Some of the
    * encrypted data won't be presented to the end-user if the end-user doesn't have
    * access permissions.
-   *
+   * <p>
    * The filtered list size should never exceed the over page size from the page request.
-   *
+   * <p>
    * It will return an adjusted batch offset if another batch retrieval is needed as the original page request
    * has not fulfilled. The new batch load will start from the adjusted offset.
    */
@@ -2148,10 +2148,12 @@ public class SecretManagerImpl implements SecretManager {
   private List<UuidAware> fetchParents(String accountId, Set<Parent> parents) {
     TreeBasedTable<SettingVariableTypes, EncryptionDetail, List<Parent>> parentByTypes = TreeBasedTable.create();
     parents.forEach(parent -> {
-      if (parentByTypes.get(parent.getVariableType(), parent.getEncryptionDetail()) == null) {
-        parentByTypes.put(parent.getVariableType(), parent.getEncryptionDetail(), new ArrayList<>());
+      List<Parent> parentList = parentByTypes.get(parent.getVariableType(), parent.getEncryptionDetail());
+      if (parentList == null) {
+        parentList = new ArrayList<>();
+        parentByTypes.put(parent.getVariableType(), parent.getEncryptionDetail(), parentList);
       }
-      parentByTypes.get(parent.getVariableType(), parent.getEncryptionDetail()).add(parent);
+      parentList.add(parent);
     });
 
     List<UuidAware> rv = new ArrayList<>();

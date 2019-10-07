@@ -79,6 +79,11 @@ public class KmsLegacyConfig extends Base implements EncryptionConfig, Execution
   }
 
   @Override
+  public boolean isGlobalKms() {
+    return Account.GLOBAL_ACCOUNT_ID.equals(accountId);
+  }
+
+  @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     return Arrays.asList(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapabilityForKms(region));
