@@ -5,10 +5,13 @@ import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.network.Http.getBaseUrl;
 import static java.lang.String.format;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 
@@ -18,6 +21,7 @@ import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
+@UtilityClass
 public class InstallUtils {
   private static final String defaultKubectlVersion = "v1.13.2";
   private static final String kubectlBaseDir = "./client-tools/kubectl/";
@@ -73,7 +77,7 @@ public class InstallUtils {
         return true;
       }
 
-      if (isWindows()) {
+      if (SystemUtils.IS_OS_WINDOWS) {
         logger.info("Skipping kubectl install on Windows");
         return true;
       }
@@ -167,7 +171,7 @@ public class InstallUtils {
 
   public static boolean installGoTemplateTool(DelegateConfiguration configuration) {
     try {
-      if (isWindows()) {
+      if (SystemUtils.IS_OS_WINDOWS) {
         logger.info("Skipping go-template install on Windows");
         return true;
       }
@@ -263,22 +267,15 @@ public class InstallUtils {
     return getBaseUrl(managerUrl);
   }
 
-  private static String getOsPath() {
-    String osName = System.getProperty("os.name").toLowerCase();
-
-    if (osName.startsWith("windows")) {
+  @VisibleForTesting
+  static String getOsPath() {
+    if (SystemUtils.IS_OS_WINDOWS) {
       return "windows";
     }
-
-    if (osName.startsWith("mac")) {
+    if (SystemUtils.IS_OS_MAC) {
       return "darwin";
     }
-
     return "linux";
-  }
-
-  private static boolean isWindows() {
-    return System.getProperty("os.name").startsWith("Windows");
   }
 
   private static boolean validateHelmExists(String helmDirectory) {
@@ -344,7 +341,7 @@ public class InstallUtils {
         return true;
       }
 
-      if (isWindows()) {
+      if (SystemUtils.IS_OS_WINDOWS) {
         logger.info("Skipping helm install on Windows");
         return true;
       }
@@ -432,7 +429,7 @@ public class InstallUtils {
 
   public static boolean installChartMuseum(DelegateConfiguration configuration) {
     try {
-      if (isWindows()) {
+      if (SystemUtils.IS_OS_WINDOWS) {
         logger.info("Skipping chart museum install on Windows");
         return true;
       }
@@ -487,7 +484,7 @@ public class InstallUtils {
 
   public static boolean installTerraformConfigInspect(DelegateConfiguration configuration) {
     try {
-      if (isWindows()) {
+      if (SystemUtils.IS_OS_WINDOWS) {
         logger.info("Skipping terraform-config-inspect install on Windows");
         return true;
       }
