@@ -19,7 +19,6 @@ import org.cloudfoundry.operations.applications.ApplicationDetail;
 import software.wings.api.PcfInstanceElement;
 import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.PcfConfig;
-import software.wings.beans.ResizeStrategy;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
 import software.wings.helpers.ext.pcf.PivotalClientApiException;
@@ -89,17 +88,11 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
               .collect(toList());
 
       List<PcfInstanceElement> pcfInstanceElements = new ArrayList<>();
-      if (ResizeStrategy.DOWNSIZE_OLD_FIRST.equals(commandRollbackRequest.getResizeStrategy())) {
-        pcfCommandTaskHelper.downSizeListOfInstances(executionLogCallback, pcfDeploymentManager, pcfServiceDataUpdated,
-            pcfRequestConfig, downSizeList, commandRollbackRequest.getRouteMaps());
-        pcfCommandTaskHelper.upsizeListOfInstances(executionLogCallback, pcfDeploymentManager, pcfServiceDataUpdated,
-            pcfRequestConfig, upsizeList, pcfInstanceElements, commandRollbackRequest.getRouteMaps());
-      } else {
-        pcfCommandTaskHelper.upsizeListOfInstances(executionLogCallback, pcfDeploymentManager, pcfServiceDataUpdated,
-            pcfRequestConfig, upsizeList, pcfInstanceElements, commandRollbackRequest.getRouteMaps());
-        pcfCommandTaskHelper.downSizeListOfInstances(executionLogCallback, pcfDeploymentManager, pcfServiceDataUpdated,
-            pcfRequestConfig, downSizeList, commandRollbackRequest.getRouteMaps());
-      }
+      // During rollback, always upsize old ones
+      pcfCommandTaskHelper.upsizeListOfInstances(executionLogCallback, pcfDeploymentManager, pcfServiceDataUpdated,
+          pcfRequestConfig, upsizeList, pcfInstanceElements, commandRollbackRequest.getRouteMaps());
+      pcfCommandTaskHelper.downSizeListOfInstances(executionLogCallback, pcfDeploymentManager, pcfServiceDataUpdated,
+          pcfRequestConfig, downSizeList, commandRollbackRequest.getRouteMaps());
 
       // This steps is only required for Simulated BG workflow
       if (isRollbackRoutesRequired(pcfRequestConfig, commandRollbackRequest)) {

@@ -201,34 +201,47 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testPerformDeploy_nonBlueGreen() throws Exception {
-    PcfCommandRequest pcfCommandRequest = PcfCommandDeployRequest.builder()
-                                              .pcfCommandType(PcfCommandType.RESIZE)
-                                              .resizeStrategy(ResizeStrategy.DOWNSIZE_OLD_FIRST)
-                                              .pcfConfig(getPcfConfig())
-                                              .accountId(ACCOUNT_ID)
-                                              .newReleaseName("a_s_e__6")
-                                              .organization(ORG)
-                                              .space(SPACE)
-                                              .updateCount(2)
-                                              .downSizeCount(2)
-                                              .totalPreviousInstanceCount(2)
-                                              .timeoutIntervalInMin(2)
-                                              .build();
+    PcfCommandRequest pcfCommandRequest =
+        PcfCommandDeployRequest.builder()
+            .pcfCommandType(PcfCommandType.RESIZE)
+            .resizeStrategy(ResizeStrategy.DOWNSIZE_OLD_FIRST)
+            .pcfConfig(getPcfConfig())
+            .accountId(ACCOUNT_ID)
+            .newReleaseName("a_s_e__6")
+            .organization(ORG)
+            .space(SPACE)
+            .updateCount(2)
+            .downSizeCount(1)
+            .totalPreviousInstanceCount(2)
+            .timeoutIntervalInMin(2)
+            .downsizeAppDetail(
+                PcfAppSetupTimeDetails.builder().applicationName("a_s_e__4").initialInstanceCount(2).build())
+            .build();
 
-    ApplicationDetail applicationDetail = ApplicationDetail.builder()
-                                              .id("10")
-                                              .diskQuota(1)
-                                              .instances(0)
-                                              .memoryLimit(1)
-                                              .name("a_s_e__6")
-                                              .requestedState("STOPPED")
-                                              .stack("")
-                                              .runningInstances(0)
-                                              .build();
+    ApplicationDetail applicationDetailNew = ApplicationDetail.builder()
+                                                 .id("10")
+                                                 .diskQuota(1)
+                                                 .instances(0)
+                                                 .memoryLimit(1)
+                                                 .name("a_s_e__6")
+                                                 .requestedState("STOPPED")
+                                                 .stack("")
+                                                 .runningInstances(0)
+                                                 .build();
 
-    doReturn(applicationDetail)
-        .doReturn(applicationDetail)
-        .doReturn(applicationDetail)
+    ApplicationDetail applicationDetailOld = ApplicationDetail.builder()
+                                                 .id("10")
+                                                 .diskQuota(1)
+                                                 .instances(2)
+                                                 .memoryLimit(1)
+                                                 .name("a_s_e__4")
+                                                 .requestedState("RUNNING")
+                                                 .stack("")
+                                                 .runningInstances(0)
+                                                 .build();
+    doReturn(applicationDetailNew)
+        .doReturn(applicationDetailOld)
+        .doReturn(applicationDetailNew)
         .when(pcfDeploymentManager)
         .getApplicationByName(any());
 
@@ -247,7 +260,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
                              .diskQuota(1)
                              .requestedState(RUNNING)
                              .id("1")
-                             .instances(1)
+                             .instances(2)
                              .memoryLimit(1)
                              .runningInstances(1)
                              .build());
@@ -256,7 +269,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
                              .diskQuota(1)
                              .requestedState(RUNNING)
                              .id("1")
-                             .instances(1)
+                             .instances(0)
                              .memoryLimit(1)
                              .runningInstances(1)
                              .build());
@@ -267,32 +280,46 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     doReturn(ApplicationDetail.builder()
                  .id("10")
                  .diskQuota(1)
-                 .instances(0)
+                 .instances(1)
                  .memoryLimit(1)
                  .name("a_s_e__4")
                  .requestedState("STOPPED")
                  .stack("")
                  .runningInstances(0)
+                 .instanceDetails(InstanceDetail.builder()
+                                      .cpu(1.0)
+                                      .diskQuota((long) 1.23)
+                                      .diskUsage((long) 1.23)
+                                      .index("0")
+                                      .memoryQuota((long) 1)
+                                      .memoryUsage((long) 1)
+                                      .build())
                  .build())
-        .doReturn(ApplicationDetail.builder()
-                      .id("10")
-                      .diskQuota(1)
-                      .instances(0)
-                      .memoryLimit(1)
-                      .name("a_s_e__3")
-                      .requestedState("STOPPED")
-                      .stack("")
-                      .runningInstances(0)
-                      .build())
         .doReturn(ApplicationDetail.builder()
                       .id("10")
                       .diskQuota(1)
                       .instances(2)
                       .memoryLimit(1)
-                      .name("a_s_e__4")
-                      .requestedState("STOPPED")
+                      .name("a_s_e__6")
+                      .requestedState("RUNNING")
                       .stack("")
                       .runningInstances(2)
+                      .instanceDetails(InstanceDetail.builder()
+                                           .cpu(1.0)
+                                           .diskQuota((long) 1.23)
+                                           .diskUsage((long) 1.23)
+                                           .index("0")
+                                           .memoryQuota((long) 1)
+                                           .memoryUsage((long) 1)
+                                           .build(),
+                          InstanceDetail.builder()
+                              .cpu(1.0)
+                              .diskQuota((long) 1.23)
+                              .diskUsage((long) 1.23)
+                              .index("1")
+                              .memoryQuota((long) 1)
+                              .memoryUsage((long) 1)
+                              .build())
                       .build())
         .when(pcfDeploymentManager)
         .resizeApplication(any());
@@ -306,14 +333,11 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
 
     assertThat(pcfDeployCommandResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     List<PcfServiceData> pcfServiceDatas = pcfDeployCommandResponse.getInstanceDataUpdated();
-    assertThat(pcfServiceDatas).hasSize(3);
+    assertThat(pcfServiceDatas).hasSize(2);
     for (PcfServiceData data : pcfServiceDatas) {
       if (data.getName().equals("a_s_e__4")) {
-        assertThat(data.getPreviousCount()).isEqualTo(1);
-        assertThat(data.getDesiredCount()).isEqualTo(0);
-      } else if (data.getName().equals("a_s_e__3")) {
-        assertThat(data.getPreviousCount()).isEqualTo(1);
-        assertThat(data.getDesiredCount()).isEqualTo(0);
+        assertThat(data.getPreviousCount()).isEqualTo(2);
+        assertThat(data.getDesiredCount()).isEqualTo(1);
       } else if (data.getName().equals("a_s_e__6")) {
         assertThat(data.getPreviousCount()).isEqualTo(0);
         assertThat(data.getDesiredCount()).isEqualTo(2);
@@ -331,8 +355,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
             .accountId(ACCOUNT_ID)
             .instanceData(
                 Arrays.asList(PcfServiceData.builder().name("a_s_e__6").previousCount(2).desiredCount(0).build(),
-                    PcfServiceData.builder().name("a_s_e__4").previousCount(0).desiredCount(1).build(),
-                    PcfServiceData.builder().name("a_s_e__3").previousCount(0).desiredCount(1).build()))
+                    PcfServiceData.builder().name("a_s_e__4").previousCount(0).desiredCount(2).build()))
             .resizeStrategy(ResizeStrategy.DOWNSIZE_OLD_FIRST)
             .organization(ORG)
             .space(SPACE)
@@ -346,7 +369,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
                  .diskQuota(1)
                  .instances(0)
                  .memoryLimit(1)
-                 .name("a_s_e__4")
+                 .name("a_s_e__")
                  .requestedState("STOPPED")
                  .stack("")
                  .runningInstances(0)
@@ -361,68 +384,47 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
                       .stack("")
                       .runningInstances(0)
                       .build())
-        .doReturn(ApplicationDetail.builder()
-                      .id("Guid:a_s_e__3")
-                      .diskQuota(1)
-                      .instances(1)
-                      .memoryLimit(1)
-                      .name("a_s_e__3")
-                      .requestedState("STOPPED")
-                      .stack("")
-                      .runningInstances(0)
-                      .build())
         .when(pcfDeploymentManager)
         .getApplicationByName(any());
 
-    ApplicationDetail applicationDetail = ApplicationDetail.builder()
-                                              .id("Guid:a_s_e__6")
-                                              .diskQuota(1)
-                                              .instances(0)
-                                              .memoryLimit(1)
-                                              .name("a_s_e__6")
-                                              .requestedState("STOPPED")
-                                              .stack("")
-                                              .runningInstances(0)
-                                              .build();
+    ApplicationDetail applicationDetailDownsize = ApplicationDetail.builder()
+                                                      .id("Guid:a_s_e__6")
+                                                      .diskQuota(1)
+                                                      .instances(0)
+                                                      .memoryLimit(1)
+                                                      .name("a_s_e__6")
+                                                      .requestedState("STOPPED")
+                                                      .stack("")
+                                                      .runningInstances(0)
+                                                      .build();
 
-    doReturn(applicationDetail)
-        .doReturn(ApplicationDetail.builder()
-                      .instanceDetails(Arrays.asList(InstanceDetail.builder()
-                                                         .cpu(1.0)
-                                                         .diskQuota((long) 1.23)
-                                                         .diskUsage((long) 1.23)
-                                                         .index("1")
-                                                         .memoryQuota((long) 1)
-                                                         .memoryUsage((long) 1)
-                                                         .build()))
-                      .id("Guid:a_s_e__4")
-                      .diskQuota(1)
-                      .instances(1)
-                      .memoryLimit(1)
-                      .name("a_s_e__4")
-                      .requestedState("RUNNING")
-                      .stack("")
-                      .runningInstances(1)
-                      .build())
-        // 3rd time is upsize
-        .doReturn(ApplicationDetail.builder()
-                      .instanceDetails(Arrays.asList(InstanceDetail.builder()
-                                                         .cpu(1.0)
-                                                         .diskQuota((long) 1.23)
-                                                         .diskUsage((long) 1.23)
-                                                         .index("2")
-                                                         .memoryQuota((long) 1)
-                                                         .memoryUsage((long) 1)
-                                                         .build()))
-                      .id("Guid:a_s_e__3")
-                      .diskQuota(1)
-                      .instances(1)
-                      .memoryLimit(1)
-                      .name("a_s_e__3")
-                      .requestedState("RUNNING")
-                      .stack("")
-                      .runningInstances(1)
-                      .build())
+    doReturn(ApplicationDetail.builder()
+                 .instanceDetails(Arrays.asList(InstanceDetail.builder()
+                                                    .cpu(1.0)
+                                                    .diskQuota((long) 1.23)
+                                                    .diskUsage((long) 1.23)
+                                                    .index("0")
+                                                    .memoryQuota((long) 1)
+                                                    .memoryUsage((long) 1)
+                                                    .build(),
+                     InstanceDetail.builder()
+                         .cpu(1.0)
+                         .diskQuota((long) 1.23)
+                         .diskUsage((long) 1.23)
+                         .index("1")
+                         .memoryQuota((long) 1)
+                         .memoryUsage((long) 1)
+                         .build()))
+                 .id("Guid:a_s_e__4")
+                 .diskQuota(1)
+                 .instances(1)
+                 .memoryLimit(1)
+                 .name("a_s_e__4")
+                 .requestedState("RUNNING")
+                 .stack("")
+                 .runningInstances(1)
+                 .build())
+        .doReturn(applicationDetailDownsize)
         .when(pcfDeploymentManager)
         .resizeApplication(any());
 
@@ -443,7 +445,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
         .forEach(pcfInstanceElement
             -> pcfInstanceElements.add(
                 pcfInstanceElement.getApplicationId() + ":" + pcfInstanceElement.getInstanceIndex()));
-    assertThat(pcfInstanceElements.contains("Guid:a_s_e__3:2")).isTrue();
+    assertThat(pcfInstanceElements.contains("Guid:a_s_e__4:0")).isTrue();
     assertThat(pcfInstanceElements.contains("Guid:a_s_e__4:1")).isTrue();
   }
 
