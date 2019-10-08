@@ -57,8 +57,8 @@ public class PcfCommandTaskHelper {
   /**
    * Returns Application names those will be downsized in deployment process
    */
-  public List<PcfAppSetupTimeDetails> generateDownsizeDetails(
-      PcfRequestConfig pcfRequestConfig, String releaseName, Integer maxCount) throws PivotalClientApiException {
+  public List<PcfAppSetupTimeDetails> generateDownsizeDetails(PcfRequestConfig pcfRequestConfig, String releaseName)
+      throws PivotalClientApiException {
     String prefix = getAppPrefix(releaseName);
 
     List<ApplicationSummary> applicationSummaries =

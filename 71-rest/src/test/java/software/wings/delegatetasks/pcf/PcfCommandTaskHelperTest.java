@@ -2,6 +2,7 @@ package software.wings.delegatetasks.pcf;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import io.harness.category.element.UnitTests;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
+import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.InstanceDetail;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -229,5 +231,36 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
     assertThat(pcfInstanceElements.get(0).getApplicationId()).isEqualTo("id");
     assertThat(pcfInstanceElements.get(0).getDisplayName()).isEqualTo("app");
     assertThat(pcfInstanceElements.get(0).getInstanceIndex()).isEqualTo("0");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGenerateDownsizeDetails() throws Exception {
+    List<ApplicationSummary> previousReleases = new ArrayList<>();
+    previousReleases.add(ApplicationSummary.builder()
+                             .name("a_s_e__4")
+                             .diskQuota(1)
+                             .requestedState(RUNNING)
+                             .id("1")
+                             .instances(1)
+                             .memoryLimit(1)
+                             .runningInstances(0)
+                             .build());
+    previousReleases.add(ApplicationSummary.builder()
+                             .name("a_s_e__5")
+                             .diskQuota(1)
+                             .requestedState(RUNNING)
+                             .id("1")
+                             .instances(0)
+                             .memoryLimit(1)
+                             .runningInstances(0)
+                             .build());
+    doReturn(previousReleases).when(pcfDeploymentManager).getDeployedServicesWithNonZeroInstances(any(), anyString());
+
+    List<PcfAppSetupTimeDetails> details =
+        pcfCommandTaskHelper.generateDownsizeDetails(PcfRequestConfig.builder().build(), "a_s_e__5");
+    assertThat(details).isNotNull();
+    assertThat(details.size()).isEqualTo(1);
+    assertThat(details.get(0).getApplicationName()).isEqualTo("a_s_e__4");
   }
 }
