@@ -8,6 +8,7 @@ import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -73,6 +74,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactKeys;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
+import software.wings.beans.artifact.ArtifactStreamCollectionStatus;
 import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.ArtifactSummary;
@@ -432,10 +434,12 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     addAcrHostNameIfNeeded(artifactStream);
 
-    // set metadata-only field for nexus
+    // Set metadata-only field for nexus.
     setMetadataOnly(artifactStream);
-    // add keywords
+    // Add keywords.
     artifactStream.setKeywords(trimmedLowercaseSet(artifactStream.generateKeywords()));
+    // Set collection status initially to UNSTABLE.
+    artifactStream.setCollectionStatus(ArtifactStreamCollectionStatus.UNSTABLE.name());
     String id = Validator.duplicateCheck(() -> wingsPersistence.save(artifactStream), "name", artifactStream.getName());
     yamlPushService.pushYamlChangeSet(
         accountId, null, artifactStream, Type.CREATE, artifactStream.isSyncFromGit(), false);
@@ -578,7 +582,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     addAcrHostNameIfNeeded(artifactStream);
 
-    // add keywords
+    // Add keywords.
     artifactStream.setKeywords(trimmedLowercaseSet(artifactStream.generateKeywords()));
 
     ArtifactStream finalArtifactStream = Validator.duplicateCheck(
@@ -592,6 +596,13 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
 
     if (shouldDeleteArtifactsOnSourceChanged(existingArtifactStream, finalArtifactStream)) {
+      // Mark the collection status as unstable (for non-custom) because the artifact source has changed. We will again
+      // do a fresh artifact collection.
+      if (!CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
+        updateCollectionStatus(
+            accountId, finalArtifactStream.getUuid(), ArtifactStreamCollectionStatus.UNSTABLE.name());
+      }
+
       // TODO: This logic has to be moved to Prune event or Queue to ensure guaranteed execution
       executorService.submit(() -> artifactService.deleteWhenArtifactSourceNameChanged(existingArtifactStream));
     }
@@ -995,6 +1006,17 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                       .filter(ArtifactStreamKeys.uuid, artifactStreamId);
     UpdateOperations<ArtifactStream> updateOperations = wingsPersistence.createUpdateOperations(ArtifactStream.class)
                                                             .set(ArtifactStreamKeys.failedCronAttempts, counter);
+    UpdateResults update = wingsPersistence.update(query, updateOperations);
+    return update.getUpdatedCount() == 1;
+  }
+
+  @Override
+  public boolean updateCollectionStatus(String accountId, String artifactStreamId, String collectionStatus) {
+    Query<ArtifactStream> query = wingsPersistence.createQuery(ArtifactStream.class)
+                                      .filter(ArtifactStreamKeys.accountId, accountId)
+                                      .filter(ArtifactStreamKeys.uuid, artifactStreamId);
+    UpdateOperations<ArtifactStream> updateOperations = wingsPersistence.createUpdateOperations(ArtifactStream.class);
+    setUnset(updateOperations, ArtifactStreamKeys.collectionStatus, collectionStatus);
     UpdateResults update = wingsPersistence.update(query, updateOperations);
     return update.getUpdatedCount() == 1;
   }

@@ -13,4 +13,5 @@ import java.util.List;
 @Builder
 public class BuildSourceResponse {
   private List<BuildDetails> buildDetails;
+  private boolean stable;
 }

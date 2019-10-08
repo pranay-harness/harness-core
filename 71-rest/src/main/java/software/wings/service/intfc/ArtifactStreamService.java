@@ -62,6 +62,8 @@ public interface ArtifactStreamService extends OwnedByService {
 
   boolean updateFailedCronAttempts(String accountId, String artifactStreamId, int counter);
 
+  boolean updateCollectionStatus(String accountId, String artifactStreamId, String collectionStatus);
+
   List<ArtifactStream> listBySettingId(String settingId);
 
   List<ArtifactStream> listByIds(Collection<String> artifactStreamIds);

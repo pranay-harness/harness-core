@@ -87,9 +87,11 @@ public class BuildSourceTask extends AbstractDelegateRunnableTask {
         }
       }
 
+      // NOTE: Here BuildSourceExecutionResponse::buildSourceResponse::stable is marked always true. When artifact
+      // streams are capable of pagination we'll need to get that from the getBuilds function above.
       return BuildSourceExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-          .buildSourceResponse(BuildSourceResponse.builder().buildDetails(buildDetails).build())
+          .buildSourceResponse(BuildSourceResponse.builder().buildDetails(buildDetails).stable(true).build())
           .build();
     } catch (Exception ex) {
       logger.error("Exception in processing BuildSource task [{}]", ex);
