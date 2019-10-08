@@ -6,6 +6,7 @@ import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.maintenance.MaintenanceController.getMaintenanceFilename;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.waiter.NotifyEvent.Builder.aNotifyEvent;
+import static java.lang.Math.max;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
@@ -29,20 +30,23 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
+import java.util.function.IntSupplier;
 
 /**
  * Scheduled Task to look for finished WaitInstances and send messages to NotifyEventQueue.
- *
- * @author Rishi
  */
 @Slf4j
 public class Notifier implements Runnable {
+  static final int PAGE_SIZE = 1000;
+
   @Inject private HPersistence persistence;
   @Inject private PersistentLocker persistentLocker;
   @Inject private Queue<NotifyEvent> notifyQueue;
   @Inject private QueueController queueController;
 
+  private int step = PAGE_SIZE / 3 + new Random().nextInt(PAGE_SIZE / 3);
   private int skip;
 
   @Override
@@ -77,7 +81,7 @@ public class Notifier implements Runnable {
     final List<NotifyResponse> notifyResponses = persistence.createQuery(NotifyResponse.class, excludeAuthority)
                                                      .project(NotifyResponseKeys.uuid, true)
                                                      .project(NotifyResponseKeys.createdAt, true)
-                                                     .asList(new FindOptions().skip(skip).limit(1000));
+                                                     .asList(new FindOptions().skip(skip).limit(PAGE_SIZE));
 
     if (isEmpty(notifyResponses)) {
       logger.debug("There are no NotifyResponse entries to process");
@@ -87,19 +91,17 @@ public class Notifier implements Runnable {
 
     logger.info("Notifier responses {} with skip {}", notifyResponses.size(), skip);
 
-    // if we accumulated 1000 responses, they might be all partial. Lets skip some and give chance to the newer to be
-    // processed.
-    skip = notifyResponses.size() < 1000 ? 0 : skip + 250;
+    skip = nextSkip(skip, notifyResponses.size(), step,
+        () -> (int) persistence.createQuery(NotifyResponse.class, excludeAuthority).count());
 
     Set<String> correlationIds = notifyResponses.stream().map(NotifyResponse::getUuid).collect(toSet());
     Map<String, List<String>> waitInstances = new HashMap<>();
 
     // Get wait queue entries
-    try (HIterator<WaitQueue> iterator =
-             new HIterator<WaitQueue>(persistence.createQuery(WaitQueue.class, excludeAuthority)
-                                          .field(WaitQueueKeys.correlationId)
-                                          .in(correlationIds)
-                                          .fetch())) {
+    try (HIterator<WaitQueue> iterator = new HIterator<>(persistence.createQuery(WaitQueue.class, excludeAuthority)
+                                                             .field(WaitQueueKeys.correlationId)
+                                                             .in(correlationIds)
+                                                             .fetch())) {
       while (iterator.hasNext()) {
         // process distinct set of wait instanceIds
         final WaitQueue waitQueue = iterator.next();
@@ -131,5 +133,18 @@ public class Notifier implements Runnable {
                                .in(deleteResponses));
       }
     }
+  }
+
+  static int nextSkip(int current, int loaded, int step, IntSupplier collectionSize) {
+    int next = current;
+    if (current == 0) {
+      if (loaded >= PAGE_SIZE) {
+        next = collectionSize.getAsInt() - PAGE_SIZE;
+      }
+    } else {
+      next -= step;
+    }
+
+    return max(0, next);
   }
 }
