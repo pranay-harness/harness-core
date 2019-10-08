@@ -28,6 +28,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.api.DeploymentType.PCF;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -134,11 +135,13 @@ import software.wings.beans.LambdaSpecification.FunctionSpecification;
 import software.wings.beans.Notification;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.Service;
+import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.AmiCommandUnit;
@@ -2188,6 +2191,25 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  public void testSetPcfV2ServiceFromAppManifestIfRequired() {
+    Query mockQuery = mock(Query.class);
+    when(mockWingsPersistence.createQuery(Service.class)).thenReturn(mockQuery);
+    when(mockQuery.filter(anyString(), anyString())).thenReturn(mockQuery);
+    when(mockQuery.getKey()).thenReturn(new Key<>(Service.class, "services", SERVICE_ID));
+
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().storeType(StoreType.Local).serviceId(SERVICE_ID).build();
+    applicationManifest.setAppId(APP_ID);
+
+    srs.setPcfV2ServiceFromAppManifestIfRequired(applicationManifest, AppManifestSource.SERVICE);
+
+    verify(mockWingsPersistence, times(1)).update(any(Query.class), any());
+    verify(updateOperations).set(ServiceKeys.isPcfV2, true);
+    verify(mockQuery).filter(ServiceKeys.deploymentType, PCF.name());
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void testCreatePCFV2ServiceWithExistingAppManifest() {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
@@ -2212,5 +2234,38 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     verify(applicationManifestService, times(0)).create(any());
     verify(applicationManifestService, times(0)).createManifestFileByServiceId(any(), any());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+
+  public void testSetPcfV2ServiceFromAppManifestIfRequiredInvalidSource() {
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().storeType(StoreType.Local).serviceId(SERVICE_ID).build();
+    applicationManifest.setAppId(APP_ID);
+
+    srs.setPcfV2ServiceFromAppManifestIfRequired(applicationManifest, AppManifestSource.ENV_SERVICE);
+
+    verify(mockWingsPersistence, times(0)).update(any(Query.class), any());
+    verify(mockWingsPersistence, times(0)).createUpdateOperations(any());
+    verify(mockWingsPersistence, times(0)).createQuery(any());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testSetPcfV2ServiceFromAppManifestIfRequiredNonExistentService() {
+    Query mockQuery = mock(Query.class);
+    when(mockWingsPersistence.createQuery(Service.class)).thenReturn(mockQuery);
+    when(mockQuery.filter(anyString(), anyString())).thenReturn(mockQuery);
+    when(mockQuery.getKey()).thenReturn(null);
+
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().storeType(StoreType.Local).serviceId(SERVICE_ID).build();
+    applicationManifest.setAppId(APP_ID);
+    srs.setPcfV2ServiceFromAppManifestIfRequired(applicationManifest, AppManifestSource.ENV_SERVICE);
+
+    verify(mockWingsPersistence, times(0)).update(any(Query.class), any());
+    verify(mockWingsPersistence, times(0)).createUpdateOperations(any());
+    verify(mockWingsPersistence, times(0)).createQuery(any());
   }
 }

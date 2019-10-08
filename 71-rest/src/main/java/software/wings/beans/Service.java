@@ -76,6 +76,7 @@ public class Service extends Base implements KeywordsAware, NameAccess, TagAware
   @SchemaIgnore private Set<String> keywords;
 
   private boolean isK8sV2;
+  private boolean isPcfV2;
   @Indexed private String accountId;
   @Indexed private List<String> artifactStreamIds;
   @Transient private List<ArtifactStreamBinding> artifactStreamBindings;
@@ -90,7 +91,7 @@ public class Service extends Base implements KeywordsAware, NameAccess, TagAware
       long version, AppContainer appContainer, List<ConfigFile> configFiles, List<ServiceVariable> serviceVariables,
       List<ArtifactStream> artifactStreams, List<ServiceCommand> serviceCommands, Activity lastDeploymentActivity,
       Activity lastProdDeploymentActivity, Setup setup, boolean isK8sV2, String accountId,
-      List<String> artifactStreamIds, boolean sample) {
+      List<String> artifactStreamIds, boolean sample, boolean isPcfV2) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.description = description;
@@ -109,6 +110,7 @@ public class Service extends Base implements KeywordsAware, NameAccess, TagAware
     this.setup = setup;
     this.keywords = keywords;
     this.isK8sV2 = isK8sV2;
+    this.isPcfV2 = isPcfV2;
     this.accountId = accountId;
     this.artifactStreamIds = artifactStreamIds;
     this.sample = sample;
@@ -127,6 +129,7 @@ public class Service extends Base implements KeywordsAware, NameAccess, TagAware
         .helmValueYaml(helmValueYaml)
         .appContainer(appContainer)
         .isK8sV2(isK8sV2)
+        .isPcfV2(isPcfV2)
         .build();
   }
 

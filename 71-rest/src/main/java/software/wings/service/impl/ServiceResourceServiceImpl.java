@@ -2403,6 +2403,26 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
+  public void setPcfV2ServiceFromAppManifestIfRequired(
+      ApplicationManifest applicationManifest, AppManifestSource appManifestSource) {
+    if (!AppManifestSource.SERVICE.equals(appManifestSource)) {
+      return;
+    }
+
+    if (exists(applicationManifest.getAppId(), applicationManifest.getServiceId())) {
+      UpdateOperations<Service> updateOperations =
+          wingsPersistence.createUpdateOperations(Service.class).set(ServiceKeys.isPcfV2, true);
+
+      Query<Service> query = wingsPersistence.createQuery(Service.class)
+                                 .filter(Service.APP_ID_KEY, applicationManifest.getAppId())
+                                 .filter(Service.ID_KEY, applicationManifest.getServiceId())
+                                 .filter(ServiceKeys.deploymentType, PCF.name());
+
+      wingsPersistence.update(query, updateOperations);
+    }
+  }
+
+  @Override
   public ManifestFile createValuesYaml(String appId, String serviceId, ManifestFile manifestFile) {
     ApplicationManifest appManifest =
         applicationManifestService.getAppManifest(appId, null, serviceId, AppManifestKind.VALUES);
