@@ -9,6 +9,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.pcf.model.PcfConstants.MANIFEST_YML;
+import static io.harness.pcf.model.PcfConstants.VARS_YML;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 import static java.lang.String.join;
@@ -216,7 +217,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   private static String default_k8s_namespace_yaml;
   private static String default_k8s_service_yaml;
   private static String default_k8s_values_yaml;
-  private static String default_pcf_manifest_yaml;
+  private static String default_pcf_manifest_yml;
+  private static String default_pcf_vars_yml;
 
   static {
     try {
@@ -232,8 +234,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       url = ServiceResourceServiceImpl.class.getClassLoader().getResource("default-k8s-manifests/values.yaml");
       default_k8s_values_yaml = Resources.toString(url, StandardCharsets.UTF_8);
 
-      url = ServiceResourceServiceImpl.class.getClassLoader().getResource("default-pcf-manifests/manifest.yaml");
-      default_pcf_manifest_yaml = Resources.toString(url, StandardCharsets.UTF_8);
+      url = ServiceResourceServiceImpl.class.getClassLoader().getResource("default-pcf-manifests/manifest.yml");
+      default_pcf_manifest_yml = Resources.toString(url, StandardCharsets.UTF_8);
+
+      url = ServiceResourceServiceImpl.class.getClassLoader().getResource("default-pcf-manifests/vars.yml");
+      default_pcf_vars_yml = Resources.toString(url, StandardCharsets.UTF_8);
     } catch (IOException e) {
       throw new RuntimeException("Failed to read default manifests", e);
     }
@@ -2289,9 +2294,13 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     applicationManifestService.create(applicationManifest);
 
     ManifestFile defaultManifestSpec =
-        ManifestFile.builder().fileName(MANIFEST_YML).fileContent(default_pcf_manifest_yaml).build();
+        ManifestFile.builder().fileName(MANIFEST_YML).fileContent(default_pcf_manifest_yml).build();
     defaultManifestSpec.setAppId(service.getAppId());
     applicationManifestService.createManifestFileByServiceId(defaultManifestSpec, service.getUuid());
+
+    ManifestFile varsManifestSpec = ManifestFile.builder().fileName(VARS_YML).fileContent(default_pcf_vars_yml).build();
+    varsManifestSpec.setAppId(service.getAppId());
+    applicationManifestService.createManifestFileByServiceId(varsManifestSpec, service.getUuid());
   }
 
   /*

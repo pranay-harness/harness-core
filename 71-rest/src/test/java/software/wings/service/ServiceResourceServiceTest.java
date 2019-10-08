@@ -3,6 +3,8 @@ package software.wings.service;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.pcf.model.PcfConstants.MANIFEST_YML;
+import static io.harness.pcf.model.PcfConstants.VARS_YML;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
@@ -11,6 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
@@ -35,6 +38,7 @@ import static software.wings.beans.CommandCategory.Type.SCRIPTS;
 import static software.wings.beans.CommandCategory.Type.VERIFICATIONS;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
+import static software.wings.beans.FeatureName.PCF_MANIFEST_REDESIGN;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.Service.ServiceBuilder;
@@ -76,9 +80,11 @@ import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_ID;
 import static software.wings.utils.WingsTestConstants.TARGET_APP_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.Resources;
 import com.google.inject.Inject;
 
 import de.danielbechler.diff.ObjectDifferBuilder;
@@ -114,6 +120,7 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
+import software.wings.api.DeploymentType;
 import software.wings.beans.AccountEvent;
 import software.wings.beans.Application;
 import software.wings.beans.CommandCategory;
@@ -130,6 +137,7 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.Workflow.WorkflowBuilder;
+import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
@@ -164,6 +172,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PipelineService;
@@ -180,6 +189,7 @@ import software.wings.utils.WingsTestConstants.MockChecker;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -233,6 +243,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Mock private InfrastructureProvisionerService infrastructureProvisionerService;
   @Mock private ApplicationManifestService applicationManifestService;
   @Mock private AuditServiceHelper auditServiceHelper;
+  @Mock private FeatureFlagService featureFlagService;
 
   @Inject @InjectMocks private ServiceResourceService srs;
 
@@ -2127,5 +2138,79 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     ManifestFile manifestFile = manifestFileArgumentCaptor.getValue();
     assertThat(manifestFile.getFileContent()).isEqualTo(fileContent + "\n");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCreatePCFV2Service() throws IOException {
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
+    Service service = Service.builder()
+                          .appId(APP_ID)
+                          .accountId(ACCOUNT_ID)
+                          .uuid(SERVICE_ID)
+                          .deploymentType(DeploymentType.PCF)
+                          .name("PCFV2")
+                          .build();
+
+    doReturn(service).when(spyServiceResourceService).addCommand(any(), any(), any(ServiceCommand.class), eq(true));
+    doNothing().when(auditServiceHelper).addEntityOperationIdentifierDataToAuditContext(any());
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    when(featureFlagService.isEnabled(PCF_MANIFEST_REDESIGN, ACCOUNT_ID)).thenReturn(true);
+    Service savedService = spyServiceResourceService.save(service);
+
+    assertThat(savedService.getUuid()).isEqualTo(SERVICE_ID);
+    assertThat(savedService.getName()).isEqualTo("PCFV2");
+
+    ArgumentCaptor<ApplicationManifest> appManifestArgumentCaptor = ArgumentCaptor.forClass(ApplicationManifest.class);
+    verify(applicationManifestService, times(1)).create(appManifestArgumentCaptor.capture());
+    ApplicationManifest appManifest = appManifestArgumentCaptor.getValue();
+    assertThat(appManifest.getKind()).isEqualTo(AppManifestKind.K8S_MANIFEST);
+    assertThat(appManifest.getStoreType()).isEqualTo(StoreType.Local);
+    assertThat(appManifest.getServiceId()).isEqualTo(SERVICE_ID);
+    assertThat(appManifest.getAppId()).isEqualTo(APP_ID);
+
+    ArgumentCaptor<ManifestFile> manifestFileArgumentCaptor = ArgumentCaptor.forClass(ManifestFile.class);
+    verify(applicationManifestService, times(2))
+        .createManifestFileByServiceId(manifestFileArgumentCaptor.capture(), any());
+
+    URL url = ServiceResourceServiceImpl.class.getClassLoader().getResource("default-pcf-manifests/vars.yml");
+    String default_pcf_vars_yml = Resources.toString(url, Charsets.UTF_8);
+
+    url = ServiceResourceServiceImpl.class.getClassLoader().getResource("default-pcf-manifests/manifest.yml");
+    String default_pcf_manifest_yml = Resources.toString(url, Charsets.UTF_8);
+
+    List<ManifestFile> manifestFiles = manifestFileArgumentCaptor.getAllValues();
+    assertThat(manifestFiles)
+        .extracting(ManifestFile::getFileName, ManifestFile::getFileContent)
+        .contains(tuple(MANIFEST_YML, default_pcf_manifest_yml), tuple(VARS_YML, default_pcf_vars_yml));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCreatePCFV2ServiceWithExistingAppManifest() {
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
+    Service service = Service.builder()
+                          .appId(APP_ID)
+                          .accountId(ACCOUNT_ID)
+                          .uuid(SERVICE_ID)
+                          .deploymentType(DeploymentType.PCF)
+                          .name("PCFV2")
+                          .build();
+
+    doReturn(service).when(spyServiceResourceService).addCommand(any(), any(), any(ServiceCommand.class), eq(true));
+    doNothing().when(auditServiceHelper).addEntityOperationIdentifierDataToAuditContext(any());
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    when(featureFlagService.isEnabled(PCF_MANIFEST_REDESIGN, ACCOUNT_ID)).thenReturn(true);
+    when(applicationManifestService.getManifestByServiceId(service.getAppId(), service.getUuid()))
+        .thenReturn(ApplicationManifest.builder().storeType(StoreType.Local).build());
+    Service savedService = spyServiceResourceService.save(service);
+
+    assertThat(savedService.getUuid()).isEqualTo(SERVICE_ID);
+    assertThat(savedService.getName()).isEqualTo("PCFV2");
+
+    verify(applicationManifestService, times(0)).create(any());
+    verify(applicationManifestService, times(0)).createManifestFileByServiceId(any(), any());
   }
 }
