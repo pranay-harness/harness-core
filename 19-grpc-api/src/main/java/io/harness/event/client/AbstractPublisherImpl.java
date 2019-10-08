@@ -72,7 +72,10 @@ abstract class AbstractPublisherImpl extends EventPublisher {
 
   @Override
   public final void shutdown() {
-    Preconditions.checkState(!shutDown.getAndSet(true), "Already shut down");
+    if (shutDown.getAndSet(true)) {
+      logger.warn("Already shutdown");
+      return;
+    }
     MoreExecutors.shutdownAndAwaitTermination(executorService, 10, TimeUnit.SECONDS);
     logger.info("Events accepted: {}, Events sent: {}", acceptedCount.get(), sentCount.get());
     close();
