@@ -1,7 +1,6 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
-import static java.util.stream.Collectors.toList;
 
 import com.google.inject.Singleton;
 
@@ -14,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
-import org.cloudfoundry.operations.applications.ApplicationSummary;
 import software.wings.api.PcfInstanceElement;
 import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.PcfConfig;
@@ -46,7 +44,6 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
       throw new InvalidArgumentsException(Pair.of("pcfCommandRequest", "Must be instance of PcfCommandDeployRequest"));
     }
     PcfCommandDeployRequest pcfCommandDeployRequest = (PcfCommandDeployRequest) pcfCommandRequest;
-
     List<PcfServiceData> pcfServiceDataUpdated = new ArrayList<>();
     PcfDeployCommandResponse pcfDeployCommandResponse =
         PcfDeployCommandResponse.builder().pcfInstanceElements(new ArrayList<>()).build();
@@ -69,26 +66,13 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
           pcfRequestConfig, pcfCommandDeployRequest, pcfDeploymentManager);
       // No of instances to be added to newly created application in this deploy stage
       Integer stepIncrease = pcfCommandDeployRequest.getUpdateCount() - details.getInstances();
+      Integer stepDecrease = pcfCommandDeployRequest.getDownSizeCount();
 
-      //  pcfCommandDeployRequest.getDownSizeCount() total instances to take down at this phase
-      // so no instances to take down = total - total instances taken down till now ()
-      // (which is = total instances created in new service)
-      List<ApplicationSummary> previousReleases = pcfDeploymentManager.getPreviousReleases(
-          pcfRequestConfig, pcfCommandTaskHelper.getAppPrefix(details.getName()));
-      previousReleases = previousReleases.stream()
-                             .filter(applicationSummary -> !applicationSummary.getName().equals(details.getName()))
-                             .collect(toList());
-      Integer instanceCountForPreviousReleases =
-          previousReleases.stream().mapToInt(ApplicationSummary::getInstances).sum();
-      Integer stepDecrease = pcfCommandDeployRequest.getDownSizeCount()
-          - (pcfCommandDeployRequest.getTotalPreviousInstanceCount() - instanceCountForPreviousReleases);
-
-      String prefix = pcfCommandTaskHelper.getAppPrefix(pcfCommandDeployRequest.getNewReleaseName());
       // downsize previous apps with non zero instances by same count new app was upsized
       List<PcfInstanceElement> pcfInstanceElementsForVerification = new ArrayList<>();
       if (ResizeStrategy.DOWNSIZE_OLD_FIRST.equals(pcfCommandDeployRequest.getResizeStrategy())) {
         pcfCommandTaskHelper.downsizePreviousReleases(pcfCommandDeployRequest, pcfRequestConfig, executionLogCallback,
-            pcfServiceDataUpdated, stepDecrease, prefix, pcfInstanceElementsForVerification);
+            pcfServiceDataUpdated, stepDecrease, pcfInstanceElementsForVerification);
 
         pcfCommandTaskHelper.upsizeNewApplication(executionLogCallback, pcfDeploymentManager, pcfCommandDeployRequest,
             pcfServiceDataUpdated, pcfRequestConfig, details, stepIncrease, pcfInstanceElementsForVerification);
@@ -97,7 +81,7 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
             pcfServiceDataUpdated, pcfRequestConfig, details, stepIncrease, pcfInstanceElementsForVerification);
 
         pcfCommandTaskHelper.downsizePreviousReleases(pcfCommandDeployRequest, pcfRequestConfig, executionLogCallback,
-            pcfServiceDataUpdated, stepDecrease, prefix, pcfInstanceElementsForVerification);
+            pcfServiceDataUpdated, stepDecrease, pcfInstanceElementsForVerification);
       }
       // generate response to be sent back to Manager
       pcfDeployCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);

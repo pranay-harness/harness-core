@@ -4,6 +4,7 @@ import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.pcf.model.PcfConstants.PCF_ARTIFACT_DOWNLOAD_DIR_PATH;
 import static java.util.stream.Collectors.toList;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -64,25 +65,18 @@ public class PcfCommandTaskHelper {
         pcfDeploymentManager.getDeployedServicesWithNonZeroInstances(pcfRequestConfig, prefix);
 
     List<PcfAppSetupTimeDetails> downSizeUpdate = new ArrayList<>();
-    int count = maxCount;
-    int instanceCount;
     for (int index = applicationSummaries.size() - 1; index >= 0; index--) {
-      if (count <= 0) {
-        break;
-      }
-
       ApplicationSummary applicationSummary = applicationSummaries.get(index);
       if (releaseName.equals(applicationSummary.getName()) || applicationSummary.getInstances() == 0) {
         continue;
       }
-      instanceCount = applicationSummary.getInstances();
+
       downSizeUpdate.add(PcfAppSetupTimeDetails.builder()
                              .applicationGuid(applicationSummary.getId())
                              .applicationName(applicationSummary.getName())
                              .urls(applicationSummary.getUrls())
                              .initialInstanceCount(applicationSummary.getInstances())
                              .build());
-      count = instanceCount >= count ? 0 : count - instanceCount;
     }
 
     return downSizeUpdate;
@@ -155,108 +149,77 @@ public class PcfCommandTaskHelper {
    * app_serv_env__4   : 0
    * app_serv_env__3   : 1
    * app_serv_env__2   : 1
-   *
-   * @param pcfCommandDeployRequest
-   * @param pcfRequestConfig
-   * @param executionLogCallback
-   * @param pcfServiceDataUpdated
-   * @param updateCount
-   * @param prefix
-   * @param pcfInstanceElements
-   * @throws PivotalClientApiException
    */
   public void downsizePreviousReleases(PcfCommandDeployRequest pcfCommandDeployRequest,
       PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback,
-      List<PcfServiceData> pcfServiceDataUpdated, Integer updateCount, String prefix,
-      List<PcfInstanceElement> pcfInstanceElements) throws PivotalClientApiException {
-    executionLogCallback.saveExecutionLog("# Downsizing previous application version/s");
-
-    List<ApplicationSummary> applicationSummaries =
-        pcfDeploymentManager.getDeployedServicesWithNonZeroInstances(pcfRequestConfig, prefix);
-
-    List<PcfServiceData> downSizeUpdate = new ArrayList<>();
-    int count = updateCount;
-    int instanceCount;
-
-    if (updateCount == 0) {
-      // If 0 instances are to be downsized in this stage, then find one of the previous applications, to be downsized
-      // and return guid of that application, so verification phase can use that guid.
-      getGuidForFirstAppToBeDownsized(
-          pcfCommandDeployRequest, pcfInstanceElements, applicationSummaries, pcfRequestConfig);
-    } else {
-      for (int index = applicationSummaries.size() - 1; index >= 0; index--) {
-        if (count <= 0) {
-          break;
-        }
-
-        ApplicationSummary applicationSummary = applicationSummaries.get(index);
-        if (pcfCommandDeployRequest.getNewReleaseName().equals(applicationSummary.getName())) {
-          continue;
-        }
-
-        instanceCount = applicationSummary.getInstances();
-        int newCount = instanceCount <= count ? 0 : instanceCount - count;
-
-        executionLogCallback.saveExecutionLog(new StringBuilder()
-                                                  .append("APPLICATION-NAME: ")
-                                                  .append(applicationSummary.getName())
-                                                  .append("\nCURRENT-INSTANCE-COUNT: ")
-                                                  .append(applicationSummary.getInstances())
-                                                  .append("\nDESIRED-INSTANCE-COUNT: ")
-                                                  .append(newCount)
-                                                  .toString());
-
-        PcfServiceData pcfServiceData = PcfServiceData.builder()
-                                            .name(applicationSummary.getName())
-                                            .id(applicationSummary.getId())
-                                            .previousCount(applicationSummary.getInstances())
-                                            .desiredCount(newCount)
-                                            .build();
-        downSizeUpdate.add(pcfServiceData);
-
-        // downsize application
-        ApplicationDetail applicationDetailAfterResize = downSize(pcfServiceData, executionLogCallback,
-            pcfRequestConfig, pcfDeploymentManager, pcfCommandDeployRequest.getRouteMaps());
-
-        // Application that is downsized
-        if (EmptyPredicate.isNotEmpty(applicationDetailAfterResize.getInstanceDetails())) {
-          applicationDetailAfterResize.getInstanceDetails().forEach(instance
-              -> pcfInstanceElements.add(PcfInstanceElement.builder()
-                                             .applicationId(applicationDetailAfterResize.getId())
-                                             .displayName(applicationDetailAfterResize.getName())
-                                             .instanceIndex(instance.getIndex())
-                                             .isUpsize(false)
-                                             .build()));
-        }
-
-        count = instanceCount >= count ? 0 : count - instanceCount;
-      }
+      List<PcfServiceData> pcfServiceDataUpdated, Integer updateCount, List<PcfInstanceElement> pcfInstanceElements)
+      throws PivotalClientApiException {
+    if (pcfCommandDeployRequest.isStandardBlueGreen()) {
+      executionLogCallback.saveExecutionLog("BG Deployment. Old Application will not be downsized.");
+      return;
     }
 
-    pcfServiceDataUpdated.addAll(downSizeUpdate);
+    executionLogCallback.saveExecutionLog("# Downsizing previous application version/s");
+
+    PcfAppSetupTimeDetails downsizeAppDetails = pcfCommandDeployRequest.getDownsizeAppDetail();
+    if (downsizeAppDetails == null) {
+      executionLogCallback.saveExecutionLog("# No Application is available for downsize");
+      return;
+    }
+
+    pcfRequestConfig.setApplicationName(downsizeAppDetails.getApplicationName());
+    ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
+    executionLogCallback.saveExecutionLog(new StringBuilder()
+                                              .append("APPLICATION-NAME: ")
+                                              .append(applicationDetail.getName())
+                                              .append("\nCURRENT-INSTANCE-COUNT: ")
+                                              .append(applicationDetail.getInstances())
+                                              .append("\nDESIRED-INSTANCE-COUNT: ")
+                                              .append(updateCount)
+                                              .toString());
+
+    PcfServiceData pcfServiceData = PcfServiceData.builder()
+                                        .name(applicationDetail.getName())
+                                        .id(applicationDetail.getId())
+                                        .previousCount(applicationDetail.getInstances())
+                                        .desiredCount(updateCount)
+                                        .build();
+
+    pcfServiceDataUpdated.add(pcfServiceData);
+
+    if (updateCount >= applicationDetail.getInstances()) {
+      // If 0 instances are to be downsized in this stage, then find one of the previous applications, to be downsized
+      // and return guid of that application, so verification phase can use that guid.
+      executionLogCallback.saveExecutionLog("# No Downsize was required.");
+      getGuidForAppToBeDownsized(pcfInstanceElements, applicationDetail);
+      return;
+    }
+
+    // downsize application
+    ApplicationDetail applicationDetailAfterResize = downSize(pcfServiceData, executionLogCallback, pcfRequestConfig,
+        pcfDeploymentManager, pcfCommandDeployRequest.getRouteMaps());
+
+    // Application that is downsized
+    if (EmptyPredicate.isNotEmpty(applicationDetailAfterResize.getInstanceDetails())) {
+      applicationDetailAfterResize.getInstanceDetails().forEach(instance
+          -> pcfInstanceElements.add(PcfInstanceElement.builder()
+                                         .applicationId(applicationDetailAfterResize.getId())
+                                         .displayName(applicationDetailAfterResize.getName())
+                                         .instanceIndex(instance.getIndex())
+                                         .isUpsize(false)
+                                         .build()));
+    }
   }
 
-  private void getGuidForFirstAppToBeDownsized(PcfCommandDeployRequest pcfCommandDeployRequest,
-      List<PcfInstanceElement> pcfInstanceElements, List<ApplicationSummary> applicationSummaries,
-      PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
-    for (int index = applicationSummaries.size() - 1; index >= 0; index--) {
-      ApplicationSummary applicationSummary = applicationSummaries.get(index);
-      if (pcfCommandDeployRequest.getNewReleaseName().equals(applicationSummary.getName())) {
-        continue;
-      } else {
-        pcfRequestConfig.setApplicationName(applicationSummary.getName());
-        ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
-        if (EmptyPredicate.isNotEmpty(applicationDetail.getInstanceDetails())) {
-          applicationDetail.getInstanceDetails().forEach(instanceDetail
-              -> pcfInstanceElements.add(PcfInstanceElement.builder()
-                                             .displayName(applicationDetail.getName())
-                                             .applicationId(applicationDetail.getId())
-                                             .instanceIndex(instanceDetail.getIndex())
-                                             .build()));
-        }
-
-        break;
-      }
+  private void getGuidForAppToBeDownsized(List<PcfInstanceElement> pcfInstanceElements,
+      ApplicationDetail applicationDetail) throws PivotalClientApiException {
+    if (EmptyPredicate.isNotEmpty(applicationDetail.getInstanceDetails())) {
+      applicationDetail.getInstanceDetails().forEach(instanceDetail
+          -> pcfInstanceElements.add(PcfInstanceElement.builder()
+                                         .displayName(applicationDetail.getName())
+                                         .applicationId(applicationDetail.getId())
+                                         .instanceIndex(instanceDetail.getIndex())
+                                         .build()));
     }
   }
 
@@ -309,7 +272,8 @@ public class PcfCommandTaskHelper {
     }
   }
 
-  private ApplicationDetail downSize(PcfServiceData pcfServiceData, ExecutionLogCallback executionLogCallback,
+  @VisibleForTesting
+  ApplicationDetail downSize(PcfServiceData pcfServiceData, ExecutionLogCallback executionLogCallback,
       PcfRequestConfig pcfRequestConfig, PcfDeploymentManager pcfDeploymentManager, List<String> routePaths)
       throws PivotalClientApiException {
     pcfRequestConfig.setApplicationName(pcfServiceData.getName());

@@ -1,6 +1,7 @@
 package software.wings.sm.states.pcf;
 
 import static com.google.common.collect.Maps.newHashMap;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Collections.emptyList;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 
@@ -268,6 +269,10 @@ public class PcfDeployState extends State {
         .accountId(application.getAccountId())
         .newReleaseName(pcfSetupContextElement.getNewPcfApplicationDetails().getApplicationName())
         .timeoutIntervalInMin(pcfSetupContextElement.getTimeoutIntervalInMinutes())
+        .downsizeAppDetail(isEmpty(pcfSetupContextElement.getAppDetailsToBeDownsized())
+                ? null
+                : pcfSetupContextElement.getAppDetailsToBeDownsized().get(0))
+        .isStandardBlueGreen(pcfSetupContextElement.isStandardBlueGreenWorkflow())
         .build();
   }
 
@@ -322,6 +327,10 @@ public class PcfDeployState extends State {
   private Activity createActivity(ExecutionContext executionContext) {
     Application app = ((ExecutionContextImpl) executionContext).getApp();
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
+
+    if (app == null) {
+      throw new InvalidRequestException("Application was null in Context");
+    }
 
     ActivityBuilder activityBuilder =
         pcfStateHelper.getActivityBuilder(app.getName(), app.getUuid(), PCF_RESIZE_COMMAND, Type.Command,
