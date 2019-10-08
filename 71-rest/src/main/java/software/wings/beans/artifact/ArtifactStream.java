@@ -89,6 +89,12 @@ public abstract class ArtifactStream
   @Transient private List<ArtifactSummary> artifacts;
   private boolean sample;
 
+  // Collection status denotes whether the first-time collection of the artifact stream is completed. If it's completed
+  // we mark the status as STABLE, otherwise it is by default UNSTABLE when the stream is created or the artifact source
+  // is updated. For backwards compatibility, null is treated as stable and we make sure to update the artifact stream
+  // to UNSTABLE if the artifact source is changed.
+  private String collectionStatus;
+
   public ArtifactStream(String artifactStreamType) {
     this.artifactStreamType = artifactStreamType;
     this.autoPopulate = true;

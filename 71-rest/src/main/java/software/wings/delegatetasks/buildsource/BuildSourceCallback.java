@@ -5,6 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.artifact.ArtifactStreamCollectionStatus.STABLE;
+import static software.wings.beans.artifact.ArtifactStreamCollectionStatus.UNSTABLE;
 
 import com.google.inject.Inject;
 
@@ -64,6 +66,9 @@ public class BuildSourceCallback implements NotifyCallback {
   @Inject private transient ArtifactCollectionUtils artifactCollectionUtils;
   @Inject private transient ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
+  // Used in tests.
+  public BuildSourceCallback() {}
+
   public BuildSourceCallback(String accountId, String artifactStreamId, String permitId,
       String settingId) { // todo: new constr with settingId
     this.accountId = accountId;
@@ -81,18 +86,33 @@ public class BuildSourceCallback implements NotifyCallback {
       if (SUCCESS.equals(((BuildSourceExecutionResponse) notifyResponseData).getCommandExecutionStatus())) {
         updatePermit(artifactStream, false);
         BuildSourceExecutionResponse buildSourceExecutionResponse = (BuildSourceExecutionResponse) notifyResponseData;
-        if (buildSourceExecutionResponse.getBuildSourceResponse() != null) {
+        BuildSourceResponse buildSourceResponse = buildSourceExecutionResponse.getBuildSourceResponse();
+        if (buildSourceResponse != null) {
           builds = buildSourceExecutionResponse.getBuildSourceResponse().getBuildDetails();
         } else {
           logger.warn(
               "ASYNC_ARTIFACT_COLLECTION: null BuildSourceResponse in buildSourceExecutionResponse:[{}] for artifactStreamId [{}]",
               buildSourceExecutionResponse, artifactStreamId);
+          return;
         }
+
+        // NOTE: buildSourceResponse is not null at this point.
         try {
+          boolean isUnstable = UNSTABLE.name().equals(artifactStream.getCollectionStatus());
+          if (isUnstable && buildSourceResponse.isStable()) {
+            // If the artifact stream is unstable and buildSourceResponse has stable as true, mark this artifact stream
+            // as stable.
+            artifactStreamService.updateCollectionStatus(accountId, artifactStreamId, STABLE.name());
+          }
           List<Artifact> artifacts = processBuilds(artifactStream);
           if (isNotEmpty(artifacts)) {
             logger.info("[{}] new artifacts collected for artifactStreamId {}",
                 artifacts.stream().map(Artifact::getBuildNo).collect(Collectors.toList()), artifactStream.getUuid());
+            if (isUnstable) {
+              return;
+            }
+
+            // Invoke triggers for only stable artifact streams.
             if (!featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
               triggerService.triggerExecutionPostArtifactCollectionAsync(
                   accountId, artifactStream.fetchAppId(), artifactStreamId, artifacts);
