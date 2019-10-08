@@ -69,6 +69,8 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
     } else {
       serviceResourceService.setK8v2ServiceFromAppManifest(
           applicationManifest, applicationManifestService.getAppManifestType(applicationManifest));
+      serviceResourceService.setPcfV2ServiceFromAppManifestIfRequired(
+          applicationManifest, applicationManifestService.getAppManifestType(applicationManifest));
       return applicationManifestService.create(applicationManifest);
     }
   }

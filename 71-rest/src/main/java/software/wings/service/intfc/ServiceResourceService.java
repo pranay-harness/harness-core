@@ -511,4 +511,7 @@ public interface ServiceResourceService extends OwnedByApplication {
   List<Service> listByArtifactStreamId(String artifactStreamId);
 
   List<Service> listByDeploymentType(String appId, String deploymentType);
+
+  void setPcfV2ServiceFromAppManifestIfRequired(
+      ApplicationManifest applicationManifest, AppManifestSource appManifestSource);
 }
