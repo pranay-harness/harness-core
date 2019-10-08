@@ -37,8 +37,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.resources.PrometheusResource;
 import software.wings.service.impl.CloudWatchServiceImpl;
-import software.wings.service.impl.analysis.LogDataRecord;
-import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord.LogMLAnalysisRecordKeys;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
@@ -475,8 +473,6 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
               "Invalid baseline start and end time provided. They both should be positive and the difference should at least be "
                   + (CRON_POLL_INTERVAL_IN_MINUTES - 1) + " provided config: " + logsCVConfiguration);
     }
-    wingsPersistence.delete(wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
-                                .filter(LogDataRecordKeys.cvConfigId, cvConfigId));
     wingsPersistence.delete(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
                                 .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId)
                                 .field(LogMLAnalysisRecordKeys.logCollectionMinute)
