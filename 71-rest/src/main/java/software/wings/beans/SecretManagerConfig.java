@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
@@ -42,6 +44,7 @@ import javax.validation.constraints.NotNull;
   }, options = @IndexOptions(unique = true, name = "uniqueIdx"))
 })
 @HarnessEntity(exportable = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class SecretManagerConfig implements EncryptionConfig, PersistentEntity, UuidAware, CreatedAtAware,
                                                      CreatedByAware, UpdatedAtAware, UpdatedByAware {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
@@ -66,6 +69,7 @@ public abstract class SecretManagerConfig implements EncryptionConfig, Persisten
 
   public abstract void maskSecrets();
 
+  @JsonIgnore
   public boolean isGlobalKms() {
     return false;
   }
