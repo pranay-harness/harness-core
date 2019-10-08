@@ -69,6 +69,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public class SecretManagerTest extends CategoryTest {
@@ -304,7 +305,26 @@ public class SecretManagerTest extends CategoryTest {
 
   @Test
   @Category(UnitTests.class)
-  public void getGetEncryptedDataDetails() {
+  public void encryptedDataDetails() {
+    EncryptedData mockEncryptedData = mock(EncryptedData.class);
+    when(mockEncryptedData.getEncryptionType()).thenReturn(EncryptionType.KMS);
+    String kmsId = UUIDGenerator.generateUuid();
+    when(mockEncryptedData.getKmsId()).thenReturn(kmsId);
+    KmsConfig kmsConfig = mock(KmsConfig.class);
+    when(kmsConfig.isGlobalKms()).thenReturn(true);
+    when(secretManagerConfigService.getSecretManager(ACCOUNT_ID, kmsId)).thenReturn(kmsConfig);
+    String refId = UUIDGenerator.generateUuid();
+    when(wingsPersistence.get(EncryptedData.class, refId)).thenReturn(mockEncryptedData);
+
+    Optional<EncryptedDataDetail> encryptedDataDetails =
+        secretManager.encryptedDataDetails(ACCOUNT_ID, "password", refId);
+    assertThat(encryptedDataDetails.get()).isNotNull();
+    assertThat(encryptedDataDetails.get().getEncryptionConfig()).isEqualTo(kmsConfig);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void getEncryptionDetails() {
     when(featureFlagService.isEnabled(FeatureName.GLOBAL_KMS_PRE_PROCESSING, ACCOUNT_ID)).thenReturn(true);
     JenkinsConfig jenkinsConfig = getJenkinsConfig(ACCOUNT_ID);
     EncryptedRecordData mockEncryptedRecordData = mock(EncryptedRecordData.class);

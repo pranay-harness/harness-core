@@ -61,12 +61,17 @@ import javax.crypto.spec.SecretKeySpec;
 @Singleton
 @Slf4j
 public class KmsEncryptDecryptClient {
-  @Inject private TimeLimiter timeLimiter;
+  private TimeLimiter timeLimiter;
 
   // Caffeine cache is a high performance java cache just like Guava Cache. Below is the benchmark result
   // https://github.com/ben-manes/caffeine/wiki/Benchmarks
   private Cache<KmsEncryptionKeyCacheKey, byte[]> kmsEncryptionKeyCache =
       Caffeine.newBuilder().maximumSize(2000).expireAfterAccess(2, TimeUnit.HOURS).build();
+
+  @Inject
+  public KmsEncryptDecryptClient(TimeLimiter timeLimiter) {
+    this.timeLimiter = timeLimiter;
+  }
 
   public EncryptedRecord encrypt(String accountId, char[] value, KmsConfig kmsConfig) {
     if (kmsConfig == null) {
