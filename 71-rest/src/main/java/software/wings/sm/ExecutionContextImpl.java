@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.ServiceVariable.Type.TEXT;
@@ -221,8 +222,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   @Override
   public Object evaluateExpression(String expression, StateExecutionContext stateExecutionContext) {
-    return normalizeAndEvaluate(
-        expression, prepareContext(stateExecutionContext), normalizeStateName(stateExecutionInstance.getDisplayName()));
+    return normalizeAndEvaluate(expression, prepareContext(stateExecutionContext),
+        asList(normalizeStateName(stateExecutionInstance.getDisplayName()), "context"));
   }
 
   @Override
@@ -453,7 +454,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
         expression, context, variableResolverTracker, normalizeStateName(stateExecutionInstance.getDisplayName()));
   }
 
-  private Object normalizeAndEvaluate(String expression, Map<String, Object> context, String defaultObjectPrefix) {
+  private Object normalizeAndEvaluate(
+      String expression, Map<String, Object> context, List<String> defaultObjectPrefixes) {
     if (expression == null) {
       return null;
     }
@@ -507,7 +509,16 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
         }
       }
       if (unknownObject) {
-        variable = defaultObjectPrefix + "." + variable;
+        for (String defaultObjectPrefix : defaultObjectPrefixes) {
+          String normalizedVariable = defaultObjectPrefix + "." + variable;
+          try {
+            evaluate(normalizedVariable, new HashMap<>(), context, new ArrayList<>());
+          } catch (RuntimeException exception) {
+            continue;
+          }
+          variable = normalizedVariable;
+          break;
+        }
       }
 
       String varId = varPrefix + new Random().nextInt(10000);
@@ -527,11 +538,11 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       logger.info("The above code seems obsolete, but if you see me in the logs, it is not");
     }
 
-    return evaluate(sb.toString(), normalizedExpressionMap, context, defaultObjectPrefix);
+    return evaluate(sb.toString(), normalizedExpressionMap, context, defaultObjectPrefixes);
   }
 
   private Object evaluate(String expr, Map<String, String> normalizedExpressionMap, Map<String, Object> context,
-      String defaultObjectPrefix) {
+      List<String> defaultObjectPrefixes) {
     Map<String, Object> evaluatedValueMap = new HashMap<>(context);
     for (Entry<String, String> entry : normalizedExpressionMap.entrySet()) {
       String key = entry.getKey();
@@ -540,7 +551,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
         String valStr = (String) val;
         Matcher matcher = ManagerExpressionEvaluator.wingsVariablePattern.matcher(valStr);
         if (matcher.find()) {
-          val = normalizeAndEvaluate(valStr, context, defaultObjectPrefix);
+          val = normalizeAndEvaluate(valStr, context, defaultObjectPrefixes);
         }
       }
       evaluatedValueMap.put(key, val);
