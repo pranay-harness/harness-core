@@ -46,6 +46,8 @@ public class HelmDeployStateExecutionData extends StateExecutionData implements 
 
   @Builder.Default private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
 
+  public static final int MAX_ERROR_MSG_LENGTH = 1024;
+
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
@@ -62,9 +64,12 @@ public class HelmDeployStateExecutionData extends StateExecutionData implements 
 
   private void setExecutionData(Map<String, ExecutionDataValue> executionData) {
     String errorMsg = getErrorMsg();
-    if (isNotBlank(errorMsg) && errorMsg.length() > 256) {
+    if (isNotBlank(errorMsg) && errorMsg.length() > MAX_ERROR_MSG_LENGTH) {
       putNotNull(executionData, "errorMsg",
-          ExecutionDataValue.builder().displayName("Message").value(errorMsg.substring(0, 256)).build());
+          ExecutionDataValue.builder()
+              .displayName("Message")
+              .value(errorMsg.substring(0, MAX_ERROR_MSG_LENGTH))
+              .build());
     }
 
     putNotNull(
