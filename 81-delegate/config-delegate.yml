@@ -9,7 +9,7 @@ pollForTasks: false
 description: description here
 publishTarget: localhost:9890
 publishAuthority: localhost
-queueFilePath: /tmp/eventQueue
+queueFilePath: eventQueue
 enablePerpetualTasks: false
 managerTarget: localhost:9880
 managerAuthority: localhost
