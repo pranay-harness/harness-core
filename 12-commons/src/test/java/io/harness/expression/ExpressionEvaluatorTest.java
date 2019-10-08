@@ -72,6 +72,16 @@ public class ExpressionEvaluatorTest extends CategoryTest {
 
   @Test
   @Category(UnitTests.class)
+  public void shouldNotCrashWithNull() {
+    ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
+    Map<String, Object> context = new HashMap<>();
+    context.put("name", null);
+    assertThat(expressionEvaluator.substitute("${name}", context)).isEqualTo("null");
+    assertThat(expressionEvaluator.evaluate("name", context)).isNull();
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void shouldEvaluateRecursively() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
     Map<String, Object> context = ImmutableMap.<String, Object>builder().put("name", "bob").put("bob", bob).build();

@@ -5,24 +5,25 @@ import org.apache.commons.jexl3.JexlContext;
 import org.apache.commons.jexl3.JexlException;
 
 import java.util.List;
-import java.util.concurrent.ConcurrentMap;
+import java.util.Map;
 
 @Builder
 public class LateBindingContext implements JexlContext {
   private ExpressionEvaluator expressionEvaluator;
   private List<String> prefixes;
-  private ConcurrentMap<String, Object> map;
+  private Map<String, Object> map;
 
   private boolean recursive;
 
   @Override
-  public boolean has(String name) {
+  public synchronized boolean has(String name) {
     return map.containsKey(name);
   }
 
   @Override
-  public Object get(String key) {
-    Object object = map.get(key);
+  public synchronized Object get(String key) {
+    Object object;
+    object = map.get(key);
     if (object == null && !recursive) {
       for (String prefix : prefixes) {
         if (prefix == null) {
@@ -52,11 +53,11 @@ public class LateBindingContext implements JexlContext {
   }
 
   @Override
-  public void set(String name, Object value) {
+  public synchronized void set(String name, Object value) {
     map.put(name, value);
   }
 
-  public void clear() {
+  public synchronized void clear() {
     map.clear();
   }
 }
