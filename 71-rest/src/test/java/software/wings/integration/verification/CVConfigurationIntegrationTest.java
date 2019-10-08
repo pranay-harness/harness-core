@@ -2,7 +2,6 @@ package software.wings.integration.verification;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static javax.ws.rs.client.Entity.entity;
@@ -33,7 +32,6 @@ import com.amazonaws.services.cloudwatch.model.StandardUnit;
 import io.harness.category.element.IntegrationTests;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -804,7 +802,6 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = RAGHU, intermittent = true)
   @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testElkConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
