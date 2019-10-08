@@ -3,7 +3,6 @@ package io.harness.expression;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
-import static java.util.stream.Collectors.toConcurrentMap;
 
 import io.harness.data.algorithm.IdentifierName;
 import io.harness.exception.CriticalExpressionEvaluationException;
@@ -22,9 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -234,11 +231,7 @@ public class ExpressionEvaluator {
   }
 
   private JexlContext prepareContext(Map<String, Object> context, String defaultObjectPrefix) {
-    final ConcurrentMap<String, Object> map = context.entrySet()
-                                                  .stream()
-                                                  .filter(entry -> entry.getKey() != null && entry.getValue() != null)
-                                                  .collect(toConcurrentMap(Entry::getKey, Entry::getValue));
-
+    final Map<String, Object> map = new HashMap(context);
     map.putAll(expressionFunctorMap);
     return LateBindingContext.builder()
         .prefixes(generatePrefixList(defaultObjectPrefix))
