@@ -148,8 +148,8 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       executionLogCallback.saveExecutionLog("# App Details: ");
       pcfCommandTaskHelper.printApplicationDetail(newApplication, executionLogCallback);
 
-      List<PcfAppSetupTimeDetails> downsizeAppDetails = pcfCommandTaskHelper.generateDownsizeDetails(
-          pcfRequestConfig, newReleaseName, getCount(pcfCommandSetupRequest));
+      List<PcfAppSetupTimeDetails> downsizeAppDetails =
+          pcfCommandTaskHelper.generateDownsizeDetails(pcfRequestConfig, newReleaseName);
       PcfSetupCommandResponse pcfSetupCommandResponse =
           PcfSetupCommandResponse.builder()
               .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
@@ -222,14 +222,6 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       }
     } catch (Exception e) {
       logger.warn("Failed to remove temp files created" + e);
-    }
-  }
-
-  private Integer getCount(PcfCommandSetupRequest pcfCommandSetupRequest) {
-    if (pcfCommandSetupRequest.isUseCurrentCount()) {
-      return pcfCommandSetupRequest.getCurrentRunningCount();
-    } else {
-      return pcfCommandSetupRequest.getMaxCount();
     }
   }
 
