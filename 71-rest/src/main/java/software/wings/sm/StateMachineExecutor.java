@@ -272,6 +272,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     stateExecutionInstance.setAppId(stateMachine.getAppId());
     State state =
         stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
+    notNullCheck("state", state);
     stateExecutionInstance.setRollback(state.isRollback());
     stateExecutionInstance.setStateType(state.getStateType());
 
@@ -419,6 +420,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     }
     State currentState =
         stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
+    notNullCheck("currentState", currentState);
     if (currentState.getWaitInterval() != null && currentState.getWaitInterval() > 0) {
       StateExecutionData stateExecutionData =
           aStateExecutionData()
@@ -457,6 +459,7 @@ public class StateMachineExecutor implements StateInspectionListener {
       StateMachine stateMachine = context.getStateMachine();
       State currentState =
           stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
+      notNullCheck("currentState", currentState);
 
       logger.info("startStateExecution for State {} of type {}", currentState.getName(), currentState.getStateType());
 
@@ -686,6 +689,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   }
 
   private Map<String, String> getManualInterventionPlaceholderValues(ExecutionContextImpl context) {
+    notNullCheck("context.getApp()", context.getApp());
     WorkflowExecution workflowExecution = workflowExecutionService.getExecutionDetails(
         context.getApp().getUuid(), context.getWorkflowExecutionId(), false, emptySet());
     String artifactsMessage =
@@ -698,7 +702,7 @@ public class StateMachineExecutor implements StateInspectionListener {
 
   protected void sendManualInterventionNeededNotification(ExecutionContextImpl context) {
     Application app = context.getApp();
-
+    notNullCheck("app", app);
     Workflow workflow = workflowService.readWorkflow(app.getAppId(), context.getWorkflowId());
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
@@ -721,6 +725,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   private void openAnAlert(ExecutionContextImpl context, StateExecutionInstance stateExecutionInstance) {
     try {
       Application app = context.getApp();
+      notNullCheck("app", app);
       Environment environment = context.getEnv();
       ManualInterventionNeededAlert manualInterventionNeededAlert =
           ManualInterventionNeededAlert.builder()
@@ -919,8 +924,10 @@ public class StateMachineExecutor implements StateInspectionListener {
     try {
       State currentState =
           sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
+      notNullCheck("currentState", currentState);
       injector.injectMembers(currentState);
       if (isNotBlank(stateExecutionInstance.getDelegateTaskId())) {
+        notNullCheck("context.getApp()", context.getApp());
         if (finalStatus == ABORTED) {
           delegateService.abortTask(context.getApp().getAccountId(), stateExecutionInstance.getDelegateTaskId());
         } else {
