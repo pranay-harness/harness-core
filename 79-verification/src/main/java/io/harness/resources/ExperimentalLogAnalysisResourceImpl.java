@@ -1,5 +1,7 @@
 package io.harness.resources;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
@@ -70,11 +72,10 @@ public class ExperimentalLogAnalysisResourceImpl implements ExperimentalLogAnaly
       WorkflowExecution workflowExecution =
           managerClientHelper.callManagerWithRetry(managerClient.getWorkflowExecution(applicationId, stateExecutionId))
               .getResource();
-      mlAnalysisResponse.setWorkflowExecutionId(workflowExecution.getUuid());
-      if (workflowExecution.getEnvId() == null) {
-        mlAnalysisResponse.setEnvId("build-workflow");
-      } else {
-        mlAnalysisResponse.setEnvId(workflowExecution.getEnvId());
+      if (workflowExecution != null) {
+        mlAnalysisResponse.setWorkflowExecutionId(workflowExecution.getUuid());
+        mlAnalysisResponse.setEnvId(
+            isEmpty(workflowExecution.getEnvId()) ? "build-workflow" : workflowExecution.getEnvId());
       }
 
       mlAnalysisResponse.setAppId(applicationId);

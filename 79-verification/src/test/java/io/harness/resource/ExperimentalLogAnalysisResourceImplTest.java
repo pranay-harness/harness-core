@@ -85,6 +85,21 @@ public class ExperimentalLogAnalysisResourceImplTest extends VerificationBaseTes
 
   @Test
   @Category(UnitTests.class)
+  public void testSaveLogAnalysisMLRecordsNoWorkflow() throws IOException {
+    Call<RestResponse<WorkflowExecution>> restCall = mock(Call.class);
+    when(restCall.execute()).thenReturn(Response.success(new RestResponse<>()));
+    when(verificationManagerClient.getWorkflowExecution(anyString(), anyString())).thenReturn(restCall);
+    when(logAnalysisService.saveExperimentalLogAnalysisRecords(
+             any(ExperimentalLogMLAnalysisRecord.class), any(StateType.class), any(Optional.class)))
+        .thenReturn(true);
+    RestResponse<Boolean> response = logAnalysisResource.saveLogAnalysisMLRecords(mockAccountId, mockApplicationId,
+        mockStateExecutionId, logCollectionMinute, false, taskId, StateType.ELK, getMLAnalysisRecord());
+
+    assertThat(response.getResource()).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void testGetLogExpAnalysisInfo_shouldSuccess() throws IOException {
     List<ExpAnalysisInfo> expectedData = getLogMLExpAnalysisInfo();
     when(logAnalysisService.getExpAnalysisInfoList()).thenReturn(expectedData);
