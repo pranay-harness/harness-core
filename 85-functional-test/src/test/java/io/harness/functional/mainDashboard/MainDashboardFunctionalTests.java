@@ -80,7 +80,7 @@ public class MainDashboardFunctionalTests extends AbstractFunctionalTest {
     assertThat(environment).isNotNull();
 
     Workflow sampleWorkflow =
-        workflowUtils.buildCanaryWorkflowPostDeploymentStep("Test Workflow", environment.getUuid());
+        workflowUtils.buildCanaryWorkflowPostDeploymentStep("Test Workflow mainDashboard", environment.getUuid());
 
     // REST API.
     Workflow savedWorkflow = WorkflowRestUtils.createWorkflow(
@@ -101,6 +101,8 @@ public class MainDashboardFunctionalTests extends AbstractFunctionalTest {
     // Main Dashboard update check (after executing a workflow)
     // Handled the case of parallel workflow executions
     assertThat(updatedTotalCount - totalCount).isGreaterThan(0);
+    // Deleting the workflow
+    WorkflowRestUtils.deleteWorkflow(bearerToken, savedWorkflow.getUuid(), application.getAppId());
   }
 
   @Test
