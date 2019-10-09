@@ -568,19 +568,25 @@ public class AccountServiceImpl implements AccountService {
       if (isEmpty(deployPlatforms)) {
         UrlInfo docLink =
             getDocLink(TechStack.builder().category("Deployment Platforms").technology("General").build());
-        deployPlatforms.add(String.join(DELIMITER, docLink.getTitle(), docLink.getUrl()));
+        if (docLink != null) {
+          deployPlatforms.add(String.join(DELIMITER, docLink.getTitle(), docLink.getUrl()));
+        }
       }
 
       if (isEmpty(artifacts)) {
         UrlInfo docLink =
             getDocLink(TechStack.builder().category("Artifact Repositories").technology("General").build());
-        artifacts.add(String.join(DELIMITER, docLink.getTitle(), docLink.getUrl()));
+        if (docLink != null) {
+          artifacts.add(String.join(DELIMITER, docLink.getTitle(), docLink.getUrl()));
+        }
       }
 
       if (isEmpty(monitoringTools)) {
         UrlInfo docLink =
             getDocLink(TechStack.builder().category("Monitoring And Logging").technology("General").build());
-        monitoringTools.add(String.join(DELIMITER, docLink.getTitle(), docLink.getUrl()));
+        if (docLink != null) {
+          monitoringTools.add(String.join(DELIMITER, docLink.getTitle(), docLink.getUrl()));
+        }
       }
 
       Map<String, Object> model = new HashMap<>();
