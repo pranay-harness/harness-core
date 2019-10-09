@@ -53,9 +53,9 @@ public class ScimUserServiceImpl implements ScimUserService {
       // if the user already exists with with that email and is disabled, activate him.
       if (user.isDisabled()) {
         updateUser(user.getUuid(), accountId, userQuery);
-        return Response.status(Status.CREATED).entity(userQuery).build();
+        return Response.status(Status.CREATED).entity(getUser(user.getUuid(), accountId)).build();
       } else {
-        return Response.status(Status.CONFLICT).entity(userQuery).build();
+        return Response.status(Status.CONFLICT).entity(getUser(user.getUuid(), accountId)).build();
       }
     }
 
@@ -69,9 +69,14 @@ public class ScimUserServiceImpl implements ScimUserService {
     userService.inviteUser(userInvite);
 
     user = userService.getUserByEmail(primaryEmail, accountId);
-    userQuery.setId(user.getUuid());
-    logger.info("SCIM: Completed creating user call: {}", userQuery);
-    return Response.status(Status.CREATED).entity(userQuery).build();
+
+    if (user != null) {
+      userQuery.setId(user.getUuid());
+      logger.info("SCIM: Completed creating user call: {}", userQuery);
+      return Response.status(Status.CREATED).entity(getUser(user.getUuid(), accountId)).build();
+    } else {
+      return Response.status(Status.NOT_FOUND).build();
+    }
   }
 
   private String getPrimaryEmail(ScimUser userQuery) {
