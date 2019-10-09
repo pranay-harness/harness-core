@@ -10,6 +10,7 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.groups.Tuple.tuple;
 import static org.assertj.core.util.Lists.newArrayList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -17,6 +18,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static software.wings.api.DeploymentType.AMI;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
@@ -34,6 +36,7 @@ import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNot
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP;
 import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
+import static software.wings.beans.PhaseStepType.COLLECT_ARTIFACT;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
 import static software.wings.beans.PhaseStepType.DEPLOY_AWS_LAMBDA;
@@ -41,6 +44,7 @@ import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
 import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
+import static software.wings.beans.PhaseStepType.K8S_PHASE_STEP;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PREPARE_STEPS;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
@@ -77,14 +81,17 @@ import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.ass
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.assertWorkflowPhaseTemplateExpressions;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.assertWorkflowPhaseTemplateStep;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructAmiInfraMapping;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructAmiWorkflow;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructAppDVerifyStep;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructAppdTemplateExpressions;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructAwsLambdaInfraMapping;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBasicDeploymentTemplateWorkflow;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBasicWorkflow;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBasicWorkflowWithDeployServicePhaseStep;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBasicWorkflowWithPhase;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBlueGreenWorkflow;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBuildWorkflow;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBuildWorkflowWithPhase;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructCanaryHttpAsPostDeploymentStep;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructCanaryWithHttpPhaseStep;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructCanaryWithHttpStep;
@@ -102,6 +109,7 @@ import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.con
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructHELMInfra;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructHelmWorkflowWithProperties;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructHttpTemplateStep;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructK8SWorkflow;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructLinkedTemplate;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructMulitServiceTemplateWorkflow;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructMultiServiceWorkflow;
@@ -115,21 +123,58 @@ import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.con
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.getEnvTemplateExpression;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.getInfraTemplateExpression;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.getServiceTemplateExpression;
-import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
 import static software.wings.sm.StateType.AWS_CODEDEPLOY_STATE;
 import static software.wings.sm.StateType.AWS_LAMBDA_VERIFICATION;
 import static software.wings.sm.StateType.AWS_NODE_SELECT;
 import static software.wings.sm.StateType.DC_NODE_SELECT;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
+import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.sm.StateType.FORK;
 import static software.wings.sm.StateType.HTTP;
 import static software.wings.sm.StateType.JENKINS;
 import static software.wings.sm.StateType.KUBERNETES_DEPLOY;
 import static software.wings.sm.StateType.KUBERNETES_SETUP;
 import static software.wings.sm.StateType.KUBERNETES_SETUP_ROLLBACK;
+import static software.wings.sm.StateType.PAUSE;
+import static software.wings.sm.StateType.PHASE;
+import static software.wings.sm.StateType.PHASE_STEP;
 import static software.wings.sm.StateType.REPEAT;
 import static software.wings.sm.StateType.SHELL_SCRIPT;
+import static software.wings.sm.StateType.SUB_WORKFLOW;
+import static software.wings.sm.StateType.WAIT;
+import static software.wings.sm.StepType.APPROVAL;
+import static software.wings.sm.StepType.ARTIFACT_COLLECTION;
+import static software.wings.sm.StepType.BAMBOO;
+import static software.wings.sm.StepType.BARRIER;
+import static software.wings.sm.StepType.ECS_STEADY_STATE_CHECK;
+import static software.wings.sm.StepType.EMAIL;
+import static software.wings.sm.StepType.HELM_DEPLOY;
+import static software.wings.sm.StepType.JIRA_CREATE_UPDATE;
+import static software.wings.sm.StepType.K8S_APPLY;
+import static software.wings.sm.StepType.K8S_BLUE_GREEN_DEPLOY;
+import static software.wings.sm.StepType.K8S_CANARY_DEPLOY;
+import static software.wings.sm.StepType.K8S_DELETE;
+import static software.wings.sm.StepType.K8S_DEPLOYMENT_ROLLING;
+import static software.wings.sm.StepType.K8S_SCALE;
+import static software.wings.sm.StepType.K8S_TRAFFIC_SPLIT;
+import static software.wings.sm.StepType.KUBERNETES_SWAP_SERVICE_SELECTORS;
+import static software.wings.sm.StepType.NEW_RELIC_DEPLOYMENT_MARKER;
+import static software.wings.sm.StepType.RESOURCE_CONSTRAINT;
+import static software.wings.sm.StepType.SERVICENOW_CREATE_UPDATE;
+import static software.wings.sm.StepType.TERRAFORM_APPLY;
+import static software.wings.stencils.WorkflowStepType.APM;
+import static software.wings.stencils.WorkflowStepType.ARTIFACT;
+import static software.wings.stencils.WorkflowStepType.AWS_AMI;
+import static software.wings.stencils.WorkflowStepType.AWS_SSH;
+import static software.wings.stencils.WorkflowStepType.CI_SYSTEM;
+import static software.wings.stencils.WorkflowStepType.FLOW_CONTROL;
+import static software.wings.stencils.WorkflowStepType.ISSUE_TRACKING;
+import static software.wings.stencils.WorkflowStepType.KUBERNETES;
+import static software.wings.stencils.WorkflowStepType.LOG;
+import static software.wings.stencils.WorkflowStepType.NOTIFICATION;
+import static software.wings.stencils.WorkflowStepType.SERVICE_COMMAND;
+import static software.wings.stencils.WorkflowStepType.UTILITY;
 import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.ArtifactType.WAR;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -156,9 +201,9 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -224,14 +269,15 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.TemplateExpression;
+import software.wings.beans.User;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowCategorySteps;
 import software.wings.beans.WorkflowCategoryStepsMeta;
 import software.wings.beans.WorkflowPhase;
-import software.wings.beans.WorkflowStepMeta;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.beans.command.Command;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.stats.CloneMetadata;
@@ -255,6 +301,7 @@ import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.personalization.PersonalizationService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
@@ -265,15 +312,16 @@ import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachineTest.StateSync;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeScope;
+import software.wings.sm.StepType;
 import software.wings.sm.Transition;
 import software.wings.sm.TransitionType;
 import software.wings.stencils.Stencil;
-import software.wings.stencils.StencilCategory;
 import software.wings.stencils.StencilPostProcessor;
+import software.wings.stencils.WorkflowStepType;
 import software.wings.utils.WingsTestConstants.MockChecker;
 
 import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -311,6 +359,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Mock private TemplateService templateService;
   @Mock private UserGroupService userGroupService;
   @Mock FeatureFlagService featureFlagService;
+  @Mock private PersonalizationService personalizationService;
 
   @InjectMocks @Inject private WorkflowServiceHelper workflowServiceHelper;
   @InjectMocks @Inject private WorkflowServiceTemplateHelper workflowServiceTemplateHelper;
@@ -327,6 +376,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Mock private FieldEnd fieldEnd;
 
   private Service service = Service.builder().name(SERVICE_NAME).uuid(SERVICE_ID).artifactType(WAR).build();
+  private User user = User.Builder.anUser().withUuid("invalid").withEmail("invalid@abcd.com").build();
 
   /**
    * Sets mocks.
@@ -378,6 +428,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(notificationSetupService.listNotificationGroups(
              application.getAccountId(), RoleType.ACCOUNT_ADMIN.getDisplayName()))
         .thenReturn(notificationGroups);
+    when(personalizationService.fetch(anyString(), anyString(), any())).thenReturn(null);
   }
 
   @Test
@@ -686,7 +737,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(stencils.get(StateTypeScope.ORCHESTRATION_STENCILS))
         .extracting(Stencil::getType)
         .doesNotContain("BUILD", "ENV_STATE")
-        .contains(REPEAT.name(), FORK.name(), HTTP.name(), ARTIFACT_COLLECTION.name());
+        .contains(REPEAT.name(), FORK.name(), HTTP.name(), StateType.ARTIFACT_COLLECTION.name());
   }
 
   @Test
@@ -698,7 +749,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     List<Stencil> stencilList = stencils.get(StateTypeScope.ORCHESTRATION_STENCILS);
     assertThat(stencilList)
         .extracting(Stencil::getType)
-        .doesNotContain("BUILD", "ENV_STATE", ARTIFACT_COLLECTION.name())
+        .doesNotContain("BUILD", "ENV_STATE", StateType.ARTIFACT_COLLECTION.name())
         .contains("REPEAT", "FORK", "HTTP", AWS_NODE_SELECT.name(), AWS_LAMBDA_VERIFICATION.name());
   }
 
@@ -738,7 +789,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     List<Stencil> stencilList = stencils.get(StateTypeScope.ORCHESTRATION_STENCILS);
     assertThat(stencilList)
         .extracting(Stencil::getType)
-        .doesNotContain("BUILD", "ENV_STATE", ARTIFACT_COLLECTION.name(), ECS_SERVICE_SETUP.name(),
+        .doesNotContain("BUILD", "ENV_STATE", StateType.ARTIFACT_COLLECTION.name(), ECS_SERVICE_SETUP.name(),
             ECS_SERVICE_DEPLOY.name(), StateType.ECS_STEADY_STATE_CHECK.name())
         .contains("REPEAT", "FORK", "HTTP", KUBERNETES_SETUP.name(), KUBERNETES_SETUP_ROLLBACK.name(),
             KUBERNETES_DEPLOY.name(), StateType.KUBERNETES_STEADY_STATE_CHECK.name());
@@ -762,7 +813,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     List<Stencil> stencilList = stencils.get(StateTypeScope.ORCHESTRATION_STENCILS);
     assertThat(stencilList)
         .extracting(Stencil::getType)
-        .doesNotContain("BUILD", "ENV_STATE", ARTIFACT_COLLECTION.name(), KUBERNETES_SETUP.name(),
+        .doesNotContain("BUILD", "ENV_STATE", StateType.ARTIFACT_COLLECTION.name(), KUBERNETES_SETUP.name(),
             KUBERNETES_SETUP_ROLLBACK.name(), KUBERNETES_DEPLOY.name(), StateType.KUBERNETES_STEADY_STATE_CHECK.name())
         .contains("REPEAT", "FORK", "HTTP", ECS_SERVICE_SETUP.name(), ECS_SERVICE_DEPLOY.name(),
             StateType.ECS_STEADY_STATE_CHECK.name());
@@ -786,7 +837,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     List<Stencil> stencilList = stencils.get(StateTypeScope.ORCHESTRATION_STENCILS);
     assertThat(stencilList)
         .extracting(Stencil::getType)
-        .doesNotContain("BUILD", "ENV_STATE", ARTIFACT_COLLECTION.name(), KUBERNETES_SETUP.name(),
+        .doesNotContain("BUILD", "ENV_STATE", StateType.ARTIFACT_COLLECTION.name(), KUBERNETES_SETUP.name(),
             KUBERNETES_SETUP_ROLLBACK.name(), KUBERNETES_DEPLOY.name(), StateType.KUBERNETES_STEADY_STATE_CHECK.name())
         .contains("REPEAT", "FORK", "HTTP", DC_NODE_SELECT.name(), StateType.SHELL_SCRIPT.name());
   }
@@ -1020,7 +1071,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldCreateBasicAwsAmiDeploymentWorkflow() {
     Workflow workflow = constructBasicWorkflow();
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(constructAmiInfraMapping());
-    when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.AMI);
+    when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(AMI);
 
     Workflow savedWorkflow = workflowService.createWorkflow(workflow);
     assertThat(savedWorkflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
@@ -1094,7 +1145,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowPhase.getPhaseSteps())
         .isNotEmpty()
         .extracting(PhaseStep::getPhaseStepType)
-        .contains(CONTAINER_DEPLOY);
+        .contains(PhaseStepType.HELM_DEPLOY);
 
     assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, workflow)).contains(EntityType.ARTIFACT);
   }
@@ -3445,87 +3496,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testCategoriesFromCalculateCategorySteps() {
-    Workflow workflow = aWorkflow().build();
-    StateType[] stateTypes = {HTTP, SHELL_SCRIPT};
-    StencilCategory[] stencilCategory = {StencilCategory.OTHERS};
-
-    final WorkflowCategoryStepsMeta categoryOthers = WorkflowCategoryStepsMeta.builder()
-                                                         .id(StencilCategory.OTHERS.getName())
-                                                         .name(StencilCategory.OTHERS.getDisplayName())
-                                                         .stepIds(asList(HTTP.getType(), SHELL_SCRIPT.getType()))
-                                                         .build();
-
-    final WorkflowCategoryStepsMeta emptyCategoryFavorites =
-        WorkflowCategoryStepsMeta.builder().id("MY_FAVORITES").name("My Favorites").stepIds(asList()).build();
-
-    final WorkflowCategoryStepsMeta categoryFavorites =
-        emptyCategoryFavorites.toBuilder().stepIds(asList(HTTP.getType())).build();
-
-    WorkflowCategorySteps workflowCategorySteps = WorkflowServiceImpl.calculateCategorySteps(
-        null, null, stateTypes, stencilCategory, workflow, null, null, 0, infrastructureMappingService);
-    assertThat(workflowCategorySteps.getCategories()).containsExactly(emptyCategoryFavorites, categoryOthers);
-
-    Set<String> favorite = ImmutableSet.of(HTTP.name());
-    workflowCategorySteps = WorkflowServiceImpl.calculateCategorySteps(
-        favorite, null, stateTypes, stencilCategory, workflow, null, null, 0, infrastructureMappingService);
-    assertThat(workflowCategorySteps.getCategories()).containsExactly(categoryFavorites, categoryOthers);
-
-    LinkedList<String> recent = new LinkedList();
-    recent.add(SHELL_SCRIPT.getType());
-
-    final WorkflowCategoryStepsMeta categoryRecent = WorkflowCategoryStepsMeta.builder()
-                                                         .id("RECENTLY_USED")
-                                                         .name("Recently Used")
-                                                         .stepIds(asList(SHELL_SCRIPT.getType()))
-                                                         .build();
-
-    workflowCategorySteps = WorkflowServiceImpl.calculateCategorySteps(
-        null, recent, stateTypes, stencilCategory, workflow, null, null, 0, infrastructureMappingService);
-    assertThat(workflowCategorySteps.getCategories())
-        .containsExactly(categoryRecent, emptyCategoryFavorites, categoryOthers);
-
-    workflowCategorySteps = WorkflowServiceImpl.calculateCategorySteps(
-        favorite, recent, stateTypes, stencilCategory, workflow, null, null, 0, infrastructureMappingService);
-    assertThat(workflowCategorySteps.getCategories())
-        .containsExactly(categoryRecent, categoryFavorites, categoryOthers);
-  }
-
-  @Test
-  @Category(UnitTests.class)
-  public void testStepsFromCalculateCategorySteps() {
-    Workflow workflow = aWorkflow().build();
-    StateType[] stateTypes = {HTTP, SHELL_SCRIPT};
-    StencilCategory[] stencilCategory = {StencilCategory.OTHERS};
-
-    ImmutableMap<String, WorkflowStepMeta> stepMetaMap =
-        ImmutableMap.<String, WorkflowStepMeta>builder()
-            .put(
-                HTTP.getType(), WorkflowStepMeta.builder().name(HTTP.getName()).favorite(false).available(true).build())
-            .put(SHELL_SCRIPT.getType(),
-                WorkflowStepMeta.builder().name(SHELL_SCRIPT.getName()).favorite(false).available(true).build())
-            .build();
-
-    WorkflowCategorySteps workflowCategorySteps = WorkflowServiceImpl.calculateCategorySteps(
-        null, null, stateTypes, stencilCategory, workflow, null, null, 0, infrastructureMappingService);
-    assertThat(workflowCategorySteps.getSteps()).isEqualTo(stepMetaMap);
-
-    Set<String> favorite = ImmutableSet.of(HTTP.name());
-    workflowCategorySteps = WorkflowServiceImpl.calculateCategorySteps(
-        favorite, null, stateTypes, stencilCategory, workflow, null, null, 0, infrastructureMappingService);
-
-    stepMetaMap =
-        ImmutableMap.<String, WorkflowStepMeta>builder()
-            .put(HTTP.getType(), WorkflowStepMeta.builder().name(HTTP.getName()).favorite(true).available(true).build())
-            .put(SHELL_SCRIPT.getType(),
-                WorkflowStepMeta.builder().name(SHELL_SCRIPT.getName()).favorite(false).available(true).build())
-            .build();
-
-    assertThat(workflowCategorySteps.getSteps()).isEqualTo(stepMetaMap);
-  }
-
-  @Test
-  @Category(UnitTests.class)
   public void testCloneWorkflowWithSameName() {
     try {
       Workflow workflow = workflowService.createWorkflow(constructCanaryWorkflowWithPhase());
@@ -3550,6 +3520,238 @@ public class WorkflowServiceTest extends WingsBaseTest {
       fail("Expected an InvalidRequestException to be thrown");
     } catch (InvalidRequestException exception) {
       assertThat(exception.getParams().get("message")).isEqualTo("Duplicate name WORKFLOW_NAME");
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void categoriesForBuildWorkflow() throws IllegalArgumentException {
+    Workflow workflow = workflowService.createWorkflow(constructBuildWorkflowWithPhase());
+    String phaseId =
+        ((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getWorkflowPhases().get(0).getUuid();
+    assertThat(workflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+
+    WorkflowCategorySteps workflowCategorySteps =
+        workflowService.calculateCategorySteps(workflow, user.getUuid(), phaseId, COLLECT_ARTIFACT.name(), 0, false);
+    assertThat(workflowCategorySteps.getCategories()).isNotEmpty();
+
+    assertThat(workflowCategorySteps.getCategories())
+        .extracting(
+            WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
+        .contains(tuple(ARTIFACT.name(), ARTIFACT.getDisplayName(), asList(ARTIFACT_COLLECTION.name())));
+
+    validateCommonCategories(workflowCategorySteps);
+
+    assertThat(workflowCategorySteps.getCategories())
+        .extracting(WorkflowCategoryStepsMeta::getId)
+        .doesNotContain(KUBERNETES.name(), AWS_SSH.name());
+  }
+
+  private void validateCommonCategories(WorkflowCategorySteps workflowCategorySteps) {
+    validateCommonCategories(workflowCategorySteps, false);
+  }
+
+  private void validateCommonCategories(WorkflowCategorySteps workflowCategorySteps, boolean isK8sPhaseStep) {
+    assertThat(workflowCategorySteps.getCategories())
+        .extracting(
+            WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
+        .contains(tuple(WorkflowStepType.INFRASTRUCTURE_PROVISIONER.name(),
+            WorkflowStepType.INFRASTRUCTURE_PROVISIONER.getDisplayName(), asList(TERRAFORM_APPLY.name())));
+    assertThat(workflowCategorySteps.getCategories())
+        .extracting(
+            WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
+        .contains(tuple(ISSUE_TRACKING.name(), ISSUE_TRACKING.getDisplayName(),
+            asList(JIRA_CREATE_UPDATE.name(), SERVICENOW_CREATE_UPDATE.name())));
+    assertThat(workflowCategorySteps.getCategories())
+        .extracting(
+            WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
+        .contains(tuple(NOTIFICATION.name(), NOTIFICATION.getDisplayName(), asList(EMAIL.name())));
+    assertThat(workflowCategorySteps.getCategories())
+        .extracting(
+            WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
+        .contains(tuple(FLOW_CONTROL.name(), FLOW_CONTROL.getDisplayName(),
+            asList(BARRIER.name(), RESOURCE_CONSTRAINT.name(), APPROVAL.name())));
+    assertThat(workflowCategorySteps.getCategories())
+        .extracting(
+            WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
+        .contains(tuple(CI_SYSTEM.name(), CI_SYSTEM.getDisplayName(), asList(StepType.JENKINS.name(), BAMBOO.name())));
+    if (isK8sPhaseStep) {
+      assertThat(workflowCategorySteps.getCategories())
+          .extracting(WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName,
+              WorkflowCategoryStepsMeta::getStepIds)
+          .contains(tuple(UTILITY.name(), UTILITY.getDisplayName(),
+              asList(SHELL_SCRIPT.name(), HTTP.name(), NEW_RELIC_DEPLOYMENT_MARKER.name())));
+    } else {
+      assertThat(workflowCategorySteps.getCategories())
+          .extracting(WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName,
+              WorkflowCategoryStepsMeta::getStepIds)
+          .contains(tuple(UTILITY.name(), UTILITY.getDisplayName(), asList(SHELL_SCRIPT.name(), HTTP.name())));
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void categoriesForBasicWorkflow() throws IllegalArgumentException {
+    Workflow workflow = workflowService.createWorkflow(constructBasicWorkflowWithDeployServicePhaseStep());
+    String phaseId =
+        ((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getWorkflowPhases().get(0).getUuid();
+    assertThat(workflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+    when(serviceResourceService.getServiceCommands(workflow.getAppId(), SERVICE_ID))
+        .thenReturn(asList(ServiceCommand.Builder.aServiceCommand()
+                               .withCommand(Command.Builder.aCommand().withName("Install").build())
+                               .build(),
+            ServiceCommand.Builder.aServiceCommand()
+                .withCommand(Command.Builder.aCommand().withName("MyCommand").build())
+                .build()));
+    when(serviceResourceService.exist(anyString(), anyString())).thenReturn(true);
+    WorkflowCategorySteps workflowCategorySteps =
+        workflowService.calculateCategorySteps(workflow, user.getUuid(), phaseId, DEPLOY_SERVICE.name(), 0, false);
+    assertThat(workflowCategorySteps.getCategories()).isNotEmpty();
+
+    assertThat(workflowCategorySteps.getSteps().keySet()).contains("INSTALL", "MYCOMMAND");
+    assertThat(workflowCategorySteps.getSteps().get("INSTALL").getName()).isEqualTo("Install");
+    assertThat(workflowCategorySteps.getCategories())
+        .extracting(
+            WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
+        .contains(tuple(SERVICE_COMMAND.name(), SERVICE_COMMAND.getDisplayName(), asList("INSTALL", "MYCOMMAND")));
+    validateCommonCategories(workflowCategorySteps);
+    assertThat(workflowCategorySteps.getCategories())
+        .extracting(WorkflowCategoryStepsMeta::getId)
+        .doesNotContain(ARTIFACT.name(), APM.name(), LOG.name());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void categoriesForEcsWorkflow() throws IllegalArgumentException {
+    Workflow workflow = workflowService.createWorkflow(constructEcsWorkflow());
+    String phaseId =
+        ((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getWorkflowPhases().get(0).getUuid();
+    assertThat(workflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+    WorkflowCategorySteps workflowCategorySteps =
+        workflowService.calculateCategorySteps(workflow, user.getUuid(), phaseId, CONTAINER_DEPLOY.name(), 0, false);
+    assertThat(workflowCategorySteps.getCategories()).isNotEmpty();
+
+    assertThat(workflowCategorySteps.getCategories())
+        .extracting(
+            WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
+        .contains(tuple(WorkflowStepType.ECS.name(), WorkflowStepType.ECS.getDisplayName(),
+            asList(ECS_SERVICE_DEPLOY.name(), ECS_STEADY_STATE_CHECK.name())));
+
+    validateCommonCategories(workflowCategorySteps);
+
+    assertThat(workflowCategorySteps.getCategories())
+        .extracting(WorkflowCategoryStepsMeta::getId)
+        .doesNotContain(APM.name(), LOG.name(), ARTIFACT.name());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void categoriesForHelmWorkflow() throws IllegalArgumentException {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("helmReleaseNamePrefix", "defaultValue");
+    Workflow workflow = constructHelmWorkflowWithProperties(properties);
+    String phaseId =
+        ((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getWorkflowPhases().get(0).getUuid();
+    assertThat(workflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+
+    WorkflowCategorySteps workflowCategorySteps =
+        workflowService.calculateCategorySteps(workflow, user.getUuid(), phaseId, HELM_DEPLOY.name(), 0, false);
+    assertThat(workflowCategorySteps.getCategories()).isNotEmpty();
+
+    assertThat(workflowCategorySteps.getCategories())
+        .extracting(
+            WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
+        .contains(
+            tuple(WorkflowStepType.HELM.name(), WorkflowStepType.HELM.getDisplayName(), asList(HELM_DEPLOY.name())));
+
+    validateCommonCategories(workflowCategorySteps);
+
+    assertThat(workflowCategorySteps.getCategories())
+        .extracting(WorkflowCategoryStepsMeta::getId)
+        .doesNotContain(APM.name(), LOG.name(), ARTIFACT.name(), KUBERNETES.name());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void categoriesForK8SWorkflow() throws IllegalArgumentException {
+    Workflow workflow = workflowService.createWorkflow(constructK8SWorkflow());
+    String phaseId =
+        ((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getWorkflowPhases().get(0).getUuid();
+    assertThat(workflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+    when(serviceResourceService.exist(anyString(), anyString())).thenReturn(true);
+    WorkflowCategorySteps workflowCategorySteps =
+        workflowService.calculateCategorySteps(workflow, user.getUuid(), phaseId, K8S_PHASE_STEP.name(), 0, false);
+    assertThat(workflowCategorySteps.getCategories()).isNotEmpty();
+
+    assertThat(workflowCategorySteps.getCategories())
+        .extracting(
+            WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
+        .contains(tuple(KUBERNETES.name(), KUBERNETES.getDisplayName(),
+            asList(K8S_CANARY_DEPLOY.name(), K8S_BLUE_GREEN_DEPLOY.name(), KUBERNETES_SWAP_SERVICE_SELECTORS.name(),
+                K8S_DEPLOYMENT_ROLLING.name(), K8S_TRAFFIC_SPLIT.name(), K8S_APPLY.name(), K8S_SCALE.name(),
+                K8S_DELETE.name())));
+    validateCommonCategories(workflowCategorySteps, true);
+
+    assertThat(workflowCategorySteps.getCategories())
+        .extracting(WorkflowCategoryStepsMeta::getId)
+        .doesNotContain(ARTIFACT.name());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void categoriesForAmiWorkflowRollbackSection() {
+    Workflow workflow = workflowService.createWorkflow(constructAmiWorkflow());
+    String phaseId =
+        ((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getWorkflowPhases().get(0).getUuid();
+    assertThat(workflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+
+    WorkflowCategorySteps workflowCategorySteps = workflowService.calculateCategorySteps(
+        workflow, user.getUuid(), phaseId, AMI_DEPLOY_AUTOSCALING_GROUP.name(), 0, true);
+    assertThat(workflowCategorySteps.getCategories()).isNotEmpty();
+
+    assertThat(workflowCategorySteps.getCategories())
+        .extracting(
+            WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
+        .contains(tuple(AWS_AMI.name(), AWS_AMI.getDisplayName(), asList(StepType.AWS_AMI_SERVICE_ROLLBACK.name())));
+
+    validateCommonCategories(workflowCategorySteps);
+
+    assertThat(workflowCategorySteps.getCategories())
+        .extracting(WorkflowCategoryStepsMeta::getId)
+        .doesNotContain(APM.name(), LOG.name(), ARTIFACT.name()); // TODO: should this contain APM and LOG
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testAllStateTypesDefinedInStepTypes() {
+    List<StateType> excludedStateTypes =
+        asList(SUB_WORKFLOW, REPEAT, FORK, WAIT, PAUSE, ENV_STATE, PHASE, PHASE_STEP, AWS_LAMBDA_VERIFICATION);
+
+    Set<String> stateTypes = new HashSet<>();
+    for (StateType stateType : StateType.values()) {
+      if (!excludedStateTypes.contains(stateType)) {
+        stateTypes.add(stateType.getType());
+      }
+    }
+
+    Set<String> stepTypes = new HashSet<>();
+    for (StepType stepType : StepType.values()) {
+      stepTypes.add(stepType.getType());
+    }
+
+    assertThat(stateTypes.size()).as(getMessage(stateTypes, stepTypes)).isEqualTo(stepTypes.size());
+    assertThat(stateTypes).containsAll(stepTypes);
+  }
+
+  private String getMessage(Set<String> stateTypes, Set<String> stepTypes) {
+    Set<String> stateTypesCopy = new HashSet<>(stateTypes);
+    Set<String> stepTypesCopy = new HashSet<>(stepTypes);
+    if (stateTypesCopy.size() > stepTypesCopy.size()) {
+      stateTypesCopy.removeAll(stepTypesCopy);
+      return "StateType(s): " + Joiner.on(", ").join(stateTypesCopy) + " should be added to StepType as well.";
+    } else {
+      stepTypesCopy.removeAll(stateTypesCopy);
+      return "StepType(s): " + Joiner.on(", ").join(stepTypesCopy) + " should be added to StateType as well.";
     }
   }
 }

@@ -192,5 +192,5 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
   List<String> obtainWorkflowNamesReferencedByInfrastructureDefinition(String appId, String infraDefinitionId);
 
   WorkflowCategorySteps calculateCategorySteps(
-      Workflow workflow, String userId, String phaseId, String sectionId, int position);
+      Workflow workflow, String userId, String phaseId, String sectionId, int position, boolean rollbackSection);
 }

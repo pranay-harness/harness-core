@@ -69,6 +69,7 @@ import static software.wings.sm.StateType.TERRAFORM_ROLLBACK;
 import static software.wings.sm.StateType.values;
 import static software.wings.sm.states.provision.TerraformProvisionState.INHERIT_APPROVED_PLAN;
 import static software.wings.sm.states.provision.TerraformProvisionState.RUN_PLAN_ONLY_KEY;
+import static software.wings.stencils.WorkflowStepType.SERVICE_COMMAND;
 import static software.wings.utils.Validator.notEmptyCheck;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -216,11 +217,13 @@ import software.wings.sm.StateMachine.StateMachineKeys;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
+import software.wings.sm.StepType;
 import software.wings.sm.states.k8s.K8sStateHelper;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilCategory;
 import software.wings.stencils.StencilPostProcessor;
+import software.wings.stencils.WorkflowStepType;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
@@ -3280,8 +3283,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public WorkflowCategorySteps calculateCategorySteps(
-      Workflow workflow, String userId, String phaseId, String sectionId, int position) {
-    boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, workflow.getAccountId());
+      Workflow workflow, String userId, String phaseId, String sectionId, int position, boolean rollbackSection) {
     Set<String> favorites = null;
     LinkedList<String> recent = null;
 
@@ -3294,55 +3296,41 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         recent = personalization.getSteps().getRecent();
       }
     }
-    if (infraRefactor) {
-      return calculateCategorySteps(favorites, recent, StateType.values(), StencilCategory.values(), workflow, phaseId,
-          sectionId, position, infrastructureDefinitionService);
-    } else {
-      return calculateCategorySteps(favorites, recent, StateType.values(), StencilCategory.values(), workflow, phaseId,
-          sectionId, position, infrastructureMappingService);
+    // filter StepType by PhaseStepType
+    List<StepType> stepTypesList = StepType.filterByPhaseStepType(sectionId, rollbackSection);
+    StepType[] stepTypes = stepTypesList.stream().toArray(StepType[] ::new);
+    // get workflow phase
+    WorkflowPhase workflowPhase = null;
+    if (phaseId != null && !phaseId.equals("default")) { // for pre-deployment phaseId will be default
+      workflowPhase = workflowServiceHelper.getWorkflowPhase(workflow, phaseId);
     }
+
+    return calculateCategorySteps(favorites, recent, stepTypes, workflowPhase, workflow.getAppId());
   }
 
-  public static WorkflowCategorySteps calculateCategorySteps(Set<String> favorites, LinkedList<String> recent,
-      StateType[] stateTypes, StencilCategory[] stencilCategories, Workflow workflow, String phaseId, String sectionId,
-      int position, InfrastructureDefinitionService infrastructureDefinitionService) {
+  public WorkflowCategorySteps calculateCategorySteps(Set<String> favorites, LinkedList<String> recent,
+      StepType[] stepTypes, WorkflowPhase workflowPhase, String appId) {
     Map<String, WorkflowStepMeta> steps = new HashMap<>();
-    for (StateType step : stateTypes) {
-      Boolean available =
-          checkIfStepAvailable(workflow, phaseId, step, workflow.getAppId(), infrastructureDefinitionService);
-      final WorkflowStepMeta stepMeta = WorkflowStepMeta.builder()
-                                            .name(step.getName())
-                                            .favorite(isNotEmpty(favorites) && favorites.contains(step.getType()))
-                                            .available(available)
-                                            .build();
-      steps.put(step.getType(), stepMeta);
+    DeploymentType workflowPhaseDeploymentType = workflowPhase != null ? workflowPhase.getDeploymentType() : null;
+    for (StepType step : stepTypes) {
+      if (step.matches(workflowPhaseDeploymentType)) {
+        final WorkflowStepMeta stepMeta = WorkflowStepMeta.builder()
+                                              .name(step.getName())
+                                              .favorite(isNotEmpty(favorites) && favorites.contains(step.getType()))
+                                              .available(true)
+                                              .build();
+        steps.put(step.getType(), stepMeta);
+      }
     }
-
-    return getWorkflowCategorySteps(favorites, recent, stateTypes, stencilCategories, steps);
+    String serviceId = workflowServiceHelper.getServiceIdFromPhase(workflowPhase);
+    List<String> serviceCommands = workflowServiceHelper.getServiceCommands(workflowPhase, appId, serviceId);
+    return getWorkflowCategorySteps(favorites, recent, stepTypes, steps, serviceCommands);
   }
 
-  public static WorkflowCategorySteps calculateCategorySteps(Set<String> favorites, LinkedList<String> recent,
-      StateType[] stateTypes, StencilCategory[] stencilCategories, Workflow workflow, String phaseId, String sectionId,
-      int position, InfrastructureMappingService infrastructureMappingService) {
-    Map<String, WorkflowStepMeta> steps = new HashMap<>();
-    for (StateType step : stateTypes) {
-      Boolean available =
-          checkIfStepAvailable(workflow, phaseId, step, workflow.getAppId(), infrastructureMappingService);
-      final WorkflowStepMeta stepMeta = WorkflowStepMeta.builder()
-                                            .name(step.getName())
-                                            .favorite(isNotEmpty(favorites) && favorites.contains(step.getType()))
-                                            .available(available)
-                                            .build();
-      steps.put(step.getType(), stepMeta);
-    }
-
-    return getWorkflowCategorySteps(favorites, recent, stateTypes, stencilCategories, steps);
-  }
-
-  public static WorkflowCategorySteps getWorkflowCategorySteps(Set<String> favorites, LinkedList<String> recent,
-      StateType[] stateTypes, StencilCategory[] stencilCategories, Map<String, WorkflowStepMeta> steps) {
+  public WorkflowCategorySteps getWorkflowCategorySteps(Set<String> favorites, LinkedList<String> recent,
+      StepType[] stepTypes, Map<String, WorkflowStepMeta> steps, List<String> commandNames) {
     List<WorkflowCategoryStepsMeta> categories = new ArrayList<>();
-
+    Map<String, WorkflowCategoryStepsMeta> map = new HashMap<>();
     // We do not want the recent category if it is empty
     if (isNotEmpty(recent)) {
       List<String> stepIds = new ArrayList<>();
@@ -3351,131 +3339,70 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           WorkflowCategoryStepsMeta.builder().id("RECENTLY_USED").name("Recently Used").stepIds(stepIds).build());
     }
 
-    {
-      // We would like to add the favorite category even if it is empty. This inconsistency is for UI convenience
-      List<String> stepIds = new ArrayList<>();
-      if (isNotEmpty(favorites)) {
-        for (StateType step : stateTypes) {
-          if (favorites.contains(step.getType())) {
-            stepIds.add(step.getType());
-          }
-        }
-      }
-      categories.add(
-          WorkflowCategoryStepsMeta.builder().id("MY_FAVORITES").name("My Favorites").stepIds(stepIds).build());
-    }
-
-    for (StencilCategory category : stencilCategories) {
-      if (category.isHidden()) {
-        continue;
-      }
-      List<String> stepIds = new ArrayList<>();
-      for (StateType step : stateTypes) {
-        if (step.getStencilCategory().equals(category)) {
+    // We would like to add the favorite category even if it is empty. This inconsistency is for UI convenience
+    List<String> stepIds = new ArrayList<>();
+    if (isNotEmpty(favorites)) {
+      for (StepType step : stepTypes) {
+        if (favorites.contains(step.getType())) {
           stepIds.add(step.getType());
         }
       }
+    }
+    categories.add(
+        WorkflowCategoryStepsMeta.builder().id("MY_FAVORITES").name("My Favorites").stepIds(stepIds).build());
+
+    Map<String, StepType> stepTypeMap = new HashMap<>();
+    for (StepType stepType : stepTypes) {
+      stepTypeMap.put(stepType.getType(), stepType);
+    }
+
+    for (Entry<WorkflowStepType, List<StepType>> entry : StepType.workflowStepTypeListMap.entrySet()) {
+      WorkflowStepType workflowStepType = entry.getKey();
+      if (!workflowStepType.name().equals(SERVICE_COMMAND.name())) {
+        List<StepType> stepTypeList = entry.getValue();
+        if (isNotEmpty(stepTypeList)) {
+          for (StepType stepType : stepTypeList) {
+            if (stepTypeMap.containsKey(stepType.getType())) {
+              if (!map.containsKey(workflowStepType.name())) {
+                map.put(workflowStepType.name(),
+                    WorkflowCategoryStepsMeta.builder()
+                        .id(workflowStepType.name())
+                        .name(workflowStepType.getDisplayName())
+                        .stepIds(new ArrayList<>())
+                        .build());
+              }
+              WorkflowCategoryStepsMeta meta = map.get(workflowStepType.name());
+              if (isEmpty(meta.getStepIds()) || !meta.getStepIds().contains(stepType.getType())) {
+                meta.getStepIds().add(stepType.getType());
+                map.put(workflowStepType.name(), meta);
+              }
+            }
+          }
+        }
+        if (map.containsKey(workflowStepType.name())) {
+          categories.add(map.get(workflowStepType.name()));
+        }
+      }
+    }
+
+    // Special handling for ServiceCommands
+    // For "Service Commands" Category to show up on UI, the corresponding StepIds must be present in Map<> steps
+    if (isNotEmpty(commandNames)) {
+      List<String> upped = new ArrayList<>();
+      for (String commandName : commandNames) {
+        // converting commandName like "Install" to uppercase. This is to make it consistent with other steps
+        // and also since UI needs it this way to display the icon in UI
+        upped.add(commandName.toUpperCase());
+        steps.put(commandName.toUpperCase(),
+            WorkflowStepMeta.builder().favorite(false).available(true).name(commandName).build());
+      }
       categories.add(WorkflowCategoryStepsMeta.builder()
-                         .id(category.getName())
-                         .name(category.getDisplayName())
-                         .stepIds(stepIds)
+                         .id(SERVICE_COMMAND.name())
+                         .name(SERVICE_COMMAND.getDisplayName())
+                         .stepIds(upped)
                          .build());
     }
-
     return WorkflowCategorySteps.builder().steps(steps).categories(categories).build();
-  }
-
-  private static Boolean checkIfStepAvailable(Workflow workflow, String phaseId, StateType stateType, String appId,
-      InfrastructureMappingService infrastructureMappingService) {
-    boolean buildWorkflow = false;
-    if (workflow != null) {
-      OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-      WorkflowPhase workflowPhase = null;
-      if (orchestrationWorkflow != null) {
-        buildWorkflow = BUILD.equals(orchestrationWorkflow.getOrchestrationWorkflowType());
-      }
-      if (isNotBlank(phaseId) && !phaseId.equalsIgnoreCase("default")) {
-        if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
-          workflowPhase = ((CanaryOrchestrationWorkflow) orchestrationWorkflow)
-                              .getWorkflowPhases()
-                              .stream()
-                              .findFirst()
-                              .filter(phase -> phase.getUuid().equals(phaseId))
-                              .orElseGet(null);
-        }
-        if (workflowPhase == null) {
-          throw new InvalidRequestException(
-              "Workflow Phase not associated with Workflow [" + workflow.getName() + "]", USER);
-        }
-        String infraMappingId = workflowPhase.getInfraMappingId();
-        if (workflowPhase.checkInfraTemplatized()) {
-          DeploymentType workflowPhaseDeploymentType = workflowPhase.getDeploymentType();
-          if (workflowPhaseDeploymentType != null) {
-            return stateType.matches(workflowPhaseDeploymentType);
-          }
-        } else if (infraMappingId != null) {
-          InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
-          if (infrastructureMapping != null) {
-            return stateType.matches(infrastructureMapping);
-          }
-        }
-      }
-      if (stateType.getStencilCategory().equals(StencilCategory.COMMANDS)
-          || stateType.getStencilCategory().equals(StencilCategory.CLOUD)) {
-        return false;
-      }
-    }
-    if (!buildWorkflow) {
-      return !stateType.getStencilCategory().equals(StencilCategory.COLLECTIONS);
-    }
-    return true;
-  }
-
-  private static Boolean checkIfStepAvailable(Workflow workflow, String phaseId, StateType stateType, String appId,
-      InfrastructureDefinitionService infrastructureDefinitionService) {
-    boolean buildWorkflow = false;
-    if (workflow != null) {
-      OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-      WorkflowPhase workflowPhase = null;
-      if (orchestrationWorkflow != null) {
-        buildWorkflow = BUILD.equals(orchestrationWorkflow.getOrchestrationWorkflowType());
-      }
-      if (isNotBlank(phaseId) && !phaseId.equalsIgnoreCase("default")) {
-        if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
-          workflowPhase = ((CanaryOrchestrationWorkflow) orchestrationWorkflow)
-                              .getWorkflowPhases()
-                              .stream()
-                              .findFirst()
-                              .filter(phase -> phase.getUuid().equals(phaseId))
-                              .orElseGet(null);
-        }
-        if (workflowPhase == null) {
-          throw new InvalidRequestException(
-              "Workflow Phase not associated with Workflow [" + workflow.getName() + "]", USER);
-        }
-        String infraDefinitionId = workflowPhase.getInfraDefinitionId();
-        if (workflowPhase.checkInfraDefinitionTemplatized()) {
-          DeploymentType workflowPhaseDeploymentType = workflowPhase.getDeploymentType();
-          if (workflowPhaseDeploymentType != null) {
-            return stateType.matches(workflowPhaseDeploymentType);
-          }
-        } else if (infraDefinitionId != null) {
-          InfrastructureDefinition infrastructureDefinition =
-              infrastructureDefinitionService.get(appId, infraDefinitionId);
-          if (infrastructureDefinition != null) {
-            return stateType.matches(infrastructureDefinition);
-          }
-        }
-      }
-      if (stateType.getStencilCategory().equals(StencilCategory.COMMANDS)
-          || stateType.getStencilCategory().equals(StencilCategory.CLOUD)) {
-        return false;
-      }
-    }
-    if (!buildWorkflow) {
-      return !stateType.getStencilCategory().equals(StencilCategory.COLLECTIONS);
-    }
-    return true;
   }
 
   @Override

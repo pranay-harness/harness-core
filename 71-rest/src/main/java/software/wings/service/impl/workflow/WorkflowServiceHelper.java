@@ -15,6 +15,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.DeploymentType.AMI;
 import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
@@ -22,6 +23,7 @@ import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.PCF;
+import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
@@ -220,6 +222,59 @@ public class WorkflowServiceHelper {
   public static final String ROLLBACK_CONTAINERS = "Rollback Containers";
   public static final String ROLLBACK_AWS_CODE_DEPLOY = "Rollback AWS CodeDeploy";
   public static final String ROLLBACK_KUBERNETES_SETUP = "Rollback Kubernetes Setup";
+  public static final String JIRA = "Jira";
+  public static final String ARTIFACT_COLLECTION_STEP = "Artifact Collection";
+  public static final String ARTIFACT_CHECK_STEP = "Artifact Check";
+  public static final String APPDYNAMICS = "AppDynamics";
+  public static final String NEW_RELIC = "New Relic";
+  public static final String DYNATRACE = "Dynatrace";
+  public static final String PROMETHEUS = "Prometheus";
+  public static final String DATADOG_METRICS = "Datadog Metrics";
+  public static final String STACKDRIVER = "Stackdriver";
+  public static final String CLOUDWATCH = "CloudWatch";
+  public static final String BUG_SNAG = "Bugsnag";
+  public static final String CUSTOM_METRICS = "Custom Metrics";
+  public static final String DATADOG_LOG = "Datadog Log";
+  public static final String ELK = "ELK";
+  public static final String SPLUNK_V2 = "Splunkv2";
+  public static final String STACKDRIVER_LOG = "Stackdriver Log";
+  public static final String SUMO_LOGIC = "Sumo Logic";
+  public static final String LOGZ = "LOGZ";
+  public static final String CUSTOM_LOG_VERIFICATION = "Custom Log Verification";
+  public static final String AWS_SELECT_NODES = "AWS Select Nodes";
+  public static final String ELB = "Elastic Load Balancer";
+  public static final String AZURE_SELECT_NODES = "Azure Select Nodes";
+  public static final String ROLLBACK_ECS_SETUP = "Rollback ECS Setup";
+  public static final String PCF_MAP_ROUTE_NAME = "Map Route";
+  public static final String PCF_UNMAP_ROUTE_NAME = "Unmap Route";
+  public static final String PROVISION_SHELL_SCRIPT = "Shell Script Provision";
+  public static final String ROLLBACK_CLOUD_FORMATION = "CloudFormation Rollback Stack";
+  public static final String ROLLBACK_TERRAFORM_NAME = "Terraform Rollback";
+  public static final String ECS_STEADY_STATE_CHK = "Ecs Steady State Check";
+  public static final String KUBERNETES_STEADY_STATE_CHECK = "Steady State Check";
+  public static final String ECS_UPGRADE_CONTAINERS = "ECS Upgrade Containers";
+  public static final String ECS_ROLLBACK_CONTAINERS = "ECS Rollback Containers";
+  public static final String KUBERNETES_UPGRADE_CONTAINERS = "Kubernetes Upgrade Containers";
+  public static final String KUBERNETES_ROLLBACK_CONTAINERS = "Kubernetes Rollback Containers";
+  public static final String GCP_CLUSTER_SETUP_NAME = "Gcp Cluster Setup";
+  public static final String SWAP_SERVICE_SELECTORS = "Swap Service Selectors";
+  public static final String ROLLING_SELECT_NODES = "Rolling Select Nodes";
+  public static final String CF_CREATE_STACK = "CloudFormation Create Stack";
+  public static final String CF_DELETE_STACK = "CloudFormation Delete Stack";
+  public static final String TERRAFORM_APPLY = "Terraform Apply";
+  public static final String TERRAFORM_PROVISION = "Terraform Provision";
+  public static final String TERRAFORM_DESTROY = "Terraform Destroy";
+  public static final String SERVICENOW = "ServiceNow";
+  public static final String EMAIL = "Email";
+  public static final String BARRIER = "Barrier";
+  public static final String RESOURCE_CONSTRAINT = "Resource Constraint";
+  public static final String APPROVAL_NAME = "Approval";
+  public static final String JENKINS = "Jenkins";
+  public static final String BAMBOO = "Bamboo";
+  public static final String SHELL_SCRIPT = "Shell Script";
+  public static final String HTTP = "HTTP";
+  public static final String NEW_RELIC_DEPLOYMENT_MARKER = "New Relic Deployment Marker";
+  public static final String COMMAND_NAME = "Command";
 
   private static final String SETUP_AUTOSCALING_GROUP = "Setup AutoScaling Group";
   private static final String PROVISION_INFRASTRUCTURE = "Provision Infrastructure";
@@ -2455,5 +2510,56 @@ public class WorkflowServiceHelper {
       return infraMapping instanceof AwsAmiInfrastructureMapping
           && AmiDeploymentType.SPOTINST.equals(((AwsAmiInfrastructureMapping) infraMapping).getAmiDeploymentType());
     }
+  }
+
+  public WorkflowPhase getWorkflowPhase(Workflow workflow, String phaseId) {
+    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+    if (isBlank(phaseId)) {
+      throw new InvalidRequestException("Phase Id not provided");
+    } else if (!phaseId.equalsIgnoreCase("default")) {
+      if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
+        return ((CanaryOrchestrationWorkflow) orchestrationWorkflow)
+            .getWorkflowPhases()
+            .stream()
+            .filter(phase -> phase.getUuid().equals(phaseId))
+            .findFirst()
+            .orElseGet(null);
+      }
+    }
+    return null;
+  }
+
+  public String getServiceIdFromPhase(WorkflowPhase workflowPhase) {
+    if (workflowPhase != null) {
+      if (!workflowPhase.checkServiceTemplatized()) {
+        return workflowPhase.getServiceId();
+      } else if (workflowPhase.checkServiceTemplatized()) {
+        // this will be removed in the future once service commands moved to template library
+        return workflowPhase.getServiceId();
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Get service commands - exclude service that has internal commands
+   * @param workflowPhase
+   * @param appId
+   * @param svcId
+   * @return
+   */
+  public List<String> getServiceCommands(WorkflowPhase workflowPhase, String appId, String svcId) {
+    List<String> commandNames = new ArrayList<>();
+    if (svcId != null) {
+      if (workflowPhase != null && workflowPhase.getDeploymentType() != null
+          && workflowPhase.getDeploymentType().equals(SSH) && serviceResourceService.exist(appId, svcId)) {
+        List<ServiceCommand> serviceCommands = new ArrayList<>(serviceResourceService.getServiceCommands(appId, svcId));
+        commandNames = serviceCommands.stream()
+                           .map(serviceCommand -> serviceCommand.getCommand().getName())
+                           .distinct()
+                           .collect(Collectors.toList());
+      }
+    }
+    return commandNames;
   }
 }
