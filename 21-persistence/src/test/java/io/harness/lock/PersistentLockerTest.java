@@ -73,7 +73,7 @@ public class PersistentLockerTest extends PersistenceTest {
     try (AcquiredLock lock = persistentLocker.acquireLock(AcquiredLock.class, "cba", Duration.ofMinutes(1))) {
       body = true;
     } catch (RuntimeException ex) {
-      assertThat(ex.getMessage()).isEqualTo("GENERAL_ERROR");
+      assertThat(ex.getMessage()).isEqualTo("Failed to acquire distributed lock for io.harness.lock.AcquiredLock-cba");
     }
 
     assertThat(body).isFalse();

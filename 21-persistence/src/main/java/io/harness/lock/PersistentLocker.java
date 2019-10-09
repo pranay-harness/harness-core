@@ -16,6 +16,7 @@ import com.deftlabs.lock.mongo.DistributedLock;
 import com.deftlabs.lock.mongo.DistributedLockOptions;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.mongodb.BasicDBObject;
+import io.harness.exception.GeneralException;
 import io.harness.exception.WingsException;
 import io.harness.health.HealthMonitor;
 import io.harness.lock.AcquiredDistributedLock.AcquiredDistributedLockBuilder;
@@ -50,7 +51,7 @@ public class PersistentLocker implements Locker, HealthMonitor {
             .distributedLockSvc(distributedLockSvc));
   }
 
-  @SuppressWarnings("PMD")
+  @SuppressWarnings({"PMD", "squid:S2222"})
   public AcquiredLock acquireLock(String name, Duration timeout, AcquiredDistributedLockBuilder builder) {
     DistributedLockOptions options = new DistributedLockOptions();
     options.setInactiveLockTimeout((int) timeout.toMillis());
@@ -69,8 +70,7 @@ public class PersistentLocker implements Locker, HealthMonitor {
       // object is deleted in the middle of tryLock. Ignore the exception and assume that we failed to obtain the lock.
     }
 
-    throw new WingsException(GENERAL_ERROR, NOBODY)
-        .addParam("message", format("Failed to acquire distributed lock for %s", name));
+    throw new GeneralException(format("Failed to acquire distributed lock for %s", name), NOBODY);
   }
 
   @Override
@@ -156,6 +156,7 @@ public class PersistentLocker implements Locker, HealthMonitor {
   @Override
   public void isHealthy() throws Exception {
     try (AcquiredLock dummy = acquireEphemeralLock("HEALTH_CHECK - " + generateUuid(), ofSeconds(1))) {
+      // nothing to do
     }
   }
 }

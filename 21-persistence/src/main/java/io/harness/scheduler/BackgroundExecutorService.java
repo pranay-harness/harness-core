@@ -19,7 +19,7 @@ public class BackgroundExecutorService {
     this.executorService = configuration.isClustered() ? new CurrentThreadExecutor() : executorService;
   }
 
-  public Future<?> submit(Runnable task) {
+  public Future submit(Runnable task) {
     return executorService.submit(task);
   }
 }
