@@ -667,10 +667,6 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     return fieldValueMap;
   }
 
-  private boolean isTemplated(String expression) {
-    return expression != null && expression.contains("$");
-  }
-
   private void saveFieldMapForDefinition(
       InfrastructureDefinition infrastructureDefinition, Map<String, String> fieldMapForClass) {
     try {
@@ -1189,9 +1185,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   }
 
   @Override
-  public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String infraDefinitionId){}
-
-  ;
+  public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String infraDefinitionId) {}
 
   @Override
   public void ensureSafeToDelete(@NotEmpty String appId, InfrastructureDefinition infrastructureDefinition) {
