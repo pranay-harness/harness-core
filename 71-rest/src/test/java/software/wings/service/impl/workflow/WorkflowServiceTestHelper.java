@@ -4,6 +4,8 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static software.wings.api.DeploymentType.AMI;
+import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.BlueGreenOrchestrationWorkflow.BlueGreenOrchestrationWorkflowBuilder.aBlueGreenOrchestrationWorkflow;
@@ -24,7 +26,9 @@ import static software.wings.beans.InfrastructureMappingType.GCP_KUBERNETES;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.MultiServiceOrchestrationWorkflow.MultiServiceOrchestrationWorkflowBuilder.aMultiServiceOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
+import static software.wings.beans.PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP;
 import static software.wings.beans.PhaseStepType.HELM_DEPLOY;
+import static software.wings.beans.PhaseStepType.K8S_PHASE_STEP;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
@@ -45,6 +49,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.ENV_STATE;
+import static software.wings.sm.StateType.SHELL_SCRIPT;
 import static software.wings.sm.StateType.WAIT;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -273,6 +278,42 @@ public class WorkflowServiceTestHelper {
         .build();
   }
 
+  public static Workflow constructBuildWorkflowWithPhase() {
+    return aWorkflow()
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(
+            aBuildOrchestrationWorkflow()
+                .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                .addWorkflowPhase(
+                    aWorkflowPhase()
+                        .phaseSteps(asList(aPhaseStep(PhaseStepType.COLLECT_ARTIFACT, "Collect Artifact").build()))
+                        .build())
+                .build())
+        .build();
+  }
+
+  public static Workflow constructBasicWorkflowWithDeployServicePhaseStep() {
+    return aWorkflow()
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(
+            aBuildOrchestrationWorkflow()
+                .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                .addWorkflowPhase(
+                    aWorkflowPhase()
+                        .serviceId(SERVICE_ID)
+                        .deploymentType(SSH)
+                        .phaseSteps(asList(aPhaseStep(PhaseStepType.DEPLOY_SERVICE, "Deploy Service").build()))
+                        .build())
+                .build())
+        .build();
+  }
+
   public static Workflow constructMultiServiceWorkflow() {
     return aWorkflow()
         .name(WORKFLOW_NAME)
@@ -444,6 +485,7 @@ public class WorkflowServiceTestHelper {
                 .addWorkflowPhase(aWorkflowPhase()
                                       .serviceId(SERVICE_ID)
                                       .infraMappingId(INFRA_MAPPING_ID)
+                                      .deploymentType(ECS)
                                       .phaseSteps(asList(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                                                              .addStep(GraphNode.builder()
                                                                           .id(generateUuid())
@@ -462,22 +504,68 @@ public class WorkflowServiceTestHelper {
         .name(WORKFLOW_NAME)
         .appId(APP_ID)
         .envId(ENV_ID)
+        .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
+                                   .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                   .addWorkflowPhase(aWorkflowPhase()
+                                                         .serviceId(SERVICE_ID)
+                                                         .infraMappingId(INFRA_MAPPING_ID)
+                                                         .deploymentType(DeploymentType.HELM)
+                                                         .phaseSteps(asList(aPhaseStep(HELM_DEPLOY, DEPLOY_CONTAINERS)
+                                                                                .addStep(GraphNode.builder()
+                                                                                             .id(generateUuid())
+                                                                                             .type(HELM_DEPLOY.name())
+                                                                                             .name(UPGRADE_CONTAINERS)
+                                                                                             .properties(properties)
+                                                                                             .build())
+                                                                                .build()))
+                                                         .build())
+                                   .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                   .build())
+        .build();
+  }
+
+  public static Workflow constructK8SWorkflow() {
+    return aWorkflow()
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .envId(ENV_ID)
+        .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
+                                   .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                   .addWorkflowPhase(aWorkflowPhase()
+                                                         .serviceId(SERVICE_ID)
+                                                         .infraMappingId(INFRA_MAPPING_ID)
+                                                         .deploymentType(DeploymentType.KUBERNETES)
+                                                         .phaseSteps(asList(aPhaseStep(K8S_PHASE_STEP, "Deploy")
+                                                                                .addStep(GraphNode.builder()
+                                                                                             .id(generateUuid())
+                                                                                             .type(SHELL_SCRIPT.name())
+                                                                                             .name("Shell Script")
+                                                                                             .build())
+                                                                                .build()))
+                                                         .build())
+                                   .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                   .build())
+        .build();
+  }
+
+  public static Workflow constructAmiWorkflow() {
+    return aWorkflow()
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .envId(ENV_ID)
+        .serviceId(SERVICE_ID)
+        .infraMappingId(INFRA_MAPPING_ID)
         .orchestrationWorkflow(
-            aCanaryOrchestrationWorkflow()
+            aBasicOrchestrationWorkflow()
+                .withWorkflowPhases(asList(
+                    aWorkflowPhase()
+                        .serviceId(SERVICE_ID)
+                        .infraMappingId(INFRA_MAPPING_ID)
+                        .deploymentType(AMI)
+                        .phaseSteps(asList(
+                            aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, AMI_DEPLOY_AUTOSCALING_GROUP.name()).build()))
+                        .build()))
                 .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
-                .addWorkflowPhase(aWorkflowPhase()
-                                      .serviceId(SERVICE_ID)
-                                      .infraMappingId(INFRA_MAPPING_ID)
-                                      .deploymentType(DeploymentType.HELM)
-                                      .phaseSteps(asList(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
-                                                             .addStep(GraphNode.builder()
-                                                                          .id(generateUuid())
-                                                                          .type(HELM_DEPLOY.name())
-                                                                          .name(UPGRADE_CONTAINERS)
-                                                                          .properties(properties)
-                                                                          .build())
-                                                             .build()))
-                                      .build())
                 .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
                 .build())
         .build();
@@ -528,7 +616,7 @@ public class WorkflowServiceTestHelper {
     return anEcsInfrastructureMapping()
         .withUuid(INFRA_MAPPING_ID)
         .withServiceId(SERVICE_ID)
-        .withDeploymentType(DeploymentType.ECS.name())
+        .withDeploymentType(ECS.name())
         .withInfraMappingType(AWS_ECS.name())
         .withComputeProviderType(GCP.name())
         .withClusterName(RUNTIME)

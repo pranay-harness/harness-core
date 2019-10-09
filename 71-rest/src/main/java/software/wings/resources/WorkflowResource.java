@@ -614,10 +614,10 @@ public class WorkflowResource {
   @ExceptionMetered
   public RestResponse<WorkflowCategorySteps> getSteps(@QueryParam("accountId") String accountId,
       @PathParam("phaseId") String phaseId, @PathParam("sectionId") String sectionId,
-      @PathParam("position") int position, Workflow workflow) {
+      @PathParam("position") int position, @QueryParam("rollbackSection") boolean rollbackSection, Workflow workflow) {
     final User user = UserThreadLocal.get();
     final WorkflowCategorySteps steps =
-        workflowService.calculateCategorySteps(workflow, user.getUuid(), phaseId, sectionId, position);
+        workflowService.calculateCategorySteps(workflow, user.getUuid(), phaseId, sectionId, position, rollbackSection);
     return new RestResponse<>(steps);
   }
 
