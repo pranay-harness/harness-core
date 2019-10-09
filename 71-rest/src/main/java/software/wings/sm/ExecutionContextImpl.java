@@ -16,6 +16,7 @@ import static software.wings.sm.ContextElement.ENVIRONMENT_VARIABLE;
 import static software.wings.sm.ContextElement.SAFE_DISPLAY_SERVICE_VARIABLE;
 import static software.wings.sm.ContextElement.SERVICE_VARIABLE;
 import static software.wings.utils.KubernetesConvention.getNormalizedInfraMappingIdLabelValue;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
@@ -96,6 +97,7 @@ import software.wings.settings.SettingValue;
 import software.wings.sm.ExecutionContextImpl.ServiceVariables.ServiceVariablesBuilder;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -270,6 +272,10 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   @Override
   public List<Artifact> getArtifacts() {
     WorkflowStandardParams workflowStandardParams = getContextElement(ContextElementType.STANDARD);
+    if (workflowStandardParams == null || workflowStandardParams.getApp() == null) {
+      logger.warn("workflowStandardParams or workflowStandardParams.getApp() is null");
+      return Collections.emptyList();
+    }
     String accountId = workflowStandardParams.getApp().getAccountId();
     if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
       List<ContextElement> contextElementList = getContextElementList(ContextElementType.ARTIFACT);
@@ -353,6 +359,9 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   public Map<String, Artifact> getArtifactsForService(String serviceId) {
     WorkflowStandardParams workflowStandardParams = getContextElement(ContextElementType.STANDARD);
     Map<String, Artifact> map = new HashMap<>();
+    if (workflowStandardParams == null || workflowStandardParams.getWorkflowElement() == null) {
+      return map;
+    }
     List<ArtifactVariable> artifactVariables = workflowStandardParams.getWorkflowElement().getArtifactVariables();
     if (isEmpty(artifactVariables)) {
       return map;
@@ -606,7 +615,9 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
         variables.put(variableName, renderExpression(new String(serviceVariable.getValue())));
       } else if (!Type.ARTIFACT.equals(serviceVariable.getType())) {
         if (isEmpty(serviceVariable.getAccountId())) {
-          serviceVariable.setAccountId(getApp().getAccountId());
+          Application app = getApp();
+          notNullCheck("app", app);
+          serviceVariable.setAccountId(app.getAccountId());
         }
         variables.put(variableName,
             ServiceEncryptedVariable.builder()
@@ -814,7 +825,10 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     }
     if (stateExecutionContext.getArtifact() != null) {
       map = copyIfNeeded(map);
-      addArtifactToContext(artifactStreamService, getApp().getAccountId(), map, stateExecutionContext.getArtifact());
+      Application app = getApp();
+      if (app != null) {
+        addArtifactToContext(artifactStreamService, app.getAccountId(), map, stateExecutionContext.getArtifact());
+      }
     }
     if (stateExecutionContext.getArtifactFileName() != null) {
       map.put(ExpressionEvaluator.ARTIFACT_FILE_NAME_VARIABLE, stateExecutionContext.getArtifactFileName());
@@ -882,7 +896,10 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     if (!(contextElement instanceof WorkflowStandardParams)) {
       return null;
     }
-    return ((WorkflowStandardParams) contextElement).getApp().getAccountId();
+
+    Application app = ((WorkflowStandardParams) contextElement).getApp();
+    notNullCheck("app", app);
+    return app.getAccountId();
   }
 
   @Override
@@ -940,7 +957,10 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
         || phaseElement.getServiceElement().getUuid() == null) {
       return null;
     }
-    String envId = getEnv().getUuid();
+
+    Environment env = getEnv();
+    notNullCheck("env", env);
+    String envId = env.getUuid();
     Optional<Key<ServiceTemplate>> serviceTemplateKey =
         serviceTemplateService
             .getTemplateRefKeysByService(getAppId(), phaseElement.getServiceElement().getUuid(), envId)
@@ -1013,6 +1033,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   public void populateDeploymentSpecificInfoInInfraMappingElement(
       InfrastructureMapping infrastructureMapping, PhaseElement phaseElement, InfraMappingElementBuilder builder) {
     String infraMappingId = fetchInfraMappingId();
+    notNullCheck("infraMappingId", infraMappingId);
 
     if (DeploymentType.PCF.name().equals(phaseElement.getDeploymentType())) {
       PcfInfrastructureMapping pcfInfrastructureMapping = (PcfInfrastructureMapping) infrastructureMapping;
