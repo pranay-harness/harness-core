@@ -52,6 +52,6 @@ public class ElkCVConfigurationYamlHandler extends LogsCVConfigurationYamlHandle
 
   @Override
   public Class getYamlClass() {
-    return ElkCVConfigurationYamlHandler.class;
+    return ElkCVConfigurationYaml.class;
   }
 }
