@@ -1,23 +1,32 @@
 package software.wings.service.impl.verification;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.threading.Morpheus.sleep;
+import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
+import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 
 import com.google.inject.Inject;
 
 import io.fabric8.utils.Lists;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.VerificationOperationException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
+import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
+import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 
 import java.util.ArrayList;
@@ -177,5 +186,107 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
       assertThat(definition.getMetricName()).isEqualTo(metric.getMetricName());
       assertThat(definition.getMetricType().name()).isEqualTo(metric.getMetricType());
     });
+  }
+
+  @Test(expected = VerificationOperationException.class)
+  @Category(UnitTests.class)
+  public void testInvalidCvConfig() {
+    cvConfigurationService.resetBaseline(generateUuid(), generateUuid(), new LogsCVConfiguration());
+  }
+
+  @Test(expected = VerificationOperationException.class)
+  @Category(UnitTests.class)
+  public void testNullCvConfig() {
+    final LogsCVConfiguration logsCVConfig = createLogsCVConfig(false);
+    String cvConfigId = wingsPersistence.save(logsCVConfig);
+    cvConfigurationService.resetBaseline(logsCVConfig.getAppId(), cvConfigId, null);
+  }
+
+  @Test(expected = VerificationOperationException.class)
+  @Category(UnitTests.class)
+  public void testUpdateWithNoBaselineSet() {
+    final LogsCVConfiguration logsCVConfig = createLogsCVConfig(true);
+    String cvConfigId = wingsPersistence.save(logsCVConfig);
+
+    final LogsCVConfiguration updatedConfig = createLogsCVConfig(true);
+    updatedConfig.setBaselineStartMinute(0);
+    updatedConfig.setBaselineEndMinute(0);
+
+    cvConfigurationService.resetBaseline(logsCVConfig.getAppId(), cvConfigId, updatedConfig);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testResetWithBaselineSet() {
+    final LogsCVConfiguration logsCVConfig = createLogsCVConfig(true);
+    String cvConfigId = wingsPersistence.save(logsCVConfig);
+
+    final LogsCVConfiguration updatedConfig = createLogsCVConfig(false);
+    updatedConfig.setBaselineStartMinute(301);
+    updatedConfig.setBaselineEndMinute(360);
+
+    LogsCVConfiguration fetchedConfig = wingsPersistence.get(LogsCVConfiguration.class, cvConfigId);
+    assertThat(fetchedConfig.isEnabled24x7()).isTrue();
+
+    cvConfigId = cvConfigurationService.resetBaseline(logsCVConfig.getAppId(), cvConfigId, updatedConfig);
+    fetchedConfig = wingsPersistence.get(LogsCVConfiguration.class, cvConfigId);
+    assertThat(fetchedConfig.isEnabled24x7()).isTrue();
+    assertThat(fetchedConfig.getBaselineStartMinute()).isEqualTo(updatedConfig.getBaselineStartMinute());
+    assertThat(fetchedConfig.getBaselineEndMinute()).isEqualTo(updatedConfig.getBaselineEndMinute());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testResetBaselineWithData() {
+    final LogsCVConfiguration logsCVConfig = createLogsCVConfig(true);
+    String cvConfigId = wingsPersistence.save(logsCVConfig);
+    int numOfAnalysisRecords = 17;
+    for (int i = 0; i < numOfAnalysisRecords * CRON_POLL_INTERVAL_IN_MINUTES; i += CRON_POLL_INTERVAL_IN_MINUTES) {
+      wingsPersistence.save(LogMLAnalysisRecord.builder().logCollectionMinute(i).cvConfigId(cvConfigId).build());
+      wingsPersistence.save(LearningEngineAnalysisTask.builder().cvConfigId(cvConfigId).build());
+    }
+
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority).count())
+        .isEqualTo(numOfAnalysisRecords);
+    assertThat(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).count())
+        .isEqualTo(numOfAnalysisRecords);
+    int numOfAnalysisToKeep = 8;
+
+    final LogsCVConfiguration updatedConfig = createLogsCVConfig(true);
+    updatedConfig.setBaselineStartMinute(numOfAnalysisToKeep * CRON_POLL_INTERVAL_IN_MINUTES);
+    updatedConfig.setBaselineEndMinute(numOfAnalysisRecords * CRON_POLL_INTERVAL_IN_MINUTES);
+
+    String newCvConfigId = cvConfigurationService.resetBaseline(logsCVConfig.getAppId(), cvConfigId, updatedConfig);
+    LogsCVConfiguration fetchedConfig = wingsPersistence.get(LogsCVConfiguration.class, newCvConfigId);
+    assertThat(fetchedConfig.isEnabled24x7()).isTrue();
+    assertThat(fetchedConfig.getBaselineStartMinute()).isEqualTo(updatedConfig.getBaselineStartMinute());
+    assertThat(fetchedConfig.getBaselineEndMinute()).isEqualTo(updatedConfig.getBaselineEndMinute());
+
+    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority).count()).isEqualTo(0);
+    assertThat(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).count())
+        .isEqualTo(numOfAnalysisToKeep);
+
+    sleep(ofSeconds(2));
+    wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList().forEach(logMLAnalysisRecord -> {
+      assertThat(logMLAnalysisRecord.getCvConfigId()).isEqualTo(newCvConfigId);
+      assertThat(logMLAnalysisRecord.isDeprecated()).isTrue();
+    });
+  }
+
+  private LogsCVConfiguration createLogsCVConfig(boolean enabled24x7) {
+    LogsCVConfiguration logsCVConfiguration = new LogsCVConfiguration();
+    logsCVConfiguration.setName("Config 1");
+    logsCVConfiguration.setAppId(generateUuid());
+    logsCVConfiguration.setEnvId(generateUuid());
+    logsCVConfiguration.setServiceId(generateUuid());
+    logsCVConfiguration.setEnabled24x7(enabled24x7);
+    logsCVConfiguration.setConnectorId(generateUuid());
+    logsCVConfiguration.setBaselineStartMinute(100);
+    logsCVConfiguration.setBaselineEndMinute(200);
+    logsCVConfiguration.setAlertEnabled(false);
+    logsCVConfiguration.setAlertThreshold(0.1);
+    logsCVConfiguration.setQuery(generateUuid());
+    logsCVConfiguration.setStateType(StateType.SUMO);
+    return logsCVConfiguration;
   }
 }

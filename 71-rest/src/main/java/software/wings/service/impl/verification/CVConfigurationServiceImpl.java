@@ -458,20 +458,21 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   public String resetBaseline(String appId, String cvConfigId, LogsCVConfiguration logsCVConfiguration) {
     final LogsCVConfiguration cvConfiguration = wingsPersistence.get(LogsCVConfiguration.class, cvConfigId);
     if (cvConfiguration == null) {
-      throw new WingsException(GENERAL_ERROR, USER).addParam("message", "No configuration found with id " + cvConfigId);
+      throw new VerificationOperationException(GENERAL_ERROR, "No configuration found with id " + cvConfigId, USER);
     }
 
     if (logsCVConfiguration == null) {
-      throw new WingsException(GENERAL_ERROR, USER).addParam("message", "No log configuration provided in the payload");
+      throw new VerificationOperationException(GENERAL_ERROR, "No log configuration provided in the payload", USER);
     }
 
-    if (logsCVConfiguration.getBaselineStartMinute() <= 0 || logsCVConfiguration.getBaselineEndMinute() <= 0
-        || logsCVConfiguration.getBaselineEndMinute()
-            < logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1) {
-      throw new WingsException(GENERAL_ERROR, USER)
-          .addParam("message",
-              "Invalid baseline start and end time provided. They both should be positive and the difference should at least be "
-                  + (CRON_POLL_INTERVAL_IN_MINUTES - 1) + " provided config: " + logsCVConfiguration);
+    if (cvConfiguration.isEnabled24x7()
+        && (logsCVConfiguration.getBaselineStartMinute() <= 0 || logsCVConfiguration.getBaselineEndMinute() <= 0
+               || logsCVConfiguration.getBaselineEndMinute()
+                   < logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1)) {
+      throw new VerificationOperationException(GENERAL_ERROR,
+          "Invalid baseline start and end time provided. They both should be positive and the difference should at least be "
+              + (CRON_POLL_INTERVAL_IN_MINUTES - 1) + " provided config: " + logsCVConfiguration,
+          USER);
     }
     wingsPersistence.delete(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
                                 .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId)
