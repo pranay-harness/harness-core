@@ -35,10 +35,14 @@ import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Singleton
 @Slf4j
 public class APMDelegateServiceImpl implements APMDelegateService {
+  private static final String DATADOG_API_MASK = "api_key=([^&]*)";
+  private static final String DATADOG_APP_MASK = "application_key=([^&]*)";
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService delegateLogService;
 
@@ -121,11 +125,27 @@ public class APMDelegateServiceImpl implements APMDelegateService {
       request = getAPMRestClient(config).collect(
           config.getUrl(), resolveDollarReferences(config.getHeaders()), resolveDollarReferences(config.getOptions()));
     }
-    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                     .name(URL_STRING)
-                                     .value(request.request().url().toString())
-                                     .type(FieldType.URL)
-                                     .build());
+    String urlToLog = request.request().url().toString();
+    if (urlToLog.contains("api_key")) {
+      Pattern batchPattern = Pattern.compile(DATADOG_API_MASK);
+      Matcher matcher = batchPattern.matcher(urlToLog);
+      while (matcher.find()) {
+        final String apiKey = matcher.group(1);
+        urlToLog = urlToLog.replace(apiKey, "<apiKey>");
+      }
+    }
+
+    if (urlToLog.contains("application_key")) {
+      Pattern batchPattern = Pattern.compile(DATADOG_APP_MASK);
+      Matcher matcher = batchPattern.matcher(urlToLog);
+      while (matcher.find()) {
+        final String appKey = matcher.group(1);
+        urlToLog = urlToLog.replace(appKey, "<appKey>");
+      }
+    }
+
+    apiCallLog.addFieldToRequest(
+        ThirdPartyApiCallField.builder().name(URL_STRING).value(urlToLog).type(FieldType.URL).build());
 
     final Response<Object> response;
     try {

@@ -1427,14 +1427,17 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
     Map<String, List<APMMetricInfo>> metricInfoByQuery;
     if (!config.isServiceLevel()) {
-      metricInfoByQuery = metricEndpointsInfo(Optional.ofNullable(config.getDatadogServiceName()),
-          Optional.of(new ArrayList<>(Arrays.asList(config.getMetrics().split(",")))), Optional.empty(),
-          Optional.empty(),
+      Optional<List<String>> metrics = Optional.empty();
+      if (isNotEmpty(config.getMetrics())) {
+        metrics = Optional.of(new ArrayList<>(Arrays.asList(config.getMetrics().split(","))));
+      }
+      metricInfoByQuery = metricEndpointsInfo(Optional.ofNullable(config.getDatadogServiceName()), metrics,
+          Optional.empty(), Optional.ofNullable(config.getCustomMetrics()),
           isEmpty(config.getDeploymentType()) ? Optional.empty()
                                               : Optional.of(DeploymentType.valueOf(config.getDeploymentType())));
     } else {
-      metricInfoByQuery = createDatadogMetricEndPointMap(config.getDockerMetrics(), config.getEcsMetrics(),
-          config.getDatadogServiceName(), config.getCustomMetricsMap());
+      metricInfoByQuery = createDatadogMetricEndPointMap(
+          config.getDockerMetrics(), config.getEcsMetrics(), config.getDatadogServiceName(), config.getCustomMetrics());
     }
 
     List<Object> loadResponse = new ArrayList<>();
@@ -1442,16 +1445,34 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     // loop for each metric
     for (Entry<String, List<APMMetricInfo>> entry : metricInfoByQuery.entrySet()) {
       String url = entry.getKey();
+      String hostname = config.getInstanceName();
+      if (config.getInstanceElement() != null) {
+        hostname = config.getInstanceElement().getHostName();
+      }
       if (url.contains(VERIFICATION_HOST_PLACEHOLDER)) {
-        url = url.replace(VERIFICATION_HOST_PLACEHOLDER, config.getInstanceElement().getHostName());
+        url = url.replace(VERIFICATION_HOST_PLACEHOLDER, hostname);
       }
       apmValidateCollectorConfig.setUrl(url);
       VerificationNodeDataSetupResponse verificationNodeDataSetupResponse =
           getVerificationNodeDataResponse(accountId, apmValidateCollectorConfig, config.getGuid());
+      APMResponseParser.APMResponseData responseData = new APMResponseParser.APMResponseData(
+          null, DEFAULT_GROUP_NAME, (String) verificationNodeDataSetupResponse.getDataForNode(), entry.getValue());
+
+      Collection<NewRelicMetricDataRecord> metricDataRecords = APMResponseParser.extract(Arrays.asList(responseData));
+
       if (!verificationNodeDataSetupResponse.isProviderReachable()) {
         // if not reachable then directly return. no need to process further
         return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
       }
+      verificationNodeDataSetupResponse.setProviderReachable(true);
+      boolean loadPresent = metricDataRecords.size() > 0;
+
+      verificationNodeDataSetupResponse.setLoadResponse(
+          VerificationLoadResponse.builder()
+              .loadResponse(verificationNodeDataSetupResponse.getDataForNode())
+              .isLoadPresent(loadPresent)
+              .build());
+
       // add load response only for metrics containing nodedata.
       if (verificationNodeDataSetupResponse.getLoadResponse().isLoadPresent()) {
         loadResponse.add(verificationNodeDataSetupResponse);
@@ -2357,6 +2378,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     String apmResponse = delegateProxyFactory.get(APMDelegateService.class, syncTaskContext)
                              .fetch(apmValidateCollectorConfig, ThirdPartyApiCallLog.createApiCallLog(accountId, guid));
     JSONObject jsonObject = new JSONObject(apmResponse);
+
     boolean hasLoad = false;
     if (jsonObject.length() != 0) {
       hasLoad = true;
