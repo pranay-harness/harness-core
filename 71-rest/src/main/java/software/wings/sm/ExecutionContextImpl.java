@@ -1,5 +1,6 @@
 package software.wings.sm;
 
+import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -76,6 +77,7 @@ import software.wings.expression.SubstitutionFunctor;
 import software.wings.expression.SweepingOutputFunctor;
 import software.wings.service.impl.AccountLogContext;
 import software.wings.service.impl.AppLogContext;
+import software.wings.service.impl.PipelineWorkflowExecutionLogContext;
 import software.wings.service.impl.StateExecutionInstanceLogContext;
 import software.wings.service.impl.SweepingOutputServiceImpl;
 import software.wings.service.impl.WorkflowExecutionLogContext;
@@ -1105,7 +1107,11 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       context.put(WorkflowLogContext.ID, getWorkflowId());
     }
     if (getWorkflowExecutionId() != null) {
-      context.put(WorkflowExecutionLogContext.ID, getWorkflowExecutionId());
+      if (getWorkflowType() == PIPELINE) {
+        context.put(PipelineWorkflowExecutionLogContext.ID, getWorkflowExecutionId());
+      } else {
+        context.put(WorkflowExecutionLogContext.ID, getWorkflowExecutionId());
+      }
     }
     if (getStateExecutionInstanceId() != null) {
       context.put(StateExecutionInstanceLogContext.ID, getStateExecutionInstanceId());
