@@ -42,6 +42,6 @@ public class SplunkCVConfigurationYamlHandler extends LogsCVConfigurationYamlHan
 
   @Override
   public Class getYamlClass() {
-    return SplunkCVConfigurationYamlHandler.class;
+    return SplunkCVConfigurationYaml.class;
   }
 }

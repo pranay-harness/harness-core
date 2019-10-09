@@ -46,6 +46,6 @@ public class StackdriverCVConfigurationYamlHandler extends LogsCVConfigurationYa
 
   @Override
   public Class getYamlClass() {
-    return StackdriverCVConfigurationYamlHandler.class;
+    return StackdriverCVConfigurationYaml.class;
   }
 }
