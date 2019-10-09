@@ -105,6 +105,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
     List<CVConfiguration> cvConfigurations = wingsPersistence.createQuery(CVConfiguration.class)
                                                  .filter("appId", appId)
                                                  .filter(CVConfigurationKeys.serviceId, serviceId)
+                                                 .filter(CVConfigurationKeys.enabled24x7, true)
                                                  .asList();
     if (isEmpty(cvConfigurations)) {
       logger.info("No cv config found for appId={}, serviceId={}", appId, serviceId);
@@ -205,12 +206,15 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
         LogMLAnalysisRecord record = iterator.next();
         record.decompressLogAnalysisRecord();
         if (analysisMinRecordIndexMap.containsKey(record.getLogCollectionMinute())) {
-          LogMLAnalysisRecord prevRecord = records.get(analysisMinRecordIndexMap.get(record.getLogCollectionMinute()));
-          prevRecord.decompressLogAnalysisRecord();
-          if (prevRecord.getAnalysisStatus().equals(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE)) {
-            indexesWithFeedback.add(analysisMinRecordIndexMap.get(record.getLogCollectionMinute()));
-          } else {
-            indexesWithFeedback.add(index);
+          Integer indexInMap = analysisMinRecordIndexMap.get(record.getLogCollectionMinute());
+          LogMLAnalysisRecord prevRecord = indexInMap != null ? records.get(indexInMap) : null;
+          if (prevRecord != null) {
+            prevRecord.decompressLogAnalysisRecord();
+            if (prevRecord.getAnalysisStatus().equals(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE)) {
+              indexesWithFeedback.add(analysisMinRecordIndexMap.get(record.getLogCollectionMinute()));
+            } else {
+              indexesWithFeedback.add(index);
+            }
           }
         }
         analysisMinRecordIndexMap.put(record.getLogCollectionMinute(), index);

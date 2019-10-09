@@ -283,6 +283,13 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
         apiCallLog.addFieldToRequest(
             ThirdPartyApiCallField.builder().name(URL_STRING).value(urlToLog).type(FieldType.URL).build());
         apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+        if (request.request().body() != null) {
+          apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                           .name("body")
+                                           .type(FieldType.TEXT)
+                                           .value(request.request().body().toString())
+                                           .build());
+        }
         try {
           response = request.execute();
         } catch (Exception e) {
