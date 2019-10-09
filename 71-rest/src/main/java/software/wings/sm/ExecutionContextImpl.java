@@ -30,6 +30,7 @@ import io.harness.beans.SweepingOutput.Scope;
 import io.harness.beans.SweepingOutput.SweepingOutputBuilder;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
+import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.LateBindingMap;
 import io.harness.expression.LateBindingValue;
@@ -99,7 +100,6 @@ import software.wings.settings.SettingValue;
 import software.wings.sm.ExecutionContextImpl.ServiceVariables.ServiceVariablesBuilder;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -253,6 +253,24 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   }
 
   @Override
+  public WorkflowStandardParams fetchWorkflowStandardParamsFromContext() {
+    if (stateExecutionInstance.getContextElements() == null) {
+      throw new InvalidRequestException("State Execution Context Elements can not be null");
+    }
+    final WorkflowStandardParams workflowStandardParams =
+        (WorkflowStandardParams) stateExecutionInstance.getContextElements()
+            .stream()
+            .filter(contextElement -> contextElement.getElementType() == ContextElementType.STANDARD)
+            .findFirst()
+            .orElse(null);
+
+    if (workflowStandardParams == null) {
+      throw new InvalidRequestException("Workflow Standard Params can not be null");
+    }
+    return workflowStandardParams;
+  }
+
+  @Override
   public <T extends ContextElement> T getContextElement(ContextElementType contextElementType, String name) {
     return (T) stateExecutionInstance.getContextElements()
         .stream()
@@ -273,11 +291,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   @Override
   public List<Artifact> getArtifacts() {
-    WorkflowStandardParams workflowStandardParams = getContextElement(ContextElementType.STANDARD);
-    if (workflowStandardParams == null || workflowStandardParams.getApp() == null) {
-      logger.warn("workflowStandardParams or workflowStandardParams.getApp() is null");
-      return Collections.emptyList();
-    }
+    WorkflowStandardParams workflowStandardParams = fetchWorkflowStandardParamsFromContext();
     String accountId = workflowStandardParams.getApp().getAccountId();
     if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
       List<ContextElement> contextElementList = getContextElementList(ContextElementType.ARTIFACT);
@@ -304,7 +318,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   @Override
   public Artifact getArtifactForService(String serviceId) {
-    WorkflowStandardParams workflowStandardParams = getContextElement(ContextElementType.STANDARD);
+    WorkflowStandardParams workflowStandardParams = fetchWorkflowStandardParamsFromContext();
     List<ContextElement> contextElementList = getContextElementList(ContextElementType.ARTIFACT);
     if (contextElementList == null) {
       return workflowStandardParams.getArtifactForService(serviceId);
@@ -359,9 +373,9 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   @Override
   public Map<String, Artifact> getArtifactsForService(String serviceId) {
-    WorkflowStandardParams workflowStandardParams = getContextElement(ContextElementType.STANDARD);
+    WorkflowStandardParams workflowStandardParams = fetchWorkflowStandardParamsFromContext();
     Map<String, Artifact> map = new HashMap<>();
-    if (workflowStandardParams == null || workflowStandardParams.getWorkflowElement() == null) {
+    if (workflowStandardParams.getWorkflowElement() == null) {
       return map;
     }
     List<ArtifactVariable> artifactVariables = workflowStandardParams.getWorkflowElement().getArtifactVariables();

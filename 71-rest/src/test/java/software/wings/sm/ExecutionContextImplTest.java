@@ -14,6 +14,7 @@ import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandard
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import com.google.common.collect.ImmutableList;
@@ -26,6 +27,7 @@ import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutput.Scope;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.exception.InvalidRequestException;
 import io.harness.limits.LimitCheckerFactory;
 import org.assertj.core.util.Maps;
 import org.junit.Before;
@@ -45,6 +47,7 @@ import software.wings.api.ServiceTemplateElement;
 import software.wings.api.WorkflowElement;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -55,6 +58,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
@@ -80,6 +84,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   @Mock private LimitCheckerFactory limitCheckerFactory;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Mock private FeatureFlagService featureFlagService;
 
   @Before
   public void setup() {
@@ -109,6 +114,77 @@ public class ExecutionContextImplTest extends WingsBaseTest {
 
     ServiceElement element = context.getContextElement(ContextElementType.SERVICE);
     assertThat(element).isNotNull().isEqualToComparingFieldByField(element3);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldFetchWorkflowStandardParams() {
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+
+    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
+
+    context.pushContextElement(aWorkflowStandardParams()
+                                   .withAppId(generateUuid())
+                                   .withWorkflowElement(WorkflowElement.builder().build())
+                                   .build());
+
+    assertThat(context.fetchWorkflowStandardParamsFromContext()).isNotNull();
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
+  public void shouldThrowWhenNoContextElements() {
+    ExecutionContextImpl context = new ExecutionContextImpl(new StateExecutionInstance());
+    context.fetchWorkflowStandardParamsFromContext();
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
+  public void shouldThrowWhenNoWorkflowStandardParams() {
+    ExecutionContextImpl context = new ExecutionContextImpl(new StateExecutionInstance());
+    ServiceElement element1 = ServiceElement.builder().uuid(generateUuid()).name("svc1").build();
+    context.pushContextElement(element1);
+    context.fetchWorkflowStandardParamsFromContext();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldfetchNoArtifacts() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+    ExecutionContextImpl context = new ExecutionContextImpl(new StateExecutionInstance());
+    injector.injectMembers(context);
+
+    Application app = anApplication().name("AppA").accountId(ACCOUNT_ID).build();
+    app = appService.save(app);
+
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
+
+    WorkflowStandardParams std = new WorkflowStandardParams();
+    std.setAppId(app.getUuid());
+    std.setArtifactIds(asList(ARTIFACT_ID));
+    injector.injectMembers(std);
+    context.pushContextElement(std);
+
+    assertThat(context.getArtifacts()).isNullOrEmpty();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldfetchNoArtifactsForService() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+    ExecutionContextImpl context = new ExecutionContextImpl(new StateExecutionInstance());
+    injector.injectMembers(context);
+
+    Application app = anApplication().name("AppA").accountId(ACCOUNT_ID).build();
+    app = appService.save(app);
+
+    WorkflowStandardParams std = new WorkflowStandardParams();
+    std.setAppId(app.getUuid());
+    std.setArtifactIds(asList(ARTIFACT_ID));
+    injector.injectMembers(std);
+    context.pushContextElement(std);
+
+    assertThat(context.getArtifactForService(SERVICE_ID)).isNull();
   }
 
   private ExecutionContextImpl prepareContext(StateExecutionInstance stateExecutionInstance) {
