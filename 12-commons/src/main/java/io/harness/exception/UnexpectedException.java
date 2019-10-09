@@ -12,4 +12,8 @@ public class UnexpectedException extends WingsException {
   public UnexpectedException(String message) {
     super(message, null, UNEXPECTED, Level.ERROR, null, null);
   }
+
+  public UnexpectedException(String message, Throwable throwable) {
+    super(message, throwable, UNEXPECTED, Level.ERROR, null, null);
+  }
 }
