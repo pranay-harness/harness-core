@@ -1,5 +1,6 @@
 package io.harness.batch.processing.integration.service;
 
+import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.batch.processing.ccm.InstanceState;
@@ -9,8 +10,10 @@ import io.harness.batch.processing.entities.InstanceData.InstanceDataKeys;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.category.element.IntegrationTests;
 import io.harness.persistence.HPersistence;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.val;
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -39,7 +42,9 @@ public class InstanceDataIntegrationTest extends BaseIntegrationTest {
   @Autowired private HPersistence hPersistence;
 
   @Test
+  @Owner(emails = HITESH)
   @Category(IntegrationTests.class)
+  @Ignore("Under Investigation, as discussed with Owner")
   public void shouldCreateInstanceData() {
     InstanceData instanceData = createInstanceData(TEST_INSTANCE_ID);
     boolean instanceCreated = instanceDataService.create(instanceData);
