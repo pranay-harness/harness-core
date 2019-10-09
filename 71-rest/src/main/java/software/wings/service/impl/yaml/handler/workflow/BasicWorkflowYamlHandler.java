@@ -25,6 +25,7 @@ public class BasicWorkflowYamlHandler extends WorkflowYamlHandler<BasicWorkflowY
     if (isNotEmpty(phaseList)) {
       WorkflowPhase workflowPhase = phaseList.get(0);
       workflow.infraMappingId(workflowPhase.getInfraMappingId()).serviceId(workflowPhase.getServiceId());
+      workflow.infraDefinitionId(workflowPhase.getInfraDefinitionId());
     }
 
     basicOrchestrationWorkflowBuilder.withFailureStrategies(workflowInfo.getFailureStrategies())

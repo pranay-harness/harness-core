@@ -26,6 +26,7 @@ public class RollingWorkflowYamlHandler extends WorkflowYamlHandler<RollingWorkf
     if (isNotEmpty(phaseList)) {
       WorkflowPhase workflowPhase = phaseList.get(0);
       workflow.infraMappingId(workflowPhase.getInfraMappingId()).serviceId(workflowPhase.getServiceId());
+      workflow.infraDefinitionId(workflowPhase.getInfraDefinitionId());
     }
 
     rollingOrchestrationWorkflowBuilder.withFailureStrategies(workflowInfo.getFailureStrategies())
