@@ -27,7 +27,6 @@ import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.Nullable;
 import software.wings.beans.EntityType;
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithTags;
 import software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.DeploymentMetaDataFields;
@@ -95,6 +94,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -121,36 +121,14 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
       if (timeScaleDBService.isValid()) {
         return getData(accountId, aggregateFunction, filters, groupBy, sortCriteria);
       } else {
-        return getMockData(getGroupByEntity(groupBy), getGroupByTime(groupBy));
+        throw new InvalidRequestException("Cannot process request");
       }
     } catch (Exception e) {
       throw new InvalidRequestException("Error while fetching deployment data", e);
     }
   }
 
-  @Nullable
-  private QLData getMockData(List<QLDeploymentEntityAggregation> groupBy, QLTimeSeriesAggregation groupByTime) {
-    int groupBySize = groupBy != null ? groupBy.size() : 0;
-    if (groupBySize == 0) {
-      return StatsStubDataHelper.getSinglePointData();
-    } else if (groupBySize == 1) {
-      if (groupByTime == null) {
-        return StatsStubDataHelper.getAggregatedData();
-      } else {
-        return StatsStubDataHelper.getTimeAggregatedData();
-      }
-    } else if (groupBySize == 2) {
-      if (groupByTime == null) {
-        return StatsStubDataHelper.getStackedAggregatedData();
-      } else {
-        return StatsStubDataHelper.getStackedTimeAggregatedData();
-      }
-    } else {
-      return null;
-    }
-  }
-
-  private QLData getData(@NotNull String accountId, QLDeploymentAggregationFunction aggregateFunction,
+  protected QLData getData(@NotNull String accountId, QLDeploymentAggregationFunction aggregateFunction,
       List<QLDeploymentFilter> filters, List<QLDeploymentAggregation> groupByList,
       List<QLDeploymentSortCriteria> sortCriteria) {
     DeploymentStatsQueryMetaData queryData;
@@ -227,9 +205,9 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     return null;
   }
 
-  private QLStackedData generateStackedBarChartData(DeploymentStatsQueryMetaData queryData, ResultSet resultSet)
+  protected QLStackedData generateStackedBarChartData(DeploymentStatsQueryMetaData queryData, ResultSet resultSet)
       throws SQLException {
-    Map<String, List<QLIntermediateStackDataPoint>> qlTimeDataPointMap = new HashMap<>();
+    Map<String, List<QLIntermediateStackDataPoint>> qlTimeDataPointMap = new LinkedHashMap<>();
     while (resultSet != null && resultSet.next()) {
       QLIntermediateStackDataPointBuilder dataPointBuilder = QLIntermediateStackDataPoint.builder();
       for (DeploymentMetaDataFields field : queryData.getFieldNames()) {
@@ -352,9 +330,9 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     return QLReference.builder().type(field.getFieldName()).id(key).name(statsHelper.getEntityName(field, key)).build();
   }
 
-  private QLData generateStackedTimeSeriesData(DeploymentStatsQueryMetaData queryData, ResultSet resultSet)
-      throws SQLException {
-    Map<Long, List<QLTimeDataPoint>> qlTimeDataPointMap = new HashMap<>();
+  protected QLStackedTimeSeriesData generateStackedTimeSeriesData(
+      DeploymentStatsQueryMetaData queryData, ResultSet resultSet) throws SQLException {
+    Map<Long, List<QLTimeDataPoint>> qlTimeDataPointMap = new LinkedHashMap<>();
     while (resultSet != null && resultSet.next()) {
       QLTimeDataPointBuilder dataPointBuilder = QLTimeDataPoint.builder();
       for (DeploymentMetaDataFields field : queryData.getFieldNames()) {
@@ -386,7 +364,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     return prepareStackedTimeSeriesData(queryData, qlTimeDataPointMap);
   }
 
-  private QLData prepareStackedTimeSeriesData(
+  private QLStackedTimeSeriesData prepareStackedTimeSeriesData(
       DeploymentStatsQueryMetaData queryData, Map<Long, List<QLTimeDataPoint>> qlTimeDataPointMap) {
     QLStackedTimeSeriesDataBuilder timeSeriesDataBuilder = QLStackedTimeSeriesData.builder();
     List<QLStackedTimeSeriesDataPoint> timeSeriesDataPoints = new ArrayList<>();
@@ -402,7 +380,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     return timeSeriesDataBuilder.data(timeSeriesDataPoints).build();
   }
 
-  private QLData generateTimeSeriesData(DeploymentStatsQueryMetaData queryData, ResultSet resultSet)
+  protected QLTimeSeriesData generateTimeSeriesData(DeploymentStatsQueryMetaData queryData, ResultSet resultSet)
       throws SQLException {
     QLTimeSeriesDataBuilder builder = QLTimeSeriesData.builder();
     List<QLTimeSeriesDataPoint> dataPoints = new ArrayList<>();
@@ -428,7 +406,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     return builder.dataPoints(dataPoints).build();
   }
 
-  private QLData generateAggregateData(DeploymentStatsQueryMetaData queryData, ResultSet resultSet)
+  protected QLAggregatedData generateAggregateData(DeploymentStatsQueryMetaData queryData, ResultSet resultSet)
       throws SQLException {
     QLAggregatedDataBuilder builder = QLAggregatedData.builder();
     List<QLDataPoint> dataPoints = new ArrayList();
@@ -472,7 +450,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     return dataPoints;
   }
 
-  private QLData generateSinglePointData(DeploymentStatsQueryMetaData queryData, ResultSet resultSet)
+  protected QLSinglePointData generateSinglePointData(DeploymentStatsQueryMetaData queryData, ResultSet resultSet)
       throws SQLException {
     QLSinglePointDataBuilder builder = QLSinglePointData.builder();
     while (resultSet != null && resultSet.next()) {
