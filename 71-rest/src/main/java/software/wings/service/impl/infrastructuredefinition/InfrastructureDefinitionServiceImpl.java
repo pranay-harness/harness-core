@@ -42,6 +42,7 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
@@ -66,6 +67,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.queue.Queue;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.spotinst.model.ElastiGroup;
@@ -96,6 +98,7 @@ import software.wings.beans.SpotInstConfig;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.infrastructure.Host;
+import software.wings.common.InfrastructureConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.azure.AzureHelperService;
@@ -609,14 +612,22 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     }
   }
 
-  private boolean renderExpression(InfrastructureDefinition infrastructureDefinition, ExecutionContext context) {
+  boolean renderExpression(InfrastructureDefinition infrastructureDefinition, ExecutionContext context) {
+    Set<String> ignoredExpressions = ImmutableSet.of(InfrastructureConstants.INFRA_KUBERNETES_INFRAID_EXPRESSION);
     Map<String, Object> fieldMapForClass = getAllFields(infrastructureDefinition.getInfrastructure());
     Map<String, String> renderedFieldMap = new HashMap<>();
 
     if (isEmpty(infrastructureDefinition.getProvisionerId())) {
       for (Entry<String, Object> entry : fieldMapForClass.entrySet()) {
-        if (entry.getValue() instanceof String && isTemplated((String) entry.getValue())) {
-          renderedFieldMap.put(entry.getKey(), context.renderExpression((String) entry.getValue()));
+        if (entry.getValue() instanceof String
+            && ExpressionEvaluator.containsVariablePattern((String) entry.getValue())) {
+          String expression = (String) entry.getValue();
+          String renderedValue = context.renderExpression(expression);
+          if ((expression.equals(renderedValue) || renderedValue == null)
+              && !isIgnored(ignoredExpressions, expression)) {
+            throw new InvalidRequestException(format("Unable to resolve expression : \"%s\"", expression), USER);
+          }
+          renderedFieldMap.put(entry.getKey(), renderedValue);
         }
       }
       saveFieldMapForDefinition(infrastructureDefinition, renderedFieldMap);
@@ -631,6 +642,10 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
           infrastructureDefinition.getEnvId(), infrastructureDefinition.getUuid());
     }
     return true;
+  }
+
+  private boolean isIgnored(Set<String> ignoredExpressions, String expression) {
+    return ignoredExpressions.stream().anyMatch(expression::contains);
   }
 
   @VisibleForTesting
