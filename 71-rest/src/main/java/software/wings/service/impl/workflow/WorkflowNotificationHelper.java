@@ -8,8 +8,8 @@ import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
+import static java.lang.String.join;
 import static java.util.Collections.emptySet;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -22,7 +22,6 @@ import static software.wings.sm.StateType.PHASE;
 import static software.wings.utils.Misc.getDurationString;
 import static software.wings.utils.Validator.notNullCheck;
 
-import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -31,7 +30,6 @@ import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.context.ContextElementType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.client.utils.URIBuilder;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -49,6 +47,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.security.UserGroup;
+import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
@@ -66,7 +65,6 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ApprovalState.ApprovalStateType;
 import software.wings.sm.states.PhaseSubWorkflow;
 
-import java.net.URISyntaxException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.Clock;
@@ -118,8 +116,8 @@ public class WorkflowNotificationHelper {
     Notification notification;
     if (status == SUCCESS || status == PAUSED || status == RESUMED) {
       notification = anInformationNotification()
-                         .withAccountId(app.getAccountId())
-                         .withAppId(context.getAppId())
+                         .withAccountId(app != null ? app.getAccountId() : null)
+                         .withAppId(app != null ? app.getUuid() : null)
                          .withEntityId(context.getWorkflowExecutionId())
                          .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
                          .withNotificationTemplateId(WORKFLOW_NOTIFICATION.name())
@@ -127,8 +125,8 @@ public class WorkflowNotificationHelper {
                          .build();
     } else {
       notification = aFailureNotification()
-                         .withAccountId(app.getAccountId())
-                         .withAppId(app.getUuid())
+                         .withAccountId(app != null ? app.getAccountId() : null)
+                         .withAppId(app != null ? app.getUuid() : null)
                          .withEnvironmentId(BUILD.equals(context.getOrchestrationWorkflowType()) ? null : env.getUuid())
                          .withEntityId(context.getWorkflowExecutionId())
                          .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
@@ -140,7 +138,7 @@ public class WorkflowNotificationHelper {
     }
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    if (workflowStandardParams.isNotifyTriggeredUserOnly()) {
+    if (workflowStandardParams != null && workflowStandardParams.isNotifyTriggeredUserOnly()) {
       notificationService.sendNotificationToTriggeredByUserOnly(notification, workflowStandardParams.getCurrentUser());
     } else {
       notificationService.sendNotificationAsync(notification, notificationRules);
@@ -165,8 +163,8 @@ public class WorkflowNotificationHelper {
     Notification notification;
     if (status.equals(SUCCESS) || status.equals(PAUSED)) {
       notification = anInformationNotification()
-                         .withAccountId(app.getAccountId())
-                         .withAppId(context.getAppId())
+                         .withAccountId(app != null ? app.getAccountId() : null)
+                         .withAppId(app != null ? app.getUuid() : null)
                          .withEntityId(context.getWorkflowExecutionId())
                          .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
                          .withNotificationTemplateId(WORKFLOW_NOTIFICATION.name())
@@ -174,8 +172,8 @@ public class WorkflowNotificationHelper {
                          .build();
     } else if (status.equals(FAILED)) {
       notification = aFailureNotification()
-                         .withAccountId(app.getAccountId())
-                         .withAppId(app.getUuid())
+                         .withAccountId(app != null ? app.getAccountId() : null)
+                         .withAppId(app != null ? app.getUuid() : null)
                          .withEnvironmentId(env.getUuid())
                          .withEntityId(context.getWorkflowExecutionId())
                          .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
@@ -190,7 +188,7 @@ public class WorkflowNotificationHelper {
     }
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    if (workflowStandardParams.isNotifyTriggeredUserOnly()) {
+    if (workflowStandardParams != null && workflowStandardParams.isNotifyTriggeredUserOnly()) {
       notificationService.sendNotificationToTriggeredByUserOnly(notification, workflowStandardParams.getCurrentUser());
     } else {
       notificationService.sendNotificationAsync(notification, notificationRules);
@@ -320,21 +318,9 @@ public class WorkflowNotificationHelper {
         Arrays.stream(renderedExpression.split(",")).map(String::trim).collect(Collectors.toList());
 
     List<UserGroup> userGroups = userGroupService.listByName(accountId, userGroupNames);
-    List<String> userGroupIds = userGroups.stream().map(UserGroup::getUuid).collect(Collectors.toList());
-    notificationRule.setUserGroupIds(userGroupIds);
-  }
-
-  private void logMissingNames(String accountId, List<String> userGroupNames, List<UserGroup> userGroups) {
-    Map<String, UserGroup> groupsByName =
-        userGroups.stream().collect(Collectors.toMap(UserGroup::getName, (UserGroup ug) -> ug));
-
-    for (String userGroupName : userGroupNames) {
-      UserGroup group = groupsByName.get(userGroupName);
-      if (null == group) {
-        logger.info(
-            "[LIKELY_USER_ERROR] No user group by name: {}. This can happen if the expression resolves to a user group name that does not exist. accountId={}",
-            userGroupName, accountId);
-      }
+    if (isNotEmpty(userGroups)) {
+      List<String> userGroupIds = userGroups.stream().map(UserGroup::getUuid).collect(Collectors.toList());
+      notificationRule.setUserGroupIds(userGroupIds);
     }
   }
 
@@ -375,7 +361,7 @@ public class WorkflowNotificationHelper {
     if (workflowExecution.getPipelineExecutionId() != null) {
       String pipelineName = workflowExecution.getPipelineSummary().getPipelineName();
       if (isNotBlank(pipelineName)) {
-        String pipelineUrl = buildAbsoluteUrl(
+        String pipelineUrl = NotificationMessageResolver.buildAbsoluteUrl(configuration,
             format("/account/%s/app/%s/pipeline-execution/%s/workflow-execution/%s/details", app.getAccountId(),
                 app.getUuid(), workflowExecution.getPipelineExecutionId(), context.getWorkflowExecutionId()));
         pipelineMsg = format(" as part of <<<%s|-|%s>>> pipeline", pipelineUrl, pipelineName);
@@ -388,7 +374,7 @@ public class WorkflowNotificationHelper {
     Map<String, String> placeHolderValues = new HashMap<>();
     placeHolderValues.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
     placeHolderValues.put("WORKFLOW_URL", workflowUrl);
-    placeHolderValues.put("VERB", getStatusVerb(status));
+    placeHolderValues.put("VERB", NotificationMessageResolver.getStatusVerb(status));
     placeHolderValues.put("USER_NAME", triggeredBy);
     placeHolderValues.put("PIPELINE", pipelineMsg);
     placeHolderValues.put("APP_NAME", app.getName());
@@ -412,46 +398,9 @@ public class WorkflowNotificationHelper {
 
   public String calculateWorkflowUrl(String workflowExecutionId, OrchestrationWorkflowType type, String accountId,
       String appId, String environmentId) {
-    return buildAbsoluteUrl(format("/account/%s/app/%s/env/%s/executions/%s/details", accountId, appId,
-        BUILD.equals(type) ? "build" : environmentId, workflowExecutionId));
-  }
-
-  private String buildAbsoluteUrl(String fragment) {
-    String baseUrl = configuration.getPortal().getUrl().trim();
-    if (!baseUrl.endsWith("/")) {
-      baseUrl += "/";
-    }
-    try {
-      URIBuilder uriBuilder = new URIBuilder(baseUrl);
-      uriBuilder.setFragment(fragment);
-      return uriBuilder.toString();
-    } catch (URISyntaxException e) {
-      logger.error("Bad URI syntax", e);
-      return baseUrl;
-    }
-  }
-
-  private String getStatusVerb(ExecutionStatus status) {
-    switch (status) {
-      case SUCCESS:
-        return "completed";
-      case FAILED:
-      case ERROR:
-        return "failed";
-      case PAUSED:
-        return "paused";
-      case RESUMED:
-        return "resumed";
-      case ABORTED:
-        return "aborted";
-      case REJECTED:
-        return "rejected";
-      case EXPIRED:
-        return "expired";
-      default:
-        unhandled(status);
-        return "failed";
-    }
+    return NotificationMessageResolver.buildAbsoluteUrl(configuration,
+        format("/account/%s/app/%s/env/%s/executions/%s/details", accountId, appId,
+            BUILD.equals(type) ? "build" : environmentId, workflowExecutionId));
   }
 
   public String getArtifactsMessage(ExecutionContext context, WorkflowExecution workflowExecution, ExecutionScope scope,
@@ -503,7 +452,7 @@ public class WorkflowNotificationHelper {
 
     String artifactsMsg = "no services";
     if (isNotEmpty(serviceMsgs)) {
-      artifactsMsg = Joiner.on(", ").join(serviceMsgs);
+      artifactsMsg = join(", ", serviceMsgs);
     }
     return artifactsMsg;
   }
