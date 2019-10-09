@@ -44,6 +44,7 @@ import software.wings.service.impl.splunk.SplunkAnalysisCluster.MessageFrequency
 import software.wings.service.intfc.verification.CV24x7DashboardService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
+import software.wings.verification.HeatMap;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
@@ -241,7 +242,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testFeedbackSummary() {
     String cvConfigId = generateUuid();
-    createAndSaveSumoConfig(cvConfigId);
+    createAndSaveSumoConfig(cvConfigId, true);
     enableFeatureFlag(FeatureName.CV_FEEDBACKS);
 
     long endTime = Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(10);
@@ -264,14 +265,16 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
     assertThat(summary.getUnknownClusters().get(0).getFeedbackSummary().getJiraLink()).isEqualTo("testJiraLink");
   }
 
-  private void createAndSaveSumoConfig(String cvConfigId) {
+  private LogsCVConfiguration createAndSaveSumoConfig(String cvConfigId, boolean enabled247SG) {
     LogsCVConfiguration sumoCOnfig = new LogsCVConfiguration();
     sumoCOnfig.setAppId(appId);
+    sumoCOnfig.setServiceId(serviceId);
     sumoCOnfig.setQuery("exception");
     sumoCOnfig.setStateType(StateType.SUMO);
     sumoCOnfig.setUuid(cvConfigId);
-
+    sumoCOnfig.setEnabled24x7(enabled247SG);
     wingsPersistence.save(sumoCOnfig);
+    return sumoCOnfig;
   }
 
   private CVFeedbackRecord createFeedbackRecordInDB(String cvConfigId, long analysisMin) {
@@ -280,6 +283,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
         CVFeedbackRecord.builder()
             .accountId(accountId)
             .cvConfigId(cvConfigId)
+            .serviceId(serviceId)
             .analysisMinute(analysisMin)
             .clusterType(CLUSTER_TYPE.UNKNOWN)
             .actionTaken(FeedbackAction.UPDATE_PRIORITY)
@@ -298,7 +302,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetAnalysisSummaryFeedbackData() throws Exception {
     String cvConfigId = generateUuid();
-    createAndSaveSumoConfig(cvConfigId);
+    createAndSaveSumoConfig(cvConfigId, true);
     enableFeatureFlag(FeatureName.CV_FEEDBACKS);
 
     long endTime = Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(10);
@@ -484,5 +488,29 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
 
     assertThat(currentEndTime)
         .isEqualTo(TimeUnit.MINUTES.toMillis(currentTime - PREDECTIVE_HISTORY_MINUTES + CRON_POLL_INTERVAL_IN_MINUTES));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetHeatmapForEnabledConfigsOnly() {
+    String id1 = generateUuid(), id2 = generateUuid();
+    createAndSaveSumoConfig(id1, true);
+    createAndSaveSumoConfig(id2, false);
+
+    LogMLAnalysisRecord record =
+        LogMLAnalysisRecord.builder()
+            .appId(appId)
+            .cvConfigId(id1)
+            .logCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()) - 30)
+            .score(1)
+            .build();
+
+    wingsPersistence.save(record);
+
+    List<HeatMap> heatMaps = cv24x7DashboardService.getHeatMapForLogs(accountId, appId, serviceId,
+        Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(120), Timestamp.currentMinuteBoundary(), false);
+
+    assertThat(heatMaps).isNotEmpty();
+    assertThat(heatMaps.size()).isEqualTo(1);
   }
 }
