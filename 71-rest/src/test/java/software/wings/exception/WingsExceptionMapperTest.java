@@ -4,6 +4,7 @@ import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SOURCE;
 import static io.harness.eraro.ErrorCode.VAULT_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.inOrder;
@@ -101,13 +102,16 @@ public class WingsExceptionMapperTest extends WingsBaseTest implements MockableT
   @Test
   @Category(UnitTests.class)
   public void recursiveParamTest() throws IllegalAccessException {
-    WingsException exception = new WingsException(VAULT_OPERATION_ERROR, USER);
-    exception.addParam("reason", "recursive call to ${reason}");
+    assertThatCode(() -> {
+      WingsException exception = new WingsException(VAULT_OPERATION_ERROR, USER);
+      exception.addParam("reason", "recursive call to ${reason}");
 
-    Logger mockLogger = mock(Logger.class);
-    setStaticFieldValue(WingsExceptionMapper.class, "logger", mockLogger);
+      Logger mockLogger = mock(Logger.class);
+      setStaticFieldValue(WingsExceptionMapper.class, "logger", mockLogger);
 
-    final WingsExceptionMapper mapper = new WingsExceptionMapper();
-    mapper.toResponse(exception); // should not throw.
+      final WingsExceptionMapper mapper = new WingsExceptionMapper();
+      mapper.toResponse(exception); // should not throw.
+    })
+        .doesNotThrowAnyException();
   }
 }

@@ -194,6 +194,7 @@ import javax.ws.rs.Path;
 public class WingsApplication extends Application<MainConfiguration> {
   private final MetricRegistry metricRegistry = new MetricRegistry();
   private HarnessMetricRegistry harnessMetricRegistry;
+  private final Random rand = new Random();
 
   /**
    * The entry point of application.
@@ -534,8 +535,6 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   private void scheduleJobs(Injector injector) {
-    final Random rand = new Random();
-
     logger.info("Initializing scheduled jobs...");
     injector.getInstance(NotifierScheduledExecutorService.class)
         .scheduleWithFixedDelay(injector.getInstance(Notifier.class), rand.nextInt(10), 30L, TimeUnit.SECONDS);
