@@ -142,6 +142,11 @@ public class ScimGroupServiceImpl implements ScimGroupService {
         List<? extends ScimMultiValuedObject> operations =
             patchOperation.getValues(new ScimMultiValuedObject<List<String>>().getClass());
 
+        if (null == operations) {
+          logger.error("Operations is null. Skipping processing of scim call for group Id {}", groupId);
+          return;
+        }
+
         for (ScimMultiValuedObject operation : operations) {
           String userId = (String) operation.getValue();
           if (!memberIds.contains(userId)) {
@@ -208,6 +213,11 @@ public class ScimGroupServiceImpl implements ScimGroupService {
         List<? extends ScimMultiValuedObject> operations =
             patchOperation.getValues(new ScimMultiValuedObject<List<String>>().getClass());
 
+        if (null == operations) {
+          logger.error("Operations received is null. Skipping remove operation processing for groupId: {}", groupId);
+          return;
+        }
+
         for (ScimMultiValuedObject operation : operations) {
           String userId = (String) operation.getValue();
           if (memberIds.contains(userId)) {
@@ -264,7 +274,7 @@ public class ScimGroupServiceImpl implements ScimGroupService {
 
     groupQuery.setId(userGroup.getUuid());
     logger.info("SCIM: Completed creating group call: {}", groupQuery);
-    return groupQuery;
+    return getGroup(userGroup.getUuid(), accountId);
   }
 
   private List<String> getMembersOfUserGroup(ScimGroup scimGroup) {
