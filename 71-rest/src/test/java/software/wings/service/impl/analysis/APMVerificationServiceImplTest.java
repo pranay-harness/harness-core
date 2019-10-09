@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -11,12 +12,15 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
+import com.google.common.io.Resources;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.time.Timestamp;
 import io.harness.waiter.WaitNotifyEngine;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -28,6 +32,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.APMFetchConfig;
 import software.wings.WingsBaseTest;
+import software.wings.api.InstanceElement;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AppDynamicsConfig;
@@ -41,9 +46,11 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
+import software.wings.service.impl.apm.APMParserTest;
 import software.wings.service.impl.apm.APMSetupTestNodeData;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.cloudwatch.CloudWatchDataCollectionInfo;
+import software.wings.service.impl.datadog.DataDogSetupTestNodeData;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
 import software.wings.service.intfc.CloudWatchService;
@@ -132,6 +139,78 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     // verify
     assertThat(response).isNotNull();
     assertThat(response.getLoadResponse().isLoadPresent()).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetNodeDataDatadog() throws Exception {
+    DataDogSetupTestNodeData nodeData =
+        DataDogSetupTestNodeData.builder()
+            .deploymentType("KUBERNETES")
+            .metrics("docker.mem.rss")
+            .fromTime(Timestamp.currentMinuteBoundary())
+            .toTime(Timestamp.currentMinuteBoundary())
+            .instanceElement(InstanceElement.Builder.anInstanceElement().hostName("sampleHostname").build())
+            .stateType(StateType.DATA_DOG)
+            .guid(generateUuid())
+            .build();
+
+    DatadogConfig ddConfig = DatadogConfig.builder().url("sampleUrl.com").build();
+    SettingAttribute attribute = new SettingAttribute();
+    attribute.setValue(ddConfig);
+
+    String textLoad =
+        Resources.toString(APMParserTest.class.getResource("/apm/datadog_sample_response_load.json"), Charsets.UTF_8);
+
+    // setup
+    when(mockSettingsService.get(anyString())).thenReturn(attribute);
+    when(mockDelegateProxyFactory.get(any(), any())).thenReturn(mockAPMDelegateService);
+    when(mockAPMDelegateService.fetch(any(APMValidateCollectorConfig.class), any(ThirdPartyApiCallLog.class)))
+        .thenReturn(textLoad);
+    // execute
+    VerificationNodeDataSetupResponse response =
+        service.getDataForNode("accountId", "serverConfigId", nodeData, StateType.DATA_DOG);
+
+    assertThat(response).isNotNull();
+    assertThat(response.isProviderReachable()).isTrue();
+    assertThat(response.getLoadResponse()).isNotNull();
+    assertThat(response.getLoadResponse().isLoadPresent()).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetNodeDataDatadogEmptyResponse() throws Exception {
+    DataDogSetupTestNodeData nodeData =
+        DataDogSetupTestNodeData.builder()
+            .deploymentType("KUBERNETES")
+            .metrics("docker.mem.rss")
+            .fromTime(Timestamp.currentMinuteBoundary())
+            .toTime(Timestamp.currentMinuteBoundary())
+            .instanceElement(InstanceElement.Builder.anInstanceElement().hostName("sampleHostname").build())
+            .stateType(StateType.DATA_DOG)
+            .guid(generateUuid())
+            .build();
+
+    DatadogConfig ddConfig = DatadogConfig.builder().url("sampleUrl.com").build();
+    SettingAttribute attribute = new SettingAttribute();
+    attribute.setValue(ddConfig);
+
+    String textLoad =
+        Resources.toString(APMParserTest.class.getResource("/apm/datadog-emptyResponse.json"), Charsets.UTF_8);
+
+    // setup
+    when(mockSettingsService.get(anyString())).thenReturn(attribute);
+    when(mockDelegateProxyFactory.get(any(), any())).thenReturn(mockAPMDelegateService);
+    when(mockAPMDelegateService.fetch(any(APMValidateCollectorConfig.class), any(ThirdPartyApiCallLog.class)))
+        .thenReturn(textLoad);
+    // execute
+    VerificationNodeDataSetupResponse response =
+        service.getDataForNode("accountId", "serverConfigId", nodeData, StateType.DATA_DOG);
+
+    assertThat(response).isNotNull();
+    assertThat(response.isProviderReachable()).isTrue();
+    assertThat(response.getLoadResponse()).isNotNull();
+    assertThat(response.getLoadResponse().isLoadPresent()).isFalse();
   }
 
   @Test

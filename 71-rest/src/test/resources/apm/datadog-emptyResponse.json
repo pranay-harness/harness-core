@@ -1,0 +1,13 @@
+{
+  "status": "ok",
+  "res_type": "time_series",
+  "from_date": 1523567760000,
+  "series": [],
+  "to_date": 1523570156000,
+  "resp_version": 1,
+  "query": "system.load.1{host:i-07021c934421e90b4}by{host}.rollup(avg,60)",
+  "message": "",
+  "group_by": [
+    "host"
+  ]
+}

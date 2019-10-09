@@ -10,7 +10,6 @@ import software.wings.service.impl.analysis.SetupTestNodeData;
 import software.wings.sm.StateType;
 import software.wings.sm.states.DatadogState.Metric;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -29,7 +28,7 @@ public class DataDogSetupTestNodeData extends SetupTestNodeData {
   private String metrics;
   private String hostNameField;
   private String query;
-  private List<Metric> customMetrics;
+  private Map<String, Set<Metric>> customMetrics;
   private String deploymentType;
 
   @Builder
@@ -37,7 +36,7 @@ public class DataDogSetupTestNodeData extends SetupTestNodeData {
       InstanceElement instanceElement, String hostExpression, String workflowId, String guid, long fromTime,
       long toTime, String datadogServiceName, Map<String, String> dockerMetrics, Map<String, String> ecsMetrics,
       Map<String, Set<Metric>> customMetricsMap, StateType stateType, String metrics, String query,
-      String hostNameField, List<Metric> customMetrics, String deploymentType) {
+      String hostNameField, Map<String, Set<Metric>> customMetrics, String deploymentType) {
     super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid, stateType,
         fromTime, toTime);
     this.datadogServiceName = datadogServiceName;
