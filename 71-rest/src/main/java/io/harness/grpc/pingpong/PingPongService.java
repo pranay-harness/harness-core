@@ -19,7 +19,8 @@ public class PingPongService extends PingPongServiceImplBase {
   public void tryPing(Ping ping, StreamObserver<Pong> responseObserver) {
     try (AutoLogContext ignore1 = new AccountLogContext(ACCOUNT_ID_CTX_KEY.get(), OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(ping.getDelegateId(), OVERRIDE_ERROR)) {
-      logger.info("Ping at {} received", HTimestamps.toInstant(ping.getPingTimestamp()));
+      logger.info("Ping at {} received from delegate with processId: {}, version: {}",
+          HTimestamps.toInstant(ping.getPingTimestamp()), ping.getProcessId(), ping.getVersion());
       responseObserver.onNext(Pong.newBuilder().build());
       responseObserver.onCompleted();
     }
