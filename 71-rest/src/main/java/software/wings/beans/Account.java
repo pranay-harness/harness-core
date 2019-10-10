@@ -88,6 +88,8 @@ public class Account extends Base implements PersistentRegularIterable {
 
   private boolean oauthEnabled;
 
+  private boolean cloudCostEnabled;
+
   @Indexed private Long nextIteration;
 
   private transient Map<String, String> defaults = new HashMap<>();
@@ -284,6 +286,14 @@ public class Account extends Base implements PersistentRegularIterable {
 
   public void setOauthEnabled(boolean oauthEnabled) {
     this.oauthEnabled = oauthEnabled;
+  }
+
+  public boolean isCloudCostEnabled() {
+    return this.cloudCostEnabled;
+  }
+
+  public void setCloudCostEnabled(boolean cloudCostEnabled) {
+    this.cloudCostEnabled = cloudCostEnabled;
   }
 
   public Set<AccountEvent> getAccountEvents() {

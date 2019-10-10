@@ -129,6 +129,8 @@ public interface AccountService {
 
   Account updateAccountName(String accountId, String accountName, String companyName);
 
+  Boolean updateCloudCostEnabled(String accountId, boolean cloudCostEnabled);
+
   AccountSettingsResponse getAuthSettingsByAccountId(String accountId);
 
   Optional<Account> getOnPremAccount();

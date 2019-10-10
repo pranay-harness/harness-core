@@ -85,6 +85,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
     account.setCompanyName(randomString);
     account.setAccountName(randomString);
     account.setAccountKey(randomString);
+    account.setCloudCostEnabled(true);
 
     WebTarget target = client.target(API_BASE + "/users/account");
     Response response = getRequestBuilderWithAuthHeader(target).post(entity(account, APPLICATION_JSON));
@@ -105,6 +106,36 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
 
     thrown.expect(WingsException.class);
     accountService.get(createdAccount.getUuid());
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
+  public void shouldEnableAndDisableCloudCost() {
+    Account account = new Account();
+    account.setLicenseInfo(getLicenseInfo());
+    long timeMillis = System.currentTimeMillis();
+    String randomString = "" + timeMillis;
+    account.setCompanyName(randomString);
+    account.setAccountName(randomString);
+    account.setAccountKey(randomString);
+    account.setCloudCostEnabled(true);
+
+    WebTarget target = client.target(API_BASE + "/account/cloudcost/enable?accountId=" + accountId);
+    Response response = getRequestBuilderWithAuthHeader(target).post(entity(account, APPLICATION_JSON));
+    if (response.getStatus() != Status.OK.getStatusCode()) {
+      log().error("Non-ok-status. Headers: {}", response.getHeaders());
+    }
+    assertThat(response.getStatus()).isEqualTo(Status.OK.getStatusCode());
+
+    RestResponse<Boolean> restResponse = response.readEntity(new GenericType<RestResponse<Boolean>>() {});
+    assertThat(restResponse.getResource()).isTrue();
+
+    target = client.target(API_BASE + "/account/cloudcost/disable?accountId=" + accountId);
+    response = getRequestBuilderWithAuthHeader(target).post(entity(account, APPLICATION_JSON));
+    if (response.getStatus() != Status.OK.getStatusCode()) {
+      log().error("Non-ok-status. Headers: {}", response.getHeaders());
+    }
+    assertThat(response.getStatus()).isEqualTo(Status.OK.getStatusCode());
   }
 
   private Response getAccountAlerts(String accountId) {
