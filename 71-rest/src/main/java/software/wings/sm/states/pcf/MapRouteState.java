@@ -1,6 +1,8 @@
 package software.wings.sm.states.pcf;
 
+import static io.harness.exception.WingsException.USER;
 import static java.util.stream.Collectors.toList;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
@@ -109,6 +111,7 @@ public class MapRouteState extends State {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Application application = appService.get(context.getAppId());
     Environment environment = workflowStandardParams.getEnv();
+    notNullCheck("Environment does not exist", environment, USER);
 
     PcfInfrastructureMapping infrastructureMapping = (PcfInfrastructureMapping) infrastructureMappingService.get(
         application.getUuid(), context.fetchInfraMappingId());
