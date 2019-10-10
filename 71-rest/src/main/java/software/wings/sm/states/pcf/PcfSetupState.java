@@ -13,6 +13,7 @@ import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.PC
 import static software.wings.beans.command.PcfDummyCommandUnit.FetchFiles;
 import static software.wings.beans.command.PcfDummyCommandUnit.PcfSetup;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
@@ -66,6 +67,7 @@ import software.wings.beans.command.PcfDummyCommandUnit;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
+import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.common.Constants;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
@@ -189,11 +191,12 @@ public class PcfSetupState extends State {
     if (valuesInGit) {
       return executeGitTask(context, appManifestMap, activity.getUuid());
     } else {
-      return executePcfTask(context, activity.getUuid());
+      return executePcfTask(context, activity.getUuid(), appManifestMap);
     }
   }
 
-  protected ExecutionResponse executePcfTask(ExecutionContext context, String activityId) {
+  protected ExecutionResponse executePcfTask(
+      ExecutionContext context, String activityId, Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
 
@@ -230,6 +233,14 @@ public class PcfSetupState extends State {
     PcfConfig pcfConfig = (PcfConfig) settingAttribute.getValue();
     List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
         (EncryptableSetting) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
+
+    if (featureFlagService.isEnabled(FeatureName.PCF_MANIFEST_REDESIGN, app.getAccountId())) {
+      PcfSetupStateExecutionData pcfSetupStateExecutionData =
+          (PcfSetupStateExecutionData) context.getStateExecutionData();
+      if (pcfSetupStateExecutionData != null) {
+        pcfStateHelper.getFinalManifestFilesMap(appManifestMap, pcfSetupStateExecutionData.getFetchFilesResult());
+      }
+    }
 
     String applicationManifestYmlContent = pcfStateHelper.fetchManifestYmlString(context, app, serviceElement);
     if (isBlank(applicationManifestYmlContent)) {
@@ -522,6 +533,7 @@ public class PcfSetupState extends State {
       ExecutionContext context, Map<K8sValuesLocation, ApplicationManifest> appManifestMap, String activityId) {
     Application app = context.getApp();
     Environment env = ((ExecutionContextImpl) context).getEnv();
+    notNullCheck("Environment does not exist", env, USER);
 
     InfrastructureMapping infraMapping = infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
 
@@ -555,6 +567,7 @@ public class PcfSetupState extends State {
                                 .activityId(activityId)
                                 .commandName(PCF_SETUP_COMMAND)
                                 .taskType(GIT_FETCH_FILES_TASK)
+                                .appManifestMap(appManifestMap)
                                 .build())
         .delegateTaskId(delegateTaskId)
         .build();
@@ -576,7 +589,12 @@ public class PcfSetupState extends State {
       return ExecutionResponse.builder().executionStatus(executionStatus).build();
     }
 
-    return executePcfTask(context, activityId);
+    PcfSetupStateExecutionData pcfSetupStateExecutionData =
+        (PcfSetupStateExecutionData) context.getStateExecutionData();
+    pcfSetupStateExecutionData.setFetchFilesResult(
+        (GitFetchFilesFromMultipleRepoResult) executionResponse.getGitCommandResult());
+
+    return executePcfTask(context, activityId, pcfSetupStateExecutionData.getAppManifestMap());
   }
 
   private String getActivityId(ExecutionContext context) {
