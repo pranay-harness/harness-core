@@ -1,7 +1,6 @@
 package software.wings.sm.states.pcf;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
@@ -25,6 +24,7 @@ import software.wings.api.ServiceElement;
 import software.wings.api.pcf.PcfDeployContextElement;
 import software.wings.api.pcf.PcfServiceData;
 import software.wings.api.pcf.PcfSetupContextElement;
+import software.wings.api.pcf.PcfSetupStateExecutionData;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
@@ -144,7 +144,7 @@ public class PcfStateTestHelper {
         .displayName(STATE_NAME)
         .addContextElement(workflowStandardParams)
         .addContextElement(phaseElement)
-        .addStateExecutionData(aCommandStateExecutionData().build());
+        .addStateExecutionData(PcfSetupStateExecutionData.builder().build());
   }
 
   public PcfInfrastructureMapping getPcfInfrastructureMapping(List<String> route, List<String> tempRoute) {

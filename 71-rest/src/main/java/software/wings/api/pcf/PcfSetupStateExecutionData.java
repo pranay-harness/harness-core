@@ -11,6 +11,9 @@ import lombok.NoArgsConstructor;
 import software.wings.api.ExecutionDataValue;
 import software.wings.api.pcf.PcfSetupExecutionSummary.PcfSetupExecutionSummaryBuilder;
 import software.wings.beans.TaskType;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
+import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.sm.StateExecutionData;
 
@@ -40,6 +43,8 @@ public class PcfSetupStateExecutionData extends StateExecutionData implements De
   private boolean isStandardBlueGreen;
   private boolean useTempRoutes;
   private TaskType taskType;
+  private Map<K8sValuesLocation, ApplicationManifest> appManifestMap;
+  private GitFetchFilesFromMultipleRepoResult fetchFilesResult;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {

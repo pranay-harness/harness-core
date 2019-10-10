@@ -1,5 +1,6 @@
 package software.wings.sm.states.pcf;
 
+import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
@@ -14,12 +15,14 @@ import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
@@ -51,6 +54,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutput;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.serializer.KryoUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -81,7 +85,6 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.TaskType;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -93,6 +96,8 @@ import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.PcfServiceSpecification;
+import software.wings.beans.yaml.GitCommandExecutionResponse;
+import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.common.InfrastructureConstants;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
@@ -103,6 +108,7 @@ import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.service.ServiceHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
@@ -161,12 +167,13 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Mock private ServiceHelper serviceHelper;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private SweepingOutputService sweepingOutputService;
-  @Spy private PcfStateHelper pcfStateHelper;
+  @InjectMocks @Spy private PcfStateHelper pcfStateHelper;
   @Mock private ApplicationManifestUtils applicationManifestUtils;
+  @Mock private ApplicationManifestService applicationManifestService;
 
   private PcfStateTestHelper pcfStateTestHelper = new PcfStateTestHelper();
 
-  @InjectMocks private PcfSetupState pcfSetupState = new PcfSetupState("name");
+  @Spy @InjectMocks private PcfSetupState pcfSetupState = new PcfSetupState("name");
 
   @Mock private MainConfiguration configuration;
 
@@ -364,6 +371,55 @@ public class PcfSetupStateTest extends WingsBaseTest {
     PcfSetupStateExecutionData stateExecutionData =
         (PcfSetupStateExecutionData) executionResponse.getStateExecutionData();
     assertThat(stateExecutionData.getCommandName()).isEqualTo("PCF Setup");
-    assertThat(stateExecutionData.getTaskType()).isEqualTo(TaskType.GIT_FETCH_FILES_TASK);
+    assertThat(stateExecutionData.getTaskType()).isEqualTo(GIT_FETCH_FILES_TASK);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseForGitTask() {
+    GitCommandExecutionResponse gitCommandExecutionResponse =
+        GitCommandExecutionResponse.builder().gitCommandStatus(GitCommandStatus.SUCCESS).build();
+
+    Map<String, ResponseData> response = new HashMap<>();
+    response.put("activityId", gitCommandExecutionResponse);
+
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
+    appManifestMap.put(K8sValuesLocation.Service, ApplicationManifest.builder().storeType(StoreType.Local).build());
+    PcfSetupStateExecutionData pcfSetupStateExecutionData =
+        (PcfSetupStateExecutionData) context.getStateExecutionData();
+    pcfSetupStateExecutionData.setTaskType(GIT_FETCH_FILES_TASK);
+    pcfSetupStateExecutionData.setAppManifestMap(appManifestMap);
+    pcfSetupStateExecutionData.setActivityId("activityId");
+
+    doReturn(MANIFEST_YAML_CONTENT).when(pcfStateHelper).fetchManifestYmlString(any(), any(), any());
+    on(context).set("serviceTemplateService", serviceTemplateService);
+    when(featureFlagService.isEnabled(FeatureName.PCF_MANIFEST_REDESIGN, app.getAccountId())).thenReturn(true);
+
+    pcfSetupState.handleAsyncInternal(context, response);
+    verify(activityService, times(0)).updateStatus("activityId", APP_ID, FAILED);
+    ArgumentCaptor<HashMap> appManifestMapCaptor = ArgumentCaptor.forClass(HashMap.class);
+    verify(pcfSetupState, times(1)).executePcfTask(any(), any(), appManifestMapCaptor.capture());
+    Map<K8sValuesLocation, ApplicationManifest> capturedValue =
+        (Map<K8sValuesLocation, ApplicationManifest>) appManifestMapCaptor.getValue();
+    assertThat(capturedValue).isNotEmpty();
+    assertThat(capturedValue).containsKey(K8sValuesLocation.Service);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseForGitTaskInErrorCase() {
+    GitCommandExecutionResponse gitCommandExecutionResponse =
+        GitCommandExecutionResponse.builder().gitCommandStatus(GitCommandStatus.FAILURE).build();
+
+    Map<String, ResponseData> response = new HashMap<>();
+    response.put("activityId", gitCommandExecutionResponse);
+
+    PcfSetupStateExecutionData pcfSetupStateExecutionData =
+        (PcfSetupStateExecutionData) context.getStateExecutionData();
+    pcfSetupStateExecutionData.setTaskType(GIT_FETCH_FILES_TASK);
+    pcfSetupStateExecutionData.setActivityId("activityId");
+
+    pcfSetupState.handleAsyncInternal(context, response);
+    verify(activityService, times(1)).updateStatus("activityId", APP_ID, FAILED);
   }
 }
