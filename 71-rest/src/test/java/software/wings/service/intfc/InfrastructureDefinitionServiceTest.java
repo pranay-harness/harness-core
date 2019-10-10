@@ -302,15 +302,28 @@ public class InfrastructureDefinitionServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testGetAllFields() {
+  public void shouldGetExpressionAnnotatedFields() {
     InfrastructureDefinitionServiceImpl infrastructureDefinitionService =
         (InfrastructureDefinitionServiceImpl) this.infrastructureDefinitionService;
-    GoogleKubernetesEngine googleKubernetesEngine = GoogleKubernetesEngine.builder().build();
-    Map<String, Object> allFields = infrastructureDefinitionService.getAllFields(googleKubernetesEngine);
-    assertThat(allFields).hasSize(5);
-    googleKubernetesEngine.setReleaseName("rel");
-    allFields = infrastructureDefinitionService.getAllFields(googleKubernetesEngine);
+    GoogleKubernetesEngine googleKubernetesEngine = GoogleKubernetesEngine.builder().releaseName("rel").build();
+
+    Map<String, Object> allFields =
+        infrastructureDefinitionService.getExpressionAnnotatedFields(googleKubernetesEngine);
+
+    assertThat(allFields).hasSize(2);
     assertThat(allFields.get(GoogleKubernetesEngineKeys.releaseName).equals("rel")).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldReturnEmptyExpressionAnnotatedFields() {
+    InfrastructureDefinitionServiceImpl infrastructureDefinitionService =
+        (InfrastructureDefinitionServiceImpl) this.infrastructureDefinitionService;
+    AwsInstanceInfrastructure awsInstanceInfra = AwsInstanceInfrastructure.builder().build();
+
+    Map<String, Object> allFields = infrastructureDefinitionService.getExpressionAnnotatedFields(awsInstanceInfra);
+
+    assertThat(allFields).isEmpty();
   }
 
   @Test

@@ -7,6 +7,7 @@ import static software.wings.common.InfrastructureConstants.INFRA_KUBERNETES_INF
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.data.validator.Trimmed;
+import io.harness.expression.Expression;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -23,8 +24,8 @@ public class DirectKubernetesInfrastructure
     implements InfraMappingInfrastructureProvider, KubernetesInfrastructure, FieldKeyValMapProvider {
   private String cloudProviderId;
   private String clusterName;
-  private String namespace;
-  @Trimmed private String releaseName;
+  @Expression private String namespace;
+  @Expression @Trimmed private String releaseName;
 
   @Override
   public InfrastructureMapping getInfraMapping() {

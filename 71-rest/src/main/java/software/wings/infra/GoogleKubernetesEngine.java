@@ -10,6 +10,7 @@ import com.google.common.collect.ImmutableSet;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.exception.InvalidRequestException;
+import io.harness.expression.Expression;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -33,8 +34,8 @@ public class GoogleKubernetesEngine
     implements KubernetesInfrastructure, InfraMappingInfrastructureProvider, FieldKeyValMapProvider, ProvisionerAware {
   private String cloudProviderId;
   @IncludeFieldMap private String clusterName;
-  private String namespace;
-  private String releaseName;
+  @Expression private String namespace;
+  @Expression private String releaseName;
   private Map<String, String> expressions;
 
   @Override
