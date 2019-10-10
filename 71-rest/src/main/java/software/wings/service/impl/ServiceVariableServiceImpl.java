@@ -38,6 +38,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
+import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.Environment;
 import software.wings.beans.Event;
 import software.wings.beans.Service;
@@ -54,6 +55,7 @@ import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -89,6 +91,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private AuthHandler authHandler;
   @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private EntityVersionService entityVersionService;
 
   @Override
   public PageResponse<ServiceVariable> list(PageRequest<ServiceVariable> request) {
@@ -159,6 +162,8 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
     ServiceVariable newServiceVariable = duplicateCheck(
         () -> wingsPersistence.saveAndGet(ServiceVariable.class, serviceVariable), "name", serviceVariable.getName());
+    entityVersionService.newEntityVersion(serviceVariable.getAppId(), EntityType.CONFIG, serviceVariable.getUuid(),
+        serviceVariable.getEntityId(), serviceVariable.getName(), ChangeType.CREATED, null);
 
     if (newServiceVariable == null) {
       return null;
@@ -226,9 +231,9 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     if (serviceVariable.getName() != null) {
       if (savedServiceVariable.getName() != null && !savedServiceVariable.getName().equals(serviceVariable.getName())) {
         if (savedServiceVariable.getType().equals(Type.ARTIFACT)) {
-          throw new InvalidRequestException(format("Artifact variable name can not be changed."));
+          throw new InvalidRequestException("Artifact variable name can not be changed.");
         } else {
-          throw new InvalidRequestException(format("Service variable name can not be changed."));
+          throw new InvalidRequestException("Service variable name can not be changed.");
         }
       }
     }
@@ -251,6 +256,8 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
     if (isNotEmpty(updateMap)) {
       wingsPersistence.updateFields(ServiceVariable.class, serviceVariable.getUuid(), updateMap);
+      entityVersionService.newEntityVersion(serviceVariable.getAppId(), EntityType.CONFIG, serviceVariable.getUuid(),
+          serviceVariable.getEntityId(), serviceVariable.getName(), ChangeType.UPDATED, null);
       ServiceVariable updatedServiceVariable = get(serviceVariable.getAppId(), serviceVariable.getUuid());
       if (updatedServiceVariable == null) {
         return null;
