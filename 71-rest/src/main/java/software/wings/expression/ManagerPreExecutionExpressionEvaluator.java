@@ -11,7 +11,7 @@ import software.wings.service.intfc.security.SecretManager;
 
 @Value
 public class ManagerPreExecutionExpressionEvaluator extends ExpressionEvaluator {
-  private ExpressionFunctor secretManagerFunctor;
+  private final ExpressionFunctor secretManagerFunctor;
 
   public ManagerPreExecutionExpressionEvaluator(ServiceTemplateService serviceTemplateService,
       ConfigService configService, String appId, String envId, String serviceTemplateId,

@@ -146,9 +146,11 @@ public class CapabilityHelper {
                        .findFirst()
                        .orElse(null);
 
-        EncryptedDataDetail encryptedDataDetail = (EncryptedDataDetail) argument;
-        encryptionConfigsMap.put(
-            encryptedDataDetail.getEncryptionConfig().getUuid(), encryptedDataDetail.getEncryptionConfig());
+        if (argument != null) {
+          EncryptedDataDetail encryptedDataDetail = (EncryptedDataDetail) argument;
+          encryptionConfigsMap.put(
+              encryptedDataDetail.getEncryptionConfig().getUuid(), encryptedDataDetail.getEncryptionConfig());
+        }
       }
     } catch (Exception e) {
       logger.warn("Failed while generating Encryption Configs from EncryptionDataDetails: " + e);

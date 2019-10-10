@@ -97,16 +97,15 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
       if (result != null) {
         if (result instanceof DelegateTaskNotifyResponseData) {
           ((DelegateTaskNotifyResponseData) result).setDelegateMetaInfo(delegateMetaInfo);
-        } else {
-          logger.error("{} does not implement DelegateTaskNotifyResponseData", result.getClass().getName());
-        }
-        taskResponse.response(result);
-        if (result instanceof RemoteMethodReturnValueData) {
+        } else if (result instanceof RemoteMethodReturnValueData) {
           RemoteMethodReturnValueData returnValueData = (RemoteMethodReturnValueData) result;
           if (returnValueData.getException() instanceof DelegateRetryableException) {
             taskResponse.responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE);
           }
+        } else {
+          logger.error("{} does not implement DelegateTaskNotifyResponseData", result.getClass().getName());
         }
+        taskResponse.response(result);
       } else {
         String errorMessage = "No response from delegate task " + taskId;
         logger.error(errorMessage);
