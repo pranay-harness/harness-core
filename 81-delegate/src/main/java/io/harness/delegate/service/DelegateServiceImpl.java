@@ -1336,12 +1336,12 @@ public class DelegateServiceImpl implements DelegateService {
       // Delay response if already working on many tasks
       sleep(ofMillis(100 * Math.min(currentlyExecutingTasks.size() + currentlyValidatingTasks.size(), 10)));
 
-      logger.info("Validating DelegateTask - uuid: {}, accountId: {}", delegateTaskId, accountId);
+      logger.info("Try to acquire DelegateTask - uuid: {}, accountId: {}", delegateTaskId, accountId);
 
       DelegatePackage delegatePackage = execute(managerClient.acquireTask(delegateId, delegateTaskId, accountId));
       if (delegatePackage == null || delegatePackage.getDelegateTask() == null) {
-        logger.info("DelegateTask not available for validation - uuid: {}, accountId: {}", delegateTaskId,
-            delegateTaskEvent.getAccountId());
+        logger.info(
+            "DelegateTask not available - uuid: {}, accountId: {}", delegateTaskId, delegateTaskEvent.getAccountId());
         return;
       }
 

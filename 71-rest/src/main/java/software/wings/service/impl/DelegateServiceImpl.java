@@ -196,6 +196,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -267,7 +268,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Inject private DelegateTaskBroadcastHelper broadcastHelper;
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
 
-  private final Map<String, AtomicBoolean> syncTaskWaitMap = new ConcurrentHashMap<>();
+  final ConcurrentMap<String, AtomicBoolean> syncTaskWaitMap = new ConcurrentHashMap<>();
 
   private LoadingCache<String, String> delegateVersionCache = CacheBuilder.newBuilder()
                                                                   .maximumSize(10000)
@@ -295,7 +296,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
    * @see java.lang.Runnable#run()
    */
   @Override
-  @SuppressWarnings("PMD")
+  @SuppressWarnings({"PMD", "SynchronizationOnLocalVariableOrMethodParameter"})
   public void run() {
     try {
       if (isNotEmpty(syncTaskWaitMap)) {
@@ -310,10 +311,11 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                               .map(key -> key.getId().toString())
                                               .collect(toList());
         for (String taskId : completedSyncTasks) {
-          if (syncTaskWaitMap.get(taskId) != null) {
-            synchronized (syncTaskWaitMap.get(taskId)) {
-              syncTaskWaitMap.get(taskId).set(false);
-              syncTaskWaitMap.get(taskId).notifyAll();
+          AtomicBoolean flag = syncTaskWaitMap.get(taskId);
+          if (flag != null) {
+            synchronized (flag) {
+              flag.set(false);
+              flag.notifyAll();
             }
           }
         }
@@ -1448,7 +1450,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({"unchecked", "SynchronizationOnLocalVariableOrMethodParameter"})
   public <T extends ResponseData> T executeTask(DelegateTask task) {
     // Wait for task to complete
     DelegateTask completedTask;
@@ -1459,16 +1461,17 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
          AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
       List<String> eligibleDelegateIds = ensureDelegateAvailableToExecuteTask(task);
       if (isEmpty(eligibleDelegateIds)) {
+        logger.warn(assignDelegateService.getActiveDelegateAssignmentErrorMessage(task));
         throw new WingsException(UNAVAILABLE_DELEGATES, USER_ADMIN);
       }
 
       try {
         logger.info("Executing sync task");
         broadcastHelper.broadcastNewDelegateTask(task);
-        syncTaskWaitMap.put(task.getUuid(), new AtomicBoolean(true));
-        synchronized (syncTaskWaitMap.get(task.getUuid())) {
-          while (syncTaskWaitMap.get(task.getUuid()).get()) {
-            syncTaskWaitMap.get(task.getUuid()).wait(task.getData().getTimeout());
+        AtomicBoolean flag = syncTaskWaitMap.computeIfAbsent(task.getUuid(), k -> new AtomicBoolean(true));
+        synchronized (flag) {
+          while (flag.get()) {
+            flag.wait(task.getData().getTimeout());
           }
         }
         completedTask = wingsPersistence.get(DelegateTask.class, task.getUuid());
@@ -1505,9 +1508,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     task.setAsync(async);
     task.setVersion(getVersion());
     task.setLastBroadcastAt(clock.millis());
+
     generateCapabilitiesForTaskIfFeatureEnabled(task);
 
-    // Ensure that broadcast happens atleast 5 seconds from current time for async tasks
+    // Ensure that broadcast happens at least 5 seconds from current time for async tasks
     if (async) {
       task.setNextBroadast(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(5));
     }
@@ -1668,45 +1672,40 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
-  public DelegateTask failIfAllDelegatesFailed(String accountId, String delegateId, String taskId) {
+  public void failIfAllDelegatesFailed(String accountId, String delegateId, String taskId) {
     DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
     if (delegateTask == null) {
       logger.info("Task not found or was already assigned");
-      return null;
+      return;
     }
     try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
              TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
-      if (isValidationComplete(delegateTask)) {
-        // Check whether a whitelisted delegate is connected
-        List<String> whitelistedDelegates = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
-        if (isNotEmpty(whitelistedDelegates)) {
-          logger.info("Waiting for task to be acquired by a whitelisted delegate: {}", whitelistedDelegates);
-          return null;
-        } else {
-          logger.info("No whitelisted delegates found for task");
-          String errorMessage = generateValidationError(delegateTask);
-          logger.info(errorMessage);
-          ResponseData response;
-          if (delegateTask.isAsync()) {
-            response = ErrorNotifyResponseData.builder()
-                           .failureTypes(EnumSet.<FailureType>of(FailureType.DELEGATE_PROVISIONING))
-                           .errorMessage(errorMessage)
-                           .build();
-          } else {
-            InvalidRequestException exception = new InvalidRequestException(errorMessage, USER);
-            response = RemoteMethodReturnValueData.builder().exception(exception).build();
-          }
-          processDelegateResponse(accountId, null, taskId,
-              DelegateTaskResponse.builder()
-                  .accountId(accountId)
-                  .response(response)
-                  .responseCode(ResponseCode.OK)
-                  .build());
-        }
+      if (!isValidationComplete(delegateTask)) {
+        logger.info("Task is still being validated");
+        return;
+      }
+      // Check whether a whitelisted delegate is connected
+      List<String> whitelistedDelegates = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
+      if (isNotEmpty(whitelistedDelegates)) {
+        logger.info("Waiting for task to be acquired by a whitelisted delegate: {}", whitelistedDelegates);
+        return;
       }
 
-      logger.info("Task is still being validated");
-      return null;
+      logger.info("No connected whitelisted delegates found for task");
+      String errorMessage = generateValidationError(delegateTask);
+      logger.info(errorMessage);
+      ResponseData response;
+      if (delegateTask.isAsync()) {
+        response = ErrorNotifyResponseData.builder()
+                       .failureTypes(EnumSet.of(FailureType.DELEGATE_PROVISIONING))
+                       .errorMessage(errorMessage)
+                       .build();
+      } else {
+        response =
+            RemoteMethodReturnValueData.builder().exception(new InvalidRequestException(errorMessage, USER)).build();
+      }
+      processDelegateResponse(accountId, null, taskId,
+          DelegateTaskResponse.builder().accountId(accountId).response(response).responseCode(ResponseCode.OK).build());
     }
   }
 

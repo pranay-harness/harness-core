@@ -93,7 +93,7 @@ public interface DelegateService extends OwnedByAccount {
   DelegatePackage reportConnectionResults(
       String accountId, String delegateId, String taskId, List<DelegateConnectionResult> results);
 
-  DelegateTask failIfAllDelegatesFailed(String accountId, String delegateId, String taskId);
+  void failIfAllDelegatesFailed(String accountId, String delegateId, String taskId);
 
   void clearCache(String accountId, String delegateId);
 
