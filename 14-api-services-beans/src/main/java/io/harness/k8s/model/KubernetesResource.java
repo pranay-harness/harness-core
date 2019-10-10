@@ -57,7 +57,6 @@ public class KubernetesResource {
   private KubernetesResourceId resourceId;
   private Object value;
   private String spec;
-
   private static KubernetesClient k8sClient = new DefaultKubernetesClient().inAnyNamespace();
 
   private static final String dotMatch = "\\.";
@@ -216,6 +215,9 @@ public class KubernetesResource {
     HasMetadata resource = k8sClient.load(IOUtils.toInputStream(this.spec, UTF_8)).get().get(0);
 
     PodTemplateSpec podTemplateSpec = getPodTemplateSpec(resource);
+    if (podTemplateSpec == null) {
+      return this;
+    }
 
     Map<String, String> podLabels = podTemplateSpec.getMetadata().getLabels();
     if (podLabels == null) {
@@ -241,6 +243,9 @@ public class KubernetesResource {
     HasMetadata resource = k8sClient.load(IOUtils.toInputStream(this.spec, UTF_8)).get().get(0);
 
     PodSpec podSpec = getPodSpec(resource);
+    if (podSpec == null) {
+      return this;
+    }
 
     updateConfigMapRef(podSpec, configMapRefTransformer);
     updateSecretRef(podSpec, secretRefTransformer);

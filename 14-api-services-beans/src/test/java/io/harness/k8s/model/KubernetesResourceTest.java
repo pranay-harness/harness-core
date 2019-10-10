@@ -119,4 +119,24 @@ public class KubernetesResourceTest extends CategoryTest {
 
     assertThat(resource.getField("metadata.name")).isEqualTo(oldName + "-1");
   }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testAddLabelsInPodSpecNullPodTemplateSpec() throws Exception {
+    URL url = this.getClass().getResource("/null-pod-template.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = ManifestHelper.processYaml(fileContents).get(0);
+    resource = resource.addLabelsInPodSpec(ImmutableMap.of("k", "v"));
+    assertThat(resource).isNotNull();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testTransformConfigMapAndSecretRef() throws Exception {
+    URL url = this.getClass().getResource("/spec-in-template-null.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = ManifestHelper.processYaml(fileContents).get(0);
+    resource = resource.transformConfigMapAndSecretRef(UnaryOperator.identity(), UnaryOperator.identity());
+    assertThat(resource).isNotNull();
+  }
 }

@@ -1,8 +1,10 @@
 package io.harness.filesystem;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.filesystem.FileIo.deleteFileIfExists;
+import static io.harness.filesystem.FileIo.getHomeDir;
 import static io.harness.filesystem.FileIo.waitForDirectoryToBeAccessibleOutOfProcess;
 import static io.harness.filesystem.FileIo.writeFile;
 import static java.nio.file.Files.lines;
@@ -114,5 +116,12 @@ public class FileIoTest extends CategoryTest {
     }
 
     deleteDirectoryAndItsContentIfExists(directoryName);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetHomeDir() {
+    String homeDir = getHomeDir();
+    assertThat(isEmpty(homeDir)).isFalse();
   }
 }

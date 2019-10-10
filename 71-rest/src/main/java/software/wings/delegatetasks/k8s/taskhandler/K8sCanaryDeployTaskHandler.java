@@ -2,7 +2,6 @@ package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.govern.Switch.unhandled;
-import static io.harness.k8s.manifest.ManifestHelper.getManagedWorkload;
 import static io.harness.k8s.manifest.ManifestHelper.getWorkloads;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
@@ -239,7 +238,7 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
       executionLogCallback.saveExecutionLog("\nVersioning resources.");
 
       addRevisionNumber(resources, currentRelease.getNumber());
-      canaryWorkload = getManagedWorkload(resources);
+      canaryWorkload = workloads.get(0);
 
       k8sTaskHelper.cleanup(client, k8sDelegateTaskParams, releaseHistory, executionLogCallback);
 
@@ -271,7 +270,8 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
           } else {
             maxInstances = currentInstances;
           }
-          targetInstances = (int) Math.round(k8sCanaryDeployTaskParameters.getInstances() * maxInstances / 100.0);
+          targetInstances = k8sTaskHelper.getTargetInstancesForCanary(
+              k8sCanaryDeployTaskParameters.getInstances(), maxInstances, executionLogCallback);
           break;
 
         default:
