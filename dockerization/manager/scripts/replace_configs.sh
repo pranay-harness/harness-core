@@ -54,6 +54,10 @@ if [[ "" != "$ELASTICSEARCH_URI" ]]; then
   yq write -i $CONFIG_FILE elasticsearch.uri "$ELASTICSEARCH_URI"
 fi
 
+if [[ "" != "$ELASTICSEARCH_INDEX_SUFFIX" ]]; then
+  yq write -i $CONFIG_FILE elasticsearch.indexSuffix "$ELASTICSEARCH_INDEX_SUFFIX"
+fi
+
 if [[ "" != "$MONGO_LOCK_URI" ]]; then
   yq write -i $CONFIG_FILE mongo.locksUri "${MONGO_LOCK_URI//\\&/&}"
 fi

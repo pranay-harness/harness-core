@@ -4,6 +4,8 @@ import static org.mockito.Mockito.mock;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 
 import io.harness.shell.ShellExecutionService;
@@ -11,6 +13,12 @@ import io.harness.shell.ShellExecutionServiceImpl;
 import io.harness.spotinst.SpotInstHelperServiceDelegate;
 import io.harness.spotinst.SpotInstHelperServiceDelegateImpl;
 import io.harness.threading.ThreadPool;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpHost;
+import org.apache.http.client.utils.URIBuilder;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
+import software.wings.app.MainConfiguration;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.amazons3.AmazonS3Service;
@@ -28,6 +36,8 @@ import software.wings.helpers.ext.nexus.NexusServiceImpl;
 import software.wings.helpers.ext.pcf.PcfClient;
 import software.wings.helpers.ext.pcf.PcfClientImpl;
 import software.wings.helpers.ext.pcf.PcfDeploymentManagerImpl;
+import software.wings.search.framework.ElasticsearchDao;
+import software.wings.search.framework.SearchDao;
 import software.wings.service.impl.AmazonS3BuildServiceImpl;
 import software.wings.service.impl.ArtifactoryBuildServiceImpl;
 import software.wings.service.impl.ContainerServiceImpl;
@@ -71,9 +81,12 @@ import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.service.intfc.sumo.SumoDelegateService;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class WingsTestModule extends AbstractModule {
   @Override
   protected void configure() {
@@ -105,7 +118,7 @@ public class WingsTestModule extends AbstractModule {
     bind(AwsEcsHelperServiceDelegate.class).to(AwsEcsHelperServiceDelegateImpl.class);
     bind(GitService.class).to(GitServiceImpl.class);
     bind(ChartMuseumClient.class).to(ChartMuseumClientImpl.class);
-
+    bind(SearchDao.class).to(ElasticsearchDao.class);
     bind(PcfClient.class).to(PcfClientImpl.class);
     DelegateLogService mockDelegateLogService = mock(DelegateLogService.class);
     bind(DelegateLogService.class).toInstance(mockDelegateLogService);
@@ -134,5 +147,18 @@ public class WingsTestModule extends AbstractModule {
         .toInstance(ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
             new ThreadFactoryBuilder().setNameFormat("timeout-enforcer-%d").setPriority(Thread.NORM_PRIORITY).build()));
     bind(ShellExecutionService.class).to(ShellExecutionServiceImpl.class);
+  }
+
+  @Provides
+  @Singleton
+  public RestHighLevelClient getElasticsearchClient(MainConfiguration mainConfiguration) {
+    try {
+      URI uri = new URIBuilder(mainConfiguration.getElasticsearchConfig().getUri()).build();
+      return new RestHighLevelClient(RestClient.builder(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme())));
+    } catch (URISyntaxException e) {
+      logger.error(
+          String.format("Elasticsearch URI %s is invalid", mainConfiguration.getElasticsearchConfig().getUri()), e);
+    }
+    return null;
   }
 }

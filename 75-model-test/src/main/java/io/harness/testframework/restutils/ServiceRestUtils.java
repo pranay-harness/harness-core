@@ -1,11 +1,14 @@
 package io.harness.testframework.restutils;
 
+import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import io.restassured.path.json.JsonPath;
 import org.junit.Assert;
 import software.wings.beans.Service;
+
+import javax.ws.rs.core.GenericType;
 
 public class ServiceRestUtils {
   /**
@@ -26,6 +29,31 @@ public class ServiceRestUtils {
                             .jsonPath();
 
     return response.getString("resource.uuid");
+  }
+
+  public static Service updateService(String bearerToken, String accountId, String appId, Service service) {
+    GenericType<RestResponse<Service>> serviceType = new GenericType<RestResponse<Service>>() {};
+
+    RestResponse<Service> serviceRestResponse = Setup.portal()
+                                                    .auth()
+                                                    .oauth2(bearerToken)
+                                                    .queryParam("accountId", accountId)
+                                                    .queryParam("appId", appId)
+                                                    .body(service, ObjectMapperType.GSON)
+                                                    .contentType(ContentType.JSON)
+                                                    .put("/services/" + service.getUuid())
+                                                    .as(serviceType.getType());
+    return serviceRestResponse.getResource();
+  }
+
+  public static int deleteService(String bearerToken, String appId, String serviceId) {
+    return Setup.portal()
+        .auth()
+        .oauth2(bearerToken)
+        .queryParam("appId", appId)
+        .contentType(ContentType.JSON)
+        .delete("/services/" + serviceId)
+        .statusCode();
   }
 
   public static String createSSHService(String bearerToken, String appId, Service service) {

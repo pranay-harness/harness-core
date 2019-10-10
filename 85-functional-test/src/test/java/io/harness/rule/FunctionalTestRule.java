@@ -48,11 +48,13 @@ import software.wings.app.MainConfiguration;
 import software.wings.app.ManagerExecutorModule;
 import software.wings.app.ManagerQueueModule;
 import software.wings.app.SSOModule;
+import software.wings.app.SearchModule;
 import software.wings.app.SignupModule;
 import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
 import software.wings.graphql.provider.QueryLanguageProvider;
+import software.wings.search.framework.ElasticsearchConfig;
 import software.wings.security.ThreadLocalUserProvider;
 import software.wings.service.impl.EventEmitter;
 
@@ -106,7 +108,27 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
 
     DistributedLockSvc distributedLockSvc = distributedLockSvc(mongoClient, dbName, closingFactory);
 
-    Configuration configuration = getConfiguration(mongoUri);
+    RestResponse<ElasticsearchConfig> elasticsearchConfigRestResponse =
+        Setup.portal()
+            .queryParam("configurationType", ConfigurationType.ELASTICSEARCH)
+            .get("/health/configuration")
+            .as(new GenericType<RestResponse<ElasticsearchConfig>>() {}.getType());
+
+    String elasticsearchUri = new AsymmetricDecryptor(new ScmSecret())
+                                  .decryptText(elasticsearchConfigRestResponse.getResource().getEncryptedUri());
+    String elasticsearchIndexSuffix = elasticsearchConfigRestResponse.getResource().getIndexSuffix();
+    ElasticsearchConfig elasticsearchConfig =
+        ElasticsearchConfig.builder().uri(elasticsearchUri).indexSuffix(elasticsearchIndexSuffix).build();
+
+    RestResponse<Boolean> searchEnabledRestResponse =
+        Setup.portal()
+            .queryParam("configurationType", ConfigurationType.SEARCH_ENABLED)
+            .get("/health/configuration")
+            .as(new GenericType<RestResponse<Boolean>>() {}.getType());
+
+    boolean isSearchEnabled = searchEnabledRestResponse.getResource();
+
+    Configuration configuration = getConfiguration(mongoUri, elasticsearchConfig, isSearchEnabled);
 
     List<Module> modules = getRequiredModules(configuration, distributedLockSvc);
     modules.add(new ManagerQueueModule());
@@ -114,12 +136,15 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
     return modules;
   }
 
-  protected Configuration getConfiguration(String mongoUri) {
+  protected Configuration getConfiguration(
+      String mongoUri, ElasticsearchConfig elasticsearchConfig, boolean isSearchEnabled) {
     MainConfiguration configuration = new MainConfiguration();
     configuration.getPortal().setCompanyName("COMPANY_NAME");
     configuration.getPortal().setUrl("PORTAL_URL");
     configuration.getPortal().setVerificationUrl("VERIFICATION_PATH");
     configuration.setMongoConnectionFactory(MongoConfig.builder().uri(mongoUri).build());
+    configuration.setElasticsearchConfig(elasticsearchConfig);
+    configuration.setSearchEnabled(isSearchEnabled);
     configuration.setSegmentConfig(
         SegmentConfig.builder().enabled(false).apiKey("dummy_api_key").url("dummy_url").build());
     configuration.getBackgroundSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
@@ -155,6 +180,7 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
     modules.add(new GraphQLModule());
     modules.add(new SSOModule());
     modules.add(new SignupModule());
+    modules.add(new SearchModule());
     modules.add(new GcpMarketplaceIntegrationModule());
     modules.add(new AuthModule());
     return modules;

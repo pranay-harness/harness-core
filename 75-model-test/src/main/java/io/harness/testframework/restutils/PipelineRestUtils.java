@@ -27,6 +27,16 @@ public class PipelineRestUtils {
     return savedServiceResponse.getResource();
   }
 
+  public static int deletePipeline(String appId, String pipelineId, String bearerToken) {
+    return Setup.portal()
+        .auth()
+        .oauth2(bearerToken)
+        .queryParam("appId", appId)
+        .contentType(ContentType.JSON)
+        .delete("/pipelines/" + pipelineId)
+        .statusCode();
+  }
+
   public static Pipeline getPipeline(String appId, String pipelineId, String bearerToken) {
     GenericType<RestResponse<Pipeline>> pipelineType = new GenericType<RestResponse<Pipeline>>() {};
 
