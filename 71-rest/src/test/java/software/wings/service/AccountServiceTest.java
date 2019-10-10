@@ -578,4 +578,18 @@ public class AccountServiceTest extends WingsBaseTest {
     assertThat(account.getAccountName()).isEqualTo(newAccountName);
     assertThat(account.getCompanyName()).isEqualTo(companyName);
   }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testUpdateCloudCostEnabled() {
+    Account account = accountService.save(anAccount()
+                                              .withCompanyName("CompanyName 1")
+                                              .withAccountName("Account Name 1")
+                                              .withAccountKey("ACCOUNT_KEY")
+                                              .withLicenseInfo(getLicenseInfo())
+                                              .withWhitelistedDomains(new HashSet<>())
+                                              .build());
+    Boolean result = accountService.updateCloudCostEnabled(account.getUuid(), true);
+    assertThat(result).isTrue();
+  }
 }

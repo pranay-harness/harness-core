@@ -641,6 +641,13 @@ public class AccountServiceImpl implements AccountService {
     return Optional.of(accountType);
   }
 
+  public Boolean updateCloudCostEnabled(String accountId, boolean cloudCostEnabled) {
+    Account account = get(accountId);
+    account.setCloudCostEnabled(cloudCostEnabled);
+    update(account);
+    return true;
+  }
+
   @Override
   public Account update(@Valid Account account) {
     licenseService.decryptLicenseInfo(account, false);
@@ -649,6 +656,7 @@ public class AccountServiceImpl implements AccountService {
                                                      .set("companyName", account.getCompanyName())
                                                      .set("twoFactorAdminEnforced", account.isTwoFactorAdminEnforced())
                                                      .set(AccountKeys.oauthEnabled, account.isOauthEnabled())
+                                                     .set(AccountKeys.cloudCostEnabled, account.isCloudCostEnabled())
                                                      .set("whitelistedDomains", account.getWhitelistedDomains());
 
     if (null != account.getLicenseInfo()) {

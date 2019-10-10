@@ -113,6 +113,32 @@ public class AccountResource {
     return response;
   }
 
+  @POST
+  @Path("cloudcost/disable")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> disableCloudCost(@QueryParam("accountId") String accountId) {
+    RestResponse<Boolean> response =
+        accountPermissionUtils.checkIfHarnessUser("User not allowed to disable cloud cost for the account.");
+    if (response == null) {
+      response = new RestResponse<>(accountService.updateCloudCostEnabled(accountId, false));
+    }
+    return response;
+  }
+
+  @POST
+  @Path("cloudcost/enable")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> enableCloudCost(@QueryParam("accountId") String accountId) {
+    RestResponse<Boolean> response =
+        accountPermissionUtils.checkIfHarnessUser("User is not allowed to enable cloud cost for the account.");
+    if (response == null) {
+      response = new RestResponse<>(accountService.updateCloudCostEnabled(accountId, true));
+    }
+    return response;
+  }
+
   @GET
   @Timed
   @ExceptionMetered
