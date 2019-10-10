@@ -47,11 +47,13 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
+import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
@@ -107,6 +109,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private YamlDirectoryService yamlDirectoryService;
   @Mock private AuditServiceHelper auditServiceHelper;
+  @Mock private EntityVersionService mockEntityVersionService;
   @Inject @InjectMocks private ServiceVariableService serviceVariableService;
 
   /**
@@ -116,6 +119,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    */
   @Before
   public void setUp() throws IOException {
+    SERVICE_VARIABLE.setAppId(APP_ID);
     when(wingsPersistence.createQuery(ServiceVariable.class)).thenReturn(query);
     when(query.filter(any(), any())).thenReturn(query);
     when(appService.get(TARGET_APP_ID)).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
@@ -160,6 +164,9 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
   public void shouldSave() {
     serviceVariableService.save(SERVICE_VARIABLE);
     verify(wingsPersistence).saveAndGet(ServiceVariable.class, SERVICE_VARIABLE);
+    verify(mockEntityVersionService)
+        .newEntityVersion(APP_ID, EntityType.CONFIG, SERVICE_VARIABLE.getUuid(), SERVICE_VARIABLE.getEntityId(),
+            SERVICE_VARIABLE.getName(), ChangeType.CREATED, null);
   }
 
   /**
@@ -267,6 +274,9 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     verify(wingsPersistence, times(0))
         .updateFields(
             ServiceVariable.class, SERVICE_VARIABLE_ID, ImmutableMap.of("value", variable.getValue().toString()));
+    verify(mockEntityVersionService)
+        .newEntityVersion(APP_ID, EntityType.CONFIG, variable.getUuid(), variable.getEntityId(), variable.getName(),
+            ChangeType.UPDATED, null);
   }
 
   /**
@@ -317,6 +327,9 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     variable.setUuid(secondVariableId);
     when(wingsPersistence.getWithAppId(ServiceVariable.class, APP_ID, secondVariableId)).thenReturn(variable2);
     serviceVariableService.update(variable);
+    verify(mockEntityVersionService)
+        .newEntityVersion(APP_ID, EntityType.CONFIG, variable.getUuid(), variable.getEntityId(), variable.getName(),
+            ChangeType.UPDATED, null);
   }
 
   /**
