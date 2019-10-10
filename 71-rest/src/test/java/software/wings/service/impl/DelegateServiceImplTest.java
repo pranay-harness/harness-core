@@ -1,10 +1,10 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
-import static junit.framework.TestCase.fail;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -38,6 +38,7 @@ import software.wings.beans.TaskType;
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 public class DelegateServiceImplTest extends WingsBaseTest {
   private static final String VERSION = "1.0.0";
@@ -64,25 +65,19 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                             .build();
     wingsPersistence.save(delegate);
     DelegateTask delegateTask = getDelegateTask();
-    new Thread(() -> {
-      try {
-        while (isEmpty(delegateService.syncTaskWaitMap)) {
-          Thread.sleep(50L);
-        }
-        DelegateTask task =
-            wingsPersistence.createQuery(DelegateTask.class).filter("accountId", delegateTask.getAccountId()).get();
-        delegateService.processDelegateResponse(task.getAccountId(), delegate.getUuid(), task.getUuid(),
-            DelegateTaskResponse.builder()
-                .accountId(task.getAccountId())
-                .response(HttpStateExecutionResponse.builder().executionStatus(ExecutionStatus.SUCCESS).build())
-                .responseCode(ResponseCode.OK)
-                .build());
-        new Thread(delegateService).start();
-      } catch (InterruptedException e) {
-        fail();
-      }
-    })
-        .start();
+    Thread thread = new Thread(() -> {
+      await().atMost(5L, TimeUnit.SECONDS).until(() -> isNotEmpty(delegateService.syncTaskWaitMap));
+      DelegateTask task =
+          wingsPersistence.createQuery(DelegateTask.class).filter("accountId", delegateTask.getAccountId()).get();
+      delegateService.processDelegateResponse(task.getAccountId(), delegate.getUuid(), task.getUuid(),
+          DelegateTaskResponse.builder()
+              .accountId(task.getAccountId())
+              .response(HttpStateExecutionResponse.builder().executionStatus(ExecutionStatus.SUCCESS).build())
+              .responseCode(ResponseCode.OK)
+              .build());
+      new Thread(delegateService).start();
+    });
+    thread.start();
     ResponseData responseData = delegateService.executeTask(delegateTask);
     assertThat(responseData instanceof HttpStateExecutionResponse).isTrue();
     HttpStateExecutionResponse httpResponse = (HttpStateExecutionResponse) responseData;
