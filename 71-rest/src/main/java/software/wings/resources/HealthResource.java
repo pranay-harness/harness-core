@@ -20,6 +20,7 @@ import io.harness.security.AsymmetricEncryptor;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.app.MainConfiguration;
+import software.wings.search.framework.ElasticsearchConfig;
 import software.wings.security.annotations.PublicApi;
 
 import java.security.InvalidKeyException;
@@ -89,6 +90,15 @@ public class HealthResource {
                                       .encryptedLocksUri(asymmetricEncryptor.encryptText(
                                           mongoConfig.getLocksUri() != null ? mongoConfig.getLocksUri() : ""))
                                       .build());
+      case ELASTICSEARCH:
+        ElasticsearchConfig elasticsearchConfig = mainConfiguration.getElasticsearchConfig();
+        return new RestResponse<>(ElasticsearchConfig.builder()
+                                      .encryptedUri(asymmetricEncryptor.encryptText(elasticsearchConfig.getUri()))
+                                      .indexSuffix(elasticsearchConfig.getIndexSuffix())
+                                      .build());
+      case SEARCH_ENABLED:
+        boolean isSearchEnabled = mainConfiguration.isSearchEnabled();
+        return new RestResponse<>(isSearchEnabled);
       default:
         unhandled(configurationType);
     }

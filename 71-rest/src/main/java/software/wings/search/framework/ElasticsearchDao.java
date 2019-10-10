@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
@@ -37,7 +38,7 @@ import java.util.concurrent.TimeUnit;
  * @author utkarsh
  */
 @Slf4j
-public final class ElasticsearchDao implements SearchDao {
+public class ElasticsearchDao implements SearchDao {
   @Inject RestHighLevelClient client;
   @Inject ElasticsearchIndexManager elasticsearchIndexManager;
   private static final String SCRIPT_LANGUAGE = "painless";
@@ -45,6 +46,20 @@ public final class ElasticsearchDao implements SearchDao {
   private static final String FIELD_TO_UPDATE_PARAMS_KEY = "fieldToUpdate";
   private static final String NEW_ELEMENT_PARAMS_KEY = "newList";
   private static final String ID_TO_BE_DELETED_PARAMS_KEY = "idToBeDeleted";
+
+  public boolean insertDocument(String entityType, String entityId, String entityJson) {
+    String indexName = elasticsearchIndexManager.getIndexName(entityType);
+    IndexRequest indexRequest = new IndexRequest(indexName);
+    indexRequest.id(entityId);
+    indexRequest.source(entityJson, XContentType.JSON);
+    try {
+      client.index(indexRequest, RequestOptions.DEFAULT);
+      return true;
+    } catch (IOException e) {
+      logger.error(COULD_NOT_CONNECT_ERROR_MESSAGE, e);
+    }
+    return false;
+  }
 
   public boolean upsertDocument(String entityType, String entityId, String entityJson) {
     String indexName = elasticsearchIndexManager.getIndexName(entityType);
@@ -96,7 +111,7 @@ public final class ElasticsearchDao implements SearchDao {
     params.put("maxElementsInList", maxElementsInList);
 
     request.setQuery(QueryBuilders.termsQuery(EntityBaseViewKeys.id, documentIds));
-    request.setScript(new Script(ScriptType.INLINE, "painless",
+    request.setScript(new Script(ScriptType.INLINE, SCRIPT_LANGUAGE,
         "if (ctx._source[params.fieldToUpdate] != null) {if (ctx._source[params.fieldToUpdate].length == params.maxElementsInList) { ctx._source[params.fieldToUpdate] = ctx._source[params.fieldToUpdate].stream().skip(1).collect(Collectors.toList());} ctx._source[params.fieldToUpdate].add(params.newList);} else {ctx._source[params.fieldToUpdate] = [params.newList];}",
         params));
     return processUpdateByQuery(request, params, indexName);
@@ -284,7 +299,7 @@ public final class ElasticsearchDao implements SearchDao {
     params.put("currentTimestampValue", currentTimestampValue);
 
     request.setQuery(QueryBuilders.termsQuery(EntityBaseViewKeys.id, documentIds));
-    request.setScript(new Script(ScriptType.INLINE, "painless",
+    request.setScript(new Script(ScriptType.INLINE, SCRIPT_LANGUAGE,
         "if (ctx._source[params.fieldToUpdate] != null) { ctx._source[params.fieldToUpdate] = ctx._source[params.fieldToUpdate].stream().filter(item -> item >= params.newTimestampValue).collect(Collectors.toList()); ctx._source[params.fieldToUpdate].add(params.currentTimestampValue); } else { ctx._source[params.fieldToUpdate] = [params.currentTimestampValue]; }",
         params));
     return processUpdateByQuery(request, params, indexName);

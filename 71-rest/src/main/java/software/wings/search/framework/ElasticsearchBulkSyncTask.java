@@ -2,28 +2,13 @@ package software.wings.search.framework;
 
 import com.google.inject.Inject;
 
-import io.harness.persistence.HIterator;
-import io.harness.persistence.PersistentEntity;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.elasticsearch.action.support.master.AcknowledgedResponse;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.indices.CreateIndexRequest;
-import org.elasticsearch.client.indices.CreateIndexResponse;
-import org.elasticsearch.client.indices.GetIndexRequest;
-import org.elasticsearch.common.xcontent.XContentType;
-import software.wings.audit.AuditHeader;
 import software.wings.search.framework.changestreams.ChangeEvent;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.Future;
@@ -37,14 +22,10 @@ import java.util.concurrent.Future;
 
 @Slf4j
 public class ElasticsearchBulkSyncTask extends ElasticsearchSyncTask {
-  @Inject RestHighLevelClient client;
-  @Inject SearchDao searchDao;
-  @Inject ElasticsearchIndexManager elasticsearchIndexManager;
+  @Inject ElasticsearchEntityBulkMigrator elasticsearchEntityBulkMigrator;
   private Queue<ChangeEvent<?>> changeEventsDuringBulkSync = new LinkedList<>();
   private Map<Class, Boolean> isFirstChangeReceived = new HashMap<>();
   private Set<SearchEntity<?>> entitiesToBulkSync = new HashSet<>();
-  private static final String BASE_CONFIGURATION_PATH = "/elasticsearch/framework/BaseViewSchema.json";
-  private static final String ENTITY_CONFIGURATION_PATH_BASE = "/elasticsearch/entities/";
 
   private void setEntitiesToBulkSync() {
     for (SearchEntity<?> searchEntity : searchEntityMap.values()) {
@@ -57,101 +38,6 @@ public class ElasticsearchBulkSyncTask extends ElasticsearchSyncTask {
         entitiesToBulkSync.add(searchEntity);
       }
     }
-  }
-
-  private boolean deleteIndex(SearchEntity<?> searchEntity) {
-    try {
-      String indexName = elasticsearchIndexManager.getIndexName(searchEntity.getType());
-      GetIndexRequest getIndexRequest = new GetIndexRequest(indexName);
-      boolean exists = client.indices().exists(getIndexRequest, RequestOptions.DEFAULT);
-      if (exists) {
-        logger.info(String.format("%s index exists. Deleting the index", searchEntity.getType()));
-        DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest(indexName);
-
-        AcknowledgedResponse deleteIndexResponse = client.indices().delete(deleteIndexRequest, RequestOptions.DEFAULT);
-        if (deleteIndexResponse == null || !deleteIndexResponse.isAcknowledged()) {
-          logger.error(
-              String.format("Could not delete index for searchEntity %s", searchEntity.getClass().getCanonicalName()));
-          return false;
-        }
-      }
-    } catch (IOException e) {
-      logger.error("Failed to delete index", e);
-      return false;
-    }
-    return true;
-  }
-
-  private String getSearchConfiguration(SearchEntity<?> searchEntity) throws IOException {
-    String configurationPath =
-        String.format("%s%s", ENTITY_CONFIGURATION_PATH_BASE, searchEntity.getConfigurationPath());
-    String entitySettingsString =
-        IOUtils.toString(getClass().getResourceAsStream(configurationPath), StandardCharsets.UTF_8);
-    String baseSettingsString =
-        IOUtils.toString(getClass().getResourceAsStream(BASE_CONFIGURATION_PATH), StandardCharsets.UTF_8);
-    return SearchEntityUtils.mergeSettings(baseSettingsString, entitySettingsString);
-  }
-
-  private boolean createIndex(SearchEntity<?> searchEntity) {
-    try {
-      String indexName = elasticsearchIndexManager.getIndexName(searchEntity.getType());
-      CreateIndexRequest createIndexRequest = new CreateIndexRequest(indexName);
-
-      String entityConfiguration = getSearchConfiguration(searchEntity);
-      createIndexRequest.source(entityConfiguration, XContentType.JSON);
-
-      CreateIndexResponse createIndexResponse = client.indices().create(createIndexRequest, RequestOptions.DEFAULT);
-      if (createIndexResponse == null || !createIndexResponse.isAcknowledged()) {
-        logger.error(
-            String.format("Could not create index for searchEntity %s", searchEntity.getClass().getCanonicalName()));
-        return false;
-      }
-
-    } catch (IOException e) {
-      logger.error("Failed to create index", e);
-      return false;
-    }
-    return true;
-  }
-
-  private boolean recreate(SearchEntity<?> searchEntity) {
-    boolean isIndexDeleted = deleteIndex(searchEntity);
-    if (!isIndexDeleted) {
-      return false;
-    }
-    return createIndex(searchEntity);
-  }
-
-  private <T extends PersistentEntity> boolean runBulkMigration(SearchEntity<T> searchEntity) {
-    boolean isIndexRecreated = recreate(searchEntity);
-    if (!isIndexRecreated) {
-      return false;
-    }
-    if (searchEntity.getSourceEntityClass().equals(AuditHeader.class)) {
-      return true;
-    }
-    Class<T> sourceEntityClass = searchEntity.getSourceEntityClass();
-    try (HIterator<T> iterator = new HIterator<>(wingsPersistence.createQuery(sourceEntityClass).fetch())) {
-      while (iterator.hasNext()) {
-        final T object = iterator.next();
-        EntityBaseView entityBaseView = searchEntity.getView(object);
-        if (!upsertEntityBaseView(searchEntity, entityBaseView)) {
-          return false;
-        }
-      }
-    }
-    return true;
-  }
-
-  private boolean upsertEntityBaseView(SearchEntity searchEntity, EntityBaseView entityBaseView) {
-    if (entityBaseView != null) {
-      Optional<String> jsonString = SearchEntityUtils.convertToJson(entityBaseView);
-      if (!jsonString.isPresent()) {
-        return false;
-      }
-      return searchDao.upsertDocument(searchEntity.getType(), entityBaseView.getId(), jsonString.get());
-    }
-    return true;
   }
 
   private boolean processChanges(Queue<ChangeEvent<?>> changeEvents) {
@@ -188,7 +74,7 @@ public class ElasticsearchBulkSyncTask extends ElasticsearchSyncTask {
 
     for (SearchEntity<?> searchEntity : entitiesToBulkSync) {
       logger.info(String.format("Migrating %s to elasticsearch", searchEntity.getClass().getCanonicalName()));
-      hasMigrationSucceeded = runBulkMigration(searchEntity);
+      hasMigrationSucceeded = elasticsearchEntityBulkMigrator.runBulkMigration(searchEntity);
       if (hasMigrationSucceeded) {
         logger.info(String.format("%s migrated to elasticsearch", searchEntity.getClass().getCanonicalName()));
       } else {

@@ -33,6 +33,7 @@ public class WorkflowRestUtils {
   static final String ECS_SERVICE_SETUP_CONSTANT = "ECS Service Setup";
   static final String UPGRADE_CONTAINERS_CONSTANT = "Upgrade Containers";
   static final String DEPLOY_CONTAINERS_CONSTANT = "Deploy Containers";
+
   public static Workflow createWorkflow(String bearerToken, String accountId, String appId, Workflow workflow) {
     GenericType<RestResponse<Workflow>> workflowType = new GenericType<RestResponse<Workflow>>() {};
 
@@ -51,6 +52,22 @@ public class WorkflowRestUtils {
     }
 
     return savedWorkflowResponse.getResource();
+  }
+
+  public static Workflow updateWorkflow(String bearerToken, String accountId, String appId, Workflow workflow) {
+    GenericType<RestResponse<Workflow>> workflowType = new GenericType<RestResponse<Workflow>>() {};
+
+    RestResponse<Workflow> updatedWorkflowResponse = Setup.portal()
+                                                         .auth()
+                                                         .oauth2(bearerToken)
+                                                         .queryParam("accountId", accountId)
+                                                         .queryParam("appId", appId)
+                                                         .body(workflow, ObjectMapperType.GSON)
+                                                         .contentType(ContentType.JSON)
+                                                         .put("/workflows/" + workflow.getUuid() + "/basic")
+                                                         .as(workflowType.getType());
+
+    return updatedWorkflowResponse.getResource();
   }
 
   public static WorkflowExecution startWorkflow(

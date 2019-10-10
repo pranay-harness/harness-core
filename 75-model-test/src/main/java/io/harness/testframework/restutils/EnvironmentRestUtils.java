@@ -43,6 +43,33 @@ public class EnvironmentRestUtils {
     return savedApplicationResponse.getResource();
   }
 
+  public static Environment updateEnvironment(
+      String bearerToken, String accountId, String applicationId, Environment environment) {
+    GenericType<RestResponse<Environment>> environmentType = new GenericType<RestResponse<Environment>>() {};
+
+    RestResponse<Environment> environmentRestResponse = Setup.portal()
+                                                            .auth()
+                                                            .oauth2(bearerToken)
+                                                            .queryParam("appId", applicationId)
+                                                            .body(environment, ObjectMapperType.GSON)
+                                                            .contentType(ContentType.JSON)
+                                                            .put("/environments/" + environment.getUuid())
+                                                            .as(environmentType.getType());
+
+    return environmentRestResponse.getResource();
+  }
+
+  public static int deleteEnvironment(String bearerToken, String appId, String accountId, String environmentId) {
+    return Setup.portal()
+        .auth()
+        .oauth2(bearerToken)
+        .queryParam("accountId", accountId)
+        .queryParam("appId", appId)
+        .contentType(ContentType.JSON)
+        .delete("/environments/" + environmentId)
+        .statusCode();
+  }
+
   public static GcpKubernetesInfrastructureMapping configureInfraMapping(String bearerToken, Account account,
       String applicationId, String environmentId, GcpKubernetesInfrastructureMapping infrastructureMapping) {
     GenericType<RestResponse<GcpKubernetesInfrastructureMapping>> infraMappingType =
@@ -119,7 +146,9 @@ public class EnvironmentRestUtils {
     ArrayList<HashMap<String, String>> hashMaps =
         (ArrayList<HashMap<String, String>>) jsonPath.getMap("resource").get("response");
     for (HashMap<String, String> data : hashMaps) {
-      return data.get("uuid").toString();
+      if (data != null) {
+        return data.get("uuid");
+      }
     }
     return null;
   }

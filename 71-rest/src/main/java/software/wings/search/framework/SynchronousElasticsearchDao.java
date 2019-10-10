@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -28,6 +29,12 @@ public class SynchronousElasticsearchDao implements SearchDao {
     t.setDaemon(true);
     return t;
   });
+
+  @Override
+  public boolean insertDocument(String entityType, String entityId, String entityJson) {
+    Callable<Boolean> insertDocumentCallable = () -> elasticsearchDao.insertDocument(entityType, entityId, entityJson);
+    return processElasticsearchTask(insertDocumentCallable);
+  }
 
   @Override
   public boolean upsertDocument(String entityType, String entityId, String entityJson) {
@@ -86,7 +93,18 @@ public class SynchronousElasticsearchDao implements SearchDao {
   @Override
   public List<String> nestedQuery(String entityType, String fieldName, String value) {
     Callable<List<String>> nestedQueryCallable = () -> elasticsearchDao.nestedQuery(entityType, fieldName, value);
-    return processElasticsearchTask(nestedQueryCallable);
+    Future<List<String>> nestedQueryFuture = executorService.submit(nestedQueryCallable);
+    try {
+      return nestedQueryFuture.get();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      logger.error("Could not perform the elasticsearch task, interrupted in between", e);
+    } catch (ExecutionException e) {
+      logger.error("Could not perform the elasticsearch task, due to exception", e.getCause());
+    } catch (CancellationException e) {
+      logger.error("Elasticsearch task was cancelled. This should not happen at all", e);
+    }
+    return new ArrayList<>();
   }
 
   @Override
@@ -160,19 +178,19 @@ public class SynchronousElasticsearchDao implements SearchDao {
     return processElasticsearchTask(deleteDocumentCallable);
   }
 
-  private <T> T processElasticsearchTask(Callable<T> task) {
-    T response = null;
+  private boolean processElasticsearchTask(Callable<Boolean> task) {
     try {
+      boolean isSuccessful = false;
       int count = 0;
-      while (count < 3 && response == null) {
+      while (count < 3 && !isSuccessful) {
         if (count != 0) {
           Thread.sleep(200);
         }
-        Future<T> taskFuture = executorService.submit(task);
-        response = taskFuture.get();
+        Future<Boolean> taskFuture = executorService.submit(task);
+        isSuccessful = taskFuture.get();
         count++;
       }
-      return response;
+      return isSuccessful;
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       logger.error("Could not perform the elasticsearch task, interrupted in between", e);
@@ -181,6 +199,6 @@ public class SynchronousElasticsearchDao implements SearchDao {
     } catch (CancellationException e) {
       logger.error("Elasticsearch task was cancelled. This should not happen at all", e);
     }
-    return response;
+    return false;
   }
 }

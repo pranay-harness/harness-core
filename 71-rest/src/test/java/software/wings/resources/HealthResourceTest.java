@@ -15,6 +15,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.app.MainConfiguration;
 import software.wings.exception.WingsExceptionMapper;
+import software.wings.search.framework.ElasticsearchConfig;
 import software.wings.utils.ResourceTestRule;
 
 import javax.ws.rs.core.GenericType;
@@ -22,6 +23,7 @@ import javax.ws.rs.core.GenericType;
 public class HealthResourceTest extends CategoryTest {
   public static final MainConfiguration configuration = mock(MainConfiguration.class);
   public static final AsymmetricEncryptor asymmetricEncryptor = mock(AsymmetricEncryptor.class);
+  private static final String HEALTH_RESOURCE_URL = "/health/configuration?configurationType=";
 
   @ClassRule
   public static final ResourceTestRule RESOURCES =
@@ -41,14 +43,41 @@ public class HealthResourceTest extends CategoryTest {
 
     when(asymmetricEncryptor.encryptText("mongodb://localhost:27017/wings"))
         .thenReturn("mongodb://localhost:27017/wings".getBytes());
-    RestResponse<MongoConfig> restResponse =
-        RESOURCES.client()
-            .target("/health/configuration?configurationType=" + ConfigurationType.MONGO)
-            .request()
-            .get(new GenericType<RestResponse<MongoConfig>>() {});
+    RestResponse<MongoConfig> restResponse = RESOURCES.client()
+                                                 .target(HEALTH_RESOURCE_URL + ConfigurationType.MONGO)
+                                                 .request()
+                                                 .get(new GenericType<RestResponse<MongoConfig>>() {});
 
     assertThat(restResponse.getResource()).isNotNull();
     assertThat(restResponse.getResource().getEncryptedUri()).isNotEmpty();
     assertThat(restResponse.getResource().getEncryptedLocksUri()).isNotEmpty();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetElasticsearchUri() throws Exception {
+    String elasticsearchUri = "http://localhost:9200";
+
+    when(configuration.getElasticsearchConfig())
+        .thenReturn(ElasticsearchConfig.builder().uri(elasticsearchUri).indexSuffix("_default").build());
+    when(asymmetricEncryptor.encryptText(elasticsearchUri)).thenReturn(elasticsearchUri.getBytes());
+    RestResponse<ElasticsearchConfig> restResponse = RESOURCES.client()
+                                                         .target(HEALTH_RESOURCE_URL + ConfigurationType.ELASTICSEARCH)
+                                                         .request()
+                                                         .get(new GenericType<RestResponse<ElasticsearchConfig>>() {});
+    assertThat(restResponse.getResource()).isNotNull();
+    assertThat(restResponse.getResource().getEncryptedUri()).isNotNull();
+    assertThat(restResponse.getResource().getIndexSuffix()).isNotNull();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetIsSearchEnabled() {
+    when(configuration.isSearchEnabled()).thenReturn(true);
+    RestResponse<Boolean> restResponse = RESOURCES.client()
+                                             .target(HEALTH_RESOURCE_URL + ConfigurationType.SEARCH_ENABLED)
+                                             .request()
+                                             .get(new GenericType<RestResponse<Boolean>>() {});
+    assertThat(restResponse.getResource()).isEqualTo(true);
   }
 }
