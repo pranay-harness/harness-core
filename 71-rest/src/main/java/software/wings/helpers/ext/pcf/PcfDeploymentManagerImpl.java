@@ -246,14 +246,16 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
   }
 
   public String getAppPrefixByRemovingNumber(String name) {
-    if (name != null) {
-      int index = name.lastIndexOf(DELIMITER);
-      if (index >= 0) {
-        try {
-          return name.substring(0, index);
-        } catch (NumberFormatException e) {
-          // Ignore
-        }
+    if (StringUtils.isBlank(name)) {
+      return StringUtils.EMPTY;
+    }
+
+    int index = name.lastIndexOf(DELIMITER);
+    if (index >= 0) {
+      try {
+        return name.substring(0, index);
+      } catch (NumberFormatException e) {
+        // Ignore
       }
     }
     return name;

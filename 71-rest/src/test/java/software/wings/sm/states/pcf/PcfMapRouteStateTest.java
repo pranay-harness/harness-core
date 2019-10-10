@@ -5,6 +5,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -13,6 +14,8 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -330,6 +333,23 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     assertThat(routes).hasSize(2);
     assertThat(routes.contains("R1")).isTrue();
     assertThat(routes.contains("R2")).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testExecute_NPE_Validation() {
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    WorkflowStandardParams workflowStandardParams = mock(WorkflowStandardParams.class);
+    doReturn(workflowStandardParams).when(mockContext).getContextElement(any());
+
+    doReturn(anApplication().build()).when(workflowStandardParams).getApp();
+    doReturn(null).when(workflowStandardParams).getEnv();
+    try {
+      pcfRouteSwapState.execute(mockContext);
+      fail("Expecting Exception");
+    } catch (Exception e) {
+      // expected
+    }
   }
 
   @Test

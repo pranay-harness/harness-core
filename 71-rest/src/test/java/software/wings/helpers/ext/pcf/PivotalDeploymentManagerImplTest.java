@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import org.apache.commons.lang3.StringUtils;
 import org.cloudfoundry.operations.organizations.OrganizationSummary;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -30,5 +31,12 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
     List<String> orgs = deploymentManager.getOrganizations(null);
     assertThat(orgs).isNotNull();
     assertThat(orgs).containsExactly("org1", "org2");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void getAppPrefixByRemovingNumber() throws Exception {
+    assertThat(StringUtils.EMPTY).isEqualTo(deploymentManager.getAppPrefixByRemovingNumber(null));
+    assertThat("a_b_c").isEqualTo(deploymentManager.getAppPrefixByRemovingNumber("a_b_c__4"));
   }
 }
