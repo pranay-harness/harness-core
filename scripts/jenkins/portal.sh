@@ -29,6 +29,8 @@ cd dist/manager
 cp ../../71-rest/target/rest-capsule.jar .
 cp ../../71-rest/src/main/resources/hazelcast.xml .
 cp ../../keystore.jks .
+cp ../../71-rest/key.pem .
+cp ../../71-rest/cert.pem .
 cp ../../71-rest/newrelic.yml .
 cp ../../71-rest/config.yml .
 cp ../../tools/apm/appdynamics/AppServerAgent-4.5.0.23604.tar.gz .
