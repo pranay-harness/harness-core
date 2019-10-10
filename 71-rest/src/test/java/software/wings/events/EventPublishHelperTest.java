@@ -79,7 +79,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   @Mock private UserGroupService userGroupService;
   @Mock private UserService userService;
   @Mock private WhitelistService whitelistService;
-  @Inject private EventTestHelper eventTestHelper;
+  @Inject private TestUtils eventTestHelper;
   @Mock private ContinuousVerificationService continuousVerificationService;
 
   private User user;

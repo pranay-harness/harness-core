@@ -53,7 +53,7 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
   @Mock private InstanceStatService instanceStatService;
   @Mock private SecretManagerConfigService secretManagerConfigService;
   @Mock private Analytics analytics;
-  @Inject private EventTestHelper eventTestHelper;
+  @Inject private TestUtils eventTestHelper;
 
   private User user;
   private Account account;

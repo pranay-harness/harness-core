@@ -29,7 +29,7 @@ import software.wings.security.authentication.AuthenticationMechanism;
  * @author rktummala on 12/05/18
  */
 @Singleton
-public class EventTestHelper {
+public class TestUtils {
   @Inject private ScmSecret scmSecret;
 
   public Account createAccount() {

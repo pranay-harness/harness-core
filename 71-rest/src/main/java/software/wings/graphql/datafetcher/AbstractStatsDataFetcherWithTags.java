@@ -53,7 +53,7 @@ public abstract class AbstractStatsDataFetcherWithTags<A, F, G, S, E, TA extends
     return groupByTagList;
   }
 
-  protected QLData postFetch(String accountId, List<G> groupByList, QLData qlData) {
+  public QLData postFetch(String accountId, List<G> groupByList, QLData qlData) {
     List<TA> groupByTagList = getGroupByTag(groupByList);
 
     int size = groupByTagList.size();
