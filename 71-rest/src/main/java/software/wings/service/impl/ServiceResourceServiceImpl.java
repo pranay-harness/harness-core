@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -62,6 +63,7 @@ import io.harness.data.validator.EntityNameValidator;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.globalcontex.EntityOperationIdentifier;
 import io.harness.globalcontex.EntityOperationIdentifier.entityOperation;
@@ -188,6 +190,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -537,13 +540,29 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public List<CommandUnit> getFlattenCommandUnitList(String appId, String serviceId, String envId, String commandName) {
-    Map<String, Integer> commandNameVersionMap =
-        getServiceCommands(appId, serviceId, false)
-            .stream()
-            .filter(serviceCommand -> serviceCommand.getVersionForEnv(envId) != 0)
-            .collect(toMap(ServiceCommand::getName, serviceCommand -> serviceCommand.getVersionForEnv(envId)));
-
-    return getFlattenCommandUnitList(appId, serviceId, commandName, commandNameVersionMap);
+    List<ServiceCommand> serviceCommands = getServiceCommands(appId, serviceId, false);
+    try {
+      Map<String, Integer> commandNameVersionMap =
+          serviceCommands.stream()
+              .filter(serviceCommand -> serviceCommand.getVersionForEnv(envId) != 0)
+              .collect(toMap(ServiceCommand::getName, serviceCommand -> serviceCommand.getVersionForEnv(envId)));
+      return getFlattenCommandUnitList(appId, serviceId, commandName, commandNameVersionMap);
+    } catch (IllegalStateException ex) {
+      Service service = get(appId, serviceId);
+      Set<String> serviceCommandNames = new HashSet<>();
+      Set<String> duplicateNames = emptyIfNull(serviceCommands)
+                                       .stream()
+                                       .map(ServiceCommand::getName)
+                                       .filter(name -> !serviceCommandNames.add(name))
+                                       .collect(Collectors.toSet());
+      if (isNotEmpty(duplicateNames)) {
+        throw new InvalidRequestException(
+            format("Duplicate service command name %s for service %s", duplicateNames.toString(), service.getName()),
+            USER);
+      } else {
+        throw new UnexpectedException();
+      }
+    }
   }
 
   private List<CommandUnit> getFlattenCommandUnitList(
@@ -939,12 +958,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
   }
 
-  private List<Workflow> getWorkflows(Service service) {
-    return workflowService
-        .listWorkflows(aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, service.getAppId()).build())
-        .getResponse();
-  }
-
   /**
    * {@inheritDoc}
    */
@@ -1056,9 +1069,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       }
     }
     if (sb.length() > 0) {
-      String message = format(
-          "Command [%s] couldn't be deleted. Remove reference from the following workflows [" + sb.toString() + "]",
-          serviceCommand.getName());
+      String message = format("Command [%s] couldn't be deleted. Remove reference from the following workflows [%s]",
+          serviceCommand.getName(), sb.toString());
       throw new InvalidRequestException(message, USER);
     }
   }
@@ -1691,13 +1703,18 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public ServiceCommand getCommandByNameAndVersion(
       @NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName, int version) {
-    ServiceCommand command = getServiceCommands(appId, serviceId, false)
-                                 .stream()
-                                 .filter(serviceCommand -> equalsIgnoreCase(commandName, serviceCommand.getName()))
-                                 .findFirst()
-                                 .get();
-    command.setCommand(commandService.getCommand(appId, command.getUuid(), version));
-    return command;
+    Optional<ServiceCommand> commandOptional =
+        getServiceCommands(appId, serviceId, false)
+            .stream()
+            .filter(serviceCommand -> equalsIgnoreCase(commandName, serviceCommand.getName()))
+            .findFirst();
+    if (commandOptional.isPresent()) {
+      ServiceCommand command = commandOptional.get();
+      command.setCommand(commandService.getCommand(appId, command.getUuid(), version));
+      return command;
+    } else {
+      throw new InvalidRequestException(format("Could not find command %s version %s", commandName, version));
+    }
   }
 
   @Override

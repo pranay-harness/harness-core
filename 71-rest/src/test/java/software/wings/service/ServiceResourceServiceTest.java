@@ -48,6 +48,7 @@ import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandType.START;
+import static software.wings.beans.command.CommandType.STOP;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 import static software.wings.beans.command.CommandUnitType.COPY_CONFIGS;
 import static software.wings.beans.command.CommandUnitType.DOCKER_START;
@@ -91,6 +92,7 @@ import com.google.inject.Inject;
 import de.danielbechler.diff.ObjectDifferBuilder;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.PageResponse.PageResponseBuilder;
 import io.harness.beans.SearchFilter;
 import io.harness.category.element.UnitTests;
 import io.harness.event.handler.impl.EventPublishHelper;
@@ -127,6 +129,7 @@ import software.wings.beans.Application;
 import software.wings.beans.CommandCategory;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
+import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.Graph;
 import software.wings.beans.GraphNode;
@@ -150,9 +153,12 @@ import software.wings.beans.command.CleanupSshCommandUnit;
 import software.wings.beans.command.CodeDeployCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
+import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CopyConfigCommandUnit;
+import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.InitSshCommandUnit;
 import software.wings.beans.command.InitSshCommandUnitV2;
+import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.HelmChartSpecification;
@@ -194,8 +200,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 public class ServiceResourceServiceTest extends WingsBaseTest {
@@ -1278,7 +1286,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     expectedCommand.setVersion(2L);
     expectedCommand.setGraph(null);
     expectedCommand.setName("STOP");
-    expectedCommand.setCommandType(CommandType.STOP);
+    expectedCommand.setCommandType(STOP);
 
     when(commandService.getServiceCommand(APP_ID, ID_KEY))
         .thenReturn(aServiceCommand().withName("ServiceCommand").build());
@@ -2267,5 +2275,61 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(mockWingsPersistence, times(0)).update(any(Query.class), any());
     verify(mockWingsPersistence, times(0)).createUpdateOperations(any());
     verify(mockWingsPersistence, times(0)).createQuery(any());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetFlattenCommandUnits() {
+    final Command command_1 =
+        Command.Builder.aCommand()
+            .withCommandType(START)
+            .withName("start")
+            .withCommandUnits(Arrays.asList(ExecCommandUnit.Builder.anExecCommandUnit().withName("exec").build(),
+                ScpCommandUnit.Builder.aScpCommandUnit().withName("scp").build()))
+            .build();
+    final Command command_2 =
+        Command.Builder.aCommand()
+            .withCommandType(STOP)
+            .withName("stop")
+            .withCommandUnits(Arrays.asList(ExecCommandUnit.Builder.anExecCommandUnit().withName("exec").build(),
+                ScpCommandUnit.Builder.aScpCommandUnit().withName("scp").build()))
+            .build();
+    final Map<String, EntityVersion> envIdVersionMap =
+        ImmutableMap.<String, EntityVersion>of(ENV_ID, EntityVersion.Builder.anEntityVersion().withVersion(1).build());
+    ServiceCommand sc_1 = ServiceCommand.Builder.aServiceCommand()
+                              .withUuid("uuid_1")
+                              .withAppId(APP_ID)
+                              .withServiceId(SERVICE_ID)
+                              .withName(command_1.getName())
+                              .withTargetToAllEnv(true)
+                              .withCommand(command_1)
+                              .withEnvIdVersionMap(envIdVersionMap)
+                              .build();
+    ServiceCommand sc_2 = ServiceCommand.Builder.aServiceCommand()
+                              .withUuid("uuid_2")
+                              .withAppId(APP_ID)
+                              .withServiceId(SERVICE_ID)
+                              .withName(command_2.getName())
+                              .withTargetToAllEnv(true)
+                              .withCommand(command_2)
+                              .withEnvIdVersionMap(envIdVersionMap)
+                              .build();
+
+    List<ServiceCommand> serviceCommands = Arrays.asList(sc_1, sc_2);
+    doReturn(serviceCommands).when(spyServiceResourceService).getServiceCommands(anyString(), anyString());
+    doReturn(PageResponseBuilder.aPageResponse().withResponse(serviceCommands).build())
+        .when(mockWingsPersistence)
+        .query(any(), any());
+    doReturn(command_1).when(commandService).getCommand(APP_ID, sc_1.getUuid(), sc_1.getVersionForEnv(ENV_ID));
+    doReturn(command_2).when(commandService).getCommand(APP_ID, sc_2.getUuid(), sc_2.getVersionForEnv(ENV_ID));
+    List<CommandUnit> commandUnits =
+        spyServiceResourceService.getFlattenCommandUnitList(APP_ID, SERVICE_ID, ENV_ID, sc_1.getName());
+    Assertions.assertThat(commandUnits).hasSize(2);
+
+    sc_2.setName(sc_1.getName());
+    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(
+            () -> spyServiceResourceService.getFlattenCommandUnitList(APP_ID, SERVICE_ID, ENV_ID, sc_1.getName()))
+        .withMessageContaining(sc_1.getName());
   }
 }
