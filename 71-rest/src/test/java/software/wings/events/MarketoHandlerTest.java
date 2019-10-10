@@ -42,7 +42,7 @@ public class MarketoHandlerTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Mock private EventListener eventListener;
   @Mock private UserService userService;
-  @Inject private EventTestHelper eventTestHelper;
+  @Inject private TestUtils testUtils;
   @Inject private MarketoHelper marketoHelper;
 
   private User user;
@@ -52,7 +52,7 @@ public class MarketoHandlerTest extends WingsBaseTest {
 
   @Before
   public void setup() throws IllegalAccessException {
-    MarketoConfig marketoConfig = eventTestHelper.initializeMarketoConfig();
+    MarketoConfig marketoConfig = testUtils.initializeMarketoConfig();
     marketoHandler = new MarketoHandler(marketoConfig, eventListener);
     FieldUtils.writeField(marketoHandler, "userService", userService, true);
     FieldUtils.writeField(marketoHandler, "marketoHelper", marketoHelper, true);
@@ -61,8 +61,8 @@ public class MarketoHandlerTest extends WingsBaseTest {
     FieldUtils.writeField(marketoHelper, "userService", userService, true);
     when(accountService.get(anyString())).thenReturn(account);
     when(accountService.save(any())).thenReturn(account);
-    account = eventTestHelper.createAccount();
-    user = eventTestHelper.createUser(account);
+    account = testUtils.createAccount();
+    user = testUtils.createUser(account);
   }
 
   @Test
