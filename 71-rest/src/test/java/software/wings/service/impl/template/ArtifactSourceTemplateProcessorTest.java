@@ -41,7 +41,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ArtifactSourceTemplateProcessorTest extends TemplateBaseTest {
+public class ArtifactSourceTemplateProcessorTest extends TemplateBaseTestHelper {
   @Mock private WingsPersistence wingsPersistence;
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private MorphiaIterator<ArtifactStream, ArtifactStream> artifactStreamIterator;

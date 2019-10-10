@@ -54,7 +54,7 @@ import software.wings.service.intfc.ServiceResourceService;
 
 import java.util.List;
 
-public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
+public class SshCommandTemplateProcessorTest extends TemplateBaseTestHelper {
   private static final String MY_STOP = "MyStop";
   private static final String STANDALONE_EXEC = "Standalone Exec";
   private static final String ANOTHER_COMMAND = "AnotherCommand";

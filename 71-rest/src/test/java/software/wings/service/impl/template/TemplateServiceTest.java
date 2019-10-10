@@ -68,7 +68,7 @@ import java.io.IOException;
 import java.util.List;
 import javax.validation.ConstraintViolationException;
 
-public class TemplateServiceTest extends TemplateBaseTest {
+public class TemplateServiceTest extends TemplateBaseTestHelper {
   private static final String MY_START_COMMAND = "My Start Command";
   private static final String MY_START_COMMAND_APP = "My Start Command App";
   private static final String ANOTHER_MY_START_COMMAND_APP = "Another My Start Command App";

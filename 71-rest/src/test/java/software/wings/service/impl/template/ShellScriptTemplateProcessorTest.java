@@ -49,7 +49,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.template.TemplateService;
 
-public class ShellScriptTemplateProcessorTest extends TemplateBaseTest {
+public class ShellScriptTemplateProcessorTest extends TemplateBaseTestHelper {
   @Mock private WorkflowService workflowService;
 
   @Mock private MorphiaIterator<Workflow, Workflow> workflowIterator;

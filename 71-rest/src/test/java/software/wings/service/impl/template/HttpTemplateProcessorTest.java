@@ -48,7 +48,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.template.TemplateService;
 
-public class HttpTemplateProcessorTest extends TemplateBaseTest {
+public class HttpTemplateProcessorTest extends TemplateBaseTestHelper {
   @Mock private WorkflowService workflowService;
 
   @Mock private MorphiaIterator<Workflow, Workflow> workflowIterator;

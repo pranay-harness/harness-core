@@ -13,9 +13,9 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateType;
-import software.wings.service.impl.template.TemplateBaseTest;
+import software.wings.service.impl.template.TemplateBaseTestHelper;
 
-public class IISInstallCommandMigrationTest extends TemplateBaseTest {
+public class IISInstallCommandMigrationTest extends TemplateBaseTestHelper {
   @InjectMocks @Inject private IISInstallCommandMigration iisInstallCommandMigration;
 
   @Test
