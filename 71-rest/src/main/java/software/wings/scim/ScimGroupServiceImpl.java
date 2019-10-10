@@ -1,5 +1,7 @@
 package software.wings.scim;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
@@ -16,7 +18,10 @@ import software.wings.service.intfc.UserGroupService;
 
 import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
@@ -130,36 +135,6 @@ public class ScimGroupServiceImpl implements ScimGroupService {
     throw new WingsException("Failed to update group name");
   }
 
-  private void processAddOperationOnGroup(
-      String groupId, String accountId, List<String> memberIds, PatchOperation patchOperation) {
-    if (!"members".equals(patchOperation.getPath().toString())) {
-      logger.error(
-          "Expect add operation only on the members. Received it on path: {}, for accountId: {}, for GroupId {}",
-          patchOperation.getPath(), accountId, groupId);
-      // no operation needed. Pass
-    } else {
-      try {
-        List<? extends ScimMultiValuedObject> operations =
-            patchOperation.getValues(new ScimMultiValuedObject<List<String>>().getClass());
-
-        if (null == operations) {
-          logger.error("Operations is null. Skipping processing of scim call for group Id {}", groupId);
-          return;
-        }
-
-        for (ScimMultiValuedObject operation : operations) {
-          String userId = (String) operation.getValue();
-          if (!memberIds.contains(userId)) {
-            memberIds.add(userId);
-          }
-        }
-      } catch (Exception ex) {
-        logger.error("Failed to process the operation: {}, for accountId: {}, for GroupId {}",
-            patchOperation.toString(), accountId, groupId);
-      }
-    }
-  }
-
   @Override
   public Response updateGroup(String groupId, String accountId, software.wings.scim.PatchRequest patchRequest) {
     UserGroup existingGroup = userGroupService.get(accountId, groupId);
@@ -174,12 +149,13 @@ public class ScimGroupServiceImpl implements ScimGroupService {
     String newGroupName = "";
 
     for (software.wings.scim.PatchOperation patchOperation : patchRequest.getOperations()) {
+      Set<String> userIdsFromOperation = getUserIdsFromOperation(patchOperation, accountId, groupId);
       if (patchOperation.getOpType().equals("Replace")) {
         newGroupName = processReplaceOperationOnGroup(groupId, accountId, patchOperation);
       } else if (patchOperation.getOpType().equals("Add")) {
-        processAddOperationOnGroup(groupId, accountId, newMemberIds, patchOperation);
+        newMemberIds.addAll(userIdsFromOperation);
       } else if (patchOperation.getOpType().equals("Remove")) {
-        processRemoveOperationOnGroup(groupId, accountId, newMemberIds, patchOperation);
+        newMemberIds.removeAll(userIdsFromOperation);
       } else {
         logger.error("Received unexpected operation: {}", patchOperation.toString());
       }
@@ -201,34 +177,27 @@ public class ScimGroupServiceImpl implements ScimGroupService {
     return Response.status(Status.NO_CONTENT).build();
   }
 
-  private void processRemoveOperationOnGroup(
-      String groupId, String accountId, List<String> memberIds, PatchOperation patchOperation) {
-    if (!"members".equals(patchOperation.getPath().toString())) {
-      logger.error(
-          "Expect remove operation only on the members. Received it on path: {}, for accountId: {}, for GroupId {}",
+  private Set<String> getUserIdsFromOperation(PatchOperation patchOperation, String accountId, String groupId) {
+    if (!"members".equals(patchOperation.getPath())) {
+      logger.error("Expect operation only on the members. Received it on path: {}, for accountId: {}, for GroupId {}",
           patchOperation.getPath(), accountId, groupId);
-      // np operation needed. Pass
-    } else {
-      try {
-        List<? extends ScimMultiValuedObject> operations =
-            patchOperation.getValues(new ScimMultiValuedObject<List<String>>().getClass());
-
-        if (null == operations) {
-          logger.error("Operations received is null. Skipping remove operation processing for groupId: {}", groupId);
-          return;
-        }
-
-        for (ScimMultiValuedObject operation : operations) {
-          String userId = (String) operation.getValue();
-          if (memberIds.contains(userId)) {
-            memberIds.remove(userId);
-          }
-        }
-      } catch (Exception ex) {
-        logger.error("Failed to process the operation: {}, for accountId: {}, for GroupId {}",
-            patchOperation.toString(), accountId, groupId);
-      }
+      return Collections.emptySet();
     }
+
+    try {
+      List<? extends ScimMultiValuedObject> operations = patchOperation.getValues(ScimMultiValuedObject.class);
+
+      if (!isEmpty(operations)) {
+        return operations.stream().map(operation -> (String) operation.getValue()).collect(Collectors.toSet());
+      }
+
+      logger.error("Operations received is null. Skipping remove operation processing for groupId: {}", groupId);
+    } catch (Exception ex) {
+      logger.error("Failed to process the operation: {}, for accountId: {}, for GroupId {}", patchOperation.toString(),
+          accountId, groupId, ex);
+    }
+
+    return Collections.emptySet();
   }
 
   @Override
