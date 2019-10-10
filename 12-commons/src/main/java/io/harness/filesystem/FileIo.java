@@ -78,7 +78,8 @@ public class FileIo {
   }
 
   private static String getDirectoryCheckCommand() {
-    if (System.getProperty("os.name").startsWith("Windows")) {
+    String osName = System.getProperty("os.name");
+    if (isNotEmpty(osName) && osName.startsWith("Windows")) {
       return "cmd /c cd";
     }
     return "bash -c pwd";
@@ -195,8 +196,8 @@ public class FileIo {
   }
 
   public static String getHomeDir() {
-    String osName = System.getProperty("os.name").toLowerCase();
-    if (osName.startsWith("win")) {
+    String osName = System.getProperty("os.name");
+    if (isNotEmpty(osName) && osName.toLowerCase().startsWith("win")) {
       String homeDrive = System.getenv("HOMEDRIVE");
       String homePath = System.getenv("HOMEPATH");
       if (isNotEmpty(homeDrive) && isNotEmpty(homePath)) {

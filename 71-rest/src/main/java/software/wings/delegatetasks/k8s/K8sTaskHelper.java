@@ -1422,4 +1422,14 @@ public class K8sTaskHelper {
 
     return result;
   }
+
+  public Integer getTargetInstancesForCanary(
+      Integer percentInstancesInDelegateRequest, Integer maxInstances, ExecutionLogCallback logCallback) {
+    Integer targetInstances = (int) Math.round(percentInstancesInDelegateRequest * maxInstances / 100.0);
+    if (targetInstances < 1) {
+      logCallback.saveExecutionLog("\nTarget instances computed to be less than 1. Bumped up to 1");
+      targetInstances = 1;
+    }
+    return targetInstances;
+  }
 }

@@ -1,0 +1,10 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: no-pod-template
+spec:
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: nginx
