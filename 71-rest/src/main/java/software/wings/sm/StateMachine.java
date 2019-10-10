@@ -6,6 +6,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static software.wings.sm.ExpressionProcessor.EXPRESSION_PREFIX;
+import static software.wings.sm.ExpressionProcessor.EXPRESSION_SUFFIX;
+import static software.wings.sm.ExpressionProcessor.SUBFIELD_ACCESS;
 import static software.wings.sm.StateType.REPEAT;
 import static software.wings.sm.Transition.Builder.aTransition;
 import static software.wings.sm.states.RepeatState.Builder.aRepeatState;
@@ -946,7 +948,8 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
   private ContextElementType scanRequiredContextElementType(List<String> patternsForRequiredContextElementType) {
     if (patternsForRequiredContextElementType.stream().anyMatch(pattern
             -> pattern != null
-                && (pattern.contains(EXPRESSION_PREFIX + ContextElement.INSTANCE)
+                && (pattern.contains(EXPRESSION_PREFIX + ContextElement.INSTANCE + EXPRESSION_SUFFIX)
+                       || pattern.contains(EXPRESSION_PREFIX + ContextElement.INSTANCE + SUBFIELD_ACCESS)
                        || pattern.contains(EXPRESSION_PREFIX + ContextElement.HOST)))) {
       return ContextElementType.INSTANCE;
     }

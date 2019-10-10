@@ -41,6 +41,11 @@ public interface ExpressionProcessor {
    */
   String EXPRESSION_SUFFIX = "}";
 
+  /*
+   * The constant DOT
+   */
+  String SUBFIELD_ACCESS = ".";
+
   /**
    * Gets prefix object name.
    *
