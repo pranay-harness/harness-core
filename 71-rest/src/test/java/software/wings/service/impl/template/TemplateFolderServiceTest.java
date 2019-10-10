@@ -37,7 +37,7 @@ import software.wings.utils.WingsTestConstants;
 import java.util.Arrays;
 import javax.validation.ConstraintViolationException;
 
-public class TemplateFolderServiceTest extends TemplateBaseTest {
+public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   @Test(expected = InvalidRequestException.class)
   @Category(UnitTests.class)
   public void shouldNotDeleteRootFolder() {

@@ -22,7 +22,7 @@ import software.wings.beans.template.artifactsource.CustomRepositoryMapping.Attr
 import java.util.ArrayList;
 import java.util.List;
 
-public class CustomArtifactSourceTemplateTest extends TemplateBaseTest {
+public class CustomArtifactSourceTemplateTest extends TemplateBaseTestHelper {
   @Test
   @Category(UnitTests.class)
   public void shouldSaveCustomArtifactSourceTemplate() {
