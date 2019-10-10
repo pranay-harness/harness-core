@@ -58,7 +58,7 @@ public class PingPongTest implements MockableTestMixin {
     PingPongServiceBlockingStub pingPongServiceBlockingStub =
         PingPongServiceGrpc.newBlockingStub(channel).withCallCredentials(
             new DelegateAuthCallCredentials(tokenGenerator, "ACCOUNT_ID", false));
-    pingPongClient = new PingPongClient(pingPongServiceBlockingStub);
+    pingPongClient = new PingPongClient(pingPongServiceBlockingStub, "VERSION");
     server = InProcessServerBuilder.forName(serverName)
                  .directExecutor()
                  .addService(new PingPongService())
@@ -84,8 +84,8 @@ public class PingPongTest implements MockableTestMixin {
   public void shouldLogPingSuccessOnServer() throws Exception {
     pingPongClient.runOneIteration();
     val captor = ArgumentCaptor.forClass(String.class);
-    verify(mockServerLogger).info(captor.capture(), any(Instant.class));
-    assertThat(captor.getValue()).matches("Ping at .* received");
+    verify(mockServerLogger).info(captor.capture(), any(), any(), any());
+    assertThat(captor.getValue()).matches("Ping at .* received .*");
   }
 
   @Test

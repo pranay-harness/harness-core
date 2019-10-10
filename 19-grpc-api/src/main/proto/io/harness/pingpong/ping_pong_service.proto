@@ -13,6 +13,8 @@ service PingPongService {
 message Ping {
   string delegate_id = 1;
   google.protobuf.Timestamp ping_timestamp = 2;
+  string process_id = 3;
+  string version = 4;
 }
 
 message Pong {}

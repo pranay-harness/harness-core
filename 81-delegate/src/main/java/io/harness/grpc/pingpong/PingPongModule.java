@@ -9,6 +9,7 @@ import io.grpc.Channel;
 import io.harness.event.PingPongServiceGrpc;
 import io.harness.event.PingPongServiceGrpc.PingPongServiceBlockingStub;
 import io.harness.govern.ProviderModule;
+import io.harness.version.VersionInfoManager;
 
 public class PingPongModule extends ProviderModule {
   @Provides
@@ -16,5 +17,12 @@ public class PingPongModule extends ProviderModule {
   PingPongServiceBlockingStub pingPongServiceBlockingStub(
       @Named("manager-channel") Channel channel, CallCredentials callCredentials) {
     return PingPongServiceGrpc.newBlockingStub(channel).withCallCredentials(callCredentials);
+  }
+
+  @Provides
+  @Singleton
+  PingPongClient pingPongClient(
+      PingPongServiceBlockingStub pingPongServiceBlockingStub, VersionInfoManager versionInfoManager) {
+    return new PingPongClient(pingPongServiceBlockingStub, versionInfoManager.getVersionInfo().getVersion());
   }
 }

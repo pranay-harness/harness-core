@@ -137,6 +137,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   private String settingAttributeId;
   private Service service;
 
+  @Override
   @Before
   public void setUp() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());

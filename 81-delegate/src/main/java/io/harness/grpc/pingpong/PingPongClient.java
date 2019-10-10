@@ -1,26 +1,26 @@
 package io.harness.grpc.pingpong;
 
 import com.google.common.util.concurrent.AbstractScheduledService;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.delegate.service.DelegateServiceImpl;
 import io.harness.event.Ping;
 import io.harness.event.PingPongServiceGrpc.PingPongServiceBlockingStub;
 import io.harness.grpc.utils.HTimestamps;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.ProcessIdUtil;
 
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-@Singleton
 public class PingPongClient extends AbstractScheduledService {
+  private static final String PROCESS_ID = ProcessIdUtil.getProcessId();
   private final PingPongServiceBlockingStub pingPongServiceBlockingStub;
+  private final String version;
 
-  @Inject
-  public PingPongClient(PingPongServiceBlockingStub pingPongServiceBlockingStub) {
+  PingPongClient(PingPongServiceBlockingStub pingPongServiceBlockingStub, String version) {
     this.pingPongServiceBlockingStub = pingPongServiceBlockingStub;
+    this.version = version;
   }
 
   @Override
@@ -30,6 +30,8 @@ public class PingPongClient extends AbstractScheduledService {
       Ping ping = Ping.newBuilder()
                       .setDelegateId(DelegateServiceImpl.getDelegateId())
                       .setPingTimestamp(HTimestamps.fromInstant(timestamp))
+                      .setProcessId(PROCESS_ID)
+                      .setVersion(version)
                       .build();
       pingPongServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS).tryPing(ping);
       logger.info("Ping at {} successful", timestamp);
