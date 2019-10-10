@@ -6,6 +6,7 @@ import static software.wings.beans.InfrastructureType.AZURE_KUBERNETES;
 import static software.wings.common.InfrastructureConstants.INFRA_KUBERNETES_INFRAID_EXPRESSION;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.expression.Expression;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -23,8 +24,8 @@ public class AzureKubernetesService
     implements KubernetesInfrastructure, InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
   private String cloudProviderId;
   @IncludeFieldMap private String clusterName;
-  private String namespace;
-  private String releaseName;
+  @Expression private String namespace;
+  @Expression private String releaseName;
   private String subscriptionId;
   private String resourceGroup;
 

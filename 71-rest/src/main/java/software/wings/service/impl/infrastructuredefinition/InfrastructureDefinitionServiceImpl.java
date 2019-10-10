@@ -67,8 +67,10 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.queue.Queue;
+import io.harness.reflection.ReflectionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
@@ -614,7 +616,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
   boolean renderExpression(InfrastructureDefinition infrastructureDefinition, ExecutionContext context) {
     Set<String> ignoredExpressions = ImmutableSet.of(InfrastructureConstants.INFRA_KUBERNETES_INFRAID_EXPRESSION);
-    Map<String, Object> fieldMapForClass = getAllFields(infrastructureDefinition.getInfrastructure());
+    Map<String, Object> fieldMapForClass = getExpressionAnnotatedFields(infrastructureDefinition.getInfrastructure());
     Map<String, String> renderedFieldMap = new HashMap<>();
 
     if (isEmpty(infrastructureDefinition.getProvisionerId())) {
@@ -649,10 +651,11 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   }
 
   @VisibleForTesting
-  public Map<String, Object> getAllFields(InfraMappingInfrastructureProvider infrastructure) {
+  public Map<String, Object> getExpressionAnnotatedFields(InfraMappingInfrastructureProvider infrastructure) {
     // TODO: we should reconsider using reflection for this goal
     Map<String, Object> fieldValueMap = new HashMap<>();
-    Field[] declaredFields = infrastructure.getClass().getDeclaredFields();
+    List<Field> declaredFields = ReflectionUtils.getDeclaredAndInheritedFields(
+        infrastructure.getClass(), field -> field.getAnnotation(Expression.class) != null);
     for (Field declaredField : declaredFields) {
       if ("$jacocoData".equals(declaredField.getName())) {
         continue;
