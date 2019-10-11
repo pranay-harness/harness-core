@@ -132,6 +132,7 @@ import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CanaryWorkflowExecutionAdvisor;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.CustomOrchestrationWorkflow;
+import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
@@ -2815,14 +2816,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         pipelineStageExecutions.forEach(
             pipelineStageExecution -> workflowExecutions.addAll(pipelineStageExecution.getWorkflowExecutions()));
         break;
-
       case ORCHESTRATION:
         workflowExecutions.add(workflowExecution);
         break;
       default:
-        throw new WingsException(
-            ErrorCode.BASELINE_CONFIGURATION_ERROR, "Invalid workflow type: " + workflowExecution.getWorkflowType())
-            .addParam("message", "Invalid workflow type: " + workflowExecution.getWorkflowType());
+        WorkflowType workflowType = workflowExecution.getWorkflowType();
+        String message = "Invalid workflow type: " + ((workflowType == null) ? "null" : workflowType.name());
+        throw new WingsException(ErrorCode.BASELINE_CONFIGURATION_ERROR, message).addParam("message", message);
     }
 
     Set<WorkflowExecutionBaseline> baselines = new HashSet<>();
@@ -2877,15 +2877,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public WorkflowExecutionBaseline getBaselineDetails(
       String appId, String workflowExecutionId, String stateExecutionId, String currentExecId) {
-    ExecutionContext executionContext =
+    DeploymentExecutionContext executionContext =
         stateMachineExecutor.getExecutionContext(appId, currentExecId, stateExecutionId);
     if (executionContext == null) {
       logger.info("failed to get baseline details for app {}, workflow execution {}, uuid {}", appId, currentExecId,
           stateExecutionId);
       return null;
     }
-    WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
-    String envId = workflowStandardParams.getEnv().getUuid();
+    WorkflowStandardParams workflowStandardParams = executionContext.fetchWorkflowStandardParamsFromContext();
+    String envId = workflowStandardParams.fetchRequiredEnv().getUuid();
     PhaseElement phaseElement = executionContext.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();
     PageRequest<WorkflowExecutionBaseline> pageRequest = aPageRequest()

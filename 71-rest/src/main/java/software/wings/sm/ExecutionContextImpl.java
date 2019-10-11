@@ -292,7 +292,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   @Override
   public List<Artifact> getArtifacts() {
     WorkflowStandardParams workflowStandardParams = fetchWorkflowStandardParamsFromContext();
-    String accountId = workflowStandardParams.getApp().getAccountId();
+    String accountId = workflowStandardParams.fetchRequiredApp().getAccountId();
     if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
       List<ContextElement> contextElementList = getContextElementList(ContextElementType.ARTIFACT);
       if (isEmpty(contextElementList)) {

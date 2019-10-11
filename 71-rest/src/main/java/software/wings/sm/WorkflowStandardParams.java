@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
+import io.harness.exception.InvalidRequestException;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.jexl3.JexlException;
@@ -406,6 +407,14 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     return app;
   }
 
+  public Application fetchRequiredApp() {
+    Application application = getApp();
+    if (application == null) {
+      throw new InvalidRequestException("App cannot be null");
+    }
+    return application;
+  }
+
   private Account getAccount() {
     String accountId = getApp() == null ? null : getApp().getAccountId();
     if (account == null && accountId != null) {
@@ -424,6 +433,14 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
       env = environmentService.get(appId, envId, false);
     }
     return env;
+  }
+
+  public Environment fetchRequiredEnv() {
+    Environment environment = getEnv();
+    if (environment == null) {
+      throw new InvalidRequestException("Env cannot be null");
+    }
+    return environment;
   }
 
   /**

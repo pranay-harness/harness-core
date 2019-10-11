@@ -4,6 +4,8 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_REGISTRY_URL_KEY;
@@ -25,6 +27,7 @@ import com.google.inject.MembersInjector;
 
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.exception.InvalidRequestException;
 import io.harness.limits.LimitCheckerFactory;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,7 +40,6 @@ import software.wings.api.ServiceElement;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.Builder;
 import software.wings.beans.FeatureName;
 import software.wings.beans.artifact.Artifact;
 import software.wings.scheduler.BackgroundJobScheduler;
@@ -102,10 +104,10 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   public void shouldGetApp() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
-    Application app = Application.Builder.anApplication().name("AppA").accountId(ACCOUNT_ID).build();
+    Application app = anApplication().name("AppA").accountId(ACCOUNT_ID).build();
     app = appService.save(app);
 
-    Environment env = Builder.anEnvironment().appId(app.getUuid()).name("DEV").build();
+    Environment env = anEnvironment().appId(app.getUuid()).name("DEV").build();
     env = environmentService.save(env);
     app = appService.get(app.getUuid());
 
@@ -119,6 +121,58 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
 
     Map<String, Object> map = std.paramMap(context);
     assertThat(map).isNotNull().containsEntry(ContextElement.APP, app).containsEntry(ContextElement.ENV, env);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldFetchRequiredApp() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+    Application app = prepareApp();
+    WorkflowStandardParams std = new WorkflowStandardParams();
+    injector.injectMembers(std);
+    std.setAppId(app.getUuid());
+    Application fetchedApp = std.fetchRequiredApp();
+    assertThat(fetchedApp).isNotNull();
+    assertThat(fetchedApp.getName()).isEqualTo(app.getName());
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
+  public void shouldThrowOnFetchRequiredApp() {
+    WorkflowStandardParams std = new WorkflowStandardParams();
+    std.setAppId(null);
+    std.fetchRequiredApp();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldFetchRequiredEnv() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+    Application app = prepareApp();
+    Environment env = prepareEnv(app.getUuid());
+    WorkflowStandardParams std = new WorkflowStandardParams();
+    injector.injectMembers(std);
+    std.setAppId(app.getUuid());
+    std.setEnvId(env.getUuid());
+    Environment fetchedEnv = std.fetchRequiredEnv();
+    assertThat(fetchedEnv).isNotNull();
+    assertThat(fetchedEnv.getName()).isEqualTo(env.getName());
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
+  public void shouldThrowOnFetchRequiredEnv() {
+    WorkflowStandardParams std = new WorkflowStandardParams();
+    std.setEnvId(null);
+    std.fetchRequiredEnv();
+  }
+
+  private Application prepareApp() {
+    return appService.save(anApplication().name("app_name").accountId(ACCOUNT_ID).build());
+  }
+
+  private Environment prepareEnv(String appId) {
+    return environmentService.save(anEnvironment().appId(appId).name("env_name").build());
   }
 
   @Test
@@ -161,9 +215,9 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   public void shouldGetArtifactWithSourceProperties() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
-    Application app = Application.Builder.anApplication().name("AppA").accountId(ACCOUNT_ID).build();
+    Application app = anApplication().name("AppA").accountId(ACCOUNT_ID).build();
     app = appService.save(app);
-    Environment env = Builder.anEnvironment().appId(app.getUuid()).name("DEV").build();
+    Environment env = anEnvironment().appId(app.getUuid()).name("DEV").build();
     env = environmentService.save(env);
 
     WorkflowStandardParams std = new WorkflowStandardParams();
@@ -207,10 +261,10 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   public void shouldGetAccountDefaults() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
-    Application app = Application.Builder.anApplication().name("AppA").accountId(ACCOUNT_ID).build();
+    Application app = anApplication().name("AppA").accountId(ACCOUNT_ID).build();
     app = appService.save(app);
 
-    Environment env = Builder.anEnvironment().appId(app.getUuid()).name("DEV").build();
+    Environment env = anEnvironment().appId(app.getUuid()).name("DEV").build();
     env = environmentService.save(env);
 
     WorkflowStandardParams std = new WorkflowStandardParams();
