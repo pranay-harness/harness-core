@@ -11,6 +11,7 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static software.wings.beans.Log.LogLevel.INFO;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.ec2.model.Instance;
@@ -31,7 +32,8 @@ import java.util.List;
 @Singleton
 @NoArgsConstructor
 public class SpotInstDeployTaskHandler extends SpotInstTaskHandler {
-  private void scaleElastigroup(ElastiGroup elastiGroup, String spotInstToken, String spotInstAccountId,
+  @VisibleForTesting
+  void scaleElastigroup(ElastiGroup elastiGroup, String spotInstToken, String spotInstAccountId,
       String workflowExecutionId, int steadyStateTimeOut, SpotInstDeployTaskParameters deployTaskParameters,
       String scaleCommandUnit, String waitCommandUnit) throws Exception {
     if (elastiGroup != null) {

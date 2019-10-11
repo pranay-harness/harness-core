@@ -15,6 +15,7 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
@@ -111,32 +112,8 @@ public abstract class SpotInstTaskHandler {
     try {
       timeLimiter.callWithTimeout(() -> {
         while (true) {
-          List<ElastiGroupInstanceHealth> instanceHealths =
-              spotInstHelperServiceDelegate.listElastiGroupInstancesHealth(
-                  spotInstToken, spotInstAccountId, elastiGroupId);
-          int currentTotalCount = isEmpty(instanceHealths) ? 0 : instanceHealths.size();
-          int currentHealthyCount = isEmpty(instanceHealths)
-              ? 0
-              : (int) instanceHealths.stream().filter(health -> "HEALTHY".equals(health.getHealthStatus())).count();
-          if (targetInstances == 0) {
-            if (currentTotalCount == 0) {
-              waitLogCallback.saveExecutionLog(
-                  format("Elastigroup: [%s] does not have any instances.", elastiGroupId), INFO, SUCCESS);
-              return true;
-            } else {
-              waitLogCallback.saveExecutionLog(
-                  format("Elastigroup: [%s] still has [%d] total and [%d] healthy instances", elastiGroupId,
-                      currentTotalCount, currentHealthyCount));
-            }
-          } else {
-            waitLogCallback.saveExecutionLog(
-                format("Desired instances: [%d], Total instances: [%d], Healthy instances: [%d] for Elasti Group: [%s]",
-                    targetInstances, currentTotalCount, currentHealthyCount, elastiGroupId));
-            if (targetInstances == currentHealthyCount && targetInstances == currentTotalCount) {
-              waitLogCallback.saveExecutionLog(
-                  format("Elastigroup: [%s] reached steady state", elastiGroupId), INFO, SUCCESS);
-              return true;
-            }
+          if (allInstancesHealthy(spotInstToken, spotInstAccountId, elastiGroupId, waitLogCallback, targetInstances)) {
+            return true;
           }
           sleep(ofSeconds(20));
         }
@@ -157,11 +134,44 @@ public abstract class SpotInstTaskHandler {
     }
   }
 
-  protected int getTimeOut(int timeOut) {
+  @VisibleForTesting
+  boolean allInstancesHealthy(String spotInstToken, String spotInstAccountId, String elastiGroupId,
+      ExecutionLogCallback waitLogCallback, int targetInstances) throws Exception {
+    List<ElastiGroupInstanceHealth> instanceHealths =
+        spotInstHelperServiceDelegate.listElastiGroupInstancesHealth(spotInstToken, spotInstAccountId, elastiGroupId);
+    int currentTotalCount = isEmpty(instanceHealths) ? 0 : instanceHealths.size();
+    int currentHealthyCount = isEmpty(instanceHealths)
+        ? 0
+        : (int) instanceHealths.stream().filter(health -> "HEALTHY".equals(health.getHealthStatus())).count();
+    if (targetInstances == 0) {
+      if (currentTotalCount == 0) {
+        waitLogCallback.saveExecutionLog(
+            format("Elastigroup: [%s] does not have any instances.", elastiGroupId), INFO, SUCCESS);
+        return true;
+      } else {
+        waitLogCallback.saveExecutionLog(format("Elastigroup: [%s] still has [%d] total and [%d] healthy instances",
+            elastiGroupId, currentTotalCount, currentHealthyCount));
+      }
+    } else {
+      waitLogCallback.saveExecutionLog(
+          format("Desired instances: [%d], Total instances: [%d], Healthy instances: [%d] for Elasti Group: [%s]",
+              targetInstances, currentTotalCount, currentHealthyCount, elastiGroupId));
+      if (targetInstances == currentHealthyCount && targetInstances == currentTotalCount) {
+        waitLogCallback.saveExecutionLog(
+            format("Elastigroup: [%s] reached steady state", elastiGroupId), INFO, SUCCESS);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  @VisibleForTesting
+  int getTimeOut(int timeOut) {
     return (timeOut > 0) ? timeOut : defaultSteadyStateTimeout;
   }
 
-  protected List<Instance> getAllEc2InstancesOfElastiGroup(AwsConfig awsConfig, String awsRegion, String spotInstToken,
+  @VisibleForTesting
+  List<Instance> getAllEc2InstancesOfElastiGroup(AwsConfig awsConfig, String awsRegion, String spotInstToken,
       String spotInstAccountId, String elastiGroupId) throws Exception {
     List<ElastiGroupInstanceHealth> instanceHealths =
         spotInstHelperServiceDelegate.listElastiGroupInstancesHealth(spotInstToken, spotInstAccountId, elastiGroupId);
@@ -172,7 +182,8 @@ public abstract class SpotInstTaskHandler {
     return awsEc2HelperServiceDelegate.listEc2Instances(awsConfig, emptyList(), instanceIds, awsRegion);
   }
 
-  protected void createAndFinishEmptyExecutionLog(
+  @VisibleForTesting
+  void createAndFinishEmptyExecutionLog(
       SpotInstTaskParameters taskParameters, String upScaleCommandUnit, String message) {
     ExecutionLogCallback logCallback;
     logCallback = getLogCallBack(taskParameters, upScaleCommandUnit);

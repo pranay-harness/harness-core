@@ -239,7 +239,8 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
     return gson.toJson(jsonConfigMap);
   }
 
-  private void removeUnsupportedFieldsForCreatingNewGroup(Map<String, Object> elastiGroupConfigMap) {
+  @VisibleForTesting
+  void removeUnsupportedFieldsForCreatingNewGroup(Map<String, Object> elastiGroupConfigMap) {
     if (elastiGroupConfigMap.containsKey(ELASTI_GROUP_ID)) {
       elastiGroupConfigMap.remove(ELASTI_GROUP_ID);
     }
