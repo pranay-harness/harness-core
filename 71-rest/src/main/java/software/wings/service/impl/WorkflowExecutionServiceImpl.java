@@ -2820,9 +2820,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         workflowExecutions.add(workflowExecution);
         break;
       default:
-        WorkflowType workflowType = workflowExecution.getWorkflowType();
-        String message = "Invalid workflow type: " + ((workflowType == null) ? "null" : workflowType.name());
-        throw new WingsException(ErrorCode.BASELINE_CONFIGURATION_ERROR, message).addParam("message", message);
+        unhandled(workflowExecution.getWorkflowType());
     }
 
     Set<WorkflowExecutionBaseline> baselines = new HashSet<>();
