@@ -628,12 +628,15 @@ import software.wings.sm.states.provision.DestroyTerraformProvisionState;
 import software.wings.sm.states.provision.ShellScriptProvisionState;
 import software.wings.sm.states.provision.TerraformRollbackState;
 import software.wings.sm.states.spotinst.SpotInstDeployState;
+import software.wings.sm.states.spotinst.SpotInstDeployStateExecutionData;
 import software.wings.sm.states.spotinst.SpotInstListenerUpdateRollbackState;
 import software.wings.sm.states.spotinst.SpotInstListenerUpdateState;
+import software.wings.sm.states.spotinst.SpotInstListenerUpdateStateExecutionData;
 import software.wings.sm.states.spotinst.SpotInstRollbackState;
 import software.wings.sm.states.spotinst.SpotInstServiceSetup;
 import software.wings.sm.states.spotinst.SpotInstSetupContextElement;
 import software.wings.sm.states.spotinst.SpotInstSetupExecutionSummary;
+import software.wings.sm.states.spotinst.SpotInstSetupStateExecutionData;
 import software.wings.sm.states.spotinst.SpotinstDeployExecutionSummary;
 import software.wings.verification.CVActivityLog;
 import software.wings.verification.CVConfiguration;
@@ -1334,6 +1337,10 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("sm.states.spotinst.SpotInstServiceSetup", SpotInstServiceSetup.class);
     w.put("sm.states.spotinst.SpotInstSetupContextElement", SpotInstSetupContextElement.class);
     w.put("sm.states.spotinst.SpotInstSetupExecutionSummary", SpotInstSetupExecutionSummary.class);
+    w.put("sm.states.spotinst.SpotInstDeployStateExecutionData", SpotInstDeployStateExecutionData.class);
+    w.put(
+        "sm.states.spotinst.SpotInstListenerUpdateStateExecutionData", SpotInstListenerUpdateStateExecutionData.class);
+    w.put("sm.states.spotinst.SpotInstSetupStateExecutionData", SpotInstSetupStateExecutionData.class);
     w.put("sm.states.StackDriverLogState", StackDriverLogState.class);
     w.put("sm.states.StackDriverState", StackDriverState.class);
     w.put("sm.states.SubWorkflowState", SubWorkflowState.class);
