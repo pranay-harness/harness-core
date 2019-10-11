@@ -13,7 +13,6 @@ import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
 import software.wings.sm.StateExecutionData;
 
-import java.util.List;
 import java.util.Map;
 
 @Data
@@ -86,12 +85,6 @@ public class PcfRouteUpdateStateExecutionData extends StateExecutionData impleme
     }
 
     return stringBuilder.toString();
-  }
-
-  private String getDisplayString(List<String> inputs) {
-    StringBuilder builder = new StringBuilder();
-    inputs.forEach(input -> builder.append(input).append(" "));
-    return builder.toString();
   }
 
   @Override

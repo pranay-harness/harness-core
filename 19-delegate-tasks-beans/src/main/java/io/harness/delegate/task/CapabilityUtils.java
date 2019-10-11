@@ -4,8 +4,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-// TODO: This is temporary solution till all DelegateValidationTasks are moved to
-// TODO: New Capability Framework. This should go away once that happens.
+// This is temporary solution till all DelegateValidationTasks are moved to
+// New Capability Framework. This should go away once that happens.
 public class CapabilityUtils {
   private static Set<String> taskTypesMigratedToCapabilityFramework = new HashSet<>(Arrays.asList(
       // Artifact Providers

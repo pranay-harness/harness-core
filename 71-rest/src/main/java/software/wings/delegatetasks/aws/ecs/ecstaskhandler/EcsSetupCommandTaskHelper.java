@@ -241,11 +241,7 @@ public class EcsSetupCommandTaskHelper {
    * @return
    */
   public boolean isFargateTaskLauchType(EcsSetupParams ecsSetupParams) {
-    if (LaunchType.FARGATE.name().equals(ecsSetupParams.getLaunchType())) {
-      return true;
-    }
-
-    return false;
+    return LaunchType.FARGATE.name().equals(ecsSetupParams.getLaunchType());
   }
 
   /**

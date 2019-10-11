@@ -7,7 +7,6 @@ import lombok.Value;
 @Builder
 public class EntityOperationIdentifier {
   public enum entityOperation { CREATE, UPDATE, DELETE }
-  ;
   private String entityType;
   private String entityName;
   private String entityId;

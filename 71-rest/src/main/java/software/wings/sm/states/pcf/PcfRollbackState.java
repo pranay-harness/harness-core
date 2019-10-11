@@ -112,7 +112,7 @@ public class PcfRollbackState extends PcfDeployState {
   }
 
   @Override
-  public Integer getDownsizeUpdateCount(Integer updateCount, PcfSetupContextElement pcfSetupContextElement) {
+  public Integer getDownsizeUpdateCount(PcfSetupContextElement pcfSetupContextElement) {
     return -1;
   }
 

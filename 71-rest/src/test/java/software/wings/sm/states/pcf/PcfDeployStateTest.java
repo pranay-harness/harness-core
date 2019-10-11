@@ -15,6 +15,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.InstanceUnitType.COUNT;
+import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -61,7 +63,6 @@ import software.wings.app.PortalConfig;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.InstanceUnitType;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
@@ -206,7 +207,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
     on(context).set("evaluator", evaluator);
 
     pcfDeployState.setInstanceCount(50);
-    pcfDeployState.setInstanceUnitType(InstanceUnitType.PERCENTAGE);
+    pcfDeployState.setInstanceUnitType(PERCENTAGE);
     ExecutionResponse response = pcfDeployState.execute(context);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(response).isNotNull().hasFieldOrPropertyWithValue("async", true);
@@ -232,42 +233,45 @@ public class PcfDeployStateTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testGetDownsizeUpdateCount() throws Exception {
+  public void testGetDownsizeUpdateCount() {
     // PERCENT
-    pcfDeployState.setDownsizeInstanceUnitType(InstanceUnitType.PERCENTAGE);
-    pcfDeployState.setDownsizeInstanceCount(30);
-    Integer answer =
-        pcfDeployState.getDownsizeUpdateCount(50, PcfSetupContextElement.builder().maxInstanceCount(100).build());
-    assertThat(answer.intValue()).isEqualTo(70);
+    pcfDeployState.setDownsizeInstanceUnitType(PERCENTAGE);
+    pcfDeployState.setDownsizeInstanceCount(40);
+    PcfSetupContextElement pcfSetupContextElement =
+        PcfSetupContextElement.builder().useCurrentRunningInstanceCount(false).maxInstanceCount(10).build();
 
-    pcfDeployState.setDownsizeInstanceCount(80);
-    answer = pcfDeployState.getDownsizeUpdateCount(50, PcfSetupContextElement.builder().maxInstanceCount(100).build());
-    assertThat(answer.intValue()).isEqualTo(20);
+    Integer answer = pcfDeployState.getDownsizeUpdateCount(pcfSetupContextElement);
+    assertThat(answer.intValue()).isEqualTo(6);
 
-    pcfDeployState.setDownsizeInstanceCount(100);
-    answer = pcfDeployState.getDownsizeUpdateCount(50, PcfSetupContextElement.builder().maxInstanceCount(100).build());
-    assertThat(answer.intValue()).isEqualTo(0);
+    pcfDeployState.setDownsizeInstanceUnitType(COUNT);
+    pcfDeployState.setDownsizeInstanceCount(4);
+    answer = pcfDeployState.getDownsizeUpdateCount(pcfSetupContextElement);
+    assertThat(answer.intValue()).isEqualTo(6);
 
-    pcfDeployState.setDownsizeInstanceCount(0);
-    answer = pcfDeployState.getDownsizeUpdateCount(50, PcfSetupContextElement.builder().maxInstanceCount(100).build());
-    assertThat(answer.intValue()).isEqualTo(100);
+    pcfDeployState.setDownsizeInstanceCount(null);
+    pcfDeployState.setDownsizeInstanceUnitType(COUNT);
+    pcfDeployState.setInstanceCount(6);
+    answer = pcfDeployState.getDownsizeUpdateCount(pcfSetupContextElement);
+    assertThat(answer.intValue()).isEqualTo(4);
 
-    // COUNT
-    pcfDeployState.setDownsizeInstanceUnitType(InstanceUnitType.COUNT);
-    pcfDeployState.setDownsizeInstanceCount(90);
-    answer = pcfDeployState.getDownsizeUpdateCount(50, PcfSetupContextElement.builder().maxInstanceCount(100).build());
-    assertThat(answer.intValue()).isEqualTo(10);
+    pcfDeployState.setDownsizeInstanceCount(null);
+    pcfDeployState.setDownsizeInstanceUnitType(null);
+    pcfDeployState.setInstanceUnitType(COUNT);
+    pcfDeployState.setInstanceCount(6);
+    answer = pcfDeployState.getDownsizeUpdateCount(pcfSetupContextElement);
+    assertThat(answer.intValue()).isEqualTo(4);
 
-    pcfDeployState.setDownsizeInstanceCount(60);
-    answer = pcfDeployState.getDownsizeUpdateCount(50, PcfSetupContextElement.builder().maxInstanceCount(100).build());
-    assertThat(answer.intValue()).isEqualTo(40);
+    pcfDeployState.setDownsizeInstanceCount(null);
+    pcfDeployState.setDownsizeInstanceUnitType(PERCENTAGE);
+    pcfDeployState.setInstanceCount(60);
+    answer = pcfDeployState.getDownsizeUpdateCount(pcfSetupContextElement);
+    assertThat(answer.intValue()).isEqualTo(4);
 
-    pcfDeployState.setDownsizeInstanceCount(100);
-    answer = pcfDeployState.getDownsizeUpdateCount(50, PcfSetupContextElement.builder().maxInstanceCount(100).build());
-    assertThat(answer.intValue()).isEqualTo(0);
-
-    pcfDeployState.setDownsizeInstanceCount(0);
-    answer = pcfDeployState.getDownsizeUpdateCount(50, PcfSetupContextElement.builder().maxInstanceCount(100).build());
-    assertThat(answer.intValue()).isEqualTo(100);
+    pcfDeployState.setDownsizeInstanceCount(null);
+    pcfDeployState.setDownsizeInstanceUnitType(null);
+    pcfDeployState.setInstanceUnitType(PERCENTAGE);
+    pcfDeployState.setInstanceCount(40);
+    answer = pcfDeployState.getDownsizeUpdateCount(pcfSetupContextElement);
+    assertThat(answer.intValue()).isEqualTo(6);
   }
 }
