@@ -1615,6 +1615,7 @@
                         <excludes>
                             <exclude>**/DelegateIntegrationTest</exclude>
                             <exclude>**/VaultIntegrationTest</exclude>
+                            <exclude>**/KmsIntegrationTest</exclude>
                         </excludes>
                         <forkCount>6</forkCount>
                         <reuseForks>true</reuseForks>

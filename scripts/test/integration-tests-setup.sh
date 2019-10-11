@@ -158,6 +158,7 @@ docker ps
 
 # Vault integration test need to be run first to avoid interfering with other integration test such as
 # Sumo/Elk integration tests etc.
-mvn -B test -pl 71-rest -Dtest=software.wings.integration.VaultIntegrationTest -DfailIfNoTests=false
+mvn -B test -pl 71-rest -Dtest=software.wings.integration.security.VaultIntegrationTest -DfailIfNoTests=false
+mvn -B test -pl 71-rest -Dtest=software.wings.integration.security.KmsIntegrationTest -DfailIfNoTests=false
 
 
