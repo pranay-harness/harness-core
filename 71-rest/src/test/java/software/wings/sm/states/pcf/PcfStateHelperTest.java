@@ -385,7 +385,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
     assertThat(stateExecutionData.getActivityId()).isEqualTo(ACTIVITY_ID);
     assertThat("PCF BG Swap Route").isEqualTo(stateExecutionData.getCommandName());
 
-    assertThat(stateExecutionData.getPcfCommandRequest() instanceof PcfCommandRouteUpdateRequest);
+    assertThat(stateExecutionData.getPcfCommandRequest() instanceof PcfCommandRouteUpdateRequest).isTrue();
     PcfCommandRouteUpdateRequest request = (PcfCommandRouteUpdateRequest) stateExecutionData.getPcfCommandRequest();
     assertThat(stateExecutionData.getAppId()).isEqualTo(APP_ID);
     assertThat("PCF BG Swap Route").isEqualTo(stateExecutionData.getCommandName());
