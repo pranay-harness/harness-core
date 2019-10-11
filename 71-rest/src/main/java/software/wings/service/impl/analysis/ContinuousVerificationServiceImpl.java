@@ -2267,10 +2267,17 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       case SUMO:
       case ELK:
       case DATA_DOG_LOG:
-      case STACK_DRIVER_LOG:
         LogDataCollectionInfo logDataCollectionInfo = (LogDataCollectionInfo) dataCollectionInfo;
         startTime = logDataCollectionInfo.getStartTime();
         endTime = logDataCollectionInfo.getEndTime();
+        break;
+      case STACK_DRIVER_LOG:
+        // unfortunately we have inconsistency in the way we set startTime and endTime between providers for per minute
+        // task but per minute task is soon going to be replaced by new data collection framework so putting this
+        // special condition to to fix activity logs.
+        logDataCollectionInfo = (LogDataCollectionInfo) dataCollectionInfo;
+        startTime = TimeUnit.MILLISECONDS.toMinutes(logDataCollectionInfo.getStartTime());
+        endTime = TimeUnit.MILLISECONDS.toMinutes(logDataCollectionInfo.getEndTime());
         break;
       default:
         throw new IllegalStateException("Invalid state: " + context.getStateType());
