@@ -1039,7 +1039,9 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.AppDynamicsConfig", AppDynamicsConfig.class);
     w.put("beans.artifact.ArtifactFile", ArtifactFile.class);
     w.put("beans.AwsConfig", AwsConfig.class);
+    w.put("beans.AwsSecretsManagerConfig", AwsSecretsManagerConfig.class);
     w.put("beans.AzureConfig", AzureConfig.class);
+    w.put("beans.AzureVaultConfig", AzureVaultConfig.class);
     w.put("beans.BambooConfig", BambooConfig.class);
     w.put("beans.BasicOrchestrationWorkflow", BasicOrchestrationWorkflow.class);
     w.put("beans.BastionConnectionAttributes", BastionConnectionAttributes.class);
@@ -1068,6 +1070,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.command.InitSshCommandUnit", InitSshCommandUnit.class);
     w.put("beans.command.InitSshCommandUnitV2", InitSshCommandUnitV2.class);
     w.put("beans.command.K8sDummyCommandUnit", K8sDummyCommandUnit.class);
+    w.put("beans.KmsConfig", KmsConfig.class);
     w.put("beans.command.KubernetesResizeCommandUnit", KubernetesResizeCommandUnit.class);
     w.put("beans.command.KubernetesSetupCommandUnit", KubernetesSetupCommandUnit.class);
     w.put("beans.command.KubernetesSetupParams", KubernetesSetupParams.class);
@@ -1121,6 +1124,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.settings.helm.AmazonS3HelmRepoConfig", AmazonS3HelmRepoConfig.class);
     w.put("beans.settings.helm.GCSHelmRepoConfig", GCSHelmRepoConfig.class);
     w.put("beans.settings.helm.HttpHelmRepoConfig", HttpHelmRepoConfig.class);
+    w.put("beans.SecretManagerConfig", SecretManagerConfig.class);
     w.put("beans.SftpConfig", SftpConfig.class);
     w.put("beans.SlackConfig", SlackConfig.class);
     w.put("beans.SmbConfig", SmbConfig.class);
@@ -1129,6 +1133,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.SSHExecutionCredential", SSHExecutionCredential.class);
     w.put("beans.StringValue", StringValue.class);
     w.put("beans.SumoConfig", SumoConfig.class);
+    w.put("beans.VaultConfig", VaultConfig.class);
     w.put("beans.template.artifactsource.ArtifactSourceTemplate", ArtifactSourceTemplate.class);
     w.put("beans.template.artifactsource.CustomArtifactSourceTemplate", CustomArtifactSourceTemplate.class);
     w.put("beans.template.command.HttpTemplate", HttpTemplate.class);
