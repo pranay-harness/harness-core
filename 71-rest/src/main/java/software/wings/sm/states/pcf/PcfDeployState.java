@@ -154,7 +154,7 @@ public class PcfDeployState extends State {
         (EncryptableSetting) pcfConfig, context.getAppId(), context.getWorkflowExecutionId());
 
     Integer upsizeUpdateCount = getUpsizeUpdateCount(pcfSetupContextElement);
-    Integer downsizeUpdateCount = getDownsizeUpdateCount(upsizeUpdateCount, pcfSetupContextElement);
+    Integer downsizeUpdateCount = getDownsizeUpdateCount(pcfSetupContextElement);
 
     PcfDeployStateExecutionData stateExecutionData =
         getPcfDeployStateExecutionData(pcfSetupContextElement, activity, upsizeUpdateCount, downsizeUpdateCount);
@@ -209,17 +209,16 @@ public class PcfDeployState extends State {
   }
 
   @VisibleForTesting
-  protected Integer getDownsizeUpdateCount(Integer updateCount, PcfSetupContextElement pcfSetupContextElement) {
-    // if downsizeInstanceCount is not set, use same updateCount as upsize
-    Integer downsizeUpdateCount = updateCount;
+  protected Integer getDownsizeUpdateCount(PcfSetupContextElement pcfSetupContextElement) {
+    Integer downsizeUpdateCount = downsizeInstanceCount == null ? instanceCount : downsizeInstanceCount;
+    downsizeInstanceUnitType = downsizeInstanceUnitType == null ? instanceUnitType : downsizeInstanceUnitType;
 
     Integer instanceCount = pcfSetupContextElement.isUseCurrentRunningInstanceCount()
         ? pcfSetupContextElement.getCurrentRunningInstanceCount()
         : pcfSetupContextElement.getMaxInstanceCount();
-    if (downsizeInstanceCount != null) {
-      downsizeUpdateCount =
-          getInstanceCountToBeUpdated(instanceCount, downsizeInstanceCount, downsizeInstanceUnitType, false);
-    }
+
+    downsizeUpdateCount =
+        getInstanceCountToBeUpdated(instanceCount, downsizeUpdateCount, downsizeInstanceUnitType, false);
 
     return downsizeUpdateCount;
   }

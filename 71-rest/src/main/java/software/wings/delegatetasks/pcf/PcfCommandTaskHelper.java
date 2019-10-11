@@ -233,7 +233,7 @@ public class PcfCommandTaskHelper {
     if (updateCount >= applicationDetail.getInstances()) {
       // If 0 instances are to be downsized in this stage, then find one of the previous applications, to be downsized
       // and return guid of that application, so verification phase can use that guid.
-      executionLogCallback.saveExecutionLog("# No Downsize was required.");
+      executionLogCallback.saveExecutionLog("# No Downsize was required.\n");
       getGuidForAppToBeDownsized(pcfInstanceElements, applicationDetail);
       return;
     }

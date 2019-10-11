@@ -3,6 +3,7 @@ package io.harness.pcf;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.pcf.ManifestType.APPLICATION_MANIFEST;
 import static io.harness.pcf.ManifestType.APPLICATION_MANIFEST_WITH_CREATE_SERVICE;
+import static io.harness.pcf.ManifestType.CREATE_SERVICE_MANIFEST;
 import static io.harness.pcf.ManifestType.VARIABLE_MANIFEST;
 import static io.harness.pcf.model.PcfConstants.APPLICATION_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.CREATE_SERVICE_MANIFEST_ELEMENT;
@@ -29,8 +30,6 @@ public class PcfFileTypeChecker {
   }
 
   public ManifestType getManifestType(String content) {
-    ManifestType type;
-
     Map<String, Object> map = null;
     try {
       map = (Map<String, Object>) yaml.load(content);
@@ -46,12 +45,8 @@ public class PcfFileTypeChecker {
     }
 
     if (isCreateServiceManifest(map)) {
-      return APPLICATION_MANIFEST_WITH_CREATE_SERVICE;
+      return CREATE_SERVICE_MANIFEST;
     }
-
-    //    if (isAutoscalarManifest(map)) {
-    //      return AUTOSCALAR_MANIFEST;
-    //    }
 
     if (isVariableManifest(map)) {
       return VARIABLE_MANIFEST;
@@ -71,11 +66,7 @@ public class PcfFileTypeChecker {
   }
 
   private boolean isCreateServiceManifest(Map<String, Object> map) {
-    if (map.containsKey(CREATE_SERVICE_MANIFEST_ELEMENT)) {
-      return true;
-    }
-
-    return false;
+    return map.containsKey(CREATE_SERVICE_MANIFEST_ELEMENT);
   }
 
   private boolean isApplicationManifest(Map<String, Object> map) {
