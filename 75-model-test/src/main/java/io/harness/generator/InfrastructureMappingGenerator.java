@@ -201,7 +201,8 @@ public class InfrastructureMappingGenerator {
 
     if (applicationManifest == null) {
       environmentService.createValues(environment.getAppId(), environment.getUuid(), null,
-          ManifestFile.builder().fileName("values.yaml").fileContent("serviceType: ClusterIP\n").build());
+          ManifestFile.builder().fileName("values.yaml").fileContent("serviceType: ClusterIP\n").build(),
+          AppManifestKind.VALUES);
     }
 
     Service service = owners.obtainService();

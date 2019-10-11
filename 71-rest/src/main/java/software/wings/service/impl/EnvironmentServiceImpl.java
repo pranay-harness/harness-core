@@ -9,6 +9,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.pcf.model.PcfConstants.VARS_YML;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toMap;
@@ -160,7 +161,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     PageResponse<Environment> pageResponse =
         resourceLookupService.listWithTagFilters(request, tagFilter, EntityType.ENVIRONMENT, withTags);
 
-    if (pageResponse == null || pageResponse.getResponse() == null) {
+    if (pageResponse.getResponse() == null) {
       return pageResponse;
     }
     if (withSummary) {
@@ -942,10 +943,10 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     if (manifestFile == null) {
       manifestFile = ManifestFile.builder().build();
       manifestFile.setFileContent(kubernetesPayload.getAdvancedConfig());
-      createValues(appId, envId, serviceId, manifestFile);
+      createValues(appId, envId, serviceId, manifestFile, AppManifestKind.VALUES);
     } else {
       manifestFile.setFileContent(kubernetesPayload.getAdvancedConfig());
-      updateValues(appId, envId, serviceId, manifestFile);
+      updateValues(appId, envId, serviceId, manifestFile, AppManifestKind.VALUES);
     }
     manifestFile.setFileContent(kubernetesPayload.getAdvancedConfig());
 
@@ -975,24 +976,27 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   }
 
   @Override
-  public ManifestFile createValues(String appId, String envId, String serviceId, ManifestFile manifestFile) {
+  public ManifestFile createValues(
+      String appId, String envId, String serviceId, ManifestFile manifestFile, AppManifestKind kind) {
+    // ToDo Remove below if condition once the UI starts sending kind
+    if (kind == null) {
+      kind = AppManifestKind.VALUES;
+    }
+
+    notNullCheck("Application manifest kind cannot be null", kind, USER);
     validateEnvAndServiceExists(appId, envId, serviceId);
 
     ApplicationManifest applicationManifest =
-        applicationManifestService.getByEnvAndServiceId(appId, envId, serviceId, AppManifestKind.VALUES);
+        applicationManifestService.getByEnvAndServiceId(appId, envId, serviceId, kind);
     if (applicationManifest == null) {
-      applicationManifest = ApplicationManifest.builder()
-                                .storeType(StoreType.Local)
-                                .envId(envId)
-                                .serviceId(serviceId)
-                                .kind(AppManifestKind.VALUES)
-                                .build();
+      applicationManifest =
+          ApplicationManifest.builder().storeType(StoreType.Local).envId(envId).serviceId(serviceId).kind(kind).build();
       applicationManifest.setAppId(appId);
       applicationManifest = applicationManifestService.create(applicationManifest);
     }
 
     manifestFile.setAppId(appId);
-    manifestFile.setFileName(VALUES_YAML_KEY);
+    manifestFile.setFileName(getLocalOverrideManifestFileName(kind));
     manifestFile.setApplicationManifestId(applicationManifest.getUuid());
     manifestFile = applicationManifestService.upsertApplicationManifestFile(manifestFile, applicationManifest, true);
 
@@ -1000,21 +1004,41 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   }
 
   @Override
-  public ManifestFile updateValues(String appId, String envId, String serviceId, ManifestFile manifestFile) {
+  public ManifestFile updateValues(
+      String appId, String envId, String serviceId, ManifestFile manifestFile, AppManifestKind kind) {
+    // ToDo Remove below if condition once the UI starts sending kind
+    if (kind == null) {
+      kind = AppManifestKind.VALUES;
+    }
+
+    notNullCheck("Application manifest kind cannot be null", kind, USER);
     validateEnvAndServiceExists(appId, envId, serviceId);
 
-    ApplicationManifest appManifest = getAppManifest(appId, envId, serviceId, AppManifestKind.VALUES);
+    ApplicationManifest appManifest = getAppManifest(appId, envId, serviceId, kind);
     if (appManifest == null) {
       throw new InvalidRequestException(
           format("Application manifest doesn't exist for environment: %s and service: %s", envId, serviceId));
     }
 
     manifestFile.setAppId(appId);
-    manifestFile.setFileName(VALUES_YAML_KEY);
+    manifestFile.setFileName(getLocalOverrideManifestFileName(kind));
     manifestFile.setApplicationManifestId(appManifest.getUuid());
     manifestFile = applicationManifestService.upsertApplicationManifestFile(manifestFile, appManifest, false);
 
     return manifestFile;
+  }
+
+  private String getLocalOverrideManifestFileName(AppManifestKind kind) {
+    switch (kind) {
+      case PCF_OVERRIDE:
+        return VARS_YML;
+
+      case VALUES:
+        return VALUES_YAML_KEY;
+
+      default:
+        throw new InvalidRequestException("Unhandled application manifest kind " + kind, USER);
+    }
   }
 
   private void validateEnvAndServiceExists(String appId, String envId, String serviceId) {

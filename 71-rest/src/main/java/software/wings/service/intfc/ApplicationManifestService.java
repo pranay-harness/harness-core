@@ -76,4 +76,6 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
   void deleteAllManifestFilesByAppManifestId(String appId, String appManifestId);
 
   PageResponse<ApplicationManifest> list(PageRequest<ApplicationManifest> pageRequest);
+
+  List<ManifestFile> getOverrideManifestFilesByEnvId(String appId, String envId);
 }

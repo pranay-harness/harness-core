@@ -60,6 +60,14 @@ public class EnvironmentResource {
   @Inject private AuthService authService;
   @Inject private ApplicationManifestService applicationManifestService;
 
+  @Inject
+  public EnvironmentResource(EnvironmentService environmentService, AuthService authService,
+      ApplicationManifestService applicationManifestService) {
+    this.environmentService = environmentService;
+    this.authService = authService;
+    this.applicationManifestService = applicationManifestService;
+  }
+
   /**
    * List.
    *
@@ -337,9 +345,9 @@ public class EnvironmentResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE)
-  public RestResponse<ManifestFile> createValues(
-      @QueryParam("appId") String appId, @PathParam("envId") String envId, ManifestFile manifestFile) {
-    return new RestResponse<>(environmentService.createValues(appId, envId, null, manifestFile));
+  public RestResponse<ManifestFile> createValues(@QueryParam("appId") String appId,
+      @QueryParam("kind") AppManifestKind kind, @PathParam("envId") String envId, ManifestFile manifestFile) {
+    return new RestResponse<>(environmentService.createValues(appId, envId, null, manifestFile, kind));
   }
 
   @PUT
@@ -347,10 +355,11 @@ public class EnvironmentResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE)
-  public RestResponse<ManifestFile> updateValues(@QueryParam("appId") String appId, @PathParam("envId") String envId,
+  public RestResponse<ManifestFile> updateValues(@QueryParam("appId") String appId,
+      @QueryParam("kind") AppManifestKind kind, @PathParam("envId") String envId,
       @PathParam("manifestFileId") String manifestFileId, ManifestFile manifestFile) {
     manifestFile.setUuid(manifestFileId);
-    return new RestResponse<>(environmentService.updateValues(appId, envId, null, manifestFile));
+    return new RestResponse<>(environmentService.updateValues(appId, envId, null, manifestFile, kind));
   }
 
   @GET
@@ -380,8 +389,9 @@ public class EnvironmentResource {
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE)
   public RestResponse<ManifestFile> createValuesForService(@QueryParam("appId") String appId,
-      @PathParam("envId") String envId, @PathParam("serviceId") String serviceId, ManifestFile manifestFile) {
-    return new RestResponse<>(environmentService.createValues(appId, envId, serviceId, manifestFile));
+      @QueryParam("kind") AppManifestKind kind, @PathParam("envId") String envId,
+      @PathParam("serviceId") String serviceId, ManifestFile manifestFile) {
+    return new RestResponse<>(environmentService.createValues(appId, envId, serviceId, manifestFile, kind));
   }
 
   @PUT
@@ -390,10 +400,11 @@ public class EnvironmentResource {
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE)
   public RestResponse<ManifestFile> updateValuesForService(@QueryParam("appId") String appId,
-      @PathParam("envId") String envId, @PathParam("serviceId") String serviceId,
-      @PathParam("manifestFileId") String manifestFileId, ManifestFile manifestFile) {
+      @QueryParam("kind") AppManifestKind kind, @PathParam("envId") String envId,
+      @PathParam("serviceId") String serviceId, @PathParam("manifestFileId") String manifestFileId,
+      ManifestFile manifestFile) {
     manifestFile.setUuid(manifestFileId);
-    return new RestResponse<>(environmentService.updateValues(appId, envId, serviceId, manifestFile));
+    return new RestResponse<>(environmentService.updateValues(appId, envId, serviceId, manifestFile, kind));
   }
 
   @GET
@@ -536,5 +547,15 @@ public class EnvironmentResource {
   public RestResponse<ManifestFile> getValuesManifestFile(
       @QueryParam("appId") String appId, @PathParam("envId") String envId) {
     return new RestResponse<>(applicationManifestService.getManifestFileByEnvId(appId, envId, AppManifestKind.VALUES));
+  }
+
+  @GET
+  @Path("{envId}/manifest-files")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.READ)
+  public RestResponse<List<ManifestFile>> getLocalOverrideManifestFiles(
+      @QueryParam("appId") String appId, @PathParam("envId") String envId) {
+    return new RestResponse<>(applicationManifestService.getOverrideManifestFilesByEnvId(appId, envId));
   }
 }

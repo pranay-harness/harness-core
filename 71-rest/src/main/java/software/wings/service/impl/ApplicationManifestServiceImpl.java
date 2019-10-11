@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
@@ -28,7 +29,6 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FilenameUtils;
 import org.mongodb.morphia.query.Query;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
@@ -64,7 +64,7 @@ import software.wings.yaml.directory.DirectoryNode;
 import software.wings.yaml.directory.DirectoryPath;
 
 import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -223,6 +223,27 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   public ManifestFile getManifestFileByEnvId(String appId, String envId, AppManifestKind kind) {
     ApplicationManifest appManifest = getByEnvId(appId, envId, kind);
     return getManifestFileByFileName(appManifest.getUuid(), VALUES_YAML_KEY);
+  }
+
+  @Override
+  public List<ManifestFile> getOverrideManifestFilesByEnvId(String appId, String envId) {
+    Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
+                                           .filter(ApplicationKeys.appId, appId)
+                                           .filter(ApplicationManifestKeys.envId, envId)
+                                           .filter(ApplicationManifestKeys.serviceId, null);
+    List<ApplicationManifest> applicationManifests = query.asList();
+
+    List<ManifestFile> manifestFiles = new ArrayList<>();
+    for (ApplicationManifest applicationManifest : applicationManifests) {
+      List<ManifestFile> manifestFilesByAppManifestId =
+          getManifestFilesByAppManifestId(applicationManifest.getAppId(), applicationManifest.getUuid());
+
+      if (isNotEmpty(manifestFilesByAppManifestId)) {
+        manifestFiles.addAll(manifestFilesByAppManifestId);
+      }
+    }
+
+    return manifestFiles;
   }
 
   @Override
@@ -824,14 +845,6 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     }
     if (bytes.length > allowedSizeInBytes) {
       throw new InvalidRequestException(format("File size: %s bytes exceeded the limit", bytes.length), USER);
-    }
-  }
-
-  private void doFileExtensionValidation(ManifestFile manifestFile) {
-    List<String> allowedExtensions = Arrays.asList("yaml", "yml");
-    String fileExtension = FilenameUtils.getExtension(manifestFile.getFileName());
-    if (!allowedExtensions.contains(fileExtension)) {
-      throw new InvalidRequestException(format("Extension: %s is not allowed", fileExtension), USER);
     }
   }
 
