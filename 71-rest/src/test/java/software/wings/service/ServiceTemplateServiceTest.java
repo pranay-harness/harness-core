@@ -3,18 +3,21 @@ package software.wings.service;
 import static com.google.common.collect.ImmutableMap.of;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.pcf.model.PcfConstants.VARS_YML;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
+import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -45,8 +48,13 @@ import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
+import software.wings.beans.appmanifest.AppManifestKind;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ManifestFile;
+import software.wings.beans.appmanifest.StoreType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ServiceTemplateServiceImpl;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
@@ -54,13 +62,17 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
+import software.wings.utils.ArtifactType;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
  * Created by anubhaw on 4/29/16.
  */
 public class ServiceTemplateServiceTest extends WingsBaseTest {
+  private final String APP_MANIFEST_ID = "APP_MANIFEST_ID";
+
   /**
    * The Query.
    */
@@ -76,6 +88,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   @Mock private EnvironmentService environmentService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private ServiceVariableService serviceVariableService;
+  @Mock private ApplicationManifestService appManifestService;
 
   @Inject @InjectMocks private ServiceTemplateService templateService;
   @Spy @InjectMocks private ServiceTemplateService spyTemplateService = new ServiceTemplateServiceImpl();
@@ -297,5 +310,72 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
 
     List<ConfigFile> hostConfigFiles = templateService.computedConfigFiles(APP_ID, ENV_ID, TEMPLATE_ID);
     assertThat(hostConfigFiles).isEqualTo(asList(configFile2));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testPopulateServiceAndOverrideValuesManifestFile() {
+    PageResponse<ServiceTemplate> pageResponse =
+        aPageResponse().withResponse(asList(builder.but().withServiceId(SERVICE_ID).build())).build();
+
+    when(wingsPersistence.query(ServiceTemplate.class, aPageRequest().build())).thenReturn(pageResponse);
+    when(infrastructureMappingService.list(any(PageRequest.class))).thenReturn(aPageResponse().build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID))
+        .thenReturn(Service.builder().artifactType(ArtifactType.PCF).build());
+
+    PageResponse<ServiceTemplate> templatePageResponse =
+        templateService.list(aPageRequest().build(), true, OBTAIN_VALUE);
+    assertThat(templatePageResponse).isInstanceOf(PageResponse.class);
+    ServiceTemplate serviceTemplate = pageResponse.getResponse().get(0);
+    assertThat(serviceTemplate.getValuesOverrideManifestFile()).isNull();
+    verify(appManifestService, times(0)).getManifestFilesByAppManifestId(any(), any());
+
+    ApplicationManifest appManifest =
+        ApplicationManifest.builder().storeType(StoreType.Local).kind(AppManifestKind.PCF_OVERRIDE).build();
+    appManifest.setAppId(APP_ID);
+    appManifest.setUuid(APP_MANIFEST_ID);
+    when(appManifestService.getAppManifest(APP_ID, ENV_ID, SERVICE_ID, AppManifestKind.PCF_OVERRIDE))
+        .thenReturn(appManifest);
+
+    templatePageResponse = templateService.list(aPageRequest().build(), true, OBTAIN_VALUE);
+    assertThat(templatePageResponse).isInstanceOf(PageResponse.class);
+    serviceTemplate = pageResponse.getResponse().get(0);
+    assertThat(serviceTemplate.getValuesOverrideManifestFile()).isNull();
+    verify(appManifestService, times(1)).getManifestFilesByAppManifestId(any(), any());
+
+    when(appManifestService.getManifestFilesByAppManifestId(APP_ID, APP_MANIFEST_ID))
+        .thenReturn(Arrays.asList(ManifestFile.builder().fileName(VARS_YML).fileContent("vars").build()));
+
+    templatePageResponse = templateService.list(aPageRequest().build(), true, OBTAIN_VALUE);
+    assertThat(templatePageResponse).isInstanceOf(PageResponse.class);
+    serviceTemplate = pageResponse.getResponse().get(0);
+    assertThat(serviceTemplate.getValuesOverrideManifestFile().getFileName()).isEqualTo(VARS_YML);
+    assertThat(serviceTemplate.getValuesOverrideManifestFile().getFileContent()).isEqualTo("vars");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testPopulateServiceAndOverrideValuesManifestFileForValues() {
+    PageResponse<ServiceTemplate> pageResponse =
+        aPageResponse().withResponse(asList(builder.but().withServiceId(SERVICE_ID).build())).build();
+
+    when(wingsPersistence.query(ServiceTemplate.class, aPageRequest().build())).thenReturn(pageResponse);
+    when(infrastructureMappingService.list(any(PageRequest.class))).thenReturn(aPageResponse().build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(Service.builder().build());
+
+    ApplicationManifest appManifest =
+        ApplicationManifest.builder().storeType(StoreType.Local).kind(AppManifestKind.VALUES).build();
+    appManifest.setAppId(APP_ID);
+    appManifest.setUuid(APP_MANIFEST_ID);
+    when(appManifestService.getAppManifest(APP_ID, ENV_ID, SERVICE_ID, AppManifestKind.VALUES)).thenReturn(appManifest);
+    when(appManifestService.getManifestFilesByAppManifestId(APP_ID, APP_MANIFEST_ID))
+        .thenReturn(Arrays.asList(ManifestFile.builder().fileName(VALUES_YAML_KEY).fileContent("values").build()));
+
+    PageResponse<ServiceTemplate> templatePageResponse =
+        templateService.list(aPageRequest().build(), true, OBTAIN_VALUE);
+    assertThat(templatePageResponse).isInstanceOf(PageResponse.class);
+    ServiceTemplate serviceTemplate = pageResponse.getResponse().get(0);
+    assertThat(serviceTemplate.getValuesOverrideManifestFile().getFileName()).isEqualTo(VALUES_YAML_KEY);
+    assertThat(serviceTemplate.getValuesOverrideManifestFile().getFileContent()).isEqualTo("values");
   }
 }

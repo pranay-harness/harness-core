@@ -445,16 +445,29 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   }
 
   private void populateServiceAndOverrideValuesManifestFile(ServiceTemplate template) {
+    Service service = serviceResourceService.get(template.getAppId(), template.getServiceId());
+    if (service == null) {
+      return;
+    }
+
+    AppManifestKind appManifestKind = AppManifestKind.VALUES;
+    if (ArtifactType.PCF.equals(service.getArtifactType())) {
+      appManifestKind = AppManifestKind.PCF_OVERRIDE;
+    }
+
     ApplicationManifest appManifest = applicationManifestService.getAppManifest(
-        template.getAppId(), template.getEnvId(), template.getServiceId(), AppManifestKind.VALUES);
+        template.getAppId(), template.getEnvId(), template.getServiceId(), appManifestKind);
     if (appManifest == null) {
       return;
     }
 
-    ManifestFile manifestFile =
-        applicationManifestService.getManifestFileByFileName(appManifest.getUuid(), VALUES_YAML_KEY);
+    List<ManifestFile> manifestFiles =
+        applicationManifestService.getManifestFilesByAppManifestId(appManifest.getAppId(), appManifest.getUuid());
+    if (isEmpty(manifestFiles)) {
+      return;
+    }
 
-    template.setValuesOverrideManifestFile(manifestFile);
+    template.setValuesOverrideManifestFile(manifestFiles.get(0));
   }
 
   /* (non-Javadoc)

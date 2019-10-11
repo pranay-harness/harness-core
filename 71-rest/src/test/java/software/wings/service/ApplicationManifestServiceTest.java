@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.pcf.model.PcfConstants.VARS_YML;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -7,7 +8,9 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
+import static software.wings.beans.appmanifest.AppManifestKind.PCF_OVERRIDE;
 import static software.wings.beans.appmanifest.AppManifestKind.VALUES;
+import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
 import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.beans.appmanifest.StoreType.Remote;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -29,6 +32,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
+import software.wings.beans.Environment;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.Service;
 import software.wings.beans.appmanifest.AppManifestKind;
@@ -40,6 +44,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ApplicationManifestServiceImpl;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
@@ -57,6 +62,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   @Mock private YamlPushService yamlPushService;
 
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private EnvironmentService environmentService;
 
   @Inject @InjectMocks ApplicationManifestService applicationManifestService;
   @Inject ApplicationManifestServiceImpl applicationManifestServiceImpl;
@@ -933,5 +939,31 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     applicationManifest.setKind(AppManifestKind.K8S_MANIFEST);
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> applicationManifestServiceImpl.validateLocalAppManifest(applicationManifest));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetOverrideManifestFilesByEnvId() {
+    wingsPersistence.save(Environment.Builder.anEnvironment().appId(APP_ID).uuid(ENV_ID).build());
+
+    ManifestFile localManifestFile = ManifestFile.builder().fileName("val.yaml").fileContent("values").build();
+    environmentService.createValues(APP_ID, ENV_ID, null, localManifestFile, null);
+
+    localManifestFile = ManifestFile.builder().fileName("variable.yaml").fileContent("vars").build();
+    environmentService.createValues(APP_ID, ENV_ID, null, localManifestFile, PCF_OVERRIDE);
+
+    List<ManifestFile> manifestFiles = applicationManifestService.getOverrideManifestFilesByEnvId(APP_ID, ENV_ID);
+    assertThat(manifestFiles).isNotEmpty();
+    assertThat(manifestFiles.get(0).getFileName()).isEqualTo(VALUES_YAML_KEY);
+    assertThat(manifestFiles.get(0).getFileContent()).isEqualTo("values");
+    assertThat(manifestFiles.get(1).getFileName()).isEqualTo(VARS_YML);
+    assertThat(manifestFiles.get(1).getFileContent()).isEqualTo("vars");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetOverrideManifestFilesByEnvIdEmptyCase() {
+    List<ManifestFile> manifestFiles = applicationManifestService.getOverrideManifestFilesByEnvId(APP_ID, ENV_ID);
+    assertThat(manifestFiles).isEmpty();
   }
 }

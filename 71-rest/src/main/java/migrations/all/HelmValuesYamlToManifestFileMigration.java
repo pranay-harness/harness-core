@@ -60,7 +60,8 @@ public class HelmValuesYamlToManifestFileMigration implements Migration {
           applicationManifestService.getByEnvId(environment.getAppId(), environment.getUuid(), AppManifestKind.VALUES);
       if (applicationManifest == null) {
         ManifestFile manifestFile = ManifestFile.builder().fileContent(environment.getHelmValueYaml()).build();
-        environmentService.createValues(environment.getAppId(), environment.getUuid(), null, manifestFile);
+        environmentService.createValues(
+            environment.getAppId(), environment.getUuid(), null, manifestFile, AppManifestKind.VALUES);
       }
     }
 
@@ -93,8 +94,8 @@ public class HelmValuesYamlToManifestFileMigration implements Migration {
 
           if (applicationManifest == null) {
             ManifestFile manifestFile = ManifestFile.builder().fileContent(helmValue).build();
-            environmentService.createValues(
-                environment.getAppId(), environment.getUuid(), serviceTemplate.getServiceId(), manifestFile);
+            environmentService.createValues(environment.getAppId(), environment.getUuid(),
+                serviceTemplate.getServiceId(), manifestFile, AppManifestKind.VALUES);
           }
         }
       }
