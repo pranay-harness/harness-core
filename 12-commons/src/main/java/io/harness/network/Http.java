@@ -44,7 +44,7 @@ public class Http {
       new UrlValidator(new String[] {"http", "https"}, UrlValidator.ALLOW_LOCAL_URLS);
 
   private static TrustManager[] trustAllCerts = getTrustManagers();
-  private static SSLContext sc = getSslContext();
+  private static final SSLContext sc = createSslContext();
 
   public static boolean connectableHost(String host, int port) {
     try (Socket socket = new Socket()) {
@@ -105,13 +105,18 @@ public class Http {
     return connection;
   }
 
-  public static SSLContext getSslContext() {
+  private static SSLContext createSslContext() {
     try {
-      sc = SSLContext.getInstance("SSL");
-      sc.init(null, trustAllCerts, new java.security.SecureRandom());
+      final SSLContext sslContext = SSLContext.getInstance("SSL");
+      sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+      return sslContext;
     } catch (NoSuchAlgorithmException | KeyManagementException e) {
       logger.error("Error while initializing the SSL context", e);
     }
+    return null;
+  }
+
+  public static SSLContext getSslContext() {
     return sc;
   }
 
