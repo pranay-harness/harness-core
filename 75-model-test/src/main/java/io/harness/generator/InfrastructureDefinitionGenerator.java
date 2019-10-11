@@ -45,7 +45,7 @@ public class InfrastructureDefinitionGenerator {
 
   @Inject private WingsPersistence wingsPersistence;
 
-  private final String gcpCluster = "us-central1-a/harness-test";
+  private static final String GCP_CLUSTER = "us-central1-a/harness-test";
 
   public InfrastructureDefinition ensurePredefined(
       Randomizer.Seed seed, Owners owners, String predefined, String bearerToken) {
@@ -150,7 +150,7 @@ public class InfrastructureDefinitionGenerator {
     GoogleKubernetesEngine gcpK8sInfra = GoogleKubernetesEngine.builder()
                                              .cloudProviderId(gcpK8sCloudProvider.getUuid())
                                              .namespace(nameSpaceUnique)
-                                             .clusterName(gcpCluster)
+                                             .clusterName(GCP_CLUSTER)
                                              .releaseName("release-${infra.kubernetes.infraId}")
                                              .build();
     InfrastructureDefinition infrastructureDefinition = InfrastructureDefinition.builder()

@@ -1457,7 +1457,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
                                                          .workflowExecutionId(workflowExecutionId)
                                                          .serviceId(serviceId)
 
-                                                         .hostnameSeparator(DatadogLogState.hostNameSeparator)
+                                                         .hostnameSeparator(DatadogLogState.HOST_NAME_SEPARATOR)
                                                          .shouldInspectHosts(true)
                                                          .collectionFrequency(1)
                                                          .collectionTime(15)

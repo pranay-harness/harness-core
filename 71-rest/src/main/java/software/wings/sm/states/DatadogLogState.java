@@ -28,7 +28,7 @@ import java.util.Set;
 
 @Slf4j
 public class DatadogLogState extends AbstractLogAnalysisState {
-  public static String hostNameSeparator = " OR ";
+  public static final String HOST_NAME_SEPARATOR = " OR ";
 
   @Attributes(required = true, title = "Datadog Log Server") protected String analysisServerConfigId;
 
@@ -49,6 +49,7 @@ public class DatadogLogState extends AbstractLogAnalysisState {
 
   @Attributes(required = true, title = "Search Keywords")
   @DefaultValue("*exception*")
+  @Override
   public String getQuery() {
     return query;
   }
@@ -84,6 +85,7 @@ public class DatadogLogState extends AbstractLogAnalysisState {
 
   @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
   @DefaultValue("15")
+  @Override
   public String getTimeDuration() {
     if (isBlank(timeDuration)) {
       return String.valueOf(15);
