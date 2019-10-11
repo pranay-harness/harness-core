@@ -1,7 +1,33 @@
 package software.wings.delegatetasks.pcf;
 
 import static com.google.common.base.Charsets.UTF_8;
-import static io.harness.pcf.model.PcfConstants.PCF_ARTIFACT_DOWNLOAD_DIR_PATH;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.pcf.model.PcfConstants.APPLICATION_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.BUILDPACKS_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.BUILDPACK_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.COMMAND_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.CREATE_SERVICE_MANIFEST_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.DISK_QUOTA_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.DOCKER_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.DOMAINS_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.ENV_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.HEALTH_CHECK_HTTP_ENDPOINT_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.HEALTH_CHECK_TYPE_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.HOSTS_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.HOST_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.INSTANCE_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.MEMORY_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.NAME_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.NO_HOSTNAME_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.NO_ROUTE_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.PATH_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.RANDOM_ROUTE_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.ROUTES_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.ROUTE_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.ROUTE_PATH_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.SERVICES_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.STACK_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.TIMEOUT_MANIFEST_YML_ELEMENT;
 import static java.util.stream.Collectors.toList;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -9,8 +35,13 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.FlowStyle;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -29,6 +60,7 @@ import software.wings.helpers.ext.pcf.PcfRequestConfig;
 import software.wings.helpers.ext.pcf.PivotalClientApiException;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
+import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.service.intfc.FileService.FileBucket;
 
@@ -37,7 +69,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -45,9 +81,17 @@ import java.util.concurrent.ExecutionException;
  */
 @Singleton
 public class PcfCommandTaskHelper {
-  private static final String IMAGE_FILE_LOCATION_PLACEHOLDER = "\\$\\{FILE_LOCATION}";
-  private static final String APPLICATION_NAME_PLACEHOLDER = "\\$\\{APPLICATION_NAME}";
-  private static final String INSTANCE_COUNT_PLACEHOLDER = "\\$\\{INSTANCE_COUNT}";
+  private static final Yaml yaml;
+  public static final String CURRENT_INSTANCE_COUNT = "CURRENT-INSTANCE-COUNT: ";
+  public static final String DESIRED_INSTANCE_COUNT = "DESIRED-INSTANCE-COUNT: ";
+  public static final String APPLICATION = "APPLICATION: ";
+
+  static {
+    DumperOptions options = new DumperOptions();
+    options.setDefaultFlowStyle(FlowStyle.BLOCK);
+    options.setExplicitStart(true);
+    yaml = new Yaml(options);
+  }
 
   public static final String DELIMITER = "__";
 
@@ -84,45 +128,44 @@ public class PcfCommandTaskHelper {
 
   public void upsizeListOfInstances(ExecutionLogCallback executionLogCallback,
       PcfDeploymentManager pcfDeploymentManager, List<PcfServiceData> pcfServiceDataUpdated,
-      PcfRequestConfig pcfRequestConfig, List<PcfServiceData> upsizeList, List<PcfInstanceElement> pcfInstanceElements,
-      List<String> routeMaps) throws PivotalClientApiException {
+      PcfRequestConfig pcfRequestConfig, List<PcfServiceData> upsizeList, List<PcfInstanceElement> pcfInstanceElements)
+      throws PivotalClientApiException {
     for (PcfServiceData pcfServiceData : upsizeList) {
       executionLogCallback.saveExecutionLog(new StringBuilder()
                                                 .append("# Upsizing application:")
                                                 .append("\nAPPLICATION-NAME: ")
                                                 .append(pcfServiceData.getName())
-                                                .append("\nCURRENT-INSTANCE-COUNT: ")
+                                                .append("\n" + CURRENT_INSTANCE_COUNT)
                                                 .append(pcfServiceData.getPreviousCount())
-                                                .append("\nDESIRED-INSTANCE-COUNT: ")
+                                                .append("\n" + DESIRED_INSTANCE_COUNT)
                                                 .append(pcfServiceData.getDesiredCount())
                                                 .toString());
       pcfRequestConfig.setApplicationName(pcfServiceData.getName());
       pcfRequestConfig.setDesiredCount(pcfServiceData.getDesiredCount());
-      upsizeInstance(pcfRequestConfig, pcfDeploymentManager, executionLogCallback, pcfServiceDataUpdated,
-          pcfInstanceElements, routeMaps);
+      upsizeInstance(
+          pcfRequestConfig, pcfDeploymentManager, executionLogCallback, pcfServiceDataUpdated, pcfInstanceElements);
       pcfServiceDataUpdated.add(pcfServiceData);
     }
   }
 
   public void downSizeListOfInstances(ExecutionLogCallback executionLogCallback,
       PcfDeploymentManager pcfDeploymentManager, List<PcfServiceData> pcfServiceDataUpdated,
-      PcfRequestConfig pcfRequestConfig, List<PcfServiceData> downSizeList, List<String> routeMaps)
-      throws PivotalClientApiException {
+      PcfRequestConfig pcfRequestConfig, List<PcfServiceData> downSizeList) throws PivotalClientApiException {
     executionLogCallback.saveExecutionLog("\n");
     for (PcfServiceData pcfServiceData : downSizeList) {
       executionLogCallback.saveExecutionLog(new StringBuilder()
                                                 .append("# Downsizing application:")
                                                 .append("\nAPPLICATION-NAME: ")
                                                 .append(pcfServiceData.getName())
-                                                .append("\nCURRENT-INSTANCE-COUNT: ")
+                                                .append("\n" + CURRENT_INSTANCE_COUNT)
                                                 .append(pcfServiceData.getPreviousCount())
-                                                .append("\nDESIRED-INSTANCE-COUNT: ")
+                                                .append("\n" + DESIRED_INSTANCE_COUNT)
                                                 .append(pcfServiceData.getDesiredCount())
                                                 .toString());
 
       pcfRequestConfig.setApplicationName(pcfServiceData.getName());
       pcfRequestConfig.setDesiredCount(pcfServiceData.getDesiredCount());
-      downSize(pcfServiceData, executionLogCallback, pcfRequestConfig, pcfDeploymentManager, routeMaps);
+      downSize(pcfServiceData, executionLogCallback, pcfRequestConfig, pcfDeploymentManager);
       pcfServiceDataUpdated.add(pcfServiceData);
     }
   }
@@ -196,8 +239,8 @@ public class PcfCommandTaskHelper {
     }
 
     // downsize application
-    ApplicationDetail applicationDetailAfterResize = downSize(pcfServiceData, executionLogCallback, pcfRequestConfig,
-        pcfDeploymentManager, pcfCommandDeployRequest.getRouteMaps());
+    ApplicationDetail applicationDetailAfterResize =
+        downSize(pcfServiceData, executionLogCallback, pcfRequestConfig, pcfDeploymentManager);
 
     // Application that is downsized
     if (EmptyPredicate.isNotEmpty(applicationDetailAfterResize.getInstanceDetails())) {
@@ -224,7 +267,7 @@ public class PcfCommandTaskHelper {
   }
 
   public ApplicationDetail printApplicationDetail(
-      ApplicationDetail applicationDetail, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+      ApplicationDetail applicationDetail, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog(new StringBuilder()
                                               .append("NAME: ")
                                               .append(applicationDetail.getName())
@@ -257,6 +300,11 @@ public class PcfCommandTaskHelper {
   public File downloadArtifact(List<ArtifactFile> artifactFiles, String accountId, File workingDirecotry)
       throws IOException, ExecutionException {
     List<Pair<String, String>> fileIds = Lists.newArrayList();
+
+    if (isEmpty(artifactFiles)) {
+      throw new InvalidArgumentsException(Pair.of("Artifact", "is not available"));
+    }
+
     artifactFiles.forEach(artifactFile -> fileIds.add(Pair.of(artifactFile.getFileUuid(), null)));
     try (InputStream inputStream =
              delegateFileManager.downloadArtifactByFileId(FileBucket.ARTIFACTS, fileIds.get(0).getKey(), accountId)) {
@@ -274,8 +322,7 @@ public class PcfCommandTaskHelper {
 
   @VisibleForTesting
   ApplicationDetail downSize(PcfServiceData pcfServiceData, ExecutionLogCallback executionLogCallback,
-      PcfRequestConfig pcfRequestConfig, PcfDeploymentManager pcfDeploymentManager, List<String> routePaths)
-      throws PivotalClientApiException {
+      PcfRequestConfig pcfRequestConfig, PcfDeploymentManager pcfDeploymentManager) throws PivotalClientApiException {
     pcfRequestConfig.setApplicationName(pcfServiceData.getName());
     pcfRequestConfig.setDesiredCount(pcfServiceData.getDesiredCount());
 
@@ -313,30 +360,19 @@ public class PcfCommandTaskHelper {
     return -1;
   }
 
-  public File createManifestYamlFileLocally(PcfCommandSetupRequest pcfCommandSetupRequest, String tempPath,
-      String releaseName, File workingDirectory) throws IOException {
-    String manifestYaml = pcfCommandSetupRequest.getManifestYaml();
-
-    manifestYaml = manifestYaml.replaceAll(APPLICATION_NAME_PLACEHOLDER, releaseName)
-                       .replaceAll(IMAGE_FILE_LOCATION_PLACEHOLDER, tempPath)
-                       .replaceAll(INSTANCE_COUNT_PLACEHOLDER, "0");
-
-    File manifestFile = getManifestFile(releaseName, workingDirectory);
+  public File createManifestYamlFileLocally(PcfCreateApplicationRequestData requestData) throws IOException {
+    File manifestFile = getManifestFile(requestData);
     if (!manifestFile.createNewFile()) {
       throw new WingsException(ErrorCode.GENERAL_ERROR)
           .addParam("message", "Failed to create file " + manifestFile.getCanonicalPath());
     }
 
-    FileUtils.writeStringToFile(manifestFile, manifestYaml, UTF_8);
+    FileUtils.writeStringToFile(manifestFile, requestData.getFinalManifestYaml(), UTF_8);
     return manifestFile;
   }
 
-  public String getPcfArtifactDownloadDirPath() {
-    return PCF_ARTIFACT_DOWNLOAD_DIR_PATH;
-  }
-
-  public File getManifestFile(String releaseName, File dir) {
-    return new File(dir.getAbsolutePath() + "/" + releaseName + System.currentTimeMillis() + ".yml");
+  public File getManifestFile(PcfCreateApplicationRequestData requestData) {
+    return new File(requestData.getConfigPathVar() + "/" + requestData.getNewReleaseName() + ".yml");
   }
 
   /**
@@ -347,22 +383,21 @@ public class PcfCommandTaskHelper {
    * @param pcfServiceDataUpdated
    * @param pcfRequestConfig
    * @param details
-   * @param stepIncrease
    * @param pcfInstanceElements
    * @throws PivotalClientApiException
    */
   public void upsizeNewApplication(ExecutionLogCallback executionLogCallback, PcfDeploymentManager pcfDeploymentManager,
       PcfCommandDeployRequest pcfCommandDeployRequest, List<PcfServiceData> pcfServiceDataUpdated,
-      PcfRequestConfig pcfRequestConfig, ApplicationDetail details, Integer stepIncrease,
-      List<PcfInstanceElement> pcfInstanceElements) throws PivotalClientApiException {
+      PcfRequestConfig pcfRequestConfig, ApplicationDetail details, List<PcfInstanceElement> pcfInstanceElements)
+      throws PivotalClientApiException {
     executionLogCallback.saveExecutionLog("# Upsizing new application, ");
 
     executionLogCallback.saveExecutionLog(new StringBuilder()
                                               .append("APPLICATION-NAME: ")
                                               .append(details.getName())
-                                              .append("\nCURRENT-INSTANCE-COUNT: ")
+                                              .append("\n" + CURRENT_INSTANCE_COUNT)
                                               .append(details.getInstances())
-                                              .append("\nDESIRED-INSTANCE-COUNT: ")
+                                              .append("\n" + DESIRED_INSTANCE_COUNT)
                                               .append(pcfCommandDeployRequest.getUpdateCount())
                                               .toString());
 
@@ -371,13 +406,13 @@ public class PcfCommandTaskHelper {
     pcfRequestConfig.setDesiredCount(pcfCommandDeployRequest.getUpdateCount());
 
     // perform upsize
-    upsizeInstance(pcfRequestConfig, pcfDeploymentManager, executionLogCallback, pcfServiceDataUpdated,
-        pcfInstanceElements, pcfCommandDeployRequest.getRouteMaps());
+    upsizeInstance(
+        pcfRequestConfig, pcfDeploymentManager, executionLogCallback, pcfServiceDataUpdated, pcfInstanceElements);
   }
 
   private void upsizeInstance(PcfRequestConfig pcfRequestConfig, PcfDeploymentManager pcfDeploymentManager,
       ExecutionLogCallback executionLogCallback, List<PcfServiceData> pcfServiceDataUpdated,
-      List<PcfInstanceElement> pcfInstanceElements, List<String> routeMaps) throws PivotalClientApiException {
+      List<PcfInstanceElement> pcfInstanceElements) throws PivotalClientApiException {
     // Get application details before upsize
     ApplicationDetail detailsBeforeUpsize = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
     StringBuilder sb = new StringBuilder();
@@ -403,7 +438,7 @@ public class PcfCommandTaskHelper {
                                        .isUpsize(true)
                                        .build()));
 
-    // Instance token is ApplicationGuid:InstanceIndex, that can be used to connect to instance from outside workd
+    // Instance token is ApplicationGuid:InstanceIndex, that can be used to connect to instance from outside world
     executionLogCallback.saveExecutionLog(
         new StringBuilder().append("\n# Application state details after upsize:  ").toString());
     printApplicationDetail(detailsAfterUpsize, executionLogCallback);
@@ -413,7 +448,7 @@ public class PcfCommandTaskHelper {
   public void mapRouteMaps(String applicationName, List<String> routes, PcfRequestConfig pcfRequestConfig,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     executionLogCallback.saveExecutionLog("\n# Adding Routs");
-    executionLogCallback.saveExecutionLog("APPLICATION: " + applicationName);
+    executionLogCallback.saveExecutionLog(APPLICATION + applicationName);
     executionLogCallback.saveExecutionLog("ROUTE: \n[" + getRouteString(routes));
     // map
     pcfRequestConfig.setApplicationName(applicationName);
@@ -424,7 +459,7 @@ public class PcfCommandTaskHelper {
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
     executionLogCallback.saveExecutionLog("\n# Unmapping routes");
-    executionLogCallback.saveExecutionLog("APPLICATION: " + applicationName);
+    executionLogCallback.saveExecutionLog(APPLICATION + applicationName);
     executionLogCallback.saveExecutionLog("ROUTE: \n[" + getRouteString(applicationDetail.getUrls()));
     // map
     pcfRequestConfig.setApplicationName(applicationName);
@@ -434,7 +469,7 @@ public class PcfCommandTaskHelper {
   public void unmapRouteMaps(String applicationName, List<String> routes, PcfRequestConfig pcfRequestConfig,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     executionLogCallback.saveExecutionLog("\n# Unmapping Routes");
-    executionLogCallback.saveExecutionLog("APPLICATION: " + applicationName);
+    executionLogCallback.saveExecutionLog(APPLICATION + applicationName);
     executionLogCallback.saveExecutionLog("ROUTES: \n[" + getRouteString(routes));
     // unmap
     pcfRequestConfig.setApplicationName(applicationName);
@@ -451,5 +486,162 @@ public class PcfCommandTaskHelper {
     routeMaps.forEach(routeMap -> builder.append("\n").append(routeMap));
     builder.append("\n]");
     return builder.toString();
+  }
+
+  public String generateManifestYamlForPush(PcfCreateApplicationRequestData requestData)
+      throws PivotalClientApiException {
+    // Substitute name,
+    String manifestYaml = requestData.getSetupRequest().getManifestYaml();
+
+    Map<String, Object> map = (Map<String, Object>) yaml.load(manifestYaml);
+    List<Map> applicationMaps = (List<Map>) map.get(APPLICATION_YML_ELEMENT);
+
+    if (isEmpty(applicationMaps)) {
+      throw new InvalidArgumentsException(
+          Pair.of("Manifest.yml does not have any elements under \'applications\'", manifestYaml));
+    }
+
+    // We always assume, first app is main application being deployed.
+    Map mapForUpdate = applicationMaps.get(0);
+
+    // Use TreeMap that uses case insensitive keys
+    TreeMap<String, Object> applicationToBeUpdated = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+    applicationToBeUpdated.putAll(mapForUpdate);
+
+    // Update Name, Path for Artifact and Instances
+    applicationToBeUpdated.put(NAME_MANIFEST_YML_ELEMENT, requestData.getNewReleaseName());
+    applicationToBeUpdated.put(PATH_MANIFEST_YML_ELEMENT, requestData.getArtifactPath());
+
+    // To handle old locally generated manifests
+    applicationToBeUpdated.put(INSTANCE_MANIFEST_YML_ELEMENT, 0);
+
+    // Update routes.
+    updateConfigWithRoutesIfRequired(requestData, applicationToBeUpdated);
+    // We do not want to change order
+
+    // remove "create-services" elements as it would have been used by cf cli plugin to create services.
+    // This elements is not needed for cf push
+    map.remove(CREATE_SERVICE_MANIFEST_ELEMENT);
+    Map<String, Object> applicationMapForYamlDump = generateFinalMapForYamlDump(applicationToBeUpdated);
+
+    // replace map for first application that we are deploying
+    applicationMaps.set(0, applicationMapForYamlDump);
+    try {
+      return yaml.dump(map);
+    } catch (Exception e) {
+      throw new PivotalClientApiException(new StringBuilder()
+                                              .append("Failed to generate final version of  Manifest.yml file. ")
+                                              .append(manifestYaml)
+                                              .toString(),
+          e);
+    }
+  }
+
+  private Map<String, Object> generateFinalMapForYamlDump(TreeMap<String, Object> applicationToBeUpdated) {
+    Map<String, Object> yamlMap = new LinkedHashMap<>();
+
+    addToMapIfExists(yamlMap, applicationToBeUpdated, NAME_MANIFEST_YML_ELEMENT);
+    addToMapIfExists(yamlMap, applicationToBeUpdated, MEMORY_MANIFEST_YML_ELEMENT);
+    addToMapIfExists(yamlMap, applicationToBeUpdated, INSTANCE_MANIFEST_YML_ELEMENT);
+    addToMapIfExists(yamlMap, applicationToBeUpdated, BUILDPACK_MANIFEST_YML_ELEMENT);
+    addToMapIfExists(yamlMap, applicationToBeUpdated, BUILDPACKS_MANIFEST_YML_ELEMENT);
+    addToMapIfExists(yamlMap, applicationToBeUpdated, PATH_MANIFEST_YML_ELEMENT);
+    addToMapIfExists(yamlMap, applicationToBeUpdated, COMMAND_MANIFEST_YML_ELEMENT);
+    addToMapIfExists(yamlMap, applicationToBeUpdated, DISK_QUOTA_MANIFEST_YML_ELEMENT);
+    addToMapIfExists(yamlMap, applicationToBeUpdated, DOCKER_MANIFEST_YML_ELEMENT);
+    addToMapIfExists(yamlMap, applicationToBeUpdated, DOMAINS_MANIFEST_YML_ELEMENT);
+    addToMapIfExists(yamlMap, applicationToBeUpdated, ENV_MANIFEST_YML_ELEMENT);
+    addToMapIfExists(yamlMap, applicationToBeUpdated, HEALTH_CHECK_HTTP_ENDPOINT_MANIFEST_YML_ELEMENT);
+    addToMapIfExists(yamlMap, applicationToBeUpdated, HEALTH_CHECK_TYPE_MANIFEST_YML_ELEMENT);
+    addToMapIfExists(yamlMap, applicationToBeUpdated, HOSTS_MANIFEST_YML_ELEMENT);
+    addToMapIfExists(yamlMap, applicationToBeUpdated, HOST_MANIFEST_YML_ELEMENT);
+    addToMapIfExists(yamlMap, applicationToBeUpdated, NO_HOSTNAME_MANIFEST_YML_ELEMENT);
+    addToMapIfExists(yamlMap, applicationToBeUpdated, NO_ROUTE_MANIFEST_YML_ELEMENT);
+    addToMapIfExists(yamlMap, applicationToBeUpdated, RANDOM_ROUTE_MANIFEST_YML_ELEMENT);
+    addToMapIfExists(yamlMap, applicationToBeUpdated, ROUTE_PATH_MANIFEST_YML_ELEMENT);
+    addToMapIfExists(yamlMap, applicationToBeUpdated, ROUTES_MANIFEST_YML_ELEMENT);
+    addToMapIfExists(yamlMap, applicationToBeUpdated, SERVICES_MANIFEST_YML_ELEMENT);
+    addToMapIfExists(yamlMap, applicationToBeUpdated, STACK_MANIFEST_YML_ELEMENT);
+    addToMapIfExists(yamlMap, applicationToBeUpdated, TIMEOUT_MANIFEST_YML_ELEMENT);
+
+    return yamlMap;
+  }
+
+  private void addToMapIfExists(Map destMap, Map sourceMap, String element) {
+    if (sourceMap.containsKey(element)) {
+      destMap.put(element, sourceMap.get(element));
+    }
+  }
+
+  private void updateConfigWithRoutesIfRequired(
+      PcfCreateApplicationRequestData requestData, TreeMap applicationToBeUpdated) {
+    PcfCommandSetupRequest setupRequest = requestData.getSetupRequest();
+
+    applicationToBeUpdated.remove(ROUTES_MANIFEST_YML_ELEMENT);
+
+    // 1. Check and handle no-route scenario
+    boolean isNoRoute = applicationToBeUpdated.containsKey(NO_ROUTE_MANIFEST_YML_ELEMENT)
+        && (boolean) applicationToBeUpdated.get(NO_ROUTE_MANIFEST_YML_ELEMENT);
+    if (isNoRoute) {
+      handleManifestWithNoRoute(applicationToBeUpdated, setupRequest.isBlueGreen());
+      return;
+    }
+
+    // 2. Check if random-route config is needed. This happens if random-route=true in manifest or
+    // user has not provided any route value.
+    if (shouldUseRandomRoute(applicationToBeUpdated, setupRequest)) {
+      handleRandomRouteScenario(requestData, applicationToBeUpdated);
+      return;
+    }
+
+    // 3. Insert routes provided by user.
+    List<String> routesForUse = setupRequest.getRouteMaps();
+    List<Map<String, String>> routeMapList = new ArrayList<>();
+    routesForUse.forEach(routeString -> {
+      Map<String, String> mapEntry = Collections.singletonMap(ROUTE_MANIFEST_YML_ELEMENT, routeString);
+      routeMapList.add(mapEntry);
+    });
+
+    // Add this route config to applicationConfig
+    applicationToBeUpdated.put(ROUTES_MANIFEST_YML_ELEMENT, routeMapList);
+  }
+
+  private boolean shouldUseRandomRoute(Map applicationToBeUpdated, PcfCommandSetupRequest setupRequest) {
+    return manifestContainsRandomRouteElement(applicationToBeUpdated) || isEmpty(setupRequest.getRouteMaps());
+  }
+
+  private boolean manifestContainsRandomRouteElement(Map applicationToBeUpdated) {
+    return applicationToBeUpdated.containsKey(RANDOM_ROUTE_MANIFEST_YML_ELEMENT)
+        && (boolean) applicationToBeUpdated.get(RANDOM_ROUTE_MANIFEST_YML_ELEMENT);
+  }
+
+  @VisibleForTesting
+  void handleManifestWithNoRoute(Map applicationToBeUpdated, boolean isBlueGreen) {
+    // No route is not allowed for BG
+    if (isBlueGreen) {
+      throw new InvalidRequestException("Invalid Config. \"no-route\" can not be used with BG deployment");
+    }
+
+    // If no-route = true, then route element is not needed.
+    applicationToBeUpdated.remove(ROUTES_MANIFEST_YML_ELEMENT);
+  }
+
+  @VisibleForTesting
+  void handleRandomRouteScenario(PcfCreateApplicationRequestData requestData, Map applicationToBeUpdated) {
+    applicationToBeUpdated.put(RANDOM_ROUTE_MANIFEST_YML_ELEMENT, true);
+    if (!applicationToBeUpdated.containsKey(HOST_MANIFEST_YML_ELEMENT)) {
+      // Random-routes needs to be generated.  ransom-route uses host mentioned in manifest to generate route.
+      // If that is not present, generate some host name contextual to current deployment.
+      // We add space to this hostName, as we want to generate routes space specific, as same route can not be in
+      // multiple spaces.
+      String appName = requestData.getNewReleaseName();
+      String appPrefix = appName.substring(0, appName.lastIndexOf("__"));
+      appPrefix = appPrefix + '-' + requestData.getPcfRequestConfig().getSpaceName();
+      // '_' in routemap is not allowed, PCF lets us create route but while accessing it, fails
+      appPrefix = appPrefix.replace("__", "-");
+      appPrefix = appPrefix.replace("_", "-");
+
+      applicationToBeUpdated.put(HOST_MANIFEST_YML_ELEMENT, appPrefix);
+    }
   }
 }

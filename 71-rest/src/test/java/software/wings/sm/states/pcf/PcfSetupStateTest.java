@@ -23,11 +23,16 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
+import static software.wings.beans.appmanifest.StoreType.Local;
+import static software.wings.beans.appmanifest.StoreType.Remote;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.command.Command.Builder.aCommand;
+import static software.wings.beans.command.PcfDummyCommandUnit.FetchFiles;
+import static software.wings.beans.command.PcfDummyCommandUnit.PcfSetup;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.MASKED;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
+import static software.wings.sm.states.pcf.PcfSetupState.PCF_SETUP_COMMAND;
 import static software.wings.sm.states.pcf.PcfStateTestHelper.ORG;
 import static software.wings.sm.states.pcf.PcfStateTestHelper.SPACE;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -88,12 +93,12 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
-import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.command.CommandType;
+import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
@@ -121,7 +126,6 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -133,8 +137,10 @@ import software.wings.utils.ApplicationManifestUtils;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class PcfSetupStateTest extends WingsBaseTest {
   private static final String BASE_URL = "https://env.harness.io/";
@@ -145,8 +151,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
       + "    buildpack: https://github.com/cloudfoundry/java-buildpack.git\n"
       + "    path: ${FILE_LOCATION}\n"
       + "    routes:\n"
-      + "      - route: ${ROUTE_MAP}\n"
-      + "serviceName: SERV\n";
+      + "      - route: ${ROUTE_MAP}\n";
 
   @Mock private SettingsService settingsService;
   @Mock private DelegateService delegateService;
@@ -161,7 +166,6 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Mock private ArtifactService artifactService;
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
-  @Mock private EncryptionService encryptionService;
   @Mock private VariableProcessor variableProcessor;
   @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private ServiceHelper serviceHelper;
@@ -357,8 +361,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
     on(context).set("serviceTemplateService", serviceTemplateService);
 
     Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap = new HashMap<>();
-    applicationManifestMap.put(
-        K8sValuesLocation.Service, ApplicationManifest.builder().storeType(StoreType.Remote).build());
+    applicationManifestMap.put(K8sValuesLocation.Service, ApplicationManifest.builder().storeType(Remote).build());
     when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.PCF_OVERRIDE))
         .thenReturn(applicationManifestMap);
     when(applicationManifestUtils.createGitFetchFilesTaskParams(any(), any(), any()))
@@ -384,7 +387,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
     response.put("activityId", gitCommandExecutionResponse);
 
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
-    appManifestMap.put(K8sValuesLocation.Service, ApplicationManifest.builder().storeType(StoreType.Local).build());
+    appManifestMap.put(K8sValuesLocation.Service, ApplicationManifest.builder().storeType(Local).build());
     PcfSetupStateExecutionData pcfSetupStateExecutionData =
         (PcfSetupStateExecutionData) context.getStateExecutionData();
     pcfSetupStateExecutionData.setTaskType(GIT_FETCH_FILES_TASK);
@@ -421,5 +424,59 @@ public class PcfSetupStateTest extends WingsBaseTest {
 
     pcfSetupState.handleAsyncInternal(context, response);
     verify(activityService, times(1)).updateStatus("activityId", APP_ID, FAILED);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetCommandUnitList() throws Exception {
+    List<CommandUnit> commandUnits = pcfSetupState.getCommandUnitList(true);
+    assertThat(commandUnits).isNotNull();
+    assertThat(commandUnits.size()).isEqualTo(2);
+
+    Set<String> commandUnitsList = new HashSet<>();
+    commandUnitsList.add(FetchFiles);
+    commandUnitsList.add(PcfSetup);
+
+    assertCommandUnits(commandUnits, commandUnitsList);
+
+    commandUnitsList.add(PcfSetup);
+    commandUnits = pcfSetupState.getCommandUnitList(false);
+    assertCommandUnits(commandUnits, commandUnitsList);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testIsManifestInGit() throws Exception {
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
+    appManifestMap.put(K8sValuesLocation.Service, ApplicationManifest.builder().storeType(Remote).build());
+    appManifestMap.put(K8sValuesLocation.Environment, ApplicationManifest.builder().storeType(Local).build());
+    assertThat(pcfSetupState.isManifestInGit(appManifestMap)).isTrue();
+
+    appManifestMap.remove(K8sValuesLocation.Service);
+    assertThat(pcfSetupState.isManifestInGit(appManifestMap)).isFalse();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetCurrentRunningCountForSetupRequest() throws Exception {
+    PcfSetupState setupState = new PcfSetupState("PCF", PCF_SETUP_COMMAND);
+    assertThat(setupState.getCurrentRunningCountForSetupRequest()).isNull();
+
+    setupState.setUseCurrentRunningCount(true);
+    setupState.setCurrentRunningCount(null);
+    assertThat(setupState.getCurrentRunningCountForSetupRequest()).isNotNull();
+    assertThat(setupState.getCurrentRunningCountForSetupRequest().intValue()).isEqualTo(2);
+
+    setupState.setCurrentRunningCount(4);
+    assertThat(setupState.getCurrentRunningCountForSetupRequest()).isNotNull();
+    assertThat(setupState.getCurrentRunningCountForSetupRequest().intValue()).isEqualTo(4);
+  }
+
+  private void assertCommandUnits(List<CommandUnit> commandUnits, Set<String> commandUnitsList) {
+    commandUnits.forEach(commandUnit -> {
+      assertThat(commandUnitsList.contains(commandUnit.getName()));
+      commandUnitsList.remove(commandUnit.getName());
+    });
+    assertThat(commandUnitsList.size()).isEqualTo(0);
   }
 }

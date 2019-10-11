@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.context.ContextElementType;
 import software.wings.api.pcf.PcfDeployContextElement;
 import software.wings.api.pcf.PcfDeployStateExecutionData;
+import software.wings.api.pcf.PcfServiceData;
 import software.wings.api.pcf.PcfSetupContextElement;
 import software.wings.beans.Application;
 import software.wings.beans.InstanceUnitType;
@@ -18,6 +19,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -42,7 +44,8 @@ public class PcfRollbackState extends PcfDeployState {
     // Deploy sends emptyInstanceData and PcfCommandTask figured out which apps to be resized,
     // in case of rollback, we send InstanceData mentioning apps and their reset counts
     StringBuilder updateDetails = new StringBuilder();
-    if (pcfDeployContextElement.getInstanceData() != null) {
+    List<PcfServiceData> instanceData = new ArrayList<>();
+    if (pcfDeployContextElement != null && pcfDeployContextElement.getInstanceData() != null) {
       pcfDeployContextElement.getInstanceData().forEach(pcfServiceData -> {
         Integer temp = pcfServiceData.getDesiredCount();
         pcfServiceData.setDesiredCount(pcfServiceData.getPreviousCount());
@@ -54,9 +57,9 @@ public class PcfRollbackState extends PcfDeployState {
                                  .append(pcfServiceData.getDesiredCount())
                                  .append("}\n")
                                  .toString());
+
+        instanceData.addAll(pcfDeployContextElement.getInstanceData());
       });
-    } else {
-      pcfDeployContextElement.setInstanceData(new ArrayList<>());
     }
 
     stateExecutionData.setUpdateDetails(updateDetails.toString());
@@ -73,7 +76,7 @@ public class PcfRollbackState extends PcfDeployState {
         .tempRouteMaps(infrastructureMapping.getTempRouteMap())
         .pcfConfig(pcfConfig)
         .pcfCommandType(PcfCommandType.ROLLBACK)
-        .instanceData(pcfDeployContextElement.getInstanceData())
+        .instanceData(instanceData)
         .appId(application.getUuid())
         .accountId(application.getAccountId())
         .timeoutIntervalInMin(pcfSetupContextElement.getTimeoutIntervalInMinutes())

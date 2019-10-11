@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -26,6 +27,7 @@ import org.cloudfoundry.operations.routes.Routes;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -33,6 +35,8 @@ import org.zeroturnaround.exec.ProcessResult;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import software.wings.WingsBaseTest;
+import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 
 import java.util.Arrays;
 import java.util.List;
@@ -514,5 +518,37 @@ public class PivotalClientTest extends WingsBaseTest {
           .isEqualTo(
               "Exception occurred while mapping routeMap: Route{applications=[app], domain=harness.io, host=stage, id=1, path=null, port=null, service=null, space=space, type=null}, AppName: app, Error: No space targeted");
     }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testPushApplicationUsingManifest() throws Exception {
+    PcfClientImpl client = spy(PcfClientImpl.class);
+    doNothing().when(client).performCfPushUsingCli(any(), any());
+    doNothing().when(client).pushUsingPcfSdk(any(), any());
+
+    ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(logCallback).saveExecutionLog(anyString());
+
+    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().useCLIForAppCreate(true).build();
+
+    PcfCreateApplicationRequestData requestData =
+        PcfCreateApplicationRequestData.builder().manifestFilePath("path").pcfRequestConfig(pcfRequestConfig).build();
+    // actual call
+    client.pushApplicationUsingManifest(requestData, logCallback);
+
+    ArgumentCaptor<PcfCreateApplicationRequestData> captor =
+        ArgumentCaptor.forClass(PcfCreateApplicationRequestData.class);
+    verify(client).performCfPushUsingCli(captor.capture(), any());
+    PcfCreateApplicationRequestData captorValue = captor.getValue();
+    assertThat(captorValue).isEqualTo(requestData);
+
+    pcfRequestConfig.setUseCLIForAppCreate(false);
+    // actual call
+    client.pushApplicationUsingManifest(requestData, logCallback);
+    ArgumentCaptor<PcfRequestConfig> pcfRequestCaptor = ArgumentCaptor.forClass(PcfRequestConfig.class);
+    verify(client).pushUsingPcfSdk(pcfRequestCaptor.capture(), any());
+    PcfRequestConfig captorValueConfig = pcfRequestCaptor.getValue();
+    assertThat(captorValueConfig).isEqualTo(pcfRequestConfig);
   }
 }

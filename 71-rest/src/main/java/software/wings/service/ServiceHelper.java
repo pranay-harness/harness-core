@@ -13,52 +13,75 @@ import java.util.regex.Pattern;
 @Singleton
 @Slf4j
 public class ServiceHelper {
+  public static final String APP_NAME_PATTERN = "^\\s*[-]\\s+name\\s*:";
+  public static final String INSTANCE_PATTERN = "^\\s*instances\\s*:";
+  public static final String PATH_PATTERN = "^\\s*path\\s*:";
+
   public void addPlaceholderTexts(PcfServiceSpecification pcfServiceSpecification) {
     String manifestYaml = pcfServiceSpecification.getManifestYaml();
     StringBuilder sb = new StringBuilder(128);
 
     BufferedReader bufReader = new BufferedReader(new StringReader(manifestYaml));
-    String line = null;
-
-    Pattern patternAppName = Pattern.compile("^\\s*[-]\\s+name\\s*:");
-    Pattern patternInstances = Pattern.compile("^\\s*instances\\s*:");
-    Pattern patternPath = Pattern.compile("^\\s*path\\s*:");
-    Pattern patternRoute = Pattern.compile("^\\s*[-]\\s+route\\s*:");
-    boolean routeAdded = false;
+    String line;
     try {
       while ((line = bufReader.readLine()) != null) {
-        Matcher matcher = patternAppName.matcher(line);
-        if (matcher.find()) {
-          sb.append(matcher.group(0)).append(" ${APPLICATION_NAME}\n");
-          continue;
+        boolean matchFound = checkAndProcessApplicationName(line, sb);
+
+        if (!matchFound) {
+          matchFound = checkAndProcessInstance(line, sb);
         }
 
-        matcher = patternInstances.matcher(line);
-        if (matcher.find()) {
-          sb.append(matcher.group(0)).append(" ${INSTANCE_COUNT}\n");
-          continue;
+        if (!matchFound) {
+          matchFound = checkAndProcessPath(line, sb);
         }
 
-        matcher = patternPath.matcher(line);
-        if (matcher.find()) {
-          sb.append(matcher.group(0)).append(" ${FILE_LOCATION}\n");
-          continue;
+        if (!matchFound) {
+          sb.append(line).append('\n');
         }
-
-        matcher = patternRoute.matcher(line);
-        if (matcher.find()) {
-          if (!routeAdded) {
-            routeAdded = true;
-            sb.append(matcher.group(0)).append(" ${ROUTE_MAP}\n");
-          }
-          continue;
-        }
-
-        sb.append(line).append('\n');
       }
     } catch (Exception e) {
       logger.error("", e);
     }
     pcfServiceSpecification.setManifestYaml(sb.toString());
+  }
+
+  private Matcher checkAndGetMatcher(String line, String patternString) {
+    Pattern pattern = Pattern.compile(patternString);
+    Matcher matcher = pattern.matcher(line);
+    if (matcher.find()) {
+      return matcher;
+    }
+
+    return null;
+  }
+
+  private boolean checkAndProcessApplicationName(String line, StringBuilder sb) {
+    Matcher matcher = checkAndGetMatcher(line, APP_NAME_PATTERN);
+    if (matcher != null) {
+      sb.append(matcher.group(0)).append(" ${APPLICATION_NAME}\n");
+      return true;
+    }
+
+    return false;
+  }
+
+  private boolean checkAndProcessInstance(String line, StringBuilder sb) {
+    Matcher matcher = checkAndGetMatcher(line, INSTANCE_PATTERN);
+    if (matcher != null) {
+      sb.append(matcher.group(0)).append(" ${INSTANCE_COUNT}\n");
+      return true;
+    }
+
+    return false;
+  }
+
+  private boolean checkAndProcessPath(String line, StringBuilder sb) {
+    Matcher matcher = checkAndGetMatcher(line, PATH_PATTERN);
+    if (matcher != null) {
+      sb.append(matcher.group(0)).append(" ${FILE_LOCATION}\n");
+      return true;
+    }
+
+    return false;
   }
 }

@@ -116,9 +116,18 @@ public class PcfSwitchBlueGreenRoutes extends State {
 
     PcfRouteUpdateRequestConfigData requestConfigData = getPcfRouteUpdateRequestConfigData(pcfSetupContextElement);
 
-    return pcfStateHelper.queueDelegateTaskForRouteUpdate(app, pcfConfig, delegateService, pcfInfrastructureMapping,
-        activity.getUuid(), env.getUuid(), pcfSetupContextElement.getTimeoutIntervalInMinutes(),
-        PCF_BG_SWAP_ROUTE_COMMAND, requestConfigData, encryptedDataDetails);
+    return pcfStateHelper.queueDelegateTaskForRouteUpdate(
+        PcfRouteUpdateQueueRequestData.builder()
+            .pcfConfig(pcfConfig)
+            .app(app)
+            .pcfInfrastructureMapping(pcfInfrastructureMapping)
+            .activityId(activity.getUuid())
+            .envId(env.getUuid())
+            .timeoutIntervalInMinutes(pcfSetupContextElement.getTimeoutIntervalInMinutes())
+            .commandName(PCF_BG_SWAP_ROUTE_COMMAND)
+            .requestConfigData(requestConfigData)
+            .encryptedDataDetails(encryptedDataDetails)
+            .build());
   }
 
   private PcfRouteUpdateRequestConfigData getPcfRouteUpdateRequestConfigData(

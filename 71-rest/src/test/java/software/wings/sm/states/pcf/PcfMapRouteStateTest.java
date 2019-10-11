@@ -51,6 +51,7 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
@@ -146,6 +147,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
 
   @InjectMocks private MapRouteState pcfRouteSwapState = new MapRouteState("name");
   @InjectMocks private PcfSwitchBlueGreenRoutes pcfSwitchBlueGreenRoutes = new PcfSwitchBlueGreenRoutes("name");
+  @InjectMocks @Inject PcfStateHelper pcfStateHelper;
 
   @Mock private MainConfiguration configuration;
 
@@ -204,6 +206,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
 
   @Before
   public void setup() throws IllegalAccessException {
+    when(delegateService.queueTask(any())).thenReturn("ID");
     when(appService.get(APP_ID)).thenReturn(app);
     when(appService.getApplicationWithDefaults(APP_ID)).thenReturn(app);
     when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(service);
@@ -248,8 +251,8 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
         .thenReturn(safeDisplayServiceVariableList);
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     FieldUtils.writeField(pcfRouteSwapState, "secretManager", secretManager, true);
-    FieldUtils.writeField(pcfRouteSwapState, "pcfStateHelper", new PcfStateHelper(), true);
-    FieldUtils.writeField(pcfSwitchBlueGreenRoutes, "pcfStateHelper", new PcfStateHelper(), true);
+    FieldUtils.writeField(pcfRouteSwapState, "pcfStateHelper", pcfStateHelper, true);
+    FieldUtils.writeField(pcfSwitchBlueGreenRoutes, "pcfStateHelper", pcfStateHelper, true);
     when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean(), anySet()))
         .thenReturn(WorkflowExecution.builder().build());
     context = new ExecutionContextImpl(stateExecutionInstance);

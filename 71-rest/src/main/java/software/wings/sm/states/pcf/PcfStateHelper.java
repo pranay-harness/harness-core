@@ -2,7 +2,13 @@ package software.wings.sm.states.pcf;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.pcf.model.PcfConstants.APPLICATION_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.MANIFEST_YML;
+import static io.harness.pcf.model.PcfConstants.NO_ROUTE_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.ROUTES_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.ROUTE_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.ROUTE_PLACEHOLDER_TOKEN_DEPRECATED;
+import static java.util.Collections.emptyList;
 import static software.wings.helpers.ext.k8s.request.K8sValuesLocation.EnvironmentGlobal;
 import static software.wings.helpers.ext.k8s.request.K8sValuesLocation.Service;
 import static software.wings.helpers.ext.k8s.request.K8sValuesLocation.ServiceOverride;
@@ -11,6 +17,7 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
@@ -20,7 +27,6 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pcf.ManifestType;
 import io.harness.pcf.PcfFileTypeChecker;
-import io.harness.security.encryption.EncryptedDataDetail;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.api.ServiceElement;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
@@ -30,14 +36,12 @@ import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
-import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
-import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
@@ -59,53 +63,38 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.WorkflowStandardParams;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class PcfStateHelper {
+  public static final String WORKFLOW_STANDARD_PARAMS = "workflowStandardParams";
+  public static final String CURRENT_USER = "currentUser";
   @Inject private ApplicationManifestService applicationManifestService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private ServiceHelper serviceHelper;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private PcfFileTypeChecker pcfFileTypeChecker;
+  @Inject private DelegateService delegateService;
 
-  public PcfCommandRequest getPcfCommandRouteUpdateRequest(PcfCommandType pcfCommandType, String commandName,
-      String appId, String accountId, String activityId, PcfConfig pcfConfig, String organization, String space,
-      PcfRouteUpdateRequestConfigData requestConfigData, Integer timeoutIntervalInMin) {
-    timeoutIntervalInMin = timeoutIntervalInMin == null ? Integer.valueOf(5) : timeoutIntervalInMin;
-    return PcfCommandRouteUpdateRequest.builder()
-        .pcfCommandType(pcfCommandType)
-        .commandName(commandName)
-        .appId(appId)
-        .accountId(accountId)
-        .activityId(activityId)
-        .pcfConfig(pcfConfig)
-        .organization(organization)
-        .space(space)
-        .pcfRouteUpdateConfigData(requestConfigData)
-        .timeoutIntervalInMin(timeoutIntervalInMin)
-        .build();
-  }
-
-  public DelegateTask getDelegateTask(String accountId, String appId, TaskType taskType, String waitId, String envId,
-      String infrastructureMappingId, Object[] parameters, long timeout) {
+  public DelegateTask getDelegateTask(PcfDelegateTaskCreationData taskCreationData) {
     return DelegateTask.builder()
         .async(true)
-        .accountId(accountId)
-        .appId(appId)
-        .waitId(waitId)
+        .accountId(taskCreationData.getAccountId())
+        .appId(taskCreationData.getAppId())
+        .waitId(taskCreationData.getWaitId())
         .data(TaskData.builder()
-                  .taskType(taskType.name())
-                  .parameters(parameters)
-                  .timeout(TimeUnit.MINUTES.toMillis(timeout))
+                  .taskType(taskCreationData.getTaskType().name())
+                  .parameters(taskCreationData.getParameters())
+                  .timeout(TimeUnit.MINUTES.toMillis(taskCreationData.getTimeout()))
                   .build())
-        .envId(envId)
-        .infrastructureMappingId(infrastructureMappingId)
+        .envId(taskCreationData.getEnvId())
+        .infrastructureMappingId(taskCreationData.getInfrastructureMappingId())
         .build();
   }
 
@@ -122,28 +111,28 @@ public class PcfStateHelper {
         .build();
   }
 
-  public ActivityBuilder getActivityBuilder(String appName, String appId, String commandName, Type type,
-      ExecutionContext executionContext, String commandType, CommandUnitType commandUnitType, Environment environment,
-      List<CommandUnit> commandUnits) {
+  public ActivityBuilder getActivityBuilder(PcfActivityBuilderCreationData activityBuilderCreationData) {
+    ExecutionContext executionContext = activityBuilderCreationData.getExecutionContext();
+    Environment environment = activityBuilderCreationData.getEnvironment();
     WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
-    notNullCheck("workflowStandardParams", workflowStandardParams, USER);
-    notNullCheck("currentUser", workflowStandardParams.getCurrentUser(), USER);
+    notNullCheck(WORKFLOW_STANDARD_PARAMS, workflowStandardParams, USER);
+    notNullCheck(CURRENT_USER, workflowStandardParams.getCurrentUser(), USER);
 
     return Activity.builder()
-        .applicationName(appName)
-        .appId(appId)
-        .commandName(commandName)
-        .type(type)
+        .applicationName(activityBuilderCreationData.getAppName())
+        .appId(activityBuilderCreationData.getAppId())
+        .commandName(activityBuilderCreationData.getCommandName())
+        .type(activityBuilderCreationData.getType())
         .workflowType(executionContext.getWorkflowType())
         .workflowExecutionName(executionContext.getWorkflowExecutionName())
         .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
         .stateExecutionInstanceName(executionContext.getStateExecutionInstanceName())
-        .commandType(commandType)
+        .commandType(activityBuilderCreationData.getCommandType())
         .workflowExecutionId(executionContext.getWorkflowExecutionId())
         .workflowId(executionContext.getWorkflowId())
-        .commandUnits(commandUnits)
+        .commandUnits(activityBuilderCreationData.getCommandUnits())
         .status(ExecutionStatus.RUNNING)
-        .commandUnitType(commandUnitType)
+        .commandUnitType(activityBuilderCreationData.getCommandUnitType())
         .environmentId(environment.getUuid())
         .environmentName(environment.getName())
         .environmentType(environment.getEnvironmentType())
@@ -153,25 +142,47 @@ public class PcfStateHelper {
                          .build());
   }
 
-  public ExecutionResponse queueDelegateTaskForRouteUpdate(Application app, PcfConfig pcfConfig,
-      DelegateService delegateService, PcfInfrastructureMapping pcfInfrastructureMapping, String activityId,
-      String envId, Integer timeoutIntervalInMinutes, String commandName,
-      PcfRouteUpdateRequestConfigData requestConfigData, List<EncryptedDataDetail> encryptedDataDetails) {
-    PcfCommandRequest pcfCommandRequest = getPcfCommandRouteUpdateRequest(PcfCommandType.UPDATE_ROUTE, commandName,
-        app.getUuid(), app.getAccountId(), activityId, pcfConfig, pcfInfrastructureMapping.getOrganization(),
-        pcfInfrastructureMapping.getSpace(), requestConfigData, timeoutIntervalInMinutes);
+  public ExecutionResponse queueDelegateTaskForRouteUpdate(PcfRouteUpdateQueueRequestData queueRequestData) {
+    Integer timeoutIntervalInMinutes = queueRequestData.getTimeoutIntervalInMinutes() == null
+        ? Integer.valueOf(5)
+        : queueRequestData.getTimeoutIntervalInMinutes();
+    Application app = queueRequestData.getApp();
+    PcfInfrastructureMapping pcfInfrastructureMapping = queueRequestData.getPcfInfrastructureMapping();
+    String activityId = queueRequestData.getActivityId();
 
-    PcfRouteUpdateStateExecutionData stateExecutionData = getRouteUpdateStateExecutionData(
-        activityId, app.getAccountId(), app.getUuid(), pcfCommandRequest, commandName, requestConfigData);
+    PcfCommandRequest pcfCommandRequest = PcfCommandRouteUpdateRequest.builder()
+                                              .pcfCommandType(PcfCommandType.UPDATE_ROUTE)
+                                              .commandName(queueRequestData.getCommandName())
+                                              .appId(app.getUuid())
+                                              .accountId(app.getAccountId())
+                                              .activityId(activityId)
+                                              .pcfConfig(queueRequestData.getPcfConfig())
+                                              .organization(pcfInfrastructureMapping.getOrganization())
+                                              .space(pcfInfrastructureMapping.getSpace())
+                                              .pcfRouteUpdateConfigData(queueRequestData.getRequestConfigData())
+                                              .timeoutIntervalInMin(timeoutIntervalInMinutes)
+                                              .build();
+
+    PcfRouteUpdateStateExecutionData stateExecutionData =
+        getRouteUpdateStateExecutionData(activityId, app.getUuid(), app.getAccountId(), pcfCommandRequest,
+            queueRequestData.getCommandName(), queueRequestData.getRequestConfigData());
 
     DelegateTask delegateTask =
-        getDelegateTask(app.getAccountId(), app.getUuid(), TaskType.PCF_COMMAND_TASK, activityId, envId,
-            pcfInfrastructureMapping.getUuid(), new Object[] {pcfCommandRequest, encryptedDataDetails}, 10);
+        getDelegateTask(PcfDelegateTaskCreationData.builder()
+                            .waitId(queueRequestData.getActivityId())
+                            .accountId(app.getAccountId())
+                            .appId(app.getUuid())
+                            .envId(queueRequestData.getEnvId())
+                            .taskType(TaskType.PCF_COMMAND_TASK)
+                            .infrastructureMappingId(pcfInfrastructureMapping.getUuid())
+                            .parameters(new Object[] {pcfCommandRequest, queueRequestData.getEncryptedDataDetails()})
+                            .timeout(10)
+                            .build());
 
     delegateService.queueTask(delegateTask);
 
     return ExecutionResponse.builder()
-        .correlationIds(Arrays.asList(activityId))
+        .correlationIds(Arrays.asList(queueRequestData.getActivityId()))
         .stateExecutionData(stateExecutionData)
         .async(true)
         .build();
@@ -184,8 +195,18 @@ public class PcfStateHelper {
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
     notNullCheck("Environment does not exist", env, USER);
 
-    ActivityBuilder activityBuilder = getActivityBuilder(app.getName(), app.getUuid(), commandName, Type.Command,
-        executionContext, stateType, commandUnitType, env, Collections.emptyList());
+    ActivityBuilder activityBuilder = getActivityBuilder(PcfActivityBuilderCreationData.builder()
+                                                             .appName(app.getName())
+                                                             .appId(app.getUuid())
+                                                             .environment(env)
+                                                             .type(Type.Command)
+                                                             .commandName(commandName)
+                                                             .executionContext(executionContext)
+                                                             .commandType(stateType)
+                                                             .commandUnitType(commandUnitType)
+                                                             .commandUnits(emptyList())
+                                                             .build());
+
     return activityService.save(activityBuilder.build());
   }
 
@@ -301,5 +322,58 @@ public class PcfStateHelper {
     }
 
     pcfManifestFilesMap.put(manifestType, fileContent);
+  }
+
+  public List<String> getRouteMaps(
+      String applicationManifestYmlContent, PcfInfrastructureMapping pcfInfrastructureMapping) {
+    Yaml yaml = new Yaml();
+    Map<String, Object> yamlMap = (Map<String, Object>) yaml.load(applicationManifestYmlContent);
+    List<Map> applicationsMaps = (List<Map>) yamlMap.get(APPLICATION_YML_ELEMENT);
+
+    if (isEmpty(applicationsMaps)) {
+      throw new InvalidArgumentsException(Pair.of("Manifest", "contains no application config"));
+    }
+
+    // Always assume, 1st app is main application being deployed.
+    Map application = applicationsMaps.get(0);
+    Map<String, Object> applicationConfigMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+    applicationConfigMap.putAll(application);
+
+    // fetch Routes element from application config
+    final List<Map<String, String>> routeMapsInYaml =
+        (List<Map<String, String>>) applicationConfigMap.get(ROUTES_MANIFEST_YML_ELEMENT);
+
+    // routes is not mentioned in Manifest
+    if (isEmpty(routeMapsInYaml)) {
+      List<String> infraMapRoutes = pcfInfrastructureMapping.getRouteMaps();
+      // Manifest mentions no-route or route is not provided in infraMapping as well.
+      if (useNoRoute(applicationConfigMap) || isEmpty(infraMapRoutes)) {
+        return emptyList();
+      }
+
+      return infraMapRoutes;
+    } else if (routeMapsInYaml.size() == 1) {
+      Map mapForRoute = routeMapsInYaml.get(0);
+      String routeValue = (String) mapForRoute.get(ROUTE_MANIFEST_YML_ELEMENT);
+      List<String> routes = new ArrayList<>();
+      // if manifest contains "${ROUTE_MAP}", means read from InfraMapping
+      if (ROUTE_PLACEHOLDER_TOKEN_DEPRECATED.equals(routeValue)) {
+        return isEmpty(pcfInfrastructureMapping.getRouteMaps()) ? emptyList() : pcfInfrastructureMapping.getRouteMaps();
+      }
+
+      // actual route value is mentioned
+      routes.add(routeValue);
+      return routes;
+    } else {
+      // more than 1 routes are mentioned, means user has mentioned multiple actual route values
+      List<String> routes = new ArrayList<>();
+      routeMapsInYaml.forEach(routeMap -> routes.add(routeMap.get(ROUTE_MANIFEST_YML_ELEMENT)));
+      return routes;
+    }
+  }
+
+  private boolean useNoRoute(Map application) {
+    return application.containsKey(NO_ROUTE_MANIFEST_YML_ELEMENT)
+        && (boolean) application.get(NO_ROUTE_MANIFEST_YML_ELEMENT);
   }
 }

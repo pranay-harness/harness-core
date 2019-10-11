@@ -90,9 +90,9 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
       List<PcfInstanceElement> pcfInstanceElements = new ArrayList<>();
       // During rollback, always upsize old ones
       pcfCommandTaskHelper.upsizeListOfInstances(executionLogCallback, pcfDeploymentManager, pcfServiceDataUpdated,
-          pcfRequestConfig, upsizeList, pcfInstanceElements, commandRollbackRequest.getRouteMaps());
-      pcfCommandTaskHelper.downSizeListOfInstances(executionLogCallback, pcfDeploymentManager, pcfServiceDataUpdated,
-          pcfRequestConfig, downSizeList, commandRollbackRequest.getRouteMaps());
+          pcfRequestConfig, upsizeList, pcfInstanceElements);
+      pcfCommandTaskHelper.downSizeListOfInstances(
+          executionLogCallback, pcfDeploymentManager, pcfServiceDataUpdated, pcfRequestConfig, downSizeList);
 
       // This steps is only required for Simulated BG workflow
       if (isRollbackRoutesRequired(pcfRequestConfig, commandRollbackRequest)) {
