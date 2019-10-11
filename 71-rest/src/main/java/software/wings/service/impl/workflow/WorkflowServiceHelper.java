@@ -2513,30 +2513,23 @@ public class WorkflowServiceHelper {
   }
 
   public WorkflowPhase getWorkflowPhase(Workflow workflow, String phaseId) {
-    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     if (isBlank(phaseId)) {
       throw new InvalidRequestException("Phase Id not provided");
-    } else if (!phaseId.equalsIgnoreCase("default")) {
-      if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
-        return ((CanaryOrchestrationWorkflow) orchestrationWorkflow)
-            .getWorkflowPhases()
-            .stream()
-            .filter(phase -> phase.getUuid().equals(phaseId))
-            .findFirst()
-            .orElseGet(null);
-      }
     }
-    return null;
+    CanaryOrchestrationWorkflow orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+    return orchestrationWorkflow.getWorkflowPhases()
+        .stream()
+        .filter(workflowPhase -> workflowPhase.getUuid().equals(phaseId))
+        .findFirst()
+        .orElse(null);
   }
 
   public String getServiceIdFromPhase(WorkflowPhase workflowPhase) {
     if (workflowPhase != null) {
-      if (!workflowPhase.checkServiceTemplatized()) {
-        return workflowPhase.getServiceId();
-      } else if (workflowPhase.checkServiceTemplatized()) {
-        // this will be removed in the future once service commands moved to template library
-        return workflowPhase.getServiceId();
-      }
+      //  in the future once service commands moved to template library, return serviceId only if service is not
+      //  templatized in workflow phase
+      return workflowPhase.getServiceId();
     }
     return null;
   }
@@ -2549,17 +2542,15 @@ public class WorkflowServiceHelper {
    * @return
    */
   public List<String> getServiceCommands(WorkflowPhase workflowPhase, String appId, String svcId) {
-    List<String> commandNames = new ArrayList<>();
-    if (svcId != null) {
-      if (workflowPhase != null && workflowPhase.getDeploymentType() != null
-          && workflowPhase.getDeploymentType().equals(SSH) && serviceResourceService.exist(appId, svcId)) {
-        List<ServiceCommand> serviceCommands = new ArrayList<>(serviceResourceService.getServiceCommands(appId, svcId));
-        commandNames = serviceCommands.stream()
-                           .map(serviceCommand -> serviceCommand.getCommand().getName())
-                           .distinct()
-                           .collect(Collectors.toList());
-      }
+    if (svcId == null || workflowPhase == null || !SSH.equals(workflowPhase.getDeploymentType())
+        || !serviceResourceService.exist(appId, svcId)) {
+      return new ArrayList<>();
     }
-    return commandNames;
+
+    List<ServiceCommand> serviceCommands = serviceResourceService.getServiceCommands(appId, svcId);
+    return serviceCommands.stream()
+        .map(serviceCommand -> serviceCommand.getCommand().getName())
+        .distinct()
+        .collect(Collectors.toList());
   }
 }
