@@ -17,6 +17,7 @@ import org.cloudfoundry.operations.organizations.OrganizationSummary;
 import org.cloudfoundry.operations.routes.Route;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 
 import java.util.Collections;
 import java.util.List;
@@ -27,6 +28,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
   public static final String DELIMITER = "__";
   @Inject PcfClient pcfClient;
 
+  @Override
   public List<String> getOrganizations(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
     try {
       List<OrganizationSummary> organizationSummaries = pcfClient.getOrganizations(pcfRequestConfig);
@@ -36,6 +38,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     }
   }
 
+  @Override
   public List<String> getSpacesForOrganization(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
     try {
       return pcfClient.getSpacesForOrganization(pcfRequestConfig);
@@ -44,6 +47,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     }
   }
 
+  @Override
   public List<String> getRouteMaps(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
     try {
       return pcfClient.getRoutesForSpace(pcfRequestConfig);
@@ -52,16 +56,18 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     }
   }
 
-  public ApplicationDetail createApplication(PcfRequestConfig pcfRequestConfig, String manifestFilePath,
-      String configPathVar, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+  @Override
+  public ApplicationDetail createApplication(PcfCreateApplicationRequestData requestData,
+      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     try {
-      pcfClient.pushApplicationUsingManifest(pcfRequestConfig, manifestFilePath, configPathVar, executionLogCallback);
-      return getApplicationByName(pcfRequestConfig);
+      pcfClient.pushApplicationUsingManifest(requestData, executionLogCallback);
+      return getApplicationByName(requestData.getPcfRequestConfig());
     } catch (Exception e) {
       throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
     }
   }
 
+  @Override
   public ApplicationDetail getApplicationByName(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
     try {
       return pcfClient.getApplicationByName(pcfRequestConfig);
@@ -70,6 +76,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     }
   }
 
+  @Override
   public ApplicationDetail resizeApplication(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
     try {
       ApplicationDetail applicationDetail = pcfClient.getApplicationByName(pcfRequestConfig);
@@ -89,6 +96,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     }
   }
 
+  @Override
   public void unmapRouteMapForApplication(PcfRequestConfig pcfRequestConfig, List<String> paths)
       throws PivotalClientApiException {
     try {
@@ -98,6 +106,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     }
   }
 
+  @Override
   public void mapRouteMapForApplication(PcfRequestConfig pcfRequestConfig, List<String> paths)
       throws PivotalClientApiException {
     try {
@@ -146,6 +155,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     }
   }
 
+  @Override
   public void deleteApplication(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
     try {
       pcfClient.deleteApplication(pcfRequestConfig);
@@ -154,6 +164,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     }
   }
 
+  @Override
   public String stopApplication(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
     try {
       pcfClient.stopApplication(pcfRequestConfig);
@@ -163,6 +174,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     }
   }
 
+  @Override
   public String createRouteMap(PcfRequestConfig pcfRequestConfig, String host, String domain, String path,
       boolean tcpRoute, boolean useRandomPort, Integer port) throws PivotalClientApiException, InterruptedException {
     validateArgs(host, domain, path, tcpRoute, useRandomPort, port);
@@ -261,6 +273,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     return name;
   }
 
+  @Override
   public String checkConnectivity(PcfConfig pcfConfig) {
     try {
       getOrganizations(PcfRequestConfig.builder()

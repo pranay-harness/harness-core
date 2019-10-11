@@ -3,18 +3,19 @@ package software.wings.sm.states.pcf;
 import static com.google.common.collect.Maps.newHashMap;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
-import static java.lang.String.format;
+import static io.harness.pcf.model.PcfConstants.INFRA_ROUTE;
+import static io.harness.pcf.model.PcfConstants.PCF_INFRA_ROUTE;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
 import static software.wings.beans.TaskType.PCF_COMMAND_TASK;
-import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.PCF_SETUP;
 import static software.wings.beans.command.PcfDummyCommandUnit.FetchFiles;
 import static software.wings.beans.command.PcfDummyCommandUnit.PcfSetup;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 import static software.wings.utils.Validator.notNullCheck;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -26,7 +27,6 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -63,12 +63,11 @@ import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.command.PcfDummyCommandUnit;
-import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
-import software.wings.common.Constants;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
@@ -77,7 +76,6 @@ import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfSetupCommandResponse;
 import software.wings.service.ServiceHelper;
 import software.wings.service.impl.ActivityHelperService;
-import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -205,16 +203,16 @@ public class PcfSetupState extends State {
     ServiceElement serviceElement = phaseElement.getServiceElement();
 
     Artifact artifact = ((DeploymentExecutionContext) context).getDefaultArtifactForService(serviceElement.getUuid());
-    if (artifact == null) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, WingsException.USER).addParam("args", "Artifact is null");
-    }
+    notNullCheck("Artifact Can not be null", artifact);
 
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactStreamId());
-    // Observed NPE in alerts
-    if (artifactStream == null) {
-      throw new WingsException(format(
-          "Unable to find artifact stream for service %s, artifact %s", serviceElement.getName(), artifact.getUuid()));
-    }
+    notNullCheck(new StringBuilder(128)
+                     .append("Unable to find artifact stream for service ")
+                     .append(serviceElement.getName())
+                     .append(" and Artifact: ")
+                     .append(artifact.getUuid())
+                     .toString(),
+        artifactStream);
 
     if (olderActiveVersionCountToKeep == null) {
       olderActiveVersionCountToKeep = Integer.valueOf(3);
@@ -244,29 +242,29 @@ public class PcfSetupState extends State {
 
     String applicationManifestYmlContent = pcfStateHelper.fetchManifestYmlString(context, app, serviceElement);
     if (isBlank(applicationManifestYmlContent)) {
-      throw new InvalidArgumentsException(Pair.of("Manifest.yml", "Can not have blank manifest config"));
+      throw new InvalidArgumentsException(Pair.of("Manifest.yml", "Can not be null"));
     }
 
-    // @TODO as decided, will change to use expressions here
+    applicationManifestYmlContent = context.renderExpression(applicationManifestYmlContent);
+
     // User has control to decide if for new application,
-    // inframapping.routemaps to use or inframapping.temproutemaps to use.
+    // inframapping.routes to use or inframapping.tempRoutes to use.
     // so it automatically, attaches B-G deployment capability to deployment
     // if user selected tempRoutes
     boolean isOriginalRoute = false;
-    String infraRouteConstLegacy = "${" + Constants.INFRA_ROUTE + "}";
-    String infraRouteConst = "${" + WorkflowServiceHelper.INFRA_ROUTE_PCF + "}";
+    String infraRouteConstLegacy = INFRA_ROUTE;
+    String infraRouteConst = PCF_INFRA_ROUTE;
     if (route == null || infraRouteConstLegacy.equalsIgnoreCase(route.trim())
         || infraRouteConst.equalsIgnoreCase(route.trim())) {
       isOriginalRoute = true;
     }
 
+    // @TODO: This needs to be moved to a workflow setup.
     List<String> tempRouteMaps = CollectionUtils.isEmpty(pcfInfrastructureMapping.getTempRouteMap())
         ? emptyList()
         : pcfInfrastructureMapping.getTempRouteMap();
 
-    List<String> routeMaps = CollectionUtils.isEmpty(pcfInfrastructureMapping.getRouteMaps())
-        ? emptyList()
-        : pcfInfrastructureMapping.getRouteMaps();
+    List<String> routeMaps = pcfStateHelper.getRouteMaps(applicationManifestYmlContent, pcfInfrastructureMapping);
 
     // change ${app.name}__${service.name}__${env.name} to actual name.
     pcfAppName = isNotBlank(pcfAppName) ? Misc.normalizeExpression(context.renderExpression(pcfAppName))
@@ -291,7 +289,7 @@ public class PcfSetupState extends State {
             .space(pcfInfrastructureMapping.getSpace())
             .pcfConfig(pcfConfig)
             .pcfCommandType(PcfCommandType.SETUP)
-            .manifestYaml(context.renderExpression(applicationManifestYmlContent))
+            .manifestYaml(applicationManifestYmlContent)
             .workflowExecutionId(context.getWorkflowExecutionId())
             .artifactFiles(artifact.getArtifactFiles())
             .routeMaps(isOriginalRoute ? routeMaps : tempRouteMaps)
@@ -331,8 +329,16 @@ public class PcfSetupState extends State {
     String waitId = generateUuid();
 
     DelegateTask delegateTask =
-        pcfStateHelper.getDelegateTask(app.getAccountId(), app.getUuid(), PCF_COMMAND_TASK, waitId, env.getUuid(),
-            pcfInfrastructureMapping.getUuid(), new Object[] {commandRequest, encryptedDataDetails}, 5);
+        pcfStateHelper.getDelegateTask(PcfDelegateTaskCreationData.builder()
+                                           .accountId(app.getAccountId())
+                                           .appId(app.getUuid())
+                                           .waitId(waitId)
+                                           .taskType(TaskType.PCF_COMMAND_TASK)
+                                           .envId(env.getUuid())
+                                           .infrastructureMappingId(pcfInfrastructureMapping.getUuid())
+                                           .parameters(new Object[] {commandRequest, encryptedDataDetails})
+                                           .timeout(5)
+                                           .build());
 
     delegateService.queueTask(delegateTask);
 
@@ -343,7 +349,8 @@ public class PcfSetupState extends State {
         .build();
   }
 
-  private Integer getCurrentRunningCountForSetupRequest() {
+  @VisibleForTesting
+  Integer getCurrentRunningCountForSetupRequest() {
     if (!useCurrentRunningCount) {
       return null;
     }
@@ -353,23 +360,6 @@ public class PcfSetupState extends State {
     }
 
     return currentRunningCount;
-  }
-
-  private String getPrefix(String appName, String serviceName, String envName) {
-    return appName + "_" + serviceName + "_" + envName;
-  }
-
-  private void validateSpecification(PcfServiceSpecification pcfServiceSpecification) {
-    if (pcfServiceSpecification == null || pcfServiceSpecification.getManifestYaml() == null
-        || !pcfServiceSpecification.getManifestYaml().contains("{FILE_LOCATION}")
-        || !pcfServiceSpecification.getManifestYaml().contains("{INSTANCE_COUNT}")
-        || !pcfServiceSpecification.getManifestYaml().contains("{APPLICATION_NAME}")) {
-      throw new InvalidRequestException("Invalid manifest yaml "
-              + (pcfServiceSpecification == null || pcfServiceSpecification.getManifestYaml() == null
-                        ? "NULL"
-                        : pcfServiceSpecification.getManifestYaml()),
-          USER);
-    }
   }
 
   @Override
@@ -417,6 +407,7 @@ public class PcfSetupState extends State {
     PcfSetupCommandResponse pcfSetupCommandResponse =
         (PcfSetupCommandResponse) executionResponse.getPcfCommandResponse();
 
+    boolean isPcfSetupCommandResponseNull = pcfSetupCommandResponse == null;
     PcfSetupContextElementBuilder pcfSetupContextElementBuilder =
         PcfSetupContextElement.builder()
             .serviceId(stateExecutionData.getServiceId())
@@ -429,15 +420,14 @@ public class PcfSetupState extends State {
             .pcfCommandRequest(stateExecutionData.getPcfCommandRequest())
             .isStandardBlueGreenWorkflow(stateExecutionData.isStandardBlueGreen());
 
-    if (pcfSetupCommandResponse != null) {
+    if (!isPcfSetupCommandResponseNull) {
       pcfSetupContextElementBuilder.timeoutIntervalInMinutes(timeoutIntervalInMinutes)
           .totalPreviousInstanceCount(
               Optional.ofNullable(pcfSetupCommandResponse.getTotalPreviousInstanceCount()).orElse(0))
           .appDetailsToBeDownsized(pcfSetupCommandResponse.getDownsizeDetails());
       if (ExecutionStatus.SUCCESS.equals(executionStatus)) {
         pcfSetupContextElementBuilder.newPcfApplicationDetails(pcfSetupCommandResponse.getNewApplicationDetails());
-        addNewlyCreateRouteMapIfRequired(
-            context, stateExecutionData, pcfSetupCommandResponse, pcfSetupContextElementBuilder);
+        addNewlyCreateRouteMapIfRequired(stateExecutionData, pcfSetupCommandResponse, pcfSetupContextElementBuilder);
       }
     }
 
@@ -453,8 +443,11 @@ public class PcfSetupState extends State {
   }
 
   private Integer generateCurrentRunningCount(PcfSetupCommandResponse pcfSetupCommandResponse) {
-    Integer currentRunningCountFetched = pcfSetupCommandResponse.getInstanceCountForMostRecentVersion();
+    if (pcfSetupCommandResponse == null) {
+      return Integer.valueOf(2);
+    }
 
+    Integer currentRunningCountFetched = pcfSetupCommandResponse.getInstanceCountForMostRecentVersion();
     if (currentRunningCountFetched == null || currentRunningCountFetched.intValue() <= 0) {
       return Integer.valueOf(2);
     }
@@ -462,23 +455,23 @@ public class PcfSetupState extends State {
     return currentRunningCountFetched;
   }
 
-  private void addNewlyCreateRouteMapIfRequired(ExecutionContext context, PcfSetupStateExecutionData stateExecutionData,
+  private void addNewlyCreateRouteMapIfRequired(PcfSetupStateExecutionData stateExecutionData,
       PcfSetupCommandResponse pcfSetupCommandResponse, PcfSetupContextElementBuilder pcfSetupContextElementBuilder) {
     PcfInfrastructureMapping infrastructureMapping = (PcfInfrastructureMapping) infrastructureMappingService.get(
         stateExecutionData.getAppId(), stateExecutionData.getInfraMappingId());
     boolean isInfraUpdated = false;
     if (stateExecutionData.isUseTempRoutes()) {
-      List<String> routes = infrastructureMapping.getTempRouteMap();
-      if (EmptyPredicate.isEmpty(routes)) {
-        routes = pcfSetupCommandResponse.getNewApplicationDetails().getUrls();
+      List<String> tempRoutes = stateExecutionData.getTempRouteMaps();
+      if (EmptyPredicate.isEmpty(tempRoutes)) {
+        tempRoutes = pcfSetupCommandResponse.getNewApplicationDetails().getUrls();
         isInfraUpdated = true;
-        infrastructureMapping.setTempRouteMap(routes);
+        infrastructureMapping.setTempRouteMap(tempRoutes);
       }
-      pcfSetupContextElementBuilder.tempRouteMap(routes);
-      stateExecutionData.setTempRouteMaps(routes);
-      pcfSetupContextElementBuilder.routeMaps(infrastructureMapping.getRouteMaps());
+      pcfSetupContextElementBuilder.tempRouteMap(tempRoutes);
+      stateExecutionData.setTempRouteMaps(tempRoutes);
+      pcfSetupContextElementBuilder.routeMaps(stateExecutionData.getRouteMaps());
     } else {
-      List<String> routes = infrastructureMapping.getRouteMaps();
+      List<String> routes = stateExecutionData.getRouteMaps();
       if (EmptyPredicate.isEmpty(routes)) {
         routes = pcfSetupCommandResponse.getNewApplicationDetails().getUrls();
         isInfraUpdated = true;
@@ -486,7 +479,7 @@ public class PcfSetupState extends State {
       }
       pcfSetupContextElementBuilder.routeMaps(routes);
       stateExecutionData.setRouteMaps(routes);
-      pcfSetupContextElementBuilder.tempRouteMap(infrastructureMapping.getTempRouteMap());
+      pcfSetupContextElementBuilder.tempRouteMap(stateExecutionData.getTempRouteMaps());
     }
 
     if (isInfraUpdated) {
@@ -495,7 +488,9 @@ public class PcfSetupState extends State {
   }
 
   @Override
-  public void handleAbortEvent(ExecutionContext context) {}
+  public void handleAbortEvent(ExecutionContext context) {
+    // Nothing to be done here
+  }
 
   private Activity createActivity(ExecutionContext executionContext, boolean remoteManifestType) {
     Application app = executionContext.getApp();
@@ -503,8 +498,17 @@ public class PcfSetupState extends State {
 
     List<CommandUnit> commandUnitList = getCommandUnitList(remoteManifestType);
 
-    ActivityBuilder activityBuilder = pcfStateHelper.getActivityBuilder(app.getName(), app.getUuid(), PCF_SETUP_COMMAND,
-        Type.Command, executionContext, getStateType(), PCF_SETUP, env, commandUnitList);
+    ActivityBuilder activityBuilder = pcfStateHelper.getActivityBuilder(PcfActivityBuilderCreationData.builder()
+                                                                            .appName(app.getName())
+                                                                            .appId(app.getUuid())
+                                                                            .commandName(PCF_SETUP_COMMAND)
+                                                                            .type(Type.Command)
+                                                                            .executionContext(executionContext)
+                                                                            .commandType(getStateType())
+                                                                            .commandUnitType(CommandUnitType.PCF_SETUP)
+                                                                            .commandUnits(commandUnitList)
+                                                                            .environment(env)
+                                                                            .build());
 
     return activityService.save(activityBuilder.build());
   }
@@ -533,10 +537,9 @@ public class PcfSetupState extends State {
       ExecutionContext context, Map<K8sValuesLocation, ApplicationManifest> appManifestMap, String activityId) {
     Application app = context.getApp();
     Environment env = ((ExecutionContextImpl) context).getEnv();
-    notNullCheck("Environment does not exist", env, USER);
-
+    notNullCheck("Environment is null", env, USER);
     InfrastructureMapping infraMapping = infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
-
+    notNullCheck("InfraStructureMapping is null", infraMapping, USER);
     GitFetchFilesTaskParams fetchFilesTaskParams =
         applicationManifestUtils.createGitFetchFilesTaskParams(context, app, appManifestMap);
     fetchFilesTaskParams.setActivityId(activityId);
@@ -601,7 +604,8 @@ public class PcfSetupState extends State {
     return ((PcfSetupStateExecutionData) context.getStateExecutionData()).getActivityId();
   }
 
-  private boolean isManifestInGit(Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
+  @VisibleForTesting
+  boolean isManifestInGit(Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
     for (Entry<K8sValuesLocation, ApplicationManifest> entry : appManifestMap.entrySet()) {
       ApplicationManifest applicationManifest = entry.getValue();
       if (StoreType.Remote.equals(applicationManifest.getStoreType())) {
@@ -612,7 +616,8 @@ public class PcfSetupState extends State {
     return false;
   }
 
-  private List<CommandUnit> getCommandUnitList(boolean remoteStoreType) {
+  @VisibleForTesting
+  List<CommandUnit> getCommandUnitList(boolean remoteStoreType) {
     List<CommandUnit> canaryCommandUnits = new ArrayList<>();
 
     if (remoteStoreType) {

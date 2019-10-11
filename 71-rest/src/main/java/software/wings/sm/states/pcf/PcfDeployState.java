@@ -163,8 +163,16 @@ public class PcfDeployState extends State {
         pcfConfig, upsizeUpdateCount, downsizeUpdateCount, stateExecutionData, pcfInfrastructureMapping);
 
     DelegateTask task =
-        pcfStateHelper.getDelegateTask(app.getAccountId(), app.getUuid(), TaskType.PCF_COMMAND_TASK, activity.getUuid(),
-            env.getUuid(), pcfInfrastructureMapping.getUuid(), new Object[] {commandRequest, encryptedDataDetails}, 5);
+        pcfStateHelper.getDelegateTask(PcfDelegateTaskCreationData.builder()
+                                           .appId(app.getUuid())
+                                           .accountId(app.getAccountId())
+                                           .taskType(TaskType.PCF_COMMAND_TASK)
+                                           .waitId(activity.getUuid())
+                                           .envId(env.getUuid())
+                                           .infrastructureMappingId(pcfInfrastructureMapping.getUuid())
+                                           .parameters(new Object[] {commandRequest, encryptedDataDetails})
+                                           .timeout(5)
+                                           .build());
 
     delegateService.queueTask(task);
 
@@ -332,9 +340,17 @@ public class PcfDeployState extends State {
       throw new InvalidRequestException("Application was null in Context");
     }
 
-    ActivityBuilder activityBuilder =
-        pcfStateHelper.getActivityBuilder(app.getName(), app.getUuid(), PCF_RESIZE_COMMAND, Type.Command,
-            executionContext, getStateType(), CommandUnitType.PCF_RESIZE, env, Collections.emptyList());
+    ActivityBuilder activityBuilder = pcfStateHelper.getActivityBuilder(PcfActivityBuilderCreationData.builder()
+                                                                            .appId(app.getUuid())
+                                                                            .appName(app.getName())
+                                                                            .commandName(PCF_RESIZE_COMMAND)
+                                                                            .type(Type.Command)
+                                                                            .executionContext(executionContext)
+                                                                            .commandType(getStateType())
+                                                                            .commandUnitType(CommandUnitType.PCF_RESIZE)
+                                                                            .environment(env)
+                                                                            .commandUnits(Collections.emptyList())
+                                                                            .build());
 
     return activityService.save(activityBuilder.build());
   }

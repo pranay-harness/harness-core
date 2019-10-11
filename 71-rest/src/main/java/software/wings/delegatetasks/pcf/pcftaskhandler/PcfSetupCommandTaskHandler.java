@@ -34,6 +34,7 @@ import software.wings.helpers.ext.pcf.PcfRequestConfig;
 import software.wings.helpers.ext.pcf.PivotalClientApiException;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
+import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfSetupCommandResponse;
@@ -58,6 +59,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
    * This method is responsible for fetching previous release version information
    * like, previous releaseNames with Running instances, All existing previous releaseNames.
    */
+  @Override
   public PcfCommandExecutionResponse executeTaskInternal(PcfCommandRequest pcfCommandRequest,
       List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
     if (!(pcfCommandRequest instanceof PcfCommandSetupRequest)) {
@@ -96,10 +98,8 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       }
 
       // Get new Revision version
-      int releaseRevision = CollectionUtils.isEmpty(previousReleases)
-          ? 0
-          : pcfCommandTaskHelper.getRevisionFromReleaseName(previousReleases.get(previousReleases.size() - 1).getName())
-              + 1;
+      // @TODO: add unit test
+      int releaseRevision = getReleaseRevisionForNewApplication(previousReleases);
 
       // Delete any older application excpet most recent 1.
       deleteOlderApplications(previousReleases, pcfRequestConfig, pcfCommandSetupRequest, executionLogCallback);
@@ -120,30 +120,42 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       String newReleaseName =
           ServiceVersionConvention.getServiceName(pcfCommandSetupRequest.getReleaseNamePrefix(), releaseRevision);
 
-      String randomToken = UUIDGenerator.generateUuid();
       // This path represents location where artifact will be downloaded, manifest file will be created and
       // config.json file will be generated with login details by cf cli, for current task.
       // This value is set to CF_HOME env variable when process executor is created.
+      String randomToken = UUIDGenerator.generateUuid();
       workingDirectory = generateWorkingDirectoryForDeployment(randomToken);
 
       // Download artifact on delegate from manager
       artifactFile = pcfCommandTaskHelper.downloadArtifact(
           pcfCommandSetupRequest.getArtifactFiles(), pcfCommandSetupRequest.getAccountId(), workingDirectory);
 
+      PcfCreateApplicationRequestData requestData = PcfCreateApplicationRequestData.builder()
+                                                        .pcfRequestConfig(pcfRequestConfig)
+                                                        .artifactPath(artifactFile.getAbsolutePath())
+                                                        .configPathVar(workingDirectory.getAbsolutePath())
+                                                        .setupRequest(pcfCommandSetupRequest)
+                                                        .newReleaseName(newReleaseName)
+                                                        .build();
+
+      // Log manifest yml provided by user
+      executionLogCallback.saveExecutionLog("# Manifest yml Received: \n");
+      executionLogCallback.saveExecutionLog(requestData.getSetupRequest().getManifestYaml());
+
+      // Generate final manifest Yml needed for push.
+      requestData.setFinalManifestYaml(pcfCommandTaskHelper.generateManifestYamlForPush(requestData));
+
       // Create manifest.yaml file
-      manifestYamlFile = pcfCommandTaskHelper.createManifestYamlFileLocally(
-          pcfCommandSetupRequest, artifactFile.getAbsolutePath(), newReleaseName, workingDirectory);
+      manifestYamlFile = pcfCommandTaskHelper.createManifestYamlFileLocally(requestData);
+      requestData.setManifestFilePath(manifestYamlFile.getAbsolutePath());
 
       // Create new Application
       executionLogCallback.saveExecutionLog("\n# Creating new Application");
-      pcfRequestConfig.setApplicationName(newReleaseName);
-      pcfRequestConfig.setRouteMaps(pcfCommandSetupRequest.getRouteMaps());
-      pcfRequestConfig.setServiceVariables(pcfCommandSetupRequest.getServiceVariables());
-      pcfRequestConfig.setSafeDisplayServiceVariables(pcfCommandSetupRequest.getSafeDisplayServiceVariables());
 
-      ApplicationDetail newApplication = pcfDeploymentManager.createApplication(pcfRequestConfig,
-          manifestYamlFile.getAbsolutePath(), workingDirectory.getAbsolutePath(), executionLogCallback);
+      // Update pcfRequestConfig with details to create application
+      updatePcfRequestConfig(pcfCommandSetupRequest, pcfRequestConfig, newReleaseName);
 
+      ApplicationDetail newApplication = pcfDeploymentManager.createApplication(requestData, executionLogCallback);
       executionLogCallback.saveExecutionLog("# Application created successfully");
       executionLogCallback.saveExecutionLog("# App Details: ");
       pcfCommandTaskHelper.printApplicationDetail(newApplication, executionLogCallback);
@@ -188,6 +200,21 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       removeTempFilesCreated((PcfCommandSetupRequest) pcfCommandRequest, executionLogCallback, artifactFile,
           manifestYamlFile, workingDirectory);
     }
+  }
+
+  private void updatePcfRequestConfig(
+      PcfCommandSetupRequest pcfCommandSetupRequest, PcfRequestConfig pcfRequestConfig, String newReleaseName) {
+    pcfRequestConfig.setApplicationName(newReleaseName);
+    pcfRequestConfig.setRouteMaps(pcfCommandSetupRequest.getRouteMaps());
+    pcfRequestConfig.setServiceVariables(pcfCommandSetupRequest.getServiceVariables());
+    pcfRequestConfig.setSafeDisplayServiceVariables(pcfCommandSetupRequest.getSafeDisplayServiceVariables());
+  }
+
+  private int getReleaseRevisionForNewApplication(List<ApplicationSummary> previousReleases) {
+    return CollectionUtils.isEmpty(previousReleases)
+        ? 0
+        : pcfCommandTaskHelper.getRevisionFromReleaseName(previousReleases.get(previousReleases.size() - 1).getName())
+            + 1;
   }
 
   private File generateWorkingDirectoryForDeployment(String workingDirecotry) throws IOException {

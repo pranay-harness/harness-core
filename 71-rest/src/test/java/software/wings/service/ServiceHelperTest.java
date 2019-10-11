@@ -28,8 +28,7 @@ public class ServiceHelperTest extends WingsBaseTest {
                 + "    path: /user/todo.war\n"
                 + "    routes:\n"
                 + "      - route: wings-apps-sf.cfapps.io\n"
-                + "      - route: wings-apps-sf.cfapps.io\n"
-                + "serviceName: SERV")
+                + "      - route: wings-apps-sf.cfapps.io\n")
             .build();
 
     serviceHelper.addPlaceholderTexts(pcfServiceSpecification);
@@ -42,7 +41,7 @@ public class ServiceHelperTest extends WingsBaseTest {
         + "    buildpack: https://github.com/cloudfoundry/java-buildpack.git\n"
         + "    path: ${FILE_LOCATION}\n"
         + "    routes:\n"
-        + "      - route: ${ROUTE_MAP}\n"
-        + "serviceName: SERV\n");
+        + "      - route: wings-apps-sf.cfapps.io\n"
+        + "      - route: wings-apps-sf.cfapps.io\n");
   }
 }

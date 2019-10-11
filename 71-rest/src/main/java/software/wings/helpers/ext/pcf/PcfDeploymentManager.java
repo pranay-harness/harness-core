@@ -4,6 +4,7 @@ import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 
 import java.util.List;
 
@@ -12,7 +13,7 @@ public interface PcfDeploymentManager {
 
   List<String> getSpacesForOrganization(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException;
 
-  ApplicationDetail createApplication(PcfRequestConfig pcfRequestConfig, String manifestFilePath, String configPathVar,
+  ApplicationDetail createApplication(PcfCreateApplicationRequestData requestData,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException;
 
   ApplicationDetail resizeApplication(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException;

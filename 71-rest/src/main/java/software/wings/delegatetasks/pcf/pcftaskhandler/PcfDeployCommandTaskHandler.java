@@ -75,10 +75,10 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
             pcfServiceDataUpdated, stepDecrease, pcfInstanceElementsForVerification);
 
         pcfCommandTaskHelper.upsizeNewApplication(executionLogCallback, pcfDeploymentManager, pcfCommandDeployRequest,
-            pcfServiceDataUpdated, pcfRequestConfig, details, stepIncrease, pcfInstanceElementsForVerification);
+            pcfServiceDataUpdated, pcfRequestConfig, details, pcfInstanceElementsForVerification);
       } else {
         pcfCommandTaskHelper.upsizeNewApplication(executionLogCallback, pcfDeploymentManager, pcfCommandDeployRequest,
-            pcfServiceDataUpdated, pcfRequestConfig, details, stepIncrease, pcfInstanceElementsForVerification);
+            pcfServiceDataUpdated, pcfRequestConfig, details, pcfInstanceElementsForVerification);
 
         pcfCommandTaskHelper.downsizePreviousReleases(pcfCommandDeployRequest, pcfRequestConfig, executionLogCallback,
             pcfServiceDataUpdated, stepDecrease, pcfInstanceElementsForVerification);

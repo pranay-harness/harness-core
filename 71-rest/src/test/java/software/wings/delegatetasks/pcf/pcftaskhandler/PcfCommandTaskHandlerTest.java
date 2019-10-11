@@ -65,8 +65,8 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
       + "    buildpack: https://github.com/cloudfoundry/java-buildpack.git\n"
       + "    path: ${FILE_LOCATION}\n"
       + "    routes:\n"
-      + "      - route: ${ROUTE_MAP}\n"
-      + "serviceName: SERV\n";
+      + "      - route: ${ROUTE_MAP}\n";
+
   public static final String ORG = "ORG";
   public static final String SPACE = "SPACE";
   public static final String ACCOUNT_ID = "ACCOUNT_ID";
@@ -98,6 +98,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
                                               .accountId(ACCOUNT_ID)
                                               .routeMaps(Arrays.asList("ab.rc", "ab.ty/asd"))
                                               .timeoutIntervalInMin(5)
+                                              .releaseNamePrefix("a_s_e")
                                               .maxCount(2)
                                               .build();
 
@@ -156,7 +157,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     File f1 = new File("./test1");
     File f2 = new File("./test2");
     doReturn(f1).when(pcfCommandTaskHelper).downloadArtifact(any(), any(), any());
-    doReturn(f2).when(pcfCommandTaskHelper).createManifestYamlFileLocally(any(), any(), any(), any());
+    doReturn(f2).when(pcfCommandTaskHelper).createManifestYamlFileLocally(any());
     doNothing().when(pcfCommandTaskHelper).deleteCreatedFile(anyList());
 
     doReturn(ApplicationDetail.builder()
@@ -170,11 +171,11 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
                  .runningInstances(0)
                  .build())
         .when(pcfDeploymentManager)
-        .createApplication(any(), any(), anyString(), any());
+        .createApplication(any(), any());
 
     PcfCommandExecutionResponse pcfCommandExecutionResponse =
         pcfSetupCommandTaskHandler.executeTask(pcfCommandRequest, null);
-    verify(pcfDeploymentManager, times(1)).createApplication(any(), any(), anyString(), any());
+    verify(pcfDeploymentManager, times(1)).createApplication(any(), any());
     verify(pcfDeploymentManager, times(3)).deleteApplication(any());
     verify(pcfDeploymentManager, times(1)).resizeApplication(any());
 

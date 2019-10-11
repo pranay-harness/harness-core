@@ -141,10 +141,18 @@ public class MapRouteState extends State {
       requestConfigData = getPcfRouteUpdateRequestConfigData(pcfSetupContextElement, infrastructureMapping);
     }
 
-    return pcfStateHelper.queueDelegateTaskForRouteUpdate(application, pcfConfig, delegateService,
-        infrastructureMapping, activity.getUuid(), environment.getUuid(),
-        pcfSetupContextElement.getTimeoutIntervalInMinutes(), PCF_MAP_ROUTE_COMMAND, requestConfigData,
-        encryptedDetails);
+    return pcfStateHelper.queueDelegateTaskForRouteUpdate(
+        PcfRouteUpdateQueueRequestData.builder()
+            .app(application)
+            .pcfConfig(pcfConfig)
+            .pcfInfrastructureMapping(infrastructureMapping)
+            .activityId(activity.getUuid())
+            .envId(environment.getUuid())
+            .timeoutIntervalInMinutes(pcfSetupContextElement.getTimeoutIntervalInMinutes())
+            .commandName(PCF_MAP_ROUTE_COMMAND)
+            .requestConfigData(requestConfigData)
+            .encryptedDataDetails(encryptedDetails)
+            .build());
   }
 
   private PcfRouteUpdateRequestConfigData getPcfRouteUpdateRequestConfigData(

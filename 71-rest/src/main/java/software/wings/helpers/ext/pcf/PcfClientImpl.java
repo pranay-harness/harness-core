@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.pcf;
 
+import static com.google.common.base.Charsets.UTF_8;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.pcf.model.PcfConstants.CF_HOME;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
 import static java.util.stream.Collectors.toList;
@@ -12,6 +14,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.operations.CloudFoundryOperations;
@@ -47,7 +50,9 @@ import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -274,25 +279,36 @@ public class PcfClientImpl implements PcfClient {
     }
   }
 
-  public void pushApplicationUsingManifest(PcfRequestConfig pcfRequestConfig, String filePath, String configVarPath,
+  public void pushApplicationUsingManifest(PcfCreateApplicationRequestData requestData,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException, InterruptedException {
+    PcfRequestConfig pcfRequestConfig = requestData.getPcfRequestConfig();
+    String manifestFilePath = requestData.getManifestFilePath();
+
     logger.info(new StringBuilder()
                     .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
                     .append("Creating Application: ")
                     .append(pcfRequestConfig.getApplicationName())
                     .toString());
 
-    Path path = Paths.get(filePath);
+    Path path = Paths.get(manifestFilePath);
+    if (pcfRequestConfig.isUseCLIForAppCreate()) {
+      logger.info("Using CLI to create application");
+      performCfPushUsingCli(requestData, executionLogCallback);
+      return;
+    } else {
+      executionLogCallback.saveExecutionLog(
+          "Using SDK to create application, Deprecated... Please enable flag: USE_PCF_CLI");
+      pushUsingPcfSdk(pcfRequestConfig, path);
+    }
+  }
+
+  @VisibleForTesting
+  void pushUsingPcfSdk(PcfRequestConfig pcfRequestConfig, Path path)
+      throws PivotalClientApiException, InterruptedException {
     List<ApplicationManifest> applicationManifests = ApplicationManifestUtils.read(path);
 
     ApplicationManifest applicationManifest = applicationManifests.get(0);
     applicationManifest = InitializeApplicationManifest(applicationManifest, pcfRequestConfig);
-
-    if (pcfRequestConfig.isUseCLIForAppCreate()) {
-      logger.info("Using CLI to create application");
-      performCfPushUsingCli(pcfRequestConfig, filePath, applicationManifest, configVarPath, executionLogCallback);
-      return;
-    }
     AtomicBoolean exceptionOccured = new AtomicBoolean(false);
     StringBuilder errorBuilder = new StringBuilder();
     CountDownLatch latch = new CountDownLatch(1);
@@ -319,20 +335,22 @@ public class PcfClientImpl implements PcfClient {
     }
   }
 
-  private void performCfPushUsingCli(PcfRequestConfig pcfRequestConfig, String filePath,
-      ApplicationManifest applicationManifest, String configPathVar, ExecutionLogCallback executionLogCallback)
+  @VisibleForTesting
+  void performCfPushUsingCli(PcfCreateApplicationRequestData requestData, ExecutionLogCallback executionLogCallback)
       throws PivotalClientApiException {
     // Create a new filePath.
-    String finalFilePath = filePath.replace(".yml", "_1.yml");
-    ApplicationManifestUtils.write(Paths.get(finalFilePath), applicationManifest);
-    logManifestFile(finalFilePath, executionLogCallback);
+    PcfRequestConfig pcfRequestConfig = requestData.getPcfRequestConfig();
 
-    executionLogCallback.saveExecutionLog("# CF_HOME value: " + configPathVar);
     int exitCode = 1;
     try {
-      boolean loginSuccessful = doLogin(pcfRequestConfig, executionLogCallback, configPathVar);
+      String finalFilePath = requestData.getManifestFilePath().replace(".yml", "_1.yml");
+      FileUtils.writeStringToFile(new File(finalFilePath), requestData.getFinalManifestYaml(), UTF_8);
+      logManifestFile(finalFilePath, executionLogCallback);
+
+      executionLogCallback.saveExecutionLog("# CF_HOME value: " + requestData.getConfigPathVar());
+      boolean loginSuccessful = doLogin(pcfRequestConfig, executionLogCallback, requestData.getConfigPathVar());
       if (loginSuccessful) {
-        exitCode = doCfPush(pcfRequestConfig, executionLogCallback, finalFilePath, configPathVar);
+        exitCode = doCfPush(pcfRequestConfig, executionLogCallback, finalFilePath, requestData.getConfigPathVar());
       }
     } catch (Exception e) {
       throw new PivotalClientApiException(new StringBuilder()
@@ -654,7 +672,7 @@ public class PcfClientImpl implements PcfClient {
 
   public List<Route> getRouteMapsByNames(List<String> paths, PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
-    if (EmptyPredicate.isEmpty(paths)) {
+    if (isEmpty(paths)) {
       return Collections.EMPTY_LIST;
     }
 

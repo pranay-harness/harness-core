@@ -6,6 +6,7 @@ import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 
 import java.util.List;
 
@@ -24,8 +25,8 @@ public class PcfDeploymentManagerUnsupported implements PcfDeploymentManager {
   }
 
   @Override
-  public ApplicationDetail createApplication(PcfRequestConfig pcfRequestConfig, String manifestFilePath,
-      String configPathVar, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+  public ApplicationDetail createApplication(PcfCreateApplicationRequestData requestData,
+      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     throw new PivotalClientApiException("PCF operations not supported by this API.");
   }
 
