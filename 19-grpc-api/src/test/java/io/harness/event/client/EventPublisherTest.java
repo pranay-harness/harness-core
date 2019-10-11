@@ -18,6 +18,7 @@ import com.google.protobuf.Any;
 import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.event.EventPublisherGrpc;
 import io.harness.event.EventPublisherGrpc.EventPublisherBlockingStub;
@@ -44,7 +45,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class EventPublisherTest {
+public class EventPublisherTest extends CategoryTest {
   private static final String QUEUE_FILE_PATH = FileUtils.getTempDirectoryPath() + "/" + UUID.randomUUID().toString();
   private static final String SERVER_NAME = InProcessServerBuilder.generateName();
   private final AtomicInteger messagesPublished = new AtomicInteger();

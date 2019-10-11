@@ -5,19 +5,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import io.harness.category.element.UnitTests;
 import io.harness.mongo.HObjectFactory;
-import io.harness.mongo.HObjectFactory.NotFoundClass;
-import io.harness.reflection.CodeUtils;
+import io.harness.morphia.MorphiaModule;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.map.HashedMap;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mongodb.morphia.Morphia;
-import org.mongodb.morphia.mapping.MappedClass;
 import software.wings.WingsBaseTest;
+import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.alert.AlertData;
 import software.wings.beans.command.CommandUnit;
 import software.wings.common.PartitionProcessorTest.SampleElement;
@@ -34,46 +31,30 @@ import software.wings.sm.StateMachineTest.StateAsync;
 import software.wings.sm.StateMachineTest.StateSync;
 import software.wings.sm.StepExecutionSummary;
 
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 @Slf4j
 public class ManagerMorphiaRegistrarTest extends WingsBaseTest {
   @Inject HObjectFactory objectFactory;
-  @Inject @Named("morphiaClasses") Set<Class> morphiaClasses;
 
   @Test
   @Category(UnitTests.class)
   public void testManagerClassesModule() {
-    final Set<Class> classes = new HashSet<>();
-    new ManagerMorphiaRegistrar().registerClasses(classes);
-    CodeUtils.checkHarnessClassBelongToModule(CodeUtils.location(ManagerMorphiaRegistrar.class), classes);
+    new ManagerMorphiaRegistrar().testClassesModule();
   }
 
   @Test
   @Category(UnitTests.class)
   public void testManagerSearchAndList() {
-    Morphia morphia = new Morphia();
-    morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
-    morphia.getMapper().getOptions().setMapSubPackages(true);
-    morphia.mapPackage("software.wings");
-    morphia.mapPackage("io.harness");
+    new MorphiaModule().testAutomaticSearch(
+        ImmutableSet.<Class>builder().add(Dummy.class).add(MongoEntity.class).build());
+  }
 
-    final HashSet<Class> classes = new HashSet<>(morphiaClasses);
-    classes.add(Dummy.class);
-    classes.add(MongoEntity.class);
-
-    boolean success = true;
-    for (MappedClass cls : morphia.getMapper().getMappedClasses()) {
-      if (!classes.contains(cls.getClazz())) {
-        logger.error(cls.getClazz().toString());
-        success = false;
-      }
-    }
-
-    assertThat(success).isTrue();
+  @Test
+  @Category(UnitTests.class)
+  public void testManagerImplementationClassesModule() {
+    new ManagerMorphiaRegistrar().testImplementationClassesModule();
   }
 
   @Test
@@ -92,6 +73,7 @@ public class ManagerMorphiaRegistrarTest extends WingsBaseTest {
                                                            .add(CommandUnit.class)
                                                            .add(ContextElement.class)
                                                            .add(DataCollectionInfo.class)
+                                                           .add(SecretManagerConfig.class)
                                                            .add(SettingValue.class)
                                                            .add(State.class)
                                                            .add(StateMachineExecutionCallback.class)
@@ -100,17 +82,5 @@ public class ManagerMorphiaRegistrarTest extends WingsBaseTest {
         classes);
 
     assertThat(unwanted).isEmpty();
-  }
-
-  @Test
-  @Category(UnitTests.class)
-  public void testManagerImplementationClassesModule() {
-    final Map<String, Class> map = new HashMap<>();
-    new ManagerMorphiaRegistrar().registerImplementationClasses(map);
-
-    Set<Class> classes = new HashSet<>(map.values());
-    classes.remove(NotFoundClass.class);
-
-    CodeUtils.checkHarnessClassBelongToModule(CodeUtils.location(ManagerMorphiaRegistrar.class), classes);
   }
 }

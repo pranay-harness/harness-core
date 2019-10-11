@@ -13,7 +13,7 @@ import com.google.inject.Inject;
 
 import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
-import io.harness.iterator.CronIterableEntity.CronIterableEntityKeys;
+import io.harness.iterator.TestCronIterableEntity.CronIterableEntityKeys;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.mongo.MongoPersistenceIterator.Handler;
@@ -41,11 +41,11 @@ public class PersistenceCronIteratorTest extends PersistenceTest {
   @Inject private QueueController queueController;
   private ExecutorService executorService = ThreadPool.create(4, 15, 1, TimeUnit.SECONDS);
 
-  PersistenceIterator<CronIterableEntity> iterator;
+  PersistenceIterator<TestCronIterableEntity> iterator;
 
-  class TestHandler implements Handler<CronIterableEntity> {
+  class TestHandler implements Handler<TestCronIterableEntity> {
     @Override
-    public void handle(CronIterableEntity entity) {
+    public void handle(TestCronIterableEntity entity) {
       Morpheus.sleep(ofSeconds(1));
       logger.info("Handle {}", entity.getUuid());
     }
@@ -53,8 +53,8 @@ public class PersistenceCronIteratorTest extends PersistenceTest {
 
   @Before
   public void setup() {
-    iterator = MongoPersistenceIterator.<CronIterableEntity>builder()
-                   .clazz(CronIterableEntity.class)
+    iterator = MongoPersistenceIterator.<TestCronIterableEntity>builder()
+                   .clazz(TestCronIterableEntity.class)
                    .fieldName(CronIterableEntityKeys.nextIterations)
                    .targetInterval(ofSeconds(10))
                    .acceptableNoAlertDelay(ofSeconds(1))
@@ -73,8 +73,8 @@ public class PersistenceCronIteratorTest extends PersistenceTest {
   @Category(UnitTests.class)
   public void testExpandNextIterationsAllStay() {
     long now = System.currentTimeMillis();
-    final CronIterableEntity cronIterableEntity =
-        CronIterableEntity.builder()
+    final TestCronIterableEntity cronIterableEntity =
+        TestCronIterableEntity.builder()
             .nextIterations(new ArrayList<Long>(asList(now + 1000, now + 2000)))
             .expression("* * * * * ?")
             .build();
@@ -89,8 +89,8 @@ public class PersistenceCronIteratorTest extends PersistenceTest {
   @Category(UnitTests.class)
   public void testExpandNextIterationsAllOld() {
     long now = System.currentTimeMillis();
-    final CronIterableEntity cronIterableEntity =
-        CronIterableEntity.builder()
+    final TestCronIterableEntity cronIterableEntity =
+        TestCronIterableEntity.builder()
             .nextIterations(new ArrayList<Long>(asList(now - 2000, now - 1000)))
             .expression("* * * * * ?")
             .build();
@@ -105,8 +105,8 @@ public class PersistenceCronIteratorTest extends PersistenceTest {
   @Category(UnitTests.class)
   public void testExpandNextIterationsTruncatedMatch() {
     long now = System.currentTimeMillis();
-    final CronIterableEntity cronIterableEntity =
-        CronIterableEntity.builder()
+    final TestCronIterableEntity cronIterableEntity =
+        TestCronIterableEntity.builder()
             .nextIterations(new ArrayList<Long>(asList(now - 2000, now - 1000, now, now + 1000, now + 2000)))
             .expression("* * * * * ?")
             .build();
@@ -121,8 +121,8 @@ public class PersistenceCronIteratorTest extends PersistenceTest {
   @Category(UnitTests.class)
   public void testExpandNextIterationsTruncatedNoMatch() {
     long now = System.currentTimeMillis();
-    final CronIterableEntity cronIterableEntity =
-        CronIterableEntity.builder()
+    final TestCronIterableEntity cronIterableEntity =
+        TestCronIterableEntity.builder()
             .nextIterations(new ArrayList<Long>(asList(now - 2000, now - 1000, now, now + 1000, now + 2000)))
             .expression("* * * * * ?")
             .build();
@@ -140,10 +140,10 @@ public class PersistenceCronIteratorTest extends PersistenceTest {
     assertThatCode(() -> {
       try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
         for (int i = 1; i <= 10; i++) {
-          final CronIterableEntity iterableEntity = CronIterableEntity.builder()
-                                                        .uuid(generateUuid())
-                                                        .expression(String.format("*/%d * * * * ? *", i))
-                                                        .build();
+          final TestCronIterableEntity iterableEntity = TestCronIterableEntity.builder()
+                                                            .uuid(generateUuid())
+                                                            .expression(String.format("*/%d * * * * ? *", i))
+                                                            .build();
           persistence.save(iterableEntity);
         }
 

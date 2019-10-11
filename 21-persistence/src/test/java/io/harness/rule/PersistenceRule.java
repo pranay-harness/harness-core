@@ -8,8 +8,8 @@ import com.google.inject.TypeLiteral;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ServersModule;
-import io.harness.iterator.IrregularIterableEntity;
-import io.harness.iterator.RegularIterableEntity;
+import io.harness.iterator.TestIrregularIterableEntity;
+import io.harness.iterator.TestRegularIterableEntity;
 import io.harness.module.TestMongoModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoPersistence;
@@ -74,8 +74,8 @@ public class PersistenceRule
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(objectFactory);
     morphia.map(TestQueuableObject.class);
-    morphia.map(RegularIterableEntity.class);
-    morphia.map(IrregularIterableEntity.class);
+    morphia.map(TestRegularIterableEntity.class);
+    morphia.map(TestIrregularIterableEntity.class);
     datastore = (AdvancedDatastore) morphia.createDatastore(mongoInfo.getClient(), databaseName);
     datastore.setQueryFactory(new QueryFactory());
 

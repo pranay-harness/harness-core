@@ -15,7 +15,7 @@ import com.google.inject.Inject;
 
 import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
-import io.harness.iterator.RegularIterableEntity.RegularIterableEntityKeys;
+import io.harness.iterator.TestRegularIterableEntity.RegularIterableEntityKeys;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.mongo.MongoPersistenceIterator.Handler;
@@ -41,11 +41,11 @@ public class PersistenceRegularIteratorTest extends PersistenceTest {
   @Inject private QueueController queueController;
   private ExecutorService executorService = ThreadPool.create(4, 15, 1, TimeUnit.SECONDS);
 
-  PersistenceIterator<RegularIterableEntity> iterator;
+  PersistenceIterator<TestRegularIterableEntity> iterator;
 
-  class TestHandler implements Handler<RegularIterableEntity> {
+  class TestHandler implements Handler<TestRegularIterableEntity> {
     @Override
-    public void handle(RegularIterableEntity entity) {
+    public void handle(TestRegularIterableEntity entity) {
       Morpheus.sleep(ofSeconds(1));
       logger.info("Handle {}", entity.getUuid());
     }
@@ -53,8 +53,8 @@ public class PersistenceRegularIteratorTest extends PersistenceTest {
 
   @Before
   public void setup() {
-    iterator = MongoPersistenceIterator.<RegularIterableEntity>builder()
-                   .clazz(RegularIterableEntity.class)
+    iterator = MongoPersistenceIterator.<TestRegularIterableEntity>builder()
+                   .clazz(TestRegularIterableEntity.class)
                    .fieldName(RegularIterableEntityKeys.nextIteration)
                    .targetInterval(ofSeconds(10))
                    .acceptableNoAlertDelay(ofSeconds(1))
@@ -91,8 +91,8 @@ public class PersistenceRegularIteratorTest extends PersistenceTest {
   @Bypass
   public void testWakeup() throws IOException {
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
-      final RegularIterableEntity entity =
-          RegularIterableEntity.builder().uuid(generateUuid()).nextIteration(currentTimeMillis() + 1000).build();
+      final TestRegularIterableEntity entity =
+          TestRegularIterableEntity.builder().uuid(generateUuid()).nextIteration(currentTimeMillis() + 1000).build();
       persistence.save(entity);
 
       final Future<?> future1 = executorService.submit(() -> iterator.process(LOOP));
@@ -104,7 +104,8 @@ public class PersistenceRegularIteratorTest extends PersistenceTest {
       Morpheus.sleep(ofSeconds(1));
       future1.cancel(true);
 
-      final RegularIterableEntity updatedEntity = persistence.get(RegularIterableEntity.class, entity.getUuid());
+      final TestRegularIterableEntity updatedEntity =
+          persistence.get(TestRegularIterableEntity.class, entity.getUuid());
 
       assertThat(updatedEntity.getNextIteration()).isGreaterThan(entity.getNextIteration());
     }
@@ -117,7 +118,7 @@ public class PersistenceRegularIteratorTest extends PersistenceTest {
     assertThatCode(() -> {
       try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
         for (int i = 0; i < 10; i++) {
-          persistence.save(RegularIterableEntity.builder().build());
+          persistence.save(TestRegularIterableEntity.builder().build());
         }
 
         final Future<?> future1 = executorService.submit(() -> iterator.process(LOOP));

@@ -13,7 +13,7 @@ import com.google.inject.Inject;
 
 import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
-import io.harness.iterator.IrregularIterableEntity.IrregularIterableEntityKeys;
+import io.harness.iterator.TestIrregularIterableEntity.IrregularIterableEntityKeys;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.mongo.MongoPersistenceIterator.Handler;
@@ -39,11 +39,11 @@ public class PersistenceIrregularIteratorTest extends PersistenceTest {
   @Inject private QueueController queueController;
   private ExecutorService executorService = ThreadPool.create(4, 15, 1, TimeUnit.SECONDS);
 
-  PersistenceIterator<IrregularIterableEntity> iterator;
+  PersistenceIterator<TestIrregularIterableEntity> iterator;
 
-  class TestHandler implements Handler<IrregularIterableEntity> {
+  class TestHandler implements Handler<TestIrregularIterableEntity> {
     @Override
-    public void handle(IrregularIterableEntity entity) {
+    public void handle(TestIrregularIterableEntity entity) {
       Morpheus.sleep(ofSeconds(1));
       logger.info("Handle {}", entity.getUuid());
     }
@@ -51,8 +51,8 @@ public class PersistenceIrregularIteratorTest extends PersistenceTest {
 
   @Before
   public void setup() {
-    iterator = MongoPersistenceIterator.<IrregularIterableEntity>builder()
-                   .clazz(IrregularIterableEntity.class)
+    iterator = MongoPersistenceIterator.<TestIrregularIterableEntity>builder()
+                   .clazz(TestIrregularIterableEntity.class)
                    .fieldName(IrregularIterableEntityKeys.nextIterations)
                    .targetInterval(ofSeconds(10))
                    .acceptableNoAlertDelay(ofSeconds(1))
@@ -91,7 +91,8 @@ public class PersistenceIrregularIteratorTest extends PersistenceTest {
     assertThatCode(() -> {
       try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
         for (int i = 0; i < 10; i++) {
-          final IrregularIterableEntity iterableEntity = IrregularIterableEntity.builder().uuid(generateUuid()).build();
+          final TestIrregularIterableEntity iterableEntity =
+              TestIrregularIterableEntity.builder().uuid(generateUuid()).build();
           persistence.save(iterableEntity);
         }
 

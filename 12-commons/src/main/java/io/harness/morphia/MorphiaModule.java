@@ -3,13 +3,17 @@ package io.harness.morphia;
 import com.google.inject.Provides;
 import com.google.inject.name.Named;
 
+import io.harness.exception.GeneralException;
 import io.harness.govern.DependencyModule;
 import io.harness.govern.DependencyProviderModule;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.util.ConcurrentHashSet;
+import org.mongodb.morphia.Morphia;
+import org.mongodb.morphia.mapping.MappedClass;
 import org.reflections.Reflections;
 
 import java.lang.reflect.Constructor;
+import java.util.HashSet;
 import java.util.Set;
 
 @Slf4j
@@ -53,5 +57,27 @@ public class MorphiaModule extends DependencyProviderModule {
   @Override
   public Set<DependencyModule> dependencies() {
     return null;
+  }
+
+  public void testAutomaticSearch(Set<Class> testClasses) {
+    Morphia morphia = new Morphia();
+    morphia.getMapper().getOptions().setMapSubPackages(true);
+    morphia.mapPackage("software.wings");
+    morphia.mapPackage("io.harness");
+
+    final Set<Class> classes = new HashSet<>(morphiaClasses);
+    classes.addAll(testClasses);
+
+    boolean success = true;
+    for (MappedClass cls : morphia.getMapper().getMappedClasses()) {
+      if (!classes.contains(cls.getClazz())) {
+        logger.error(cls.getClazz().toString());
+        success = false;
+      }
+    }
+
+    if (!success) {
+      throw new GeneralException("there are classes that are not registered");
+    }
   }
 }

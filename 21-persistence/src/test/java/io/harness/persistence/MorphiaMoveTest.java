@@ -10,11 +10,8 @@ import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.mongo.MorphiaMove;
 import lombok.Builder;
-import lombok.Value;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
 
 interface MorphiaInterface {}
 
@@ -24,14 +21,6 @@ class HackMorphiaClass implements MorphiaInterface {
   private String className;
 }
 
-@Value
-@Builder
-@Entity(value = "!!!testHolder", noClassnameStored = true)
-class HolderEntity implements PersistentEntity {
-  @Id private String uuid;
-  MorphiaInterface morphiaObj;
-}
-
 public class MorphiaMoveTest extends PersistenceTest {
   @Inject private HPersistence persistence;
 
@@ -39,8 +28,8 @@ public class MorphiaMoveTest extends PersistenceTest {
   @Category(UnitTests.class)
   @SuppressWarnings("PMD")
   public void shouldCacheMissingClass() {
-    HolderEntity entity =
-        HolderEntity.builder()
+    TestHolderEntity entity =
+        TestHolderEntity.builder()
             .uuid(generateUuid())
             .morphiaObj(
                 HackMorphiaClass.builder().test("test").className("io.harness.persistence.MorphiaMissingClass").build())
@@ -49,12 +38,12 @@ public class MorphiaMoveTest extends PersistenceTest {
     assertThat(id).isNotNull();
 
     try {
-      persistence.get(HolderEntity.class, id);
+      persistence.get(TestHolderEntity.class, id);
     } catch (Throwable ignore) {
       // do nothing
     }
     try {
-      persistence.get(HolderEntity.class, id);
+      persistence.get(TestHolderEntity.class, id);
     } catch (Throwable ignore) {
       // do nothing
     }
@@ -63,8 +52,8 @@ public class MorphiaMoveTest extends PersistenceTest {
   @Test
   @Category(UnitTests.class)
   public void shouldReadOldClass() {
-    HolderEntity entity =
-        HolderEntity.builder()
+    TestHolderEntity entity =
+        TestHolderEntity.builder()
             .uuid(generateUuid())
             .morphiaObj(
                 HackMorphiaClass.builder().test("test").className("io.harness.persistence.MorphiaOldClass").build())
@@ -72,7 +61,7 @@ public class MorphiaMoveTest extends PersistenceTest {
     String id = persistence.save(entity);
     assertThat(id).isNotNull();
 
-    final HolderEntity holderEntity = persistence.get(HolderEntity.class, id);
+    final TestHolderEntity holderEntity = persistence.get(TestHolderEntity.class, id);
     assertThat(((MorphiaClass) holderEntity.getMorphiaObj()).getTest()).isEqualTo("test");
   }
 
@@ -84,8 +73,8 @@ public class MorphiaMoveTest extends PersistenceTest {
                          .sources(ImmutableSet.of("io.harness.persistence.MorphiaClass"))
                          .build());
 
-    HolderEntity entity =
-        HolderEntity.builder()
+    TestHolderEntity entity =
+        TestHolderEntity.builder()
             .uuid(generateUuid())
             .morphiaObj(
                 HackMorphiaClass.builder().test("test").className("io.harness.persistence.MorphiaFeatureClass").build())
@@ -93,7 +82,7 @@ public class MorphiaMoveTest extends PersistenceTest {
     String id = persistence.save(entity);
     assertThat(id).isNotNull();
 
-    final HolderEntity holderEntity = persistence.get(HolderEntity.class, id);
+    final TestHolderEntity holderEntity = persistence.get(TestHolderEntity.class, id);
     assertThat(((MorphiaClass) holderEntity.getMorphiaObj()).getTest()).isEqualTo("test");
   }
 }
