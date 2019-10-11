@@ -3322,35 +3322,29 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         steps.put(step.getType(), stepMeta);
       }
     }
-    String serviceId = workflowServiceHelper.getServiceIdFromPhase(workflowPhase);
-    List<String> serviceCommands = workflowServiceHelper.getServiceCommands(workflowPhase, appId, serviceId);
-    return getWorkflowCategorySteps(favorites, recent, stepTypes, steps, serviceCommands);
+
+    List<WorkflowCategoryStepsMeta> categories = new ArrayList<>();
+    // Add recents
+    addRecentsToWorkflowCategories(recent, categories);
+    // Add favorites category always even if it is empty.
+    addFavoritesToWorkflowCategories(favorites, stepTypes, categories);
+    // get all categories relevant for workflow
+    addWorkflowCategorySteps(stepTypes, categories);
+    // add service commands to categories
+    addServiceCommandsToWorkflowCategories(steps, fetchServiceCommandNames(workflowPhase, appId), categories);
+
+    return WorkflowCategorySteps.builder().steps(steps).categories(categories).build();
   }
 
-  public WorkflowCategorySteps getWorkflowCategorySteps(Set<String> favorites, LinkedList<String> recent,
-      StepType[] stepTypes, Map<String, WorkflowStepMeta> steps, List<String> commandNames) {
-    List<WorkflowCategoryStepsMeta> categories = new ArrayList<>();
-    Map<String, WorkflowCategoryStepsMeta> map = new HashMap<>();
-    // We do not want the recent category if it is empty
-    if (isNotEmpty(recent)) {
-      List<String> stepIds = new ArrayList<>();
-      recent.descendingIterator().forEachRemaining(stepId -> stepIds.add(stepId));
-      categories.add(
-          WorkflowCategoryStepsMeta.builder().id("RECENTLY_USED").name("Recently Used").stepIds(stepIds).build());
+  private List<String> fetchServiceCommandNames(WorkflowPhase workflowPhase, String appId) {
+    if (workflowPhase == null) {
+      return new ArrayList<>();
     }
+    String serviceId = workflowServiceHelper.getServiceIdFromPhase(workflowPhase);
+    return workflowServiceHelper.getServiceCommands(workflowPhase, appId, serviceId);
+  }
 
-    // We would like to add the favorite category even if it is empty. This inconsistency is for UI convenience
-    List<String> stepIds = new ArrayList<>();
-    if (isNotEmpty(favorites)) {
-      for (StepType step : stepTypes) {
-        if (favorites.contains(step.getType())) {
-          stepIds.add(step.getType());
-        }
-      }
-    }
-    categories.add(
-        WorkflowCategoryStepsMeta.builder().id("MY_FAVORITES").name("My Favorites").stepIds(stepIds).build());
-
+  public void addWorkflowCategorySteps(StepType[] stepTypes, List<WorkflowCategoryStepsMeta> categories) {
     Map<String, StepType> stepTypeMap = new HashMap<>();
     for (StepType stepType : stepTypes) {
       stepTypeMap.put(stepType.getType(), stepType);
@@ -3358,33 +3352,29 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     for (Entry<WorkflowStepType, List<StepType>> entry : StepType.workflowStepTypeListMap.entrySet()) {
       WorkflowStepType workflowStepType = entry.getKey();
-      if (!workflowStepType.name().equals(SERVICE_COMMAND.name())) {
-        List<StepType> stepTypeList = entry.getValue();
-        if (isNotEmpty(stepTypeList)) {
-          for (StepType stepType : stepTypeList) {
-            if (stepTypeMap.containsKey(stepType.getType())) {
-              if (!map.containsKey(workflowStepType.name())) {
-                map.put(workflowStepType.name(),
-                    WorkflowCategoryStepsMeta.builder()
-                        .id(workflowStepType.name())
-                        .name(workflowStepType.getDisplayName())
-                        .stepIds(new ArrayList<>())
-                        .build());
-              }
-              WorkflowCategoryStepsMeta meta = map.get(workflowStepType.name());
-              if (isEmpty(meta.getStepIds()) || !meta.getStepIds().contains(stepType.getType())) {
-                meta.getStepIds().add(stepType.getType());
-                map.put(workflowStepType.name(), meta);
-              }
-            }
-          }
-        }
-        if (map.containsKey(workflowStepType.name())) {
-          categories.add(map.get(workflowStepType.name()));
+      List<StepType> stepTypeList = entry.getValue();
+      if (workflowStepType.name().equals(SERVICE_COMMAND.name()) || isEmpty(stepTypeList)) {
+        continue;
+      }
+      List<String> stepIds = new ArrayList<>();
+      for (StepType stepType : stepTypeList) {
+        if (stepTypeMap.containsKey(stepType.getType()) && !stepIds.contains(stepType.getType())) {
+          stepIds.add(stepType.getType());
         }
       }
+      // not adding category if there are no steps
+      if (isNotEmpty(stepIds)) {
+        categories.add(WorkflowCategoryStepsMeta.builder()
+                           .id(workflowStepType.name())
+                           .name(workflowStepType.getDisplayName())
+                           .stepIds(stepIds)
+                           .build());
+      }
     }
+  }
 
+  private void addServiceCommandsToWorkflowCategories(
+      Map<String, WorkflowStepMeta> steps, List<String> commandNames, List<WorkflowCategoryStepsMeta> categories) {
     // Special handling for ServiceCommands
     // For "Service Commands" Category to show up on UI, the corresponding StepIds must be present in Map<> steps
     if (isNotEmpty(commandNames)) {
@@ -3402,7 +3392,29 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                          .stepIds(upped)
                          .build());
     }
-    return WorkflowCategorySteps.builder().steps(steps).categories(categories).build();
+  }
+
+  private void addFavoritesToWorkflowCategories(
+      Set<String> favorites, StepType[] stepTypes, List<WorkflowCategoryStepsMeta> categories) {
+    List<String> stepIds = new ArrayList<>();
+    if (isNotEmpty(favorites)) {
+      for (StepType step : stepTypes) {
+        if (favorites.contains(step.getType())) {
+          stepIds.add(step.getType());
+        }
+      }
+    }
+    categories.add(
+        WorkflowCategoryStepsMeta.builder().id("MY_FAVORITES").name("My Favorites").stepIds(stepIds).build());
+  }
+
+  private void addRecentsToWorkflowCategories(LinkedList<String> recent, List<WorkflowCategoryStepsMeta> categories) {
+    if (isNotEmpty(recent)) {
+      List<String> stepIds = new ArrayList<>();
+      recent.descendingIterator().forEachRemaining(stepId -> stepIds.add(stepId));
+      categories.add(
+          WorkflowCategoryStepsMeta.builder().id("RECENTLY_USED").name("Recently Used").stepIds(stepIds).build());
+    }
   }
 
   @Override
