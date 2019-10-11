@@ -7,6 +7,8 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -35,10 +37,12 @@ import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
+import software.wings.helpers.ext.pcf.request.PcfCommandRouteUpdateRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest;
 import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest.ActionType;
 import software.wings.helpers.ext.pcf.request.PcfInstanceSyncRequest;
+import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfDeployCommandResponse;
@@ -80,6 +84,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
   @InjectMocks @Spy PcfCommandTaskHelper pcfCommandTaskHelper;
   @InjectMocks @Inject PcfSetupCommandTaskHandler pcfSetupCommandTaskHandler;
   @InjectMocks @Inject PcfDeployCommandTaskHandler pcfDeployCommandTaskHandler;
+  @InjectMocks @Spy PcfRouteUpdateCommandTaskHandler pcfRouteUpdateCommandTaskHandler;
   @InjectMocks @Inject PcfRollbackCommandTaskHandler pcfRollbackCommandTaskHandler;
   @InjectMocks @Inject PcfDataFetchCommandTaskHandler pcfDataFetchCommandTaskHandler;
   @InjectMocks @Inject PcfApplicationDetailsCommandTaskHandler pcfApplicationDetailsCommandTaskHandler;
@@ -555,5 +560,69 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     assertThat(pcfInstanceSyncResponse.getInstanceIndices()).isNotNull();
     assertThat(pcfInstanceSyncResponse.getInstanceIndices()).hasSize(1);
     assertThat(pcfInstanceSyncResponse.getInstanceIndices().get(0)).isEqualTo("2");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testPerformSwapRouteExecute() throws Exception {
+    PcfRouteUpdateRequestConfigData routeUpdateRequestConfigData =
+        PcfRouteUpdateRequestConfigData.builder()
+            .downsizeOldApplication(false)
+            .finalRoutes(Arrays.asList("a.b.c"))
+            .isRollback(true)
+            .isStandardBlueGreen(true)
+            .existingApplicationDetails(
+                Arrays.asList(PcfAppSetupTimeDetails.builder().applicationName("app1").initialInstanceCount(1).build()))
+            .build();
+    PcfCommandRequest pcfCommandRequest = PcfCommandRouteUpdateRequest.builder()
+                                              .pcfCommandType(PcfCommandType.RESIZE)
+                                              .pcfConfig(getPcfConfig())
+                                              .accountId(ACCOUNT_ID)
+                                              .organization(ORG)
+                                              .space(SPACE)
+                                              .timeoutIntervalInMin(2)
+                                              .pcfCommandType(PcfCommandType.UPDATE_ROUTE)
+                                              .pcfRouteUpdateConfigData(routeUpdateRequestConfigData)
+                                              .build();
+
+    doNothing().when(pcfCommandTaskHelper).mapRouteMaps(anyString(), anyList(), any(), any());
+    doNothing().when(pcfCommandTaskHelper).unmapRouteMaps(anyString(), anyList(), any(), any());
+
+    // 2
+    reset(pcfDeploymentManager);
+    routeUpdateRequestConfigData.setDownsizeOldApplication(true);
+    PcfCommandExecutionResponse pcfCommandExecutionResponse =
+        pcfRouteUpdateCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
+    verify(pcfDeploymentManager, times(1)).resizeApplication(any());
+    assertThat(pcfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+
+    // 3
+    reset(pcfDeploymentManager);
+    routeUpdateRequestConfigData.setDownsizeOldApplication(true);
+    routeUpdateRequestConfigData.setExistingApplicationDetails(null);
+    pcfCommandExecutionResponse =
+        pcfRouteUpdateCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
+    verify(pcfDeploymentManager, never()).resizeApplication(any());
+    assertThat(pcfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+
+    // 4
+    reset(pcfDeploymentManager);
+    routeUpdateRequestConfigData.setDownsizeOldApplication(true);
+    routeUpdateRequestConfigData.setRollback(false);
+    routeUpdateRequestConfigData.setExistingApplicationDetails(null);
+    pcfCommandExecutionResponse =
+        pcfRouteUpdateCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
+    verify(pcfDeploymentManager, times(0)).resizeApplication(any());
+    assertThat(pcfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+
+    // 5
+    reset(pcfDeploymentManager);
+    routeUpdateRequestConfigData.setDownsizeOldApplication(true);
+    routeUpdateRequestConfigData.setExistingApplicationDetails(
+        Arrays.asList(PcfAppSetupTimeDetails.builder().applicationName("app1").initialInstanceCount(1).build()));
+    pcfCommandExecutionResponse =
+        pcfRouteUpdateCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
+    verify(pcfDeploymentManager, times(1)).resizeApplication(any());
+    assertThat(pcfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
   }
 }

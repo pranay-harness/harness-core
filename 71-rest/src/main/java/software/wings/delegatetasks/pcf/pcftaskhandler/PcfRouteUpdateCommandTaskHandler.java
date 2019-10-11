@@ -1,8 +1,10 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -59,9 +61,17 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
               .timeOutIntervalInMins(pcfCommandRouteUpdateRequest.getTimeoutIntervalInMin())
               .build();
 
-      if (pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().isStandardBlueGreen()) {
+      PcfRouteUpdateRequestConfigData pcfRouteUpdateConfigData =
+          pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData();
+      if (pcfRouteUpdateConfigData.isStandardBlueGreen()) {
+        // If rollback and old app was downsized, restore it
+        restoreOldAppDuringRollbackIfNeeded(
+            executionLogCallback, pcfCommandRouteUpdateRequest, pcfRequestConfig, pcfRouteUpdateConfigData);
+        // Swap routes
         performRouteUpdateForStandardBlueGreen(pcfCommandRouteUpdateRequest, pcfRequestConfig, executionLogCallback);
-        resizeOldApplicationsIfRequired(pcfCommandRouteUpdateRequest, pcfRequestConfig, executionLogCallback);
+        // if deploy and downsizeOld is true
+        downsizeOldAppDuringDeployIfRequired(
+            executionLogCallback, pcfCommandRouteUpdateRequest, pcfRequestConfig, pcfRouteUpdateConfigData);
       } else {
         performRouteUpdateForSimulatedBlueGreen(pcfCommandRouteUpdateRequest, pcfRequestConfig, executionLogCallback);
       }
@@ -82,34 +92,39 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
     return pcfCommandExecutionResponse;
   }
 
-  private void resizeOldApplicationsIfRequired(PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest,
-      PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) {
+  @VisibleForTesting
+  void restoreOldAppDuringRollbackIfNeeded(ExecutionLogCallback executionLogCallback,
+      PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest, PcfRequestConfig pcfRequestConfig,
+      PcfRouteUpdateRequestConfigData pcfRouteUpdateConfigData) {
+    if (pcfRouteUpdateConfigData.isRollback() && pcfRouteUpdateConfigData.isDownsizeOldApplication()) {
+      resizeOldApplications(pcfCommandRouteUpdateRequest, pcfRequestConfig, executionLogCallback, true);
+    }
+  }
+
+  @VisibleForTesting
+  void resizeOldApplications(PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest,
+      PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback, boolean isRollback) {
     PcfRouteUpdateRequestConfigData pcfRouteUpdateConfigData =
         pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData();
 
-    if (!pcfRouteUpdateConfigData.isDownsizeOldApplication()
-        || EmptyPredicate.isEmpty(pcfRouteUpdateConfigData.getExistingApplicationNames())) {
-      return;
-    }
-
-    if (pcfRouteUpdateConfigData.isRollback()) {
-      executionLogCallback.saveExecutionLog("\n# Resizing Old Apps to original count as a part of Rollback");
-    } else {
-      executionLogCallback.saveExecutionLog("\n# Resizing Old Apps to 0 count as configured");
-    }
-
+    String msg =
+        isRollback ? "\n# Restoring Old Apps to original count" : "\n# Resizing Old Apps to 0 count as configured";
+    executionLogCallback.saveExecutionLog(msg);
     String appNameBeingDownsized = null;
-    for (PcfAppSetupTimeDetails appDetail : pcfRouteUpdateConfigData.getExistingApplicationDetails()) {
+
+    List<PcfAppSetupTimeDetails> existingApplicationDetails = pcfRouteUpdateConfigData.getExistingApplicationDetails();
+    if (isNotEmpty(existingApplicationDetails)) {
       try {
-        appNameBeingDownsized = appDetail.getApplicationName();
-        int count = pcfRouteUpdateConfigData.isRollback() ? appDetail.getInitialInstanceCount() : 0;
+        PcfAppSetupTimeDetails existingAppDetails = existingApplicationDetails.get(0);
+        appNameBeingDownsized = existingAppDetails.getApplicationName();
+        int count = isRollback ? existingAppDetails.getInitialInstanceCount() : 0;
 
         pcfRequestConfig.setApplicationName(appNameBeingDownsized);
         pcfRequestConfig.setDesiredCount(count);
         executionLogCallback.saveExecutionLog(new StringBuilder()
                                                   .append("Resizing Application: {")
                                                   .append(appNameBeingDownsized)
-                                                  .append("} to count: ")
+                                                  .append("} to Count: ")
                                                   .append(count)
                                                   .toString());
         pcfDeploymentManager.resizeApplication(pcfRequestConfig);
@@ -117,6 +132,15 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
         logger.error("Failed to downsize PCF application: " + appNameBeingDownsized);
         executionLogCallback.saveExecutionLog("Failed while downsizing old application: " + appNameBeingDownsized);
       }
+    }
+  }
+
+  @VisibleForTesting
+  void downsizeOldAppDuringDeployIfRequired(ExecutionLogCallback executionLogCallback,
+      PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest, PcfRequestConfig pcfRequestConfig,
+      PcfRouteUpdateRequestConfigData pcfRouteUpdateConfigData) {
+    if (!pcfRouteUpdateConfigData.isRollback() && pcfRouteUpdateConfigData.isDownsizeOldApplication()) {
+      resizeOldApplications(pcfCommandRouteUpdateRequest, pcfRequestConfig, executionLogCallback, false);
     }
   }
 
@@ -144,7 +168,7 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
     pcfCommandTaskHelper.unmapRouteMaps(
         data.getNewApplicatiaonName(), unmapRouteForNewApp, pcfRequestConfig, executionLogCallback);
 
-    if (EmptyPredicate.isNotEmpty(data.getExistingApplicationNames())) {
+    if (isNotEmpty(data.getExistingApplicationNames())) {
       List<String> mapRouteForExistingApp = data.isRollback() ? data.getFinalRoutes() : data.getTempRoutes();
       List<String> unmapRouteForExistingApp = data.isRollback() ? data.getTempRoutes() : data.getFinalRoutes();
       for (String existingAppName : data.getExistingApplicationNames()) {

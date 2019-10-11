@@ -19,6 +19,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
 import software.wings.api.pcf.PcfSetupContextElement;
+import software.wings.api.pcf.PcfSwapRouteRollbackContextElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -106,6 +107,16 @@ public class PcfSwitchBlueGreenRoutes extends State {
             .filter(cse -> context.fetchInfraMappingId().equals(cse.getInfraMappingId()))
             .findFirst()
             .orElse(PcfSetupContextElement.builder().build());
+
+    if (isRollback()) {
+      PcfSwapRouteRollbackContextElement pcfSwapRouteRollbackContextElement =
+          context.getContextElement(ContextElementType.PCF_ROUTE_SWAP_ROLLBACK);
+      if (pcfSwapRouteRollbackContextElement != null
+          && pcfSwapRouteRollbackContextElement.getPcfRouteUpdateRequestConfigData() != null) {
+        downsizeOldApps =
+            pcfSwapRouteRollbackContextElement.getPcfRouteUpdateRequestConfigData().isDownsizeOldApplication();
+      }
+    }
 
     Activity activity = createActivity(context);
     SettingAttribute settingAttribute = settingsService.get(pcfInfrastructureMapping.getComputeProviderSettingId());
