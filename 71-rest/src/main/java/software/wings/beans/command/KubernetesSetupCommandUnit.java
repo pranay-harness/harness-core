@@ -19,6 +19,8 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
+import static software.wings.beans.Log.LogWeight.Bold;
+import static software.wings.beans.Log.color;
 import static software.wings.beans.command.ContainerApiVersions.KUBERNETES_V1;
 import static software.wings.beans.command.ContainerResizeCommandUnit.DASH_STRING;
 import static software.wings.beans.container.KubernetesContainerTask.CONFIG_MAP_NAME_PLACEHOLDER_REGEX;
@@ -115,6 +117,7 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;
+import software.wings.beans.Log.LogColor;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData.ContainerSetupCommandUnitExecutionDataBuilder;
@@ -1768,6 +1771,11 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                             .withSpec(spec.build())
                             .build();
       executionLogCallback.saveExecutionLog("Setting service:\n\n" + toDisplayYaml(service));
+      if (serviceSpecification.getTargetPort() != null) {
+        executionLogCallback.saveExecutionLog(
+            color(format("Using targetPort: %d for service %s", serviceSpecification.getTargetPort(), serviceName),
+                LogColor.Cyan, Bold));
+      }
       return service;
     }
   }
