@@ -50,7 +50,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
   @Inject private UsageMetricsEventPublisher usageMetricsEventPublisher;
   @Inject private DeploymentEventProcessor deploymentEventProcessor;
   @Inject private DataFetcherUtils utils;
-  private static final long COOL_DOWN_INTERVAL = 15 * 60 * 1000; /* 15 MINS COOL DOWN INTERVAL */
+  protected static final long COOL_DOWN_INTERVAL = 15 * 60 * 1000; /* 15 MINS COOL DOWN INTERVAL */
 
   private static final String CHECK_MISSING_DATA_QUERY =
       "SELECT COUNT(DISTINCT(EXECUTIONID)) FROM DEPLOYMENT WHERE ACCOUNTID=? AND ENDTIME>=? AND ENDTIME<=? AND PARENT_EXECUTION IS NULL;";
@@ -302,7 +302,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
     return wingsPersistence.get(DeploymentReconRecord.class, uuid);
   }
 
-  public DeploymentReconRecord getLatestDeploymentReconRecord(@NotNull String accountId) {
+  protected DeploymentReconRecord getLatestDeploymentReconRecord(@NotNull String accountId) {
     MorphiaIterator<DeploymentReconRecord, DeploymentReconRecord> iterator = null;
     try {
       iterator = wingsPersistence.createQuery(DeploymentReconRecord.class)
@@ -322,7 +322,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
     }
   }
 
-  private long getWFExecCountFromMongoDB(String accountId, long durationStartTs, long durationEndTs) {
+  protected long getWFExecCountFromMongoDB(String accountId, long durationStartTs, long durationEndTs) {
     return wingsPersistence.createQuery(WorkflowExecution.class)
         .field(WorkflowExecutionKeys.accountId)
         .equal(accountId)
@@ -341,7 +341,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
         .count();
   }
 
-  private boolean shouldPerformReconciliation(@NotNull DeploymentReconRecord record, Long durationEndTs) {
+  protected boolean shouldPerformReconciliation(@NotNull DeploymentReconRecord record, Long durationEndTs) {
     if (record.getReconciliationStatus().equals(ReconciliationStatus.IN_PROGRESS)) {
       /***
        * If the latest record in db is older than COOL_DOWN_INTERVAL, mark that reconciliation as failed and move on.
