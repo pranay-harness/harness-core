@@ -1,20 +1,20 @@
 package software.wings.security;
 
-/**
- * @author marklu on 2019-06-12
- */
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
 public class HarnessUserThreadLocal {
-  public static ThreadLocal<HarnessUserAccountActions> harnessUserThreadLocal = new ThreadLocal<>();
+  public static final ThreadLocal<HarnessUserAccountActions> values = new ThreadLocal<>();
 
   public static void set(HarnessUserAccountActions harnessUserAccountActions) {
-    harnessUserThreadLocal.set(harnessUserAccountActions);
+    values.set(harnessUserAccountActions);
   }
 
   public static void unset() {
-    harnessUserThreadLocal.remove();
+    values.remove();
   }
 
   public static HarnessUserAccountActions get() {
-    return harnessUserThreadLocal.get();
+    return values.get();
   }
 }

@@ -548,7 +548,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .workflowId(analysisContext.getWorkflowId())
             .workflowExecutionId(analysisContext.getWorkflowExecutionId())
             .serviceId(analysisContext.getServiceId())
-            .hostnameSeparator(DatadogLogState.hostNameSeparator)
+            .hostnameSeparator(DatadogLogState.HOST_NAME_SEPARATOR)
             .hostnameField(analysisContext.getHostNameField())
             .responseDefinition(
                 datadogLogState.constructLogDefinitions(datadogConfig, analysisContext.getHostNameField(), false))

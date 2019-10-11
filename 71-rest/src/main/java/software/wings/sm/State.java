@@ -25,8 +25,7 @@ import java.util.Map;
  * @author Rishi
  */
 public abstract class State {
-  protected static Integer UNDEFINED_TIMEOUT;
-  protected static Integer INFINITE_TIMEOUT = -1;
+  protected static final Integer INFINITE_TIMEOUT = -1;
 
   @SchemaIgnore private String id;
 
@@ -65,7 +64,7 @@ public abstract class State {
     this.templateUuid = templateUuid;
   }
 
-  @Inject @Transient private transient DelegateService delegateService;
+  @Inject @Transient private DelegateService delegateService;
 
   public State() {}
   /**

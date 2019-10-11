@@ -54,6 +54,7 @@ import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -183,10 +184,11 @@ public class AuthServiceImpl implements AuthService {
     this.dashboardAuthHandler = dashboardAuthHandler;
   }
 
+  @UtilityClass
   public static final class Keys {
     public static final String HARNESS_EMAIL = "@harness.io";
-    public static String LOGIN_EVENT = "User Authenticated";
-    public static String GROUP_ID = "groupId";
+    public static final String LOGIN_EVENT = "User Authenticated";
+    public static final String GROUP_ID = "groupId";
   }
 
   @Override

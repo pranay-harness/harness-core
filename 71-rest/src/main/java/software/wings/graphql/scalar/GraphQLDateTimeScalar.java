@@ -6,6 +6,7 @@ import graphql.schema.CoercingParseLiteralException;
 import graphql.schema.CoercingParseValueException;
 import graphql.schema.CoercingSerializeException;
 import graphql.schema.GraphQLScalarType;
+import lombok.experimental.UtilityClass;
 
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -16,9 +17,11 @@ import java.util.function.Function;
  * Created this GraphQLScalar for DateTime scalar.
  * At present adding support for String/Long/Int conversion to date.
  */
+@UtilityClass
 public final class GraphQLDateTimeScalar {
-  public static String INVALID_INPUT_INSTANCE_TYPE = "DateTime scalars needs input to be instanceof Long but it was: ";
-  public static String INVALID_AST_TYPE = "Expected AST type 'StringValue' but was: ";
+  public static final String INVALID_INPUT_INSTANCE_TYPE =
+      "DateTime scalars needs input to be instanceof Long but it was: ";
+  public static final String INVALID_AST_TYPE = "Expected AST type 'StringValue' but was: ";
 
   public static final GraphQLScalarType type =
       GraphQLScalarType.newScalar()
@@ -26,7 +29,7 @@ public final class GraphQLDateTimeScalar {
           .description("DateTime Scalar")
           .coercing(new Coercing<Long, Long>() {
             @Override
-            public Long serialize(Object input) throws CoercingSerializeException {
+            public Long serialize(Object input) {
               if (input instanceof Long) {
                 return (Long) input;
               }
@@ -34,7 +37,7 @@ public final class GraphQLDateTimeScalar {
             }
 
             @Override
-            public Long parseValue(Object input) throws CoercingParseValueException {
+            public Long parseValue(Object input) {
               try {
                 Long date = parseInput(input);
                 if (date == null) {
@@ -49,7 +52,7 @@ public final class GraphQLDateTimeScalar {
             }
 
             @Override
-            public Long parseLiteral(Object input) throws CoercingParseLiteralException {
+            public Long parseLiteral(Object input) {
               try {
                 Long date = parseInput(input);
                 if (date == null) {
