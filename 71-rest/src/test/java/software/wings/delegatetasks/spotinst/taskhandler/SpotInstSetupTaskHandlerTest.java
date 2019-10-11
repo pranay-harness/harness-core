@@ -1,18 +1,30 @@
 package software.wings.delegatetasks.spotinst.taskhandler;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Maps.newHashMap;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_CREATED_AT;
+import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_ID;
+import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_UPDATED_AT;
+import static io.harness.spotinst.model.SpotInstConstants.defaultSteadyStateTimeout;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.service.impl.aws.model.AwsConstants.FORWARD_LISTENER_ACTION;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 
+import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.elasticloadbalancingv2.model.Action;
 import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
@@ -25,6 +37,8 @@ import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskResponse;
 import io.harness.spotinst.SpotInstHelperServiceDelegate;
 import io.harness.spotinst.model.ElastiGroup;
+import io.harness.spotinst.model.ElastiGroupCapacity;
+import io.harness.spotinst.model.ElastiGroupInstanceHealth;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -41,6 +55,7 @@ import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class SpotInstSetupTaskHandlerTest extends WingsBaseTest {
@@ -188,7 +203,7 @@ public class SpotInstSetupTaskHandlerTest extends WingsBaseTest {
       + "{\"name\":\"stageTg2\",\"arn\":\"s_tg2\",\"type\":\"TARGET_GROUP\"}]},"
       + "\"securityGroupIds\":[\"sg-d748f48f\"],"
       + "\"monitoring\":false,\"ebsOptimized\":false,\"imageId\":\"img-123456\","
-      + "\"keyPair\":\"some_name\",\"tenancy\":\"default\"}},\"scaling\":{},\"scheduling\":{},"
+      + "\"keyPair\":\"some_name\",\"userData\":\"userData\",\"tenancy\":\"default\"}},\"scaling\":{},\"scheduling\":{},"
       + "\"thirdPartiesIntegration\":{}}}";
 
   @Test
@@ -199,6 +214,7 @@ public class SpotInstSetupTaskHandlerTest extends WingsBaseTest {
             .blueGreen(true)
             .image("img-123456")
             .elastiGroupJson(json)
+            .userData("userData")
             .awsLoadBalancerConfigs(Arrays.asList(LoadBalancerDetailsForBGDeployment.builder()
                                                       .loadBalancerName("lb1")
                                                       .loadBalancerArn("arn1")
@@ -216,7 +232,6 @@ public class SpotInstSetupTaskHandlerTest extends WingsBaseTest {
                     .stageTargetGroupArn("s_tg2")
                     .build()))
             .build();
-
     assertThat(spotInstSetupTaskHandler.generateFinalJson(parameters, "newName")).isEqualTo(newJsonConfig);
   }
 
@@ -312,11 +327,15 @@ public class SpotInstSetupTaskHandlerTest extends WingsBaseTest {
     doNothing().when(mockCallback).saveExecutionLog(anyString());
     doNothing().when(mockCallback).saveExecutionLog(anyString(), any(), any());
     doReturn(mockCallback).when(spotInstSetupTaskHandler).getLogCallBack(any(), anyString());
-    doReturn(newArrayList(ElastiGroup.builder().name("foo__1").build(), ElastiGroup.builder().name("foo__2").build()))
+    doReturn(newArrayList(ElastiGroup.builder().name("foo__1").build(),
+                 ElastiGroup.builder().name("foo__2").capacity(ElastiGroupCapacity.builder().target(0).build()).build(),
+                 ElastiGroup.builder().name("foo__3").capacity(ElastiGroupCapacity.builder().target(1).build()).build(),
+                 ElastiGroup.builder().name("foo__4").build(), ElastiGroup.builder().name("foo__5").build(),
+                 ElastiGroup.builder().name("foo__6").build()))
         .when(mockSpotInstHelperServiceDelegate)
         .listAllElastiGroups(anyString(), anyString(), anyString());
     doReturn("JSON").when(spotInstSetupTaskHandler).generateFinalJson(any(), anyString());
-    doReturn(ElastiGroup.builder().id("newId").name("foo__3").build())
+    doReturn(ElastiGroup.builder().id("newId").name("foo__7").build())
         .when(mockSpotInstHelperServiceDelegate)
         .createElastiGroup(anyString(), anyString(), anyString());
     SpotInstSetupTaskParameters parameters = SpotInstSetupTaskParameters.builder()
@@ -335,11 +354,93 @@ public class SpotInstSetupTaskHandlerTest extends WingsBaseTest {
     SpotInstSetupTaskResponse setupResponse = (SpotInstSetupTaskResponse) spotInstTaskResponse;
     ElastiGroup newElastiGroup = setupResponse.getNewElastiGroup();
     assertThat(newElastiGroup).isNotNull();
-    assertThat(newElastiGroup.getName()).isEqualTo("foo__3");
+    assertThat(newElastiGroup.getName()).isEqualTo("foo__7");
     assertThat(newElastiGroup.getId()).isEqualTo("newId");
     List<ElastiGroup> groupToBeDownsized = setupResponse.getGroupToBeDownsized();
     assertThat(groupToBeDownsized).isNotNull();
     assertThat(groupToBeDownsized.size()).isEqualTo(1);
-    assertThat(groupToBeDownsized.get(0).getName()).isEqualTo("foo__2");
+    assertThat(groupToBeDownsized.get(0).getName()).isEqualTo("foo__6");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testRemoveUnsupportedFieldsForCreatingNewGroup() throws Exception {
+    Map<String, Object> map = newHashMap();
+    map.put("foo", "bar");
+    map.put(ELASTI_GROUP_ID, "id");
+    map.put(ELASTI_GROUP_CREATED_AT, 10);
+    map.put(ELASTI_GROUP_UPDATED_AT, 20);
+    spotInstSetupTaskHandler.removeUnsupportedFieldsForCreatingNewGroup(map);
+    assertThat(map.size()).isEqualTo(1);
+    assertThat(map.containsKey(ELASTI_GROUP_ID)).isFalse();
+    assertThat(map.containsKey(ELASTI_GROUP_CREATED_AT)).isFalse();
+    assertThat(map.containsKey(ELASTI_GROUP_UPDATED_AT)).isFalse();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testAllInstancesHealthyScaleDown() throws Exception {
+    doReturn(singletonList(ElastiGroupInstanceHealth.builder().healthStatus("HEALTHY").build()))
+        .doReturn(emptyList())
+        .when(mockSpotInstHelperServiceDelegate)
+        .listElastiGroupInstancesHealth(anyString(), anyString(), anyString());
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    boolean val = spotInstSetupTaskHandler.allInstancesHealthy("TOKEN", "ACCOUNT_ID", "ID", mockCallback, 0);
+    assertThat(val).isFalse();
+    val = spotInstSetupTaskHandler.allInstancesHealthy("TOKEN", "ACCOUNT_ID", "ID", mockCallback, 0);
+    assertThat(val).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testAllInstancesHealthyScaleUp() throws Exception {
+    doReturn(emptyList())
+        .doReturn(singletonList(ElastiGroupInstanceHealth.builder().healthStatus("HEALTHY").build()))
+        .when(mockSpotInstHelperServiceDelegate)
+        .listElastiGroupInstancesHealth(anyString(), anyString(), anyString());
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    boolean val = spotInstSetupTaskHandler.allInstancesHealthy("TOKEN", "ACCOUNT_ID", "ID", mockCallback, 1);
+    assertThat(val).isFalse();
+    val = spotInstSetupTaskHandler.allInstancesHealthy("TOKEN", "ACCOUNT_ID", "ID", mockCallback, 1);
+    assertThat(val).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetTimeOut() throws Exception {
+    assertThat(spotInstSetupTaskHandler.getTimeOut(0)).isEqualTo(defaultSteadyStateTimeout);
+    assertThat(spotInstSetupTaskHandler.getTimeOut(10)).isEqualTo(10);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetAllEc2InstancesOfElastiGroup() throws Exception {
+    doReturn(emptyList())
+        .doReturn(
+            singletonList(ElastiGroupInstanceHealth.builder().instanceId("id-1234").healthStatus("HEALTHY").build()))
+        .when(mockSpotInstHelperServiceDelegate)
+        .listElastiGroupInstancesHealth(anyString(), anyString(), anyString());
+    doReturn(singletonList(new Instance().withInstanceId("id-1234")))
+        .when(mockAwsEc2HelperServiceDelegate)
+        .listEc2Instances(any(), anyList(), anyList(), anyString());
+    List<Instance> allEc2Instances = spotInstSetupTaskHandler.getAllEc2InstancesOfElastiGroup(
+        AwsConfig.builder().build(), "us-east-1", "TOKEN", "ACCOUNT_ID", "ELASTIGROUP_ID");
+    assertThat(allEc2Instances.isEmpty()).isTrue();
+    allEc2Instances = spotInstSetupTaskHandler.getAllEc2InstancesOfElastiGroup(
+        AwsConfig.builder().build(), "us-east-1", "TOKEN", "ACCOUNT_ID", "ELASTIGROUP_ID");
+    assertThat(allEc2Instances.size()).isEqualTo(1);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCreateAndFinishEmptyExecutionLog() throws Exception {
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString(), any(), any());
+    doReturn(mockCallback).when(spotInstSetupTaskHandler).getLogCallBack(any(), anyString());
+    spotInstSetupTaskHandler.createAndFinishEmptyExecutionLog(
+        SpotInstSetupTaskParameters.builder().build(), "foo", "bar");
+    verify(mockCallback).saveExecutionLog(eq("bar"), eq(INFO), eq(SUCCESS));
   }
 }
