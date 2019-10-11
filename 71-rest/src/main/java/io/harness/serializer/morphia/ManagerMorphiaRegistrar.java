@@ -5,8 +5,6 @@ import io.harness.event.reconciliation.deployment.DeploymentReconRecord;
 import io.harness.governance.pipeline.model.PipelineGovernanceConfig;
 import io.harness.marketplace.gcp.events.AccountActiveEvent;
 import io.harness.marketplace.gcp.events.GcpMarketplaceEvent;
-import io.harness.mongo.HObjectFactory;
-import io.harness.mongo.HObjectFactory.NotFoundClass;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.notifications.NotificationReceiverInfo;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
@@ -1112,8 +1110,10 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.infrastructure.instance.info.PhysicalHostInstanceInfo", PhysicalHostInstanceInfo.class);
     w.put("beans.JenkinsConfig", JenkinsConfig.class);
     w.put("beans.JiraConfig", JiraConfig.class);
+    w.put("beans.KmsConfig", KmsConfig.class);
     w.put("beans.KubernetesClusterConfig", KubernetesClusterConfig.class);
     w.put("beans.KubernetesConfig", KubernetesConfig.class);
+    w.put("beans.LocalEncryptionConfig", LocalEncryptionConfig.class);
     w.put("beans.MultiServiceOrchestrationWorkflow", MultiServiceOrchestrationWorkflow.class);
     w.put("beans.NewRelicConfig", NewRelicConfig.class);
     w.put("beans.PcfConfig", PcfConfig.class);
@@ -1146,6 +1146,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.trigger.ScheduledTriggerCondition", ScheduledTriggerCondition.class);
     w.put("beans.trigger.WebHookTriggerCondition", WebHookTriggerCondition.class);
     w.put("beans.trigger.WorkflowAction", WorkflowAction.class);
+    w.put("beans.VaultConfig", VaultConfig.class);
     w.put("beans.WinRmConnectionAttributes", WinRmConnectionAttributes.class);
     w.put("beans.yaml.GitCommandExecutionResponse", GitCommandExecutionResponse.class);
     w.put("beans.yaml.GitCommitAndPushResult", GitCommitAndPushResult.class);
@@ -1211,7 +1212,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("service.impl.event.timeseries.TimeSeriesBatchEventInfo", TimeSeriesBatchEventInfo.class);
     w.put("service.impl.event.timeseries.TimeSeriesEventInfo", TimeSeriesEventInfo.class);
     w.put("service.impl.logz.LogzDataCollectionInfo", LogzDataCollectionInfo.class);
-    w.put("service.impl.newrelic.MetricAnalysisExecutionData", HObjectFactory.NotFoundClass.class);
+    w.put("service.impl.newrelic.MetricAnalysisExecutionData", NotFoundClass.class);
     w.put("service.impl.newrelic.NewRelicMarkerExecutionData", NewRelicMarkerExecutionData.class);
     w.put("service.impl.splunk.SplunkAnalysisCluster", SplunkAnalysisCluster.class);
     w.put("service.impl.splunk.SplunkDataCollectionInfo", SplunkDataCollectionInfo.class);

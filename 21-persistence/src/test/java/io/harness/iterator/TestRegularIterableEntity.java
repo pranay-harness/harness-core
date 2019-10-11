@@ -10,7 +10,7 @@ import org.mongodb.morphia.annotations.Id;
 @Builder
 @Entity(value = "!!!testRegularIterable")
 @FieldNameConstants(innerTypeName = "RegularIterableEntityKeys")
-public class RegularIterableEntity implements PersistentRegularIterable {
+public class TestRegularIterableEntity implements PersistentRegularIterable {
   @Id private String uuid;
   private Long nextIteration;
 

@@ -4,6 +4,7 @@ import com.mongodb.DBObject;
 import io.harness.exception.UnexpectedException;
 import io.harness.mongo.MorphiaMove.MorphiaMoveKeys;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.morphia.MorphiaRegistrar.NotFoundClass;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -59,8 +60,6 @@ public class HObjectFactory extends DefaultCreator {
   private boolean isHarnessClass(String className) {
     return className.startsWith("software.wings") || className.startsWith("io.harness");
   }
-
-  public interface NotFoundClass {}
 
   private Map<String, Set<String>> alerted = new ConcurrentHashMap<>();
 
