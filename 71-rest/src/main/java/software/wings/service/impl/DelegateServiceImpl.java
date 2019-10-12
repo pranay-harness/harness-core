@@ -1834,6 +1834,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         final SecretManagerFunctor secretManagerFunctor =
             (SecretManagerFunctor) managerPreExecutionExpressionEvaluator.getSecretManagerFunctor();
 
+        if (secretManagerFunctor == null) {
+          return null;
+        }
+
         return DelegatePackage.builder()
             .delegateTask(delegateTask)
             .encryptionConfigs(secretManagerFunctor.getEncryptionConfigs())
@@ -2556,7 +2560,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     }
 
     for (Delegate delegateToBeUpdated : delegates) {
-      try (AutoLogContext ignore = new DelegateLogContext(delegateToBeUpdated.getUuid(), OVERRIDE_ERROR)) {
+      try (AutoLogContext ignore = new DelegateLogContext(delegateToBeUpdated.getUuid(), OVERRIDE_NESTS)) {
         if ("SCOPES".equals(fieldBeingUpdate)) {
           logger.info("Updating delegate scopes: includeScopes:{} excludeScopes:{}", delegate.getIncludeScopes(),
               delegate.getExcludeScopes());

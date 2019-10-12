@@ -204,6 +204,7 @@ public class DelegateServiceImpl implements DelegateService {
   private static final String HOST_NAME = getLocalHostName();
   private static final String DELEGATE_TYPE = System.getenv().get("DELEGATE_TYPE");
   private static final String DELEGATE_GROUP_NAME = System.getenv().get("DELEGATE_GROUP_NAME");
+  private static final String START_SH = "start.sh";
 
   private static volatile String delegateId;
 
@@ -235,7 +236,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private DelegateLogService delegateLogService;
   @Inject private EncryptionService encryptionService;
 
-  private final Object waiter = new Object();
+  private final AtomicBoolean waiter = new AtomicBoolean(true);
 
   private final Map<String, DelegateTask> currentlyValidatingTasks = new ConcurrentHashMap<>();
   private final Map<String, DelegateTask> currentlyExecutingTasks = new ConcurrentHashMap<>();
@@ -285,7 +286,7 @@ public class DelegateServiceImpl implements DelegateService {
       accountId = delegateConfiguration.getAccountId();
       startTime = clock.millis();
 
-      applyProxyConfigurations();
+      logProxyConfiguration();
 
       connectionHeartbeat = DelegateConnectionHeartbeat.builder()
                                 .delegateConnectionId(delegateConnectionId)
@@ -392,7 +393,7 @@ public class DelegateServiceImpl implements DelegateService {
             client.newOptionsBuilder()
                 .runtime(asyncHttpClient, true)
                 .reconnect(true)
-                .reconnectAttempts(new File("start.sh").exists() ? MAX_CONNECT_ATTEMPTS : Integer.MAX_VALUE)
+                .reconnectAttempts(new File(START_SH).exists() ? MAX_CONNECT_ATTEMPTS : Integer.MAX_VALUE)
                 .pauseBeforeReconnectInSeconds(RECONNECT_INTERVAL_SECONDS)
                 .build();
         socket = client.create(clientOptions);
@@ -493,7 +494,9 @@ public class DelegateServiceImpl implements DelegateService {
       }
 
       synchronized (waiter) {
-        waiter.wait();
+        while (waiter.get()) {
+          waiter.wait();
+        }
       }
 
       messageService.closeData(DELEGATE_DASH + getProcessId());
@@ -525,22 +528,26 @@ public class DelegateServiceImpl implements DelegateService {
     return delegateConfiguration.isPollForTasks();
   }
 
-  private void applyProxyConfigurations() {
+  private void logProxyConfiguration() {
     String proxyHost = System.getProperty("https.proxyHost");
 
-    if (isNotBlank(proxyHost)) {
-      String proxyScheme = System.getProperty("proxyScheme");
-      String proxyPort = System.getProperty("https.proxyPort");
-      logger.info("Using {} proxy {}:{}", proxyScheme, proxyHost, proxyPort);
-      String nonProxyHostsString = System.getProperty("http.nonProxyHosts");
-      if (isNotBlank(nonProxyHostsString)) {
-        String[] suffixes = nonProxyHostsString.split("\\|");
-        List<String> nonProxyHosts = Stream.of(suffixes).map(suffix -> suffix.substring(1)).collect(toList());
-        logger.info("No proxy for hosts with suffix in: {}", nonProxyHosts);
-      }
-    } else {
+    if (isBlank(proxyHost)) {
       logger.info("No proxy settings. Configure in proxy.config if needed");
+      return;
     }
+
+    String proxyScheme = System.getProperty("proxyScheme");
+    String proxyPort = System.getProperty("https.proxyPort");
+    logger.info("Using {} proxy {}:{}", proxyScheme, proxyHost, proxyPort);
+    String nonProxyHostsString = System.getProperty("http.nonProxyHosts");
+
+    if (nonProxyHostsString == null || isBlank(nonProxyHostsString)) {
+      return;
+    }
+
+    String[] suffixes = nonProxyHostsString.split("\\|");
+    List<String> nonProxyHosts = Stream.of(suffixes).map(suffix -> suffix.substring(1)).collect(toList());
+    logger.info("No proxy for hosts with suffix in: {}", nonProxyHosts);
   }
 
   private void handleClose(Object o) {
@@ -667,7 +674,8 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public void stop() {
     synchronized (waiter) {
-      waiter.notify();
+      waiter.set(false);
+      waiter.notifyAll();
     }
   }
 
@@ -1168,7 +1176,7 @@ public class DelegateServiceImpl implements DelegateService {
   private boolean doRestartDelegate() {
     long now = clock.millis();
 
-    return new File("start.sh").exists()
+    return new File(START_SH).exists()
         && (restartNeeded.get() || now - lastHeartbeatSentAt.get() > HEARTBEAT_TIMEOUT
                || now - lastHeartbeatReceivedAt.get() > HEARTBEAT_TIMEOUT);
   }
@@ -1610,7 +1618,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void replaceRunScripts(DelegateScripts delegateScripts) throws IOException {
-    for (String fileName : asList("start.sh", "stop.sh", "delegate.sh", "setup-proxy.sh")) {
+    for (String fileName : asList(START_SH, "stop.sh", "delegate.sh", "setup-proxy.sh")) {
       Files.deleteIfExists(Paths.get(fileName));
       File scriptFile = new File(fileName);
       String script = delegateScripts.getScriptByName(fileName);
