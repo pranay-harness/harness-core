@@ -8,6 +8,7 @@ import io.harness.category.element.CliFunctionalTests;
 import io.harness.category.element.FunctionalTests;
 import io.harness.category.element.IntegrationTests;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.CategoryConfigException;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.Description;
@@ -60,8 +61,9 @@ public class OwnerRule extends RepeatRule {
   public static final String UTKARSH = "utkarsh.gupta@harness.io";
   public static final String VAIBHAV_SI = "vaibhav.si@harness.io";
   public static final String VAIBHAV_TULSYAN = "vaibhav.tulsyan@harness.io";
-  public static final String YOGESH_CHAUHAN = "yogesh.chauhan@harness.io";
   public static final String VENKATESH = "venkatesh.kotrike@harness.io";
+  public static final String VIKAS = "vikas.naiyar@harness.io";
+  public static final String YOGESH_CHAUHAN = "yogesh.chauhan@harness.io";
 
   private static List<String> active = ImmutableList.<String>builder()
                                            .add(AADITI)
@@ -79,6 +81,7 @@ public class OwnerRule extends RepeatRule {
                                            .add(HITESH)
                                            .add(JATIN)
                                            .add(JUHI)
+                                           .add(KAMAL)
                                            .add(MARK)
                                            .add(MEENAKSHI)
                                            .add(NATARAJA)
@@ -102,9 +105,9 @@ public class OwnerRule extends RepeatRule {
                                            .add(UTKARSH)
                                            .add(VAIBHAV_SI)
                                            .add(VAIBHAV_TULSYAN)
-                                           .add(YOGESH_CHAUHAN)
                                            .add(VENKATESH)
-                                           .add(KAMAL)
+                                           .add(VIKAS)
+                                           .add(YOGESH_CHAUHAN)
                                            .build();
 
   @Retention(RetentionPolicy.RUNTIME)
@@ -124,7 +127,7 @@ public class OwnerRule extends RepeatRule {
 
     for (String email : owner.emails()) {
       if (!active.contains(email)) {
-        throw new RuntimeException(format("Email %s is not active.", email));
+        throw new CategoryConfigException(format("Email %s is not active.", email));
       }
     }
 
