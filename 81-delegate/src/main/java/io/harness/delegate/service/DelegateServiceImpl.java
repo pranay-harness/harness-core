@@ -1722,35 +1722,29 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private String getSequenceConfigData() {
-    String content = null;
-    try {
-      FileUtils.touch(new File(DELEGATE_SEQUENCE_CONFIG_FILE));
-
-      if (isEcsDelegate()) {
-        content = FileIo.getFileContentsWithSharedLockAcrossProcesses(DELEGATE_SEQUENCE_CONFIG_FILE);
-      }
-    } catch (Exception e) {
-      // Ignore
+    if (!isEcsDelegate()) {
+      return "";
     }
 
-    return isBlank(content) ? null : content;
+    try {
+      FileUtils.touch(new File(DELEGATE_SEQUENCE_CONFIG_FILE));
+      return FileIo.getFileContentsWithSharedLockAcrossProcesses(DELEGATE_SEQUENCE_CONFIG_FILE);
+    } catch (Exception e) {
+      return "";
+    }
   }
 
   private String getSequenceNumForEcsDelegate() {
-    String content;
-    String seqNum = null;
-    if (isEcsDelegate()) {
-      content = getSequenceConfigData();
-      if (isNotBlank(content)) {
-        int indexForSeqNum = content.lastIndexOf(SEQ);
-        seqNum = content.substring(indexForSeqNum + 5);
-        if (isBlank(seqNum)) {
-          seqNum = null;
-        }
-      }
+    if (!isEcsDelegate()) {
+      return null;
+    }
+    String content = getSequenceConfigData();
+    if (isBlank(content)) {
+      return null;
     }
 
-    return seqNum;
+    String seqNum = content.substring(content.lastIndexOf(SEQ) + 5);
+    return isBlank(seqNum) ? null : seqNum;
   }
 
   private String getRandomTokenForEcsDelegate() {
@@ -1770,30 +1764,29 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private String readTokenFromFile() {
-    String token = null;
-    String content;
-    if (isEcsDelegate()) {
-      content = getSequenceConfigData();
-      if (isNotBlank(content)) {
-        int indexForSeqNum = content.lastIndexOf(SEQ);
-        token = content.substring(7, indexForSeqNum);
-        if (isBlank(token)) {
-          token = null;
-        }
-      }
+    if (!isEcsDelegate()) {
+      return null;
     }
-    return token;
+    String content = getSequenceConfigData();
+    if (isBlank(content)) {
+      return null;
+    }
+
+    String token = content.substring(7, content.lastIndexOf(SEQ));
+    return isBlank(token) ? null : token;
   }
 
   private void handleEcsDelegateRegistrationResponse(Delegate delegate) {
-    if (isEcsDelegate()) {
-      try {
-        FileIo.writeWithExclusiveLockAcrossProcesses(
-            TOKEN + delegate.getDelegateRandomToken() + SEQ + delegate.getSequenceNum(), DELEGATE_SEQUENCE_CONFIG_FILE,
-            StandardOpenOption.TRUNCATE_EXISTING);
-      } catch (Exception e) {
-        logger.error("Failed to write registration response into delegate_sequence file");
-      }
+    if (!isEcsDelegate()) {
+      return;
+    }
+
+    try {
+      FileIo.writeWithExclusiveLockAcrossProcesses(
+          TOKEN + delegate.getDelegateRandomToken() + SEQ + delegate.getSequenceNum(), DELEGATE_SEQUENCE_CONFIG_FILE,
+          StandardOpenOption.TRUNCATE_EXISTING);
+    } catch (Exception e) {
+      logger.error("Failed to write registration response into delegate_sequence file");
     }
   }
 
