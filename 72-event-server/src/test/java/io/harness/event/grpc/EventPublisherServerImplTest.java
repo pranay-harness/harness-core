@@ -25,6 +25,7 @@ import io.harness.event.PublishRequest;
 import io.harness.event.PublishResponse;
 import io.harness.event.payloads.Lifecycle;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
+import io.harness.grpc.utils.HTimestamps;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
@@ -35,6 +36,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -61,20 +64,23 @@ public class EventPublisherServerImplTest {
   @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldPersistMessages() {
+    Instant occurredAt = Instant.now().minus(20, ChronoUnit.HOURS).truncatedTo(ChronoUnit.MILLIS);
     Context.current().withValue(DelegateAuthServerInterceptor.ACCOUNT_ID_CTX_KEY, TEST_ACC_ID).run(() -> {
       @SuppressWarnings("unchecked") // Casting as we can't use List<PublishedMessage> as the class type.
       ArgumentCaptor<List<PublishedMessage>> captor = ArgumentCaptor.forClass((Class) List.class);
-      PublishRequest publishRequest = PublishRequest.newBuilder()
-                                          .addAllMessages(testMessages()
-                                                              .stream()
-                                                              .map(message
-                                                                  -> PublishMessage.newBuilder()
-                                                                         .putAttributes("key1", "val1")
-                                                                         .putAttributes("key2", message.toString())
-                                                                         .setPayload(Any.pack(message))
-                                                                         .build())
-                                                              .collect(Collectors.toList()))
-                                          .build();
+      PublishRequest publishRequest =
+          PublishRequest.newBuilder()
+              .addAllMessages(testMessages()
+                                  .stream()
+                                  .map(message
+                                      -> PublishMessage.newBuilder()
+                                             .putAttributes("key1", "val1")
+                                             .putAttributes("key2", message.toString())
+                                             .setPayload(Any.pack(message))
+                                             .setOccurredAt(HTimestamps.fromInstant(occurredAt))
+                                             .build())
+                                  .collect(Collectors.toList()))
+              .build();
       publisherServer.publish(publishRequest, observer);
       verify(hPersistence).save(captor.capture());
       List<PublishedMessage> captured = captor.getValue();
@@ -87,6 +93,7 @@ public class EventPublisherServerImplTest {
                          .data(Any.pack(message).toByteArray())
                          .accountId(TEST_ACC_ID)
                          .attributes(ImmutableMap.of("key1", "val1", "key2", message.toString()))
+                         .occurredAt(occurredAt.toEpochMilli())
                          .build())
               .collect(Collectors.toList()));
     });

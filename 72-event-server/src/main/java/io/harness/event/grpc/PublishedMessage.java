@@ -36,6 +36,7 @@ public class PublishedMessage implements PersistentEntity, CreatedAtAware, UuidA
   @Id private String uuid;
   private long createdAt;
 
+  private final long occurredAt;
   private final String accountId;
   private final String type;
   private final byte[] data;
@@ -44,11 +45,13 @@ public class PublishedMessage implements PersistentEntity, CreatedAtAware, UuidA
   @Setter(AccessLevel.NONE) private transient Message message;
 
   @Builder
-  private PublishedMessage(String accountId, String type, byte[] data, Map<String, String> attributes) {
+  private PublishedMessage(
+      String accountId, String type, byte[] data, Map<String, String> attributes, long occurredAt) {
     this.accountId = accountId;
     this.type = type;
     this.data = data;
     this.attributes = attributes;
+    this.occurredAt = occurredAt;
   }
 
   public Message getMessage() {

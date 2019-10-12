@@ -69,15 +69,16 @@ public class PodWatcher implements Watcher<Pod> {
                             .addAllOwner(getAllOwners(pod.getMetadata().getOwnerReferences()))
                             .build();
       logMessage(podInfo);
-      eventPublisher.publishMessage(podInfo);
+      eventPublisher.publishMessage(podInfo, creationTimestamp);
+      final Timestamp timestamp = HTimestamps.parse(podScheduledCondition.getLastTransitionTime());
       PodEvent podEvent = PodEvent.newBuilder()
                               .setCloudProviderId(cloudProviderId)
                               .setPodUid(uid)
                               .setType(EVENT_TYPE_SCHEDULED)
-                              .setTimestamp(HTimestamps.parse(podScheduledCondition.getLastTransitionTime()))
+                              .setTimestamp(timestamp)
                               .build();
       logMessage(podEvent);
-      eventPublisher.publishMessage(podEvent);
+      eventPublisher.publishMessage(podEvent, timestamp);
       publishedPods.add(uid);
     }
 
@@ -91,7 +92,7 @@ public class PodWatcher implements Watcher<Pod> {
                               .setTimestamp(timestamp)
                               .build();
       logMessage(podEvent);
-      eventPublisher.publishMessage(podEvent);
+      eventPublisher.publishMessage(podEvent, timestamp);
       publishedPods.remove(uid);
     }
   }

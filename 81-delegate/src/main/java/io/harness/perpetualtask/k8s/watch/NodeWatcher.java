@@ -5,6 +5,7 @@ import static io.harness.perpetualtask.k8s.watch.NodeEvent.EventType.EVENT_TYPE_
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import com.google.protobuf.Timestamp;
 
 import io.fabric8.kubernetes.api.model.Node;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -47,38 +48,41 @@ public class NodeWatcher implements Watcher<Node> {
   }
 
   private void publishNodeStartedEvent(Node node) {
+    final Timestamp timestamp = HTimestamps.parse(node.getMetadata().getCreationTimestamp());
     NodeEvent nodeStartedEvent = NodeEvent.newBuilder()
                                      .setCloudProviderId(cloudProviderId)
                                      .setNodeUid(node.getMetadata().getUid())
                                      .setType(EVENT_TYPE_START)
-                                     .setTimestamp(HTimestamps.parse(node.getMetadata().getCreationTimestamp()))
+                                     .setTimestamp(timestamp)
                                      .build();
     logger.debug("Publishing event: {}", nodeStartedEvent);
-    eventPublisher.publishMessage(nodeStartedEvent);
+    eventPublisher.publishMessage(nodeStartedEvent, timestamp);
   }
 
   private void publishNodeStoppedEvent(Node node) {
+    final Timestamp timestamp = HTimestamps.fromInstant(Instant.now());
     NodeEvent nodeStoppedEvent = NodeEvent.newBuilder()
                                      .setCloudProviderId(cloudProviderId)
                                      .setNodeUid(node.getMetadata().getUid())
                                      .setType(EVENT_TYPE_STOP)
-                                     .setTimestamp(HTimestamps.fromInstant(Instant.now()))
+                                     .setTimestamp(timestamp)
                                      .build();
     logger.debug("Publishing event: {}", nodeStoppedEvent);
-    eventPublisher.publishMessage(nodeStoppedEvent);
+    eventPublisher.publishMessage(nodeStoppedEvent, timestamp);
     publishedNodes.remove(node.getMetadata().getUid());
   }
 
   private void publishNodeInfo(Node node) {
     if (!publishedNodes.contains(node.getMetadata().getUid())) {
+      final Timestamp timestamp = HTimestamps.parse(node.getMetadata().getCreationTimestamp());
       NodeInfo nodeInfo = NodeInfo.newBuilder()
                               .setCloudProviderId(cloudProviderId)
                               .setNodeUid(node.getMetadata().getUid())
                               .setNodeName(node.getMetadata().getName())
-                              .setCreationTime(HTimestamps.parse(node.getMetadata().getCreationTimestamp()))
+                              .setCreationTime(timestamp)
                               .putAllLabels(node.getMetadata().getLabels())
                               .build();
-      eventPublisher.publishMessage(nodeInfo);
+      eventPublisher.publishMessage(nodeInfo, timestamp);
       publishedNodes.add(node.getMetadata().getUid());
     }
   }
