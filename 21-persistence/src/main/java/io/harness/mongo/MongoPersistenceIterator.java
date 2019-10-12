@@ -11,6 +11,7 @@ import static java.time.Duration.ZERO;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
@@ -51,6 +52,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
   private Duration targetInterval;
   private Duration maximumDelayForCheck;
   private Duration acceptableNoAlertDelay;
+  private Duration acceptableExecutionTime;
   private Duration throttleInterval;
   private Handler<T> handler;
   private FilterExpander<T> filterExpander;
@@ -212,33 +214,50 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
   @SuppressWarnings({"squid:S2445"}) // We are aware that the entity will be different object every time the method is
                                      // called. This is exactly what we want.
 
-  void processEntity(final T entity) {
+  @VisibleForTesting
+  public void processEntity(final T entity) {
     try {
-      synchronized (entity) {
-        semaphore.acquire();
-        entity.notify();
-      }
+      semaphore.acquire();
     } catch (InterruptedException e) {
       logger.info("Working on entity {}.{} was interrupted", clazz.getCanonicalName(), entity.getUuid());
       Thread.currentThread().interrupt();
       return;
     }
 
-    final Long nextIteration = entity.obtainNextIteration(fieldName);
-    if (schedulingType == REGULAR) {
-      ((PersistentRegularIterable) entity).updateNextIteration(fieldName, null);
-    }
-
-    long delay = nextIteration == null ? 0 : currentTimeMillis() - nextIteration;
-    if (delay < acceptableNoAlertDelay.toMillis()) {
-      logger.info("Working on entity {}.{} with delay {}", clazz.getCanonicalName(), entity.getUuid(), delay);
-    } else {
-      logger.error("Entity {}.{} was delayed {} which is more than the acceptable {}", clazz.getCanonicalName(),
-          entity.getUuid(), delay, acceptableNoAlertDelay.toMillis());
-    }
-
     try {
-      handler.handle(entity);
+      synchronized (entity) {
+        entity.notify();
+      }
+      final Long nextIteration = entity.obtainNextIteration(fieldName);
+      if (schedulingType == REGULAR) {
+        ((PersistentRegularIterable) entity).updateNextIteration(fieldName, null);
+      }
+
+      long startTime = currentTimeMillis();
+
+      long delay = nextIteration == null ? 0 : startTime - nextIteration;
+      if (delay < acceptableNoAlertDelay.toMillis()) {
+        logger.info("Working on entity {}.{} with delay {}", clazz.getCanonicalName(), entity.getUuid(), delay);
+      } else {
+        logger.error("Entity {}.{} was delayed {} which is more than the acceptable {}", clazz.getCanonicalName(),
+            entity.getUuid(), delay, acceptableNoAlertDelay.toMillis());
+      }
+
+      try {
+        handler.handle(entity);
+      } catch (RuntimeException exception) {
+        logger.error("Catch and handle all exceptions in the entity handler", exception);
+      }
+
+      if (acceptableExecutionTime != null) {
+        long handleTime = currentTimeMillis() - startTime;
+        if (handleTime > acceptableExecutionTime.toMillis()) {
+          logger.error("Entity {}.{} was handled longer {} than the acceptable {}", clazz.getCanonicalName(),
+              entity.getUuid(), handleTime, acceptableExecutionTime.toMillis());
+        }
+      }
+    } catch (RuntimeException exception) {
+      logger.error("Exception while processing entity", exception);
     } finally {
       semaphore.release();
     }

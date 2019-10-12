@@ -41,9 +41,9 @@ public class PersistenceRegularIteratorTest extends PersistenceTest {
   @Inject private QueueController queueController;
   private ExecutorService executorService = ThreadPool.create(4, 15, 1, TimeUnit.SECONDS);
 
-  PersistenceIterator<TestRegularIterableEntity> iterator;
+  MongoPersistenceIterator<TestRegularIterableEntity> iterator;
 
-  class TestHandler implements Handler<TestRegularIterableEntity> {
+  static class TestHandler implements Handler<TestRegularIterableEntity> {
     @Override
     public void handle(TestRegularIterableEntity entity) {
       Morpheus.sleep(ofSeconds(1));
@@ -59,6 +59,7 @@ public class PersistenceRegularIteratorTest extends PersistenceTest {
                    .targetInterval(ofSeconds(10))
                    .acceptableNoAlertDelay(ofSeconds(1))
                    .maximumDelayForCheck(ofSeconds(5))
+                   .acceptableExecutionTime(ofMillis(10))
                    .executorService(executorService)
                    .semaphore(new Semaphore(10))
                    .handler(new TestHandler())
@@ -73,6 +74,15 @@ public class PersistenceRegularIteratorTest extends PersistenceTest {
   @Category(UnitTests.class)
   public void testPumpWithEmptyCollection() {
     assertThatCode(() -> { iterator.process(PUMP); }).doesNotThrowAnyException();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testProcessEntity() {
+    final TestRegularIterableEntity entity =
+        TestRegularIterableEntity.builder().uuid(generateUuid()).nextIteration(currentTimeMillis() + 1000).build();
+
+    assertThatCode(() -> { iterator.processEntity(entity); }).doesNotThrowAnyException();
   }
 
   @Test
