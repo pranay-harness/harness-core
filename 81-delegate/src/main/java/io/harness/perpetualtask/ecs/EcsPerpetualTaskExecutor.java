@@ -124,7 +124,7 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
                                     .build();
 
     logger.info("Esc sync published Message {} ", ecsSyncEvent.toString());
-    eventPublisher.publishMessage(ecsSyncEvent);
+    eventPublisher.publishMessage(ecsSyncEvent, ecsSyncEvent.getLastProcessedTimestamp());
   }
 
   private void publishTaskEvent(String clusterName, String region, Set<String> currentActiveTaskArns,
@@ -166,7 +166,7 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
                 .setEcsTaskResource(ReservedResource.newBuilder().setCpu(cpu).setMemory(memory).build())
                 .build();
         logger.debug("Task published Message {} ", ecsTaskInfo.toString());
-        eventPublisher.publishMessage(ecsTaskInfo);
+        eventPublisher.publishMessage(ecsTaskInfo, HTimestamps.fromDate(task.getStartedAt()));
       }
 
       if (null != task.getStoppedAt() && taskStoppedEventRequired(lastProcessedTime, task, activeTaskArns)) {
@@ -200,20 +200,21 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
   private void publishEc2LifecycleEvent(String instanceId, Date date, EventType eventType) {
     Ec2Lifecycle ec2Lifecycle =
         Ec2Lifecycle.newBuilder().setLifecycle(createLifecycle(instanceId, date, eventType)).build();
-    eventPublisher.publishMessage(ec2Lifecycle);
+    eventPublisher.publishMessage(ec2Lifecycle, ec2Lifecycle.getLifecycle().getTimestamp());
   }
 
   private void publishContainerInstanceLifecycleEvent(String instanceId, Date date, EventType eventType) {
     EcsContainerInstanceLifecycle ecsContainerInstanceLifecycle =
         EcsContainerInstanceLifecycle.newBuilder().setLifecycle(createLifecycle(instanceId, date, eventType)).build();
-    eventPublisher.publishMessage(ecsContainerInstanceLifecycle);
+    eventPublisher.publishMessage(
+        ecsContainerInstanceLifecycle, ecsContainerInstanceLifecycle.getLifecycle().getTimestamp());
   }
 
   private void publishTaskLifecycleEvent(String instanceId, Date date, EventType eventType) {
     EcsTaskLifecycle ecsTaskLifecycle =
         EcsTaskLifecycle.newBuilder().setLifecycle(createLifecycle(instanceId, date, eventType)).build();
     logger.debug("Task Lifecycle event {} ", ecsTaskLifecycle.toString());
-    eventPublisher.publishMessage(ecsTaskLifecycle);
+    eventPublisher.publishMessage(ecsTaskLifecycle, ecsTaskLifecycle.getLifecycle().getTimestamp());
   }
 
   private Set<String> getCurrentActiveContainerInstanceArns(List<ContainerInstance> containerInstances) {
@@ -258,7 +259,8 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
                 .build();
 
         logger.info("Container published Message {} ", ecsContainerInstanceInfo.toString());
-        eventPublisher.publishMessage(ecsContainerInstanceInfo);
+        eventPublisher.publishMessage(
+            ecsContainerInstanceInfo, HTimestamps.fromDate(containerInstance.getRegisteredAt()));
       }
     }
   }
@@ -316,7 +318,7 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
 
         Ec2InstanceInfo ec2InstanceInfo = ec2InstanceInfoBuilder.build();
         logger.info("EC2 published Message {} ", ec2InstanceInfo.toString());
-        eventPublisher.publishMessage(ec2InstanceInfo);
+        eventPublisher.publishMessage(ec2InstanceInfo, HTimestamps.fromDate(instance.getLaunchTime()));
       }
     }
   }

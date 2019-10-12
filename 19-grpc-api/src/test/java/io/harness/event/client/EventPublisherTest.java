@@ -94,7 +94,9 @@ public class EventPublisherTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldThrowIaeIfWrongMethodIsCalled() {
     assertThatIllegalArgumentException().isThrownBy(
-        () -> eventPublisher.publishMessage(PublishMessage.newBuilder().build()));
+        ()
+            -> eventPublisher.publishMessage(
+                PublishMessage.newBuilder().build(), HTimestamps.fromInstant(Instant.now())));
   }
 
   @Test
@@ -123,7 +125,8 @@ public class EventPublisherTest extends CategoryTest {
                                             .setInstanceId("instanceId-123")
                                             .setType(EVENT_TYPE_START)
                                             .setTimestamp(HTimestamps.fromInstant(Instant.now()))
-                                            .build());
+                                            .build(),
+              HTimestamps.fromInstant(Instant.now()));
           messagesPublished.incrementAndGet();
         }
       } finally {

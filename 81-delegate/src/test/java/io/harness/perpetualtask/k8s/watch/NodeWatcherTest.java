@@ -15,6 +15,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.Message;
+import com.google.protobuf.Timestamp;
 
 import io.fabric8.kubernetes.api.model.DoneableNode;
 import io.fabric8.kubernetes.api.model.Node;
@@ -47,7 +48,6 @@ public class NodeWatcherTest {
   private NodeWatcher nodeWatcher;
   private EventPublisher eventPublisher;
   private Watch watch;
-  String cloudProviderId = "cloud-provider-id";
 
   @Before
   public void setUp() throws Exception {
@@ -59,7 +59,7 @@ public class NodeWatcherTest {
     watch = mock(Watch.class);
     when(kubernetesClient.nodes()).thenReturn(nodeOps);
     when(nodeOps.watch(any())).thenReturn(watch);
-    nodeWatcher = new NodeWatcher(kubernetesClient, cloudProviderId, eventPublisher);
+    nodeWatcher = new NodeWatcher(kubernetesClient, "cloud-provider-id", eventPublisher);
   }
 
   @Test
@@ -70,7 +70,7 @@ public class NodeWatcherTest {
     Node node = node(UID, NAME, creationTime.toString(), new HashMap<>());
     nodeWatcher.eventReceived(Action.ADDED, node);
     ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
-    verify(eventPublisher, times(2)).publishMessage(captor.capture());
+    verify(eventPublisher, times(2)).publishMessage(captor.capture(), any(Timestamp.class));
     assertThat(captor.getAllValues().get(1)).isInstanceOfSatisfying(NodeEvent.class, nodeEvent -> {
       assertThat(nodeEvent.getNodeUid()).isEqualTo(UID);
       assertThat(nodeEvent.getType()).isEqualTo(EVENT_TYPE_START);
@@ -86,7 +86,7 @@ public class NodeWatcherTest {
     Node node = node(UID, NAME, creationTimestamp, new HashMap<>());
     nodeWatcher.eventReceived(Action.DELETED, node);
     ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
-    verify(eventPublisher, times(2)).publishMessage(captor.capture());
+    verify(eventPublisher, times(2)).publishMessage(captor.capture(), any(Timestamp.class));
     assertThat(captor.getAllValues().get(1)).isInstanceOfSatisfying(NodeEvent.class, nodeEvent -> {
       assertThat(nodeEvent.getNodeUid()).isEqualTo(UID);
       assertThat(nodeEvent.getType()).isEqualTo(EVENT_TYPE_STOP);
@@ -104,7 +104,7 @@ public class NodeWatcherTest {
     Node node = node(UID, NAME, creationTime.toString(), labels);
     nodeWatcher.eventReceived(Action.ADDED, node);
     ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
-    verify(eventPublisher, times(2)).publishMessage(captor.capture());
+    verify(eventPublisher, times(2)).publishMessage(captor.capture(), any(Timestamp.class));
     assertThat(captor.getAllValues().get(0)).isInstanceOfSatisfying(NodeInfo.class, nodeInfo -> {
       assertThat(nodeInfo.getNodeUid()).isEqualTo(UID);
       assertThat(nodeInfo.getNodeName()).isEqualTo(NAME);
@@ -114,7 +114,7 @@ public class NodeWatcherTest {
     Mockito.reset(eventPublisher);
     captor = ArgumentCaptor.forClass(Message.class);
     nodeWatcher.eventReceived(Action.DELETED, node);
-    verify(eventPublisher).publishMessage(captor.capture());
+    verify(eventPublisher).publishMessage(captor.capture(), any(Timestamp.class));
     assertThat(captor.getAllValues()).hasSize(1).isNotInstanceOfAny(NodeInfo.class);
   }
 

@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.Message;
+import com.google.protobuf.Timestamp;
 
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.DoneablePod;
@@ -44,12 +45,10 @@ import org.mockito.ArgumentCaptor;
 import java.util.List;
 
 @Slf4j
-//@RunWith(JUnit4.class)
 public class PodWatcherTest {
   private PodWatcher podWatcher;
   private EventPublisher eventPublisher;
   private Watch watch;
-  String cloudProviderId = "cloud-provider-id";
 
   @Before
   public void setUp() throws Exception {
@@ -64,7 +63,7 @@ public class PodWatcherTest {
     when(kubernetesClient.pods()).thenReturn(podeOps);
     when(podeOps.inAnyNamespace()).thenReturn(ks);
     when(ks.watch(any())).thenReturn(watch);
-    podWatcher = new PodWatcher(kubernetesClient, cloudProviderId, eventPublisher);
+    podWatcher = new PodWatcher(kubernetesClient, "cloud-provider-id", eventPublisher);
   }
 
   @Test
@@ -73,7 +72,7 @@ public class PodWatcherTest {
   public void shouldPublishPodScheduledAndPodInfo() throws Exception {
     podWatcher.eventReceived(Action.MODIFIED, scheduledPod());
     ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
-    verify(eventPublisher, times(2)).publishMessage(captor.capture());
+    verify(eventPublisher, times(2)).publishMessage(captor.capture(), any(Timestamp.class));
     assertThat(captor.getAllValues()).hasSize(2);
     assertThat(captor.getAllValues().get(0)).isInstanceOfSatisfying(PodInfo.class, this ::infoMessageAssertions);
     assertThat(captor.getAllValues().get(1)).isInstanceOfSatisfying(PodEvent.class, this ::scheduledMessageAssertions);
@@ -85,7 +84,7 @@ public class PodWatcherTest {
   public void shouldPublishPodDeleted() throws Exception {
     podWatcher.eventReceived(Action.DELETED, scheduledAndDeletedPod());
     ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
-    verify(eventPublisher, atLeastOnce()).publishMessage(captor.capture());
+    verify(eventPublisher, atLeastOnce()).publishMessage(captor.capture(), any(Timestamp.class));
     assertThat(captor.getAllValues().get(2)).isInstanceOfSatisfying(PodEvent.class, this ::deletedMessageAssertions);
   }
 
@@ -98,7 +97,7 @@ public class PodWatcherTest {
     podWatcher.eventReceived(Action.MODIFIED, scheduledPod()); // none
     podWatcher.eventReceived(Action.DELETED, scheduledAndDeletedPod()); // deleted
     ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
-    verify(eventPublisher, atLeastOnce()).publishMessage(captor.capture());
+    verify(eventPublisher, atLeastOnce()).publishMessage(captor.capture(), any(Timestamp.class));
     List<Message> publishedMessages = captor.getAllValues();
     assertThat(publishedMessages).hasSize(3);
     assertThat(publishedMessages.get(0)).isInstanceOfSatisfying(PodInfo.class, this ::infoMessageAssertions);
