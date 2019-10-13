@@ -334,7 +334,7 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   @Override
   public void addArtifactFile(String artifactId, String accountId, List<ArtifactFile> artifactFile) {
-    logger.info("Adding artifactFiles for artifactId {} and accountId {}", artifactId, accountId);
+    logger.info("Adding artifactFiles for artifactId {}", artifactId);
     Query<Artifact> query = wingsPersistence.createQuery(Artifact.class)
                                 .filter(ArtifactKeys.accountId, accountId)
                                 .filter(ArtifactKeys.uuid, artifactId);

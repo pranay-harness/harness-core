@@ -314,9 +314,9 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
             DelegateConnectionResult result =
                 wingsPersistence.findAndModify(query, updateOperations, findAndModifyOptions);
             if (result != null) {
-              logger.info("Whitelist entry refreshed for task {} and delegate {}", task.getUuid(), delegateId);
+              logger.info("Whitelist entry refreshed");
             } else {
-              logger.info("Whitelist entry was not updated for task {} and delegate {}", task.getUuid(), delegateId);
+              logger.info("Whitelist entry was not updated");
             }
           }
         }
@@ -366,7 +366,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
   @Override
   public String getActiveDelegateAssignmentErrorMessage(DelegateTask delegateTask) {
-    logger.info("Delegate task {} is terminated", delegateTask.getUuid());
+    logger.info("Delegate task is terminated");
 
     String errorMessage = "Unknown";
 

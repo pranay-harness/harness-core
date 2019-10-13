@@ -477,17 +477,17 @@ public class InstanceHelper {
       if (isSupported(infrastructureMappingType)) {
         InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infraMapping);
         instanceHandler.handleNewDeployment(deploymentSummaries, isRollback);
-        logger.info("Handled deployment event for executionId [{}], infraMappingId [{}] of appId [{}] successfully",
-            workflowExecutionId, infraMappingId, appId);
+        logger.info("Handled deployment event for executionId [{}], infraMappingId [{}] successfully",
+            workflowExecutionId, infraMappingId);
       } else {
-        logger.info("Skipping deployment event for executionId [{}], infraMappingId [{}] of appId [{}]",
-            workflowExecutionId, infraMappingId, appId);
+        logger.info(
+            "Skipping deployment event for executionId [{}], infraMappingId [{}]", workflowExecutionId, infraMappingId);
       }
     } catch (Exception ex) {
       // We have to catch all kinds of runtime exceptions, log it and move on, otherwise the queue impl keeps retrying
       // forever in case of exception
-      logger.warn("Exception while handling deployment event for executionId [{}], infraMappingId [{}] of appId [{}]",
-          workflowExecutionId, infraMappingId, appId, ex);
+      logger.warn("Exception while handling deployment event for executionId [{}], infraMappingId [{}]",
+          workflowExecutionId, infraMappingId, ex);
     }
   }
 

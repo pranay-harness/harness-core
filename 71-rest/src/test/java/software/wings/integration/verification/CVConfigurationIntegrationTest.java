@@ -1285,6 +1285,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = RAGHU, intermittent = true)
   @Category(IntegrationTests.class)
   public void testListConfig() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());

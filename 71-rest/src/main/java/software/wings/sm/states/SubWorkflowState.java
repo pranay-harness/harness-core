@@ -106,8 +106,7 @@ public class SubWorkflowState extends State {
     if (executionStatus != ExecutionStatus.SUCCESS) {
       executionResponseBuilder.executionStatus(executionStatus);
     }
-    logger.info("Subworkflow state execution completed - stateExecutionInstanceId:{}, displayName:{}",
-        ((ExecutionContextImpl) context).getStateExecutionInstance().getUuid(), getName());
+    logger.info("Subworkflow state execution completed - displayName:{}", getName());
 
     ElementStateExecutionData stateExecutionData = (ElementStateExecutionData) context.getStateExecutionData();
     stateExecutionData.setElementStatusSummary(workflowExecutionService.getElementsSummary(
@@ -115,7 +114,9 @@ public class SubWorkflowState extends State {
   }
 
   @Override
-  public void handleAbortEvent(ExecutionContext context) {}
+  public void handleAbortEvent(ExecutionContext context) {
+    // nothing to handle
+  }
 
   @Override
   @SchemaIgnore

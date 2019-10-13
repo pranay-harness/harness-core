@@ -74,8 +74,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
     Artifact artifact = message.getArtifact();
     String accountId = artifact.getAccountId();
     try {
-      logger.info(
-          "Received artifact collection event for artifactId {} and of accountId {}", artifact.getUuid(), accountId);
+      logger.info("Received artifact collection event for artifactId {}", artifact.getUuid());
 
       artifactService.updateStatus(artifact.getUuid(), accountId, Status.RUNNING, ContentStatus.DOWNLOADING);
 
