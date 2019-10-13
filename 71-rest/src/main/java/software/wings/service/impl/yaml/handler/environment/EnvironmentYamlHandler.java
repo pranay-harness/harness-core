@@ -55,6 +55,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -333,9 +334,9 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
       }
     }
 
-    for (ServiceVariableKey serviceVariableKey : existingVariableMap.keySet()) {
-      if (!yamlVariableOverrideMap.containsKey(serviceVariableKey)) {
-        configVarsToDelete.add(existingVariableMap.get(serviceVariableKey));
+    for (Map.Entry<ServiceVariableKey, ServiceVariable> entry : existingVariableMap.entrySet()) {
+      if (!yamlVariableOverrideMap.containsKey(entry.getKey())) {
+        configVarsToDelete.add(entry.getValue());
       }
     }
 
@@ -390,7 +391,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
     for (VariableOverrideYaml configVar : configVarsToUpdate) {
       ServiceVariableKey serviceVariableKey =
           ServiceVariableKey.builder().name(configVar.getName()).serviceName(configVar.getServiceName()).build();
-      ServiceVariable serviceVariable = variableMap.get(serviceVariableKey);
+      ServiceVariable serviceVariable = Objects.requireNonNull(variableMap.get(serviceVariableKey));
       String value = configVar.getValue();
 
       switch (serviceVariable.getType()) {
